@@ -201,7 +201,7 @@ class ReportingService
         $this->logger->info('Processing report for node: '.$node->getId());
 
         $report['status'] = 'processing';
-        
+
         // Ensure ObjectService is configured for reports before saving
         $this->ensureReportConfiguration();
         $this->objectService->saveObject(object: $report, uuid: $report['id']);
@@ -216,7 +216,7 @@ class ReportingService
             $this->logger->error('Error extracting text from document: '.$e->getMessage(), ['exception' => $e]);
             $report['status']       = 'failed';
             $report['errorMessage'] = 'Error extracting text from document: '.$e->getMessage();
-            
+
             // Ensure ObjectService is configured for reports before saving
             $this->ensureReportConfiguration();
             $this->objectService->saveObject(object: $report, uuid: $report['id']);
@@ -237,18 +237,24 @@ class ReportingService
             ];
 
             $report['riskLevel'] = 'low';
-            
+
             // Ensure ObjectService is configured for reports before saving
             $this->ensureReportConfiguration();
             $this->objectService->saveObject(object: $report, uuid: $report['id']);
             return  $report;
         }
 
-        // Send text to Presidio for analysis and get entities.
-        $presidioResults = $this->analyzeWithPresidio($report['text'], $threshold);
+        try {
 
-        // Process entities from Presidio with new enhanced logic
-        $report['entities'] = $this->processEntitiesFromPresidio($presidioResults['entities_found']);
+            // Send text to Presidio for analysis and get entities.
+            $presidioResults = $this->analyzeWithPresidio($report['text'], $threshold);
+            // Process entities from Presidio with new enhanced logic
+            $report['entities'] = $this->processEntitiesFromPresidio($presidioResults['entities_found']);
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+            $this->objectService->saveObject(object: $report, uuid: $report['id']);
+        }
+
 
         if (empty($report['entities']) === true) {
             $this->logger->debug('No entities detected in document: '.$filePath);
@@ -385,21 +391,21 @@ class ReportingService
     {
         // Make entities unique by text property and aggregate scores
         $uniqueEntities = [];
-        
+
         foreach ($presidioEntities as $entity) {
             $text       = $entity['text'] ?? '';
             $entityType = $entity['entity_type'] ?? 'UNKNOWN';
             $score      = $entity['score'] ?? 0.0;
             $start      = $entity['start'] ?? 0;
             $end        = $entity['end'] ?? 0;
-            
+
             if (empty($text) === true) {
                 continue;
             }
-            
+
             // Use text as unique key for deduplication
             $uniqueKey = $text;
-            
+
             if (isset($uniqueEntities[$uniqueKey]) === true) {
                 // If entity already exists, keep the higher score
                 if ($score > $uniqueEntities[$uniqueKey]['score']) {
@@ -418,10 +424,10 @@ class ReportingService
                 ];
             }
         }
-        
+
         // Process each unique entity
         $processedEntities = [];
-        
+
         foreach ($uniqueEntities as $entity) {
             try {
                 // Find or create entity object
@@ -429,21 +435,21 @@ class ReportingService
                     $entity['text'],
                     $entity['entityType']
                 );
-                
+
                 // Verify the entity was created successfully before trying to update statistics
                 if (empty($entityObject['id']) === true) {
                     throw new Exception('Entity object has no ID');
                 }
-                
+
                 // Update entity statistics
                 $this->entityService->updateEntityStatistics(
                     $entityObject['id'],
                     $entity['score']
                 );
-                
+
                 // Generate unique key for this document-specific entity
                 $entityKey = substr(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), 0, 8);
-                
+
                 // Add enhanced data to entity
                 $enhancedEntity = [
                     'text'           => $entity['text'],
@@ -455,13 +461,13 @@ class ReportingService
                     'anonymize'      => true, // Default to true for security-first approach
                     'entityObjectId' => $entityObject['id'],
                 ];
-                
+
                 $processedEntities[] = $enhancedEntity;
-                
+
                 $this->logger->debug(
                     'Processed entity: '.$entity['text'].' with object ID: '.$entityObject['id']
                 );
-                
+
             } catch (Exception $e) {
                 $this->logger->error(
                     'Failed to process entity: '.$e->getMessage(),
@@ -470,10 +476,10 @@ class ReportingService
                         'exception' => $e,
                     ]
                 );
-                
+
                 // Add entity without object reference as fallback
                 $entityKey = substr(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), 0, 8);
-                
+
                 $fallbackEntity = [
                     'text'           => $entity['text'],
                     'score'          => $entity['score'],
@@ -484,17 +490,17 @@ class ReportingService
                     'anonymize'      => true,
                     'entityObjectId' => null, // No object reference
                 ];
-                
+
                 $processedEntities[] = $fallbackEntity;
             }//end try
         }//end foreach
-        
+
         $this->logger->info(
             'Processed '.count($processedEntities).' unique entities from '.count($presidioEntities).' detected entities'
         );
-        
+
         return $processedEntities;
-        
+
     }//end processEntitiesFromPresidio()
 
 
@@ -945,7 +951,7 @@ class ReportingService
 
                         $report['status']       = 'failed';
                         $report['errorMessage'] = 'Missing nodeId';
-                        
+
                         // Ensure ObjectService is configured for reports before saving
                         $this->ensureReportConfiguration();
                         $this->objectService->saveObject(object: $report, uuid: $report['id']);
@@ -1066,7 +1072,7 @@ class ReportingService
         // Skip reporting for anonymized files (safeguard)
         $fileName = $node->getName();
         $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-        
+
         if (str_ends_with($fileNameWithoutExtension, '_anonymized') === true) {
             $this->logger->info(
                 'Skipping report creation for anonymized file: '.$fileName.' (safeguard check)',
@@ -1163,7 +1169,7 @@ class ReportingService
         // Reset ObjectService to report configuration
         $this->objectService->setRegister($this->reportRegisterType);
         $this->objectService->setSchema($this->reportSchemaType);
-        
+
         $this->logger->debug(
             'ObjectService configured for reports',
             [
@@ -1171,11 +1177,11 @@ class ReportingService
                 'schema'   => $this->reportSchemaType,
             ]
         );
-        
+
         // Verify configuration was set correctly
         $currentRegister = $this->objectService->getRegister();
         $currentSchema = $this->objectService->getSchema();
-        
+
         if ($currentRegister !== $this->reportRegisterType || $currentSchema !== $this->reportSchemaType) {
             $this->logger->warning(
                 'ObjectService configuration mismatch after setting',
