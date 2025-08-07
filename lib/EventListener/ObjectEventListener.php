@@ -1,26 +1,20 @@
 <?php
 
-namespace OCA\OpenConnector\EventListener;
+namespace OCA\DocuDesk\EventListener;
 
-use OCA\OpenConnector\Service\SynchronizationService;
+use OCA\DocuDesk\Service\IndexService;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCP\Files\Events\Node\AbstractNodeEvent;
-use OCP\Files\Events\Node\NodeCreatedEvent;
-use OCP\Files\Events\Node\NodeDeletedEvent;
-use OCP\Files\Events\Node\NodeTouchedEvent;
-use OCP\Files\Events\Node\NodeWrittenEvent;
-use OCP\Files\FileInfo;
 use Psr\Log\LoggerInterface;
 
-class ObjectCreatedEventListener implements IEventListener
+class ObjectEventListener implements IEventListener
 {
 
 	public function __construct(
-		private readonly SynchronizationService $synchronizationService,
+		private readonly IndexService $indexService,
         private readonly LoggerInterface $logger,
 	)
 	{
@@ -49,11 +43,15 @@ class ObjectCreatedEventListener implements IEventListener
     private function handleObjectCreated(ObjectCreatedEvent $event): void
     {
         $object = $event->getObject();
+        var_dump($object->getUuid());
+        $this->indexService->indexObject($object);
     }
 
-    private function handleObjectUpdated(ObjectCreatedEvent $event): void
+    private function handleObjectUpdated(ObjectUpdatedEvent $event): void
     {
-        $object = $event->getObject();
+        $object = $event->getNewObject();
+        var_dump($object->getId());
+        $this->indexService->indexObject($object);
 
     }
 

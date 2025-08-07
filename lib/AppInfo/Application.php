@@ -42,7 +42,9 @@ class Application extends App implements IBootstrap
      *
      * @param array $urlParams URL parameters for the application
      */
-    public function __construct(array $urlParams=[])
+    public function __construct(
+        array $urlParams=[],
+    )
     {
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
@@ -76,6 +78,18 @@ class Application extends App implements IBootstrap
             \OCP\Files\Events\Node\NodeWrittenEvent::class,
             \OCA\DocuDesk\EventListener\FileEventListener::class
         );
+        $context->registerEventListener(
+            \OCA\OpenRegister\Event\ObjectCreatedEvent::class,
+            \OCA\DocuDesk\EventListener\ObjectEventListener::class
+        );
+        $context->registerEventListener(
+            \OCA\OpenRegister\Event\ObjectUpdatedEvent::class,
+            \OCA\DocuDesk\EventListener\ObjectEventListener::class
+        );
+        $context->registerEventListener(
+            \OCA\OpenRegister\Event\ObjectDeletedEvent::class,
+            \OCA\DocuDesk\EventListener\ObjectEventListener::class
+        );
 
     }//end register()
 
@@ -99,9 +113,9 @@ class Application extends App implements IBootstrap
             // Install and enable OpenRegister.
             $settingsService = $container->get(\OCA\DocuDesk\Service\SettingsService::class);
             $settingsService->initialize();
-            \OC::$server->getLogger()->info('DocuDesk has been installed, enabled and configured successfully');
+//            $this->logger->info('DocuDesk has been installed, enabled and configured successfully');
         } catch (\Exception $e) {
-            \OC::$server->getLogger()->warning('Failed to install/enable/configrue DocuDesk: '.$e->getMessage());
+//            $this->logger->warning('Failed to install/enable/configrue DocuDesk: '.$e->getMessage());
         }
 
     }//end boot()
