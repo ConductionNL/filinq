@@ -177,6 +177,34 @@
 				</div>
 			</div>
 
+			<div class="api-connection">
+				<h3>{{ t('docudesk', 'Solr API') }}</h3>
+				<div class="input-field">
+					<label for="solr-url">{{ t('docudesk', 'Solr URL') }}</label>
+					<input
+						id="solr-url"
+						v-model="apiConfig.solr.url"
+						type="text"
+						:placeholder="t('docudesk', 'Enter Solr URL (e.g., http://solr:8983)')">
+				</div>
+				<div class="input-field">
+					<label for="solr-collection">{{ t('docudesk', 'Solr Collection') }}</label>
+					<input
+						id="solr-collection"
+						v-model="apiConfig.solr.collection"
+						type="text"
+						:placeholder="t('docudesk', 'Enter Solr collection (e.g. docudesk-zuiddrecht)')">
+				</div>
+				<div class="input-field">
+					<label for="solr-key">{{ t('docudesk', 'API Key') }}</label>
+					<input
+						id="solr-key"
+						v-model="apiConfig.solr.key"
+						type="password"
+						:placeholder="t('docudesk', 'Enter Solr API Key')">
+				</div>
+			</div>
+
 			<div class="button-container">
 				<NcButton type="primary" :disabled="saving" @click="saveApiConfig">
 					<template #icon>
@@ -258,6 +286,19 @@
 						@update:checked="reportConfig.store_original_text = $event" />
 					<div class="setting-description">
 						{{ t('docudesk', 'Store the original document text in reports') }}
+					</div>
+				</div>
+
+				<div class="setting-item">
+					<div class="setting-label">
+						{{ t('docudesk', 'Index documents') }}
+					</div>
+					<NcCheckboxRadioSwitch
+						:checked="reportConfig.index_documents"
+						type="switch"
+						@update:checked="reportConfig.index_documents = $event" />
+					<div class="setting-description">
+						{{ t('docudesk', 'Index documents in Solr') }}
 					</div>
 				</div>
 
@@ -345,6 +386,11 @@ export default {
 					url: '',
 					key: '',
 				},
+				solr: {
+					url: '',
+					collection: '',
+					key: '',
+				}
 			},
 			reportConfig: {
 				enable_reporting: true,
@@ -354,6 +400,7 @@ export default {
 				store_original_text: true,
 				report_object_type: 'report',
 				log_object_type: 'documentLog',
+				index_documents: false,
 			},
 			isSavingReportConfig: false,
 		}
@@ -444,7 +491,7 @@ export default {
 				.then(response => response.json())
 				.then(data => {
 					// Simple assignment without any validation or conversion
-					this.apiConfig = data
+					this.apiConfig = { ...this.apiConfig, ...data }
 				})
 				.catch(err => {
 					console.error('Failed to fetch API config:', err)
@@ -711,7 +758,7 @@ export default {
 		async fetchReportConfig() {
 			try {
 				const response = await axios.get(generateUrl('/apps/docudesk/api/v1/settings/report'))
-				this.reportConfig = response.data
+				this.reportConfig = { ...this.reportConfig, ...response.data }
 			} catch (error) {
 				console.error('Error fetching report configuration:', error)
 				showError(t('docudesk', 'Failed to load report configuration'))

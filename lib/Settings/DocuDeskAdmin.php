@@ -114,6 +114,10 @@ class DocuDeskAdmin implements ISettings
             'enableReporting'       => $this->config->getSystemValue('docudesk_enable_reporting', true),
             'enableAnonymization'   => $this->config->getSystemValue('docudesk_enable_anonymization', true),
             'storeOriginalText'     => $this->config->getSystemValue('docudesk_store_original_text', true),
+            'indexingEnabled'       => $this->config->getSystemValueBool('docudesk_index_documents'),
+            'solrUrl'               => $this->config->getSystemValueString('docudesk_solr_url'),
+            'solrCollection'        => $this->config->getSystemValueString('docudesk_solr_collection'),
+
         ];
 
         return new TemplateResponse('docudesk', 'settings/admin', $parameters, '');

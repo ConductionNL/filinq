@@ -91,6 +91,10 @@ class Application extends App implements IBootstrap
             \OCA\DocuDesk\EventListener\ObjectEventListener::class
         );
 
+        $context->registerSearchProvider(
+            \OCA\DocuDesk\Search\DocumentSearchProvider::class
+        );
+
     }//end register()
 
 

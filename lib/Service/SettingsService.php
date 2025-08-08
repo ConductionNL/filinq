@@ -88,7 +88,7 @@ class SettingsService
             try {
                 $configurationService = $this->getConfigurationService();
             } catch (\Exception $e) {
-                throw new \RuntimeException('OpenCatalogi configuration service is not available: '.$e->getMessage());
+                throw new \RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
             }
 
             // Get current configuration version from app config.
