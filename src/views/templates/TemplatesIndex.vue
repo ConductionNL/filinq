@@ -1,5 +1,5 @@
 <script setup>
-import { templateStore, navigationStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { templateStore, navigationStore } from '../../store/store.js'
 			<TemplatesList />
 		</template>
 		<template #default>
-			<NcEmptyContent v-if="!templateStore.templateItem || navigationStore.selected != 'templates' "
+			<NcEmptyContent v-if="!objectStore.getActiveObject('template') || navigationStore.selected !== 'templates'"
 				class="detailContainer"
 				name="No Template"
 				description="No template selected">
@@ -16,12 +16,12 @@ import { templateStore, navigationStore } from '../../store/store.js'
 					<BriefcaseAccountOutline />
 				</template>
 				<template #action>
-					<NcButton type="primary" @click="templateStore.setTemplateItem(null); navigationStore.setModal('editTemplate')">
+					<NcButton type="primary" @click="objectStore.setActiveObject('template', null); navigationStore.setModal('editTemplate')">
 						Add Template
 					</NcButton>
 				</template>
 			</NcEmptyContent>
-			<TemplateDetails v-if="templateStore.templateItem && navigationStore.selected === 'templates'" />
+			<TemplateDetails v-if="objectStore.getActiveObject('template') && navigationStore.selected === 'templates'" />
 		</template>
 	</NcAppContent>
 </template>

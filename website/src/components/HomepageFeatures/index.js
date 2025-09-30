@@ -2,33 +2,43 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
+/**
+ * List of features displayed on the homepage
+ * Each feature has a title and description
+ */
 const FeatureList = [
   {
-    title: 'Easy to Use',
+    title: '100% Local Processing',
     description: (
       <>
-        Open Register is designed to be easily installed and used to get your register up and running quickly.
+        All document processing happens within your Nextcloud instance, ensuring your sensitive data never leaves your secure environment while maintaining full functionality.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Comprehensive Document Services',
     description: (
       <>
-        Open Register lets you focus on your data, while we handle the complexity of object management.
+        From document generation and signing to GDPR anonymization and WCAG compliance, DocuDesk provides all the tools you need for modern document management.
       </>
     ),
   },
   {
-    title: 'Common Ground Ready',
+    title: 'Seamless Integration',
     description: (
       <>
-        Built with Dutch Common Ground principles in mind, ensuring standardized and compliant data management.
+        Connect with SharePoint, Office 365, or case management systems while maintaining complete control over your document processing and storage.
       </>
     ),
   },
 ];
 
+/**
+ * Component to render a single feature
+ * @param {string} title - The title of the feature
+ * @param {JSX.Element} description - The description of the feature
+ * @returns {JSX.Element} Feature component
+ */
 function Feature({title, description}) {
   return (
     <div className={clsx('col col--4')}>
@@ -40,6 +50,10 @@ function Feature({title, description}) {
   );
 }
 
+/**
+ * Main component that displays all features on the homepage
+ * @returns {JSX.Element} HomepageFeatures component
+ */
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
@@ -52,4 +66,4 @@ export default function HomepageFeatures() {
       </div>
     </section>
   );
-} 
+}

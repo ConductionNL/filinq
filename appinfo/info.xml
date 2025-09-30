@@ -27,12 +27,11 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
-    <version>0.0.3</version>
-    <licence>agpl</licence>
+    <version>0.0.31</version>
+    <licence>AGPL</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
     <category>organization</category>
-    <category>tools</category>
     <website>https://github.com/ConductionNL/DocuDesk</website>
     <bugs>https://github.com/ConductionNL/DocuDesk/issues</bugs>
     <repository>https://github.com/ConductionNL/docudesk</repository>
@@ -46,7 +45,7 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="28" max-version="30"/>
+        <nextcloud min-version="28" max-version="32"/>
     </dependencies>
     <navigations>
         <navigation>

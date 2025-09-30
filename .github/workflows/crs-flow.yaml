@@ -1,0 +1,54 @@
+name: Generate Certificate Request and Send Private Key
+
+on:
+  workflow_dispatch
+
+jobs:
+  generate-csr-and-send-key:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get repository name
+        id: repo-name
+        run: echo "repo=${GITHUB_REPOSITORY#*/}" >> $GITHUB_OUTPUT
+
+      - name: Create directories if not exist
+        run: |
+          if [ ! -d ".nextcloud/certificates" ]; then
+            mkdir -p .nextcloud/certificates
+            echo "Created .nextcloud/certificates directory"
+          else
+            echo ".nextcloud/certificates directory already exists"
+          fi
+
+      - name: Generate certificate request and private key
+        run: |
+          openssl req -nodes -newkey rsa:4096 \
+          -keyout .nextcloud/certificates/${{ steps.repo-name.outputs.repo }}.key \
+          -out .nextcloud/certificates/${{ steps.repo-name.outputs.repo }}.csr \
+          -subj "/CN=${{ steps.repo-name.outputs.repo }}"
+
+      - name: Send private key via Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          PRIVATE_KEY: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PRIVATE_KEY=$(cat .nextcloud/certificates/${{ steps.repo-name.outputs.repo }}.key)
+          curl -X POST -H 'Content-type: application/json' --data '{
+            "text": "Here is the private key for ${{ steps.repo-name.outputs.repo }}, store this in passworks:\n```\n'"${PRIVATE_KEY}"'\n```"
+          }' $SLACK_WEBHOOK_URL
+
+      - name: Remove private key
+        run: rm .nextcloud/certificates/${{ steps.repo-name.outputs.repo }}.key
+
+      - name: Commit and push CSR
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .nextcloud/certificates/${{ steps.repo-name.outputs.repo }}.csr
+          git commit -m "Add CSR for ${{ steps.repo-name.outputs.repo }}"
+          git push

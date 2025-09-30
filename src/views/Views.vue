@@ -6,11 +6,9 @@ import { navigationStore } from '../store/store.js'
 	<!-- Main content container for all views -->
 	<NcAppContent>
 		<template #default>
-			<FileIndex v-if="navigationStore.selected === 'files'" />
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
-			<AnonymizationList v-if="navigationStore.selected === 'anonymization'" />
-			<SigningIndex v-if="navigationStore.selected === 'signing'" />
-			<WcagIndex v-if="navigationStore.selected === 'wcag'" />
+			<ReportsIndex v-if="navigationStore.selected === 'reports'" />
+			<EntitiesIndex v-if="navigationStore.selected === 'entities'" />
 			<TemplatesIndex v-if="navigationStore.selected === 'templates'" />
 		</template>
 	</NcAppContent>
@@ -24,23 +22,19 @@ import { navigationStore } from '../store/store.js'
 import { NcAppContent } from '@nextcloud/vue'
 
 // View components
-import FileIndex from './files/FileIndex.vue'
 import Dashboard from './dashboard/DashboardIndex.vue'
-import AnonymizationList from './anonymization/AnonymizationList.vue'
-import SigningIndex from './signing/SigningIndex.vue'
-import WcagIndex from './wcag/WcagIndex.vue'
+import ReportsIndex from './reports/ReportsIndex.vue'
+import EntitiesIndex from './entities/EntitiesIndex.vue'
 import TemplatesIndex from './templates/TemplatesIndex.vue'
 
 export default {
 	name: 'Views',
 	components: {
 		NcAppContent,
-		FileIndex,
 		Dashboard,
-		AnonymizationList,
-		SigningIndex,
-		WcagIndex,
-		TemplatesIndex
+		ReportsIndex,
+		EntitiesIndex,
+		TemplatesIndex,
 	},
 }
 </script>

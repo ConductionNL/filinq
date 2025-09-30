@@ -1,5 +1,5 @@
 <script setup>
-import { templateStore, navigationStore, searchStore } from '../../store/store.js'
+import { objectStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -7,23 +7,23 @@ import { templateStore, navigationStore, searchStore } from '../../store/store.j
 		<ul>
 			<div class="listHeader">
 				<NcTextField
-					:value="templateStore.searchTerm"
-					:show-trailing-button="templateStore.searchTerm !== ''"
+					:value="objectStore.getSearchTerm('template')"
+					:show-trailing-button="objectStore.getSearchTerm('template') !== ''"
 					label="Search"
 					class="searchField"
 					trailing-button-icon="close"
-					@input="templateStore.setSearchTerm($event.target.value)"
-					@trailing-button-click="templateStore.clearSearch()">
+					@update:value="(value) => objectStore.setSearchTerm('template', value)"
+					@trailing-button-click="objectStore.clearSearch('template')">
 					<Magnify :size="20" />
 				</NcTextField>
 				<NcActions>
-					<NcActionButton @click="templateStore.refreshTemplateList()">
+					<NcActionButton @click="objectStore.fetchCollection('template')">
 						<template #icon>
 							<Refresh :size="20" />
 						</template>
 						Refresh
 					</NcActionButton>
-					<NcActionButton @click="templateStore.setTemplateItem(null); navigationStore.setModal('editTemplate')">
+					<NcActionButton @click="objectStore.clearActiveObject('template'); navigationStore.setModal('editTemplate')">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -32,17 +32,17 @@ import { templateStore, navigationStore, searchStore } from '../../store/store.j
 				</NcActions>
 			</div>
 
-			<div v-if="templateStore.templateList && templateStore.templateList.length > 0 && !templateStore.isLoadingTemplateList">
-				<NcListItem v-for="(template, i) in templateStore.templateList"
+			<div v-if="!objectStore.isLoading('template')">
+				<NcListItem v-for="(template, i) in objectStore.getCollection('template').results"
 					:key="`${template}${i}`"
-					:name="template?.name"
+					:name="template?.name || 'Unnamed Template'"
 					:force-display-actions="true"
-					:active="templateStore.templateItem?.id === template?.id"
+					:active="objectStore.getActiveObject('template')?.id === template?.id"
 					:details="template.approved === 'approved' ? 'Approved': 'Not approved'"
 					:counter-number="template?.skills?.length || 0"
 					@click="handleTemplateSelect(template)">
 					<template #icon>
-						<BriefcaseAccountOutline :class="templateStore.templateItem?.id === template?.id && 'selectedIcon'"
+						<BriefcaseAccountOutline :class="objectStore.getActiveObject('template')?.id === template?.id && 'selectedIcon'"
 							disable-menu
 							:size="44" />
 					</template>
@@ -50,15 +50,15 @@ import { templateStore, navigationStore, searchStore } from '../../store/store.j
 						{{ template?.summary || 'No summary available' }}
 					</template>
 					<template #actions>
-						<NcActionButton @click="templateStore.setTemplateItem(template); navigationStore.setModal('editTemplate')">
+						<NcActionButton @click="objectStore.setActiveObject('template', template); navigationStore.setModal('editTemplate')">
 							<template #icon>
-								<Pencil />
+								<Pencil :size="20" />
 							</template>
 							Edit
 						</NcActionButton>
-						<NcActionButton @click="templateStore.setTemplateItem(template); navigationStore.setDialog('deleteTemplate')">
+						<NcActionButton @click="objectStore.setActiveObject('template', template); navigationStore.setDialog('deleteObject', { objectType: 'template', dialogTitle: 'Template' })">
 							<template #icon>
-								<TrashCanOutline />
+								<TrashCanOutline :size="20" />
 							</template>
 							Delete
 						</NcActionButton>
@@ -67,14 +67,17 @@ import { templateStore, navigationStore, searchStore } from '../../store/store.j
 			</div>
 		</ul>
 
-		<NcLoadingIcon v-if="templateStore.isLoadingTemplateList"
+		<NcLoadingIcon v-if="objectStore.isLoading('template')"
 			class="loadingIcon"
 			:size="64"
 			appearance="dark"
 			name="Loading templates" />
 
-		<div v-if="templateStore.templateList.length === 0 && !templateStore.isLoadingTemplateList">
-			No templates defined yet.
+		<div v-if="!objectStore.getCollection('template').results.length" class="empty-state">
+			<p>No templates defined yet.</p>
+			<NcButton type="primary" @click="objectStore.clearActiveObject('template'); navigationStore.setModal('editTemplate')">
+				Add Template
+			</NcButton>
 		</div>
 	</NcAppContentList>
 </template>
@@ -82,9 +85,15 @@ import { templateStore, navigationStore, searchStore } from '../../store/store.j
 <script>
 /**
  * Component for displaying and managing the list of templates
- * Provides functionality for searching, adding, editing and deleting templates
+ *
+ * @package
+ * @author Conduction B.V. <info@conduction.nl>
+ * @copyright Copyright (c) 2024 Conduction B.V.
+ * @license EUPL-1.2
+ * @version 1.0.0
  */
-import { NcListItem, NcActions, NcActionButton, NcAppContentList, NcTextField, NcLoadingIcon } from '@nextcloud/vue'
+// Components
+import { NcListItem, NcActions, NcActionButton, NcAppContentList, NcTextField, NcLoadingIcon, NcButton } from '@nextcloud/vue'
 
 // Icons
 import Magnify from 'vue-material-design-icons/Magnify.vue'
@@ -104,6 +113,7 @@ export default {
 		NcAppContentList,
 		NcTextField,
 		NcLoadingIcon,
+		NcButton,
 		// Icons
 		BriefcaseAccountOutline,
 		Magnify,
@@ -113,7 +123,7 @@ export default {
 		TrashCanOutline,
 	},
 	mounted() {
-		templateStore.refreshTemplateList()
+		objectStore.fetchCollection('template')
 	},
 	methods: {
 		/**
@@ -122,7 +132,7 @@ export default {
 		 */
 		async handleTemplateSelect(template) {
 			// Set the selected template in the store
-			templateStore.setTemplateItem(template)
+			objectStore.setActiveObject('template', template)
 		},
 	},
 }
@@ -135,6 +145,9 @@ export default {
     z-index: 1000;
     background-color: var(--color-main-background);
     border-bottom: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 .searchField {
@@ -149,5 +162,16 @@ export default {
 
 .loadingIcon {
     margin-block-start: var(--OC-margin-20);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    color: var(--color-text-maxcontrast);
+    gap: 16px;
 }
 </style>

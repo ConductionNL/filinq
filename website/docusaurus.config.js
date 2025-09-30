@@ -3,10 +3,10 @@
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'DocuDesk',
-  tagline: 'Flexible object management for Nextcloud',
-  url: 'https://conductionnl.github.io',
-  baseUrl: '/docudesk/',
+  title: 'DocuDesk.app',
+  tagline: 'Flexible document management for your organization',
+  url: 'https://docudesk.app/',
+  baseUrl: '/',
   
   // GitHub pages deployment config
   organizationName: 'conductionnl',
@@ -39,15 +39,34 @@ const config = {
         },
       }),
     ],
+    [
+      'redocusaurus',
+      {
+        // Plugin Options for loading OpenAPI files
+        specs: [
+          // Pass it a path to a local OpenAPI YAML file
+          {
+            // Redocusaurus will automatically bundle your spec into a single file during the build
+            spec: 'static/oas/docudesk-api.yaml',
+            route: '/api',
+          },
+        ],
+        // Theme Options for modifying how redoc renders them
+        theme: {
+          // Change with your site colors
+          primaryColor: '#1890ff',
+        },
+      },
+    ]
   ],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'Open Register',
+        title: 'DocuDesk.app',
         logo: {
-          alt: 'Open Register Logo',
+          alt: 'DocuDesk Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -56,6 +75,11 @@ const config = {
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Documentation',
+          },
+          {
+            href: '/api',
+            label: 'API Documentation',
+            position: 'right',
           },
           {
             href: 'https://github.com/conductionnl/docudesk',
@@ -86,13 +110,13 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Open Register. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Gemeente Hoekse Waard. Built with Docusaurus.`,
       },
       prism: {
         theme: require('prism-react-renderer/themes/github'),
         darkTheme: require('prism-react-renderer/themes/dracula'),
       },
-    }),
+    })
 };
 
 module.exports = config;

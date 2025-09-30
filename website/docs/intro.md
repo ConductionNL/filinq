@@ -1,47 +1,63 @@
-# Open Register Documentation
+# DocuDesk Documentation
 
-This directory contains the documentation website for Open Register, built with [Docusaurus 2](https://docusaurus.io/).
+DocuDesk provides services for generating and anonymizing PDF, Word, HTML or Excel documents in a GDPR and WCAG compliant manner, all while keeping your data secure within your local Nextcloud instance.
 
-## Installation
+## The Power of Local Processing
 
-Install the dependencies:
+Imagine a world where your sensitive documents never have to leave your premises, yet you still have all the power of modern cloud collaboration. That's DocuDesk. Running on your local Nextcloud instance, it's like having a secure document fortress with a sophisticated diplomatic corps.
 
-    npm install
+When your organization needs to process sensitive documents - whether it's generating contracts, anonymizing personal data, or ensuring accessibility - everything happens within your walls. Your data stays your data. Yet through Nextcloud's powerful integration capabilities, you maintain seamless connections with your SharePoint, Office 365, or case management systems.
 
-## Local Development
+## Key Features
 
-Start the development server:
+- 📄 Generate documents in multiple formats (PDF, Word, HTML, Excel)
+- ✍️ Digital document signing and verification
+- 🔒 GDPR-compliant document anonymization
+- ♿ WCAG accessibility standards compliance
+- 🔄 Batch document processing
+- 📱 Responsive document viewing
+- 🏰 100% Local document processing
+- 🤝 Seamless external system integration
+- 📋 Complete audit trail
+- ⚡ High performance local operations
+- 🔍 Document comparison and version tracking
+- 🏷️ AI-powered document classification
+- 🌐 Multi-language support
+- ✅ Document validation & quality control
+- ⚡ Workflow automation & process management
+- 📊 Comprehensive reporting & analytics
 
-    npm start
+## Why Nextcloud?
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+We chose Nextcloud as our platform for several compelling reasons:
 
-## Build
+### Seamless Integration with Enterprise Systems
+Nextcloud provides robust integration capabilities with Microsoft Office 365 and SharePoint, allowing organizations to maintain their existing workflows while adding powerful document processing capabilities. Users can seamlessly access and process documents across platforms without disrupting their established processes.
 
-Build the static files:
+### Enterprise-Grade Security
+By leveraging Nextcloud's secure infrastructure, DocuDesk ensures all document processing happens within your controlled environment. This means sensitive data never leaves your premises while still enabling collaborative features and integrations with external systems.
 
-    npm run build
+### Easy Installation and Updates
+DocuDesk is available directly through the Nextcloud App Store, making installation as simple as a few clicks:
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+1. Log in to your Nextcloud instance as an administrator
+2. Navigate to the Apps section
+3. Find DocuDesk in the Office & Text category
+4. Click "Install"
 
-## Deployment
+Note: For anonymization functionality, you'll need to provide your own LLM (Language Learning Model) tool. We recommend using Presidio, an open-source solution. You can find detailed installation instructions for Presidio at https://github.com/MWest2020/presidio-nl/tree/main/docs. However, you're free to use other anonymization tools that suit your needs.
 
-The documentation is automatically deployed to GitHub Pages when changes are pushed to the `documentation` branch.
+The app will automatically stay up-to-date with your Nextcloud instance, ensuring you always have the latest features and security updates.
 
-## Project Structure
-
-    website/
-    ├── docs/              # Documentation markdown files
-    ├── src/               # React components and pages
-    ├── static/            # Static files (images, etc)
-    ├── docusaurus.config.js   # Site configuration
-    ├── package.json       # Project dependencies
-    ├── README.md         # This file
-    └── sidebars.js       # Sidebar configuration
+### Scalability and Performance
+Nextcloud's architecture allows DocuDesk to handle everything from individual document processing to large-scale batch operations, all while maintaining optimal performance within your local environment.
 
 ## Contributing
 
-1. Create a new branch from `documentation`
-2. Make your changes
-3. Test locally using `npm start`
-4. Create a Pull Request to the `documentation` branch
+We welcome contributions to improve the documentation! If you'd like to contribute, please visit our [GitHub repository](https://github.com/conductionnl/docudesk). There you can:
+
+- Report issues or suggest improvements by opening an issue
+- Submit pull requests with documentation changes
+- Engage with the community in discussions
+
+For detailed contribution guidelines, please refer to the CONTRIBUTING.md file in our repository.
