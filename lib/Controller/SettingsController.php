@@ -149,6 +149,9 @@ class SettingsController extends Controller
         $data['enableReporting']       = $this->config->getSystemValue('docudesk_enable_reporting', true);
         $data['enableAnonymization']   = $this->config->getSystemValue('docudesk_enable_anonymization', true);
         $data['storeOriginalText']     = $this->config->getSystemValue('docudesk_store_original_text', true);
+        $data['indexingEnabled']       = $this->config->getSystemValueBool('docudesk_indexing_enabled');
+        $data['solrUrl']               = $this->config->getSystemValueString('docudesk_solr_url');
+        $data['solrCollection']        = $this->config->getSystemValueString('docudesk_solr_collection');
 
         // Get the current values for the object types from the configuration.
         try {
@@ -196,6 +199,9 @@ class SettingsController extends Controller
                 'enableReporting'       => 'docudesk_enable_reporting',
                 'enableAnonymization'   => 'docudesk_enable_anonymization',
                 'storeOriginalText'     => 'docudesk_store_original_text',
+                'indexingEnabled'       => 'docudesk_indexing_enabled',
+                'solrUrl'               => 'docudesk_solr_url',
+                'solrCollection'        => 'docudesk_solr_collection',
             ];
 
             // Update system configuration values.
@@ -423,6 +429,11 @@ class SettingsController extends Controller
                     'url' => $this->config->getSystemValue('docudesk_nldocs_url', ''),
                     'key' => $this->config->getSystemValue('docudesk_nldocs_api_key', ''),
                 ],
+                'solr'   => [
+                    'url' => $this->config->getSystemValue('docudesk_solr_url', ''),
+                    'collection' => $this->config->getSystemValue('docudesk_solr_collection', ''),
+                    'key' => $this->config->getSystemValue('docudesk_solr_api_key', ''),
+                ],
             ];
 
             return new JSONResponse($apiConfig);
@@ -493,6 +504,20 @@ class SettingsController extends Controller
                 }
             }
 
+            // Store Solr API configuration directly without validation.
+            if (isset($apiConfig['solr']) === true) {
+                if (isset($apiConfig['solr']['url']) === true) {
+                    $this->config->setSystemValue('docudesk_solr_url', $apiConfig['solr']['url']);
+                }
+                if (isset($apiConfig['solr']['collection']) === true) {
+                    $this->config->setSystemValue('docudesk_solr_collection', $apiConfig['solr']['collection']);
+                }
+
+                if (isset($apiConfig['solr']['key']) === true) {
+                    $this->config->setSystemValue('docudesk_solr_api_key', $apiConfig['solr']['key']);
+                }
+            }
+
             return new JSONResponse(['success' => true]);
         } catch (\Exception $e) {
             return new JSONResponse(['error' => $e->getMessage()], 500);
@@ -522,6 +547,7 @@ class SettingsController extends Controller
                 'store_original_text'    => $this->config->getSystemValue('docudesk_store_original_text', true),
                 'report_object_type'     => $this->config->getSystemValue('docudesk_report_object_type', 'report'),
                 'log_object_type'        => $this->config->getSystemValue('docudesk_log_object_type', 'documentLog'),
+                'index_documents'        => $this->config->getSystemValueBool(key: 'docudesk_index_documents'),
             ];
 
             return new JSONResponse($reportConfig);
@@ -585,6 +611,10 @@ class SettingsController extends Controller
 
             if (isset($reportConfig['log_object_type']) === true) {
                 $this->config->setSystemValue('docudesk_log_object_type', $reportConfig['log_object_type']);
+            }
+
+            if (isset($reportConfig['index_documents']) === true) {
+                $this->config->setSystemValue('docudesk_index_documents', $reportConfig['index_documents']);
             }
 
             return new JSONResponse(['success' => true]);

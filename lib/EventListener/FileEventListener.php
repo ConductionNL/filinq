@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\EventListener;
 
 use InvalidArgumentException;
+use OCA\DocuDesk\Service\IndexService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Files\Events\Node\AbstractNodeEvent;
@@ -66,6 +67,7 @@ class FileEventListener implements IEventListener
      */
     public function __construct(
         private readonly ReportingService $reportingService,
+        private readonly IndexService $indexService,
         private readonly LoggerInterface $logger
     ) {
 
@@ -126,11 +128,11 @@ class FileEventListener implements IEventListener
     private function handleNodeCreated(NodeCreatedEvent $event): void
     {
         $node = $event->getNode();
-        
+
         // Skip reporting for anonymized files (ending with _anonymized)
         $fileName = $node->getName();
         $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-        
+
         if (str_ends_with($fileNameWithoutExtension, '_anonymized') === true) {
             $this->logger->debug(
                 'Skipping report creation for anonymized file: '.$fileName,
@@ -141,7 +143,7 @@ class FileEventListener implements IEventListener
             );
             return;
         }
-        
+
         $this->logger->debug(
             'File created: '.$fileName,
             [
@@ -196,6 +198,8 @@ class FileEventListener implements IEventListener
                 'path'    => $node->getPath(),
             ]
         );
+
+        $this->indexService->deleteDocument($node->getId());
 
     }//end handleNodeDeleted()
 

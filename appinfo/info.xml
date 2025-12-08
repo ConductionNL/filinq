@@ -28,6 +28,7 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
     <version>0.0.31</version>
+    <version>0.0.30-1</version>
     <licence>AGPL</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
