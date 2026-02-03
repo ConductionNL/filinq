@@ -20,11 +20,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\OpenCatalogi\Dashboard\CatalogWidget;
-use OCA\OpenCatalogi\Dashboard\UnpublishedPublicationsWidget;
-use OCA\OpenCatalogi\Dashboard\UnpublishedAttachmentsWidget;
-use OCP\IConfig;
-use OCP\App\AppManager;
 use OCA\DocuDesk\Service\SettingsService;
 
 /**
@@ -60,40 +55,10 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        include_once __DIR__.'/../../vendor/autoload.php';
-        // Register event listeners for file operations.
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeCreatedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeDeletedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeTouchedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeWrittenEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCA\OpenRegister\Event\ObjectCreatedEvent::class,
-            \OCA\DocuDesk\EventListener\ObjectEventListener::class
-        );
-        $context->registerEventListener(
-            \OCA\OpenRegister\Event\ObjectUpdatedEvent::class,
-            \OCA\DocuDesk\EventListener\ObjectEventListener::class
-        );
-        $context->registerEventListener(
-            \OCA\OpenRegister\Event\ObjectDeletedEvent::class,
-            \OCA\DocuDesk\EventListener\ObjectEventListener::class
-        );
-
-        $context->registerSearchProvider(
-            \OCA\DocuDesk\Search\DocumentSearchProvider::class
-        );
+        // Event listeners and search providers have been removed.
+        // Text extraction and search are now handled by OpenRegister.
+        // DocuDesk focuses on document anonymization and metadata enhancement.
+        // No migrations needed as DocuDesk uses OpenRegister for storage.
 
     }//end register()
 

@@ -10,19 +10,9 @@ import { navigationStore } from '../store/store.js'
 					<Finance :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'reports'" name="Reports" @click="navigationStore.setSelected('reports')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" name="Anonymization" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
-					<FileDocumentOutline :size="20" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'entities'" name="Entities" @click="navigationStore.setSelected('entities')">
-				<template #icon>
-					<TagOutline :size="20" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'templates'" name="Templates" @click="navigationStore.setSelected('templates')">
-				<template #icon>
-					<FileOutline :size="20" />
+					<ShieldLockOutline :size="20" />
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
@@ -38,9 +28,7 @@ import {
 
 // Icons
 import Finance from 'vue-material-design-icons/Finance.vue'
-import TagOutline from 'vue-material-design-icons/TagOutline.vue'
-import FileOutline from 'vue-material-design-icons/FileOutline.vue'
-import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 
 export default {
 	name: 'MainMenu',
@@ -51,9 +39,7 @@ export default {
 		NcAppNavigationItem,
 		// icons
 		Finance,
-		TagOutline,
-		FileOutline,
-		FileDocumentOutline,
+		ShieldLockOutline,
 	},
 	methods: {
 		openLink(url, type = '') {

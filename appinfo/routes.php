@@ -17,30 +17,24 @@ return [
 		['name' => 'settings#testPresidioAnonymizer', 'url' => 'api/settings/test-presidio-anonymizer', 'verb' => 'POST'],
 		['name' => 'settings#getApiConfig', 'url' => 'api/settings/api-config', 'verb' => 'GET'],
 		['name' => 'settings#saveApiConfig', 'url' => 'api/settings/api-config', 'verb' => 'POST'],
-		['name' => 'settings#getReportConfig', 'url' => '/api/v1/settings/report', 'verb' => 'GET'],
-		['name' => 'settings#saveReportConfig', 'url' => '/api/v1/settings/report', 'verb' => 'POST'],
 		
-		// Object API routes	
-		['name' => 'objects#index', 'url' => 'api/objects/{objectType}', 'verb' => 'GET'],
-		['name' => 'objects#create', 'url' => 'api/objects/{objectType}', 'verb' => 'POST'],
-		['name' => 'objects#show', 'url' => 'api/objects/{objectType}/{id}', 'verb' => 'GET'],
-		['name' => 'objects#update', 'url' => 'api/objects/{objectType}/{id}', 'verb' => 'PUT'],
-		['name' => 'objects#destroy', 'url' => 'api/objects/{objectType}/{id}', 'verb' => 'DELETE'],
-		['name' => 'objects#lock', 'url' => 'api/objects/{objectType}/{id}/lock', 'verb' => 'POST'],
-		['name' => 'objects#unlock', 'url' => 'api/objects/{objectType}/{id}/unlock', 'verb' => 'POST'],
-		['name' => 'objects#revert', 'url' => 'api/objects/{objectType}/{id}/revert', 'verb' => 'POST'],
-		['name' => 'objects#getAuditTrail', 'url' => 'api/objects/{objectType}/{id}/audit', 'verb' => 'GET'],
-		['name' => 'objects#getRelations', 'url' => 'api/objects/{objectType}/{id}/relations', 'verb' => 'GET'],
-		['name' => 'objects#getUses', 'url' => 'api/objects/{objectType}/{id}/uses', 'verb' => 'GET'],
-		['name' => 'objects#getFiles', 'url' => 'api/objects/{objectType}/{id}/files', 'verb' => 'GET'],
+		// Document API routes (via OpenRegister)
+		['name' => 'document#index', 'url' => 'api/documents', 'verb' => 'GET'],
+		['name' => 'document#create', 'url' => 'api/documents', 'verb' => 'POST'],
+		['name' => 'document#show', 'url' => 'api/documents/{id}', 'verb' => 'GET'],
+		['name' => 'document#update', 'url' => 'api/documents/{id}', 'verb' => 'PUT'],
+		['name' => 'document#destroy', 'url' => 'api/documents/{id}', 'verb' => 'DELETE'],
 		
-		// Report routes
-		['name' => 'report#index', 'url' => '/api/v1/reports', 'verb' => 'GET'],
-		['name' => 'report#create', 'url' => '/api/v1/reports', 'verb' => 'POST'],
-		['name' => 'report#show', 'url' => '/api/v1/reports/{id}', 'verb' => 'GET'],
-		['name' => 'report#update', 'url' => '/api/v1/reports/{id}', 'verb' => 'PUT'],
-		['name' => 'report#destroy', 'url' => '/api/v1/reports/{id}', 'verb' => 'DELETE'],
-		['name' => 'report#getLatestForNode', 'url' => '/api/v1/reports/node/{nodeId}', 'verb' => 'GET'],
-		['name' => 'report#process', 'url' => '/api/v1/reports/{id}/process', 'verb' => 'POST'],
+		// Anonymization routes
+		['name' => 'anonymization#anonymize', 'url' => 'api/anonymize', 'verb' => 'POST'],
+		['name' => 'anonymization#preview', 'url' => 'api/anonymize/preview', 'verb' => 'POST'],
+		['name' => 'anonymization#getRules', 'url' => 'api/anonymize/rules', 'verb' => 'GET'],
+		['name' => 'anonymization#updateRules', 'url' => 'api/anonymize/rules', 'verb' => 'PUT'],
+		
+		// Metadata routes
+		['name' => 'metadata#extract', 'url' => 'api/metadata/extract', 'verb' => 'POST'],
+		['name' => 'metadata#enhance', 'url' => 'api/metadata/enhance', 'verb' => 'POST'],
+		['name' => 'metadata#getMetadata', 'url' => 'api/metadata/{documentId}', 'verb' => 'GET'],
+		['name' => 'metadata#updateMetadata', 'url' => 'api/metadata/{documentId}', 'verb' => 'PUT'],
 	],
 ];

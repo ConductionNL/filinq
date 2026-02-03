@@ -10,22 +10,15 @@ When your organization needs to process sensitive documents - whether it's gener
 
 ## Key Features
 
-- 📄 Generate documents in multiple formats (PDF, Word, HTML, Excel)
-- ✍️ Digital document signing and verification
-- 🔒 GDPR-compliant document anonymization
-- ♿ WCAG accessibility standards compliance
-- 🔄 Batch document processing
-- 📱 Responsive document viewing
-- 🏰 100% Local document processing
-- 🤝 Seamless external system integration
-- 📋 Complete audit trail
+- 📄 Document storage and management via OpenRegister
+- 🔒 GDPR-compliant document anonymization using Presidio
+- 📊 Document metadata extraction and enhancement
+- 📝 Publication consent management (GDPR & Wet Open Overheid compliant)
+- 🔍 Entity detection and PII removal
+- 📋 Complete audit trail for compliance
 - ⚡ High performance local operations
-- 🔍 Document comparison and version tracking
-- 🏷️ AI-powered document classification
 - 🌐 Multi-language support
 - ✅ Document validation & quality control
-- ⚡ Workflow automation & process management
-- 📊 Comprehensive reporting & analytics
 
 ## Why Nextcloud?
 

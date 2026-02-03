@@ -1,38 +1,49 @@
 <?php
 /**
- * Service for anonymizing sensitive information in documents
+ * Anonymization Service
+ *
+ * Service for anonymizing sensitive information in documents.
+ * This service works with documents stored in OpenRegister and uses
+ * Presidio for entity detection and anonymization.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
- *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @author   Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * @version GIT: <git_id>
- *
- * @link https://www.DocuDesk.app
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version  GIT: <git_id>
+ * @link     https://www.DocuDesk.app
  */
+
+declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DateTime;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use OCA\DocuDesk\Service\OpenRegisterService;
+use OCA\OpenRegister\Service\DocumentService;
+use OCP\Files\Node;
+use OCP\Files\IRootFolder;
 use OCP\IConfig;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Uuid;
-use OCA\OpenRegister\Service\ObjectService;
 
 /**
  * Service for anonymizing sensitive information in documents
  *
  * This service handles the anonymization of sensitive information in documents
- * using Presidio for entity detection and replacement. Anonymization results
- * are stored directly on the report object.
+ * using Presidio for entity detection and replacement. It works with documents
+ * stored in OpenRegister and stores anonymization results on the document object.
+ *
+ * @category Service
+ * @package  OCA\DocuDesk\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
  */
 class AnonymizationService
 {
@@ -62,84 +73,86 @@ class AnonymizationService
      *
      * @var LoggerInterface
      */
-    private LoggerInterface $logger;
+    private readonly LoggerInterface $logger;
 
     /**
      * HTTP client for API requests
      *
      * @var Client
      */
-    private Client $client;
+    private readonly Client $client;
 
     /**
      * Configuration service
      *
      * @var IConfig
      */
-    private IConfig $config;
+    private readonly IConfig $config;
 
     /**
-     * Object service for storing report data
+     * OpenRegister service for document operations
      *
-     * @var ObjectService
+     * @var OpenRegisterService
      */
-    private ObjectService $objectService;
+    private readonly OpenRegisterService $openRegisterService;
 
     /**
-     * Extraction service for getting text from documents
+     * Document service from OpenRegister for word replacement
      *
-     * @var ExtractionService
+     * @var DocumentService
      */
-    private ExtractionService $extractionService;
+    private readonly DocumentService $documentService;
+
+    /**
+     * Root folder service for file operations
+     *
+     * @var IRootFolder
+     */
+    private readonly IRootFolder $rootFolder;
 
     /**
      * User session for getting current user
      *
      * @var IUserSession
      */
-    private IUserSession $userSession;
-
-    /**
-     * Reporting service for getting reports
-     *
-     * @var ReportingService
-     */
-    private ReportingService $reportingService;
+    private readonly IUserSession $userSession;
 
     /**
      * App config for getting app config
      *
      * @var IAppConfig
      */
-    private IAppConfig $appConfig;
-
+    private readonly IAppConfig $appConfig;
 
     /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface   $logger            Logger for error reporting
-     * @param IConfig           $config            Configuration service
-     * @param ObjectService     $objectService     Service for storing objects
-     * @param ExtractionService $extractionService Service for extracting text from documents
-     * @param IUserSession      $userSession       User session for getting current user
-     * @param IAppConfig        $appConfig         App configuration service
+     * @param LoggerInterface      $logger             Logger for error reporting
+     * @param IConfig              $config             Configuration service
+     * @param OpenRegisterService  $openRegisterService Service for OpenRegister operations
+     * @param DocumentService      $documentService     Document service from OpenRegister
+     * @param IRootFolder          $rootFolder         Root folder service for file operations
+     * @param IUserSession         $userSession        User session for getting current user
+     * @param IAppConfig           $appConfig          App configuration service
      *
      * @return void
      */
     public function __construct(
         LoggerInterface $logger,
         IConfig $config,
-        ObjectService $objectService,
-        ExtractionService $extractionService,
+        OpenRegisterService $openRegisterService,
+        DocumentService $documentService,
+        IRootFolder $rootFolder,
         IUserSession $userSession,
         IAppConfig $appConfig
     ) {
-        $this->logger            = $logger;
-        $this->config            = $config;
-        $this->objectService     = $objectService;
-        $this->extractionService = $extractionService;
-        $this->userSession       = $userSession;
-        $this->appConfig         = $appConfig;
+        $this->logger             = $logger;
+        $this->config             = $config;
+        $this->openRegisterService = $openRegisterService;
+        $this->documentService    = $documentService;
+        $this->rootFolder         = $rootFolder;
+        $this->userSession        = $userSession;
+        $this->appConfig          = $appConfig;
 
         // Initialize Guzzle HTTP client.
         $this->client = new Client(
@@ -151,409 +164,288 @@ class AnonymizationService
 
     }//end __construct()
 
-
     /**
-     * Set the reporting service
+     * Anonymize a document stored in OpenRegister
      *
-     * This method is used to set the reporting service after construction
-     * to avoid circular dependencies.
+     * This method retrieves a document from OpenRegister, gets its text content
+     * (which was extracted by OpenRegister), detects entities using Presidio,
+     * and creates an anonymized version of the document file.
      *
-     * @param ReportingService $reportingService Service for generating reports
+     * @param string $documentId The document ID in OpenRegister
      *
-     * @return void
-     *
-     * @psalm-return   void
-     * @phpstan-return void
-     */
-    public function setReportingService(ReportingService $reportingService): void
-    {
-        $this->reportingService = $reportingService;
-
-    }//end setReportingService()
-
-
-    /**
-     * Anonymize a Word document by replacing detected entities in the document structure
-     *
-     * @param \OCP\Files\Node $node               The file node to anonymize
-     * @param array           $processedEntities  The processed entities with replacement info
-     * @param string          $anonymizedFileName The name for the anonymized file
-     *
-     * @return \OCP\Files\File The new anonymized file node
+     * @return array<string, mixed> The updated document with anonymization results
      *
      * @throws Exception If anonymization fails
-     *
-     * @psalm-return   \OCP\Files\File
-     * @phpstan-return \OCP\Files\File
      */
-    private function anonymizeWordDocument(
-        \OCP\Files\Node $node,
-        array $processedEntities,
-        string $anonymizedFileName
-    ): \OCP\Files\File {
-        // Get the file content as a stream and save to a temp file.
-        $stream   = $node->fopen('r');
-        $tempFile = tempnam(sys_get_temp_dir(), 'docudesk_word_');
-        if ($tempFile === false) {
-            throw new Exception('Failed to create temporary file');
-        }
-
-        $tempStream = fopen($tempFile, 'w');
-        if ($tempStream === false) {
-            unlink($tempFile);
-            throw new Exception('Failed to open temporary file for writing');
-        }
-
-        stream_copy_to_stream($stream, $tempStream);
-        fclose($tempStream);
-        fclose($stream);
-
-        // Load the document.
-        $phpWord = \PhpOffice\PhpWord\IOFactory::load($tempFile);
-
-        // Helper: Replace text in all elements recursively.
-        $replaceInElements = function (array $elements, array $replacements) use (&$replaceInElements) {
-            foreach ($elements as $element) {
-                // Replace in text runs.
-                if (method_exists($element, 'getText') === true && method_exists($element, 'setText') === true) {
-                    $text = $element->getText();
-                    foreach ($replacements as $replacement) {
-                        $text = str_ireplace($replacement['originalText'], $replacement['replacementText'], $text);
-                    }
-
-                    $element->setText($text);
-                }
-
-                // Replace in tables.
-                if (method_exists($element, 'getRows') === true) {
-                    foreach ($element->getRows() as $row) {
-                        foreach ($row->getCells() as $cell) {
-                            $replaceInElements($cell->getElements(), $replacements);
-                        }
-                    }
-                }
-
-                // Replace in lists.
-                if (method_exists($element, 'getItems') === true) {
-                    foreach ($element->getItems() as $item) {
-                        $replaceInElements($item->getElements(), $replacements);
-                    }
-                }
-
-                // Replace in nested elements.
-                if (method_exists($element, 'getElements') === true) {
-                    $replaceInElements($element->getElements(), $replacements);
-                }
-            }//end foreach
-        };
-
-        // Build replacements array.
-        $replacements = [];
-        foreach ($processedEntities as $entity) {
-            $replacements[] = [
-                'originalText'    => $entity['text'],
-                'replacementText' => '['.$entity['entityType'].': '.$entity['key'].']',
-            ];
-        }
-
-        // Replace in headers.
-        foreach ($phpWord->getSections() as $section) {
-            foreach ($section->getHeaders() as $header) {
-                $replaceInElements($header->getElements(), $replacements);
-            }
-        }
-
-        // Replace in main content.
-        foreach ($phpWord->getSections() as $section) {
-            $replaceInElements($section->getElements(), $replacements);
-        }
-
-        // Replace in footers.
-        foreach ($phpWord->getSections() as $section) {
-            foreach ($section->getFooters() as $footer) {
-                $replaceInElements($footer->getElements(), $replacements);
-            }
-        }
-
-        // Save the anonymized document to a new temp file.
-        $anonymizedTempFile = tempnam(sys_get_temp_dir(), 'docudesk_word_anon_');
-        \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007')->save($anonymizedTempFile);
-
-        // Get the parent folder and create the new file.
-        $parentFolder = $node->getParent();
-        if ($parentFolder->nodeExists($anonymizedFileName) === true) {
-            $parentFolder->get($anonymizedFileName)->delete();
-        }
-
-        $anonymizedStream = fopen($anonymizedTempFile, 'r');
-        $newFile          = $parentFolder->newFile($anonymizedFileName, $anonymizedStream);
-        // Do NOT call fclose($anonymizedStream) here; Nextcloud handles the stream lifecycle internally.
-        // Clean up temp files.
-        unlink($tempFile);
-        unlink($anonymizedTempFile);
-
-        return $newFile;
-
-    }//end anonymizeWordDocument()
-
-
-    /**
-     * Process anonymization for a document based on a report
-     *
-     * This method creates an anonymized file and stores the anonymization results
-     * directly on the report object.
-     *
-     * @param \OCP\Files\Node           $node   The file node to anonymize
-     * @param array<string, mixed>|null $report The report containing detected entities (optional)
-     *
-     * @return array<string, mixed> The updated report with anonymization results
-     *
-     * @throws Exception If anonymization fails
-     *
-     * @psalm-return   array<string, mixed>
-     * @phpstan-return array<string, mixed>
-     */
-    public function processAnonymization(\OCP\Files\Node $node, ?array $report=null): array
+    public function anonymizeDocument(string $documentId): array
     {
         $startTime = microtime(true);
 
-        // Create a new file name with "_anonymized" suffix.
-        $fileName      = $node->getName();
-        $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
-        $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-
-        // If the file is already anonymized, skip processing and return report.
-        if (str_ends_with($fileNameWithoutExtension, '_anonymized') === true) {
-            $this->logger->info('Skipping anonymization for file already ending with _anonymized: '.$fileName);
-            return $report ?? [];
-        }
-
-        // If no report is provided, try to get one.
-        if ($report === null) {
-            $this->logger->debug('No report provided, trying to get existing report');
-
-            // Try to get existing report.
-            $report = $this->reportingService->getReport($node);
-
-            // If no report exists, create one.
-            if ($report === null) {
-                $this->logger->debug('No existing report found, creating new report');
-                $report = $this->reportingService->createReport($node);
+        try {
+            // Get document from OpenRegister.
+            $document = $this->openRegisterService->getDocument($documentId);
+            if ($document === null) {
+                throw new Exception('Document not found: '.$documentId);
             }
 
-            // If report is not completed, process it.
-            if ($report['status'] !== 'completed') {
-                $this->logger->debug('Report not completed, processing report');
-                $report = $this->reportingService->processReport($report);
+            // Get file node if file path is available.
+            $filePath = $document['filePath'] ?? null;
+            if ($filePath === null) {
+                throw new Exception('File path not available for document: '.$documentId);
             }
-        }
 
-        // Create a new file name with "_anonymized" suffix.
-        $anonymizedFileName = $fileNameWithoutExtension.'_anonymized';
-        if (empty($fileExtension) === false) {
-            $anonymizedFileName .= '.'.$fileExtension;
-        }
+            $node = $this->rootFolder->get($filePath);
+            if ($node->getType() !== \OCP\Files\FileInfo::TYPE_FILE) {
+                throw new Exception('Node is not a file: '.$filePath);
+            }
 
-        // Use ETag as file hash if available, otherwise calculate hash.
-        $fileHash = null;
-        if (method_exists($node, 'getEtag') === true) {
-            $fileHash = $node->getEtag();
-            $this->logger->debug('Using ETag as file hash: '.$fileHash);
-        } else {
-            // Fall back to calculating hash.
-            $fileHash = $this->reportingService->calculateFileHash($node->getPath());
-        }
+            // Get text content from OpenRegister (extracted by OpenRegister).
+            $text = $this->openRegisterService->getDocumentText($documentId);
+            if ($text === null || empty($text) === true) {
+                throw new Exception('Text content not available for document: '.$documentId);
+            }
 
-        // Initialize anonymization result if not exists or if file changed.
-        if (isset($report['anonymization']) === false 
-            || ($report['anonymization']['fileHash'] ?? null) !== $fileHash
-        ) {
-            $report['anonymization'] = [
-                'fileHash'           => $fileHash,
-                'anonymizedFileName' => '',
-                'anonymizedFilePath' => '',
-                'replacements'       => [],
-                'startTime'          => $startTime,
-                'endTime'            => null,
-                'processingTime'     => null,
-                'status'             => 'pending',
-                'message'            => '',
+            // Detect entities using Presidio.
+            $entities = $this->detectEntities($text);
+
+            // Check if anonymization is needed.
+            if (empty($entities) === true) {
+                $this->logger->info('No entities detected for anonymization in document: '.$documentId);
+
+                // Update document with anonymization status.
+                $document['anonymization'] = [
+                    'status'         => 'completed',
+                    'message'        => 'No entities detected for anonymization',
+                    'endTime'        => microtime(true),
+                    'processingTime' => microtime(true) - $startTime,
+                    'entities'       => [],
+                ];
+
+                $this->openRegisterService->updateDocument($documentId, $document);
+                return $document;
+            }
+
+            // Process anonymization using OpenRegister DocumentService.
+            $anonymizedFile = $this->documentService->anonymizeDocument($node, $entities);
+
+            // Update document with anonymization results.
+            $endTime = microtime(true);
+            $document['anonymization'] = [
+                'status'             => 'completed',
+                'message'            => 'Anonymization completed successfully',
+                'anonymizedFileName' => $anonymizedFile->getName(),
+                'anonymizedFilePath' => $anonymizedFile->getPath(),
+                'entities'           => $entities,
+                'endTime'            => $endTime,
+                'processingTime'     => $endTime - $startTime,
             ];
-        } else if ($report['anonymization']['status'] === 'completed') {
-            // Return existing anonymization if already completed and file hasn't changed.
+
+            $updatedDocument = $this->openRegisterService->updateDocument($documentId, $document);
+
             $this->logger->debug(
-                'File hash matches existing anonymization, returning cached result',
+                'Document anonymized successfully',
                 [
-                    'fileHash' => $fileHash,
-                    'reportId' => $report['id'] ?? null,
+                    'documentId' => $documentId,
+                    'entities'   => count($entities),
                 ]
             );
-            $report['anonymization']['message'] = 'File hash matches existing anonymization, returning cached result';
-            return $report;
+
+            return $updatedDocument;
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to anonymize document: '.$e->getMessage(),
+                [
+                    'documentId' => $documentId,
+                    'exception'  => $e,
+                ]
+            );
+            throw new Exception('Failed to anonymize document: '.$e->getMessage(), 0, $e);
         }
 
-        // Check if anonymization is needed (if there are entities).
-        if (empty($report['entities']) === true) {
-            $this->logger->info('No entities detected for anonymization in document: '.$node->getPath());
-
-            // Update anonymization result.
-            $report['anonymization']['status']         = 'completed';
-            $report['anonymization']['message']        = 'No entities detected for anonymization in document: '.$node->getPath();
-            $report['anonymization']['endTime']        = microtime(true);
-            $report['anonymization']['processingTime'] = $report['anonymization']['endTime'] - $startTime;
-
-            // Save the updated report.
-            // Ensure ObjectService is configured for reports before saving
-            $this->ensureReportConfiguration();
-            $this->objectService->saveObject(object: $report, uuid: $report['id'] ?? null);
-
-            return $report;
-        }
-
-        // Update anonymization status to processing.
-        $report['anonymization']['status'] = 'processing';
-
-        // Save the updated report.
-        // Ensure ObjectService is configured for reports before saving
-        $this->ensureReportConfiguration();
-        $this->objectService->saveObject(object: $report, uuid: $report['id'] ?? null);
-
-        // Process entities and find their positions in the content if not provided.
-        $processedEntities = [];
-        foreach ($report['entities'] as $entity) {
-            $entityType = $entity['entityType'] ?? 'UNKNOWN';
-            $entityText = $entity['text'] ?? '';
-            $score      = $entity['score'] ?? 0;
-            $entityKey  = $entity['key'] ?? substr(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), 0, 8);
-            $anonymize  = $entity['anonymize'] ?? true;
-            
-            if (empty($entityText) === true) {
-                continue;
-            }
-
-            // Only process entities that should be anonymized
-            if ($anonymize === true) {
-                $processedEntities[] = [
-                    'entityType' => $entityType,
-                    'text'       => $entityText,
-                    'score'      => $score,
-                    'key'        => $entityKey,
-                ];
-            }
-        }
-
-        // If the file is a Word document, anonymize using PhpWord.
-        if (in_array(strtolower($fileExtension), ['doc', 'docx'], true) === true) {
-            $newFile = $this->anonymizeWordDocument($node, $processedEntities, $anonymizedFileName);
-        } else {
-            // For other file types, use the old logic.
-            $content = $node->getContent();
-            if (empty($content) === true) {
-                throw new Exception('Failed to get content from file: '.$node->getPath());
-            }
-
-            $anonymizedContent = $content;
-            foreach ($processedEntities as $entity) {
-                $anonymizedContent = str_ireplace(
-                    $entity['text'],
-                    '['.$entity['entityType'].': '.$entity['key'].']',
-                    $anonymizedContent
-                );
-            }
-
-            $parentFolder = $node->getParent();
-            if ($parentFolder->nodeExists($anonymizedFileName) === true) {
-                $parentFolder->get($anonymizedFileName)->delete();
-            }
-
-            $newFile = $parentFolder->newFile($anonymizedFileName, $anonymizedContent);
-        }//end if
-
-        // Update anonymization object.
-        $endTime = microtime(true);
-        $report['anonymization']['status']             = 'completed';
-        $report['anonymization']['message']            = 'Anonymization completed successfully';
-        $report['anonymization']['replacements']       = $processedEntities;
-        $report['anonymization']['anonymizedFileName'] = $anonymizedFileName;
-        $report['anonymization']['anonymizedFilePath'] = $newFile->getPath();
-        $report['anonymization']['endTime']            = $endTime;
-        $report['anonymization']['processingTime']     = $endTime - $startTime;
-
-        // Save the updated report.
-        // Ensure ObjectService is configured for reports before saving
-        $this->ensureReportConfiguration();
-        $this->objectService->saveObject(object: $report, uuid: $report['id'] ?? null);
-        
-        return $report;
-
-    }//end processAnonymization()
-
+    }//end anonymizeDocument()
 
     /**
-     * Get anonymization results for a report
+     * Preview anonymization without creating an anonymized file
      *
-     * This method retrieves the anonymization data from a report object.
+     * @param string $documentId The document ID in OpenRegister
      *
-     * @param array $report The report object
+     * @return array<string, mixed> Preview data with detected entities
      *
-     * @return array<string, mixed>|null The anonymization data or null if not found
-     *
-     * @psalm-return   array<string, mixed>|null
-     * @phpstan-return array<string, mixed>|null
+     * @throws Exception If preview fails
      */
-    public function getAnonymizationFromReport(array $report): ?array
+    public function previewAnonymization(string $documentId): array
     {
-        return $report['anonymization'] ?? null;
+        try {
+            // Get text content from OpenRegister.
+            $text = $this->openRegisterService->getDocumentText($documentId);
+            if ($text === null || empty($text) === true) {
+                throw new Exception('Text content not available for document: '.$documentId);
+            }
 
-    }//end getAnonymizationFromReport()
+            // Detect entities using Presidio.
+            $entities = $this->detectEntities($text);
 
+            return [
+                'documentId' => $documentId,
+                'entities'   => $entities,
+                'count'      => count($entities),
+            ];
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to preview anonymization: '.$e->getMessage(),
+                [
+                    'documentId' => $documentId,
+                    'exception'  => $e,
+                ]
+            );
+            throw new Exception('Failed to preview anonymization: '.$e->getMessage(), 0, $e);
+        }
+
+    }//end previewAnonymization()
 
     /**
-     * Check if a report has been anonymized
+     * Detect entities in text using Presidio
      *
-     * @param array $report The report object
+     * @param string $text Text content to analyze
      *
-     * @return bool True if the report has been anonymized, false otherwise
-     *
-     * @psalm-return   bool
-     * @phpstan-return bool
+     * @return array<array<string, mixed>> Array of detected entities
      */
-    public function isReportAnonymized(array $report): bool
+    private function detectEntities(string $text): array
     {
-        $anonymization = $this->getAnonymizationFromReport($report);
-        return $anonymization !== null && ($anonymization['status'] ?? '') === 'completed';
+        try {
+            // Get Presidio analyzer URL from configuration.
+            $analyzerUrl = $this->appConfig->getValueString(
+                'docudesk',
+                'presidio_analyzer_url',
+                self::DEFAULT_PRESIDIO_ANALYZER_URL
+            );
 
-    }//end isReportAnonymized()
+            // Get confidence threshold from configuration.
+            $threshold = (float) $this->appConfig->getValueString(
+                'docudesk',
+                'presidio_confidence_threshold',
+                (string) self::DEFAULT_CONFIDENCE_THRESHOLD
+            );
+
+            // Prepare request to Presidio analyzer.
+            $requestData = [
+                'text'      => $text,
+                'language'  => 'en',
+                'entities'  => [
+                    'PERSON',
+                    'EMAIL_ADDRESS',
+                    'PHONE_NUMBER',
+                    'CREDIT_CARD',
+                    'IBAN_CODE',
+                    'IP_ADDRESS',
+                    'DATE_TIME',
+                    'LOCATION',
+                    'ORGANIZATION',
+                ],
+            ];
+
+            // Send request to Presidio analyzer.
+            $response = $this->client->post(
+                $analyzerUrl,
+                [
+                    'json'    => $requestData,
+                    'timeout' => 30,
+                ]
+            );
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            $entities     = $responseData['entities'] ?? [];
+
+            // Filter entities by confidence threshold and add keys.
+            $processedEntities = [];
+            foreach ($entities as $entity) {
+                $score = $entity['score'] ?? 0;
+                if ($score >= $threshold) {
+                    $processedEntities[] = [
+                        'entityType' => $entity['type'] ?? 'UNKNOWN',
+                        'text'       => substr($text, $entity['start'] ?? 0, ($entity['end'] ?? 0) - ($entity['start'] ?? 0)),
+                        'start'      => $entity['start'] ?? 0,
+                        'end'        => $entity['end'] ?? 0,
+                        'score'      => $score,
+                        'key'        => substr(Uuid::v4()->toRfc4122(), 0, 8),
+                    ];
+                }
+            }
+
+            return $processedEntities;
+        } catch (GuzzleException $e) {
+            $this->logger->error(
+                'Failed to detect entities using Presidio: '.$e->getMessage(),
+                [
+                    'exception' => $e,
+                ]
+            );
+            return [];
+        }
+
+    }//end detectEntities()
 
 
     /**
-     * Ensure ObjectService is configured for reports
+     * Get anonymization rules from configuration
      *
-     * This method ensures that the ObjectService is properly configured
-     * for report operations when saving reports from AnonymizationService.
+     * @return array<string, mixed> Anonymization rules configuration
+     */
+    public function getAnonymizationRules(): array
+    {
+        return [
+            'presidio_analyzer_url'         => $this->appConfig->getValueString(
+                'docudesk',
+                'presidio_analyzer_url',
+                self::DEFAULT_PRESIDIO_ANALYZER_URL
+            ),
+            'presidio_anonymizer_url'       => $this->appConfig->getValueString(
+                'docudesk',
+                'presidio_anonymizer_url',
+                self::DEFAULT_PRESIDIO_ANONYMIZER_URL
+            ),
+            'presidio_confidence_threshold' => (float) $this->appConfig->getValueString(
+                'docudesk',
+                'presidio_confidence_threshold',
+                (string) self::DEFAULT_CONFIDENCE_THRESHOLD
+            ),
+        ];
+
+    }//end getAnonymizationRules()
+
+    /**
+     * Update anonymization rules in configuration
+     *
+     * @param array<string, mixed> $rules Anonymization rules to update
      *
      * @return void
-     *
-     * @psalm-return   void
-     * @phpstan-return void
      */
-    private function ensureReportConfiguration(): void
+    public function updateAnonymizationRules(array $rules): void
     {
-        // Get report configuration from app config (same as ReportingService)
-        $reportRegisterType = $this->appConfig->getValueString('docudesk', 'report_register', 'document');
-        $reportSchemaType   = $this->appConfig->getValueString('docudesk', 'report_schema', 'report');
-        
-        // Reset ObjectService to report configuration
-        $this->objectService->setRegister($reportRegisterType);
-        $this->objectService->setSchema($reportSchemaType);
-        
-        $this->logger->debug(
-            'ObjectService configured for reports in AnonymizationService',
-            [
-                'register' => $reportRegisterType,
-                'schema'   => $reportSchemaType,
-            ]
-        );
-    }
+        if (isset($rules['presidio_analyzer_url']) === true) {
+            $this->appConfig->setValueString(
+                'docudesk',
+                'presidio_analyzer_url',
+                $rules['presidio_analyzer_url']
+            );
+        }
 
-}//end class 
+        if (isset($rules['presidio_anonymizer_url']) === true) {
+            $this->appConfig->setValueString(
+                'docudesk',
+                'presidio_anonymizer_url',
+                $rules['presidio_anonymizer_url']
+            );
+        }
+
+        if (isset($rules['presidio_confidence_threshold']) === true) {
+            $this->appConfig->setValueString(
+                'docudesk',
+                'presidio_confidence_threshold',
+                (string) $rules['presidio_confidence_threshold']
+            );
+        }
+
+    }//end updateAnonymizationRules()
+
+}//end class
