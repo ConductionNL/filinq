@@ -26,7 +26,7 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
-    <version>2.0.0</version>
+    <version>0.0.32-unstable.1</version>
     <licence>AGPL</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
