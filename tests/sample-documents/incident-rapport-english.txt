@@ -1,0 +1,53 @@
+INCIDENT REPORT
+
+Organization: European Data Protection Authority
+Reference: IR-2026-0042
+Classification: Confidential
+Date of incident: 3 February 2026
+Date of report: 5 February 2026
+Report author: Dr. Sarah Williams, Data Protection Officer
+
+1. INCIDENT SUMMARY
+
+On 3 February 2026 at approximately 14:23 CET, a data breach was detected in the customer relationship management (CRM) system of TechFlow Solutions B.V., registered at Keizersgracht 520, 1017 EJ Amsterdam, The Netherlands (Chamber of Commerce: 56789012).
+
+The breach was reported by IT Security Manager David van der Berg (employee ID: TF-2019-088, email: d.vanderberg@techflow.eu, mobile: +31 6 55 44 33 22) to the Data Protection Authority within the mandatory 72-hour window.
+
+2. AFFECTED DATA SUBJECTS
+
+The breach potentially affected 2,347 individuals. A sample of affected records includes:
+
+- Emma Johnson, Date of Birth: 15/03/1988, Email: emma.johnson@example.com, Credit Card: **** **** **** 4523 (Visa), Customer ID: CUS-00892
+- Lars Eriksson, Date of Birth: 22/11/1975, Email: l.eriksson@mail.se, IBAN: SE35 5000 0000 0549 1000 0003, Customer ID: CUS-01205
+- Marie Dubois, Date of Birth: 07/06/1992, Email: marie.dubois@orange.fr, French SSN: 2 92 06 75 108 042 36, Customer ID: CUS-01567
+- Ahmed Hassan, Date of Birth: 30/09/1985, Email: a.hassan@gmail.com, Dutch BSN: 369258147, Customer ID: CUS-01890
+- Katarina Novak, Date of Birth: 14/01/2001, Email: k.novak@seznam.cz, Phone: +420 777 888 999, Customer ID: CUS-02103
+
+3. ROOT CAUSE ANALYSIS
+
+The investigation, led by external cybersecurity consultant James O'Brien (CyberShield Consulting Ltd., 45 Baker Street, London W1U 8EW, United Kingdom, j.obrien@cybershield.co.uk), determined that:
+
+a) An SQL injection vulnerability in the customer portal (URL: https://portal.techflow.eu) was exploited.
+b) The attacker's IP address was traced to 185.234.xx.xx (anonymized), originating from a VPN service.
+c) Database administrator Natasha Volkov (employee ID: TF-2021-156) had flagged the vulnerability in a security audit report dated 15 October 2025 but remediation was delayed.
+
+4. ACTIONS TAKEN
+
+The CEO of TechFlow Solutions, Mr. Robert-Jan ter Horst (personal email: rj.terhorst@gmail.com, BSN: 741852963), has been notified and has authorized the following remediation measures:
+
+- Engagement of forensic investigators: CyberForensics GmbH, Friedrichstrasse 123, 10117 Berlin (contact: Dipl.-Ing. Klaus Weber, +49 30 1234 5678, k.weber@cyberforensics.de)
+- Notification of all affected data subjects by registered mail
+- Credit monitoring service provided through partner Experian (account manager: Patricia Santos, p.santos@experian.com)
+
+5. LEGAL COUNSEL
+
+The matter is being handled by:
+- Internal counsel: mr. Annemarie Bos (a.bos@techflow.eu, +31 20 555 0101)
+- External counsel: Advocatenkantoor De Vries & Partners, Zuidas 200, 1082 MD Amsterdam (lead partner: mr. dr. Willem de Vries, w.devries@devriespartners.nl, +31 20 678 9012)
+
+Dr. Sarah Williams
+Data Protection Officer
+European Data Protection Authority
+Rue de la Loi 175, 1048 Brussels, Belgium
+Tel: +32 2 234 5678
+Email: s.williams@edpa.europa.eu

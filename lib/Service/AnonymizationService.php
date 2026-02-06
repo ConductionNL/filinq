@@ -2,9 +2,9 @@
 /**
  * Anonymization Service
  *
- * Service for anonymizing sensitive information in documents.
- * This service works with documents stored in OpenRegister and uses
- * Presidio for entity detection and anonymization.
+ * Service for orchestrating the document anonymization pipeline:
+ * upload, text extraction with entity detection, and anonymization.
+ * Uses OpenRegister services for text extraction and entity recognition.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -20,24 +20,14 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
-use OCA\DocuDesk\Service\OpenRegisterService;
-use OCA\OpenRegister\Service\DocumentService;
-use OCP\Files\Node;
+use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
-use OCP\IConfig;
-use OCP\IAppConfig;
 use OCP\IUserSession;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Uid\Uuid;
 
 /**
- * Service for anonymizing sensitive information in documents
- *
- * This service handles the anonymization of sensitive information in documents
- * using Presidio for entity detection and replacement. It works with documents
- * stored in OpenRegister and stores anonymization results on the document object.
+ * Service for orchestrating the document anonymization pipeline
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -48,215 +38,341 @@ use Symfony\Component\Uid\Uuid;
 class AnonymizationService
 {
     /**
-     * Default Presidio API URL if not specified in configuration
-     *
-     * @var string
-     */
-    private const DEFAULT_PRESIDIO_ANALYZER_URL = 'http://presidio-api:8080/analyze';
-
-    /**
-     * Default Presidio Anonymizer API URL if not specified in configuration
-     *
-     * @var string
-     */
-    private const DEFAULT_PRESIDIO_ANONYMIZER_URL = 'http://presidio-api:8080/anonymize';
-
-    /**
-     * Default confidence threshold for entity detection
-     *
-     * @var float
-     */
-    private const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
-
-    /**
-     * Logger instance for error reporting
-     *
-     * @var LoggerInterface
-     */
-    private readonly LoggerInterface $logger;
-
-    /**
-     * HTTP client for API requests
-     *
-     * @var Client
-     */
-    private readonly Client $client;
-
-    /**
-     * Configuration service
-     *
-     * @var IConfig
-     */
-    private readonly IConfig $config;
-
-    /**
-     * OpenRegister service for document operations
-     *
-     * @var OpenRegisterService
-     */
-    private readonly OpenRegisterService $openRegisterService;
-
-    /**
-     * Document service from OpenRegister for word replacement
-     *
-     * @var DocumentService
-     */
-    private readonly DocumentService $documentService;
-
-    /**
-     * Root folder service for file operations
-     *
-     * @var IRootFolder
-     */
-    private readonly IRootFolder $rootFolder;
-
-    /**
-     * User session for getting current user
-     *
-     * @var IUserSession
-     */
-    private readonly IUserSession $userSession;
-
-    /**
-     * App config for getting app config
-     *
-     * @var IAppConfig
-     */
-    private readonly IAppConfig $appConfig;
-
-    /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface      $logger             Logger for error reporting
-     * @param IConfig              $config             Configuration service
-     * @param OpenRegisterService  $openRegisterService Service for OpenRegister operations
-     * @param DocumentService      $documentService     Document service from OpenRegister
-     * @param IRootFolder          $rootFolder         Root folder service for file operations
-     * @param IUserSession         $userSession        User session for getting current user
-     * @param IAppConfig           $appConfig          App configuration service
+     * @param LoggerInterface    $logger      Logger for error reporting
+     * @param ContainerInterface $container   Container for dependency injection
+     * @param IAppManager        $appManager  App manager interface
+     * @param IRootFolder        $rootFolder  Root folder for file operations
+     * @param IUserSession       $userSession User session for getting current user
      *
      * @return void
      */
     public function __construct(
-        LoggerInterface $logger,
-        IConfig $config,
-        OpenRegisterService $openRegisterService,
-        DocumentService $documentService,
-        IRootFolder $rootFolder,
-        IUserSession $userSession,
-        IAppConfig $appConfig
+        private readonly LoggerInterface $logger,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager,
+        private readonly IRootFolder $rootFolder,
+        private readonly IUserSession $userSession
     ) {
-        $this->logger             = $logger;
-        $this->config             = $config;
-        $this->openRegisterService = $openRegisterService;
-        $this->documentService    = $documentService;
-        $this->rootFolder         = $rootFolder;
-        $this->userSession        = $userSession;
-        $this->appConfig          = $appConfig;
-
-        // Initialize Guzzle HTTP client.
-        $this->client = new Client(
-            [
-                'timeout'         => 30,
-                'connect_timeout' => 5,
-            ]
-        );
-
     }//end __construct()
 
     /**
-     * Anonymize a document stored in OpenRegister
+     * Get the TextExtractionService from OpenRegister
      *
-     * This method retrieves a document from OpenRegister, gets its text content
-     * (which was extracted by OpenRegister), detects entities using Presidio,
-     * and creates an anonymized version of the document file.
+     * @return \OCA\OpenRegister\Service\TextExtractionService The TextExtractionService instance
      *
-     * @param string $documentId The document ID in OpenRegister
-     *
-     * @return array<string, mixed> The updated document with anonymization results
-     *
-     * @throws Exception If anonymization fails
+     * @throws \RuntimeException If OpenRegister is not available
      */
-    public function anonymizeDocument(string $documentId): array
+    private function getTextExtractionService(): \OCA\OpenRegister\Service\TextExtractionService
     {
-        $startTime = microtime(true);
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\TextExtractionService');
+        }
 
+        throw new \RuntimeException('OpenRegister TextExtractionService is not available.');
+
+    }//end getTextExtractionService()
+
+    /**
+     * Get the EntityRecognitionHandler from OpenRegister
+     *
+     * @return \OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler The handler instance
+     *
+     * @throws \RuntimeException If OpenRegister is not available
+     */
+    private function getEntityRecognitionHandler(): \OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler');
+        }
+
+        throw new \RuntimeException('OpenRegister EntityRecognitionHandler is not available.');
+
+    }//end getEntityRecognitionHandler()
+
+    /**
+     * Get the FileService from OpenRegister
+     *
+     * @return \OCA\OpenRegister\Service\FileService The FileService instance
+     *
+     * @throws \RuntimeException If OpenRegister is not available
+     */
+    private function getFileService(): \OCA\OpenRegister\Service\FileService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\FileService');
+        }
+
+        throw new \RuntimeException('OpenRegister FileService is not available.');
+
+    }//end getFileService()
+
+    /**
+     * Get the EntityRelationMapper from OpenRegister
+     *
+     * @return \OCA\OpenRegister\Db\EntityRelationMapper The mapper instance
+     *
+     * @throws \RuntimeException If OpenRegister is not available
+     */
+    private function getEntityRelationMapper(): \OCA\OpenRegister\Db\EntityRelationMapper
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Db\EntityRelationMapper');
+        }
+
+        throw new \RuntimeException('OpenRegister EntityRelationMapper is not available.');
+
+    }//end getEntityRelationMapper()
+
+    /**
+     * Get the current user ID
+     *
+     * @return string The current user ID
+     *
+     * @throws Exception If no user is logged in
+     */
+    private function getCurrentUserId(): string
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            throw new Exception('No user is currently logged in.');
+        }
+
+        return $user->getUID();
+
+    }//end getCurrentUserId()
+
+    /**
+     * Upload a file to the user's DocuDesk folder
+     *
+     * Creates the DocuDesk subfolder in the user's files if it doesn't exist,
+     * then writes the file content to it.
+     *
+     * @param string $fileName    The name of the file to upload
+     * @param string $fileContent The raw file content
+     *
+     * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
+     *
+     * @throws Exception If the upload fails
+     */
+    public function uploadFile(string $fileName, string $fileContent): array
+    {
         try {
-            // Get document from OpenRegister.
-            $document = $this->openRegisterService->getDocument($documentId);
-            if ($document === null) {
-                throw new Exception('Document not found: '.$documentId);
+            $userId = $this->getCurrentUserId();
+            $userFolder = $this->rootFolder->getUserFolder($userId);
+
+            // Create DocuDesk subfolder if it doesn't exist.
+            if ($userFolder->nodeExists('DocuDesk') === false) {
+                $userFolder->newFolder('DocuDesk');
             }
 
-            // Get file node if file path is available.
-            $filePath = $document['filePath'] ?? null;
-            if ($filePath === null) {
-                throw new Exception('File path not available for document: '.$documentId);
+            $docuDeskFolder = $userFolder->get('DocuDesk');
+
+            // Handle duplicate file names by appending a number.
+            $targetName = $fileName;
+            $counter = 1;
+            while ($docuDeskFolder->nodeExists($targetName) === true) {
+                $pathInfo = pathinfo($fileName);
+                $baseName = $pathInfo['filename'];
+                $extension = isset($pathInfo['extension']) === true ? '.'.$pathInfo['extension'] : '';
+                $targetName = $baseName.'_'.$counter.$extension;
+                $counter++;
             }
 
-            $node = $this->rootFolder->get($filePath);
-            if ($node->getType() !== \OCP\Files\FileInfo::TYPE_FILE) {
-                throw new Exception('Node is not a file: '.$filePath);
-            }
+            $file = $docuDeskFolder->newFile($targetName, $fileContent);
 
-            // Get text content from OpenRegister (extracted by OpenRegister).
-            $text = $this->openRegisterService->getDocumentText($documentId);
-            if ($text === null || empty($text) === true) {
-                throw new Exception('Text content not available for document: '.$documentId);
-            }
-
-            // Detect entities using Presidio.
-            $entities = $this->detectEntities($text);
-
-            // Check if anonymization is needed.
-            if (empty($entities) === true) {
-                $this->logger->info('No entities detected for anonymization in document: '.$documentId);
-
-                // Update document with anonymization status.
-                $document['anonymization'] = [
-                    'status'         => 'completed',
-                    'message'        => 'No entities detected for anonymization',
-                    'endTime'        => microtime(true),
-                    'processingTime' => microtime(true) - $startTime,
-                    'entities'       => [],
-                ];
-
-                $this->openRegisterService->updateDocument($documentId, $document);
-                return $document;
-            }
-
-            // Process anonymization using OpenRegister DocumentService.
-            $anonymizedFile = $this->documentService->anonymizeDocument($node, $entities);
-
-            // Update document with anonymization results.
-            $endTime = microtime(true);
-            $document['anonymization'] = [
-                'status'             => 'completed',
-                'message'            => 'Anonymization completed successfully',
-                'anonymizedFileName' => $anonymizedFile->getName(),
-                'anonymizedFilePath' => $anonymizedFile->getPath(),
-                'entities'           => $entities,
-                'endTime'            => $endTime,
-                'processingTime'     => $endTime - $startTime,
-            ];
-
-            $updatedDocument = $this->openRegisterService->updateDocument($documentId, $document);
-
-            $this->logger->debug(
-                'Document anonymized successfully',
+            $this->logger->info(
+                'File uploaded to DocuDesk folder',
                 [
-                    'documentId' => $documentId,
-                    'entities'   => count($entities),
+                    'userId'   => $userId,
+                    'fileName' => $targetName,
+                    'fileId'   => $file->getId(),
                 ]
             );
 
-            return $updatedDocument;
+            return [
+                'fileId'   => $file->getId(),
+                'filePath' => $file->getPath(),
+                'fileName' => $targetName,
+                'fileSize' => $file->getSize(),
+            ];
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to upload file: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            throw new Exception('Failed to upload file: '.$e->getMessage(), 0, $e);
+        }
+
+    }//end uploadFile()
+
+    /**
+     * Extract text from a file and detect entities
+     *
+     * Uses OpenRegister's TextExtractionService to extract text,
+     * EntityRecognitionHandler to detect entities, and EntityRelationMapper
+     * to retrieve the full entity details.
+     *
+     * @param int $fileId The Nextcloud file ID
+     *
+     * @return array<string, mixed> Extraction result with entities, entityCount, chunksProcessed
+     *
+     * @throws Exception If extraction or detection fails
+     */
+    public function extractAndDetectEntities(int $fileId): array
+    {
+        try {
+            // Step 1: Extract text from the file.
+            $textExtractionService = $this->getTextExtractionService();
+            $extractionResult = $textExtractionService->extractFile($fileId, true);
+
+            $this->logger->debug(
+                'Text extracted from file',
+                [
+                    'fileId' => $fileId,
+                    'result' => is_array($extractionResult) === true ? array_keys($extractionResult) : 'non-array',
+                ]
+            );
+
+            // Step 2: Run entity recognition on the extracted chunks.
+            // Use 'presidio' method explicitly since 'hybrid' only uses regex.
+            $entityRecognitionHandler = $this->getEntityRecognitionHandler();
+            $recognitionResult = $entityRecognitionHandler->processSourceChunks('file', $fileId, [
+                'method' => 'presidio',
+            ]);
+
+            $this->logger->debug(
+                'Entity recognition completed',
+                [
+                    'fileId' => $fileId,
+                    'result' => is_array($recognitionResult) === true ? count($recognitionResult) : 'non-array',
+                ]
+            );
+
+            // Step 3: Retrieve full entity details.
+            $entityRelationMapper = $this->getEntityRelationMapper();
+            $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+            // Normalize entity data to a consistent format.
+            $normalizedEntities = [];
+            foreach ($entities as $entity) {
+                $entityData = is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true
+                    ? $entity->jsonSerialize()
+                    : (array) $entity;
+
+                $normalizedEntities[] = [
+                    'type'       => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',
+                    'value'      => $entityData['entity_value'] ?? $entityData['entityValue'] ?? '',
+                    'confidence' => $entityData['confidence'] ?? 0.0,
+                ];
+            }
+
+            return [
+                'entities'        => $normalizedEntities,
+                'entityCount'     => count($normalizedEntities),
+                'chunksProcessed' => is_array($recognitionResult) === true ? count($recognitionResult) : 0,
+            ];
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to extract and detect entities: '.$e->getMessage(),
+                [
+                    'fileId'    => $fileId,
+                    'exception' => $e,
+                ]
+            );
+            throw new Exception('Failed to extract and detect entities: '.$e->getMessage(), 0, $e);
+        }
+
+    }//end extractAndDetectEntities()
+
+    /**
+     * Anonymize entities in a document
+     *
+     * Maps entities to the format expected by OpenRegister's FileService
+     * and calls anonymizeDocument to create an anonymized copy.
+     *
+     * @param int                    $fileId   The Nextcloud file ID
+     * @param array<array<string, mixed>> $entities The entities to anonymize
+     *
+     * @return array<string, mixed> Anonymization result with anonymizedFileId, anonymizedFileName, etc.
+     *
+     * @throws Exception If anonymization fails
+     */
+    public function anonymizeDocument(int $fileId, array $entities): array
+    {
+        try {
+            $fileService = $this->getFileService();
+
+            // Get the file node.
+            $node = $fileService->getFileById($fileId);
+
+            // Map entities to the format expected by OpenRegister's anonymizeDocument.
+            // All text values must be strings to avoid str_ireplace() type errors
+            // in OpenRegister's DocumentProcessingHandler (PHP casts numeric string
+            // array keys to integers, causing TypeError).
+            $mappedEntities = [];
+            $seen = [];
+            foreach ($entities as $entity) {
+                $text = (string) ($entity['value'] ?? $entity['text'] ?? '');
+
+                // Skip empty, very short, or purely numeric values.
+                // Numeric strings like "2026" or "0" cause PHP array key type coercion.
+                if ($text === '' || strlen($text) < 3 || is_numeric($text) === true) {
+                    continue;
+                }
+
+                // Skip duplicate entity values.
+                if (isset($seen[$text]) === true) {
+                    continue;
+                }
+                $seen[$text] = true;
+
+                $mappedEntities[] = [
+                    'text'       => $text,
+                    'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
+                    'key'        => $this->generateUuid(),
+                ];
+            }
+
+            // Call the anonymization.
+            $result = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            $this->logger->info(
+                'Document anonymized',
+                [
+                    'fileId'       => $fileId,
+                    'entityCount'  => count($mappedEntities),
+                ]
+            );
+
+            // Extract result information.
+            $anonymizedFileId   = null;
+            $anonymizedFileName = null;
+            $anonymizedFilePath = null;
+
+            if (is_object($result) === true && method_exists($result, 'getId') === true) {
+                $anonymizedFileId   = $result->getId();
+                $anonymizedFileName = $result->getName();
+                $anonymizedFilePath = $result->getPath();
+            } elseif (is_array($result) === true) {
+                $anonymizedFileId   = $result['fileId'] ?? $result['id'] ?? null;
+                $anonymizedFileName = $result['fileName'] ?? $result['name'] ?? null;
+                $anonymizedFilePath = $result['filePath'] ?? $result['path'] ?? null;
+            }
+
+            return [
+                'anonymizedFileId'   => $anonymizedFileId,
+                'anonymizedFileName' => $anonymizedFileName,
+                'anonymizedFilePath' => $anonymizedFilePath,
+                'replacementCount'   => count($mappedEntities),
+            ];
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
                 [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
+                    'fileId'    => $fileId,
+                    'exception' => $e,
                 ]
             );
             throw new Exception('Failed to anonymize document: '.$e->getMessage(), 0, $e);
@@ -265,187 +381,18 @@ class AnonymizationService
     }//end anonymizeDocument()
 
     /**
-     * Preview anonymization without creating an anonymized file
+     * Generate a UUID v4 string
      *
-     * @param string $documentId The document ID in OpenRegister
-     *
-     * @return array<string, mixed> Preview data with detected entities
-     *
-     * @throws Exception If preview fails
+     * @return string A UUID v4 string
      */
-    public function previewAnonymization(string $documentId): array
+    private function generateUuid(): string
     {
-        try {
-            // Get text content from OpenRegister.
-            $text = $this->openRegisterService->getDocumentText($documentId);
-            if ($text === null || empty($text) === true) {
-                throw new Exception('Text content not available for document: '.$documentId);
-            }
+        $data = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
 
-            // Detect entities using Presidio.
-            $entities = $this->detectEntities($text);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
-            return [
-                'documentId' => $documentId,
-                'entities'   => $entities,
-                'count'      => count($entities),
-            ];
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to preview anonymization: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
-            );
-            throw new Exception('Failed to preview anonymization: '.$e->getMessage(), 0, $e);
-        }
-
-    }//end previewAnonymization()
-
-    /**
-     * Detect entities in text using Presidio
-     *
-     * @param string $text Text content to analyze
-     *
-     * @return array<array<string, mixed>> Array of detected entities
-     */
-    private function detectEntities(string $text): array
-    {
-        try {
-            // Get Presidio analyzer URL from configuration.
-            $analyzerUrl = $this->appConfig->getValueString(
-                'docudesk',
-                'presidio_analyzer_url',
-                self::DEFAULT_PRESIDIO_ANALYZER_URL
-            );
-
-            // Get confidence threshold from configuration.
-            $threshold = (float) $this->appConfig->getValueString(
-                'docudesk',
-                'presidio_confidence_threshold',
-                (string) self::DEFAULT_CONFIDENCE_THRESHOLD
-            );
-
-            // Prepare request to Presidio analyzer.
-            $requestData = [
-                'text'      => $text,
-                'language'  => 'en',
-                'entities'  => [
-                    'PERSON',
-                    'EMAIL_ADDRESS',
-                    'PHONE_NUMBER',
-                    'CREDIT_CARD',
-                    'IBAN_CODE',
-                    'IP_ADDRESS',
-                    'DATE_TIME',
-                    'LOCATION',
-                    'ORGANIZATION',
-                ],
-            ];
-
-            // Send request to Presidio analyzer.
-            $response = $this->client->post(
-                $analyzerUrl,
-                [
-                    'json'    => $requestData,
-                    'timeout' => 30,
-                ]
-            );
-
-            $responseData = json_decode($response->getBody()->getContents(), true);
-            $entities     = $responseData['entities'] ?? [];
-
-            // Filter entities by confidence threshold and add keys.
-            $processedEntities = [];
-            foreach ($entities as $entity) {
-                $score = $entity['score'] ?? 0;
-                if ($score >= $threshold) {
-                    $processedEntities[] = [
-                        'entityType' => $entity['type'] ?? 'UNKNOWN',
-                        'text'       => substr($text, $entity['start'] ?? 0, ($entity['end'] ?? 0) - ($entity['start'] ?? 0)),
-                        'start'      => $entity['start'] ?? 0,
-                        'end'        => $entity['end'] ?? 0,
-                        'score'      => $score,
-                        'key'        => substr(Uuid::v4()->toRfc4122(), 0, 8),
-                    ];
-                }
-            }
-
-            return $processedEntities;
-        } catch (GuzzleException $e) {
-            $this->logger->error(
-                'Failed to detect entities using Presidio: '.$e->getMessage(),
-                [
-                    'exception' => $e,
-                ]
-            );
-            return [];
-        }
-
-    }//end detectEntities()
-
-
-    /**
-     * Get anonymization rules from configuration
-     *
-     * @return array<string, mixed> Anonymization rules configuration
-     */
-    public function getAnonymizationRules(): array
-    {
-        return [
-            'presidio_analyzer_url'         => $this->appConfig->getValueString(
-                'docudesk',
-                'presidio_analyzer_url',
-                self::DEFAULT_PRESIDIO_ANALYZER_URL
-            ),
-            'presidio_anonymizer_url'       => $this->appConfig->getValueString(
-                'docudesk',
-                'presidio_anonymizer_url',
-                self::DEFAULT_PRESIDIO_ANONYMIZER_URL
-            ),
-            'presidio_confidence_threshold' => (float) $this->appConfig->getValueString(
-                'docudesk',
-                'presidio_confidence_threshold',
-                (string) self::DEFAULT_CONFIDENCE_THRESHOLD
-            ),
-        ];
-
-    }//end getAnonymizationRules()
-
-    /**
-     * Update anonymization rules in configuration
-     *
-     * @param array<string, mixed> $rules Anonymization rules to update
-     *
-     * @return void
-     */
-    public function updateAnonymizationRules(array $rules): void
-    {
-        if (isset($rules['presidio_analyzer_url']) === true) {
-            $this->appConfig->setValueString(
-                'docudesk',
-                'presidio_analyzer_url',
-                $rules['presidio_analyzer_url']
-            );
-        }
-
-        if (isset($rules['presidio_anonymizer_url']) === true) {
-            $this->appConfig->setValueString(
-                'docudesk',
-                'presidio_anonymizer_url',
-                $rules['presidio_anonymizer_url']
-            );
-        }
-
-        if (isset($rules['presidio_confidence_threshold']) === true) {
-            $this->appConfig->setValueString(
-                'docudesk',
-                'presidio_confidence_threshold',
-                (string) $rules['presidio_confidence_threshold']
-            );
-        }
-
-    }//end updateAnonymizationRules()
+    }//end generateUuid()
 
 }//end class

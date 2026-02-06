@@ -20,6 +20,10 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'settings.js'),
 		filename: appId + '-settings.js',
 	},
+	dashboard: {
+		import: path.join(__dirname, 'src', 'dashboard.js'),
+		filename: appId + '-dashboard.js',
+	},
 }
 
 module.exports = webpackConfig

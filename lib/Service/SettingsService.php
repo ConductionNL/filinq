@@ -30,10 +30,6 @@ use OCA\OpenRegister\Service\RegisterService;
 /**
  * Service for handling settings-related operations in DocuDesk
  *
- * Provides functionality for retrieving, saving, and loading settings,
- * as well as managing configuration for different object types and
- * OpenRegister integration.
- *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
@@ -66,11 +62,11 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config        App configuration interface
-     * @param IRequest           $request       Request interface
-     * @param ContainerInterface $container     Container for dependency injection
-     * @param IAppManager        $appManager    App manager interface
-     * @param LoggerInterface    $logger        Logger interface
+     * @param IAppConfig         $config          App configuration interface
+     * @param IRequest           $request         Request interface
+     * @param ContainerInterface $container       Container for dependency injection
+     * @param IAppManager        $appManager      App manager interface
+     * @param LoggerInterface    $logger          Logger interface
      * @param RegisterService    $registerService Register service for getting registers
      *
      * @return void
@@ -269,9 +265,6 @@ class SettingsService
         // Initialize the data array.
         $data = [];
         $data['objectTypes']        = [
-            'document',
-            'anonymization',
-            'metadata',
             'publicationConsent',
         ];
         $data['openRegisters']      = false;
@@ -298,12 +291,11 @@ class SettingsService
                     $data['availableRegisters'] = array_map(
                         function ($register) {
                             $registerArray = $register->jsonSerialize();
-                            
+
                             // Filter schemas to remove properties field for cleaner response.
                             if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
                                 $registerArray['schemas'] = array_map(
                                     function ($schema) {
-                                        // Keep only essential schema fields, remove properties.
                                         if (is_array($schema) === true) {
                                             return array_filter(
                                                 $schema,
@@ -325,7 +317,6 @@ class SettingsService
                         $rawRegisters
                     );
                 } catch (\TypeError $e) {
-                    // Handle OpenRegister internal errors.
                     $this->logger->warning(
                         'OpenRegister internal error - using empty registers list',
                         [
@@ -336,7 +327,6 @@ class SettingsService
                     );
                     $data['availableRegisters'] = [];
                 } catch (Exception $e) {
-                    // Handle any other OpenRegister errors.
                     $this->logger->warning(
                         'OpenRegister findAll() failed - using empty registers list',
                         [
@@ -349,7 +339,6 @@ class SettingsService
                 }
             }
         } catch (\RuntimeException $e) {
-            // Service not available, continue with default values.
             $this->logger->info(
                 'OpenRegister service not available',
                 [
@@ -361,10 +350,9 @@ class SettingsService
         // Build defaults array dynamically based on object types.
         $defaults = [];
         foreach ($data['objectTypes'] as $type) {
-            // Always use openregister as source.
             $defaults["{$type}_source"]   = 'openregister';
             $defaults["{$type}_schema"]   = '';
-            $defaults["{$type}_register"] = 'document';
+            $defaults["{$type}_register"] = '';
         }
 
         // Get the current values for the object types from the configuration.
@@ -373,29 +361,27 @@ class SettingsService
                 $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
             }
 
-            // Get DocuDesk-specific configuration from its own config.
-            $data['document_register'] = $this->config->getValueString($this->appName, 'document_register', 'document');
-            $data['document_schema']   = $this->config->getValueString($this->appName, 'document_schema', 'document');
-            $data['presidio_analyzer_url']         = $this->config->getValueString(
-                $this->appName,
-                'presidio_analyzer_url',
-                'http://presidio-api:8080/analyze'
-            );
-            $data['presidio_anonymizer_url']       = $this->config->getValueString(
-                $this->appName,
-                'presidio_anonymizer_url',
-                'http://presidio-api:8080/anonymize'
-            );
-            $data['presidio_confidence_threshold'] = (float) $this->config->getValueString(
-                $this->appName,
-                'presidio_confidence_threshold',
-                '0.7'
-            );
+            // Get DocuDesk-specific consent and metadata settings.
             $data['publication_objection_period_days'] = (int) $this->config->getValueString(
                 $this->appName,
                 'publication_objection_period_days',
                 '28'
             );
+            $data['enable_language_detection'] = $this->config->getValueString(
+                $this->appName,
+                'enable_language_detection',
+                '1'
+            ) === '1';
+            $data['enable_keyword_extraction'] = $this->config->getValueString(
+                $this->appName,
+                'enable_keyword_extraction',
+                '1'
+            ) === '1';
+            $data['enable_topic_classification'] = $this->config->getValueString(
+                $this->appName,
+                'enable_topic_classification',
+                '1'
+            ) === '1';
 
             return $data;
         } catch (Exception $e) {
@@ -433,12 +419,10 @@ class SettingsService
                 if (is_array($value) === true || is_object($value) === true) {
                     $stringValue = json_encode($value);
                 } else {
-                    // Ensure value is converted to string as required by setValueString.
                     $stringValue = is_string($value) === true ? $value : (string) $value;
                 }
 
                 $this->config->setValueString($this->appName, $key, $stringValue);
-                // Retrieve the updated value to confirm the change.
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }
 

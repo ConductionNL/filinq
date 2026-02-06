@@ -7,28 +7,29 @@ import { navigationStore } from '../store/store.js'
 	<NcAppContent>
 		<template #default>
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
-			<AnonymizationIndex v-if="navigationStore.selected === 'anonymization'" />
+			<ConsentIndex v-if="navigationStore.selected === 'consent'" />
+			<ConsentDetail v-if="navigationStore.selected === 'consentDetail'" />
+			<AnonymizationWidget v-if="navigationStore.selected === 'anonymization'" />
 		</template>
 	</NcAppContent>
 </template>
 
 <script>
-/**
- * Main view component that handles routing between different views based on navigation selection
- * Uses the navigationStore to determine which view to display
- */
 import { NcAppContent } from '@nextcloud/vue'
 
-// View components
 import Dashboard from './dashboard/DashboardIndex.vue'
-import AnonymizationIndex from './anonymization/AnonymizationIndex.vue'
+import ConsentIndex from './consent/ConsentIndex.vue'
+import ConsentDetail from './consent/ConsentDetail.vue'
+import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
 
 export default {
 	name: 'Views',
 	components: {
 		NcAppContent,
 		Dashboard,
-		AnonymizationIndex,
+		ConsentIndex,
+		ConsentDetail,
+		AnonymizationWidget,
 	},
 }
 </script>
