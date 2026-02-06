@@ -3,20 +3,20 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>docudesk</id>
     <name>DocuDesk</name>
-    <summary>Document anonymization and metadata enhancement for Nextcloud</summary>
-    <description><![CDATA[Document anonymization and metadata enhancement app for Nextcloud
+    <summary>GDPR publication consent management and document metadata enrichment for Nextcloud</summary>
+    <description><![CDATA[GDPR publication consent management and document metadata enrichment for Nextcloud
 
-DocuDesk provides services for anonymizing documents and enhancing metadata in a GDPR-compliant manner. It integrates with OpenRegister for document storage and text extraction.
+DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid) and automatic document metadata enrichment. It integrates with Open Register via events to enrich documents as they are created and updated.
 
 ## Key Features
 
-- 🔒 GDPR-compliant document anonymization using Presidio
-- 📊 Document metadata extraction and enhancement
-- 🔍 Entity detection and PII removal
-- 📝 Configurable anonymization rules
-- 🔄 Integration with OpenRegister for document storage
+- GDPR publication consent tracking with configurable objection periods
+- Wet Open Overheid compliance (minimum 4-week objection period)
+- Automatic language detection for documents
+- Keyword extraction and topic classification
+- Event-driven integration with Open Register
 
-**OpenRegister is required for this app to work**
+**Open Register is required for this app to work**
 
 Requirements can be found [here](https://conduction.gitbook.io/docudesk-nextcloud/installatie)
 
@@ -26,7 +26,7 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <licence>AGPL</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>

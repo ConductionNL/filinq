@@ -3,9 +3,9 @@
  * Metadata Service
  *
  * Service for extracting, enhancing, and managing document metadata.
- * This service works with documents stored in OpenRegister and provides
- * functionality to extract metadata from document objects and enhance
- * them with additional information.
+ * This service works with documents stored in OpenRegister via ObjectService
+ * and provides functionality to extract metadata from document objects and
+ * enhance them with additional information.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -21,8 +21,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\OpenRegisterService;
-use OCP\Files\Node;
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
  *
  * This service provides methods to extract metadata from documents,
  * enrich metadata with additional information, and standardize metadata
- * formats. It works with documents stored in OpenRegister.
+ * formats. It works with documents stored in OpenRegister via ObjectService.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -41,159 +41,113 @@ use Psr\Log\LoggerInterface;
 class MetadataService
 {
     /**
-     * Logger instance for error reporting
-     *
-     * @var LoggerInterface
-     */
-    private readonly LoggerInterface $logger;
-
-    /**
-     * OpenRegister service for document operations
-     *
-     * @var OpenRegisterService
-     */
-    private readonly OpenRegisterService $openRegisterService;
-
-    /**
      * Constructor for MetadataService
      *
-     * @param LoggerInterface      $logger             Logger for error reporting
-     * @param OpenRegisterService $openRegisterService Service for OpenRegister operations
+     * @param LoggerInterface    $logger     Logger for error reporting
+     * @param ContainerInterface $container  Container for dependency injection
+     * @param IAppManager        $appManager App manager interface
      *
      * @return void
      */
     public function __construct(
-        LoggerInterface $logger,
-        OpenRegisterService $openRegisterService
+        private readonly LoggerInterface $logger,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager
     ) {
-        $this->logger             = $logger;
-        $this->openRegisterService = $openRegisterService;
-
     }//end __construct()
 
     /**
-     * Extract metadata from a document stored in OpenRegister
+     * Get the ObjectService from OpenRegister
      *
-     * This method retrieves a document from OpenRegister and extracts
-     * metadata from it. OpenRegister handles text extraction, so this
-     * method focuses on extracting structured metadata.
+     * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
      *
-     * @param string $documentId The document ID in OpenRegister
-     *
-     * @return array<string, mixed> Extracted metadata
-     *
-     * @throws Exception If metadata extraction fails
+     * @throws \RuntimeException If OpenRegister is not available
      */
-    public function extractMetadata(string $documentId): array
+    private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
-        try {
-            $document = $this->openRegisterService->getDocument($documentId);
-            if ($document === null) {
-                throw new Exception('Document not found: '.$documentId);
-            }
-
-            // Extract basic metadata from document object.
-            $metadata = [
-                'documentId'    => $document['id'] ?? null,
-                'title'         => $document['title'] ?? $document['name'] ?? null,
-                'author'        => $document['author'] ?? null,
-                'created'       => $document['created'] ?? null,
-                'modified'      => $document['modified'] ?? null,
-                'documentType'  => $document['documentType'] ?? $document['type'] ?? null,
-                'mimeType'      => $document['mimeType'] ?? null,
-                'fileSize'      => $document['fileSize'] ?? null,
-                'fileName'      => $document['fileName'] ?? null,
-                'filePath'      => $document['filePath'] ?? null,
-            ];
-
-            // Extract additional metadata if available.
-            if (isset($document['metadata']) === true && is_array($document['metadata']) === true) {
-                $metadata = array_merge($metadata, $document['metadata']);
-            }
-
-            // Extract language if available.
-            if (isset($document['language']) === true) {
-                $metadata['language'] = $document['language'];
-            }
-
-            // Extract keywords if available.
-            if (isset($document['keywords']) === true) {
-                $metadata['keywords'] = is_array($document['keywords']) === true
-                    ? $document['keywords']
-                    : explode(',', $document['keywords']);
-            }
-
-            $this->logger->debug(
-                'Metadata extracted from document',
-                [
-                    'documentId' => $documentId,
-                    'metadata'   => $metadata,
-                ]
-            );
-
-            return $metadata;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to extract metadata: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
-            );
-            throw new Exception('Failed to extract metadata: '.$e->getMessage(), 0, $e);
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-    }//end extractMetadata()
+        throw new \RuntimeException('OpenRegister service is not available.');
+
+    }//end getObjectService()
 
     /**
-     * Enhance metadata with additional information
+     * Enhance metadata for a document object
      *
      * This method enriches existing metadata with additional information
      * such as language detection, topic classification, and keyword extraction.
+     * Accepts object data directly rather than looking up via a service.
      *
-     * @param string               $documentId The document ID
-     * @param array<string, mixed> $metadata   Existing metadata to enhance
+     * @param array<string, mixed> $objectData The document object data from OpenRegister
      *
-     * @return array<string, mixed> Enhanced metadata
+     * @return array<string, mixed> Enhanced metadata fields
      *
      * @throws Exception If metadata enhancement fails
      */
-    public function enhanceMetadata(string $documentId, array $metadata): array
+    public function enhanceMetadata(array $objectData): array
     {
         try {
-            // Get document text for analysis.
-            $text = $this->openRegisterService->getDocumentText($documentId);
+            $metadata = [];
 
-            // Enhance with language detection if text is available.
-            if ($text !== null && empty($text) === false) {
-                if (isset($metadata['language']) === false || empty($metadata['language']) === true) {
-                    $metadata['language'] = $this->detectLanguage($text);
+            // Get text content from object for analysis.
+            $text = $objectData['content'] ?? $objectData['text'] ?? $objectData['description'] ?? '';
+
+            if (is_string($text) === true && empty($text) === false) {
+                // Detect language if not already present.
+                if (isset($objectData['language']) === false || empty($objectData['language']) === true) {
+                    $detected = $this->detectLanguage($text);
+                    if ($detected !== null) {
+                        $metadata['language'] = $detected;
+                    }
                 }
 
                 // Extract keywords if not already present.
-                if (isset($metadata['keywords']) === false || empty($metadata['keywords']) === true) {
-                    $metadata['keywords'] = $this->extractKeywords($text);
+                if (isset($objectData['keywords']) === false || empty($objectData['keywords']) === true) {
+                    $keywords = $this->extractKeywords($text);
+                    if (empty($keywords) === false) {
+                        $metadata['keywords'] = $keywords;
+                    }
                 }
 
                 // Classify document topic if not already present.
-                if (isset($metadata['topic']) === false || empty($metadata['topic']) === true) {
-                    $metadata['topic'] = $this->classifyTopic($text);
+                if (isset($objectData['topic']) === false || empty($objectData['topic']) === true) {
+                    $topic = $this->classifyTopic($text);
+                    if ($topic !== null) {
+                        $metadata['topic'] = $topic;
+                    }
                 }
             }
 
-            // Normalize dates.
-            $metadata = $this->normalizeDates($metadata);
+            // Standardize document type if present.
+            if (isset($objectData['documentType']) === true && empty($objectData['documentType']) === false) {
+                $metadata['documentType'] = $this->standardizeDocumentType($objectData['documentType']);
+            }
 
-            // Standardize document type.
-            if (isset($metadata['documentType']) === true) {
-                $metadata['documentType'] = $this->standardizeDocumentType($metadata['documentType']);
+            // Normalize dates in object data.
+            $dateFields = ['created', 'modified', 'date', 'creationDate', 'modificationDate'];
+            foreach ($dateFields as $field) {
+                if (isset($objectData[$field]) === true && empty($objectData[$field]) === false) {
+                    try {
+                        $date = new \DateTime($objectData[$field]);
+                        $metadata[$field] = $date->format('c');
+                    } catch (Exception $e) {
+                        $this->logger->debug(
+                            'Failed to normalize date field: '.$field,
+                            [
+                                'value'     => $objectData[$field],
+                                'exception' => $e,
+                            ]
+                        );
+                    }
+                }
             }
 
             $this->logger->debug(
-                'Metadata enhanced for document',
+                'Metadata enhanced for document object',
                 [
-                    'documentId' => $documentId,
-                    'metadata'   => $metadata,
+                    'enhancedFields' => array_keys($metadata),
                 ]
             );
 
@@ -202,8 +156,7 @@ class MetadataService
             $this->logger->error(
                 'Failed to enhance metadata: '.$e->getMessage(),
                 [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
+                    'exception' => $e,
                 ]
             );
             throw new Exception('Failed to enhance metadata: '.$e->getMessage(), 0, $e);
@@ -212,49 +165,69 @@ class MetadataService
     }//end enhanceMetadata()
 
     /**
-     * Update document metadata in OpenRegister
+     * Enrich a document object with metadata and save it back via ObjectService
      *
-     * @param string               $documentId The document ID
-     * @param array<string, mixed> $metadata   Metadata to update
+     * @param string               $objectId The object UUID in OpenRegister
+     * @param string               $register The register ID
+     * @param string               $schema   The schema ID
+     * @param array<string, mixed> $metadata The metadata to merge into the object
      *
-     * @return array<string, mixed> Updated document object
+     * @return array<string, mixed> Updated object data
      *
-     * @throws Exception If metadata update fails
+     * @throws Exception If saving fails
      */
-    public function updateMetadata(string $documentId, array $metadata): array
+    public function saveEnrichedMetadata(string $objectId, string $register, string $schema, array $metadata): array
     {
         try {
-            $document = $this->openRegisterService->getDocument($documentId);
-            if ($document === null) {
-                throw new Exception('Document not found: '.$documentId);
+            $objectService = $this->getObjectService();
+
+            // Find the existing object.
+            $object = $objectService->find(
+                id: $objectId,
+                register: $register,
+                schema: $schema,
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            if ($object === null) {
+                throw new Exception('Object not found: '.$objectId);
             }
 
-            // Merge metadata into document.
-            $document = array_merge($document, $metadata);
+            // Merge metadata into object data.
+            $objectData = $object->getObject();
+            $objectData = array_merge($objectData, $metadata);
 
-            // Update document in OpenRegister.
-            $updatedDocument = $this->openRegisterService->updateDocument($documentId, $document);
+            // Save back via ObjectService.
+            $savedObject = $objectService->saveObject(
+                object: $objectData,
+                register: $register,
+                schema: $schema,
+                _rbac: false,
+                _multitenancy: false
+            );
 
-            $this->logger->debug(
-                'Metadata updated for document',
+            $this->logger->info(
+                'Enriched metadata saved for object',
                 [
-                    'documentId' => $documentId,
+                    'objectId'       => $objectId,
+                    'enrichedFields' => array_keys($metadata),
                 ]
             );
 
-            return $updatedDocument;
+            return $savedObject->getObject();
         } catch (Exception $e) {
             $this->logger->error(
-                'Failed to update metadata: '.$e->getMessage(),
+                'Failed to save enriched metadata: '.$e->getMessage(),
                 [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
+                    'objectId'  => $objectId,
+                    'exception' => $e,
                 ]
             );
-            throw new Exception('Failed to update metadata: '.$e->getMessage(), 0, $e);
+            throw new Exception('Failed to save enriched metadata: '.$e->getMessage(), 0, $e);
         }
 
-    }//end updateMetadata()
+    }//end saveEnrichedMetadata()
 
     /**
      * Detect language from text content
@@ -265,8 +238,6 @@ class MetadataService
      */
     private function detectLanguage(string $text): ?string
     {
-        // Simple language detection based on common words.
-        // In production, this could use a proper language detection library.
         $text = strtolower($text);
 
         // Common Dutch words.
@@ -302,8 +273,6 @@ class MetadataService
      */
     private function extractKeywords(string $text): array
     {
-        // Simple keyword extraction based on word frequency.
-        // In production, this could use NLP libraries for better extraction.
         $words = str_word_count(strtolower($text), 1);
         $wordCounts = array_count_values($words);
 
@@ -335,8 +304,6 @@ class MetadataService
      */
     private function classifyTopic(string $text): ?string
     {
-        // Simple topic classification based on keyword matching.
-        // In production, this could use ML models for better classification.
         $text = strtolower($text);
 
         $topics = [
@@ -365,39 +332,6 @@ class MetadataService
     }//end classifyTopic()
 
     /**
-     * Normalize date formats in metadata
-     *
-     * @param array<string, mixed> $metadata Metadata array
-     *
-     * @return array<string, mixed> Metadata with normalized dates
-     */
-    private function normalizeDates(array $metadata): array
-    {
-        $dateFields = ['created', 'modified', 'date', 'creationDate', 'modificationDate'];
-
-        foreach ($dateFields as $field) {
-            if (isset($metadata[$field]) === true && empty($metadata[$field]) === false) {
-                try {
-                    $date = new \DateTime($metadata[$field]);
-                    $metadata[$field] = $date->format('c');
-                } catch (Exception $e) {
-                    // Keep original value if date parsing fails.
-                    $this->logger->debug(
-                        'Failed to normalize date field: '.$field,
-                        [
-                            'value'     => $metadata[$field],
-                            'exception' => $e,
-                        ]
-                    );
-                }
-            }
-        }
-
-        return $metadata;
-
-    }//end normalizeDates()
-
-    /**
      * Standardize document type classification
      *
      * @param string $documentType Document type to standardize
@@ -408,7 +342,6 @@ class MetadataService
     {
         $documentType = strtolower(trim($documentType));
 
-        // Map common variations to standard types.
         $typeMap = [
             'pdf'              => 'pdf',
             'word'              => 'word',
@@ -434,5 +367,3 @@ class MetadataService
     }//end standardizeDocumentType()
 
 }//end class
-
-

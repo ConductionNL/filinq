@@ -20,12 +20,16 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\DocuDesk\Dashboard\AnonymizationWidget;
+use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 
 /**
  * Class Application
  *
- * @package OCA\LarpingApp\AppInfo
+ * @package OCA\DocuDesk\AppInfo
  */
 class Application extends App implements IBootstrap
 {
@@ -55,10 +59,15 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        // Event listeners and search providers have been removed.
-        // Text extraction and search are now handled by OpenRegister.
-        // DocuDesk focuses on document anonymization and metadata enhancement.
-        // No migrations needed as DocuDesk uses OpenRegister for storage.
+        // Register dashboard widget.
+        $context->registerDashboardWidget(AnonymizationWidget::class);
+
+        // Register event listeners for OpenRegister events.
+        // When documents are created/updated/deleted in OpenRegister,
+        // DocuDesk will enrich metadata and manage consent tracking.
+        $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
+        $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
 
     }//end register()
 
@@ -74,17 +83,12 @@ class Application extends App implements IBootstrap
     {
         $container = $context->getServerContainer();
 
-        // @TODO: We should look into performance here, since its called on every call to the app.
-        // Right now i can see a complete update going on. Perhaps we should see if our app
-        // version is higher that the config version or something (This adds 15ms to every call).
-        // Install and enable OpenRegister.
+        // Initialize OpenRegister configuration on boot.
         try {
-            // Install and enable OpenRegister.
             $settingsService = $container->get(\OCA\DocuDesk\Service\SettingsService::class);
             $settingsService->initialize();
-//            $this->logger->info('DocuDesk has been installed, enabled and configured successfully');
         } catch (\Exception $e) {
-//            $this->logger->warning('Failed to install/enable/configrue DocuDesk: '.$e->getMessage());
+            // Silently fail - initialization errors are logged by SettingsService.
         }
 
     }//end boot()

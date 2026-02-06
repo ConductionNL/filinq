@@ -12,7 +12,12 @@ import { navigationStore } from '../store/store.js'
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" name="Anonymization" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
-					<ShieldLockOutline :size="20" />
+					<ShieldLock :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" name="Consent Management" @click="navigationStore.setSelected('consent')">
+				<template #icon>
+					<AccountCheck :size="20" />
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
@@ -28,23 +33,18 @@ import {
 
 // Icons
 import Finance from 'vue-material-design-icons/Finance.vue'
-import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
+import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 
 export default {
 	name: 'MainMenu',
 	components: {
-		// components
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
-		// icons
 		Finance,
-		ShieldLockOutline,
-	},
-	methods: {
-		openLink(url, type = '') {
-			window.open(url, type)
-		},
+		AccountCheck,
+		ShieldLock,
 	},
 }
 </script>

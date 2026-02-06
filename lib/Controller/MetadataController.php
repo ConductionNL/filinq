@@ -3,7 +3,7 @@
  * Metadata Controller
  *
  * Controller for document metadata operations.
- * Provides endpoints for extracting, enhancing, and managing document metadata.
+ * Provides an endpoint for triggering metadata enrichment on document objects.
  *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
@@ -26,10 +26,7 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for metadata operations
- *
- * This controller provides endpoints for extracting, enhancing,
- * and managing document metadata stored in OpenRegister.
+ * Controller for metadata enrichment operations
  *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
@@ -39,20 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataController extends Controller
 {
-    /**
-     * Logger instance for error reporting
-     *
-     * @var LoggerInterface
-     */
-    private readonly LoggerInterface $logger;
-
-    /**
-     * Metadata service
-     *
-     * @var MetadataService
-     */
-    private readonly MetadataService $metadataService;
-
     /**
      * Constructor for MetadataController
      *
@@ -66,169 +49,90 @@ class MetadataController extends Controller
     public function __construct(
         string $appName,
         IRequest $request,
-        LoggerInterface $logger,
-        MetadataService $metadataService
+        private readonly LoggerInterface $logger,
+        private readonly MetadataService $metadataService
     ) {
         parent::__construct($appName, $request);
-        $this->logger          = $logger;
-        $this->metadataService = $metadataService;
 
     }//end __construct()
 
     /**
-     * Extract metadata from a document
+     * Trigger metadata enrichment for a document object
      *
-     * @return JSONResponse JSON response with extracted metadata
+     * Accepts object data (or objectId + register + schema to look it up),
+     * runs metadata enrichment, and saves the results back to OpenRegister.
+     *
+     * @return JSONResponse JSON response with enrichment results
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function extract(): JSONResponse
+    public function enrich(): JSONResponse
     {
         try {
             $data = $this->request->getParams();
 
             // Validate required fields.
-            if (isset($data['documentId']) === false || empty($data['documentId']) === true) {
+            if (isset($data['objectId']) === false || empty($data['objectId']) === true) {
                 return new JSONResponse(
-                    ['error' => 'documentId is required'],
+                    ['error' => 'objectId is required'],
                     400
                 );
             }
 
-            // Extract metadata.
-            $metadata = $this->metadataService->extractMetadata($data['documentId']);
+            if (isset($data['register']) === false || empty($data['register']) === true) {
+                return new JSONResponse(
+                    ['error' => 'register is required'],
+                    400
+                );
+            }
 
-            return new JSONResponse($metadata);
+            if (isset($data['schema']) === false || empty($data['schema']) === true) {
+                return new JSONResponse(
+                    ['error' => 'schema is required'],
+                    400
+                );
+            }
+
+            // Get object data for enrichment.
+            $objectData = $data['objectData'] ?? [];
+
+            // Run metadata enhancement.
+            $metadata = $this->metadataService->enhanceMetadata($objectData);
+
+            if (empty($metadata) === false) {
+                // Save enriched metadata back to OpenRegister.
+                $result = $this->metadataService->saveEnrichedMetadata(
+                    $data['objectId'],
+                    $data['register'],
+                    $data['schema'],
+                    $metadata
+                );
+
+                return new JSONResponse([
+                    'success'        => true,
+                    'enrichedFields' => array_keys($metadata),
+                    'object'         => $result,
+                ]);
+            }
+
+            return new JSONResponse([
+                'success' => true,
+                'message' => 'No metadata enrichment needed',
+            ]);
         } catch (Exception $e) {
             $this->logger->error(
-                'Failed to extract metadata: '.$e->getMessage(),
+                'Failed to enrich metadata: '.$e->getMessage(),
                 [
                     'exception' => $e,
                 ]
             );
             return new JSONResponse(
-                ['error' => 'Failed to extract metadata: '.$e->getMessage()],
+                ['error' => 'Failed to enrich metadata: '.$e->getMessage()],
                 500
             );
         }
 
-    }//end extract()
-
-    /**
-     * Enhance metadata with additional information
-     *
-     * @return JSONResponse JSON response with enhanced metadata
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function enhance(): JSONResponse
-    {
-        try {
-            $data = $this->request->getParams();
-
-            // Validate required fields.
-            if (isset($data['documentId']) === false || empty($data['documentId']) === true) {
-                return new JSONResponse(
-                    ['error' => 'documentId is required'],
-                    400
-                );
-            }
-
-            // Get existing metadata if provided, otherwise extract it.
-            $metadata = $data['metadata'] ?? [];
-            if (empty($metadata) === true) {
-                $metadata = $this->metadataService->extractMetadata($data['documentId']);
-            }
-
-            // Enhance metadata.
-            $enhancedMetadata = $this->metadataService->enhanceMetadata($data['documentId'], $metadata);
-
-            return new JSONResponse($enhancedMetadata);
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to enhance metadata: '.$e->getMessage(),
-                [
-                    'exception' => $e,
-                ]
-            );
-            return new JSONResponse(
-                ['error' => 'Failed to enhance metadata: '.$e->getMessage()],
-                500
-            );
-        }
-
-    }//end enhance()
-
-    /**
-     * Get metadata for a document
-     *
-     * @param string $documentId The document ID
-     *
-     * @return JSONResponse JSON response with document metadata
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function getMetadata(string $documentId): JSONResponse
-    {
-        try {
-            // Extract metadata from document.
-            $metadata = $this->metadataService->extractMetadata($documentId);
-
-            return new JSONResponse($metadata);
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to get metadata: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
-            );
-            return new JSONResponse(
-                ['error' => 'Failed to get metadata: '.$e->getMessage()],
-                500
-            );
-        }
-
-    }//end getMetadata()
-
-    /**
-     * Update metadata for a document
-     *
-     * @param string $documentId The document ID
-     *
-     * @return JSONResponse JSON response with updated document
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function updateMetadata(string $documentId): JSONResponse
-    {
-        try {
-            $data = $this->request->getParams();
-
-            // Update metadata.
-            $document = $this->metadataService->updateMetadata($documentId, $data);
-
-            return new JSONResponse($document);
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to update metadata: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
-            );
-            return new JSONResponse(
-                ['error' => 'Failed to update metadata: '.$e->getMessage()],
-                500
-            );
-        }
-
-    }//end updateMetadata()
+    }//end enrich()
 
 }//end class
-
-
