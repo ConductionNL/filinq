@@ -135,6 +135,23 @@ class AnonymizationService
 
 
     /**
+     * Get the RiskLevelService from OpenRegister
+     *
+     * @return \OCA\OpenRegister\Service\RiskLevelService The RiskLevelService instance
+     *
+     * @throws \RuntimeException If OpenRegister is not available
+     */
+    private function getRiskLevelService(): \OCA\OpenRegister\Service\RiskLevelService
+    {
+        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\RiskLevelService');
+        }
+
+        throw new \RuntimeException('OpenRegister RiskLevelService is not available.');
+
+    }//end getRiskLevelService()
+
+    /**
      * Get the current user ID
      *
      * @return string The current user ID
@@ -505,6 +522,112 @@ class AnonymizationService
 
     }//end listProcessedFiles()
 
+
+    /**
+     * List all processed files in the user's DocuDesk folder with entity counts and status
+     *
+     * Scans the DocuDesk folder and joins with entity relation data
+     * from OpenRegister to provide entity counts and anonymization status.
+     *
+     * @return array<int, array<string, mixed>> Array of file info with entityCount, status
+     */
+    public function listProcessedFiles(): array
+    {
+        try {
+            $userId = $this->getCurrentUserId();
+            $userFolder = $this->rootFolder->getUserFolder($userId);
+
+            if ($userFolder->nodeExists('DocuDesk') === false) {
+                return [];
+            }
+
+            $docuDeskFolder = $userFolder->get('DocuDesk');
+            $files = $docuDeskFolder->getDirectoryListing();
+
+            $entityRelationMapper = null;
+            try {
+                $entityRelationMapper = $this->getEntityRelationMapper();
+            } catch (\RuntimeException $e) {
+                $this->logger->warning('EntityRelationMapper not available: '.$e->getMessage());
+            }
+
+            $riskLevelService = null;
+            try {
+                $riskLevelService = $this->getRiskLevelService();
+            } catch (\RuntimeException $e) {
+                $this->logger->warning('RiskLevelService not available: '.$e->getMessage());
+            }
+
+            $result = [];
+            foreach ($files as $file) {
+                if ($file instanceof \OCP\Files\File === false) {
+                    continue;
+                }
+
+                $fileId = $file->getId();
+                $entityCount = 0;
+                $anonymizedCount = 0;
+                $status = 'uploaded';
+
+                if ($entityRelationMapper !== null) {
+                    try {
+                        $relations = $entityRelationMapper->findByFileId($fileId);
+                        $entityCount = count($relations);
+
+                        foreach ($relations as $relation) {
+                            if ($relation->getAnonymized() === true) {
+                                $anonymizedCount++;
+                            }
+                        }
+
+                        if ($entityCount > 0 && $anonymizedCount === $entityCount) {
+                            $status = 'anonymized';
+                        } elseif ($entityCount > 0) {
+                            $status = 'extracted';
+                        }
+                    } catch (\Exception $e) {
+                        $this->logger->debug('Could not fetch entities for file '.$fileId.': '.$e->getMessage());
+                    }
+                }
+
+                $riskLevel = 'none';
+                if ($riskLevelService !== null) {
+                    try {
+                        $riskLevel = $riskLevelService->getRiskLevel($fileId);
+                    } catch (\Exception $e) {
+                        $this->logger->debug('Could not fetch risk level for file '.$fileId.': '.$e->getMessage());
+                    }
+                }
+
+                $result[] = [
+                    'fileId'         => $fileId,
+                    'fileName'       => $file->getName(),
+                    'filePath'       => $file->getPath(),
+                    'fileSize'       => $file->getSize(),
+                    'mimeType'       => $file->getMimeType(),
+                    'entityCount'    => $entityCount,
+                    'anonymizedCount' => $anonymizedCount,
+                    'status'         => $status,
+                    'riskLevel'      => $riskLevel,
+                    'modified'       => $file->getMTime(),
+                ];
+            }
+
+            // Sort by modification time descending (newest first).
+            usort($result, function ($a, $b) {
+                return $b['modified'] - $a['modified'];
+            });
+
+            return $result;
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to list processed files: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            throw new Exception('Failed to list processed files: '.$e->getMessage(), 0, $e);
+        }
+
+    }//end listProcessedFiles()
 
     /**
      * Generate a UUID v4 string
