@@ -194,11 +194,12 @@ class SettingsService
                 return $results;
             }
 
-            // Import the new configuration.
-            $configurationService->importFromJson($settings, false);
-
-            // Update the configuration version in app config.
-            $this->config->setValueString($this->appName, 'configuration_version', $settings['info']['version']);
+            // Import the new configuration using the app-aware method.
+            $configurationService->importFromApp(
+                appId: $this->appName,
+                data: $settings,
+                version: $settings['info']['version']
+            );
 
             $results['configuration'] = true;
             $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
@@ -284,7 +285,7 @@ class SettingsService
                         filters: [],
                         searchConditions: [],
                         searchParams: [],
-                        extend: ['schemas']
+                        _extend: ['schemas']
                     );
 
                     // Convert Register entities to arrays and filter schemas.
