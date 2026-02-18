@@ -75,23 +75,6 @@ class AnonymizationService
     }//end getTextExtractionService()
 
     /**
-     * Get the EntityRecognitionHandler from OpenRegister
-     *
-     * @return \OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler The handler instance
-     *
-     * @throws \RuntimeException If OpenRegister is not available
-     */
-    private function getEntityRecognitionHandler(): \OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\TextExtraction\EntityRecognitionHandler');
-        }
-
-        throw new \RuntimeException('OpenRegister EntityRecognitionHandler is not available.');
-
-    }//end getEntityRecognitionHandler()
-
-    /**
      * Get the FileService from OpenRegister
      *
      * @return \OCA\OpenRegister\Service\FileService The FileService instance
@@ -252,22 +235,9 @@ class AnonymizationService
                 ]
             );
 
-            // Step 2: Run entity recognition on the extracted chunks.
-            // Use 'presidio' method explicitly since 'hybrid' only uses regex.
-            $entityRecognitionHandler = $this->getEntityRecognitionHandler();
-            $recognitionResult = $entityRecognitionHandler->processSourceChunks('file', $fileId, [
-                'method' => 'presidio',
-            ]);
-
-            $this->logger->debug(
-                'Entity recognition completed',
-                [
-                    'fileId' => $fileId,
-                    'result' => is_array($recognitionResult) === true ? count($recognitionResult) : 'non-array',
-                ]
-            );
-
-            // Step 3: Retrieve full entity details.
+            // Step 2: Retrieve full entity details.
+            // Entity recognition already ran inside extractFile() using the method
+            // configured in OpenRegister file settings (e.g. presidio, openanonymiser, hybrid).
             $entityRelationMapper = $this->getEntityRelationMapper();
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
@@ -288,7 +258,6 @@ class AnonymizationService
             return [
                 'entities'        => $normalizedEntities,
                 'entityCount'     => count($normalizedEntities),
-                'chunksProcessed' => is_array($recognitionResult) === true ? count($recognitionResult) : 0,
             ];
         } catch (Exception $e) {
             $this->logger->error(
