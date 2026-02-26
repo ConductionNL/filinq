@@ -1,7 +1,7 @@
 {
 	"name": "conductionnl/docudesk",
 	"description": "GDPR publication consent management and document metadata enrichment for Nextcloud",
-	"license": "AGPL-3.0-or-later",
+	"license": "EUPL-1.2",
 	"authors": [
 		{
 			"name": "Conduction b.v.",
