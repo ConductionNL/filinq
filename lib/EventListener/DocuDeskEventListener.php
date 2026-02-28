@@ -20,7 +20,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\EventListener;
 
 use OCA\DocuDesk\Service\MetadataService;
-use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;

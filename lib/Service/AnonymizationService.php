@@ -136,7 +136,7 @@ class AnonymizationService
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new Exception('No user is currently logged in.');
+            throw new Exception('No user is currently logged in.', 401);
         }
 
         return $user->getUID();
@@ -202,7 +202,7 @@ class AnonymizationService
                 'Failed to upload file: '.$e->getMessage(),
                 ['exception' => $e]
             );
-            throw new Exception('Failed to upload file: '.$e->getMessage(), 0, $e);
+            throw new Exception('Failed to upload file: '.$e->getMessage(), $e->getCode(), $e);
         }
 
     }//end uploadFile()
@@ -467,7 +467,7 @@ class AnonymizationService
                 'Failed to list processed files: '.$e->getMessage(),
                 ['exception' => $e]
             );
-            throw new Exception('Failed to list processed files: '.$e->getMessage(), 0, $e);
+            throw new Exception('Failed to list processed files: '.$e->getMessage(), $e->getCode(), $e);
         }
 
     }//end listProcessedFiles()
