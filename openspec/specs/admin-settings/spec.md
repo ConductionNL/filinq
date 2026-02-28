@@ -1,7 +1,3 @@
----
-status: reviewed
----
-
 # Admin Settings
 
 ## Purpose
@@ -16,7 +12,7 @@ Provides configuration management for DocuDesk, including OpenRegister integrati
 |----|------------|----------|--------|
 | SET-001 | DocuDesk has a dedicated admin section in the Nextcloud admin settings panel | MUST | Implemented |
 | SET-002 | The admin section uses the DocuDesk app icon (`app-dark.svg`) | MUST | Implemented |
-| SET-003 | The admin section is registered via `OCA\DocuDesk\Settings\DocuDeskAdmin` (ISettings) and `OCA\DocuDesk\Sections\DocuDeskAdmin` (IIconSection) -- two separate classes in different namespaces | MUST | Implemented |
+| SET-003 | The admin section is registered via `DocuDeskAdmin` ISettings and `DocuDeskAdmin` IIconSection | MUST | Implemented |
 | SET-004 | Settings are rendered using a Vue component (`Settings.vue`) via the `settings` entry point | MUST | Implemented |
 
 ### OpenRegister Integration Configuration
@@ -251,8 +247,8 @@ All three documentation types (user, admin, developer) point to the same URL. Th
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| SET-073 | External docs are hosted at conduction.gitbook.io/docudesk-nextcloud (in info.xml); Settings.vue uses `https://docudesk.app` as doc-url | MUST | Implemented |
-| SET-074 | All doc types (user, admin, developer) in info.xml use the same Gitbook URL | MUST | Implemented |
+| SET-073 | External docs are hosted at conduction.gitbook.io/docudesk-nextcloud | MUST | Implemented |
+| SET-074 | All doc types (user, admin, developer) use the same Gitbook URL | MUST | Implemented |
 | SET-075 | Roadmap is tracked at GitHub Projects | MUST | Implemented |
 
 ### File Path Resolution for docudesk_register.json (Gap 22)

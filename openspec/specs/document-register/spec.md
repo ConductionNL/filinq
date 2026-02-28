@@ -1,12 +1,8 @@
----
-status: reviewed
----
-
 # Document Register
 
 ## Purpose
 
-Defines the data model for the `document` register used by DocuDesk to store document analysis results. This register is loaded from `lib/Settings/document_register.json` (separate from the consent-focused `docudesk_register.json`) and contains three schemas: `report` (analysis results), `template` (document templates), and `entity` (cross-document entity management). Pre-seeded sample objects demonstrate the anonymization pipeline's output format. Note: all three schemas have `properties: []` (empty) and `hardValidation: false`, meaning field definitions exist only on the sample objects as ad-hoc data, not as schema-enforced property definitions. Fields like wcagComplianceResults, languageLevelResults, retentionPeriod, etc. on the sample objects represent planned features that are not yet implemented.
+Defines the data model for the `document` register used by DocuDesk to store document analysis results. This register is loaded from `lib/Settings/document_register.json` (separate from the consent-focused `docudesk_register.json`) and contains three schemas: `report` (analysis results), `template` (document templates), and `entity` (cross-document entity management). Pre-seeded sample objects demonstrate the anonymization pipeline's output format. Several fields on the report schema (wcagComplianceResults, languageLevelResults, retentionPeriod, etc.) represent planned features that are not yet implemented.
 
 ## Requirements
 
@@ -25,7 +21,6 @@ Defines the data model for the `document` register used by DocuDesk to store doc
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DREG-010 | The `report` schema stores document analysis results with slug `report`, version `0.0.1` | MUST | Implemented |
-| DREG-010a | The report schema has `properties: []` and `required: []` (empty) -- all fields below exist only on sample objects as ad-hoc data, not as schema-enforced definitions | MUST | Implemented |
 | DREG-011 | Report objects track the Nextcloud file via `nodeId` (integer file ID) and `filePath` (string) | MUST | Implemented |
 | DREG-012 | Report objects store file metadata: `fileName`, `fileType` (MIME), `fileExtension`, `fileSize` | MUST | Implemented |
 | DREG-013 | Report objects track processing status via `status` field (e.g., "completed") and `errorMessage` (null on success) | MUST | Implemented |

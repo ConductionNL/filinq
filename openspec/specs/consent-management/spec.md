@@ -1,7 +1,3 @@
----
-status: reviewed
----
-
 # Consent Management
 
 ## Purpose
@@ -276,12 +272,12 @@ The `DocuDeskEventListener` handles `ObjectCreatedEvent`, `ObjectUpdatedEvent`, 
 - Call `ConsentService::createConsentRequest()`
 - Interact with the consent system in any way
 
-The listener only imports `MetadataService` and `SettingsService` -- `ConsentService` is not imported or referenced at all. The consent flow is entirely disconnected from the event-driven pipeline.
+Despite importing `ConsentService` in its use statements, the listener never instantiates or calls it. The consent flow is entirely disconnected from the event-driven pipeline.
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | CONS-055 | Event listener processes only metadata enrichment, not consent creation | MUST | Implemented |
-| CONS-056 | ~~ConsentService is imported but unused in the event listener~~ ConsentService is NOT imported in the event listener -- only MetadataService and SettingsService are imported | MUST | Verified |
+| CONS-056 | ConsentService is imported but unused in the event listener | MUST | Dead Code |
 | CONS-057 | No automated consent creation exists -- consent records must be created manually or via future automation | MUST | Implemented |
 
 ## Dependencies
