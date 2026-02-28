@@ -1,3 +1,7 @@
+---
+status: reviewed
+---
+
 # Anonymization Pipeline
 
 ## Purpose
@@ -173,11 +177,11 @@ AND no anonymization processing occurs
 ### No User Session (Gap 13)
 
 ```
-GIVEN a request hits an anonymization endpoint without an authenticated user
+GIVEN a request hits an anonymization upload or files endpoint without an authenticated user
 WHEN getCurrentUserId() is called
-THEN an Exception is thrown with "No user is currently logged in."
-AND the exception propagates to a 500 Internal Server Error response
-NOTE: This is a bug -- should return 401 Unauthorized instead
+THEN an Exception is thrown with "No user is currently logged in." and code 401
+AND the controller correctly returns a 401 status code (for files/upload endpoints)
+NOTE: extract/anonymize endpoints do not call getCurrentUserId() directly
 ```
 
 ## Internal Implementation Details
@@ -222,14 +226,14 @@ The `generateUuid()` private method creates UUID v4 strings used as anonymizatio
 
 ### User Session Error Handling (Gap 13)
 
-The `getCurrentUserId()` private method throws a generic `Exception("No user is currently logged in.")` when `$this->userSession->getUser()` returns null. This exception is **not caught** by the calling methods (`uploadFile()`, `listProcessedFiles()`) in a way that returns a proper HTTP 401 response. Instead, it propagates up and results in a 500 Internal Server Error.
+The `getCurrentUserId()` private method throws `Exception("No user is currently logged in.", 401)` when `$this->userSession->getUser()` returns null. The controller methods (`files()`, `upload()`) check the exception code via `($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500`, which correctly returns a 401 status code for this exception. The `extract()` and `anonymize()` controller methods do not use this pattern and would return 500.
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| ANON-047 | `getCurrentUserId()` throws `Exception` (not a typed HTTP exception) when no user session exists | MUST | Bug |
-| ANON-048 | Missing user session results in 500 error instead of proper 401 Unauthorized | MUST | Bug |
+| ANON-047 | `getCurrentUserId()` throws `Exception` with code 401 when no user session exists | MUST | Implemented |
+| ANON-048 | `files()` and `upload()` controller methods correctly propagate the 401 status code; `extract()` and `anonymize()` always return 500 on any exception | MUST | Partial |
 
-**Recommended fix**: Throw `OCP\AppFramework\Http\Response` with 401 status or catch the exception in the controller and return a 401 JSONResponse.
+**Note**: The `files()` and `upload()` endpoints handle the 401 code correctly. The `extract()` and `anonymize()` endpoints do not use the exception-code-aware pattern and would return 500 for auth failures, but these endpoints accept a `fileId` parameter and do not call `getCurrentUserId()` directly.
 
 ### Upload Validation Error Responses (Gap 14)
 
