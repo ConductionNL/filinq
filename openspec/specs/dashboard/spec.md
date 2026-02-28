@@ -1,3 +1,7 @@
+---
+status: reviewed
+---
+
 # Dashboard
 
 ## Purpose
@@ -48,7 +52,7 @@ Provides a central overview of DocuDesk activity, including consent tracking sta
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DASH-030 | Serve the main app page via `GET /` (dashboard#page route) | MUST | Implemented |
-| DASH-031 | The page template sets a CSP allowing all connect domains | MUST | Implemented |
+| DASH-031 | ~~The page template sets a CSP allowing all connect domains~~ No custom CSP is set; default Nextcloud CSP applies | MUST | Removed |
 | DASH-032 | Error handling returns an error template on failure | MUST | Implemented |
 
 ## Data Model
@@ -153,30 +157,16 @@ AND clicking a widget navigates to the DocuDesk main page
 
 ## Internal Implementation Details
 
-### DashboardController::index() Dead Code (Gap 1)
+### DashboardController::index() -- REMOVED (Gap 1)
 
-The `DashboardController::index()` method contains dead code that references an undefined constant `TEST_ARRAY`:
+~~The `DashboardController::index()` method previously contained dead code referencing `self::TEST_ARRAY`.~~
 
-```php
-public function index(): JSONResponse
-{
-    try {
-        $results = ["results" => self::TEST_ARRAY];
-        return new JSONResponse($results);
-    } catch (\Exception $e) {
-        return new JSONResponse(['error' => $e->getMessage()], 500);
-    }
-}
-```
-
-**Problem**: `self::TEST_ARRAY` is not defined anywhere in `DashboardController` or its parent class. Calling this method will always throw an `Error: Undefined class constant 'TEST_ARRAY'`, which is caught by the exception handler and returned as a 500 error.
-
-**Impact**: This endpoint is completely non-functional. The `try/catch` prevents a fatal error but the endpoint always returns `{"error": "Undefined class constant 'DashboardController::TEST_ARRAY'"}` with HTTP 500.
+**Status**: This method has been **removed** from the codebase. `DashboardController` now only contains the `page()` method. The route for `index()` no longer exists in `routes.php`.
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DASH-040 | `DashboardController::index()` references undefined `self::TEST_ARRAY` constant | MUST | Dead Code |
-| DASH-041 | Calling `index()` always results in a 500 error response | MUST | Bug |
+| DASH-040 | ~~`DashboardController::index()` references undefined `self::TEST_ARRAY` constant~~ Method has been removed from codebase | N/A | Removed |
+| DASH-041 | ~~Calling `index()` always results in a 500 error response~~ No longer applicable | N/A | Removed |
 
 ### Unused $getParameter on page() Method (Gap 2)
 
@@ -215,29 +205,16 @@ DocuDesk uses **two different icon files** for navigation and dashboard widgets:
 | DASH-044 | Dashboard widgets use `app-dark.svg` icon via IIconWidget::getIconUrl() | MUST | Implemented |
 | DASH-045 | The two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
 
-### Permissive CSP Policy (Gap 25)
+### Permissive CSP Policy -- REMOVED (Gap 25)
 
-The `DashboardController::page()` method sets a Content Security Policy that allows connections to **all domains**:
+~~The `DashboardController::page()` method previously set a Content Security Policy allowing connections to all domains via `addAllowedConnectDomain('*')`.~~
 
-```php
-$csp = new ContentSecurityPolicy();
-$csp->addAllowedConnectDomain('*');
-$response->setContentSecurityPolicy($csp);
-```
-
-**Security implications**:
-- `addAllowedConnectDomain('*')` allows `fetch()`, `XMLHttpRequest`, WebSocket, and EventSource connections to any domain
-- This effectively disables the `connect-src` CSP directive for the DocuDesk page
-- Any XSS vulnerability in DocuDesk could exfiltrate data to arbitrary external servers
-
-**Likely rationale**: DocuDesk may need to connect to external services (e.g., OpenRegister API on a different domain, or the anonymization service endpoint). The wildcard avoids CSP errors during development. However, this should be tightened to specific domains for production.
+**Status**: The CSP configuration has been **removed** from the codebase. The `page()` method no longer sets any custom CSP -- it relies on Nextcloud's default Content Security Policy. The `ContentSecurityPolicy` import is also gone from the controller.
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DASH-046 | CSP `connect-src` is set to wildcard `*` via `addAllowedConnectDomain('*')` | MUST | Bug |
-| DASH-047 | The permissive CSP is a security risk if any XSS vulnerability exists in the app | MUST | Bug |
-
-**Recommended fix**: Replace `'*'` with specific domains that DocuDesk needs to connect to (e.g., `'self'` for same-origin API calls, or specific OpenRegister/anonymization service URLs).
+| DASH-046 | ~~CSP `connect-src` is set to wildcard `*`~~ CSP customization has been removed; default Nextcloud CSP applies | N/A | Removed |
+| DASH-047 | ~~The permissive CSP is a security risk~~ No longer applicable | N/A | Removed |
 
 ## Dependencies
 
@@ -246,4 +223,4 @@ $response->setContentSecurityPolicy($csp);
 - **Pinia anonymizationStore**: Quick anonymization pipeline
 - **Nextcloud IWidget/IIconWidget**: Dashboard widget registration
 - **Nextcloud NcAppNavigation**: Navigation component framework
-- **Nextcloud ContentSecurityPolicy**: CSP configuration for the page response
+- ~~**Nextcloud ContentSecurityPolicy**: CSP configuration for the page response~~ (removed -- default Nextcloud CSP now applies)

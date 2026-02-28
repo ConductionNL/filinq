@@ -1,3 +1,7 @@
+---
+status: reviewed
+---
+
 # Metadata Enrichment
 
 ## Purpose
@@ -227,14 +231,14 @@ public function handle(Event $event): void
 
 **Likely reason**: The empty constructor avoids circular dependency issues. Event listeners are registered early in the app lifecycle, and injecting MetadataService/SettingsService via constructor might trigger premature resolution of OpenRegister services (which may not be initialized yet). By resolving at handle-time, the listener ensures all services are fully booted.
 
-**Additional note**: The listener imports `ConsentService` in its `use` statements but never resolves or uses it.
+**Note**: The listener only imports `MetadataService` and `SettingsService`. `ConsentService` is NOT imported or referenced in the event listener.
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | META-072 | Event listener resolves services via `\OC::$server->get()` at handle time, not via constructor DI | MUST | Implemented |
 | META-073 | Empty constructor is intentional to avoid circular dependency during app registration | MUST | Implemented |
 | META-074 | `\OC::$server` usage is an anti-pattern that reduces testability | MUST | Bug |
-| META-075 | ConsentService is imported but never used in the event listener | MUST | Dead Code |
+| META-075 | ~~ConsentService is imported but never used in the event listener~~ ConsentService is NOT imported in the event listener -- only MetadataService and SettingsService are imported | MUST | Verified (not dead code) |
 
 ### Nested Try/Catch Error Handling in Event Listener (Gap 17)
 
