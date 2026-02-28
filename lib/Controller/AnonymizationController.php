@@ -97,36 +97,6 @@ class AnonymizationController extends Controller
 
 
     /**
-     * List all processed files with entity counts and status
-     *
-     * Returns files from the user's DocuDesk folder with their
-     * entity detection counts and anonymization status.
-     *
-     * @return JSONResponse JSON response with array of file data
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function files(): JSONResponse
-    {
-        try {
-            $result = $this->anonymizationService->listProcessedFiles();
-
-            return new JSONResponse($result);
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to list processed files: '.$e->getMessage(),
-                ['exception' => $e]
-            );
-            return new JSONResponse(
-                ['error' => 'Failed to list processed files: '.$e->getMessage()],
-                500
-            );
-        }
-
-    }//end files()
-
-    /**
      * Upload a file to the user's DocuDesk folder
      *
      * Reads the uploaded file from the request and saves it
