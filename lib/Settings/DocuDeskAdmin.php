@@ -44,6 +44,7 @@ use OCP\Settings\ISettings;
  */
 class DocuDeskAdmin implements ISettings
 {
+
     /**
      * L10N service for translations
      *

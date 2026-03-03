@@ -5,13 +5,13 @@
  * Controller for handling settings-related operations in DocuDesk.
  * Provides functionality for managing consent and metadata enrichment settings.
  *
- * @category Controller
- * @package  OCA\DocuDesk\Controller
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\DocuDesk\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -36,13 +36,15 @@ use Psr\Log\LoggerInterface;
  */
 class SettingsController extends Controller
 {
+
+
     /**
      * SettingsController constructor
      *
-     * @param string           $appName        The name of the app
-     * @param IRequest         $request        The request object
-     * @param LoggerInterface  $logger         Logger for error reporting
-     * @param SettingsService  $settingsService Service for settings operations
+     * @param string          $appName         The name of the app
+     * @param IRequest        $request         The request object
+     * @param LoggerInterface $logger          Logger for error reporting
+     * @param SettingsService $settingsService Service for settings operations
      *
      * @return void
      */
@@ -55,6 +57,7 @@ class SettingsController extends Controller
         parent::__construct($appName, $request);
 
     }//end __construct()
+
 
     /**
      * Retrieve the current settings
@@ -80,6 +83,7 @@ class SettingsController extends Controller
         }
 
     }//end index()
+
 
     /**
      * Handle the post request to update settings
@@ -108,5 +112,6 @@ class SettingsController extends Controller
         }
 
     }//end create()
+
 
 }//end class

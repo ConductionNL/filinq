@@ -44,8 +44,7 @@ class Application extends App implements IBootstrap
      */
     public function __construct(
         array $urlParams=[],
-    )
-    {
+    ) {
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
     }//end __construct()
