@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="img/app-dark.svg" alt="DocuDesk logo" width="80" height="80">
+  <img src="img/app-store.svg" alt="DocuDesk logo" width="80" height="80">
 </p>
 
 <h1 align="center">DocuDesk</h1>
