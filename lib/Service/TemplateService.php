@@ -20,7 +20,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -71,7 +70,7 @@ class TemplateService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new RuntimeException(message: 'OpenRegister service is not available.');
+        throw new \RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -155,19 +154,19 @@ class TemplateService
     /**
      * Get a single template by UUID
      *
-     * @param string $templateId The template UUID
+     * @param string $id The template UUID
      *
      * @return array The template object
      *
      * @throws Exception If the template is not found
      */
-    public function getTemplate(string $templateId): array
+    public function getTemplate(string $id): array
     {
         $objectService = $this->getObjectService();
         $config        = $this->getRegisterAndSchema();
 
         $result = $objectService->find(
-            id: $templateId,
+            id: $id,
             register: $config['register'],
             schema: $config['schema']
         );
@@ -233,24 +232,24 @@ class TemplateService
      *
      * The namespace field cannot be changed after creation.
      *
-     * @param string $templateId The template UUID
-     * @param array  $data       Updated template data
+     * @param string $id   The template UUID
+     * @param array  $data Updated template data
      *
      * @return array The updated template object
      *
      * @throws Exception If the template is not found or update fails
      */
-    public function updateTemplate(string $templateId, array $data): array
+    public function updateTemplate(string $id, array $data): array
     {
         $objectService = $this->getObjectService();
         $config        = $this->getRegisterAndSchema();
 
-        $existing = $this->getTemplate(templateId: $templateId);
+        $existing = $this->getTemplate(id: $id);
 
         // Namespace is immutable after creation.
         unset($data['namespace']);
 
-        $data['id'] = $templateId;
+        $data['id'] = $id;
         $merged     = array_merge($existing, $data);
 
         $result = $objectService->saveObject(
@@ -271,18 +270,19 @@ class TemplateService
     /**
      * Delete a template
      *
-     * @param string $templateId The template UUID
+     * @param string $id The template UUID
      *
      * @return bool True if deletion succeeded
      *
      * @throws Exception If the template is not found or deletion fails
      */
-    public function deleteTemplate(string $templateId): bool
+    public function deleteTemplate(string $id): bool
     {
         $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
 
         $objectService->deleteObject(
-            uuid: $templateId
+            uuid: $id
         );
 
         return true;

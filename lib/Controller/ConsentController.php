@@ -58,7 +58,7 @@ class ConsentController extends Controller
         private readonly ConsentService $consentService,
         private readonly SettingsService $settingsService
     ) {
-        parent::__construct(appName: $appName, request: $request);
+        parent::__construct($appName, $request);
 
     }//end __construct()
 
@@ -96,12 +96,7 @@ class ConsentController extends Controller
 
             $consents = [];
             foreach ($results as $result) {
-                if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                    $consents[] = $result->jsonSerialize();
-                    continue;
-                }
-
-                $consents[] = (array) $result;
+                $consents[] = is_object($result) && method_exists($result, 'jsonSerialize') ? $result->jsonSerialize() : (array) $result;
             }
 
             return new JSONResponse($consents);
@@ -122,14 +117,14 @@ class ConsentController extends Controller
     /**
      * Get a specific consent record
      *
-     * @param string $objectId The consent record UUID
+     * @param string $id The consent record UUID
      *
      * @return JSONResponse JSON response with consent record
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function show(string $objectId): JSONResponse
+    public function show(string $id): JSONResponse
     {
         try {
             $settings = $this->settingsService->getAllSettings();
@@ -145,7 +140,7 @@ class ConsentController extends Controller
 
             $objectService = $this->settingsService->getObjectService();
             $object        = $objectService->find(
-                id: $objectId,
+                id: $id,
                 register: $register,
                 schema: $schema,
                 _rbac: false,
@@ -159,13 +154,9 @@ class ConsentController extends Controller
                 );
             }
 
-            if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-                return new JSONResponse($object->jsonSerialize());
-            }
-
-            $responseData = (array) $object;
-
-            return new JSONResponse($responseData);
+            return new JSONResponse(
+                is_object($object) && method_exists($object, 'jsonSerialize') ? $object->jsonSerialize() : (array) $object
+            );
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to get consent: '.$e->getMessage(),
@@ -183,14 +174,14 @@ class ConsentController extends Controller
     /**
      * Update a consent record
      *
-     * @param string $objectId The consent record UUID
+     * @param string $id The consent record UUID
      *
      * @return JSONResponse JSON response with updated consent record
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function update(string $objectId): JSONResponse
+    public function update(string $id): JSONResponse
     {
         try {
             $data = $this->request->getParams();
@@ -206,7 +197,7 @@ class ConsentController extends Controller
                 );
             }
 
-            $result = $this->consentService->updateConsentStatus($objectId, $register, $schema, $data);
+            $result = $this->consentService->updateConsentStatus($id, $register, $schema, $data);
 
             return new JSONResponse($result);
         } catch (Exception $e) {

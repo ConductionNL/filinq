@@ -45,25 +45,24 @@ use OCP\Settings\ISettings;
 class DocuDeskAdmin implements ISettings
 {
 
-
     /**
      * L10N service for translations
      *
      * @var IL10N $l
      */
-    private IL10N $localization;
+    private IL10N $l;
 
 
     /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IL10N $localization L10N service for translations
+     * @param IL10N $l L10N service for translations
      *
      * @return void
      */
-    public function __construct(IL10N $localization)
+    public function __construct(IL10N $l)
     {
-        $this->localization = $localization;
+        $this->l = $l;
 
     }//end __construct()
 
