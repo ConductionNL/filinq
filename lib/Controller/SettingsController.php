@@ -54,7 +54,7 @@ class SettingsController extends Controller
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

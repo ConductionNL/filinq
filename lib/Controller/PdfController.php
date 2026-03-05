@@ -55,7 +55,7 @@ class PdfController extends Controller
         private readonly LoggerInterface $logger,
         private readonly PdfService $pdfService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

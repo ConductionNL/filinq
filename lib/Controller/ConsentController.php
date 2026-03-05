@@ -58,7 +58,7 @@ class ConsentController extends Controller
         private readonly ConsentService $consentService,
         private readonly SettingsService $settingsService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -96,7 +96,11 @@ class ConsentController extends Controller
 
             $consents = [];
             foreach ($results as $result) {
-                $consents[] = is_object($result) && method_exists($result, 'jsonSerialize') ? $result->jsonSerialize() : (array) $result;
+                if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                    $consents[] = $result->jsonSerialize();
+                } else {
+                    $consents[] = (array) $result;
+                }
             }
 
             return new JSONResponse($consents);
@@ -154,9 +158,13 @@ class ConsentController extends Controller
                 );
             }
 
-            return new JSONResponse(
-                is_object($object) && method_exists($object, 'jsonSerialize') ? $object->jsonSerialize() : (array) $object
-            );
+            if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+                $responseData = $object->jsonSerialize();
+            } else {
+                $responseData = (array) $object;
+            }
+
+            return new JSONResponse($responseData);
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to get consent: '.$e->getMessage(),

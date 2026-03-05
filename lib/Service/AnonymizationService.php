@@ -182,9 +182,13 @@ class AnonymizationService
             $targetName = $fileName;
             $counter    = 1;
             while ($docuDeskFolder->nodeExists($targetName) === true) {
-                $pathInfo   = pathinfo($fileName);
-                $baseName   = $pathInfo['filename'];
-                $extension  = isset($pathInfo['extension']) === true ? '.'.$pathInfo['extension'] : '';
+                $pathInfo  = pathinfo($fileName);
+                $baseName  = $pathInfo['filename'];
+                $extension = '';
+                if (isset($pathInfo['extension']) === true) {
+                    $extension = '.'.$pathInfo['extension'];
+                }
+
                 $targetName = $baseName.'_'.$counter.$extension;
                 $counter++;
             }
@@ -237,11 +241,16 @@ class AnonymizationService
             $textExtractionService = $this->getTextExtractionService();
             $extractionResult      = $textExtractionService->extractFile($fileId, true);
 
+            $resultKeys = 'non-array';
+            if (is_array($extractionResult) === true) {
+                $resultKeys = array_keys($extractionResult);
+            }
+
             $this->logger->debug(
                 'Text extracted from file',
                 [
                     'fileId' => $fileId,
-                    'result' => is_array($extractionResult) === true ? array_keys($extractionResult) : 'non-array',
+                    'result' => $resultKeys,
                 ]
             );
 
@@ -254,7 +263,11 @@ class AnonymizationService
             // Normalize entity data to a consistent format.
             $normalizedEntities = [];
             foreach ($entities as $entity) {
-                $entityData = is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true ? $entity->jsonSerialize() : (array) $entity;
+                if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
+                    $entityData = $entity->jsonSerialize();
+                } else {
+                    $entityData = (array) $entity;
+                }
 
                 $normalizedEntities[] = [
                     'type'       => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',

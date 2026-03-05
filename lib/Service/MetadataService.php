@@ -102,7 +102,7 @@ class MetadataService
             if (is_string($text) === true && empty($text) === false) {
                 // Detect language if not already present.
                 if (isset($objectData['language']) === false || empty($objectData['language']) === true) {
-                    $detected = $this->detectLanguage($text);
+                    $detected = $this->detectLanguage(text: $text);
                     if ($detected !== null) {
                         $metadata['language'] = $detected;
                     }
@@ -110,7 +110,7 @@ class MetadataService
 
                 // Extract keywords if not already present.
                 if (isset($objectData['keywords']) === false || empty($objectData['keywords']) === true) {
-                    $keywords = $this->extractKeywords($text);
+                    $keywords = $this->extractKeywords(text: $text);
                     if (empty($keywords) === false) {
                         $metadata['keywords'] = $keywords;
                     }
@@ -118,7 +118,7 @@ class MetadataService
 
                 // Classify document topic if not already present.
                 if (isset($objectData['topic']) === false || empty($objectData['topic']) === true) {
-                    $topic = $this->classifyTopic($text);
+                    $topic = $this->classifyTopic(text: $text);
                     if ($topic !== null) {
                         $metadata['topic'] = $topic;
                     }
@@ -127,7 +127,7 @@ class MetadataService
 
             // Standardize document type if present.
             if (isset($objectData['documentType']) === true && empty($objectData['documentType']) === false) {
-                $metadata['documentType'] = $this->standardizeDocumentType($objectData['documentType']);
+                $metadata['documentType'] = $this->standardizeDocumentType(documentType: $objectData['documentType']);
             }
 
             // Normalize dates in object data.

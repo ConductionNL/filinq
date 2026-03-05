@@ -204,4 +204,5 @@
         <severity>0</severity>
     </rule>
 
+    <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Functions/NamedParametersSniff.php"/>
 </ruleset>

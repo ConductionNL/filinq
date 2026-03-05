@@ -55,7 +55,7 @@ class AnonymizationController extends Controller
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -78,7 +78,11 @@ class AnonymizationController extends Controller
 
             return new JSONResponse($result);
         } catch (Exception $e) {
-            $statusCode = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $statusCode = 500;
+            if ($e->getCode() >= 400 && $e->getCode() < 600) {
+                $statusCode = $e->getCode();
+            }
+
             $this->logger->error(
                 'Failed to list processed files: '.$e->getMessage(),
                 ['exception' => $e]
@@ -136,7 +140,11 @@ class AnonymizationController extends Controller
 
             return new JSONResponse($result);
         } catch (Exception $e) {
-            $statusCode = ($e->getCode() >= 400 && $e->getCode() < 600) ? $e->getCode() : 500;
+            $statusCode = 500;
+            if ($e->getCode() >= 400 && $e->getCode() < 600) {
+                $statusCode = $e->getCode();
+            }
+
             $this->logger->error(
                 'Failed to upload file: '.$e->getMessage(),
                 ['exception' => $e]

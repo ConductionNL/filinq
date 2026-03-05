@@ -54,7 +54,7 @@ class MetadataController extends Controller
         private readonly LoggerInterface $logger,
         private readonly MetadataService $metadataService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

@@ -25,11 +25,24 @@ use OCP\Util;
 
 /**
  * Dashboard widget for file entities overview
+ *
+ * @category Dashboard
+ * @package  OCA\DocuDesk\Dashboard
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
  */
 class FileEntitiesWidget implements IWidget, IIconWidget
 {
 
 
+    /**
+     * Constructor for FileEntitiesWidget
+     *
+     * @param IURLGenerator $urlGenerator URL generator for building URLs
+     *
+     * @return void
+     */
     public function __construct(
         private readonly IURLGenerator $urlGenerator
     ) {
@@ -37,6 +50,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end __construct()
 
 
+    /**
+     * Get the unique widget identifier
+     *
+     * @return string The widget ID
+     */
     public function getId(): string
     {
         return 'docudesk-file-entities';
@@ -44,6 +62,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getId()
 
 
+    /**
+     * Get the widget display title
+     *
+     * @return string The widget title
+     */
     public function getTitle(): string
     {
         return 'File Entities';
@@ -51,6 +74,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getTitle()
 
 
+    /**
+     * Get the widget display order
+     *
+     * @return int The widget order
+     */
     public function getOrder(): int
     {
         return 21;
@@ -58,6 +86,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getOrder()
 
 
+    /**
+     * Get the widget icon CSS class
+     *
+     * @return string The icon CSS class
+     */
     public function getIconClass(): string
     {
         return 'icon-docudesk';
@@ -65,6 +98,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getIconClass()
 
 
+    /**
+     * Get the widget icon URL
+     *
+     * @return string The absolute URL to the widget icon
+     */
     public function getIconUrl(): string
     {
         return $this->urlGenerator->getAbsoluteURL(
@@ -74,6 +112,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getIconUrl()
 
 
+    /**
+     * Get the widget URL
+     *
+     * @return string|null The URL the widget links to
+     */
     public function getUrl(): ?string
     {
         return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
@@ -81,6 +124,11 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     }//end getUrl()
 
 
+    /**
+     * Load the widget scripts
+     *
+     * @return void
+     */
     public function load(): void
     {
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
