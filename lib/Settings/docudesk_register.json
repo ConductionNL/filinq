@@ -1,0 +1,350 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "DocuDesk Register",
+        "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
+        "version": "3.0.0"
+    },
+    "x-openregister": {
+        "type": "application",
+        "app": "docudesk",
+        "sourceType": "github",
+        "sourceUrl": "https://raw.githubusercontent.com/ConductionNL/docudesk/master/lib/Settings/docudesk_register.json",
+        "openregister": "^v0.2.10",
+        "github": {
+            "repo": "ConductionNL/docudesk",
+            "branch": "master",
+            "path": "lib/Settings/docudesk_register.json"
+        }
+    },
+    "components": {
+        "registers": {
+            "consent": {
+                "slug": "consent",
+                "title": "Consent Register",
+                "version": "2.0.0",
+                "description": "Register voor GDPR publicatie toestemmingen",
+                "schemas": [
+                    "publicationConsent"
+                ]
+            },
+            "templates": {
+                "slug": "templates",
+                "title": "Template Register",
+                "version": "1.0.0",
+                "description": "Register voor herbruikbare PDF/document templates",
+                "schemas": [
+                    "template"
+                ]
+            }
+        },
+        "schemas": {
+            "publicationConsent": {
+                "uri": null,
+                "slug": "publicationConsent",
+                "title": "Publication Consent",
+                "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat informatie over entiteiten (personen/organisaties) die ge\u00efnformeerd moeten worden voordat een document wordt gepubliceerd, en hun reactie daarop.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "AccountCheck",
+                "required": [
+                    "documentId",
+                    "entityType",
+                    "entityText"
+                ],
+                "properties": {
+                    "documentId": {
+                        "description": "Verwijzing naar het document dat gepubliceerd moet worden",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Document ID"
+                    },
+                    "entityType": {
+                        "description": "Type entiteit (PERSON of ORGANIZATION)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Entiteitstype",
+                        "enum": [
+                            "PERSON",
+                            "ORGANIZATION"
+                        ]
+                    },
+                    "entityText": {
+                        "description": "Tekst van de gedetecteerde entiteit",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Entiteit tekst",
+                        "maxLength": 500
+                    },
+                    "entityKey": {
+                        "description": "Unieke key van de entiteit (gebruikt voor anonymisatie)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Entiteit key",
+                        "maxLength": 50
+                    },
+                    "contactEmail": {
+                        "description": "E-mailadres voor notificatie (indien bekend)",
+                        "type": "string",
+                        "format": "email",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Contact e-mail",
+                        "maxLength": 255
+                    },
+                    "contactAddress": {
+                        "description": "Postadres voor notificatie (indien bekend)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Contact adres",
+                        "maxLength": 500
+                    },
+                    "notificationStatus": {
+                        "description": "Status van de notificatie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Notificatiestatus",
+                        "enum": [
+                            "pending",
+                            "sent",
+                            "delivered",
+                            "failed",
+                            "skipped"
+                        ],
+                        "default": "pending"
+                    },
+                    "notificationSentAt": {
+                        "description": "Datum/tijd waarop de notificatie is verzonden",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Notificatie verzonden op"
+                    },
+                    "consentStatus": {
+                        "description": "Status van de toestemming/bezwaar",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Toestemmingsstatus",
+                        "enum": [
+                            "pending",
+                            "consent_given",
+                            "objection_received",
+                            "no_response",
+                            "anonymized"
+                        ],
+                        "default": "pending"
+                    },
+                    "objectionDeadline": {
+                        "description": "Deadline voor bezwaar indienen (volgens Wet Open Overheid: minimaal 4 weken)",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Bezwaar deadline"
+                    },
+                    "objectionReceivedAt": {
+                        "description": "Datum/tijd waarop bezwaar is ontvangen",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Bezwaar ontvangen op"
+                    },
+                    "objectionReason": {
+                        "description": "Reden voor bezwaar (indien ingediend)",
+                        "type": "string",
+                        "format": "markdown",
+                        "visible": true,
+                        "order": 12,
+                        "facetable": false,
+                        "title": "Bezwaarreden",
+                        "maxLength": 2000
+                    },
+                    "publicationDecision": {
+                        "description": "Beslissing over publicatie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 13,
+                        "facetable": true,
+                        "title": "Publicatiebeslissing",
+                        "enum": [
+                            "pending",
+                            "anonymize",
+                            "publish_with_consent",
+                            "publish_anonymized",
+                            "reject"
+                        ],
+                        "default": "pending"
+                    },
+                    "legalBasis": {
+                        "description": "Juridische grondslag voor publicatie (bijv. Wet Open Overheid, AVG artikel 6)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 14,
+                        "facetable": true,
+                        "title": "Juridische grondslag",
+                        "maxLength": 500,
+                        "example": "Wet Open Overheid art. 3.1"
+                    },
+                    "notes": {
+                        "description": "Interne notities over het proces",
+                        "type": "string",
+                        "format": "markdown",
+                        "visible": true,
+                        "order": 15,
+                        "facetable": false,
+                        "title": "Notities",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2025-12-08T12:00:00+00:00",
+                "created": "2025-12-08T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "entityText",
+                    "objectDescriptionField": "consentStatus",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "template": {
+                "uri": null,
+                "slug": "template",
+                "title": "Document Template",
+                "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileDocument",
+                "required": [
+                    "name",
+                    "content",
+                    "namespace"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Naam van het template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Beschrijving van het doel van het template",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "maxLength": 2000
+                    },
+                    "content": {
+                        "description": "Twig/HTML template content voor PDF-rendering",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Template inhoud",
+                        "format": "html"
+                    },
+                    "namespace": {
+                        "description": "App-identifier die eigenaar is van dit template (bijv. larpingapp, opencatalogi)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Namespace",
+                        "maxLength": 64
+                    },
+                    "format": {
+                        "description": "Standaard paginaformaat voor PDF-uitvoer",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Paginaformaat",
+                        "default": "A4",
+                        "enum": [
+                            "A4",
+                            "A3",
+                            "Letter",
+                            "Legal"
+                        ]
+                    },
+                    "orientation": {
+                        "description": "Standaard pagina-oriëntatie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Oriëntatie",
+                        "default": "P",
+                        "enum": [
+                            "P",
+                            "L"
+                        ]
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-01T12:00:00+00:00",
+                "created": "2026-03-01T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
+            }
+        },
+        "objects": []
+    }
+}

@@ -1,0 +1,235 @@
+<?php
+/**
+ * Anonymization Controller
+ *
+ * Controller for the document anonymization pipeline.
+ * Provides endpoints for uploading files, extracting/detecting entities,
+ * and anonymizing documents.
+ *
+ * @category  Controller
+ * @package   OCA\DocuDesk\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Controller;
+
+use Exception;
+use OCA\DocuDesk\Service\AnonymizationService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Controller for anonymization pipeline endpoints
+ *
+ * @category Controller
+ * @package  OCA\DocuDesk\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class AnonymizationController extends Controller
+{
+
+
+    /**
+     * Constructor for AnonymizationController
+     *
+     * @param string               $appName              The application name
+     * @param IRequest             $request              The request object
+     * @param LoggerInterface      $logger               Logger for error reporting
+     * @param AnonymizationService $anonymizationService Service for anonymization operations
+     *
+     * @return void
+     */
+    public function __construct(
+        string $appName,
+        IRequest $request,
+        private readonly LoggerInterface $logger,
+        private readonly AnonymizationService $anonymizationService
+    ) {
+        parent::__construct(appName: $appName, request: $request);
+
+    }//end __construct()
+
+
+    /**
+     * List all processed files with entity counts and status
+     *
+     * Returns files from the user's DocuDesk folder with their
+     * entity detection counts and anonymization status.
+     *
+     * @return JSONResponse JSON response with array of file data
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function files(): JSONResponse
+    {
+        try {
+            $result = $this->anonymizationService->listProcessedFiles();
+
+            return new JSONResponse($result);
+        } catch (Exception $e) {
+            $statusCode = 500;
+            if ($e->getCode() >= 400 && $e->getCode() < 600) {
+                $statusCode = $e->getCode();
+            }
+
+            $this->logger->error(
+                'Failed to list processed files: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to list processed files: '.$e->getMessage()],
+                $statusCode
+            );
+        }
+
+    }//end files()
+
+
+    /**
+     * Upload a file to the user's DocuDesk folder
+     *
+     * Reads the uploaded file from the request and saves it
+     * to the user's DocuDesk folder.
+     *
+     * @return JSONResponse JSON response with upload result
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function upload(): JSONResponse
+    {
+        try {
+            $file = $this->request->getUploadedFile('file');
+
+            if ($file === null || isset($file['tmp_name']) === false) {
+                return new JSONResponse(
+                    ['error' => 'No file uploaded'],
+                    400
+                );
+            }
+
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                return new JSONResponse(
+                    ['error' => 'File upload failed with error code: '.$file['error']],
+                    400
+                );
+            }
+
+            $fileName    = $file['name'];
+            $fileContent = file_get_contents($file['tmp_name']);
+
+            if ($fileContent === false) {
+                return new JSONResponse(
+                    ['error' => 'Failed to read uploaded file'],
+                    500
+                );
+            }
+
+            $result = $this->anonymizationService->uploadFile($fileName, $fileContent);
+
+            return new JSONResponse($result);
+        } catch (Exception $e) {
+            $statusCode = 500;
+            if ($e->getCode() >= 400 && $e->getCode() < 600) {
+                $statusCode = $e->getCode();
+            }
+
+            $this->logger->error(
+                'Failed to upload file: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to upload file: '.$e->getMessage()],
+                $statusCode
+            );
+        }//end try
+
+    }//end upload()
+
+
+    /**
+     * Extract text and detect entities in a file
+     *
+     * Runs text extraction and entity recognition on the specified file.
+     *
+     * @param int $fileId The Nextcloud file ID
+     *
+     * @return JSONResponse JSON response with extraction and detection results
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function extract(int $fileId): JSONResponse
+    {
+        try {
+            $result = $this->anonymizationService->extractAndDetectEntities($fileId);
+
+            return new JSONResponse($result);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to extract and detect entities: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to extract and detect entities: '.$e->getMessage()],
+                500
+            );
+        }
+
+    }//end extract()
+
+
+    /**
+     * Anonymize entities in a document
+     *
+     * Replaces detected entities in the document with anonymized placeholders.
+     *
+     * @param int $fileId The Nextcloud file ID
+     *
+     * @return JSONResponse JSON response with anonymization result
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function anonymize(int $fileId): JSONResponse
+    {
+        try {
+            $params   = $this->request->getParams();
+            $entities = $params['entities'] ?? [];
+
+            if (is_array($entities) === false || empty($entities) === true) {
+                return new JSONResponse(
+                    ['error' => 'No entities provided for anonymization'],
+                    400
+                );
+            }
+
+            $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);
+
+            return new JSONResponse($result);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to anonymize document: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to anonymize document: '.$e->getMessage()],
+                500
+            );
+        }//end try
+
+    }//end anonymize()
+
+
+}//end class

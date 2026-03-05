@@ -1,170 +1,315 @@
 <?php
 /**
- * Service for managing document templates
+ * Template Service
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
+ * Service for managing reusable Twig/HTML templates stored as OpenRegister objects.
+ * Templates are scoped per-app via a namespace field, enabling multiple apps
+ * to maintain their own template collections.
  *
- * @author    Conduction Development Team <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * @version GIT: <git_id>
- *
- * @link https://www.DocuDesk.app
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
+
+declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\AppFramework\Db\MultipleObjectsReturnedException;
-use OCA\DocuDesk\Db\Template;
-use OCA\DocuDesk\Db\TemplateMapper;
-use OCP\IAppConfig;
-use Twig\Environment;
-use Twig\Loader\ArrayLoader;
+use Exception;
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
- * Service for managing document templates
- *
- * This service provides functionality to create, retrieve, and manage document templates.
- * It utilizes Twig for template rendering and supports various output formats such as PDF and DOCX.
- * The service interacts with the database through the TemplateMapper to persist template data.
+ * Service for CRUD operations on document templates via OpenRegister
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.nl
+ * @link     https://www.DocuDesk.app
  */
 class TemplateService
 {
-
-    /**
-     * Database mapper for templates
-     *
-     * @var TemplateMapper
-     */
-    private $mapper;
-
-    /**
-     * Twig environment for template rendering
-     *
-     * @var Environment
-     */
-    private $twig;
 
 
     /**
      * Constructor for TemplateService
      *
-     * @param TemplateMapper $mapper Database mapper for templates
+     * @param LoggerInterface    $logger          Logger for error reporting
+     * @param ContainerInterface $container       Container for dependency injection
+     * @param IAppManager        $appManager      App manager interface
+     * @param SettingsService    $settingsService Settings service for register/schema IDs
      *
      * @return void
      */
-    public function __construct(TemplateMapper $mapper)
-    {
-        $this->mapper = $mapper;
-
-        // Initialize Twig with array loader for dynamic templates.
-        $loader     = new ArrayLoader([]);
-        $this->twig = new Environment($loader);
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager,
+        private readonly SettingsService $settingsService
+    ) {
 
     }//end __construct()
 
 
     /**
-     * Creates a new template
+     * Get the ObjectService from OpenRegister
      *
-     * @param string $name         Template name
-     * @param string $content      Template content in Twig format
-     * @param string $category     Template category
-     * @param string $outputFormat Desired output format (pdf/docx)
+     * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
      *
-     * @return Template The created template
+     * @throws \RuntimeException If OpenRegister is not available
      */
-    public function createTemplate(string $name, string $content, string $category, string $outputFormat): Template
+    private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
-        $template = new Template();
-        $template->setName($name);
-        $template->setContent($content);
-        $template->setCategory($category);
-        $template->setOutputFormat($outputFormat);
+        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps(), strict: true) === true) {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        }
 
-        return $this->mapper->insert($template);
+        throw new \RuntimeException(message: 'OpenRegister service is not available.');
+
+    }//end getObjectService()
+
+
+    /**
+     * Get the template register and schema IDs from settings
+     *
+     * @return array{register: string, schema: string} Register and schema IDs
+     *
+     * @throws Exception If template register/schema is not configured
+     */
+    private function getRegisterAndSchema(): array
+    {
+        $settings = $this->settingsService->getAllSettings();
+        $register = $settings['configuration']['template_register'] ?? '';
+        $schema   = $settings['configuration']['template_schema'] ?? '';
+
+        if (empty($register) === true || empty($schema) === true) {
+            throw new Exception(message: 'Template register/schema not configured', code: 500);
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end getRegisterAndSchema()
+
+
+    /**
+     * Validate that a namespace string is a valid Nextcloud app ID
+     *
+     * @param string $namespace The namespace to validate
+     *
+     * @return bool True if valid
+     *
+     * @throws Exception If the namespace is invalid
+     */
+    private function validateNamespace(string $namespace): bool
+    {
+        if (preg_match(pattern: '/^[a-z0-9]+$/', subject: $namespace) !== 1) {
+            throw new Exception(
+                message: 'Invalid namespace: must be lowercase alphanumeric only',
+                code: 400
+            );
+        }
+
+        return true;
+
+    }//end validateNamespace()
+
+
+    /**
+     * List templates with optional filters
+     *
+     * @param array $filters Optional filters (e.g. namespace, _search)
+     * @param int   $limit   Maximum number of results (default: 20)
+     * @param int   $offset  Result offset for pagination (default: 0)
+     *
+     * @return array{results: array, total: int} Paginated template results
+     *
+     * @throws Exception If listing fails
+     */
+    public function getTemplates(array $filters=[], int $limit=20, int $offset=0): array
+    {
+        $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
+
+        $requestParams            = $filters;
+        $requestParams['_limit']  = $limit;
+        $requestParams['_offset'] = $offset;
+
+        $query = $objectService->buildSearchQuery(
+            requestParams: $requestParams,
+            register: $config['register'],
+            schema: $config['schema']
+        );
+
+        return $objectService->searchObjectsPaginated(query: $query);
+
+    }//end getTemplates()
+
+
+    /**
+     * Get a single template by UUID
+     *
+     * @param string $id The template UUID
+     *
+     * @return array The template object
+     *
+     * @throws Exception If the template is not found
+     */
+    public function getTemplate(string $id): array
+    {
+        $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
+
+        $result = $objectService->find(
+            id: $id,
+            register: $config['register'],
+            schema: $config['schema']
+        );
+
+        if (empty($result) === true) {
+            throw new Exception(message: 'Template not found', code: 404);
+        }
+
+        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+            return $result->jsonSerialize();
+        }
+
+        return $result;
+
+    }//end getTemplate()
+
+
+    /**
+     * Create a new template
+     *
+     * @param array $data Template data (name, content, namespace required)
+     *
+     * @return array The created template object
+     *
+     * @throws Exception If creation fails or validation errors occur
+     */
+    public function createTemplate(array $data): array
+    {
+        if (empty($data['namespace']) === true) {
+            throw new Exception(message: 'Namespace is required', code: 400);
+        }
+
+        $this->validateNamespace(namespace: $data['namespace']);
+
+        if (empty($data['name']) === true) {
+            throw new Exception(message: 'Name is required', code: 400);
+        }
+
+        if (empty($data['content']) === true) {
+            throw new Exception(message: 'Content is required', code: 400);
+        }
+
+        $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
+
+        $result = $objectService->saveObject(
+            object: $data,
+            register: $config['register'],
+            schema: $config['schema']
+        );
+
+        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+            return $result->jsonSerialize();
+        }
+
+        return $result;
 
     }//end createTemplate()
 
 
     /**
-     * Renders a template with provided data
+     * Update an existing template
      *
-     * @param int    $templateId ID of the template to render
-     * @param array  $data       Data to render the template with
-     * @param string $format     Output format (pdf/docx)
+     * The namespace field cannot be changed after creation.
      *
-     * @return string Rendered content
+     * @param string $id   The template UUID
+     * @param array  $data Updated template data
      *
-     * @throws DoesNotExistException If template not found
+     * @return array The updated template object
+     *
+     * @throws Exception If the template is not found or update fails
      */
-    public function renderTemplate(int $templateId, array $data, string $format): string
+    public function updateTemplate(string $id, array $data): array
     {
-        $template = $this->mapper->find($templateId);
+        $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
 
-        // Create a new template in Twig environment.
-        $this->twig->setLoader(
-            new ArrayLoader(
-                [
-                    'template' => $template->getContent(),
-                ]
-            )
+        $existing = $this->getTemplate(id: $id);
+
+        // Namespace is immutable after creation.
+        unset($data['namespace']);
+
+        $data['id'] = $id;
+        $merged     = array_merge($existing, $data);
+
+        $result = $objectService->saveObject(
+            object: $merged,
+            register: $config['register'],
+            schema: $config['schema']
         );
 
-        // Render the template with provided data.
-        $html = $this->twig->render('template', $data);
-
-        // Convert to requested format.
-        if ($format === 'pdf') {
-            return $this->convertToPdf($html);
-        } else if ($format === 'docx') {
-            return $this->convertToWord($html);
+        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+            return $result->jsonSerialize();
         }
 
-        return $html;
+        return $result;
 
-    }//end renderTemplate()
-
-
-    /**
-     * Converts HTML content to PDF
-     *
-     * @param string $html HTML content to convert
-     *
-     * @return string PDF content
-     */
-    private function convertToPdf(string $html): string
-    {
-        // @TODO: Implement PDF conversion using library like wkhtmltopdf.
-        // This is a placeholder for actual implementation.
-        return $html;
-
-    }//end convertToPdf()
+    }//end updateTemplate()
 
 
     /**
-     * Converts HTML content to Word document
+     * Delete a template
      *
-     * @param string $html HTML content to convert
+     * @param string $id The template UUID
      *
-     * @return string Word document content
+     * @return bool True if deletion succeeded
+     *
+     * @throws Exception If the template is not found or deletion fails
      */
-    private function convertToWord(string $html): string
+    public function deleteTemplate(string $id): bool
     {
-        // @TODO: Implement Word conversion using PHPWord.
-        // This is a placeholder for actual implementation.
-        return $html;
+        $objectService = $this->getObjectService();
+        $config        = $this->getRegisterAndSchema();
 
-    }//end convertToWord()
+        $objectService->deleteObject(
+            uuid: $id
+        );
+
+        return true;
+
+    }//end deleteTemplate()
+
+
+    /**
+     * Get all templates for a specific app namespace
+     *
+     * @param string $namespace The app namespace (e.g. 'larpingapp')
+     *
+     * @return array Array of template objects
+     *
+     * @throws Exception If listing fails
+     */
+    public function getTemplatesByNamespace(string $namespace): array
+    {
+        $result = $this->getTemplates(
+            filters: ['namespace' => $namespace],
+            limit: 100,
+            offset: 0
+        );
+
+        return $result['results'] ?? [];
+
+    }//end getTemplatesByNamespace()
 
 
 }//end class

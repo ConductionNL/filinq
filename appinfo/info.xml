@@ -3,21 +3,20 @@
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>docudesk</id>
     <name>DocuDesk</name>
-    <summary>Generate and anonymize documents in a GDPR and WCAG compliant manner</summary>
-    <description><![CDATA[An Document generator for Nextcloud
+    <summary>GDPR publication consent management and document metadata enrichment for Nextcloud</summary>
+    <description><![CDATA[GDPR publication consent management and document metadata enrichment for Nextcloud
 
-DocuDesk provides services for generating and anonymizing PDF, Word, HTML or Excel documents in a GDPR and WCAG compliant manner.
+DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid) and automatic document metadata enrichment. It integrates with Open Register via events to enrich documents as they are created and updated.
 
 ## Key Features
 
-- 📄 Generate documents in multiple formats (PDF, Word, HTML, Excel)
-- ✍️ Digital document signing and verification
-- 🔒 GDPR-compliant document anonymization
-- ♿ WCAG accessibility standards compliance
-- 🔄 Batch document processing
-- 📱 Responsive document viewing
+- GDPR publication consent tracking with configurable objection periods
+- Wet Open Overheid compliance (minimum 4-week objection period)
+- Automatic language detection for documents
+- Keyword extraction and topic classification
+- Event-driven integration with Open Register
 
-**System Cron is currently required for this app to work**
+**Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Requirements can be found [here](https://conduction.gitbook.io/docudesk-nextcloud/installatie)
 
@@ -27,8 +26,8 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
-    <version>0.0.31</version>
-    <licence>AGPL</licence>
+    <version>0.0.32-unstable.3</version>
+    <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
     <category>organization</category>
@@ -45,7 +44,7 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="28" max-version="30"/>
+        <nextcloud min-version="28" max-version="32"/>
     </dependencies>
     <navigations>
         <navigation>

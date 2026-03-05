@@ -20,17 +20,17 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\OpenCatalogi\Dashboard\CatalogWidget;
-use OCA\OpenCatalogi\Dashboard\UnpublishedPublicationsWidget;
-use OCA\OpenCatalogi\Dashboard\UnpublishedAttachmentsWidget;
-use OCP\IConfig;
-use OCP\App\AppManager;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\DocuDesk\Dashboard\AnonymizationWidget;
+use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
+use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 
 /**
  * Class Application
  *
- * @package OCA\LarpingApp\AppInfo
+ * @package OCA\DocuDesk\AppInfo
  */
 class Application extends App implements IBootstrap
 {
@@ -42,8 +42,9 @@ class Application extends App implements IBootstrap
      *
      * @param array $urlParams URL parameters for the application
      */
-    public function __construct(array $urlParams=[])
-    {
+    public function __construct(
+        array $urlParams=[],
+    ) {
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
     }//end __construct()
@@ -58,24 +59,16 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        include_once __DIR__.'/../../vendor/autoload.php';
-        // Register event listeners for file operations.
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeCreatedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeDeletedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeTouchedEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
-        $context->registerEventListener(
-            \OCP\Files\Events\Node\NodeWrittenEvent::class,
-            \OCA\DocuDesk\EventListener\FileEventListener::class
-        );
+        // Register dashboard widgets.
+        $context->registerDashboardWidget(AnonymizationWidget::class);
+        $context->registerDashboardWidget(FileEntitiesWidget::class);
+
+        // Register event listeners for OpenRegister events.
+        // When documents are created/updated/deleted in OpenRegister,
+        // DocuDesk will enrich metadata and manage consent tracking.
+        $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
+        $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
+        $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
 
     }//end register()
 
@@ -91,17 +84,12 @@ class Application extends App implements IBootstrap
     {
         $container = $context->getServerContainer();
 
-        // @TODO: We should look into performance here, since its called on every call to the app.
-        // Right now i can see a complete update going on. Perhaps we should see if our app
-        // version is higher that the config version or something (This adds 15ms to every call).
-        // Install and enable OpenRegister.
+        // Initialize OpenRegister configuration on boot.
         try {
-            // Install and enable OpenRegister.
             $settingsService = $container->get(\OCA\DocuDesk\Service\SettingsService::class);
             $settingsService->initialize();
-            \OC::$server->getLogger()->info('DocuDesk has been installed, enabled and configured successfully');
         } catch (\Exception $e) {
-            \OC::$server->getLogger()->warning('Failed to install/enable/configrue DocuDesk: '.$e->getMessage());
+            // Silently fail - initialization errors are logged by SettingsService.
         }
 
     }//end boot()

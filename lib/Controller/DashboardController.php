@@ -16,9 +16,7 @@ namespace OCA\DocuDesk\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\AppFramework\Http\ContentSecurityPolicy;
 
 /**
  * Dashboard controller for DocuDesk
@@ -45,7 +43,7 @@ class DashboardController extends Controller
      */
     public function __construct($appName, IRequest $request)
     {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -69,10 +67,6 @@ class DashboardController extends Controller
                 []
             );
 
-            $csp = new ContentSecurityPolicy();
-            $csp->addAllowedConnectDomain('*');
-            $response->setContentSecurityPolicy($csp);
-
             return $response;
         } catch (\Exception $e) {
             return new TemplateResponse(
@@ -84,26 +78,6 @@ class DashboardController extends Controller
         }
 
     }//end page()
-
-
-    /**
-     * Get dashboard data as JSON
-     *
-     * @return JSONResponse JSON response with dashboard data
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function index(): JSONResponse
-    {
-        try {
-            $results = ["results" => self::TEST_ARRAY];
-            return new JSONResponse($results);
-        } catch (\Exception $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
-
-    }//end index()
 
 
 }//end class
