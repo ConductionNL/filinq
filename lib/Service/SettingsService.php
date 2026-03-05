@@ -6,13 +6,13 @@
  * Provides functionality for retrieving, saving, and loading settings,
  * as well as managing configuration for OpenRegister integration.
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -38,6 +38,7 @@ use OCA\OpenRegister\Service\RegisterService;
  */
 class SettingsService
 {
+
     /**
      * The application name for identification and configuration purposes
      *
@@ -58,6 +59,7 @@ class SettingsService
      * @var string The minimum required version of OpenRegister
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
+
 
     /**
      * SettingsService constructor
@@ -83,6 +85,7 @@ class SettingsService
 
     }//end __construct()
 
+
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -105,6 +108,7 @@ class SettingsService
 
     }//end isOpenRegisterInstalled()
 
+
     /**
      * Checks if OpenRegister is enabled
      *
@@ -115,6 +119,7 @@ class SettingsService
         return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
 
     }//end isOpenRegisterEnabled()
+
 
     /**
      * Attempts to retrieve the OpenRegister service from the container
@@ -133,6 +138,7 @@ class SettingsService
 
     }//end getObjectService()
 
+
     /**
      * Attempts to retrieve the Configuration service from the container
      *
@@ -149,6 +155,7 @@ class SettingsService
         throw new \RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
+
 
     /**
      * Initializes the app with all required components
@@ -190,15 +197,17 @@ class SettingsService
 
             // Check if new configuration version is higher than current.
             if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $results['info'][] = "Configuration version {$currentVersion} is up to date or newer than {$settings['info']['version']}";
+                $infoVersion       = $settings['info']['version'];
+                $results['info'][] = 'Configuration version '.$currentVersion.' is up to date or newer than '.$infoVersion;
                 return $results;
             }
 
-            // Import the new configuration.
-            $configurationService->importFromJson($settings, false);
-
-            // Update the configuration version in app config.
-            $this->config->setValueString($this->appName, 'configuration_version', $settings['info']['version']);
+            // Import the new configuration using the app-aware method.
+            $configurationService->importFromApp(
+                appId: $this->appName,
+                data: $settings,
+                version: $settings['info']['version']
+            );
 
             $results['configuration'] = true;
             $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
@@ -215,6 +224,7 @@ class SettingsService
         return $results;
 
     }//end initialize()
+
 
     /**
      * Load settings from the docudesk_register.json file
@@ -253,6 +263,7 @@ class SettingsService
 
     }//end loadSettings()
 
+
     /**
      * Retrieve all settings
      *
@@ -266,6 +277,7 @@ class SettingsService
         $data = [];
         $data['objectTypes']        = [
             'publicationConsent',
+            'template',
         ];
         $data['openRegisters']      = false;
         $data['availableRegisters'] = [];
@@ -284,7 +296,7 @@ class SettingsService
                         filters: [],
                         searchConditions: [],
                         searchParams: [],
-                        extend: ['schemas']
+                        _extend: ['schemas']
                     );
 
                     // Convert Register entities to arrays and filter schemas.
@@ -336,8 +348,8 @@ class SettingsService
                         ]
                     );
                     $data['availableRegisters'] = [];
-                }
-            }
+                }//end try
+            }//end if
         } catch (\RuntimeException $e) {
             $this->logger->info(
                 'OpenRegister service not available',
@@ -367,17 +379,17 @@ class SettingsService
                 'publication_objection_period_days',
                 '28'
             );
-            $data['enable_language_detection'] = $this->config->getValueString(
+            $data['enable_language_detection']         = $this->config->getValueString(
                 $this->appName,
                 'enable_language_detection',
                 '1'
             ) === '1';
-            $data['enable_keyword_extraction'] = $this->config->getValueString(
+            $data['enable_keyword_extraction']         = $this->config->getValueString(
                 $this->appName,
                 'enable_keyword_extraction',
                 '1'
             ) === '1';
-            $data['enable_topic_classification'] = $this->config->getValueString(
+            $data['enable_topic_classification']       = $this->config->getValueString(
                 $this->appName,
                 'enable_topic_classification',
                 '1'
@@ -389,6 +401,7 @@ class SettingsService
         }//end try
 
     }//end getAllSettings()
+
 
     /**
      * Update the settings configuration
@@ -419,12 +432,16 @@ class SettingsService
                 if (is_array($value) === true || is_object($value) === true) {
                     $stringValue = json_encode($value);
                 } else {
-                    $stringValue = is_string($value) === true ? $value : (string) $value;
+                    if (is_string($value) === true) {
+                        $stringValue = $value;
+                    } else {
+                        $stringValue = (string) $value;
+                    }
                 }
 
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
-            }
+            }//end foreach
 
             $this->logger->info(
                 'Settings updated successfully',
@@ -439,5 +456,6 @@ class SettingsService
         }//end try
 
     }//end updateSettings()
+
 
 }//end class

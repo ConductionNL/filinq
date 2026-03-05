@@ -7,13 +7,13 @@
  * entities detected in documents that require notification before
  * publication under the Wet Open Overheid.
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -37,12 +37,14 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentService
 {
+
     /**
      * The application name
      *
      * @var string
      */
     private readonly string $appName;
+
 
     /**
      * Constructor for ConsentService
@@ -64,6 +66,7 @@ class ConsentService
 
     }//end __construct()
 
+
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -81,6 +84,7 @@ class ConsentService
 
     }//end getObjectService()
 
+
     /**
      * Get the objection period in days from settings
      *
@@ -95,6 +99,7 @@ class ConsentService
         );
 
     }//end getObjectionPeriodDays()
+
 
     /**
      * Create a consent request for a detected entity in a document
@@ -116,25 +121,28 @@ class ConsentService
         string $entityText,
         string $register,
         string $schema,
-        array $extra = []
+        array $extra=[]
     ): array {
         try {
             $objectService = $this->getObjectService();
 
             // Calculate objection deadline.
             $objectionDays = $this->getObjectionPeriodDays();
-            $deadline = new \DateTime();
+            $deadline      = new \DateTime();
             $deadline->modify("+{$objectionDays} days");
 
-            $consentData = array_merge([
-                'documentId'         => $documentId,
-                'entityType'         => $entityType,
-                'entityText'         => $entityText,
-                'notificationStatus' => 'pending',
-                'consentStatus'      => 'pending',
-                'publicationDecision' => 'pending',
-                'objectionDeadline'  => $deadline->format('c'),
-            ], $extra);
+            $consentData = array_merge(
+                    [
+                        'documentId'          => $documentId,
+                        'entityType'          => $entityType,
+                        'entityText'          => $entityText,
+                        'notificationStatus'  => 'pending',
+                        'consentStatus'       => 'pending',
+                        'publicationDecision' => 'pending',
+                        'objectionDeadline'   => $deadline->format('c'),
+                    ],
+                    $extra
+                    );
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
@@ -163,9 +171,10 @@ class ConsentService
                 ]
             );
             throw new Exception('Failed to create consent request: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end createConsentRequest()
+
 
     /**
      * Update consent status for a consent record
@@ -231,9 +240,10 @@ class ConsentService
                 ]
             );
             throw new Exception('Failed to update consent status: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end updateConsentStatus()
+
 
     /**
      * Check if an objection deadline has expired
@@ -264,14 +274,14 @@ class ConsentService
             }
 
             $objectData = $object->getObject();
-            $deadline = $objectData['objectionDeadline'] ?? null;
+            $deadline   = $objectData['objectionDeadline'] ?? null;
 
             if ($deadline === null) {
                 return false;
             }
 
             $deadlineDate = new \DateTime($deadline);
-            $now = new \DateTime();
+            $now          = new \DateTime();
 
             return $now > $deadlineDate;
         } catch (Exception $e) {
@@ -283,9 +293,10 @@ class ConsentService
                 ]
             );
             throw new Exception('Failed to check objection deadline: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end checkObjectionDeadline()
+
 
     /**
      * Get all consent records for a specific document
@@ -312,9 +323,11 @@ class ConsentService
 
             $consents = [];
             foreach ($results as $result) {
-                $consents[] = is_object($result) && method_exists($result, 'getObject')
-                    ? $result->getObject()
-                    : (array) $result;
+                if (is_object($result) === true && method_exists($result, 'getObject') === true) {
+                    $consents[] = $result->getObject();
+                } else {
+                    $consents[] = (array) $result;
+                }
             }
 
             return $consents;
@@ -327,8 +340,9 @@ class ConsentService
                 ]
             );
             throw new Exception('Failed to get consents for document: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end getConsentsByDocument()
+
 
 }//end class

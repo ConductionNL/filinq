@@ -7,13 +7,13 @@
  * and provides functionality to extract metadata from document objects and
  * enhance them with additional information.
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataService
 {
+
+
     /**
      * Constructor for MetadataService
      *
@@ -54,7 +56,9 @@ class MetadataService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager
     ) {
+
     }//end __construct()
+
 
     /**
      * Get the ObjectService from OpenRegister
@@ -72,6 +76,7 @@ class MetadataService
         throw new \RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
+
 
     /**
      * Enhance metadata for a document object
@@ -97,7 +102,7 @@ class MetadataService
             if (is_string($text) === true && empty($text) === false) {
                 // Detect language if not already present.
                 if (isset($objectData['language']) === false || empty($objectData['language']) === true) {
-                    $detected = $this->detectLanguage($text);
+                    $detected = $this->detectLanguage(text: $text);
                     if ($detected !== null) {
                         $metadata['language'] = $detected;
                     }
@@ -105,7 +110,7 @@ class MetadataService
 
                 // Extract keywords if not already present.
                 if (isset($objectData['keywords']) === false || empty($objectData['keywords']) === true) {
-                    $keywords = $this->extractKeywords($text);
+                    $keywords = $this->extractKeywords(text: $text);
                     if (empty($keywords) === false) {
                         $metadata['keywords'] = $keywords;
                     }
@@ -113,16 +118,16 @@ class MetadataService
 
                 // Classify document topic if not already present.
                 if (isset($objectData['topic']) === false || empty($objectData['topic']) === true) {
-                    $topic = $this->classifyTopic($text);
+                    $topic = $this->classifyTopic(text: $text);
                     if ($topic !== null) {
                         $metadata['topic'] = $topic;
                     }
                 }
-            }
+            }//end if
 
             // Standardize document type if present.
             if (isset($objectData['documentType']) === true && empty($objectData['documentType']) === false) {
-                $metadata['documentType'] = $this->standardizeDocumentType($objectData['documentType']);
+                $metadata['documentType'] = $this->standardizeDocumentType(documentType: $objectData['documentType']);
             }
 
             // Normalize dates in object data.
@@ -160,9 +165,10 @@ class MetadataService
                 ]
             );
             throw new Exception('Failed to enhance metadata: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end enhanceMetadata()
+
 
     /**
      * Enrich a document object with metadata and save it back via ObjectService
@@ -225,9 +231,10 @@ class MetadataService
                 ]
             );
             throw new Exception('Failed to save enriched metadata: '.$e->getMessage(), 0, $e);
-        }
+        }//end try
 
     }//end saveEnrichedMetadata()
+
 
     /**
      * Detect language from text content
@@ -264,6 +271,7 @@ class MetadataService
 
     }//end detectLanguage()
 
+
     /**
      * Extract keywords from text content
      *
@@ -273,14 +281,40 @@ class MetadataService
      */
     private function extractKeywords(string $text): array
     {
-        $words = str_word_count(strtolower($text), 1);
+        $words      = str_word_count(strtolower($text), 1);
         $wordCounts = array_count_values($words);
 
         // Filter out common stop words.
         $stopWords = [
-            'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'it',
-            'de', 'het', 'een', 'en', 'van', 'is', 'zijn', 'op', 'voor', 'met',
-            'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at',
+            'the',
+            'be',
+            'to',
+            'of',
+            'and',
+            'a',
+            'in',
+            'that',
+            'have',
+            'it',
+            'de',
+            'het',
+            'een',
+            'en',
+            'van',
+            'is',
+            'zijn',
+            'op',
+            'voor',
+            'met',
+            'for',
+            'not',
+            'on',
+            'with',
+            'he',
+            'as',
+            'you',
+            'do',
+            'at',
         ];
 
         foreach ($stopWords as $stopWord) {
@@ -295,6 +329,7 @@ class MetadataService
 
     }//end extractKeywords()
 
+
     /**
      * Classify document topic based on text content
      *
@@ -307,9 +342,9 @@ class MetadataService
         $text = strtolower($text);
 
         $topics = [
-            'legal'      => ['contract', 'agreement', 'law', 'legal', 'court', 'judge'],
-            'financial'  => ['invoice', 'payment', 'budget', 'financial', 'account', 'money'],
-            'medical'    => ['patient', 'diagnosis', 'treatment', 'medical', 'health', 'doctor'],
+            'legal'     => ['contract', 'agreement', 'law', 'legal', 'court', 'judge'],
+            'financial' => ['invoice', 'payment', 'budget', 'financial', 'account', 'money'],
+            'medical'   => ['patient', 'diagnosis', 'treatment', 'medical', 'health', 'doctor'],
             'technical' => ['system', 'software', 'technical', 'code', 'development', 'api'],
         ];
 
@@ -319,6 +354,7 @@ class MetadataService
             foreach ($keywords as $keyword) {
                 $score += substr_count($text, $keyword);
             }
+
             $scores[$topic] = $score;
         }
 
@@ -330,6 +366,7 @@ class MetadataService
         return null;
 
     }//end classifyTopic()
+
 
     /**
      * Standardize document type classification
@@ -343,27 +380,28 @@ class MetadataService
         $documentType = strtolower(trim($documentType));
 
         $typeMap = [
-            'pdf'              => 'pdf',
-            'word'              => 'word',
-            'doc'               => 'word',
-            'docx'              => 'word',
-            'excel'             => 'spreadsheet',
-            'xls'               => 'spreadsheet',
-            'xlsx'              => 'spreadsheet',
-            'powerpoint'        => 'presentation',
-            'ppt'               => 'presentation',
-            'pptx'              => 'presentation',
-            'text'              => 'text',
-            'txt'               => 'text',
-            'html'              => 'html',
-            'image'             => 'image',
-            'jpg'               => 'image',
-            'jpeg'              => 'image',
-            'png'               => 'image',
+            'pdf'        => 'pdf',
+            'word'       => 'word',
+            'doc'        => 'word',
+            'docx'       => 'word',
+            'excel'      => 'spreadsheet',
+            'xls'        => 'spreadsheet',
+            'xlsx'       => 'spreadsheet',
+            'powerpoint' => 'presentation',
+            'ppt'        => 'presentation',
+            'pptx'       => 'presentation',
+            'text'       => 'text',
+            'txt'        => 'text',
+            'html'       => 'html',
+            'image'      => 'image',
+            'jpg'        => 'image',
+            'jpeg'       => 'image',
+            'png'        => 'image',
         ];
 
         return $typeMap[$documentType] ?? $documentType;
 
     }//end standardizeDocumentType()
+
 
 }//end class
