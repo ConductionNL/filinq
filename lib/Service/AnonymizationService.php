@@ -24,6 +24,7 @@ use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
+use RuntimeException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -74,7 +75,7 @@ class AnonymizationService
             return $this->container->get('OCA\OpenRegister\Service\TextExtractionService');
         }
 
-        throw new \RuntimeException('OpenRegister TextExtractionService is not available.');
+        throw new RuntimeException('OpenRegister TextExtractionService is not available.');
 
     }//end getTextExtractionService()
 
@@ -92,7 +93,7 @@ class AnonymizationService
             return $this->container->get('OCA\OpenRegister\Service\FileService');
         }
 
-        throw new \RuntimeException('OpenRegister FileService is not available.');
+        throw new RuntimeException('OpenRegister FileService is not available.');
 
     }//end getFileService()
 
@@ -110,7 +111,7 @@ class AnonymizationService
             return $this->container->get('OCA\OpenRegister\Db\EntityRelationMapper');
         }
 
-        throw new \RuntimeException('OpenRegister EntityRelationMapper is not available.');
+        throw new RuntimeException('OpenRegister EntityRelationMapper is not available.');
 
     }//end getEntityRelationMapper()
 
@@ -128,7 +129,7 @@ class AnonymizationService
             return $this->container->get('OCA\OpenRegister\Service\RiskLevelService');
         }
 
-        throw new \RuntimeException('OpenRegister RiskLevelService is not available.');
+        throw new RuntimeException('OpenRegister RiskLevelService is not available.');
 
     }//end getRiskLevelService()
 
@@ -238,8 +239,8 @@ class AnonymizationService
     {
         try {
             // Step 1: Extract text from the file.
-            $textExtractionService = $this->getTextExtractionService();
-            $extractionResult      = $textExtractionService->extractFile($fileId, true);
+            $textExtractor    = $this->getTextExtractionService();
+            $extractionResult = $textExtractor->extractFile($fileId, true);
 
             $resultKeys = 'non-array';
             if (is_array($extractionResult) === true) {
@@ -263,10 +264,9 @@ class AnonymizationService
             // Normalize entity data to a consistent format.
             $normalizedEntities = [];
             foreach ($entities as $entity) {
+                $entityData = (array) $entity;
                 if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
                     $entityData = $entity->jsonSerialize();
-                } else {
-                    $entityData = (array) $entity;
                 }
 
                 $normalizedEntities[] = [
@@ -306,6 +306,8 @@ class AnonymizationService
      * @return array<string, mixed> Anonymization result with anonymizedFileId, anonymizedFileName, etc.
      *
      * @throws Exception If anonymization fails
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function anonymizeDocument(int $fileId, array $entities): array
     {
@@ -397,6 +399,10 @@ class AnonymizationService
      * from OpenRegister to provide entity counts and anonymization status.
      *
      * @return array<int, array<string, mixed>> Array of file info with entityCount, status
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function listProcessedFiles(): array
     {
@@ -483,8 +489,8 @@ class AnonymizationService
             // Sort by modification time descending (newest first).
             usort(
                     $result,
-                    function ($a, $b) {
-                        return $b['modified'] - $a['modified'];
+                    function ($itemA, $itemB) {
+                        return $itemB['modified'] - $itemA['modified'];
                     }
                     );
 

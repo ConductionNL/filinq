@@ -127,6 +127,8 @@ class AnonymizationWidget implements IWidget, IIconWidget
      * Load the widget scripts
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function load(): void
     {

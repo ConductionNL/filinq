@@ -20,7 +20,9 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTime;
 use Exception;
+use RuntimeException;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -80,7 +82,7 @@ class ConsentService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -128,7 +130,7 @@ class ConsentService
 
             // Calculate objection deadline.
             $objectionDays = $this->getObjectionPeriodDays();
-            $deadline      = new \DateTime();
+            $deadline      = new DateTime();
             $deadline->modify("+{$objectionDays} days");
 
             $consentData = array_merge(
@@ -280,8 +282,8 @@ class ConsentService
                 return false;
             }
 
-            $deadlineDate = new \DateTime($deadline);
-            $now          = new \DateTime();
+            $deadlineDate = new DateTime($deadline);
+            $now          = new DateTime();
 
             return $now > $deadlineDate;
         } catch (Exception $e) {
@@ -325,9 +327,10 @@ class ConsentService
             foreach ($results as $result) {
                 if (is_object($result) === true && method_exists($result, 'getObject') === true) {
                     $consents[] = $result->getObject();
-                } else {
-                    $consents[] = (array) $result;
+                    continue;
                 }
+
+                $consents[] = (array) $result;
             }
 
             return $consents;

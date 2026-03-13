@@ -146,7 +146,7 @@ import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
-	name: 'AdminSettings',
+	name: 'Settings',
 	components: {
 		NcSettingsSection,
 		NcNoteCard,

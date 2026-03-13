@@ -10,7 +10,10 @@ import { anonymizationStore } from '../../store/store.js'
 
 		<!-- Step indicator bar -->
 		<div class="step-indicator">
-			<div v-for="(step, index) in steps" :key="step.label" class="step" :class="{ active: index < anonymizationStore.stepNumber, current: index === anonymizationStore.stepNumber }">
+			<div v-for="(step, index) in steps"
+				:key="step.label"
+				class="step"
+				:class="{ active: index < anonymizationStore.stepNumber, current: index === anonymizationStore.stepNumber }">
 				<div class="step-circle">
 					{{ index + 1 }}
 				</div>

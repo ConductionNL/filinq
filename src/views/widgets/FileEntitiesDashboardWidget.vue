@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 </script>

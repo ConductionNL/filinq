@@ -20,7 +20,9 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTime;
 use Exception;
+use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -73,7 +75,7 @@ class MetadataService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -90,6 +92,9 @@ class MetadataService
      * @return array<string, mixed> Enhanced metadata fields
      *
      * @throws Exception If metadata enhancement fails
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
      */
     public function enhanceMetadata(array $objectData): array
     {
@@ -135,7 +140,7 @@ class MetadataService
             foreach ($dateFields as $field) {
                 if (isset($objectData[$field]) === true && empty($objectData[$field]) === false) {
                     try {
-                        $date = new \DateTime($objectData[$field]);
+                        $date = new DateTime($objectData[$field]);
                         $metadata[$field] = $date->format('c');
                     } catch (Exception $e) {
                         $this->logger->debug(
