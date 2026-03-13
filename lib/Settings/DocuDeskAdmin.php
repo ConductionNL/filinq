@@ -28,15 +28,13 @@
 namespace OCA\DocuDesk\Settings;
 
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IConfig;
 use OCP\IL10N;
 use OCP\Settings\ISettings;
 
 /**
  * Admin settings for DocuDesk
  *
- * This class handles the admin settings page for DocuDesk, allowing configuration
- * of various settings like Presidio API URL.
+ * This class handles the admin settings page for DocuDesk.
  *
  * @category Settings
  * @package  OCA\DocuDesk\Settings
@@ -46,47 +44,25 @@ use OCP\Settings\ISettings;
  */
 class DocuDeskAdmin implements ISettings
 {
-    /**
-     * Default Presidio Analyzer API URL
-     *
-     * @var string
-     */
-    private const DEFAULT_PRESIDIO_ANALYZER_URL = 'http://presidio-api:8080/analyze';
-
-    /**
-     * Default Presidio Anonymizer API URL
-     *
-     * @var string
-     */
-    private const DEFAULT_PRESIDIO_ANONYMIZER_URL = 'http://presidio-api:8080/anonymize';
 
     /**
      * L10N service for translations
      *
      * @var IL10N $l
      */
-    private IL10N $l;
-
-    /**
-     * Configuration service
-     *
-     * @var IConfig $config
-     */
-    private IConfig $config;
+    private IL10N $localization;
 
 
     /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IConfig $config Configuration service
-     * @param IL10N   $l      L10N service for translations
+     * @param IL10N $localization L10N service for translations
      *
      * @return void
      */
-    public function __construct(IConfig $config, IL10N $l)
+    public function __construct(IL10N $localization)
     {
-        $this->config = $config;
-        $this->l      = $l;
+        $this->localization = $localization;
 
     }//end __construct()
 
@@ -101,26 +77,7 @@ class DocuDeskAdmin implements ISettings
      */
     public function getForm(): TemplateResponse
     {
-        $parameters = [
-            'presidioAnalyzerUrl'   => $this->config->getSystemValue(
-            'docudesk_presidio_analyzer_url',
-            self::DEFAULT_PRESIDIO_ANALYZER_URL
-        ),
-            'presidioAnonymizerUrl' => $this->config->getSystemValue(
-            'docudesk_presidio_anonymizer_url',
-            self::DEFAULT_PRESIDIO_ANONYMIZER_URL
-        ),
-            'confidenceThreshold'   => $this->config->getSystemValue('docudesk_confidence_threshold', 0.7),
-            'enableReporting'       => $this->config->getSystemValue('docudesk_enable_reporting', true),
-            'enableAnonymization'   => $this->config->getSystemValue('docudesk_enable_anonymization', true),
-            'storeOriginalText'     => $this->config->getSystemValue('docudesk_store_original_text', true),
-            'indexingEnabled'       => $this->config->getSystemValueBool('docudesk_index_documents'),
-            'solrUrl'               => $this->config->getSystemValueString('docudesk_solr_url'),
-            'solrCollection'        => $this->config->getSystemValueString('docudesk_solr_collection'),
-
-        ];
-
-        return new TemplateResponse('docudesk', 'settings/admin', $parameters, '');
+        return new TemplateResponse('docudesk', 'settings/admin', [], '');
 
     }//end getForm()
 

@@ -16,7 +16,7 @@ DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid
 - Keyword extraction and topic classification
 - Event-driven integration with Open Register
 
-**Open Register is required for this app to work**
+**Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
 Requirements can be found [here](https://conduction.gitbook.io/docudesk-nextcloud/installatie)
 
@@ -26,8 +26,8 @@ Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
     ]]></description>
-    <version>0.0.32-beta.1</version>
-    <licence>AGPL</licence>
+    <version>0.0.34-unstable.8</version>
+    <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
     <category>organization</category>

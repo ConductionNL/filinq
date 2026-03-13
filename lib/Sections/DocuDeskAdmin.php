@@ -38,7 +38,7 @@ class DocuDeskAdmin implements IIconSection
      *
      * @var IL10N
      */
-    private IL10N $l;
+    private IL10N $localization;
 
     /**
      * URL generator for creating URLs
@@ -51,14 +51,14 @@ class DocuDeskAdmin implements IIconSection
     /**
      * Constructor for DocuDeskAdmin section
      *
-     * @param IL10N         $l            L10N service for translations
+     * @param IL10N         $localization L10N service for translations
      * @param IURLGenerator $urlGenerator URL generator service
      *
      * @return void
      */
-    public function __construct(IL10N $l, IURLGenerator $urlGenerator)
+    public function __construct(IL10N $localization, IURLGenerator $urlGenerator)
     {
-        $this->l            = $l;
+        $this->localization = $localization;
         $this->urlGenerator = $urlGenerator;
 
     }//end __construct()
@@ -74,7 +74,7 @@ class DocuDeskAdmin implements IIconSection
      */
     public function getIcon(): string
     {
-        return $this->urlGenerator->imagePath('core', 'actions/settings-dark.svg');
+        return $this->urlGenerator->imagePath(appName: 'docudesk', file: 'app-dark.svg');
 
     }//end getIcon()
 
@@ -104,7 +104,7 @@ class DocuDeskAdmin implements IIconSection
      */
     public function getName(): string
     {
-        return $this->l->t('DocuDesk');
+        return $this->localization->t('DocuDesk');
 
     }//end getName()
 

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <polygon points="256,26 455.19,141 455.19,371 256,486 56.81,371 56.81,141" fill="#4376FC"/>
+  <g transform="translate(136, 136) scale(10)" fill="#ffffff">
+    <path d="M6,2c-1.1,0-2,.9-2,2v16c0,1.1.9,2,2,2h12c1.1,0,2-.9,2-2v-12l-6-6H6M6,4h7v5h5v11H6V4M8,12v2h8v-2h-8M8,16v2h5v-2h-5Z"/>
+  </g>
+</svg>

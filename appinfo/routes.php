@@ -24,8 +24,19 @@ return [
 		['name' => 'metadata#enrich', 'url' => 'api/metadata/enrich', 'verb' => 'POST'],
 
 		// Anonymization routes
+		['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
 		['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
 		['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
 		['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
+
+		// PDF generation route
+		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
+
+		// Template routes
+		['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
+		['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
+		['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
+		['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
+		['name' => 'templates#destroy', 'url' => 'api/templates/{id}', 'verb' => 'DELETE'],
 	],
 ];

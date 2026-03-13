@@ -5,13 +5,13 @@
  * Controller for document metadata operations.
  * Provides an endpoint for triggering metadata enrichment on document objects.
  *
- * @category Controller
- * @package  OCA\DocuDesk\Controller
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Controller
+ * @package   OCA\DocuDesk\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -36,13 +36,15 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataController extends Controller
 {
+
+
     /**
      * Constructor for MetadataController
      *
-     * @param string            $appName         The application name
-     * @param IRequest         $request         The request object
-     * @param LoggerInterface   $logger          Logger for error reporting
-     * @param MetadataService  $metadataService Service for metadata operations
+     * @param string          $appName         The application name
+     * @param IRequest        $request         The request object
+     * @param LoggerInterface $logger          Logger for error reporting
+     * @param MetadataService $metadataService Service for metadata operations
      *
      * @return void
      */
@@ -52,9 +54,10 @@ class MetadataController extends Controller
         private readonly LoggerInterface $logger,
         private readonly MetadataService $metadataService
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
 
     /**
      * Trigger metadata enrichment for a document object
@@ -109,17 +112,21 @@ class MetadataController extends Controller
                     $metadata
                 );
 
-                return new JSONResponse([
-                    'success'        => true,
-                    'enrichedFields' => array_keys($metadata),
-                    'object'         => $result,
-                ]);
+                return new JSONResponse(
+                        [
+                            'success'        => true,
+                            'enrichedFields' => array_keys($metadata),
+                            'object'         => $result,
+                        ]
+                        );
             }
 
-            return new JSONResponse([
-                'success' => true,
-                'message' => 'No metadata enrichment needed',
-            ]);
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'No metadata enrichment needed',
+                    ]
+                    );
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to enrich metadata: '.$e->getMessage(),
@@ -131,8 +138,9 @@ class MetadataController extends Controller
                 ['error' => 'Failed to enrich metadata: '.$e->getMessage()],
                 500
             );
-        }
+        }//end try
 
     }//end enrich()
+
 
 }//end class

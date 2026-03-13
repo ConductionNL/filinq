@@ -21,6 +21,7 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
+use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -43,8 +44,7 @@ class Application extends App implements IBootstrap
      */
     public function __construct(
         array $urlParams=[],
-    )
-    {
+    ) {
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
     }//end __construct()
@@ -59,8 +59,9 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
-        // Register dashboard widget.
+        // Register dashboard widgets.
         $context->registerDashboardWidget(AnonymizationWidget::class);
+        $context->registerDashboardWidget(FileEntitiesWidget::class);
 
         // Register event listeners for OpenRegister events.
         // When documents are created/updated/deleted in OpenRegister,

@@ -1,66 +1,217 @@
-# DocuDesk
+<p align="center">
+  <img src="img/app-store.svg" alt="DocuDesk logo" width="80" height="80">
+</p>
 
-DocuDesk provides services for generating and anonymizing PDF, Word, HTML or Excel documents in a GDPR and WCAG compliant manner.
+<h1 align="center">DocuDesk</h1>
 
-## The Power of Local Processing 
+<p align="center">
+  <strong>GDPR-compliant document anonymization, consent management, and metadata enrichment for Nextcloud</strong>
+</p>
 
-Imagine a world where your sensitive documents never have to leave your premises, yet you still have all the power of modern cloud collaboration. That's DocuDesk. Running on your local Nextcloud instance, it's like having a secure document fortress with a sophisticated diplomatic corps.
+<p align="center">
+  <a href="https://github.com/ConductionNL/docudesk/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/docudesk" alt="Latest release"></a>
+  <a href="https://github.com/ConductionNL/docudesk/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/docudesk/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/docudesk/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://docudesk.app"><img src="https://img.shields.io/badge/docs-docudesk.app-green" alt="Documentation"></a>
+</p>
 
-When your organization needs to process sensitive documents - whether it's generating contracts, anonymizing personal data, or ensuring accessibility - everything happens within your walls. Your data stays your data. Yet through Nextcloud's powerful integration capabilities, you maintain seamless connections with your SharePoint, Office 365, or case management systems.
+---
 
-With advanced features like AI-powered document classification and secure version comparison, you can automate complex document workflows while maintaining complete control over your data. Our local AI processing ensures that even the most sophisticated analysis happens within your secure environment.
+DocuDesk adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive documents using AI-powered PII detection, tracks publication consent periods under the Dutch Wet Open Overheid (WOO), generates PDF documents from Twig templates, and automatically enriches document metadata — all without sending data to external cloud services.
 
-Think of it as having a high-security document embassy: all the critical work happens on your sovereign territory, but you still maintain perfect diplomatic relations with the outside world. You get the best of both worlds - absolute control over your sensitive data processing, with all the convenience of modern cloud collaboration.
+> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — all data is stored as OpenRegister objects (no own database tables).
 
-## Key Features
+## Screenshots
 
-- 📄 Generate documents in multiple formats (PDF, Word, HTML, Excel)
-- ✍️ Digital document signing and verification
-- 🔒 GDPR-compliant document anonymization
-- ♿ WCAG accessibility standards compliance
-- 🔄 Batch document processing
-- 📱 Responsive document viewing
-- 🏰 100% Local document processing
-- 🤝 Seamless external system integration
-- 📋 Complete audit trail
-- ⚡ High performance local operations
-- 🔍 Document comparison and version tracking
-- 🏷️ AI-powered document classification
-- 🌐 Multi-language support
-- 🔄 Automated workflow routing
-- ✅ Document validation & quality control
-- ⚡ Workflow automation & process management
-- 📊 Comprehensive reporting & analytics
+<table>
+  <tr>
+    <td><img src="img/screenshot-dashboard.png" alt="Dashboard with document processing overview" width="320"></td>
+    <td><img src="img/screenshot-anonymization.png" alt="Document anonymization with PII detection" width="320"></td>
+    <td><img src="img/screenshot-consent.png" alt="WOO publication consent management" width="320"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Dashboard</em></td>
+    <td align="center"><em>Anonymization</em></td>
+    <td align="center"><em>Consent Management</em></td>
+  </tr>
+</table>
 
-## Styleguide
+## Features
 
-We use the [Nextcloud Styleguide](https://github.com/nextcloud/design-system/tree/main/packages/vue/src/components) for our Vue components.
+### Document Anonymization
+- **Local Processing Pipeline** — All text extraction, entity recognition, and anonymization runs on your own instance; no data leaves your premises
+- **3-Step Workflow** — Upload, review detected entities, anonymize; inspect identified PII before committing
+- **Named Entity Recognition** — Detect names, addresses, BSN numbers, and other sensitive data via Presidio / OpenAnonymiser
+- **Risk Level Assessment** — Automatic risk classification per document using configurable thresholds
+- **Batch Processing** — Process multiple documents in a single operation
 
-### Icons
+### Consent Management
+- **Objection Period Tracking** — Enforce the minimum 4-week publication objection period required by the Wet Open Overheid
+- **Consent Lifecycle** — Track each document through intake, objection period, consent decision, and publication
+- **Consent Dashboard** — At-a-glance statistics on pending objection periods, decisions, and recent activity
+- **Audit Trail** — Full history of every consent decision and status change
 
-- [Main icon](https://pictogrammers.com/library/mdi/icon/file-document-outline/)
-- [Siging icon](https://pictogrammers.com/library/mdi/icon/file-sign/)
-- [GDPR Scan icon](https://pictogrammers.com/library/mdi/icon/incognito/)
-- [WCAG icon](https://pictogrammers.com/library/mdi/icon/camera-document/)
-- [Template icon](https://pictogrammers.com/library/mdi/icon/file-document-outline/)
+### Document Generation
+- **PDF Generation** — Create PDF documents from structured data using mPDF
+- **Twig Templates** — Define reusable document templates with Twig syntax
+- **Metadata Enrichment** — Automatic language detection, keyword extraction, and topic classification on upload
+
+### Integrations
+- **OpenRegister Events** — Listens to `ObjectCreated`, `ObjectUpdated`, and `ObjectDeleted` events for automated enrichment
+- **Nextcloud Dashboard Widgets** — `AnonymizationWidget` and `FileEntitiesWidget` for quick overviews
+- **Admin Settings** — Configure register/schema bindings, consent period duration, and enrichment toggles
+
+## Architecture
+
+```mermaid
+graph TD
+    A[Vue 2 Frontend] -->|REST API| B[PHP Controllers]
+    B --> C[AnonymizationService]
+    B --> D[ConsentService]
+    B --> E[MetadataService]
+    C --> F[OpenRegister TextExtractionService]
+    C --> G[Presidio / OpenAnonymiser]
+    D --> H[OpenRegister ObjectService]
+    E --> F
+    I[OpenRegister Events] -->|ObjectCreated/Updated| E
+    J[Nextcloud Files] --> C
+```
+
+### Data Model
+
+| Object | Description |
+|--------|-------------|
+| PublicationConsent | Consent record with objection period, notification, and decision |
+| File | Nextcloud file with extracted metadata (language, keywords, entities, risk level) |
+| Entity | Detected sensitive data point (person name, address, BSN, etc.) |
+
+### Directory Structure
+
+```
+docudesk/
+├── appinfo/           # Nextcloud app manifest, routes, navigation
+├── lib/               # PHP backend — controllers, services, event listeners, widgets
+│   ├── Controller/    # Anonymization, Consent, Metadata, Settings, Dashboard
+│   ├── Service/       # AnonymizationService, ConsentService, MetadataService
+│   ├── EventListener/ # OpenRegister object event integration
+│   └── Dashboard/     # Nextcloud Dashboard widget definitions
+├── src/               # Vue 2 frontend — components, Pinia stores, views
+│   ├── views/         # Dashboard, anonymization, consent, settings
+│   └── store/         # Pinia stores (consent, anonymization)
+├── docs/              # Feature specs, architecture, API documentation
+├── img/               # App icons and screenshots
+├── l10n/              # Translations (en, nl)
+└── website/           # Docusaurus documentation site (docudesk.app)
+```
+
+## Requirements
+
+| Dependency | Version |
+|-----------|---------|
+| Nextcloud | 28 – 33 |
+| PHP | 8.1+ |
+| [OpenRegister](https://github.com/ConductionNL/openregister) | latest |
+| Presidio / OpenAnonymiser | optional — for AI-powered entity recognition |
+
+## Installation
+
+### From the Nextcloud App Store
+
+1. Go to **Apps** in your Nextcloud instance
+2. Search for **DocuDesk**
+3. Click **Download and enable**
+
+> OpenRegister must be installed first. [Install OpenRegister](https://apps.nextcloud.com/apps/openregister)
+
+### From Source
+
+```bash
+cd /var/www/html/custom_apps
+git clone https://github.com/ConductionNL/docudesk.git
+cd docudesk
+npm install
+npm run build
+composer install
+php occ app:enable docudesk
+```
+
+## Development
+
+### Start the environment
+
+```bash
+docker compose -f openregister/docker-compose.yml up -d
+
+# With AI services (Presidio, OpenAnonymiser):
+docker compose -f openregister/docker-compose.yml --profile ai up -d
+```
+
+### Frontend development
+
+```bash
+cd docudesk
+npm install
+npm run dev        # Watch mode
+npm run build      # Production build
+```
+
+### Code quality
+
+```bash
+# PHP
+composer phpcs          # Check coding standards
+composer cs:fix         # Auto-fix issues
+composer phpmd          # Mess detection
+composer phpmetrics     # HTML metrics report
+
+# Frontend
+npm run lint            # ESLint
+npm run stylelint       # CSS linting
+```
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vue 2.7, Pinia, @nextcloud/vue |
+| Build | Webpack 5, @nextcloud/webpack-vue-config |
+| Backend | PHP 8.1+, Nextcloud App Framework |
+| Data | OpenRegister (PostgreSQL JSON objects) |
+| PDF | mPDF 8 |
+| Templates | Twig 3 |
+| NLP | Presidio, OpenAnonymiser (optional) |
+| Quality | PHPCS, PHPMD, phpmetrics, ESLint, Stylelint |
 
 ## Documentation
 
-Documentation is built using [Docusaurus](https://docusaurus.io/) and can be found in the `website` directory.
+Full documentation is available at **[docudesk.app](https://docudesk.app)**
 
-### Development
-```bash
-cd website
-npm install
-npm start
-```
+| Page | Description |
+|------|-------------|
+| [Architecture](docs/architecture.md) | Technical architecture and design decisions |
+| [Features](docs/features/) | Per-feature specification documents |
+| [API](docs/api/) | REST API and integration documentation |
 
-### Building
-```bash
-cd website
-npm run build
-```
+## Standards & Compliance
 
-Documentation is automatically generated from markdown files in `website/docs/`. The sidebar is auto-generated based on the directory structure.
+- **GDPR / AVG:** Privacy-by-design; all processing happens locally, no external cloud
+- **Wet Open Overheid (WOO):** Enforces the mandatory 4-week publication objection period
+- **Rijksoverheid Data Sovereignty:** 100% local processing — sensitive documents never leave your instance
+- **Accessibility:** WCAG AA (Dutch government requirement)
+- **Authorization:** RBAC via OpenRegister
+- **Audit trail:** Full change history on all objects
+- **Localization:** English and Dutch
 
+## Related Apps
 
+- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publish anonymized documents in open catalogs
+- **[Procest](https://github.com/ConductionNL/procest)** — Case management for document-related processes
+
+## License
+
+EUPL-1.2
+
+## Authors
+
+Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations.

@@ -13,7 +13,7 @@ const config = {
   projectName: 'docudesk',
   trailingSlash: false,
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
   // Even if you don't use internalization, you can use this field to set useful
@@ -29,9 +29,10 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          path: '../docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/conductionnl/docudesk/tree/main/website/',
+            'https://github.com/conductionnl/docudesk/tree/main/docusaurus/',
         },
         blog: false,
         theme: {
@@ -110,13 +111,20 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Gemeente Hoekse Waard. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} for <a href="https://openwebconcept.nl">Open Webconcept</a> by <a href="https://conduction.nl">Conduction B.V.</a>`,
       },
       prism: {
         theme: require('prism-react-renderer/themes/github'),
         darkTheme: require('prism-react-renderer/themes/dracula'),
       },
-    })
+      mermaid: {
+        theme: { light: 'default', dark: 'dark' },
+      },
+    }),
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
 };
 
 module.exports = config;

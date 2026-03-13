@@ -6,13 +6,13 @@
  * Provides functionality for retrieving, saving, and loading settings,
  * as well as managing configuration for OpenRegister integration.
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
- * @author   Conduction B.V. <info@conduction.nl>
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  GIT: <git_id>
- * @link     https://www.DocuDesk.app
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  */
 
 declare(strict_types=1);
@@ -20,6 +20,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use RuntimeException;
+use TypeError;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\App\IAppManager;
@@ -38,6 +40,7 @@ use OCA\OpenRegister\Service\RegisterService;
  */
 class SettingsService
 {
+
     /**
      * The application name for identification and configuration purposes
      *
@@ -58,6 +61,7 @@ class SettingsService
      * @var string The minimum required version of OpenRegister
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
+
 
     /**
      * SettingsService constructor
@@ -83,6 +87,7 @@ class SettingsService
 
     }//end __construct()
 
+
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -105,6 +110,7 @@ class SettingsService
 
     }//end isOpenRegisterInstalled()
 
+
     /**
      * Checks if OpenRegister is enabled
      *
@@ -115,6 +121,7 @@ class SettingsService
         return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
 
     }//end isOpenRegisterEnabled()
+
 
     /**
      * Attempts to retrieve the OpenRegister service from the container
@@ -129,9 +136,10 @@ class SettingsService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
+
 
     /**
      * Attempts to retrieve the Configuration service from the container
@@ -146,9 +154,10 @@ class SettingsService
             return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
         }
 
-        throw new \RuntimeException('Configuration service is not available.');
+        throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
+
 
     /**
      * Initializes the app with all required components
@@ -168,18 +177,18 @@ class SettingsService
         try {
             // Check if OpenRegister is installed and enabled.
             if ($this->isOpenRegisterInstalled() === false) {
-                throw new \RuntimeException('OpenRegister is not installed or version is too low');
+                throw new RuntimeException('OpenRegister is not installed or version is too low');
             }
 
             if ($this->isOpenRegisterEnabled() === false) {
-                throw new \RuntimeException('OpenRegister is not enabled');
+                throw new RuntimeException('OpenRegister is not enabled');
             }
 
             // Try to get the OpenRegister configuration service.
             try {
                 $configurationService = $this->getConfigurationService();
             } catch (Exception $e) {
-                throw new \RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
+                throw new RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
             }
 
             // Get current configuration version from app config.
@@ -190,15 +199,17 @@ class SettingsService
 
             // Check if new configuration version is higher than current.
             if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $results['info'][] = "Configuration version {$currentVersion} is up to date or newer than {$settings['info']['version']}";
+                $infoVersion       = $settings['info']['version'];
+                $results['info'][] = 'Configuration version '.$currentVersion.' is up to date or newer than '.$infoVersion;
                 return $results;
             }
 
-            // Import the new configuration.
-            $configurationService->importFromJson($settings, false);
-
-            // Update the configuration version in app config.
-            $this->config->setValueString($this->appName, 'configuration_version', $settings['info']['version']);
+            // Import the new configuration using the app-aware method.
+            $configurationService->importFromApp(
+                appId: $this->appName,
+                data: $settings,
+                version: $settings['info']['version']
+            );
 
             $results['configuration'] = true;
             $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
@@ -216,6 +227,7 @@ class SettingsService
 
     }//end initialize()
 
+
     /**
      * Load settings from the docudesk_register.json file
      *
@@ -229,36 +241,40 @@ class SettingsService
 
         try {
             if (file_exists($settingsFilePath) === false) {
-                throw new \RuntimeException('Settings file not found at: '.$settingsFilePath);
+                throw new RuntimeException('Settings file not found at: '.$settingsFilePath);
             }
 
             $jsonContent = file_get_contents($settingsFilePath);
             if ($jsonContent === false) {
-                throw new \RuntimeException('Failed to read settings file');
+                throw new RuntimeException('Failed to read settings file');
             }
 
             $settings = json_decode($jsonContent, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \RuntimeException('Error decoding JSON: '.json_last_error_msg());
+                throw new RuntimeException('Error decoding JSON: '.json_last_error_msg());
             }
 
             if (isset($settings['info']['version']) === false) {
-                throw new \RuntimeException('Settings file does not contain version information');
+                throw new RuntimeException('Settings file does not contain version information');
             }
 
             return $settings;
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to load settings: '.$e->getMessage());
+            throw new RuntimeException('Failed to load settings: '.$e->getMessage());
         }//end try
 
     }//end loadSettings()
+
 
     /**
      * Retrieve all settings
      *
      * @return array<string, mixed> The current settings configuration
      *
-     * @throws \RuntimeException If settings retrieval fails
+     * @throws RuntimeException If settings retrieval fails
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getAllSettings(): array
     {
@@ -266,6 +282,7 @@ class SettingsService
         $data = [];
         $data['objectTypes']        = [
             'publicationConsent',
+            'template',
         ];
         $data['openRegisters']      = false;
         $data['availableRegisters'] = [];
@@ -284,7 +301,7 @@ class SettingsService
                         filters: [],
                         searchConditions: [],
                         searchParams: [],
-                        extend: ['schemas']
+                        _extend: ['schemas']
                     );
 
                     // Convert Register entities to arrays and filter schemas.
@@ -316,7 +333,7 @@ class SettingsService
                         },
                         $rawRegisters
                     );
-                } catch (\TypeError $e) {
+                } catch (TypeError $e) {
                     $this->logger->warning(
                         'OpenRegister internal error - using empty registers list',
                         [
@@ -336,9 +353,9 @@ class SettingsService
                         ]
                     );
                     $data['availableRegisters'] = [];
-                }
-            }
-        } catch (\RuntimeException $e) {
+                }//end try
+            }//end if
+        } catch (RuntimeException $e) {
             $this->logger->info(
                 'OpenRegister service not available',
                 [
@@ -367,17 +384,17 @@ class SettingsService
                 'publication_objection_period_days',
                 '28'
             );
-            $data['enable_language_detection'] = $this->config->getValueString(
+            $data['enable_language_detection']         = $this->config->getValueString(
                 $this->appName,
                 'enable_language_detection',
                 '1'
             ) === '1';
-            $data['enable_keyword_extraction'] = $this->config->getValueString(
+            $data['enable_keyword_extraction']         = $this->config->getValueString(
                 $this->appName,
                 'enable_keyword_extraction',
                 '1'
             ) === '1';
-            $data['enable_topic_classification'] = $this->config->getValueString(
+            $data['enable_topic_classification']       = $this->config->getValueString(
                 $this->appName,
                 'enable_topic_classification',
                 '1'
@@ -385,10 +402,11 @@ class SettingsService
 
             return $data;
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to retrieve settings: '.$e->getMessage());
+            throw new RuntimeException('Failed to retrieve settings: '.$e->getMessage());
         }//end try
 
     }//end getAllSettings()
+
 
     /**
      * Update the settings configuration
@@ -416,15 +434,18 @@ class SettingsService
                 }
 
                 // Handle arrays and objects by converting to JSON.
+                $stringValue = (string) $value;
                 if (is_array($value) === true || is_object($value) === true) {
                     $stringValue = json_encode($value);
-                } else {
-                    $stringValue = is_string($value) === true ? $value : (string) $value;
+                }
+
+                if (is_string($value) === true) {
+                    $stringValue = $value;
                 }
 
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
-            }
+            }//end foreach
 
             $this->logger->info(
                 'Settings updated successfully',
@@ -435,9 +456,10 @@ class SettingsService
 
             return $data;
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to update settings: '.$e->getMessage());
+            throw new RuntimeException('Failed to update settings: '.$e->getMessage());
         }//end try
 
     }//end updateSettings()
+
 
 }//end class
