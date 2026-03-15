@@ -5,6 +5,7 @@ on:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
     branches: [main, master, development]
+  workflow_dispatch:
 
 jobs:
   quality:
@@ -12,7 +13,7 @@ jobs:
     with:
       app-name: docudesk
       php-version: "8.3"
-      nextcloud-ref: stable32
+      nextcloud-test-refs: '["stable32"]'
       enable-psalm: true
       enable-phpstan: true
       enable-phpmetrics: true
