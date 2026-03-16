@@ -140,3 +140,63 @@ THEN they can choose to use version 3 (original) or version 4 (current)
 - **OpenConnector**: External data resolution (BRP, KVK, BAG)
 - **NL Design System**: Huisstijl CSS variable support
 - **LibreOffice/unoconv** (or equivalent): Server-side ODF conversion
+
+### Using Mock Register Data
+
+This spec depends on **BRP**, **KVK**, and **BAG** mock registers for data resolution testing (DCS-002: resolve merge data from external sources).
+
+**Loading the registers:**
+```bash
+# Load BRP register (35 persons, register slug: "brp", schema: "ingeschreven-persoon")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+
+# Load KVK register (16 businesses + 14 branches, register slug: "kvk")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/kvk_register.json
+
+# Load BAG register (32 addresses + 21 objects + 21 buildings, register slug: "bag")
+docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/bag_register.json
+```
+
+**Test data for this spec's use cases:**
+- **BRP data merge**: BSN `999993653` (Suzanne Moulin) -- test template merge with person fields (naam, adres, geboortedatum)
+- **KVK data merge**: KVK `69599084` (Test EMZ Dagobert) -- test template merge with business fields (naam, KVK nummer, rechtsvorm)
+- **BAG address resolution**: Use BAG `nummeraanduiding` records -- test nested data resolution (zaak -> persoon -> adres, DCS-003)
+- **Bulk generation**: 35 BRP person records -- test bulk letter generation to multiple citizens
+
+### Current Implementation Status
+- **Not yet implemented**: This is an entirely planned spec. No `DocumentService` class exists in the codebase.
+- **Building blocks that exist**:
+  - `lib/Service/TemplateService.php` -- template CRUD is implemented (the `template-management` spec this builds on)
+  - `lib/Service/PdfService.php` -- PDF rendering via mPDF + Twig sandbox is implemented (the `pdf-generation` spec this builds on)
+  - `lib/Settings/document_register.json` -- defines the `report` and `template` schemas, but is NOT loaded during boot
+  - `appinfo/routes.php` -- no `/api/documents/generate` routes exist
+- **Key gaps**:
+  - No `DocumentService` class (DCS-010, DCS-040)
+  - No `DocumentController` class
+  - No data resolution from OpenRegister objects (DCS-001 through DCS-005)
+  - No ODF output support -- no LibreOffice/unoconv integration (DCS-021)
+  - No huisstijl configuration system (DCS-030 through DCS-032)
+  - No bulk generation or job queue (DCS-040 through DCS-043)
+  - No template versioning (DCS-050 through DCS-052)
+
+### Standards & References
+- **ODF 1.2 (ISO/IEC 26300:2015)**: Required for .odt output -- hard requirement in Dutch government tenders
+- **PDF/A (ISO 19005)**: Should be considered for archival PDF output alongside standard PDF
+- **NL Design System**: CSS variable-based theming for huisstijl enforcement
+- **WCAG 2.1 AA**: Generated documents should meet accessibility requirements (especially for government publications)
+- **Tenderned requirements**: 39% of government tenders demand document creation from templates per tender analysis
+- **Archiefwet 1995**: Template versioning supports document retention and audit trail requirements
+
+### Specificity Assessment
+- **Specific enough to implement**: Partially. The API shape and core flow are well-defined, but several areas need elaboration.
+- **Missing/Ambiguous**:
+  - ODF conversion technology not specified (LibreOffice headless? unoconv? Collabora CODE?)
+  - Huisstijl data model not defined -- what fields does the "huisstijl configuration" OpenRegister object contain?
+  - Async job queue implementation not specified (Nextcloud background jobs? Redis? n8n?)
+  - Template versioning storage mechanism not specified (OpenRegister object versions? Separate version objects?)
+  - How does nested data resolution interact with OpenConnector -- what mapping format?
+- **Open questions**:
+  1. Which ODF conversion tool will be used and how will it be deployed (docker sidecar? system package?)
+  2. How does this integrate with the existing `document_register.json` which is not currently loaded?
+  3. Should this use Nextcloud's built-in background job system or n8n for async bulk generation?
+  4. What is the maximum document size/complexity supported?

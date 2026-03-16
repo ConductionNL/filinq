@@ -136,3 +136,44 @@ Dutch municipalities use signing for: vergunningbesluiten, overeenkomsten, verwe
 - `procest:bw-parafering` — B&W parafering may trigger formal signing after approval
 - `openconnector` — routes to external signing providers (ValidSign, DocuSign)
 - `openregister:audit-trail-immutable` — stores signing audit records
+
+### Current Implementation Status
+- **Not yet implemented**: This is an entirely planned spec. Zero implementation exists in the codebase.
+  - No `SigningService`, `SigningController`, or signing-related classes exist in `lib/`
+  - No signing-related Vue components exist in `src/`
+  - No signing-related routes exist in `appinfo/routes.php`
+  - No references to "signing", "ValidSign", "PAdES", or "eIDAS" exist in any PHP, Vue, or JS files
+  - No signing provider interface or integration code exists
+- **Dependencies not yet available**:
+  - Procest integration for case-based signing flows (REQ-SIGN-01)
+  - OpenConnector integration for external signing providers (REQ-SIGN-03)
+  - OpenRegister audit trail immutable storage (REQ-SIGN-07)
+
+### Standards & References
+- **eIDAS Regulation (EU 910/2014)**: Defines three signature levels (SES, AdES, QES) -- legally binding across EU
+- **PAdES (ETSI EN 319 142)**: PDF Advanced Electronic Signatures standard for PDF-embedded signatures
+- **PKIoverheid**: Dutch government PKI framework for qualified electronic signatures (maintained by Logius)
+- **TSA (RFC 3161)**: Time Stamp Authority protocol for trusted timestamps
+- **Wet digitale overheid (Wdo)**: Dutch law governing digital government services including electronic signatures
+- **eHerkenning**: Dutch business authentication framework, relevant for external signer verification
+- **DigiD**: Dutch citizen authentication, relevant for citizen-facing signing flows
+- **ETSI EN 319 132 (XAdES)**: XML Advanced Electronic Signatures (alternative to PAdES for non-PDF documents)
+- **Archiefwet 1995**: 10-year audit trail retention requirement for signing records
+
+### Specificity Assessment
+- **Specific enough to implement**: No -- this is a high-level requirement spec, not an implementation spec.
+- **Missing/Ambiguous**:
+  - No data model defined for signing requests, signer records, or audit trail objects
+  - No API endpoints specified (what routes? what request/response format?)
+  - No `SigningProvider` interface defined (what methods? what lifecycle hooks?)
+  - ValidSign API specifics not documented (which API version? what authentication?)
+  - No Vue component designs or UI wireframes
+  - PKIoverheid certificate handling not specified (how does the app access certificates?)
+  - Bulk signing authentication mechanism unclear (session-based? certificate-based?)
+  - No schema for signing metadata storage in OpenRegister
+- **Open questions**:
+  1. Will signing be a DocuDesk feature or a separate Nextcloud app?
+  2. Should LibreSign (existing Nextcloud app) be used instead of building from scratch?
+  3. How will external signing providers be integrated -- via OpenConnector sources or direct API integration?
+  4. What is the priority ordering: ValidSign first, then native, or native first?
+  5. How does the 10-year audit trail requirement interact with Nextcloud's data retention policies?

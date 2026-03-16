@@ -290,3 +290,31 @@ The listener only imports `MetadataService` and `SettingsService` -- `ConsentSer
 - **Nextcloud IAppConfig**: Storing objection period and register/schema configuration (read directly by ConsentService)
 - **SettingsService**: Retrieving register/schema configuration for consent endpoints; provides ObjectService access for controller read operations
 - **ConsentService**: Write operations (create, update) and document-scoped queries
+
+### Current Implementation Status
+- **Implemented** with file paths:
+  - `lib/Service/ConsentService.php` -- `createConsentRequest()`, `updateConsentStatus()`, `checkObjectionDeadline()`, `getConsentsByDocument()`, `getObjectionPeriodDays()`, private `getObjectService()`
+  - `lib/Controller/ConsentController.php` -- REST API: `index()`, `show()`, `update()`, `byDocument()` (no `create` endpoint)
+  - `src/views/consent/ConsentIndex.vue` -- consent listing with stats cards and table
+  - `src/views/consent/ConsentDetail.vue` -- consent detail/edit view with status dropdowns
+  - `src/store/modules/consent.js` -- Pinia store with consent CRUD and stats getters
+  - `lib/Settings/docudesk_register.json` -- PublicationConsent schema definition
+  - `appinfo/routes.php` -- routes for GET/PUT consents and document-scoped query
+- **Not yet implemented**:
+  - **No POST /api/consents endpoint** (CONS-048/CONS-050) -- consent records cannot be created via REST API or UI
+  - **No automated consent creation** (CONS-057) -- the event listener only does metadata enrichment, not consent creation
+  - **RBAC/multitenancy disabled** (CONS-044/045/046) -- all ObjectService calls bypass access control
+- **Partial**: The consent system is structurally complete but functionally disconnected -- `createConsentRequest()` is dead code with no trigger
+
+### Standards & References
+- **GDPR/AVG**: Consent management for personal data publication (Articles 6, 7, and 21 -- right to object)
+- **WOO (Wet open overheid)**: Article 4.4 requires minimum 4-week objection period before publication. The configurable `publication_objection_period_days` (default 28) satisfies this.
+- **ISO 8601**: Objection deadlines stored in ISO 8601 datetime format
+
+### Specificity Assessment
+- **Specific enough**: The data model and API are well-specified, but the creation flow is a critical gap.
+- **Missing/Ambiguous**: How are consent records actually created? The spec documents `createConsentRequest()` as implemented but there's no trigger. The intended workflow (manual creation? automated from entity detection? triggered from WOO case?) is not specified.
+- **Open questions**:
+  1. Should a `POST /api/consents` endpoint be added?
+  2. Should the event listener trigger consent creation when entities are detected?
+  3. Is the RBAC bypass intentional for single-tenant deployments, or a bug that needs fixing for production?
