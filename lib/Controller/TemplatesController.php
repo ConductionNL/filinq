@@ -54,7 +54,7 @@ class TemplatesController extends Controller
         private readonly LoggerInterface $logger,
         private readonly TemplateService $templateService
     ) {
-        parent::__construct(appName: $appName, request: $request);
+        parent::__construct($appName, $request);
 
     }//end __construct()
 
@@ -116,17 +116,17 @@ class TemplatesController extends Controller
     /**
      * Get a single template by ID
      *
-     * @param string $objectId The template UUID
+     * @param string $id The template UUID
      *
      * @return JSONResponse JSON response with the template object
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function show(string $objectId): JSONResponse
+    public function show(string $id): JSONResponse
     {
         try {
-            $result = $this->templateService->getTemplate(id: $objectId);
+            $result = $this->templateService->getTemplate(id: $id);
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
@@ -189,20 +189,20 @@ class TemplatesController extends Controller
     /**
      * Update an existing template
      *
-     * @param string $objectId The template UUID
+     * @param string $id The template UUID
      *
      * @return JSONResponse JSON response with the updated template object
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function update(string $objectId): JSONResponse
+    public function update(string $id): JSONResponse
     {
         try {
             $data = $this->request->getParams();
             unset($data['_route'], $data['id']);
 
-            $result = $this->templateService->updateTemplate(id: $objectId, data: $data);
+            $result = $this->templateService->updateTemplate(id: $id, data: $data);
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
@@ -228,17 +228,17 @@ class TemplatesController extends Controller
     /**
      * Delete a template
      *
-     * @param string $objectId The template UUID
+     * @param string $id The template UUID
      *
      * @return JSONResponse JSON response with success status
      *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
-    public function destroy(string $objectId): JSONResponse
+    public function destroy(string $id): JSONResponse
     {
         try {
-            $this->templateService->deleteTemplate(id: $objectId);
+            $this->templateService->deleteTemplate(id: $id);
 
             return new JSONResponse(data: ['success' => true]);
         } catch (Exception $e) {

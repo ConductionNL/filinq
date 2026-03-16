@@ -24,24 +24,11 @@ use OCP\Util;
 
 /**
  * Dashboard widget for document anonymization
- *
- * @category Dashboard
- * @package  OCA\DocuDesk\Dashboard
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
  */
 class AnonymizationWidget implements IWidget, IIconWidget
 {
 
 
-    /**
-     * Constructor for AnonymizationWidget
-     *
-     * @param IURLGenerator $urlGenerator URL generator for building URLs
-     *
-     * @return void
-     */
     public function __construct(
         private readonly IURLGenerator $urlGenerator
     ) {
@@ -49,11 +36,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end __construct()
 
 
-    /**
-     * Get the unique widget identifier
-     *
-     * @return string The widget ID
-     */
     public function getId(): string
     {
         return 'docudesk-anonymization';
@@ -61,11 +43,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getId()
 
 
-    /**
-     * Get the widget display title
-     *
-     * @return string The widget title
-     */
     public function getTitle(): string
     {
         return 'Document Anonymization';
@@ -73,11 +50,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getTitle()
 
 
-    /**
-     * Get the widget display order
-     *
-     * @return int The widget order
-     */
     public function getOrder(): int
     {
         return 20;
@@ -85,11 +57,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getOrder()
 
 
-    /**
-     * Get the widget icon CSS class
-     *
-     * @return string The icon CSS class
-     */
     public function getIconClass(): string
     {
         return 'icon-docudesk';
@@ -97,11 +64,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getIconClass()
 
 
-    /**
-     * Get the widget icon URL
-     *
-     * @return string The absolute URL to the widget icon
-     */
     public function getIconUrl(): string
     {
         return $this->urlGenerator->getAbsoluteURL(
@@ -111,11 +73,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getIconUrl()
 
 
-    /**
-     * Get the widget URL
-     *
-     * @return string|null The URL the widget links to
-     */
     public function getUrl(): ?string
     {
         return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
@@ -123,13 +80,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getUrl()
 
 
-    /**
-     * Load the widget scripts
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     */
     public function load(): void
     {
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
