@@ -292,3 +292,25 @@ AnonymizationService uses two distinct EntityRelationMapper methods in different
 - **Nextcloud IUserSession**: Current user identification
 - **Nextcloud IAppManager**: Checking OpenRegister installation status
 - **PSR ContainerInterface**: Lazy service resolution
+
+### Current Implementation Status
+- **Fully implemented** with file paths:
+  - `lib/Service/AnonymizationService.php` -- core pipeline: `uploadFile()`, `extractAndDetectEntities()`, `anonymizeDocument()`, `listProcessedFiles()`, `getCurrentUserId()`, `generateUuid()`, lazy getters for OpenRegister services
+  - `lib/Controller/AnonymizationController.php` -- REST API: `files()`, `upload()`, `extract()`, `anonymize()` with validation
+  - `src/views/anonymization/AnonymizationWidget.vue` -- drag-and-drop upload UI with step indicator
+  - `src/views/anonymization/AnonymizationIndex.vue` -- anonymization view wrapper
+  - `src/store/modules/anonymization.js` -- Pinia store with file queue management
+  - `appinfo/routes.php` -- routes for all 4 anonymization endpoints
+- **Not yet implemented**: Nothing -- all requirements (ANON-001 through ANON-056) are fully implemented
+- **Partial**: ANON-048 notes that `extract()` and `anonymize()` controller methods always return 500 on exceptions (don't propagate HTTP status codes from exception)
+
+### Standards & References
+- **GDPR/AVG**: Anonymization is a core GDPR technique for personal data protection (Article 4(5) pseudonymization, Recital 26 anonymization)
+- **RFC 4122**: UUID v4 generation for anonymization replacement keys
+- **WOO (Wet open overheid)**: Anonymization pipeline supports WOO document redaction workflow
+- **NEN-ISO/IEC 27001**: Data minimization and anonymization align with information security controls
+
+### Specificity Assessment
+- **Specific enough**: Yes, this spec is highly detailed with all requirements implemented and verified.
+- **Missing/Ambiguous**: The spec does not define supported file formats for upload (which MIME types are accepted). The entity type taxonomy (PERSON, ORGANIZATION, EMAIL, etc.) is not fully enumerated -- it depends on OpenRegister's NER model.
+- **Open questions**: What happens when OpenRegister is not installed and a user tries to use anonymization? The lazy getters throw RuntimeException but the UI flow for this case is not documented.

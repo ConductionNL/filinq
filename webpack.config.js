@@ -26,4 +26,9 @@ webpackConfig.entry = {
 	},
 }
 
+webpackConfig.resolve.alias = {
+	...webpackConfig.resolve.alias,
+	'@conduction/nextcloud-vue': path.resolve(__dirname, '../nextcloud-vue/src'),
+}
+
 module.exports = webpackConfig

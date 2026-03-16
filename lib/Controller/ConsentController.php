@@ -96,7 +96,11 @@ class ConsentController extends Controller
 
             $consents = [];
             foreach ($results as $result) {
-                $consents[] = is_object($result) && method_exists($result, 'jsonSerialize') ? $result->jsonSerialize() : (array) $result;
+                if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                    $consents[] = $result->jsonSerialize();
+                } else {
+                    $consents[] = (array) $result;
+                }
             }
 
             return new JSONResponse($consents);
@@ -112,6 +116,74 @@ class ConsentController extends Controller
         }//end try
 
     }//end index()
+
+
+    /**
+     * Create a new consent request for a detected entity
+     *
+     * Expects JSON body with: documentId, entityType, entityText, and optionally extra fields.
+     *
+     * @return JSONResponse JSON response with the created consent record
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function create(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+
+            // Validate required fields.
+            $required = ['documentId', 'entityType', 'entityText'];
+            foreach ($required as $field) {
+                if (empty($data[$field]) === true) {
+                    return new JSONResponse(
+                        ['error' => "Missing required field: {$field}"],
+                        400
+                    );
+                }
+            }
+
+            $settings = $this->settingsService->getAllSettings();
+            $register = $settings['configuration']['publicationConsent_register'] ?? '';
+            $schema   = $settings['configuration']['publicationConsent_schema'] ?? '';
+
+            if (empty($register) === true || empty($schema) === true) {
+                return new JSONResponse(
+                    ['error' => 'PublicationConsent register/schema not configured'],
+                    400
+                );
+            }
+
+            // Extract known fields and pass any remaining as extra.
+            $knownFields = ['documentId', 'entityType', 'entityText'];
+            $extra       = array_diff_key($data, array_flip($knownFields));
+
+            // Remove framework-injected params that are not consent data.
+            unset($extra['_route'], $extra['_method']);
+
+            $result = $this->consentService->createConsentRequest(
+                $data['documentId'],
+                $data['entityType'],
+                $data['entityText'],
+                $register,
+                $schema,
+                $extra
+            );
+
+            return new JSONResponse($result, 201);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to create consent: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to create consent: '.$e->getMessage()],
+                500
+            );
+        }//end try
+
+    }//end create()
 
 
     /**
@@ -154,9 +226,11 @@ class ConsentController extends Controller
                 );
             }
 
-            return new JSONResponse(
-                is_object($object) && method_exists($object, 'jsonSerialize') ? $object->jsonSerialize() : (array) $object
-            );
+            if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+                return new JSONResponse($object->jsonSerialize());
+            }
+
+            return new JSONResponse((array) $object);
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to get consent: '.$e->getMessage(),

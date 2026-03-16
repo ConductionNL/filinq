@@ -99,3 +99,27 @@ GIVEN LarpingApp resolves TemplateService from Nextcloud's DI container
 WHEN it calls getTemplatesByNamespace('larpingapp')
 THEN it receives an array of template objects scoped to LarpingApp
 ```
+
+### Current Implementation Status
+- **Fully implemented** with file paths:
+  - `lib/Service/TemplateService.php` -- core template CRUD: `getTemplates()`, `getTemplate()`, `createTemplate()`, `updateTemplate()`, `deleteTemplate()`, `getTemplatesByNamespace()`, namespace validation
+  - `lib/Controller/TemplatesController.php` -- REST API: `index()`, `create()`, `show()`, `update()`, `destroy()`
+  - `lib/Settings/docudesk_register.json` -- contains the `template` schema definition with properties (name, description, content, namespace, format, orientation)
+  - `appinfo/routes.php` -- full CRUD routes: GET/POST `/api/templates`, GET/PUT/DELETE `/api/templates/{id}`
+- **Not yet implemented**: Nothing -- all requirements (TMPL-001 through TMPL-036) are fully implemented
+- **No dedicated UI**: There is no Vue component for template management in `src/views/`. Templates are managed entirely via the REST API or programmatic access through `TemplateService`.
+
+### Standards & References
+- **Twig 3.x**: Templates use Twig syntax with the same sandbox security policy as `pdf-generation` spec
+- **HTML5**: Template content format is HTML, rendered via Twig then converted to PDF
+- **ISO 216**: Page format options (A4, A3) follow international paper size standard
+- **ANSI/ASME Y14.1**: Letter and Legal format options follow American paper size standards
+
+### Specificity Assessment
+- **Specific enough**: Yes, this spec is well-defined and fully implemented.
+- **Missing/Ambiguous**: No UI for template management is documented or implemented. The namespace validation regex (`/^[a-z0-9]+$/`) excludes hyphens and underscores which may be needed. No template preview functionality is specified.
+- **Open questions**:
+  1. Should a template management UI be added to DocuDesk's admin or main interface?
+  2. Should template content validation (valid Twig syntax) be performed on create/update?
+  3. Should namespace allow hyphens/underscores (e.g., `my-app` or `my_app`)?
+  4. How does this interact with the `document-creatie-sjablonen` spec's template versioning requirement?
