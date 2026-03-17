@@ -60,7 +60,7 @@ export const useConsentStore     = defineStore(
                     this.error       = null
                     try {
                         const response = await axios.put(generateUrl(` / apps / docudesk / api / consents / ${id}`), data)
-                        // Update in local list.
+                        // Update in local list
                         const index = this.consents.findIndex(c => (c.id || c.uuid) === id)
                         if (index !== -1) {
                             this.consents[index] = response.data

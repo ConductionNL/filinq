@@ -199,3 +199,41 @@ AND dataController will identify the GDPR-responsible party
 - **AnonymizationService**: Creates report objects during the analysis pipeline
 - **OpenRegister ObjectService**: CRUD operations on register objects
 - **document_register.json**: Source of truth for register/schema structure and sample data
+
+### Current Implementation Status
+- **Partially implemented** with file paths:
+  - `lib/Settings/document_register.json` -- the JSON file exists with register, schemas (report, template, entity), and 3 pre-seeded sample objects (419 lines)
+  - `lib/Settings/docudesk_register.json` -- separate consent register, loaded during boot
+- **Critical gap: document_register.json is NOT loaded during application boot**:
+  - `lib/Service/SettingsService.php` only references `docudesk_register.json` in `loadSettings()` (line 237: `__DIR__.'/../Settings/docudesk_register.json'`)
+  - `lib/AppInfo/Application.php` calls `SettingsService::initialize()` which only imports `docudesk_register.json`
+  - There is NO code path that loads `document_register.json` into OpenRegister
+  - The register, schemas, and sample objects defined in this file are never actually created in OpenRegister
+- **Not yet implemented**:
+  - WCAG compliance results (DREG-019) -- planned
+  - Language level analysis (DREG-020) -- planned
+  - Retention policy fields (DREG-021, DREG-022, DREG-023) -- planned
+  - Template schema properties (DREG-033) -- no fields defined
+  - Entity schema properties (DREG-042, DREG-043) -- no fields defined
+  - Cross-document entity management -- not implemented
+
+### Standards & References
+- **GDPR/AVG**: Report objects include data controller, legal basis, and retention period fields (planned)
+- **WOO (Wet open overheid)**: Document analysis and risk assessment support WOO publication decisions
+- **WCAG 2.1 AA (ISO 40500)**: Planned `wcagComplianceResults` field for document accessibility assessment
+- **CEFR (Common European Framework of Reference)**: Planned `languageLevelResults` for B1/B2/C1 readability classification
+- **Archiefwet 1995**: Retention period and expiry fields align with Dutch archival law requirements
+- **NEN 2082**: Dutch standard for document management metadata
+- **MD5 (RFC 1321)**: Used for file integrity hashing (note: MD5 is cryptographically broken; SHA-256 would be more appropriate)
+
+### Specificity Assessment
+- **Specific enough**: The JSON structure is well-defined, but the loading mechanism is broken (file exists but is never imported).
+- **Missing/Ambiguous**:
+  - How should `document_register.json` be loaded? Should `SettingsService::initialize()` import both JSON files?
+  - The `anonymization` schema used by sample objects 2 and 3 is NOT defined in the register's schema list -- this is an inconsistency
+  - Schema properties are empty (`properties: []`) so there is no validation -- all fields are ad-hoc
+  - MD5 for file integrity is cryptographically weak; should SHA-256 be used instead?
+- **Open questions**:
+  1. Is the missing import of `document_register.json` a bug or is it intended to be loaded separately?
+  2. Should the `anonymization` schema be formally added to the register definition?
+  3. When will schema properties be populated to enable validation (`hardValidation: true`)?

@@ -224,3 +224,29 @@ DocuDesk uses **two different icon files** for navigation and dashboard widgets:
 - **Nextcloud IWidget/IIconWidget**: Dashboard widget registration
 - **Nextcloud NcAppNavigation**: Navigation component framework
 - ~~**Nextcloud ContentSecurityPolicy**: CSP configuration for the page response~~ (removed -- default Nextcloud CSP now applies)
+
+### Current Implementation Status
+- **Fully implemented** with file paths:
+  - `lib/Controller/DashboardController.php` -- `page()` method serving TemplateResponse (unused `$getParameter` noted)
+  - `lib/Dashboard/AnonymizationWidget.php` -- Nextcloud dashboard widget (IWidget, IIconWidget), ID `docudesk-anonymization`, order 20
+  - `lib/Dashboard/FileEntitiesWidget.php` -- Nextcloud dashboard widget (IWidget, IIconWidget), ID `docudesk-file-entities`, order 21
+  - `lib/AppInfo/Application.php` -- registers both widgets via `registerDashboardWidget()`
+  - `src/views/dashboard/DashboardIndex.vue` -- consent stats cards, recent activity, quick anonymization
+  - `src/views/Views.vue` -- conditional view rendering based on navigation state
+  - `src/navigation/MainMenu.vue` -- three-item navigation (Dashboard, Anonymization, Consent Management)
+  - `src/store/modules/navigation.ts` -- Pinia navigation store (TypeScript)
+  - `src/views/widgets/AnonymizationDashboardWidget.vue` -- NC Dashboard widget frontend
+  - `src/views/widgets/FileEntitiesDashboardWidget.vue` -- NC Dashboard widget frontend
+  - `src/dashboard.js` -- dashboard widget script bundle entry point
+  - `appinfo/routes.php` -- dashboard page route (`/`) plus SPA catch-all (`/{path}`)
+- **Not yet implemented**: Nothing -- all dashboard requirements are fully implemented
+- **Removed items**: DashboardController::index() method and permissive CSP have been removed as documented
+
+### Standards & References
+- **WCAG 2.1 AA**: Dashboard UI should comply with accessibility standards (color contrast on stat cards, keyboard navigation)
+- **Nextcloud IWidget/IIconWidget**: Standard Nextcloud Dashboard widget API
+
+### Specificity Assessment
+- **Specific enough**: Yes, this spec is complete and all requirements match the implementation.
+- **Missing/Ambiguous**: The dead code `$getParameter` on `page()` is documented but not resolved. The SPA catch-all route (`/{path}`) in routes.php is not documented in this spec.
+- **Open questions**: Should the unused `$getParameter` be removed from `page()`?

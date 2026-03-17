@@ -197,8 +197,7 @@ class SettingsService
 
             // Check if new configuration version is higher than current.
             if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $infoVersion       = $settings['info']['version'];
-                $results['info'][] = 'Configuration version '.$currentVersion.' is up to date or newer than '.$infoVersion;
+                $results['info'][] = "Configuration version {$currentVersion} is up to date or newer than {$settings['info']['version']}";
                 return $results;
             }
 
@@ -432,11 +431,7 @@ class SettingsService
                 if (is_array($value) === true || is_object($value) === true) {
                     $stringValue = json_encode($value);
                 } else {
-                    if (is_string($value) === true) {
-                        $stringValue = $value;
-                    } else {
-                        $stringValue = (string) $value;
-                    }
+                    $stringValue = is_string($value) === true ? $value : (string) $value;
                 }
 
                 $this->config->setValueString($this->appName, $key, $stringValue);

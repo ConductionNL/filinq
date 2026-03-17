@@ -93,3 +93,29 @@ WHEN renderPdf() is called
 THEN the Twig sandbox throws a SecurityError
 AND PDF generation fails with an exception
 ```
+
+### Current Implementation Status
+- **Fully implemented** with file paths:
+  - `lib/Service/PdfService.php` -- core PDF rendering: `renderPdf()` with Twig sandbox, mPDF integration, page configuration options
+  - `lib/Controller/PdfController.php` -- REST API: `render()` endpoint returning DataDownloadResponse
+  - `appinfo/routes.php` -- route for `pdf#render` (POST `/api/pdf/render`)
+  - `composer.json` -- dependencies: `mpdf/mpdf: ^8.2`, `twig/twig: ^3.18`
+- **Not yet implemented**: Nothing -- all requirements (PDF-001 through PDF-051) are fully implemented
+- **Used by other specs**:
+  - `template-management` spec uses PdfService indirectly (templates designed for PDF rendering)
+  - `document-creatie-sjablonen` spec (planned) will orchestrate PdfService for document generation
+
+### Standards & References
+- **PDF 1.4+ (ISO 32000-1)**: mPDF generates PDF 1.4 compliant output
+- **PDF/A (ISO 19005)**: Not currently enforced -- mPDF can produce PDF/A but it's not configured. Should be considered for government archival use.
+- **WCAG 2.1 AA**: PDF accessibility (tagged PDF, reading order, alt text) is not currently enforced by mPDF configuration
+- **Twig 3.x Security**: Sandbox extension with SecurityPolicy prevents template injection attacks
+
+### Specificity Assessment
+- **Specific enough**: Yes, this spec is concise and complete. The Twig sandbox policy is exhaustively documented.
+- **Missing/Ambiguous**: No mention of PDF/A compliance mode (important for Dutch government archival). No mention of font embedding or Unicode support. No maximum template size or rendering timeout specified.
+- **Open questions**:
+  1. Should PDF/A output mode be supported (add `PDFA: true` to mPDF config)?
+  2. Should fonts be embedded for consistent rendering across systems?
+  3. Is there a rendering timeout to prevent DoS via complex templates?
+  4. Should the `/tmp/mpdf` temp directory be cleaned up periodically?

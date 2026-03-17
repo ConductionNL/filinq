@@ -4,12 +4,21 @@ on:
   push:
     branches: [main, development, feature/**, bugfix/**, hotfix/**]
   pull_request:
-    branches: [main, development]
+    branches: [main, master, development]
+  workflow_dispatch:
 
 jobs:
   quality:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: docudesk
+      php-version: "8.3"
+      nextcloud-test-refs: '["stable32"]'
       enable-sbom: true
+      enable-psalm: true
+      enable-phpstan: true
+      enable-phpmetrics: true
       enable-frontend: true
+      enable-eslint: true
+      enable-phpunit: true
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister"}]'

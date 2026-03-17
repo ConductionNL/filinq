@@ -19,11 +19,7 @@ export const getTheme = () => {
     }
 
     if (document.body.hasAttribute('data-theme-default')) {
-        if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-            return 'light'
-        }
-
-        return 'dark'
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
     }
 
     return 'light'
