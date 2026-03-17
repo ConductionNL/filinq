@@ -1,0 +1,13 @@
+name: SBOM
+
+on:
+  push:
+    branches: [main, beta, development]
+
+jobs:
+  sbom:
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
+    with:
+      app-name: docudesk
+      enable-sbom: true
+      enable-frontend: true
