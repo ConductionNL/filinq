@@ -192,6 +192,12 @@ npm run build
 - **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publish anonymized documents in open catalogs
 - **[Procest](https://github.com/ConductionNL/procest)** — Case management for document-related processes
 
+## Support
+
+For support, contact us at [support@conduction.nl](mailto:support@conduction.nl).
+
+For a Service Level Agreement (SLA), contact [sales@conduction.nl](mailto:sales@conduction.nl).
+
 ## License
 
 EUPL-1.2
