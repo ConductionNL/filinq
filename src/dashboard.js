@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import { PiniaVuePlugin } from 'pinia'
+import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
 import AnonymizationDashboardWidget from './views/widgets/AnonymizationDashboardWidget.vue'
 import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWidget.vue'
@@ -7,7 +8,7 @@ import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWi
 Vue.use(PiniaVuePlugin)
 
 console.log('[DocuDesk] Registering anonymization widget callback')
-console.log('[DocuDesk] OCA.Dashboard:', window.OCA ? .Dashboard)
+console.log('[DocuDesk] OCA.Dashboard:', window.OCA?.Dashboard)
 
 OCA.Dashboard.register(
         'docudesk-anonymization',

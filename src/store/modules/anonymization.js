@@ -134,7 +134,7 @@ export const useAnonymizationStore = defineStore(
                         entry.status = 'completed'
                     } catch (err) {
                         console.error(`Failed to process ${entry.name}:`, err)
-                        entry.error  = err.response ? .data ? .error || err.message
+                        entry.error = err.response?.data?.error || err.message
                         entry.status = 'error'
                     }//end try
 
