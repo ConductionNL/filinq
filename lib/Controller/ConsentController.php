@@ -24,6 +24,7 @@ use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -48,6 +49,7 @@ class ConsentController extends Controller
      * @param LoggerInterface $logger          Logger for error reporting
      * @param ConsentService  $consentService  Service for consent operations
      * @param SettingsService $settingsService Service for settings
+     * @param IL10N           $l10n            The localization service
      *
      * @return void
      */
@@ -56,7 +58,8 @@ class ConsentController extends Controller
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly ConsentService $consentService,
-        private readonly SettingsService $settingsService
+        private readonly SettingsService $settingsService,
+        private readonly IL10N $l10n
     ) {
         parent::__construct($appName, $request);
 
@@ -82,7 +85,7 @@ class ConsentController extends Controller
 
             if (empty($register) === true || empty($schema) === true) {
                 return new JSONResponse(
-                    ['error' => 'PublicationConsent register/schema not configured'],
+                    ['error' => $this->l10n->t('PublicationConsent register/schema not configured')],
                     400
                 );
             }
@@ -110,7 +113,7 @@ class ConsentController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to list consents: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to list consents: %s', [$e->getMessage()])],
                 500
             );
         }//end try
@@ -138,7 +141,7 @@ class ConsentController extends Controller
             foreach ($required as $field) {
                 if (empty($data[$field]) === true) {
                     return new JSONResponse(
-                        ['error' => "Missing required field: {$field}"],
+                        ['error' => $this->l10n->t('Missing required field: %s', [$field])],
                         400
                     );
                 }
@@ -150,7 +153,7 @@ class ConsentController extends Controller
 
             if (empty($register) === true || empty($schema) === true) {
                 return new JSONResponse(
-                    ['error' => 'PublicationConsent register/schema not configured'],
+                    ['error' => $this->l10n->t('PublicationConsent register/schema not configured')],
                     400
                 );
             }
@@ -178,7 +181,7 @@ class ConsentController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to create consent: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to create consent: %s', [$e->getMessage()])],
                 500
             );
         }//end try
@@ -205,7 +208,7 @@ class ConsentController extends Controller
 
             if (empty($register) === true || empty($schema) === true) {
                 return new JSONResponse(
-                    ['error' => 'PublicationConsent register/schema not configured'],
+                    ['error' => $this->l10n->t('PublicationConsent register/schema not configured')],
                     400
                 );
             }
@@ -221,7 +224,7 @@ class ConsentController extends Controller
 
             if ($object === null) {
                 return new JSONResponse(
-                    ['error' => 'Consent record not found'],
+                    ['error' => $this->l10n->t('Consent record not found')],
                     404
                 );
             }
@@ -237,7 +240,7 @@ class ConsentController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to get consent: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to get consent: %s', [$e->getMessage()])],
                 500
             );
         }//end try
@@ -266,7 +269,7 @@ class ConsentController extends Controller
 
             if (empty($register) === true || empty($schema) === true) {
                 return new JSONResponse(
-                    ['error' => 'PublicationConsent register/schema not configured'],
+                    ['error' => $this->l10n->t('PublicationConsent register/schema not configured')],
                     400
                 );
             }
@@ -280,7 +283,7 @@ class ConsentController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to update consent: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to update consent: %s', [$e->getMessage()])],
                 500
             );
         }//end try
@@ -307,7 +310,7 @@ class ConsentController extends Controller
 
             if (empty($register) === true || empty($schema) === true) {
                 return new JSONResponse(
-                    ['error' => 'PublicationConsent register/schema not configured'],
+                    ['error' => $this->l10n->t('PublicationConsent register/schema not configured')],
                     400
                 );
             }
@@ -321,7 +324,7 @@ class ConsentController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to get consents for document: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to get consents for document: %s', [$e->getMessage()])],
                 500
             );
         }//end try

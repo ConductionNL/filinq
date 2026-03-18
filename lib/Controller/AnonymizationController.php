@@ -23,6 +23,7 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -46,6 +47,7 @@ class AnonymizationController extends Controller
      * @param IRequest             $request              The request object
      * @param LoggerInterface      $logger               Logger for error reporting
      * @param AnonymizationService $anonymizationService Service for anonymization operations
+     * @param IL10N                $l10n                 The localization service
      *
      * @return void
      */
@@ -53,7 +55,8 @@ class AnonymizationController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly AnonymizationService $anonymizationService
+        private readonly AnonymizationService $anonymizationService,
+        private readonly IL10N $l10n
     ) {
         parent::__construct($appName, $request);
 
@@ -84,7 +87,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to list processed files: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
         }
@@ -110,14 +113,14 @@ class AnonymizationController extends Controller
 
             if ($file === null || isset($file['tmp_name']) === false) {
                 return new JSONResponse(
-                    ['error' => 'No file uploaded'],
+                    ['error' => $this->l10n->t('No file uploaded')],
                     400
                 );
             }
 
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 return new JSONResponse(
-                    ['error' => 'File upload failed with error code: '.$file['error']],
+                    ['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
                     400
                 );
             }
@@ -127,7 +130,7 @@ class AnonymizationController extends Controller
 
             if ($fileContent === false) {
                 return new JSONResponse(
-                    ['error' => 'Failed to read uploaded file'],
+                    ['error' => $this->l10n->t('Failed to read uploaded file')],
                     500
                 );
             }
@@ -142,7 +145,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to upload file: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to upload file: %s', [$e->getMessage()])],
                 $statusCode
             );
         }//end try
@@ -174,7 +177,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to extract and detect entities: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to extract and detect entities: %s', [$e->getMessage()])],
                 500
             );
         }
@@ -202,7 +205,7 @@ class AnonymizationController extends Controller
 
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(
-                    ['error' => 'No entities provided for anonymization'],
+                    ['error' => $this->l10n->t('No entities provided for anonymization')],
                     400
                 );
             }
@@ -216,7 +219,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to anonymize document: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to anonymize document: %s', [$e->getMessage()])],
                 500
             );
         }//end try

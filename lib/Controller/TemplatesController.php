@@ -22,6 +22,7 @@ use Exception;
 use OCA\DocuDesk\Service\TemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -45,6 +46,7 @@ class TemplatesController extends Controller
      * @param IRequest        $request         The request object
      * @param LoggerInterface $logger          Logger for error reporting
      * @param TemplateService $templateService Service for template operations
+     * @param IL10N           $l10n            The localization service
      *
      * @return void
      */
@@ -52,7 +54,8 @@ class TemplatesController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly TemplateService $templateService
+        private readonly TemplateService $templateService,
+        private readonly IL10N $l10n
     ) {
         parent::__construct($appName, $request);
 

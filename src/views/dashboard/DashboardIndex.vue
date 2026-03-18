@@ -1,18 +1,19 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
 import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 </script>
 
 <template>
 	<CnDashboardPage
-		title="Dashboard"
+		:title="t('docudesk', 'Dashboard')"
 		:widgets="widgetDefs"
 		:layout="dashboardLayout"
 		:loading="consentStore.loading">
 		<!-- KPI: Total Consents -->
 		<template #widget-total-consents>
 			<div class="stat-card">
-				<h5>Total Consents</h5>
+				<h5>{{ t('docudesk', 'Total Consents') }}</h5>
 				<div class="content">
 					{{ consentStore.consentStats.total }}
 				</div>
@@ -22,7 +23,7 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 		<!-- KPI: Pending -->
 		<template #widget-pending>
 			<div class="stat-card">
-				<h5>Pending</h5>
+				<h5>{{ t('docudesk', 'Pending') }}</h5>
 				<div class="content pending">
 					{{ consentStore.consentStats.pending }}
 				</div>
@@ -32,7 +33,7 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 		<!-- KPI: Approved -->
 		<template #widget-approved>
 			<div class="stat-card">
-				<h5>Approved</h5>
+				<h5>{{ t('docudesk', 'Approved') }}</h5>
 				<div class="content approved">
 					{{ consentStore.consentStats.approved }}
 				</div>
@@ -42,7 +43,7 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 		<!-- KPI: Objected -->
 		<template #widget-objected>
 			<div class="stat-card">
-				<h5>Objected</h5>
+				<h5>{{ t('docudesk', 'Objected') }}</h5>
 				<div class="content objected">
 					{{ consentStore.consentStats.objected }}
 				</div>
@@ -55,7 +56,7 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 				<NcLoadingIcon :size="32" />
 			</div>
 			<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-				<p>No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.</p>
+				<p>{{ t('docudesk', 'No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.') }}</p>
 			</div>
 			<ul v-else class="recent-list">
 				<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
@@ -100,12 +101,12 @@ export default {
 	computed: {
 		widgetDefs() {
 			return [
-				{ id: 'total-consents', title: 'Total Consents' },
-				{ id: 'pending', title: 'Pending' },
-				{ id: 'approved', title: 'Approved' },
-				{ id: 'objected', title: 'Objected' },
-				{ id: 'recent-activity', title: 'Recent Consent Activity' },
-				{ id: 'anonymization', title: 'Quick Anonymization' },
+				{ id: 'total-consents', title: t('docudesk', 'Total Consents') },
+				{ id: 'pending', title: t('docudesk', 'Pending') },
+				{ id: 'approved', title: t('docudesk', 'Approved') },
+				{ id: 'objected', title: t('docudesk', 'Objected') },
+				{ id: 'recent-activity', title: t('docudesk', 'Recent Consent Activity') },
+				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
 			]
 		},
 		recentConsents() {
@@ -118,13 +119,13 @@ export default {
 	methods: {
 		formatStatus(status) {
 			const map = {
-				pending: 'Pending',
-				consent_given: 'Approved',
-				objection_received: 'Objected',
-				no_response: 'No Response',
-				anonymized: 'Anonymized',
+				pending: t('docudesk', 'Pending'),
+				consent_given: t('docudesk', 'Approved'),
+				objection_received: t('docudesk', 'Objected'),
+				no_response: t('docudesk', 'No Response'),
+				anonymized: t('docudesk', 'Anonymized'),
 			}
-			return map[status] || status || 'Unknown'
+			return map[status] || status || t('docudesk', 'Unknown')
 		},
 	},
 }
