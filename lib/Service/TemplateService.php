@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -70,7 +71,7 @@ class TemplateService
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException(message: 'OpenRegister service is not available.');
+        throw new RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -159,6 +160,8 @@ class TemplateService
      * @return array The template object
      *
      * @throws Exception If the template is not found
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function getTemplate(string $id): array
     {
@@ -238,6 +241,8 @@ class TemplateService
      * @return array The updated template object
      *
      * @throws Exception If the template is not found or update fails
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function updateTemplate(string $id, array $data): array
     {
@@ -275,11 +280,12 @@ class TemplateService
      * @return bool True if deletion succeeded
      *
      * @throws Exception If the template is not found or deletion fails
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function deleteTemplate(string $id): bool
     {
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
 
         $objectService->deleteObject(
             uuid: $id

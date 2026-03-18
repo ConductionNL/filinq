@@ -80,6 +80,9 @@ class AnonymizationWidget implements IWidget, IIconWidget
     }//end getUrl()
 
 
+    /**
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
     public function load(): void
     {
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');

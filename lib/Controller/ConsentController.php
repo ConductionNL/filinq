@@ -101,9 +101,10 @@ class ConsentController extends Controller
             foreach ($results as $result) {
                 if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
                     $consents[] = $result->jsonSerialize();
-                } else {
-                    $consents[] = (array) $result;
+                    continue;
                 }
+
+                $consents[] = (array) $result;
             }
 
             return new JSONResponse($consents);
@@ -198,6 +199,8 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function show(string $id): JSONResponse
     {
@@ -257,6 +260,8 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function update(string $id): JSONResponse
     {

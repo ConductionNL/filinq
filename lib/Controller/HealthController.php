@@ -19,8 +19,10 @@ namespace OCA\DocuDesk\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\App\IAppManager;
 use OCP\IDBConnection;
 use OCP\IRequest;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,7 +43,7 @@ class HealthController extends Controller
      *
      * @param string          $appName The name of the app
      * @param IRequest        $request The request object
-     * @param IDBConnection   $db      The database connection
+     * @param IDBConnection   $database The database connection
      * @param LoggerInterface $logger  Logger for error reporting
      *
      * @return void
@@ -49,7 +51,7 @@ class HealthController extends Controller
     public function __construct(
         string $appName,
         IRequest $request,
-        private readonly IDBConnection $db,
+        private readonly IDBConnection $database,
         private readonly LoggerInterface $logger
     ) {
         parent::__construct($appName, $request);
@@ -63,6 +65,8 @@ class HealthController extends Controller
      * @return JSONResponse JSON response with health status and checks
      *
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function index(): JSONResponse
     {
@@ -71,9 +75,9 @@ class HealthController extends Controller
 
         // Database check.
         try {
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('1'));
-            $result = $qb->executeQuery();
+            $queryBuilder = $this->database->getQueryBuilder();
+            $queryBuilder->select($queryBuilder->createFunction('1'));
+            $result = $queryBuilder->executeQuery();
             $result->closeCursor();
             $checks['database'] = 'ok';
         } catch (\Exception $e) {
@@ -84,7 +88,7 @@ class HealthController extends Controller
 
         // OpenRegister dependency check.
         try {
-            $appManager = \OCP\Server::get(\OCP\App\IAppManager::class);
+            $appManager = Server::get(IAppManager::class);
             $checks['openregister'] = $appManager->isEnabledForUser('openregister') === true ? 'ok' : 'missing';
             if ($checks['openregister'] !== 'ok') {
                 $status = 'degraded';

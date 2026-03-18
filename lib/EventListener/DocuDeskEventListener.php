@@ -72,15 +72,22 @@ class DocuDeskEventListener implements IEventListener
 
             if ($event instanceof ObjectCreatedEvent) {
                 $this->handleObjectCreated($event, $metadataService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectUpdatedEvent) {
-                $this->handleObjectUpdated($event, $metadataService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectDeletedEvent) {
-                $this->handleObjectDeleted($event, $logger);
-            } else {
-                $logger->debug('DocuDesk: Ignoring unhandled event type', [
-                    'eventType' => get_class($event),
-                ]);
+                return;
             }
+
+            if ($event instanceof ObjectUpdatedEvent) {
+                $this->handleObjectUpdated($event, $metadataService, $settingsService, $logger);
+                return;
+            }
+
+            if ($event instanceof ObjectDeletedEvent) {
+                $this->handleObjectDeleted($event, $logger);
+                return;
+            }
+
+            $logger->debug('DocuDesk: Ignoring unhandled event type', [
+                'eventType' => get_class($event),
+            ]);
         } catch (\Exception $e) {
             try {
                 $logger = \OC::$server->get(LoggerInterface::class);
@@ -176,6 +183,8 @@ class DocuDeskEventListener implements IEventListener
      * @param LoggerInterface    $logger          The logger instance
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,

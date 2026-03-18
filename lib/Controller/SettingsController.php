@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use RuntimeException;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -91,7 +92,7 @@ class SettingsController extends Controller
             return $this->objectService;
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
 
@@ -109,7 +110,7 @@ class SettingsController extends Controller
             return $configurationService;
         }
 
-        throw new \RuntimeException('Configuration service is not available.');
+        throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
 

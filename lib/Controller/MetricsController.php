@@ -44,7 +44,7 @@ class MetricsController extends Controller
      * @param string          $appName The name of the app
      * @param IRequest        $request The request object
      * @param IConfig         $config  The config service
-     * @param IDBConnection   $db      The database connection
+     * @param IDBConnection   $database The database connection
      * @param LoggerInterface $logger  Logger for error reporting
      *
      * @return void
@@ -53,7 +53,7 @@ class MetricsController extends Controller
         string $appName,
         IRequest $request,
         private readonly IConfig $config,
-        private readonly IDBConnection $db,
+        private readonly IDBConnection $database,
         private readonly LoggerInterface $logger
     ) {
         parent::__construct($appName, $request);
@@ -134,13 +134,13 @@ class MetricsController extends Controller
                 return 0;
             }
 
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('COUNT(*) AS cnt'))
+            $queryBuilder =$this->database->getQueryBuilder();
+            $queryBuilder->select($queryBuilder->createFunction('COUNT(*) AS cnt'))
                 ->from('openregister_objects')
-                ->where($qb->expr()->eq('register', $qb->createNamedParameter($registerId)))
-                ->andWhere($qb->expr()->eq('schema', $qb->createNamedParameter($schemaId)));
+                ->where($queryBuilder->expr()->eq('register', $queryBuilder->createNamedParameter($registerId)))
+                ->andWhere($queryBuilder->expr()->eq('schema', $queryBuilder->createNamedParameter($schemaId)));
 
-            $result = $qb->executeQuery();
+            $result = $queryBuilder->executeQuery();
             $count  = (int) $result->fetchOne();
             $result->closeCursor();
 
@@ -168,13 +168,13 @@ class MetricsController extends Controller
                 return 0;
             }
 
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('COUNT(*) AS cnt'))
+            $queryBuilder =$this->database->getQueryBuilder();
+            $queryBuilder->select($queryBuilder->createFunction('COUNT(*) AS cnt'))
                 ->from('openregister_objects')
-                ->where($qb->expr()->eq('register', $qb->createNamedParameter($registerId)))
-                ->andWhere($qb->expr()->eq('schema', $qb->createNamedParameter($schemaId)));
+                ->where($queryBuilder->expr()->eq('register', $queryBuilder->createNamedParameter($registerId)))
+                ->andWhere($queryBuilder->expr()->eq('schema', $queryBuilder->createNamedParameter($schemaId)));
 
-            $result = $qb->executeQuery();
+            $result = $queryBuilder->executeQuery();
             $count  = (int) $result->fetchOne();
             $result->closeCursor();
 

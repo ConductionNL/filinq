@@ -57,6 +57,8 @@ class DashboardController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function page(?string $getParameter): TemplateResponse
     {

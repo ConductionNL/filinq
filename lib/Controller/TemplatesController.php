@@ -125,6 +125,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function show(string $id): JSONResponse
     {
@@ -198,6 +200,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function update(string $id): JSONResponse
     {
@@ -237,6 +241,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function destroy(string $id): JSONResponse
     {

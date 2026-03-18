@@ -52,7 +52,7 @@ class DocuDeskAdmin implements ISettings
      *
      * @var IL10N $l
      */
-    private IL10N $l;
+    private IL10N $l10n;
 
     /**
      * App manager for retrieving app version
@@ -65,14 +65,14 @@ class DocuDeskAdmin implements ISettings
     /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IL10N       $l          L10N service for translations
+     * @param IL10N       $l10n       L10N service for translations
      * @param IAppManager $appManager App manager for retrieving app version
      *
      * @return void
      */
-    public function __construct(IL10N $l, IAppManager $appManager)
+    public function __construct(IL10N $l10n, IAppManager $appManager)
     {
-        $this->l          = $l;
+        $this->l10n       = $l10n;
         $this->appManager = $appManager;
 
     }//end __construct()
