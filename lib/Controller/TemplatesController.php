@@ -41,8 +41,8 @@ class TemplatesController extends Controller
     /**
      * Constructor for TemplatesController
      *
-     * @param string                 $appName        The application name
-     * @param IRequest               $request        The request object
+     * @param string                 $appName         The application name
+     * @param IRequest               $request         The request object
      * @param TemplateService        $templateService Service for template operations
      * @param TemplateRequestHandler $requestHandler  Request param parser and error handler
      *

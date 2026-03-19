@@ -42,11 +42,11 @@ class MetadataService
     /**
      * Constructor for MetadataService
      *
-     * @param LoggerInterface        $logger              Logger for error reporting
-     * @param ContainerInterface     $container           Container for dependency injection
-     * @param IAppManager            $appManager          App manager interface
-     * @param TextAnalysisService    $textAnalysisService Text analysis service
-     * @param DocumentTextExtractor  $textExtractor       Text extraction and date normalization
+     * @param LoggerInterface       $logger              Logger for error reporting
+     * @param ContainerInterface    $container           Container for dependency injection
+     * @param IAppManager           $appManager          App manager interface
+     * @param TextAnalysisService   $textAnalysisService Text analysis service
+     * @param DocumentTextExtractor $textExtractor       Text extraction and date normalization
      *
      * @return void
      */

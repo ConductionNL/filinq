@@ -3,8 +3,9 @@
  * Settings Service
  *
  * Service for handling settings-related operations in DocuDesk.
- * Provides functionality for retrieving, saving, and loading settings,
- * as well as managing configuration for OpenRegister integration.
+ * Provides functionality for retrieving and saving settings.
+ * Delegates initialization to SettingsInitializer and register
+ * discovery to RegisterDiscoveryService.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -21,12 +22,10 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use RuntimeException;
-use TypeError;
 use OCP\IAppConfig;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\RegisterService;
 
 /**
  * Service for handling settings-related operations in DocuDesk
@@ -65,11 +64,12 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config          App configuration interface
-     * @param ContainerInterface $container       Container for dependency injection
-     * @param IAppManager        $appManager      App manager interface
-     * @param LoggerInterface    $logger          Logger interface
-     * @param RegisterService    $registerService Register service for getting registers
+     * @param IAppConfig               $config           App configuration interface
+     * @param ContainerInterface       $container        Container for DI
+     * @param IAppManager              $appManager       App manager interface
+     * @param LoggerInterface          $logger           Logger interface
+     * @param RegisterDiscoveryService $discoveryService Register discovery service
+     * @param SettingsInitializer      $initializer      Settings initializer
      *
      * @return void
      */
@@ -78,7 +78,8 @@ class SettingsService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
-        private readonly RegisterService $registerService
+        private readonly RegisterDiscoveryService $discoveryService,
+        private readonly SettingsInitializer $initializer
     ) {
         $this->appName = 'docudesk';
 
@@ -88,72 +89,41 @@ class SettingsService
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
-     * @param string|null $minVersion Minimum required version
-     *
      * @return bool True if OpenRegister is installed and meets version requirements
      */
-    private function isOpenRegisterInstalled(?string $minVersion=self::MIN_OPENREGISTER_VERSION): bool
+    private function isOpenRegisterInstalled(): bool
     {
         if ($this->appManager->isInstalled(self::OPENREGISTER_APP_ID) === false) {
             return false;
         }
 
-        if ($minVersion === null) {
-            return true;
-        }
-
         $currentVersion = $this->appManager->getAppVersion(self::OPENREGISTER_APP_ID);
-        return version_compare($currentVersion, $minVersion, '>=') === true;
+        return version_compare($currentVersion, self::MIN_OPENREGISTER_VERSION, '>=') === true;
 
     }//end isOpenRegisterInstalled()
 
 
     /**
-     * Checks if OpenRegister is enabled
-     *
-     * @return bool True if OpenRegister is enabled
-     */
-    private function isOpenRegisterEnabled(): bool
-    {
-        return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
-
-    }//end isOpenRegisterEnabled()
-
-
-    /**
      * Attempts to retrieve the OpenRegister service from the container
      *
-     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
+     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service
      *
      * @throws \RuntimeException If the service is not available
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === true) {
+        if (in_array(
+            self::OPENREGISTER_APP_ID,
+            $this->appManager->getInstalledApps(),
+            true
+        ) === true
+        ) {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
-
-    /**
-     * Attempts to retrieve the Configuration service from the container
-     *
-     * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
-     *
-     * @throws \RuntimeException If the service is not available
-     */
-    private function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
-    {
-        if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-        }
-
-        throw new RuntimeException('Configuration service is not available.');
-
-    }//end getConfigurationService()
 
 
     /**
@@ -165,204 +135,9 @@ class SettingsService
      */
     public function initialize(): array
     {
-        $results = [
-            'configuration' => false,
-            'errors'        => [],
-            'info'          => [],
-        ];
-
-        try {
-            if ($this->isOpenRegisterInstalled() === false) {
-                throw new RuntimeException('OpenRegister is not installed or version is too low');
-            }
-
-            if ($this->isOpenRegisterEnabled() === false) {
-                throw new RuntimeException('OpenRegister is not enabled');
-            }
-
-            try {
-                $configurationService = $this->getConfigurationService();
-            } catch (Exception $e) {
-                throw new RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
-            }
-
-            $currentVersion = $this->config->getValueString($this->appName, 'configuration_version', '0.0.0');
-            $settings       = $this->loadSettings();
-
-            if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $settingsVersion = $settings['info']['version'];
-                $message         = 'Configuration version '.$currentVersion;
-                $message        .= ' is up to date or newer than '.$settingsVersion;
-
-                $results['info'][] = $message;
-                return $results;
-            }
-
-            $configurationService->importFromApp(
-                appId: $this->appName,
-                data: $settings,
-                version: $settings['info']['version']
-            );
-
-            $results['configuration'] = true;
-            $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
-        } catch (Exception $e) {
-            $results['errors'][] = $e->getMessage();
-            $this->logger->error(
-                'Failed to initialize DocuDesk: '.$e->getMessage(),
-                ['app' => $this->appName]
-            );
-        }//end try
-
-        return $results;
+        return $this->initializer->initialize();
 
     }//end initialize()
-
-
-    /**
-     * Load settings from the docudesk_register.json file
-     *
-     * @return array<string, mixed> The loaded settings configuration
-     *
-     * @throws \RuntimeException If settings loading fails
-     */
-    private function loadSettings(): array
-    {
-        $settingsFilePath = __DIR__.'/../Settings/docudesk_register.json';
-
-        try {
-            if (file_exists($settingsFilePath) === false) {
-                throw new RuntimeException('Settings file not found at: '.$settingsFilePath);
-            }
-
-            $jsonContent = file_get_contents($settingsFilePath);
-            if ($jsonContent === false) {
-                throw new RuntimeException('Failed to read settings file');
-            }
-
-            $settings = json_decode($jsonContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new RuntimeException('Error decoding JSON: '.json_last_error_msg());
-            }
-
-            if (isset($settings['info']['version']) === false) {
-                throw new RuntimeException('Settings file does not contain version information');
-            }
-
-            return $settings;
-        } catch (Exception $e) {
-            throw new RuntimeException('Failed to load settings: '.$e->getMessage());
-        }//end try
-
-    }//end loadSettings()
-
-
-    /**
-     * Fetch available registers from OpenRegister with schemas
-     *
-     * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
-     */
-    private function fetchAvailableRegisters(): array
-    {
-        try {
-            $rawRegisters = $this->registerService->findAll(
-                limit: null,
-                offset: null,
-                filters: [],
-                searchConditions: [],
-                searchParams: [],
-                _extend: ['schemas']
-            );
-
-            return array_map([$this, 'serializeRegister'], $rawRegisters);
-        } catch (TypeError $e) {
-            $this->logger->warning(
-                'OpenRegister internal error - using empty registers list',
-                [
-                    'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]
-            );
-            return [];
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'OpenRegister findAll() failed - using empty registers list',
-                [
-                    'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]
-            );
-            return [];
-        }//end try
-
-    }//end fetchAvailableRegisters()
-
-
-    /**
-     * Serialize a register entity and filter its schemas
-     *
-     * @param mixed $register The register entity
-     *
-     * @return array<string, mixed> Serialized register with filtered schemas
-     */
-    private function serializeRegister(mixed $register): array
-    {
-        $registerArray = $register->jsonSerialize();
-
-        if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
-            $registerArray['schemas'] = array_map([$this, 'filterSchemaProperties'], $registerArray['schemas']);
-        }
-
-        return $registerArray;
-
-    }//end serializeRegister()
-
-
-    /**
-     * Filter out the properties field from a schema array
-     *
-     * @param mixed $schema The schema data
-     *
-     * @return mixed The filtered schema
-     */
-    private function filterSchemaProperties(mixed $schema): mixed
-    {
-        if (is_array($schema) === false) {
-            return $schema;
-        }
-
-        unset($schema['properties']);
-
-        return $schema;
-
-    }//end filterSchemaProperties()
-
-
-    /**
-     * Load object type configuration defaults from app config
-     *
-     * @param array<string> $objectTypes The object types to load config for
-     *
-     * @return array<string, string> Configuration key-value pairs
-     */
-    private function loadObjectTypeConfiguration(array $objectTypes): array
-    {
-        $configuration = [];
-        foreach ($objectTypes as $type) {
-            $sourceKey   = "{$type}_source";
-            $schemaKey   = "{$type}_schema";
-            $registerKey = "{$type}_register";
-
-            $configuration[$sourceKey]   = $this->config->getValueString($this->appName, $sourceKey, 'openregister');
-            $configuration[$schemaKey]   = $this->config->getValueString($this->appName, $schemaKey, '');
-            $configuration[$registerKey] = $this->config->getValueString($this->appName, $registerKey, '');
-        }
-
-        return $configuration;
-
-    }//end loadObjectTypeConfiguration()
 
 
     /**
@@ -416,7 +191,7 @@ class SettingsService
         try {
             if ($this->isOpenRegisterInstalled() === true) {
                 $data['openRegisters']      = true;
-                $data['availableRegisters'] = $this->fetchAvailableRegisters();
+                $data['availableRegisters'] = $this->discoveryService->fetchAvailableRegisters();
             }
         } catch (\RuntimeException $e) {
             $this->logger->info(
@@ -426,7 +201,9 @@ class SettingsService
         }//end try
 
         try {
-            $data['configuration'] = $this->loadObjectTypeConfiguration($data['objectTypes']);
+            $data['configuration'] = $this->discoveryService->loadObjectTypeConfiguration(
+                $data['objectTypes']
+            );
             $data = array_merge($data, $this->loadFeatureToggles());
 
             return $data;

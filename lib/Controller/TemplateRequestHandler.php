@@ -86,7 +86,7 @@ class TemplateRequestHandler
     /**
      * Parse create/update request body and strip framework params
      *
-     * @param IRequest     $request    The request object
+     * @param IRequest      $request   The request object
      * @param array<string> $stripKeys Keys to strip from params
      *
      * @return array<string, mixed> Cleaned request data

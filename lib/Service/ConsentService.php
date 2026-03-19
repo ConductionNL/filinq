@@ -3,10 +3,9 @@
  * Consent Service
  *
  * Service for managing GDPR publication consent tracking.
- * Handles creating, updating, and querying consent records for
- * entities detected in documents that require notification before
- * publication under the Wet Open Overheid.
- * Delegates deadline checking to ObjectionDeadlineChecker.
+ * Handles creating consent records for entities detected in documents.
+ * Delegates deadline checking to ObjectionDeadlineChecker and
+ * update/query operations to ConsentUpdateHandler.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -43,10 +42,11 @@ class ConsentService
     /**
      * Constructor for ConsentService
      *
-     * @param LoggerInterface         $logger           Logger for error reporting
-     * @param ContainerInterface      $container        Container for dependency injection
-     * @param IAppManager             $appManager       App manager interface
-     * @param ObjectionDeadlineChecker $deadlineChecker Objection deadline checker
+     * @param LoggerInterface          $logger          Logger for error reporting
+     * @param ContainerInterface       $container       Container for DI
+     * @param IAppManager              $appManager      App manager interface
+     * @param ObjectionDeadlineChecker $deadlineChecker Deadline checker
+     * @param ConsentUpdateHandler     $updateHandler   Update and query handler
      *
      * @return void
      */
@@ -54,7 +54,8 @@ class ConsentService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly ObjectionDeadlineChecker $deadlineChecker
+        private readonly ObjectionDeadlineChecker $deadlineChecker,
+        private readonly ConsentUpdateHandler $updateHandler
     ) {
 
     }//end __construct()
@@ -82,10 +83,10 @@ class ConsentService
      * Create a consent request for a detected entity in a document
      *
      * @param string               $documentId The document UUID
-     * @param string               $entityType The entity type (PERSON or ORGANIZATION)
+     * @param string               $entityType The entity type
      * @param string               $entityText The detected entity text
-     * @param string               $register   The register ID for consent objects
-     * @param string               $schema     The schema ID for consent objects
+     * @param string               $register   The register ID
+     * @param string               $schema     The schema ID
      * @param array<string, mixed> $extra      Additional consent data
      *
      * @return array<string, mixed> The created consent record
@@ -105,17 +106,9 @@ class ConsentService
             $deadline      = $this->deadlineChecker->calculateDeadline();
 
             $consentData = array_merge(
-                    [
-                        'documentId'          => $documentId,
-                        'entityType'          => $entityType,
-                        'entityText'          => $entityText,
-                        'notificationStatus'  => 'pending',
-                        'consentStatus'       => 'pending',
-                        'publicationDecision' => 'pending',
-                        'objectionDeadline'   => $deadline->format('c'),
-                    ],
-                    $extra
-                    );
+                $this->buildConsentData($documentId, $entityType, $entityText, $deadline),
+                $extra
+            );
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
@@ -125,28 +118,47 @@ class ConsentService
                 _multitenancy: false
             );
 
-            $this->logger->info(
-                'Consent request created',
-                [
-                    'documentId' => $documentId,
-                    'entityType' => $entityType,
-                    'entityText' => $entityText,
-                ]
-            );
+            $this->logger->info('Consent request created', ['documentId' => $documentId]);
 
             return $savedObject->getObject();
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to create consent request: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
+                ['documentId' => $documentId, 'exception' => $e]
             );
             throw new Exception('Failed to create consent request: '.$e->getMessage(), 0, $e);
         }//end try
 
     }//end createConsentRequest()
+
+
+    /**
+     * Build the base consent data array
+     *
+     * @param string    $documentId The document UUID
+     * @param string    $entityType The entity type
+     * @param string    $entityText The entity text
+     * @param \DateTime $deadline   The objection deadline
+     *
+     * @return array<string, string> The consent data
+     */
+    private function buildConsentData(
+        string $documentId,
+        string $entityType,
+        string $entityText,
+        \DateTime $deadline
+    ): array {
+        return [
+            'documentId'          => $documentId,
+            'entityType'          => $entityType,
+            'entityText'          => $entityText,
+            'notificationStatus'  => 'pending',
+            'consentStatus'       => 'pending',
+            'publicationDecision' => 'pending',
+            'objectionDeadline'   => $deadline->format('c'),
+        ];
+
+    }//end buildConsentData()
 
 
     /**
@@ -167,53 +179,7 @@ class ConsentService
         string $schema,
         array $data
     ): array {
-        try {
-            $objectService = $this->getObjectService();
-
-            // Find the existing consent record.
-            $object = $objectService->find(
-                id: $consentId,
-                register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            if ($object === null) {
-                throw new Exception('Consent record not found: '.$consentId);
-            }
-
-            // Merge update data into existing record.
-            $consentData = array_merge($object->getObject(), $data);
-
-            // Save updated record.
-            $savedObject = $objectService->saveObject(
-                object: $consentData,
-                register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            $this->logger->info(
-                'Consent status updated',
-                [
-                    'consentId'   => $consentId,
-                    'updatedKeys' => array_keys($data),
-                ]
-            );
-
-            return $savedObject->getObject();
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to update consent status: '.$e->getMessage(),
-                [
-                    'consentId' => $consentId,
-                    'exception' => $e,
-                ]
-            );
-            throw new Exception('Failed to update consent status: '.$e->getMessage(), 0, $e);
-        }//end try
+        return $this->updateHandler->updateConsentStatus($consentId, $register, $schema, $data);
 
     }//end updateConsentStatus()
 
@@ -229,8 +195,11 @@ class ConsentService
      *
      * @throws Exception If check fails
      */
-    public function checkObjectionDeadline(string $consentId, string $register, string $schema): bool
-    {
+    public function checkObjectionDeadline(
+        string $consentId,
+        string $register,
+        string $schema
+    ): bool {
         return $this->deadlineChecker->checkObjectionDeadline($consentId, $register, $schema);
 
     }//end checkObjectionDeadline()
@@ -247,43 +216,12 @@ class ConsentService
      *
      * @throws Exception If query fails
      */
-    public function getConsentsByDocument(string $documentId, string $register, string $schema): array
-    {
-        try {
-            $objectService = $this->getObjectService();
-
-            $results = $objectService->searchObjects(
-                [
-                    '@self'      => ['register' => $register, 'schema' => $schema],
-                    'documentId' => $documentId,
-                ]
-            );
-
-            $consents = [];
-            foreach ($results as $result) {
-                $consent = (array) $result;
-                if (is_object($result) === true && method_exists($result, 'getObject') === true) {
-                    $consent = $result->getObject();
-                }
-
-                $consents[] = $consent;
-            }
-
-            return $consents;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to get consents for document: '.$e->getMessage(),
-                [
-                    'documentId' => $documentId,
-                    'exception'  => $e,
-                ]
-            );
-            throw new Exception(
-                'Failed to get consents for document: '.$e->getMessage(),
-                0,
-                $e
-            );
-        }//end try
+    public function getConsentsByDocument(
+        string $documentId,
+        string $register,
+        string $schema
+    ): array {
+        return $this->updateHandler->getConsentsByDocument($documentId, $register, $schema);
 
     }//end getConsentsByDocument()
 
