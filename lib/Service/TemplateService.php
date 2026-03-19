@@ -5,6 +5,7 @@
  * Service for managing reusable Twig/HTML templates stored as OpenRegister objects.
  * Templates are scoped per-app via a namespace field, enabling multiple apps
  * to maintain their own template collections.
+ * Delegates register/schema resolution and namespace validation to OpenRegisterResolver.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -20,9 +21,9 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Service for CRUD operations on document templates via OpenRegister
@@ -40,18 +41,16 @@ class TemplateService
     /**
      * Constructor for TemplateService
      *
-     * @param LoggerInterface    $logger          Logger for error reporting
-     * @param ContainerInterface $container       Container for dependency injection
-     * @param IAppManager        $appManager      App manager interface
-     * @param SettingsService    $settingsService Settings service for register/schema IDs
+     * @param ContainerInterface   $container        Container for dependency injection
+     * @param IAppManager          $appManager       App manager interface
+     * @param OpenRegisterResolver $registerResolver Resolver for register/schema config
      *
      * @return void
      */
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly SettingsService $settingsService
+        private readonly OpenRegisterResolver $registerResolver
     ) {
 
     }//end __construct()
@@ -66,58 +65,18 @@ class TemplateService
      */
     private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps(), strict: true) === true) {
+        if (in_array(
+            needle: 'openregister',
+            haystack: $this->appManager->getInstalledApps(),
+            strict: true
+        ) === true
+        ) {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException(message: 'OpenRegister service is not available.');
+        throw new RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
-
-
-    /**
-     * Get the template register and schema IDs from settings
-     *
-     * @return array{register: string, schema: string} Register and schema IDs
-     *
-     * @throws Exception If template register/schema is not configured
-     */
-    private function getRegisterAndSchema(): array
-    {
-        $settings = $this->settingsService->getAllSettings();
-        $register = $settings['configuration']['template_register'] ?? '';
-        $schema   = $settings['configuration']['template_schema'] ?? '';
-
-        if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(message: 'Template register/schema not configured', code: 500);
-        }
-
-        return ['register' => $register, 'schema' => $schema];
-
-    }//end getRegisterAndSchema()
-
-
-    /**
-     * Validate that a namespace string is a valid Nextcloud app ID
-     *
-     * @param string $namespace The namespace to validate
-     *
-     * @return bool True if valid
-     *
-     * @throws Exception If the namespace is invalid
-     */
-    private function validateNamespace(string $namespace): bool
-    {
-        if (preg_match(pattern: '/^[a-z0-9]+$/', subject: $namespace) !== 1) {
-            throw new Exception(
-                message: 'Invalid namespace: must be lowercase alphanumeric only',
-                code: 400
-            );
-        }
-
-        return true;
-
-    }//end validateNamespace()
 
 
     /**
@@ -134,7 +93,7 @@ class TemplateService
     public function getTemplates(array $filters=[], int $limit=20, int $offset=0): array
     {
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
+        $config        = $this->registerResolver->getRegisterAndSchema();
 
         $requestParams            = $filters;
         $requestParams['_limit']  = $limit;
@@ -159,11 +118,13 @@ class TemplateService
      * @return array The template object
      *
      * @throws Exception If the template is not found
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function getTemplate(string $id): array
     {
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
+        $config        = $this->registerResolver->getRegisterAndSchema();
 
         $result = $objectService->find(
             id: $id,
@@ -175,7 +136,9 @@ class TemplateService
             throw new Exception(message: 'Template not found', code: 404);
         }
 
-        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+        if (is_object($result) === true
+            && method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+        ) {
             return $result->jsonSerialize();
         }
 
@@ -199,7 +162,7 @@ class TemplateService
             throw new Exception(message: 'Namespace is required', code: 400);
         }
 
-        $this->validateNamespace(namespace: $data['namespace']);
+        $this->registerResolver->validateNamespace(namespace: $data['namespace']);
 
         if (empty($data['name']) === true) {
             throw new Exception(message: 'Name is required', code: 400);
@@ -210,7 +173,7 @@ class TemplateService
         }
 
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
+        $config        = $this->registerResolver->getRegisterAndSchema();
 
         $result = $objectService->saveObject(
             object: $data,
@@ -218,7 +181,9 @@ class TemplateService
             schema: $config['schema']
         );
 
-        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+        if (is_object($result) === true
+            && method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+        ) {
             return $result->jsonSerialize();
         }
 
@@ -238,11 +203,13 @@ class TemplateService
      * @return array The updated template object
      *
      * @throws Exception If the template is not found or update fails
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function updateTemplate(string $id, array $data): array
     {
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
+        $config        = $this->registerResolver->getRegisterAndSchema();
 
         $existing = $this->getTemplate(id: $id);
 
@@ -258,7 +225,9 @@ class TemplateService
             schema: $config['schema']
         );
 
-        if (is_object($result) === true && method_exists(object_or_class: $result, method: 'jsonSerialize') === true) {
+        if (is_object($result) === true
+            && method_exists(object_or_class: $result, method: 'jsonSerialize') === true
+        ) {
             return $result->jsonSerialize();
         }
 
@@ -275,11 +244,12 @@ class TemplateService
      * @return bool True if deletion succeeded
      *
      * @throws Exception If the template is not found or deletion fails
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function deleteTemplate(string $id): bool
     {
         $objectService = $this->getObjectService();
-        $config        = $this->getRegisterAndSchema();
 
         $objectService->deleteObject(
             uuid: $id
@@ -307,7 +277,7 @@ class TemplateService
             offset: 0
         );
 
-        return $result['results'] ?? [];
+        return $result['results'];
 
     }//end getTemplatesByNamespace()
 

@@ -22,6 +22,7 @@ use Exception;
 use OCA\DocuDesk\Service\MetadataService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -45,6 +46,7 @@ class MetadataController extends Controller
      * @param IRequest        $request         The request object
      * @param LoggerInterface $logger          Logger for error reporting
      * @param MetadataService $metadataService Service for metadata operations
+     * @param IL10N           $l10n            The localization service
      *
      * @return void
      */
@@ -52,9 +54,10 @@ class MetadataController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly MetadataService $metadataService
+        private readonly MetadataService $metadataService,
+        private readonly IL10N $l10n
     ) {
-        parent::__construct(appName: $appName, request: $request);
+        parent::__construct($appName, $request);
 
     }//end __construct()
 
@@ -78,21 +81,21 @@ class MetadataController extends Controller
             // Validate required fields.
             if (isset($data['objectId']) === false || empty($data['objectId']) === true) {
                 return new JSONResponse(
-                    ['error' => 'objectId is required'],
+                    ['error' => $this->l10n->t('objectId is required')],
                     400
                 );
             }
 
             if (isset($data['register']) === false || empty($data['register']) === true) {
                 return new JSONResponse(
-                    ['error' => 'register is required'],
+                    ['error' => $this->l10n->t('register is required')],
                     400
                 );
             }
 
             if (isset($data['schema']) === false || empty($data['schema']) === true) {
                 return new JSONResponse(
-                    ['error' => 'schema is required'],
+                    ['error' => $this->l10n->t('schema is required')],
                     400
                 );
             }
@@ -124,7 +127,7 @@ class MetadataController extends Controller
             return new JSONResponse(
                     [
                         'success' => true,
-                        'message' => 'No metadata enrichment needed',
+                        'message' => $this->l10n->t('No metadata enrichment needed'),
                     ]
                     );
         } catch (Exception $e) {
@@ -135,7 +138,7 @@ class MetadataController extends Controller
                 ]
             );
             return new JSONResponse(
-                ['error' => 'Failed to enrich metadata: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to enrich metadata: %s', [$e->getMessage()])],
                 500
             );
         }//end try

@@ -4,6 +4,7 @@
  *
  * Controller for managing reusable document templates.
  * Provides CRUD endpoints for Twig/HTML templates stored in OpenRegister.
+ * Delegates request parsing and error handling to TemplateRequestHandler.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
@@ -23,7 +24,6 @@ use OCA\DocuDesk\Service\TemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use Psr\Log\LoggerInterface;
 
 /**
  * Controller for template CRUD endpoints
@@ -41,18 +41,18 @@ class TemplatesController extends Controller
     /**
      * Constructor for TemplatesController
      *
-     * @param string          $appName         The application name
-     * @param IRequest        $request         The request object
-     * @param LoggerInterface $logger          Logger for error reporting
-     * @param TemplateService $templateService Service for template operations
+     * @param string                 $appName         The application name
+     * @param IRequest               $request         The request object
+     * @param TemplateService        $templateService Service for template operations
+     * @param TemplateRequestHandler $requestHandler  Request param parser and error handler
      *
      * @return void
      */
     public function __construct(
         string $appName,
         IRequest $request,
-        private readonly LoggerInterface $logger,
-        private readonly TemplateService $templateService
+        private readonly TemplateService $templateService,
+        private readonly TemplateRequestHandler $requestHandler,
     ) {
         parent::__construct($appName, $request);
 
@@ -72,42 +72,16 @@ class TemplatesController extends Controller
     public function index(): JSONResponse
     {
         try {
-            $filters   = [];
-            $namespace = $this->request->getParam('namespace');
-            $search    = $this->request->getParam('_search');
-            $limit     = (int) $this->request->getParam('_limit', '20');
-            $offset    = (int) $this->request->getParam('_offset', '0');
-
-            if (empty($namespace) === false) {
-                $filters['namespace'] = $namespace;
-            }
-
-            if (empty($search) === false) {
-                $filters['_search'] = $search;
-            }
-
+            $params = $this->requestHandler->parseListParams($this->request);
             $result = $this->templateService->getTemplates(
-                filters: $filters,
-                limit: $limit,
-                offset: $offset
+                filters: $params['filters'],
+                limit: $params['limit'],
+                offset: $params['offset']
             );
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
-            $statusCode = 500;
-            if ($e->getCode() >= 400 && $e->getCode() < 600) {
-                $statusCode = $e->getCode();
-            }
-
-            $this->logger->error(
-                message: 'Failed to list templates: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: $statusCode
-            );
+            return $this->requestHandler->buildErrorResponse($e, 'Failed to list templates: ');
         }//end try
 
     }//end index()
@@ -122,6 +96,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function show(string $id): JSONResponse
     {
@@ -130,20 +106,7 @@ class TemplatesController extends Controller
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
-            $statusCode = 500;
-            if ($e->getCode() >= 400 && $e->getCode() < 600) {
-                $statusCode = $e->getCode();
-            }
-
-            $this->logger->error(
-                message: 'Failed to get template: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: $statusCode
-            );
+            return $this->requestHandler->buildErrorResponse($e, 'Failed to get template: ');
         }
 
     }//end show()
@@ -160,27 +123,12 @@ class TemplatesController extends Controller
     public function create(): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-            unset($data['_route']);
-
+            $data   = $this->requestHandler->parseBodyParams($this->request);
             $result = $this->templateService->createTemplate(data: $data);
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
-            $statusCode = 500;
-            if ($e->getCode() >= 400 && $e->getCode() < 600) {
-                $statusCode = $e->getCode();
-            }
-
-            $this->logger->error(
-                message: 'Failed to create template: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: $statusCode
-            );
+            return $this->requestHandler->buildErrorResponse($e, 'Failed to create template: ');
         }//end try
 
     }//end create()
@@ -195,31 +143,18 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function update(string $id): JSONResponse
     {
         try {
-            $data = $this->request->getParams();
-            unset($data['_route'], $data['id']);
-
+            $data   = $this->requestHandler->parseBodyParams($this->request, ['id']);
             $result = $this->templateService->updateTemplate(id: $id, data: $data);
 
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
-            $statusCode = 500;
-            if ($e->getCode() >= 400 && $e->getCode() < 600) {
-                $statusCode = $e->getCode();
-            }
-
-            $this->logger->error(
-                message: 'Failed to update template: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: $statusCode
-            );
+            return $this->requestHandler->buildErrorResponse($e, 'Failed to update template: ');
         }//end try
 
     }//end update()
@@ -234,6 +169,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function destroy(string $id): JSONResponse
     {
@@ -242,20 +179,7 @@ class TemplatesController extends Controller
 
             return new JSONResponse(data: ['success' => true]);
         } catch (Exception $e) {
-            $statusCode = 500;
-            if ($e->getCode() >= 400 && $e->getCode() < 600) {
-                $statusCode = $e->getCode();
-            }
-
-            $this->logger->error(
-                message: 'Failed to delete template: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: $statusCode
-            );
+            return $this->requestHandler->buildErrorResponse($e, 'Failed to delete template: ');
         }
 
     }//end destroy()
