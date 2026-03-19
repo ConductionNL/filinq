@@ -54,7 +54,7 @@ class TemplatesController extends Controller
         private readonly TemplateService $templateService,
         private readonly TemplateRequestHandler $requestHandler,
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
