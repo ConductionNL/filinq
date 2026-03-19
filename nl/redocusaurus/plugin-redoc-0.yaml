@@ -1,0 +1,1781 @@
+openapi: 3.0.3
+info:
+  title: DocuDesk API
+  description: >-
+    API documentation for DocuDesk, a document management application for
+    Nextcloud
+  version: 1.0.0
+  contact:
+    name: DocuDesk Team
+    url: https://github.com/yourusername/docudesk
+  license:
+    name: AGPL-3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.en.html
+servers:
+  - url: /apps/docudesk/api/v1
+    description: Nextcloud instance API endpoint
+tags:
+  - name: documents
+    description: Operations related to documents
+  - name: folders
+    description: Operations related to folders
+  - name: tags
+    description: Operations related to document tags
+  - name: search
+    description: Operations related to searching documents
+  - name: privacy
+    description: Operations related to privacy and GDPR compliance
+  - name: parsing
+    description: Operations related to document parsing and processing
+  - name: reports
+    description: Operations related to document analysis reports
+  - name: anonymization
+    description: Operations related to document anonymization
+paths:
+  /documents:
+    get:
+      summary: List all documents
+      description: Returns a list of all documents the user has access to
+      operationId: listDocuments
+      tags:
+        - documents
+      parameters:
+        - name: folder_id
+          in: query
+          description: Filter documents by folder ID
+          required: false
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter documents by tag
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create a new document
+      description: Creates a new document in the system
+      operationId: createDocument
+      tags:
+        - documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentCreate'
+      responses:
+        '201':
+          description: Document created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /privacy/files:
+    get:
+      summary: List all files with privacy data
+      description: Returns a list of all files that contain privacy-related data
+      operationId: listPrivacyFiles
+      tags:
+        - privacy
+      responses:
+        '200':
+          description: A list of files with privacy data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrivacyFile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /privacy/files/{fileId}:
+    get:
+      summary: Get privacy data for a specific file
+      description: Returns the privacy data associated with a specific file
+      operationId: getPrivacyFile
+      tags:
+        - privacy
+      parameters:
+        - name: fileId
+          in: path
+          description: ID of the file to get privacy data for
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Privacy data for the file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyFile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update privacy data for a file
+      description: Updates the privacy data associated with a specific file
+      operationId: updatePrivacyFile
+      tags:
+        - privacy
+      parameters:
+        - name: fileId
+          in: path
+          description: ID of the file to update privacy data for
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacyFileUpdate'
+      responses:
+        '200':
+          description: Privacy data updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /parsing/logs:
+    get:
+      summary: List parsing logs
+      description: Returns a list of parsing logs for processed files
+      operationId: listParsingLogs
+      tags:
+        - parsing
+      parameters:
+        - name: file_id
+          in: query
+          description: Filter logs by file ID
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter logs by parsing status
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+        - name: from_date
+          in: query
+          description: Filter logs from this date (ISO format)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to_date
+          in: query
+          description: Filter logs until this date (ISO format)
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: A list of parsing logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParsingLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create a new parsing log
+      description: Creates a new parsing log entry for a file
+      operationId: createParsingLog
+      tags:
+        - parsing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParsingLogCreate'
+      responses:
+        '201':
+          description: Parsing log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsingLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /parsing/logs/{logId}:
+    get:
+      summary: Get a specific parsing log
+      description: Returns a specific parsing log by ID
+      operationId: getParsingLog
+      tags:
+        - parsing
+      parameters:
+        - name: logId
+          in: path
+          description: ID of the parsing log to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The parsing log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsingLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a parsing log
+      description: Updates a specific parsing log entry
+      operationId: updateParsingLog
+      tags:
+        - parsing
+      parameters:
+        - name: logId
+          in: path
+          description: ID of the parsing log to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParsingLogUpdate'
+      responses:
+        '200':
+          description: Parsing log updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsingLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /reports:
+    get:
+      summary: List all document reports
+      description: Returns a list of all document analysis reports
+      operationId: listDocumentReports
+      tags:
+        - reports
+      parameters:
+        - name: node_id
+          in: query
+          description: Filter reports by Nextcloud node ID
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter reports by status
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+      responses:
+        '200':
+          description: A list of document reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create a new document report
+      description: Creates a new document analysis report
+      operationId: createDocumentReport
+      tags:
+        - reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentReportCreate'
+      responses:
+        '201':
+          description: Document report created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /reports/{reportId}:
+    get:
+      summary: Get a specific document report
+      description: Returns a specific document analysis report by ID
+      operationId: getDocumentReport
+      tags:
+        - reports
+      parameters:
+        - name: reportId
+          in: path
+          description: ID of the report to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The document report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update a document report
+      description: Updates a specific document analysis report
+      operationId: updateDocumentReport
+      tags:
+        - reports
+      parameters:
+        - name: reportId
+          in: path
+          description: ID of the report to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentReportUpdate'
+      responses:
+        '200':
+          description: Document report updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /reports/node/{nodeId}:
+    get:
+      summary: Get the latest report for a node
+      description: >-
+        Returns the latest document analysis report for a specific Nextcloud
+        node
+      operationId: getLatestReportForNode
+      tags:
+        - reports
+      parameters:
+        - name: nodeId
+          in: path
+          description: Nextcloud node ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The latest document report for the node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /anonymization/logs:
+    get:
+      summary: List anonymization logs
+      description: Returns a list of anonymization logs
+      operationId: listAnonymizationLogs
+      tags:
+        - anonymization
+      parameters:
+        - name: node_id
+          in: query
+          description: Filter logs by Nextcloud node ID
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter logs by status
+          required: false
+          schema:
+            type: string
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+      responses:
+        '200':
+          description: A list of anonymization logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnonymizationLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: Create a new anonymization log
+      description: Creates a new anonymization log entry
+      operationId: createAnonymizationLog
+      tags:
+        - anonymization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymizationLogCreate'
+      responses:
+        '201':
+          description: Anonymization log created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymizationLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /anonymization/logs/{logId}:
+    get:
+      summary: Get a specific anonymization log
+      description: Returns a specific anonymization log by ID
+      operationId: getAnonymizationLog
+      tags:
+        - anonymization
+      parameters:
+        - name: logId
+          in: path
+          description: ID of the anonymization log to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The anonymization log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymizationLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update an anonymization log
+      description: Updates a specific anonymization log entry
+      operationId: updateAnonymizationLog
+      tags:
+        - anonymization
+      parameters:
+        - name: logId
+          in: path
+          description: ID of the anonymization log to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnonymizationLogUpdate'
+      responses:
+        '200':
+          description: Anonymization log updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymizationLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /anonymization/logs/node/{nodeId}:
+    get:
+      summary: Get the latest anonymization log for a node
+      description: Returns the latest anonymization log for a specific Nextcloud node
+      operationId: getLatestAnonymizationLogForNode
+      tags:
+        - anonymization
+      parameters:
+        - name: nodeId
+          in: path
+          description: Nextcloud node ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The latest anonymization log for the node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnonymizationLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /anonymization/deanonymize:
+    post:
+      summary: De-anonymize a document
+      description: >-
+        Restores the original text in an anonymized document using the
+        anonymization key
+      operationId: deanonymizeDocument
+      tags:
+        - anonymization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                anonymized_node_id:
+                  type: string
+                  description: Nextcloud node ID of the anonymized document
+                anonymization_key:
+                  type: string
+                  description: Key used to de-anonymize the document
+              required:
+                - anonymized_node_id
+                - anonymization_key
+      responses:
+        '200':
+          description: Document de-anonymized successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  original_node_id:
+                    type: string
+                    description: Nextcloud node ID of the de-anonymized document
+                  success:
+                    type: boolean
+                    description: Whether the de-anonymization was successful
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the document
+        name:
+          type: string
+          description: Name of the document
+        description:
+          type: string
+          description: Description of the document
+        file_id:
+          type: string
+          description: Nextcloud file ID
+        folder_id:
+          type: string
+          description: ID of the folder containing this document
+        mime_type:
+          type: string
+          description: MIME type of the document
+        size:
+          type: integer
+          description: Size of the document in bytes
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags associated with the document
+      required:
+        - id
+        - name
+        - file_id
+        - created_at
+        - updated_at
+    DocumentCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the document
+        description:
+          type: string
+          description: Description of the document
+        file_id:
+          type: string
+          description: Nextcloud file ID
+        folder_id:
+          type: string
+          description: ID of the folder to place this document in
+        tags:
+          type: array
+          items:
+            type: string
+          description: List of tags to associate with the document
+      required:
+        - name
+        - file_id
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the folder
+        name:
+          type: string
+          description: Name of the folder
+        description:
+          type: string
+          description: Description of the folder
+        parent_id:
+          type: string
+          description: ID of the parent folder (null if root)
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the tag
+        name:
+          type: string
+          description: Name of the tag
+        color:
+          type: string
+          description: Color code for the tag (hex format)
+      required:
+        - id
+        - name
+    PrivacyFile:
+      type: object
+      description: >-
+        Represents a file with privacy-related data and its GDPR compliance
+        status
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the privacy file record
+        file_id:
+          type: string
+          description: Nextcloud file ID
+        file_name:
+          type: string
+          description: Name of the file
+        file_path:
+          type: string
+          description: Path to the file in Nextcloud
+        mime_type:
+          type: string
+          description: MIME type of the file
+        contains_personal_data:
+          type: boolean
+          description: Whether the file contains personal data
+        data_categories:
+          type: array
+          items:
+            type: string
+            enum:
+              - name
+              - address
+              - email
+              - phone
+              - id_number
+              - financial
+              - health
+              - biometric
+              - location
+              - other
+          description: Categories of personal data contained in the file
+        anonymization_status:
+          type: string
+          enum:
+            - not_required
+            - pending
+            - in_progress
+            - completed
+            - failed
+          description: Status of anonymization process
+        anonymization_date:
+          type: string
+          format: date-time
+          description: Date when the file was anonymized
+        retention_period:
+          type: integer
+          description: Retention period in days (0 for indefinite)
+        retention_expiry:
+          type: string
+          format: date-time
+          description: Date when the retention period expires
+        legal_basis:
+          type: string
+          enum:
+            - consent
+            - contract
+            - legal_obligation
+            - vital_interests
+            - public_interest
+            - legitimate_interests
+          description: Legal basis for processing the data under GDPR
+        data_controller:
+          type: string
+          description: Name of the data controller
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - file_id
+        - file_name
+        - contains_personal_data
+        - anonymization_status
+        - created_at
+        - updated_at
+    PrivacyFileUpdate:
+      type: object
+      description: Data for updating a privacy file record
+      properties:
+        contains_personal_data:
+          type: boolean
+          description: Whether the file contains personal data
+        data_categories:
+          type: array
+          items:
+            type: string
+            enum:
+              - name
+              - address
+              - email
+              - phone
+              - id_number
+              - financial
+              - health
+              - biometric
+              - location
+              - other
+          description: Categories of personal data contained in the file
+        anonymization_status:
+          type: string
+          enum:
+            - not_required
+            - pending
+            - in_progress
+            - completed
+            - failed
+          description: Status of anonymization process
+        anonymization_date:
+          type: string
+          format: date-time
+          description: Date when the file was anonymized
+        retention_period:
+          type: integer
+          description: Retention period in days (0 for indefinite)
+        legal_basis:
+          type: string
+          enum:
+            - consent
+            - contract
+            - legal_obligation
+            - vital_interests
+            - public_interest
+            - legitimate_interests
+          description: Legal basis for processing the data under GDPR
+        data_controller:
+          type: string
+          description: Name of the data controller
+    ParsingLog:
+      type: object
+      description: Log entry for a file parsing operation
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the parsing log
+        file_id:
+          type: string
+          description: Nextcloud file ID of the parsed file
+        file_name:
+          type: string
+          description: Name of the parsed file
+        file_path:
+          type: string
+          description: Path to the file in Nextcloud
+        mime_type:
+          type: string
+          description: MIME type of the file
+        parsing_type:
+          type: string
+          enum:
+            - text_extraction
+            - metadata_extraction
+            - anonymization
+            - format_conversion
+            - accessibility_check
+            - validation
+          description: Type of parsing operation performed
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the parsing operation
+        started_at:
+          type: string
+          format: date-time
+          description: When the parsing operation started
+        completed_at:
+          type: string
+          format: date-time
+          description: When the parsing operation completed
+        duration_ms:
+          type: integer
+          description: Duration of the parsing operation in milliseconds
+        result_summary:
+          type: string
+          description: Summary of the parsing result
+        error_message:
+          type: string
+          description: Error message if the parsing failed
+        output_file_id:
+          type: string
+          description: ID of the output file (if any)
+        output_format:
+          type: string
+          description: Format of the output file
+        user_id:
+          type: string
+          description: ID of the user who initiated the parsing
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - file_id
+        - file_name
+        - parsing_type
+        - status
+        - user_id
+        - created_at
+        - updated_at
+    ParsingLogCreate:
+      type: object
+      description: Data for creating a new parsing log entry
+      properties:
+        file_id:
+          type: string
+          description: Nextcloud file ID of the file to parse
+        file_name:
+          type: string
+          description: Name of the file to parse
+        file_path:
+          type: string
+          description: Path to the file in Nextcloud
+        mime_type:
+          type: string
+          description: MIME type of the file
+        parsing_type:
+          type: string
+          enum:
+            - text_extraction
+            - metadata_extraction
+            - anonymization
+            - format_conversion
+            - accessibility_check
+            - validation
+          description: Type of parsing operation to perform
+        output_format:
+          type: string
+          description: Desired format of the output file
+      required:
+        - file_id
+        - file_name
+        - parsing_type
+    ParsingLogUpdate:
+      type: object
+      description: Data for updating a parsing log entry
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the parsing operation
+        completed_at:
+          type: string
+          format: date-time
+          description: When the parsing operation completed
+        duration_ms:
+          type: integer
+          description: Duration of the parsing operation in milliseconds
+        result_summary:
+          type: string
+          description: Summary of the parsing result
+        error_message:
+          type: string
+          description: Error message if the parsing failed
+        output_file_id:
+          type: string
+          description: ID of the output file
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+      required:
+        - code
+        - message
+    DocumentReport:
+      type: object
+      description: Report containing analysis results for a document
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the report
+        node_id:
+          type: string
+          description: Nextcloud node ID of the document
+        file_name:
+          type: string
+          description: Name of the document
+        file_path:
+          type: string
+          description: Path to the document in Nextcloud
+        file_hash:
+          type: string
+          description: Hash of the file content to determine if a new report is needed
+        mime_type:
+          type: string
+          description: MIME type of the document
+        file_size:
+          type: integer
+          description: Size of the document in bytes
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the report generation
+        created_at:
+          type: string
+          format: date-time
+          description: When the report was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the report was last updated
+        completed_at:
+          type: string
+          format: date-time
+          description: When the report generation was completed
+        error_message:
+          type: string
+          description: Error message if report generation failed
+        anonymization_results:
+          $ref: '#/components/schemas/AnonymizationResults'
+        wcag_compliance_results:
+          $ref: '#/components/schemas/WcagComplianceResults'
+        language_level_results:
+          $ref: '#/components/schemas/LanguageLevelResults'
+        user_id:
+          type: string
+          description: ID of the user who initiated the report generation
+      required:
+        - id
+        - node_id
+        - file_name
+        - file_hash
+        - status
+        - created_at
+        - updated_at
+    DocumentReportCreate:
+      type: object
+      description: Data for creating a new document report
+      properties:
+        node_id:
+          type: string
+          description: Nextcloud node ID of the document
+        file_name:
+          type: string
+          description: Name of the document
+        file_path:
+          type: string
+          description: Path to the document in Nextcloud
+        file_hash:
+          type: string
+          description: Hash of the file content
+        mime_type:
+          type: string
+          description: MIME type of the document
+        file_size:
+          type: integer
+          description: Size of the document in bytes
+        analysis_types:
+          type: array
+          items:
+            type: string
+            enum:
+              - anonymization
+              - wcag_compliance
+              - language_level
+          description: Types of analysis to perform
+      required:
+        - node_id
+        - file_name
+        - file_hash
+        - analysis_types
+    DocumentReportUpdate:
+      type: object
+      description: Data for updating a document report
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the report generation
+        completed_at:
+          type: string
+          format: date-time
+          description: When the report generation was completed
+        error_message:
+          type: string
+          description: Error message if report generation failed
+        anonymization_results:
+          $ref: '#/components/schemas/AnonymizationResults'
+        wcag_compliance_results:
+          $ref: '#/components/schemas/WcagComplianceResults'
+        language_level_results:
+          $ref: '#/components/schemas/LanguageLevelResults'
+    AnonymizationResults:
+      type: object
+      description: Results of anonymization analysis
+      properties:
+        contains_personal_data:
+          type: boolean
+          description: Whether the document contains personal data
+        personal_data_count:
+          type: integer
+          description: Number of personal data instances found
+        data_categories:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Categories of personal data found and their counts
+        detected_entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetectedEntity'
+          description: List of detected personal data entities
+        anonymization_suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnonymizationSuggestion'
+          description: Suggestions for anonymizing personal data
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the anonymization analysis (0-1)
+    DetectedEntity:
+      type: object
+      description: A detected personal data entity
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - name
+            - address
+            - email
+            - phone
+            - id_number
+            - financial
+            - health
+            - biometric
+            - location
+            - other
+          description: Type of personal data entity
+        text:
+          type: string
+          description: The detected text
+        position:
+          type: object
+          properties:
+            page:
+              type: integer
+              description: Page number where the entity was found
+            start_offset:
+              type: integer
+              description: Start offset of the entity in the text
+            end_offset:
+              type: integer
+              description: End offset of the entity in the text
+          description: Position of the entity in the document
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the detection (0-1)
+      required:
+        - entity_type
+        - text
+        - position
+        - confidence
+    AnonymizationSuggestion:
+      type: object
+      description: A suggestion for anonymizing personal data
+      properties:
+        entity_id:
+          type: string
+          description: ID of the detected entity
+        original_text:
+          type: string
+          description: Original text to be anonymized
+        suggested_replacement:
+          type: string
+          description: Suggested replacement text
+        anonymization_method:
+          type: string
+          enum:
+            - redaction
+            - pseudonymization
+            - generalization
+            - perturbation
+          description: Suggested anonymization method
+      required:
+        - entity_id
+        - original_text
+        - suggested_replacement
+        - anonymization_method
+    WcagComplianceResults:
+      type: object
+      description: Results of WCAG compliance analysis
+      properties:
+        compliance_level:
+          type: string
+          enum:
+            - A
+            - AA
+            - AAA
+            - non_compliant
+          description: WCAG compliance level
+        total_issues:
+          type: integer
+          description: Total number of accessibility issues found
+        issues_by_severity:
+          type: object
+          properties:
+            critical:
+              type: integer
+              description: Number of critical issues
+            serious:
+              type: integer
+              description: Number of serious issues
+            moderate:
+              type: integer
+              description: Number of moderate issues
+            minor:
+              type: integer
+              description: Number of minor issues
+          description: Breakdown of issues by severity
+        issues_by_principle:
+          type: object
+          properties:
+            perceivable:
+              type: integer
+              description: Issues related to perceivability
+            operable:
+              type: integer
+              description: Issues related to operability
+            understandable:
+              type: integer
+              description: Issues related to understandability
+            robust:
+              type: integer
+              description: Issues related to robustness
+          description: Breakdown of issues by WCAG principle
+        detailed_issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessibilityIssue'
+          description: Detailed list of accessibility issues
+        compliance_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Overall compliance score (0-100)
+    AccessibilityIssue:
+      type: object
+      description: An accessibility issue found in the document
+      properties:
+        issue_id:
+          type: string
+          description: Unique identifier for the issue
+        wcag_criterion:
+          type: string
+          description: WCAG criterion that was violated
+        severity:
+          type: string
+          enum:
+            - critical
+            - serious
+            - moderate
+            - minor
+          description: Severity of the issue
+        principle:
+          type: string
+          enum:
+            - perceivable
+            - operable
+            - understandable
+            - robust
+          description: WCAG principle related to the issue
+        description:
+          type: string
+          description: Description of the issue
+        location:
+          type: object
+          properties:
+            page:
+              type: integer
+              description: Page number where the issue was found
+            element:
+              type: string
+              description: Element where the issue was found
+          description: Location of the issue in the document
+        recommendation:
+          type: string
+          description: Recommendation for fixing the issue
+      required:
+        - issue_id
+        - wcag_criterion
+        - severity
+        - principle
+        - description
+        - recommendation
+    LanguageLevelResults:
+      type: object
+      description: Results of language level analysis
+      properties:
+        primary_language:
+          type: string
+          description: Primary language detected in the document
+        language_confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of language detection (0-1)
+        readability_scores:
+          type: object
+          properties:
+            flesch_kincaid:
+              type: number
+              format: float
+              description: Flesch-Kincaid readability score
+            flesch_reading_ease:
+              type: number
+              format: float
+              description: Flesch Reading Ease score
+            smog_index:
+              type: number
+              format: float
+              description: SMOG Index
+            coleman_liau_index:
+              type: number
+              format: float
+              description: Coleman-Liau Index
+            automated_readability_index:
+              type: number
+              format: float
+              description: Automated Readability Index
+            dale_chall_readability_score:
+              type: number
+              format: float
+              description: Dale-Chall Readability Score
+          description: Various readability scores
+        complexity_metrics:
+          type: object
+          properties:
+            average_sentence_length:
+              type: number
+              format: float
+              description: Average sentence length
+            average_word_length:
+              type: number
+              format: float
+              description: Average word length
+            complex_word_percentage:
+              type: number
+              format: float
+              description: Percentage of complex words
+            passive_voice_percentage:
+              type: number
+              format: float
+              description: Percentage of sentences in passive voice
+          description: Text complexity metrics
+        education_level:
+          type: string
+          enum:
+            - elementary
+            - middle_school
+            - high_school
+            - college
+            - graduate
+            - professional
+          description: Estimated education level required to understand the text
+        language_improvement_suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageImprovementSuggestion'
+          description: Suggestions for improving language
+        overall_language_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Overall language quality score (0-100)
+    LanguageImprovementSuggestion:
+      type: object
+      description: A suggestion for improving language
+      properties:
+        suggestion_id:
+          type: string
+          description: Unique identifier for the suggestion
+        suggestion_type:
+          type: string
+          enum:
+            - simplify
+            - shorten_sentence
+            - active_voice
+            - remove_jargon
+            - clarify
+          description: Type of suggestion
+        original_text:
+          type: string
+          description: Original text
+        suggested_text:
+          type: string
+          description: Suggested improved text
+        location:
+          type: object
+          properties:
+            page:
+              type: integer
+              description: Page number where the text was found
+            paragraph:
+              type: integer
+              description: Paragraph number
+            start_offset:
+              type: integer
+              description: Start offset of the text
+            end_offset:
+              type: integer
+              description: End offset of the text
+          description: Location of the text in the document
+        explanation:
+          type: string
+          description: Explanation of why the change is suggested
+      required:
+        - suggestion_id
+        - suggestion_type
+        - original_text
+        - suggested_text
+        - explanation
+    AnonymizationLog:
+      type: object
+      description: Log entry for a document anonymization operation
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the anonymization log
+        node_id:
+          type: string
+          description: Nextcloud node ID of the document
+        file_name:
+          type: string
+          description: Name of the document
+        file_path:
+          type: string
+          description: Path to the document in Nextcloud
+        file_hash:
+          type: string
+          description: Hash of the file content
+        mime_type:
+          type: string
+          description: MIME type of the document
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the anonymization operation
+        started_at:
+          type: string
+          format: date-time
+          description: When the anonymization operation started
+        completed_at:
+          type: string
+          format: date-time
+          description: When the anonymization operation completed
+        duration_ms:
+          type: integer
+          description: Duration of the anonymization operation in milliseconds
+        error_message:
+          type: string
+          description: Error message if anonymization failed
+        output_node_id:
+          type: string
+          description: Nextcloud node ID of the anonymized document
+        anonymization_key:
+          type: string
+          description: Key used to de-anonymize the document (encrypted)
+        original_text:
+          type: string
+          description: Original text of the document (stored securely)
+        anonymized_text:
+          type: string
+          description: Anonymized text of the document
+        entity_replacements:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityReplacement'
+          description: List of entity replacements made during anonymization
+        entities_found:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityFound'
+          description: List of entities found during anonymization
+        total_entities_found:
+          type: integer
+          description: Total number of entities found
+        total_entities_replaced:
+          type: integer
+          description: Total number of entities replaced
+        confidence_threshold:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence threshold used for entity detection
+        user_id:
+          type: string
+          description: ID of the user who initiated the anonymization
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+      required:
+        - id
+        - node_id
+        - file_name
+        - status
+        - anonymization_key
+        - user_id
+        - created_at
+        - updated_at
+    AnonymizationLogCreate:
+      type: object
+      description: Data for creating a new anonymization log entry
+      properties:
+        node_id:
+          type: string
+          description: Nextcloud node ID of the document to anonymize
+        file_name:
+          type: string
+          description: Name of the document
+        file_path:
+          type: string
+          description: Path to the document in Nextcloud
+        file_hash:
+          type: string
+          description: Hash of the file content
+        mime_type:
+          type: string
+          description: MIME type of the document
+        confidence_threshold:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence threshold for entity detection (default 0.7)
+      required:
+        - node_id
+        - file_name
+    AnonymizationLogUpdate:
+      type: object
+      description: Data for updating an anonymization log entry
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: Status of the anonymization operation
+        completed_at:
+          type: string
+          format: date-time
+          description: When the anonymization operation completed
+        duration_ms:
+          type: integer
+          description: Duration of the anonymization operation in milliseconds
+        error_message:
+          type: string
+          description: Error message if anonymization failed
+        output_node_id:
+          type: string
+          description: Nextcloud node ID of the anonymized document
+        original_text:
+          type: string
+          description: Original text of the document
+        anonymized_text:
+          type: string
+          description: Anonymized text of the document
+        entity_replacements:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityReplacement'
+          description: List of entity replacements made during anonymization
+        entities_found:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntityFound'
+          description: List of entities found during anonymization
+        total_entities_found:
+          type: integer
+          description: Total number of entities found
+        total_entities_replaced:
+          type: integer
+          description: Total number of entities replaced
+    EntityReplacement:
+      type: object
+      description: A replacement made during anonymization
+      properties:
+        replacement_id:
+          type: string
+          description: Unique identifier for the replacement
+        entity_type:
+          type: string
+          enum:
+            - PERSON
+            - LOCATION
+            - ORGANIZATION
+            - DATE
+            - ID
+            - EMAIL
+            - PHONE
+            - ADDRESS
+            - FINANCIAL
+            - MEDICAL
+            - OTHER
+          description: Type of entity
+        original_text:
+          type: string
+          description: Original text that was replaced
+        replacement_text:
+          type: string
+          description: Text used as replacement
+        position:
+          type: object
+          properties:
+            start_offset:
+              type: integer
+              description: Start offset in the document
+            end_offset:
+              type: integer
+              description: End offset in the document
+            page:
+              type: integer
+              description: Page number (for multi-page documents)
+          description: Position of the replacement in the document
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the entity detection
+      required:
+        - replacement_id
+        - entity_type
+        - original_text
+        - replacement_text
+        - confidence
+    EntityFound:
+      type: object
+      description: An entity found during anonymization
+      properties:
+        entity_type:
+          type: string
+          enum:
+            - PERSON
+            - LOCATION
+            - ORGANIZATION
+            - DATE
+            - ID
+            - EMAIL
+            - PHONE
+            - ADDRESS
+            - FINANCIAL
+            - MEDICAL
+            - OTHER
+          description: Type of entity
+        text:
+          type: string
+          description: Text of the entity
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score of the entity detection
+        position:
+          type: object
+          properties:
+            start_offset:
+              type: integer
+              description: Start offset in the document
+            end_offset:
+              type: integer
+              description: End offset in the document
+            page:
+              type: integer
+              description: Page number (for multi-page documents)
+          description: Position of the entity in the document
+      required:
+        - entity_type
+        - text
+        - score
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
