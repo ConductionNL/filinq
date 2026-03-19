@@ -5,6 +5,7 @@
  * Service for enhancing and managing document metadata.
  * This service works with documents stored in OpenRegister via ObjectService
  * and provides functionality to enrich metadata with text analysis results.
+ * Delegates text extraction and date normalization to DocumentTextExtractor.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -19,7 +20,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DateTime;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
@@ -42,10 +42,11 @@ class MetadataService
     /**
      * Constructor for MetadataService
      *
-     * @param LoggerInterface     $logger              Logger for error reporting
-     * @param ContainerInterface  $container           Container for dependency injection
-     * @param IAppManager         $appManager          App manager interface
-     * @param TextAnalysisService $textAnalysisService Text analysis service
+     * @param LoggerInterface        $logger              Logger for error reporting
+     * @param ContainerInterface     $container           Container for dependency injection
+     * @param IAppManager            $appManager          App manager interface
+     * @param TextAnalysisService    $textAnalysisService Text analysis service
+     * @param DocumentTextExtractor  $textExtractor       Text extraction and date normalization
      *
      * @return void
      */
@@ -53,7 +54,8 @@ class MetadataService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly TextAnalysisService $textAnalysisService
+        private readonly TextAnalysisService $textAnalysisService,
+        private readonly DocumentTextExtractor $textExtractor
     ) {
 
     }//end __construct()
@@ -75,26 +77,6 @@ class MetadataService
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
-
-    /**
-     * Extract text content from object data
-     *
-     * @param array<string, mixed> $objectData The document object data
-     *
-     * @return string The text content, empty string if not found
-     */
-    private function extractTextContent(array $objectData): string
-    {
-        $text = $objectData['content'] ?? $objectData['text'] ?? $objectData['description'] ?? '';
-
-        if (is_string($text) === false) {
-            return '';
-        }
-
-        return $text;
-
-    }//end extractTextContent()
 
 
     /**
@@ -136,42 +118,6 @@ class MetadataService
 
 
     /**
-     * Normalize date fields in object data
-     *
-     * @param array<string, mixed> $objectData The document object data
-     *
-     * @return array<string, string> Normalized date fields
-     */
-    private function normalizeDateFields(array $objectData): array
-    {
-        $dateFields = ['created', 'modified', 'date', 'creationDate', 'modificationDate'];
-        $metadata   = [];
-
-        foreach ($dateFields as $field) {
-            if (empty($objectData[$field]) === true) {
-                continue;
-            }
-
-            try {
-                $date = new DateTime($objectData[$field]);
-                $metadata[$field] = $date->format('c');
-            } catch (Exception $e) {
-                $this->logger->debug(
-                    'Failed to normalize date field: '.$field,
-                    [
-                        'value'     => $objectData[$field],
-                        'exception' => $e,
-                    ]
-                );
-            }
-        }
-
-        return $metadata;
-
-    }//end normalizeDateFields()
-
-
-    /**
      * Enhance metadata for a document object
      *
      * @param array<string, mixed> $objectData The document object data from OpenRegister
@@ -184,19 +130,24 @@ class MetadataService
     {
         try {
             $metadata = [];
-            $text     = $this->extractTextContent($objectData);
+            $text     = $this->textExtractor->extractTextContent($objectData);
 
             if (empty($text) === false) {
                 $metadata = $this->enhanceTextMetadata($text, $objectData);
             }
 
             if (empty($objectData['documentType']) === false) {
-                $metadata['documentType'] = $this->textAnalysisService->standardizeDocumentType($objectData['documentType']);
+                $metadata['documentType'] = $this->textAnalysisService->standardizeDocumentType(
+                    $objectData['documentType']
+                );
             }
 
-            $metadata = array_merge($metadata, $this->normalizeDateFields($objectData));
+            $metadata = array_merge($metadata, $this->textExtractor->normalizeDateFields($objectData));
 
-            $this->logger->debug('Metadata enhanced for document object', ['enhancedFields' => array_keys($metadata)]);
+            $this->logger->debug(
+                'Metadata enhanced for document object',
+                ['enhancedFields' => array_keys($metadata)]
+            );
 
             return $metadata;
         } catch (Exception $e) {
@@ -219,8 +170,12 @@ class MetadataService
      *
      * @throws Exception If saving fails
      */
-    public function saveEnrichedMetadata(string $objectId, string $register, string $schema, array $metadata): array
-    {
+    public function saveEnrichedMetadata(
+        string $objectId,
+        string $register,
+        string $schema,
+        array $metadata
+    ): array {
         try {
             $objectService = $this->getObjectService();
 

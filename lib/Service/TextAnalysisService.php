@@ -2,9 +2,9 @@
 /**
  * Text Analysis Service
  *
- * Service for analyzing text content: language detection,
- * keyword extraction, topic classification, and document type
- * standardization.
+ * Service for analyzing text content: keyword extraction and document type
+ * standardization. Delegates language detection and topic classification
+ * to LanguageClassifier.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -30,6 +30,20 @@ namespace OCA\DocuDesk\Service;
  */
 class TextAnalysisService
 {
+
+
+    /**
+     * Constructor for TextAnalysisService
+     *
+     * @param LanguageClassifier $languageClassifier Language and topic classifier
+     *
+     * @return void
+     */
+    public function __construct(
+        private readonly LanguageClassifier $languageClassifier
+    ) {
+
+    }//end __construct()
 
 
     /**
@@ -61,22 +75,7 @@ class TextAnalysisService
      */
     public function detectLanguage(string $text): ?string
     {
-        $text = strtolower($text);
-
-        $dutchWords   = ['de', 'het', 'een', 'en', 'van', 'is', 'zijn', 'op', 'voor', 'met'];
-        $dutchCount   = $this->countWordOccurrences($text, $dutchWords);
-        $englishWords = ['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'it'];
-        $englishCount = $this->countWordOccurrences($text, $englishWords);
-
-        if ($dutchCount > $englishCount && $dutchCount > 5) {
-            return 'nl';
-        }
-
-        if ($englishCount > 5) {
-            return 'en';
-        }
-
-        return null;
+        return $this->languageClassifier->detectLanguage($text);
 
     }//end detectLanguage()
 
@@ -145,31 +144,7 @@ class TextAnalysisService
      */
     public function classifyTopic(string $text): ?string
     {
-        $text = strtolower($text);
-
-        $topics = [
-            'legal'     => ['contract', 'agreement', 'law', 'legal', 'court', 'judge'],
-            'financial' => ['invoice', 'payment', 'budget', 'financial', 'account', 'money'],
-            'medical'   => ['patient', 'diagnosis', 'treatment', 'medical', 'health', 'doctor'],
-            'technical' => ['system', 'software', 'technical', 'code', 'development', 'api'],
-        ];
-
-        $scores = [];
-        foreach ($topics as $topic => $keywords) {
-            $scores[$topic] = $this->countWordOccurrences($text, $keywords);
-        }
-
-        $maxScore = max($scores);
-        if ($maxScore > 0) {
-            $topic = array_search($maxScore, $scores);
-            if ($topic !== false) {
-                return (string) $topic;
-            }
-
-            return null;
-        }
-
-        return null;
+        return $this->languageClassifier->classifyTopic($text);
 
     }//end classifyTopic()
 

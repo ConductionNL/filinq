@@ -6,6 +6,7 @@
  * Handles creating, updating, and querying consent records for
  * entities detected in documents that require notification before
  * publication under the Wet Open Overheid.
+ * Delegates deadline checking to ObjectionDeadlineChecker.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -20,11 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DateTime;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -40,21 +39,14 @@ use Psr\Log\LoggerInterface;
 class ConsentService
 {
 
-    /**
-     * The application name
-     *
-     * @var string
-     */
-    private readonly string $appName;
-
 
     /**
      * Constructor for ConsentService
      *
-     * @param LoggerInterface    $logger     Logger for error reporting
-     * @param ContainerInterface $container  Container for dependency injection
-     * @param IAppManager        $appManager App manager interface
-     * @param IAppConfig         $config     App configuration interface
+     * @param LoggerInterface         $logger           Logger for error reporting
+     * @param ContainerInterface      $container        Container for dependency injection
+     * @param IAppManager             $appManager       App manager interface
+     * @param ObjectionDeadlineChecker $deadlineChecker Objection deadline checker
      *
      * @return void
      */
@@ -62,9 +54,8 @@ class ConsentService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly IAppConfig $config
+        private readonly ObjectionDeadlineChecker $deadlineChecker
     ) {
-        $this->appName = 'docudesk';
 
     }//end __construct()
 
@@ -85,22 +76,6 @@ class ConsentService
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
-
-    /**
-     * Get the objection period in days from settings
-     *
-     * @return int Number of days for the objection period
-     */
-    private function getObjectionPeriodDays(): int
-    {
-        return (int) $this->config->getValueString(
-            $this->appName,
-            'publication_objection_period_days',
-            '28'
-        );
-
-    }//end getObjectionPeriodDays()
 
 
     /**
@@ -127,11 +102,7 @@ class ConsentService
     ): array {
         try {
             $objectService = $this->getObjectService();
-
-            // Calculate objection deadline.
-            $objectionDays = $this->getObjectionPeriodDays();
-            $deadline      = new DateTime();
-            $deadline->modify("+{$objectionDays} days");
+            $deadline      = $this->deadlineChecker->calculateDeadline();
 
             $consentData = array_merge(
                     [
@@ -260,42 +231,7 @@ class ConsentService
      */
     public function checkObjectionDeadline(string $consentId, string $register, string $schema): bool
     {
-        try {
-            $objectService = $this->getObjectService();
-
-            $object = $objectService->find(
-                id: $consentId,
-                register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            if ($object === null) {
-                throw new Exception('Consent record not found: '.$consentId);
-            }
-
-            $objectData = $object->getObject();
-            $deadline   = $objectData['objectionDeadline'] ?? null;
-
-            if ($deadline === null) {
-                return false;
-            }
-
-            $deadlineDate = new DateTime($deadline);
-            $now          = new DateTime();
-
-            return $now > $deadlineDate;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to check objection deadline: '.$e->getMessage(),
-                [
-                    'consentId' => $consentId,
-                    'exception' => $e,
-                ]
-            );
-            throw new Exception('Failed to check objection deadline: '.$e->getMessage(), 0, $e);
-        }//end try
+        return $this->deadlineChecker->checkObjectionDeadline($consentId, $register, $schema);
 
     }//end checkObjectionDeadline()
 
@@ -342,7 +278,11 @@ class ConsentService
                     'exception'  => $e,
                 ]
             );
-            throw new Exception('Failed to get consents for document: '.$e->getMessage(), 0, $e);
+            throw new Exception(
+                'Failed to get consents for document: '.$e->getMessage(),
+                0,
+                $e
+            );
         }//end try
 
     }//end getConsentsByDocument()

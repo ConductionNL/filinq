@@ -3,8 +3,8 @@
  * PDF Service
  *
  * Shared service for generating PDF documents from Twig templates and data.
- * Uses mPDF for HTML-to-PDF conversion and Twig for template rendering.
- * Designed to be consumed by any Nextcloud app via DI container.
+ * Uses mPDF for HTML-to-PDF conversion and delegates template rendering
+ * to TemplateRenderer.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -23,10 +23,6 @@ use Exception;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Psr\Log\LoggerInterface;
-use Twig\Environment;
-use Twig\Extension\SandboxExtension;
-use Twig\Loader\ArrayLoader;
-use Twig\Sandbox\SecurityPolicy;
 
 /**
  * Service for generating PDF documents from Twig templates
@@ -39,80 +35,19 @@ use Twig\Sandbox\SecurityPolicy;
  */
 class PdfService
 {
-    /**
-     * Allowed Twig filters in the sandbox
-     *
-     * @var string[]
-     */
-    private const ALLOWED_FILTERS = [
-        'escape',
-        'e',
-        'upper',
-        'lower',
-        'trim',
-        'nl2br',
-        'date',
-        'number_format',
-        'join',
-        'split',
-        'first',
-        'last',
-        'length',
-        'default',
-        'raw',
-        'sort',
-        'reverse',
-        'keys',
-        'values',
-        'merge',
-        'slice',
-        'batch',
-        'column',
-        'round',
-        'abs',
-    ];
-
-    /**
-     * Allowed Twig functions in the sandbox
-     *
-     * @var string[]
-     */
-    private const ALLOWED_FUNCTIONS = [
-        'range',
-        'cycle',
-        'date',
-        'max',
-        'min',
-    ];
-
-    /**
-     * Allowed Twig tags in the sandbox
-     *
-     * @var string[]
-     */
-    private const ALLOWED_TAGS = [
-        'if',
-        'for',
-        'set',
-        'block',
-        'extends',
-        'include',
-        'macro',
-        'spaceless',
-        'apply',
-        'autoescape',
-    ];
 
 
     /**
      * Constructor for PdfService
      *
-     * @param LoggerInterface $logger Logger for error reporting
+     * @param LoggerInterface  $logger           Logger for error reporting
+     * @param TemplateRenderer $templateRenderer Template renderer for Twig
      *
      * @return void
      */
     public function __construct(
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly TemplateRenderer $templateRenderer
     ) {
 
     }//end __construct()
@@ -135,56 +70,14 @@ class PdfService
      */
     public function renderPdf(string $templateContent, array $data=[], array $options=[]): string
     {
-        $html = $this->renderTemplate(templateContent: $templateContent, data: $data);
+        $html = $this->templateRenderer->renderTemplate(
+            templateContent: $templateContent,
+            data: $data
+        );
 
         return $this->generatePdf(html: $html, options: $options);
 
     }//end renderPdf()
-
-
-    /**
-     * Render a Twig template string with the given data context
-     *
-     * Uses a sandboxed Twig environment that only allows safe filters,
-     * functions, and tags. Objects cannot have methods or properties called.
-     *
-     * @param string $templateContent Twig template content
-     * @param array  $data            Data context for rendering
-     *
-     * @return string Rendered HTML
-     *
-     * @throws Exception If Twig rendering fails (syntax error, security violation)
-     */
-    private function renderTemplate(string $templateContent, array $data): string
-    {
-        $loader = new ArrayLoader(templates: ['document' => $templateContent]);
-        $twig   = new Environment(loader: $loader, options: ['strict_variables' => false]);
-
-        $policy  = new SecurityPolicy(
-            allowedTags: self::ALLOWED_TAGS,
-            allowedFilters: self::ALLOWED_FILTERS,
-            allowedMethods: [],
-            allowedProperties: [],
-            allowedFunctions: self::ALLOWED_FUNCTIONS
-        );
-        $sandbox = new SandboxExtension(policy: $policy, sandboxed: true);
-        $twig->addExtension(extension: $sandbox);
-
-        try {
-            return $twig->render(name: 'document', context: $data);
-        } catch (Exception $e) {
-            $this->logger->error(
-                message: 'Twig template rendering failed: '.$e->getMessage(),
-                context: ['exception' => $e]
-            );
-            throw new Exception(
-                message: 'Template rendering failed: '.$e->getMessage(),
-                code: 400,
-                previous: $e
-            );
-        }
-
-    }//end renderTemplate()
 
 
     /**
