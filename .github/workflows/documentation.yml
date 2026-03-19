@@ -2,10 +2,10 @@ name: Documentation
 
 on:
   push:
-    branches: 
+    branches:
       - development
   pull_request:
-    branches: 
+    branches:
       - development
 
 jobs:

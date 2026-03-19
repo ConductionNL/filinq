@@ -1,19 +1,45 @@
 <?php
-
 /**
- * SPDX-FileCopyrightText: 2025 Nextcloud GmbH and Nextcloud contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Bootstrap file for PHPUnit tests
+ *
+ * @category Test
+ * @package  OCA\DocuDesk\Tests
+ *
+ * @author    Conduction Development Team <dev@conduction.nl>
+ * @copyright 2025 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://DocuDesk.app
  */
 
-if (!defined('PHPUNIT_RUN')) {
-    define('PHPUNIT_RUN', 1);
+declare(strict_types=1);
+
+// Define that we're running PHPUnit.
+define('PHPUNIT_RUN', 1);
+
+// Include Composer's autoloader.
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Bootstrap Nextcloud if not already done.
+if (!defined('OC_CONSOLE')) {
+    // Try to include the main Nextcloud bootstrap.
+    if (file_exists(__DIR__ . '/../../../lib/base.php')) {
+        require_once __DIR__ . '/../../../lib/base.php';
+    }
+
+    // Load Test\TestCase and other NC test classes (NC convention).
+    if (file_exists(__DIR__ . '/../../../tests/autoload.php')) {
+        require_once __DIR__ . '/../../../tests/autoload.php';
+    }
+
+    // Load all enabled apps.
+    \OC_App::loadApps();
+
+    // Load our specific app.
+    \OC_App::loadApp('docudesk');
+
+    // Clear hooks for testing.
+    OC_Hook::clear();
 }
-
-require_once __DIR__ . '/../../../lib/base.php';
-
-\OC::$loader->addValidRoot(OC::$SERVERROOT . '/tests');
-\OC_App::loadApp('docudesk');
-
-if (!class_exists('\Test\TestCase')) {
-    require_once __DIR__ . '/../../../tests/lib/TestCase.php';
-} 
