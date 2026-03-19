@@ -24,11 +24,15 @@ import { consentStore, navigationStore } from '../../store/store.js'
 				<h3>{{ t('docudesk', 'Entity Information') }}</h3>
 				<table class="detail-table">
 					<tr>
-						<td class="label">{{ t('docudesk', 'Entity Text') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Text') }}
+						</td>
 						<td>{{ consentStore.consentItem.entityText }}</td>
 					</tr>
 					<tr>
-						<td class="label">{{ t('docudesk', 'Entity Type') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Type') }}
+						</td>
 						<td>
 							<span class="badge" :class="'badge-' + (consentStore.consentItem.entityType || '').toLowerCase()">
 								{{ consentStore.consentItem.entityType }}
@@ -36,15 +40,21 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.entityKey">
-						<td class="label">{{ t('docudesk', 'Entity Key') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Key') }}
+						</td>
 						<td>{{ consentStore.consentItem.entityKey }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.contactEmail">
-						<td class="label">{{ t('docudesk', 'Contact Email') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Contact Email') }}
+						</td>
 						<td>{{ consentStore.consentItem.contactEmail }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.contactAddress">
-						<td class="label">{{ t('docudesk', 'Contact Address') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Contact Address') }}
+						</td>
 						<td>{{ consentStore.consentItem.contactAddress }}</td>
 					</tr>
 				</table>
@@ -54,7 +64,9 @@ import { consentStore, navigationStore } from '../../store/store.js'
 				<h3>{{ t('docudesk', 'Consent Status') }}</h3>
 				<table class="detail-table">
 					<tr>
-						<td class="label">{{ t('docudesk', 'Consent Status') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Consent Status') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.consentStatus"
@@ -63,7 +75,9 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						</td>
 					</tr>
 					<tr>
-						<td class="label">{{ t('docudesk', 'Notification Status') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Notification Status') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.notificationStatus"
@@ -72,7 +86,9 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						</td>
 					</tr>
 					<tr>
-						<td class="label">{{ t('docudesk', 'Publication Decision') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Publication Decision') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.publicationDecision"
@@ -81,15 +97,21 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						</td>
 					</tr>
 					<tr>
-						<td class="label">{{ t('docudesk', 'Objection Deadline') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Objection Deadline') }}
+						</td>
 						<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.objectionReceivedAt">
-						<td class="label">{{ t('docudesk', 'Objection Received') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Objection Received') }}
+						</td>
 						<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.legalBasis">
-						<td class="label">{{ t('docudesk', 'Legal Basis') }}</td>
+						<td class="label">
+							{{ t('docudesk', 'Legal Basis') }}
+						</td>
 						<td>{{ consentStore.consentItem.legalBasis }}</td>
 					</tr>
 				</table>
@@ -97,12 +119,16 @@ import { consentStore, navigationStore } from '../../store/store.js'
 
 			<div v-if="consentStore.consentItem.objectionReason" class="detail-section">
 				<h3>{{ t('docudesk', 'Objection Reason') }}</h3>
-				<p class="notes-text">{{ consentStore.consentItem.objectionReason }}</p>
+				<p class="notes-text">
+					{{ consentStore.consentItem.objectionReason }}
+				</p>
 			</div>
 
 			<div v-if="consentStore.consentItem.notes" class="detail-section">
 				<h3>{{ t('docudesk', 'Notes') }}</h3>
-				<p class="notes-text">{{ consentStore.consentItem.notes }}</p>
+				<p class="notes-text">
+					{{ consentStore.consentItem.notes }}
+				</p>
 			</div>
 
 			<div class="detail-actions">

@@ -58,7 +58,7 @@ class PdfController extends Controller
         private readonly PdfService $pdfService,
         private readonly IL10N $l10n
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

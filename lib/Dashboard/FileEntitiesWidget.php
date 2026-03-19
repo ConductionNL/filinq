@@ -127,7 +127,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.StaticAccess)
+     * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
      */
     public function load(): void
     {
