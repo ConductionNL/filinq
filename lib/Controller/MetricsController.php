@@ -77,9 +77,11 @@ class MetricsController extends Controller
         $ncVersion  = $this->config->getSystemValueString('version', '0.0.0');
 
         // Info gauge.
-        $lines[] = '# HELP docudesk_info Application information';
-        $lines[] = '# TYPE docudesk_info gauge';
-        $lines[] = 'docudesk_info{version="'.$appVersion.'",php_version="'.$phpVersion.'",nextcloud_version="'.$ncVersion.'"} 1';
+        $lines[]     = '# HELP docudesk_info Application information';
+        $lines[]     = '# TYPE docudesk_info gauge';
+        $infoLabels  = 'version="'.$appVersion.'",php_version="'.$phpVersion.'"';
+        $infoLabels .= ',nextcloud_version="'.$ncVersion.'"';
+        $lines[]     = 'docudesk_info{'.$infoLabels.'} 1';
 
         // Up gauge.
         $lines[] = '# HELP docudesk_up Whether the application is up';

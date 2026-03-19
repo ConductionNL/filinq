@@ -188,6 +188,49 @@ class PdfService
 
 
     /**
+     * Ensure the mPDF temp directory exists and is writable
+     *
+     * @param string $tempDir The temp directory path
+     *
+     * @return void
+     */
+    private function ensureTempDirectory(string $tempDir): void
+    {
+        if (file_exists(filename: $tempDir) === false) {
+            mkdir(directory: $tempDir, permissions: 0777, recursive: true);
+        }
+
+        chmod(filename: $tempDir, permissions: 0777);
+
+    }//end ensureTempDirectory()
+
+
+    /**
+     * Build mPDF configuration array from options
+     *
+     * @param string $tempDir The temp directory path
+     * @param array  $options PDF configuration options
+     *
+     * @return array<string, mixed> mPDF configuration
+     */
+    private function buildMpdfConfig(string $tempDir, array $options): array
+    {
+        $margins = $options['margin'] ?? [];
+
+        return [
+            'tempDir'       => $tempDir,
+            'format'        => $options['format'] ?? 'A4',
+            'orientation'   => $options['orientation'] ?? 'P',
+            'margin_top'    => $margins['top'] ?? 15,
+            'margin_right'  => $margins['right'] ?? 15,
+            'margin_bottom' => $margins['bottom'] ?? 15,
+            'margin_left'   => $margins['left'] ?? 15,
+        ];
+
+    }//end buildMpdfConfig()
+
+
+    /**
      * Generate a PDF from rendered HTML content
      *
      * Creates the mPDF temp directory if it does not exist,
@@ -203,32 +246,13 @@ class PdfService
     private function generatePdf(string $html, array $options): string
     {
         $tempDir = '/tmp/mpdf';
-        if (file_exists(filename: $tempDir) === false) {
-            mkdir(directory: $tempDir, permissions: 0777, recursive: true);
-        }
+        $this->ensureTempDirectory($tempDir);
 
-        chmod(filename: $tempDir, permissions: 0777);
-
-        $format       = $options['format'] ?? 'A4';
-        $orientation  = $options['orientation'] ?? 'P';
-        $title        = $options['title'] ?? '';
-        $marginTop    = $options['margin']['top'] ?? 15;
-        $marginRight  = $options['margin']['right'] ?? 15;
-        $marginBottom = $options['margin']['bottom'] ?? 15;
-        $marginLeft   = $options['margin']['left'] ?? 15;
+        $config = $this->buildMpdfConfig($tempDir, $options);
+        $title  = $options['title'] ?? '';
 
         try {
-            $mpdf = new Mpdf(
-                    config: [
-                        'tempDir'       => $tempDir,
-                        'format'        => $format,
-                        'orientation'   => $orientation,
-                        'margin_top'    => $marginTop,
-                        'margin_right'  => $marginRight,
-                        'margin_bottom' => $marginBottom,
-                        'margin_left'   => $marginLeft,
-                    ]
-                    );
+            $mpdf = new Mpdf(config: $config);
 
             if ($title !== '') {
                 $mpdf->SetTitle($title);

@@ -21,6 +21,7 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -47,6 +48,7 @@ class AnonymizationController extends Controller
      * @param IRequest             $request              The request object
      * @param LoggerInterface      $logger               Logger for error reporting
      * @param AnonymizationService $anonymizationService Service for anonymization operations
+     * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
      *
      * @return void
@@ -56,6 +58,7 @@ class AnonymizationController extends Controller
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService,
+        private readonly FileListingService $fileListingService,
         private readonly IL10N $l10n
     ) {
         parent::__construct($appName, $request);
@@ -77,7 +80,7 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
-            $result = $this->anonymizationService->listProcessedFiles();
+            $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -139,7 +142,7 @@ class AnonymizationController extends Controller
                 );
             }
 
-            $result = $this->anonymizationService->uploadFile($fileName, $fileContent);
+            $result = $this->fileListingService->uploadFile($fileName, $fileContent);
 
             return new JSONResponse($result);
         } catch (Exception $e) {

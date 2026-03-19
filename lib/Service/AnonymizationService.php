@@ -3,7 +3,7 @@
  * Anonymization Service
  *
  * Service for orchestrating the document anonymization pipeline:
- * upload, text extraction with entity detection, and anonymization.
+ * text extraction with entity detection, and anonymization.
  * Uses OpenRegister services for text extraction and entity recognition.
  *
  * @category  Service
@@ -22,8 +22,6 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -43,482 +41,263 @@ class AnonymizationService
     /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface    $logger      Logger for error reporting
-     * @param ContainerInterface $container   Container for dependency injection
-     * @param IAppManager        $appManager  App manager interface
-     * @param IRootFolder        $rootFolder  Root folder for file operations
-     * @param IUserSession       $userSession User session for getting current user
+     * @param LoggerInterface    $logger     Logger for error reporting
+     * @param ContainerInterface $container  Container for dependency injection
+     * @param IAppManager        $appManager App manager interface
      *
      * @return void
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
-        private readonly IRootFolder $rootFolder,
-        private readonly IUserSession $userSession
+        private readonly IAppManager $appManager
     ) {
 
     }//end __construct()
 
 
     /**
-     * Get the TextExtractionService from OpenRegister
+     * Get an OpenRegister service or mapper by class name
      *
-     * @return \OCA\OpenRegister\Service\TextExtractionService The TextExtractionService instance
+     * @param string $className The fully qualified class name
      *
-     * @throws \RuntimeException If OpenRegister is not available
-     */
-    private function getTextExtractionService(): \OCA\OpenRegister\Service\TextExtractionService
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\TextExtractionService');
-        }
-
-        throw new RuntimeException('OpenRegister TextExtractionService is not available.');
-
-    }//end getTextExtractionService()
-
-
-    /**
-     * Get the FileService from OpenRegister
-     *
-     * @return \OCA\OpenRegister\Service\FileService The FileService instance
+     * @return mixed The service instance
      *
      * @throws \RuntimeException If OpenRegister is not available
      */
-    private function getFileService(): \OCA\OpenRegister\Service\FileService
+    private function getOpenRegisterService(string $className): mixed
     {
         if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\FileService');
+            return $this->container->get($className);
         }
 
-        throw new RuntimeException('OpenRegister FileService is not available.');
+        throw new RuntimeException($className.' is not available.');
 
-    }//end getFileService()
+    }//end getOpenRegisterService()
 
 
     /**
-     * Get the EntityRelationMapper from OpenRegister
+     * Normalize entity data to a consistent format
      *
-     * @return \OCA\OpenRegister\Db\EntityRelationMapper The mapper instance
+     * @param array<mixed> $entities Raw entity objects or arrays
      *
-     * @throws \RuntimeException If OpenRegister is not available
+     * @return array<int, array<string, mixed>> Normalized entity list
      */
-    private function getEntityRelationMapper(): \OCA\OpenRegister\Db\EntityRelationMapper
+    private function normalizeEntities(array $entities): array
     {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Db\EntityRelationMapper');
-        }
-
-        throw new RuntimeException('OpenRegister EntityRelationMapper is not available.');
-
-    }//end getEntityRelationMapper()
-
-
-    /**
-     * Get the RiskLevelService from OpenRegister
-     *
-     * @return \OCA\OpenRegister\Service\RiskLevelService The RiskLevelService instance
-     *
-     * @throws \RuntimeException If OpenRegister is not available
-     */
-    private function getRiskLevelService(): \OCA\OpenRegister\Service\RiskLevelService
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\RiskLevelService');
-        }
-
-        throw new RuntimeException('OpenRegister RiskLevelService is not available.');
-
-    }//end getRiskLevelService()
-
-
-    /**
-     * Get the current user ID
-     *
-     * @return string The current user ID
-     *
-     * @throws Exception If no user is logged in
-     */
-    private function getCurrentUserId(): string
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new Exception('No user is currently logged in.', 401);
-        }
-
-        return $user->getUID();
-
-    }//end getCurrentUserId()
-
-
-    /**
-     * Upload a file to the user's DocuDesk folder
-     *
-     * Creates the DocuDesk subfolder in the user's files if it doesn't exist,
-     * then writes the file content to it.
-     *
-     * @param string $fileName    The name of the file to upload
-     * @param string $fileContent The raw file content
-     *
-     * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
-     *
-     * @throws Exception If the upload fails
-     */
-    public function uploadFile(string $fileName, string $fileContent): array
-    {
-        try {
-            $userId     = $this->getCurrentUserId();
-            $userFolder = $this->rootFolder->getUserFolder($userId);
-
-            // Create DocuDesk subfolder if it doesn't exist.
-            if ($userFolder->nodeExists('DocuDesk') === false) {
-                $userFolder->newFolder('DocuDesk');
+        $normalizedEntities = [];
+        foreach ($entities as $entity) {
+            $entityData = (array) $entity;
+            if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
+                $entityData = $entity->jsonSerialize();
             }
 
-            $docuDeskNode = $userFolder->get('DocuDesk');
-            if ($docuDeskNode instanceof \OCP\Files\Folder === false) {
-                throw new Exception('DocuDesk path exists but is not a folder.');
-            }
-
-            $docuDeskFolder = $docuDeskNode;
-
-            // Handle duplicate file names by appending a number.
-            $targetName = $fileName;
-            $counter    = 1;
-            while ($docuDeskFolder->nodeExists($targetName) === true) {
-                $pathInfo = pathinfo($fileName);
-                $baseName = $pathInfo['filename'];
-                $extension = '';
-                if (isset($pathInfo['extension']) === true) {
-                    $extension = '.'.$pathInfo['extension'];
-                }
-
-                $targetName = $baseName.'_'.$counter.$extension;
-                $counter++;
-            }
-
-            $file = $docuDeskFolder->newFile($targetName, $fileContent);
-
-            $this->logger->info(
-                'File uploaded to DocuDesk folder',
-                [
-                    'userId'   => $userId,
-                    'fileName' => $targetName,
-                    'fileId'   => $file->getId(),
-                ]
-            );
-
-            return [
-                'fileId'   => $file->getId(),
-                'filePath' => $file->getPath(),
-                'fileName' => $targetName,
-                'fileSize' => $file->getSize(),
+            $normalizedEntities[] = [
+                'type'       => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',
+                'value'      => $entityData['entity_value'] ?? $entityData['entityValue'] ?? '',
+                'confidence' => $entityData['confidence'] ?? 0.0,
             ];
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to upload file: '.$e->getMessage(),
-                ['exception' => $e]
-            );
-            throw new Exception('Failed to upload file: '.$e->getMessage(), $e->getCode(), $e);
-        }//end try
+        }
 
-    }//end uploadFile()
+        return $normalizedEntities;
+
+    }//end normalizeEntities()
 
 
     /**
      * Extract text from a file and detect entities
      *
-     * Uses OpenRegister's TextExtractionService to extract text,
-     * EntityRecognitionHandler to detect entities, and EntityRelationMapper
-     * to retrieve the full entity details.
-     *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount, chunksProcessed
+     * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
      */
     public function extractAndDetectEntities(int $fileId): array
     {
         try {
-            // Step 1: Extract text from the file.
-            $textExtractor    = $this->getTextExtractionService();
-            $extractionResult = $textExtractor->extractFile($fileId, true);
+            $textExtractor = $this->getOpenRegisterService('OCA\OpenRegister\Service\TextExtractionService');
+            $textExtractor->extractFile($fileId, true);
 
-            $resultKeys = 'non-array';
-            if (is_array($extractionResult) === true) {
-                $resultKeys = array_keys($extractionResult);
-            }
+            $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
 
-            $this->logger->debug(
-                'Text extracted from file',
-                [
-                    'fileId' => $fileId,
-                    'result' => $resultKeys,
-                ]
-            );
-
-            // Step 2: Retrieve full entity details.
-            // Entity recognition already ran inside extractFile() using the method
-            // configured in OpenRegister file settings (e.g. presidio, openanonymiser, hybrid).
-            $entityRelationMapper = $this->getEntityRelationMapper();
+            $entityRelationMapper = $this->getOpenRegisterService('OCA\OpenRegister\Db\EntityRelationMapper');
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
-            // Normalize entity data to a consistent format.
-            $normalizedEntities = [];
-            foreach ($entities as $entity) {
-                $entityData = (array) $entity;
-                if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
-                    $entityData = $entity->jsonSerialize();
-                }
-
-                $normalizedEntities[] = [
-                    'type'       => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',
-                    'value'      => $entityData['entity_value'] ?? $entityData['entityValue'] ?? '',
-                    'confidence' => $entityData['confidence'] ?? 0.0,
-                ];
-            }
-
             return [
-                'entities'    => $normalizedEntities,
-                'entityCount' => count($normalizedEntities),
+                'entities'    => $this->normalizeEntities($entities),
+                'entityCount' => count($entities),
             ];
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to extract and detect entities: '.$e->getMessage(),
-                [
-                    'fileId'    => $fileId,
-                    'exception' => $e,
-                ]
+                ['fileId' => $fileId, 'exception' => $e]
             );
-            throw new Exception('Failed to extract and detect entities: '.$e->getMessage(), 0, $e);
+            throw new Exception(
+                'Failed to extract and detect entities: '.$e->getMessage(),
+                0,
+                $e
+            );
         }//end try
 
     }//end extractAndDetectEntities()
 
 
     /**
-     * Anonymize entities in a document
+     * Check if an entity text should be skipped for anonymization
      *
-     * Maps entities to the format expected by OpenRegister's FileService
-     * and calls anonymizeDocument to create an anonymized copy.
+     * @param string              $text The entity text value
+     * @param array<string, bool> $seen Already seen entity texts
+     *
+     * @return bool True if the entity should be skipped
+     */
+    private function shouldSkipEntity(string $text, array $seen): bool
+    {
+        if ($text === '' || strlen($text) < 3 || is_numeric($text) === true) {
+            return true;
+        }
+
+        return isset($seen[$text]) === true;
+
+    }//end shouldSkipEntity()
+
+
+    /**
+     * Map entities to the format expected by OpenRegister's anonymizeDocument
+     *
+     * @param array<array<string, mixed>> $entities The raw entities
+     *
+     * @return array<int, array<string, string>> Mapped entities
+     */
+    private function mapEntitiesForAnonymization(array $entities): array
+    {
+        $mappedEntities = [];
+        $seen           = [];
+        foreach ($entities as $entity) {
+            $text = (string) ($entity['value'] ?? $entity['text'] ?? '');
+
+            if ($this->shouldSkipEntity($text, $seen) === true) {
+                continue;
+            }
+
+            $seen[$text]      = true;
+            $mappedEntities[] = [
+                'text'       => $text,
+                'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
+                'key'        => $this->generateUuid(),
+            ];
+        }
+
+        return $mappedEntities;
+
+    }//end mapEntitiesForAnonymization()
+
+
+    /**
+     * Extract file info from anonymization result object
+     *
+     * @param mixed $result The anonymization result
+     *
+     * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     */
+    private function extractResultFromObject(mixed $result): array
+    {
+        $fileName = null;
+        if (method_exists($result, 'getName') === true) {
+            $fileName = $result->getName();
+        }
+
+        $filePath = null;
+        if (method_exists($result, 'getPath') === true) {
+            $filePath = $result->getPath();
+        }
+
+        return [
+            'anonymizedFileId'   => $result->getId(),
+            'anonymizedFileName' => $fileName,
+            'anonymizedFilePath' => $filePath,
+        ];
+
+    }//end extractResultFromObject()
+
+
+    /**
+     * Extract file info from anonymization result array
+     *
+     * @param array<string, mixed> $result The anonymization result
+     *
+     * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     */
+    private function extractResultFromArray(array $result): array
+    {
+        return [
+            'anonymizedFileId'   => $result['fileId'] ?? $result['id'] ?? null,
+            'anonymizedFileName' => $result['fileName'] ?? $result['name'] ?? null,
+            'anonymizedFilePath' => $result['filePath'] ?? $result['path'] ?? null,
+        ];
+
+    }//end extractResultFromArray()
+
+
+    /**
+     * Parse anonymization result into a structured array
+     *
+     * @param mixed $result The raw anonymization result
+     *
+     * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     */
+    private function parseAnonymizationResult(mixed $result): array
+    {
+        if (is_object($result) === true && method_exists($result, 'getId') === true) {
+            return $this->extractResultFromObject($result);
+        }
+
+        if (is_array($result) === true) {
+            return $this->extractResultFromArray($result);
+        }
+
+        return [
+            'anonymizedFileId'   => null,
+            'anonymizedFileName' => null,
+            'anonymizedFilePath' => null,
+        ];
+
+    }//end parseAnonymizationResult()
+
+
+    /**
+     * Anonymize entities in a document
      *
      * @param int                         $fileId   The Nextcloud file ID
      * @param array<array<string, mixed>> $entities The entities to anonymize
      *
-     * @return array<string, mixed> Anonymization result with anonymizedFileId, anonymizedFileName, etc.
+     * @return array<string, mixed> Anonymization result
      *
      * @throws Exception If anonymization fails
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function anonymizeDocument(int $fileId, array $entities): array
     {
         try {
-            $fileService = $this->getFileService();
+            $fileService    = $this->getOpenRegisterService('OCA\OpenRegister\Service\FileService');
+            $node           = $fileService->getFileById($fileId);
+            $mappedEntities = $this->mapEntitiesForAnonymization($entities);
+            $result         = $fileService->anonymizeDocument($node, $mappedEntities);
 
-            // Get the file node.
-            $node = $fileService->getFileById($fileId);
+            $this->logger->info('Document anonymized', ['fileId' => $fileId, 'entityCount' => count($mappedEntities)]);
 
-            // Map entities to the format expected by OpenRegister's anonymizeDocument.
-            // All text values must be strings to avoid str_ireplace() type errors
-            // in OpenRegister's DocumentProcessingHandler (PHP casts numeric string
-            // array keys to integers, causing TypeError).
-            $mappedEntities = [];
-            $seen           = [];
-            foreach ($entities as $entity) {
-                $text = (string) ($entity['value'] ?? $entity['text'] ?? '');
+            $resultInfo = $this->parseAnonymizationResult($result);
+            $resultInfo['replacementCount'] = count($mappedEntities);
 
-                // Skip empty, very short, or purely numeric values.
-                // Numeric strings like "2026" or "0" cause PHP array key type coercion.
-                if ($text === '' || strlen($text) < 3 || is_numeric($text) === true) {
-                    continue;
-                }
-
-                // Skip duplicate entity values.
-                if (isset($seen[$text]) === true) {
-                    continue;
-                }
-
-                $seen[$text] = true;
-
-                $mappedEntities[] = [
-                    'text'       => $text,
-                    'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
-                    'key'        => $this->generateUuid(),
-                ];
-            }//end foreach
-
-            // Call the anonymization.
-            $result = $fileService->anonymizeDocument($node, $mappedEntities);
-
-            $this->logger->info(
-                'Document anonymized',
-                [
-                    'fileId'      => $fileId,
-                    'entityCount' => count($mappedEntities),
-                ]
-            );
-
-            // Extract result information.
-            $anonymizedFileId   = null;
-            $anonymizedFileName = null;
-            $anonymizedFilePath = null;
-
-            if (is_object($result) === true && method_exists($result, 'getId') === true) {
-                $anonymizedFileId = $result->getId();
-                if (method_exists($result, 'getName') === true) {
-                    $anonymizedFileName = $result->getName();
-                }
-
-                if (method_exists($result, 'getPath') === true) {
-                    $anonymizedFilePath = $result->getPath();
-                }
-            } else if (is_array($result) === true) {
-                $anonymizedFileId   = $result['fileId'] ?? $result['id'] ?? null;
-                $anonymizedFileName = $result['fileName'] ?? $result['name'] ?? null;
-                $anonymizedFilePath = $result['filePath'] ?? $result['path'] ?? null;
-            }
-
-            return [
-                'anonymizedFileId'   => $anonymizedFileId,
-                'anonymizedFileName' => $anonymizedFileName,
-                'anonymizedFilePath' => $anonymizedFilePath,
-                'replacementCount'   => count($mappedEntities),
-            ];
+            return $resultInfo;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
-                [
-                    'fileId'    => $fileId,
-                    'exception' => $e,
-                ]
+                ['fileId' => $fileId, 'exception' => $e]
             );
             throw new Exception('Failed to anonymize document: '.$e->getMessage(), 0, $e);
         }//end try
 
     }//end anonymizeDocument()
-
-
-    /**
-     * List all processed files in the user's DocuDesk folder with entity counts and status
-     *
-     * Scans the DocuDesk folder and joins with entity relation data
-     * from OpenRegister to provide entity counts and anonymization status.
-     *
-     * @return array<int, array<string, mixed>> Array of file info with entityCount, status
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.NPathComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-     */
-    public function listProcessedFiles(): array
-    {
-        try {
-            $userId     = $this->getCurrentUserId();
-            $userFolder = $this->rootFolder->getUserFolder($userId);
-
-            if ($userFolder->nodeExists('DocuDesk') === false) {
-                return [];
-            }
-
-            $docuDeskNode = $userFolder->get('DocuDesk');
-            if ($docuDeskNode instanceof \OCP\Files\Folder === false) {
-                return [];
-            }
-
-            $docuDeskFolder = $docuDeskNode;
-            $files          = $docuDeskFolder->getDirectoryListing();
-
-            $entityRelationMapper = null;
-            try {
-                $entityRelationMapper = $this->getEntityRelationMapper();
-            } catch (\RuntimeException $e) {
-                $this->logger->warning('EntityRelationMapper not available: '.$e->getMessage());
-            }
-
-            $riskLevelService = null;
-            try {
-                $riskLevelService = $this->getRiskLevelService();
-            } catch (\RuntimeException $e) {
-                $this->logger->warning('RiskLevelService not available: '.$e->getMessage());
-            }
-
-            $result = [];
-            foreach ($files as $file) {
-                if ($file instanceof \OCP\Files\File === false) {
-                    continue;
-                }
-
-                $fileId          = $file->getId();
-                $entityCount     = 0;
-                $anonymizedCount = 0;
-                $status          = 'uploaded';
-
-                if ($entityRelationMapper !== null) {
-                    try {
-                        $relations   = $entityRelationMapper->findByFileId($fileId);
-                        $entityCount = count($relations);
-
-                        foreach ($relations as $relation) {
-                            if ($relation->getAnonymized() === true) {
-                                $anonymizedCount++;
-                            }
-                        }
-
-                        if ($entityCount > 0 && $anonymizedCount === $entityCount) {
-                            $status = 'anonymized';
-                        } else if ($entityCount > 0) {
-                            $status = 'extracted';
-                        }
-                    } catch (\Exception $e) {
-                        $this->logger->debug('Could not fetch entities for file '.$fileId.': '.$e->getMessage());
-                    }
-                }
-
-                $riskLevel = 'none';
-                if ($riskLevelService !== null) {
-                    try {
-                        $riskLevel = $riskLevelService->getRiskLevel($fileId);
-                    } catch (\Exception $e) {
-                        $this->logger->debug('Could not fetch risk level for file '.$fileId.': '.$e->getMessage());
-                    }
-                }
-
-                $result[] = [
-                    'fileId'          => $fileId,
-                    'fileName'        => $file->getName(),
-                    'filePath'        => $file->getPath(),
-                    'fileSize'        => $file->getSize(),
-                    'mimeType'        => $file->getMimeType(),
-                    'entityCount'     => $entityCount,
-                    'anonymizedCount' => $anonymizedCount,
-                    'status'          => $status,
-                    'riskLevel'       => $riskLevel,
-                    'modified'        => $file->getMTime(),
-                ];
-            }//end foreach
-
-            // Sort by modification time descending (newest first).
-            usort(
-                    $result,
-                    function ($left, $right) {
-                        return $right['modified'] - $left['modified'];
-                    }
-                    );
-
-            return $result;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to list processed files: '.$e->getMessage(),
-                ['exception' => $e]
-            );
-            throw new Exception('Failed to list processed files: '.$e->getMessage(), $e->getCode(), $e);
-        }//end try
-
-    }//end listProcessedFiles()
 
 
     /**

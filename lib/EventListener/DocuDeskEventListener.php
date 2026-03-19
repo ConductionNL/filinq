@@ -76,51 +76,145 @@ class DocuDeskEventListener implements IEventListener
                 ]
             );
 
-            if ($event instanceof ObjectCreatedEvent) {
-                $this->handleObjectCreated($event, $metadataService, $settingsService, $logger);
-                return;
-            }
-
-            if ($event instanceof ObjectUpdatedEvent) {
-                $this->handleObjectUpdated($event, $metadataService, $settingsService, $logger);
-                return;
-            }
-
-            if ($event instanceof ObjectDeletedEvent) {
-                $this->handleObjectDeleted($event, $logger);
-                return;
-            }
-
-            $logger->debug(
-                'DocuDesk: Ignoring unhandled event type',
-                [
-                    'eventType' => get_class($event),
-                ]
-            );
+            $this->dispatchEvent($event, $metadataService, $settingsService, $logger);
         } catch (\Exception $e) {
-            try {
-                $logger = \OC::$server->get(LoggerInterface::class);
-                $logger->error(
-                    'DocuDesk: Error in event handler',
-                    [
-                        'eventType' => get_class($event),
-                        'exception' => $e->getMessage(),
-                        'file'      => $e->getFile(),
-                        'line'      => $e->getLine(),
-                    ]
-                );
-            } catch (\Exception $logException) {
-                // Silently fail if logging fails.
-            }//end try
+            $this->logHandlerError($e, $event);
         }//end try
 
     }//end handle()
 
 
     /**
-     * Handles object creation events
+     * Dispatch the event to the appropriate handler
      *
-     * When a document is created in Open Register, run metadata enrichment.
+     * @param Event           $event           The event to dispatch
+     * @param MetadataService $metadataService The metadata service
+     * @param SettingsService $settingsService The settings service
+     * @param LoggerInterface $logger          The logger instance
+     *
+     * @return void
+     */
+    private function dispatchEvent(
+        Event $event,
+        MetadataService $metadataService,
+        SettingsService $settingsService,
+        LoggerInterface $logger
+    ): void {
+        if ($event instanceof ObjectCreatedEvent) {
+            $this->handleObjectCreated($event, $metadataService, $settingsService, $logger);
+            return;
+        }
+
+        if ($event instanceof ObjectUpdatedEvent) {
+            $this->handleObjectUpdated($event, $metadataService, $settingsService, $logger);
+            return;
+        }
+
+        if ($event instanceof ObjectDeletedEvent) {
+            $this->handleObjectDeleted($event, $logger);
+            return;
+        }
+
+        $logger->debug(
+            'DocuDesk: Ignoring unhandled event type',
+            [
+                'eventType' => get_class($event),
+            ]
+        );
+
+    }//end dispatchEvent()
+
+
+    /**
+     * Log an error from the event handler
+     *
+     * @param \Exception $exception The exception that occurred
+     * @param Event      $event     The event being processed
+     *
+     * @return void
+     */
+    private function logHandlerError(\Exception $exception, Event $event): void
+    {
+        try {
+            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger->error(
+                'DocuDesk: Error in event handler',
+                [
+                    'eventType' => get_class($event),
+                    'exception' => $exception->getMessage(),
+                    'file'      => $exception->getFile(),
+                    'line'      => $exception->getLine(),
+                ]
+            );
+        } catch (\Exception $logException) {
+            // Silently fail if logging fails.
+        }//end try
+
+    }//end logHandlerError()
+
+
+    /**
+     * Check if enrichment is enabled based on settings
+     *
+     * @param SettingsService $settingsService The settings service
+     *
+     * @return bool True if at least one enrichment feature is enabled
+     */
+    private function isEnrichmentEnabled(SettingsService $settingsService): bool
+    {
+        $settings       = $settingsService->getAllSettings();
+        $enableLanguage = $settings['enable_language_detection'] ?? true;
+        $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
+        $enableTopic    = $settings['enable_topic_classification'] ?? true;
+
+        return $enableLanguage === true || $enableKeywords === true || $enableTopic === true;
+
+    }//end isEnrichmentEnabled()
+
+
+    /**
+     * Run metadata enrichment for an object
+     *
+     * @param MetadataService $metadataService The metadata service
+     * @param array           $objectData      The object data to enrich
+     * @param string          $objectId        The object UUID
+     * @param string          $registerId      The register ID
+     * @param string          $schemaId        The schema ID
+     * @param LoggerInterface $logger          The logger instance
+     * @param string          $logContext      Context string for log messages
+     *
+     * @return void
+     */
+    private function runEnrichment(
+        MetadataService $metadataService,
+        array $objectData,
+        string $objectId,
+        string $registerId,
+        string $schemaId,
+        LoggerInterface $logger,
+        string $logContext
+    ): void {
+        $metadata = $metadataService->enhanceMetadata($objectData);
+
+        if (empty($metadata) === true) {
+            return;
+        }
+
+        $metadataService->saveEnrichedMetadata($objectId, $registerId, $schemaId, $metadata);
+
+        $logger->info(
+            'DocuDesk: Metadata enrichment completed for '.$logContext,
+            [
+                'objectId'       => $objectId,
+                'enrichedFields' => array_keys($metadata),
+            ]
+        );
+
+    }//end runEnrichment()
+
+
+    /**
+     * Handles object creation events
      *
      * @param ObjectCreatedEvent $event           The creation event
      * @param MetadataService    $metadataService The metadata service
@@ -155,33 +249,17 @@ class DocuDeskEventListener implements IEventListener
             ]
         );
 
-        // Check settings for which enrichment features are enabled.
         try {
-            $settings       = $settingsService->getAllSettings();
-            $enableLanguage = $settings['enable_language_detection'] ?? true;
-            $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic    = $settings['enable_topic_classification'] ?? true;
-
-            // Only run enrichment if at least one feature is enabled.
-            if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
-                $metadata = $metadataService->enhanceMetadata($objectData);
-
-                if (empty($metadata) === false) {
-                    $metadataService->saveEnrichedMetadata(
-                        $objectId,
-                        (string) $objectRegisterId,
-                        (string) $objectSchemaId,
-                        $metadata
-                    );
-
-                    $logger->info(
-                        'DocuDesk: Metadata enrichment completed for new object',
-                        [
-                            'objectId'       => $objectId,
-                            'enrichedFields' => array_keys($metadata),
-                        ]
-                    );
-                }
+            if ($this->isEnrichmentEnabled($settingsService) === true) {
+                $this->runEnrichment(
+                    $metadataService,
+                    $objectData,
+                    $objectId,
+                    (string) $objectRegisterId,
+                    (string) $objectSchemaId,
+                    $logger,
+                    'new object'
+                );
             }
         } catch (\Exception $e) {
             $logger->error(
@@ -197,10 +275,29 @@ class DocuDeskEventListener implements IEventListener
 
 
     /**
-     * Handles object update events
+     * Check if content fields have changed between old and new object data
      *
-     * When a document is updated in Open Register, re-run metadata enrichment
-     * if content has changed.
+     * @param array<string, mixed> $objectData    The new object data
+     * @param array<string, mixed> $oldObjectData The old object data
+     *
+     * @return bool True if content has changed
+     */
+    private function hasContentChanged(array $objectData, array $oldObjectData): bool
+    {
+        $contentFields = ['content', 'text', 'description', 'title'];
+        foreach ($contentFields as $field) {
+            if (($objectData[$field] ?? '') !== ($oldObjectData[$field] ?? '')) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }//end hasContentChanged()
+
+
+    /**
+     * Handles object update events
      *
      * @param ObjectUpdatedEvent $event           The update event
      * @param MetadataService    $metadataService The metadata service
@@ -208,8 +305,6 @@ class DocuDeskEventListener implements IEventListener
      * @param LoggerInterface    $logger          The logger instance
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     private function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -229,7 +324,7 @@ class DocuDeskEventListener implements IEventListener
         $objectSchemaId   = $object->getSchema();
         $objectRegisterId = $object->getRegister();
         $objectData       = $object->getObject();
-        $oldObjectData = [];
+        $oldObjectData    = [];
         if ($oldObject !== null) {
             $oldObjectData = $oldObject->getObject();
         }
@@ -243,52 +338,25 @@ class DocuDeskEventListener implements IEventListener
             ]
         );
 
-        // Check if content fields have changed.
-        $contentFields  = ['content', 'text', 'description', 'title'];
-        $contentChanged = false;
-        foreach ($contentFields as $field) {
-            if (($objectData[$field] ?? '') !== ($oldObjectData[$field] ?? '')) {
-                $contentChanged = true;
-                break;
-            }
-        }
-
-        if ($contentChanged === false) {
+        if ($this->hasContentChanged($objectData, $oldObjectData) === false) {
             $logger->debug(
                 'DocuDesk: No content change detected, skipping metadata re-enrichment',
-                [
-                    'objectId' => $objectId,
-                ]
+                ['objectId' => $objectId]
             );
             return;
         }
 
-        // Re-enrich metadata since content changed.
         try {
-            $settings       = $settingsService->getAllSettings();
-            $enableLanguage = $settings['enable_language_detection'] ?? true;
-            $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic    = $settings['enable_topic_classification'] ?? true;
-
-            if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
-                $metadata = $metadataService->enhanceMetadata($objectData);
-
-                if (empty($metadata) === false) {
-                    $metadataService->saveEnrichedMetadata(
-                        $objectId,
-                        (string) $objectRegisterId,
-                        (string) $objectSchemaId,
-                        $metadata
-                    );
-
-                    $logger->info(
-                        'DocuDesk: Metadata re-enrichment completed for updated object',
-                        [
-                            'objectId'       => $objectId,
-                            'enrichedFields' => array_keys($metadata),
-                        ]
-                    );
-                }
+            if ($this->isEnrichmentEnabled($settingsService) === true) {
+                $this->runEnrichment(
+                    $metadataService,
+                    $objectData,
+                    $objectId,
+                    (string) $objectRegisterId,
+                    (string) $objectSchemaId,
+                    $logger,
+                    'updated object'
+                );
             }
         } catch (\Exception $e) {
             $logger->error(

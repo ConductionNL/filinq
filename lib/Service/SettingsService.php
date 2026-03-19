@@ -92,7 +92,7 @@ class SettingsService
      *
      * @return bool True if OpenRegister is installed and meets version requirements
      */
-    public function isOpenRegisterInstalled(?string $minVersion=self::MIN_OPENREGISTER_VERSION): bool
+    private function isOpenRegisterInstalled(?string $minVersion=self::MIN_OPENREGISTER_VERSION): bool
     {
         if ($this->appManager->isInstalled(self::OPENREGISTER_APP_ID) === false) {
             return false;
@@ -113,7 +113,7 @@ class SettingsService
      *
      * @return bool True if OpenRegister is enabled
      */
-    public function isOpenRegisterEnabled(): bool
+    private function isOpenRegisterEnabled(): bool
     {
         return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
 
@@ -145,7 +145,7 @@ class SettingsService
      *
      * @throws \RuntimeException If the service is not available
      */
-    public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
+    private function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
         if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === true) {
             return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
@@ -172,7 +172,6 @@ class SettingsService
         ];
 
         try {
-            // Check if OpenRegister is installed and enabled.
             if ($this->isOpenRegisterInstalled() === false) {
                 throw new RuntimeException('OpenRegister is not installed or version is too low');
             }
@@ -181,26 +180,24 @@ class SettingsService
                 throw new RuntimeException('OpenRegister is not enabled');
             }
 
-            // Try to get the OpenRegister configuration service.
             try {
                 $configurationService = $this->getConfigurationService();
             } catch (Exception $e) {
                 throw new RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
             }
 
-            // Get current configuration version from app config.
             $currentVersion = $this->config->getValueString($this->appName, 'configuration_version', '0.0.0');
+            $settings       = $this->loadSettings();
 
-            // Load settings from file.
-            $settings = $this->loadSettings();
-
-            // Check if new configuration version is higher than current.
             if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $results['info'][] = "Configuration version {$currentVersion} is up to date or newer than {$settings['info']['version']}";
+                $settingsVersion = $settings['info']['version'];
+                $message         = 'Configuration version '.$currentVersion;
+                $message        .= ' is up to date or newer than '.$settingsVersion;
+
+                $results['info'][] = $message;
                 return $results;
             }
 
-            // Import the new configuration using the app-aware method.
             $configurationService->importFromApp(
                 appId: $this->appName,
                 data: $settings,
@@ -213,9 +210,7 @@ class SettingsService
             $results['errors'][] = $e->getMessage();
             $this->logger->error(
                 'Failed to initialize DocuDesk: '.$e->getMessage(),
-                [
-                    'app' => $this->appName,
-                ]
+                ['app' => $this->appName]
             );
         }//end try
 
@@ -231,7 +226,7 @@ class SettingsService
      *
      * @throws \RuntimeException If settings loading fails
      */
-    public function loadSettings(): array
+    private function loadSettings(): array
     {
         $settingsFilePath = __DIR__.'/../Settings/docudesk_register.json';
 
@@ -263,138 +258,176 @@ class SettingsService
 
 
     /**
+     * Fetch available registers from OpenRegister with schemas
+     *
+     * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
+     */
+    private function fetchAvailableRegisters(): array
+    {
+        try {
+            $rawRegisters = $this->registerService->findAll(
+                limit: null,
+                offset: null,
+                filters: [],
+                searchConditions: [],
+                searchParams: [],
+                _extend: ['schemas']
+            );
+
+            return array_map([$this, 'serializeRegister'], $rawRegisters);
+        } catch (TypeError $e) {
+            $this->logger->warning(
+                'OpenRegister internal error - using empty registers list',
+                [
+                    'exception' => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
+            return [];
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'OpenRegister findAll() failed - using empty registers list',
+                [
+                    'exception' => $e->getMessage(),
+                    'file'      => $e->getFile(),
+                    'line'      => $e->getLine(),
+                ]
+            );
+            return [];
+        }//end try
+
+    }//end fetchAvailableRegisters()
+
+
+    /**
+     * Serialize a register entity and filter its schemas
+     *
+     * @param mixed $register The register entity
+     *
+     * @return array<string, mixed> Serialized register with filtered schemas
+     */
+    private function serializeRegister(mixed $register): array
+    {
+        $registerArray = $register->jsonSerialize();
+
+        if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
+            $registerArray['schemas'] = array_map([$this, 'filterSchemaProperties'], $registerArray['schemas']);
+        }
+
+        return $registerArray;
+
+    }//end serializeRegister()
+
+
+    /**
+     * Filter out the properties field from a schema array
+     *
+     * @param mixed $schema The schema data
+     *
+     * @return mixed The filtered schema
+     */
+    private function filterSchemaProperties(mixed $schema): mixed
+    {
+        if (is_array($schema) === false) {
+            return $schema;
+        }
+
+        unset($schema['properties']);
+
+        return $schema;
+
+    }//end filterSchemaProperties()
+
+
+    /**
+     * Load object type configuration defaults from app config
+     *
+     * @param array<string> $objectTypes The object types to load config for
+     *
+     * @return array<string, string> Configuration key-value pairs
+     */
+    private function loadObjectTypeConfiguration(array $objectTypes): array
+    {
+        $configuration = [];
+        foreach ($objectTypes as $type) {
+            $sourceKey   = "{$type}_source";
+            $schemaKey   = "{$type}_schema";
+            $registerKey = "{$type}_register";
+
+            $configuration[$sourceKey]   = $this->config->getValueString($this->appName, $sourceKey, 'openregister');
+            $configuration[$schemaKey]   = $this->config->getValueString($this->appName, $schemaKey, '');
+            $configuration[$registerKey] = $this->config->getValueString($this->appName, $registerKey, '');
+        }
+
+        return $configuration;
+
+    }//end loadObjectTypeConfiguration()
+
+
+    /**
+     * Load feature toggle settings from app config
+     *
+     * @return array<string, mixed> Feature toggle settings
+     */
+    private function loadFeatureToggles(): array
+    {
+        return [
+            'publication_objection_period_days' => (int) $this->config->getValueString(
+                $this->appName,
+                'publication_objection_period_days',
+                '28'
+            ),
+            'enable_language_detection'         => $this->config->getValueString(
+                $this->appName,
+                'enable_language_detection',
+                '1'
+            ) === '1',
+            'enable_keyword_extraction'         => $this->config->getValueString(
+                $this->appName,
+                'enable_keyword_extraction',
+                '1'
+            ) === '1',
+            'enable_topic_classification'       => $this->config->getValueString(
+                $this->appName,
+                'enable_topic_classification',
+                '1'
+            ) === '1',
+        ];
+
+    }//end loadFeatureToggles()
+
+
+    /**
      * Retrieve all settings
      *
      * @return array<string, mixed> The current settings configuration
      *
      * @throws RuntimeException If settings retrieval fails
-     *
-     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
     public function getAllSettings(): array
     {
-        // Initialize the data array.
-        $data = [];
-        $data['objectTypes']        = [
-            'publicationConsent',
-            'template',
+        $data = [
+            'objectTypes'        => ['publicationConsent', 'template'],
+            'openRegisters'      => false,
+            'availableRegisters' => [],
         ];
-        $data['openRegisters']      = false;
-        $data['availableRegisters'] = [];
 
-        // Check if the OpenRegister service is available.
         try {
             if ($this->isOpenRegisterInstalled() === true) {
-                $data['openRegisters'] = true;
-
-                // Add additional error handling for OpenRegister internal errors.
-                try {
-                    // Get all registers with schemas extended.
-                    $rawRegisters = $this->registerService->findAll(
-                        limit: null,
-                        offset: null,
-                        filters: [],
-                        searchConditions: [],
-                        searchParams: [],
-                        _extend: ['schemas']
-                    );
-
-                    // Convert Register entities to arrays and filter schemas.
-                    $data['availableRegisters'] = array_map(
-                        function ($register) {
-                            $registerArray = $register->jsonSerialize();
-
-                            // Filter schemas to remove properties field for cleaner response.
-                            if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
-                                $registerArray['schemas'] = array_map(
-                                    function ($schema) {
-                                        if (is_array($schema) === true) {
-                                            return array_filter(
-                                                $schema,
-                                                function ($key) {
-                                                    return in_array($key, ['properties'], true) === false;
-                                                },
-                                                ARRAY_FILTER_USE_KEY
-                                            );
-                                        }
-
-                                        return $schema;
-                                    },
-                                    $registerArray['schemas']
-                                );
-                            }
-
-                            return $registerArray;
-                        },
-                        $rawRegisters
-                    );
-                } catch (TypeError $e) {
-                    $this->logger->warning(
-                        'OpenRegister internal error - using empty registers list',
-                        [
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                    );
-                    $data['availableRegisters'] = [];
-                } catch (Exception $e) {
-                    $this->logger->warning(
-                        'OpenRegister findAll() failed - using empty registers list',
-                        [
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                    );
-                    $data['availableRegisters'] = [];
-                }//end try
-            }//end if
+                $data['openRegisters']      = true;
+                $data['availableRegisters'] = $this->fetchAvailableRegisters();
+            }
         } catch (\RuntimeException $e) {
             $this->logger->info(
                 'OpenRegister service not available',
-                [
-                    'exception' => $e->getMessage(),
-                ]
+                ['exception' => $e->getMessage()]
             );
         }//end try
 
-        // Build defaults array dynamically based on object types.
-        $defaults = [];
-        foreach ($data['objectTypes'] as $type) {
-            $defaults["{$type}_source"]   = 'openregister';
-            $defaults["{$type}_schema"]   = '';
-            $defaults["{$type}_register"] = '';
-        }
-
-        // Get the current values for the object types from the configuration.
         try {
-            foreach ($defaults as $key => $defaultValue) {
-                $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
-            }
-
-            // Get DocuDesk-specific consent and metadata settings.
-            $data['publication_objection_period_days'] = (int) $this->config->getValueString(
-                $this->appName,
-                'publication_objection_period_days',
-                '28'
-            );
-            $data['enable_language_detection']         = $this->config->getValueString(
-                $this->appName,
-                'enable_language_detection',
-                '1'
-            ) === '1';
-            $data['enable_keyword_extraction']         = $this->config->getValueString(
-                $this->appName,
-                'enable_keyword_extraction',
-                '1'
-            ) === '1';
-            $data['enable_topic_classification']       = $this->config->getValueString(
-                $this->appName,
-                'enable_topic_classification',
-                '1'
-            ) === '1';
+            $data['configuration'] = $this->loadObjectTypeConfiguration($data['objectTypes']);
+            $data = array_merge($data, $this->loadFeatureToggles());
 
             return $data;
         } catch (Exception $e) {
@@ -402,6 +435,24 @@ class SettingsService
         }//end try
 
     }//end getAllSettings()
+
+
+    /**
+     * Convert a setting value to string for storage
+     *
+     * @param mixed $value The value to convert
+     *
+     * @return string The string representation
+     */
+    private function convertValueToString(mixed $value): string
+    {
+        if (is_array($value) === true || is_object($value) === true) {
+            return json_encode($value);
+        }
+
+        return (string) $value;
+
+    }//end convertValueToString()
 
 
     /**
@@ -416,38 +467,23 @@ class SettingsService
     public function updateSettings(array $data): array
     {
         try {
-            // Update each setting in the configuration.
             foreach ($data as $key => $value) {
-                // Skip empty keys.
                 if (empty($key) === true) {
                     $this->logger->warning(
                         'Skipping empty key in updateSettings',
-                        [
-                            'value' => $value,
-                        ]
+                        ['value' => $value]
                     );
                     continue;
                 }
 
-                // Handle arrays and objects by converting to JSON.
-                $stringValue = (string) $value;
-                if (is_string($value) === true) {
-                    $stringValue = $value;
-                }
-
-                if (is_array($value) === true || is_object($value) === true) {
-                    $stringValue = json_encode($value);
-                }
-
+                $stringValue = $this->convertValueToString($value);
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach
 
             $this->logger->info(
                 'Settings updated successfully',
-                [
-                    'updatedKeys' => array_keys($data),
-                ]
+                ['updatedKeys' => array_keys($data)]
             );
 
             return $data;
