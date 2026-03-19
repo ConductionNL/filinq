@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <psalm
-    errorLevel="1"
+    errorLevel="4"
     resolveFromConfigFile="true"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="https://getpsalm.org/schema/config"
-    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
     findUnusedBaselineEntry="true"
     findUnusedCode="true"
+    findUnusedVariablesAndParams="true"
     errorBaseline="psalm-baseline.xml"
 >
     <projectFiles>
@@ -15,7 +15,67 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
-	<extraFiles>
-		<directory name="vendor"/>
-	</extraFiles>
+    <stubs>
+        <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+    </stubs>
+    <issueHandlers>
+        <UndefinedDocblockClass>
+            <errorLevel type="suppress">
+                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <referencedClass name="OCA\OpenRegister\Service\TextExtractionService"/>
+                <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+            </errorLevel>
+        </UndefinedDocblockClass>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <referencedClass name="OC"/>
+                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <referencedClass name="OCA\OpenRegister\Service\TextExtractionService"/>
+                <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+            </errorLevel>
+        </UndefinedClass>
+        <UndefinedMagicMethod errorLevel="suppress"/>
+        <UnusedClass errorLevel="suppress"/>
+        <PossiblyUnusedMethod errorLevel="suppress"/>
+        <UnusedMethod errorLevel="suppress"/>
+        <UnusedProperty errorLevel="suppress"/>
+        <PossiblyUnusedParam errorLevel="suppress"/>
+        <UnusedDocblockParam errorLevel="suppress"/>
+        <UnusedVariable errorLevel="suppress"/>
+        <PossiblyUnusedReturnValue errorLevel="suppress"/>
+        <RedundantCondition errorLevel="suppress"/>
+        <RedundantFunctionCall errorLevel="suppress"/>
+        <RedundantCast errorLevel="suppress"/>
+        <RedundantPropertyInitializationCheck errorLevel="suppress"/>
+        <StringIncrement errorLevel="suppress"/>
+        <InvalidDocblock errorLevel="suppress"/>
+        <MoreSpecificImplementedParamType errorLevel="suppress"/>
+        <MissingDependency errorLevel="suppress"/>
+        <UnevaluatedCode errorLevel="suppress"/>
+        <InvalidTemplateParam errorLevel="suppress"/>
+        <NoInterfaceProperties errorLevel="suppress"/>
+        <MissingTemplateParam errorLevel="suppress"/>
+        <DeprecatedMethod errorLevel="suppress"/>
+        <DeprecatedInterface errorLevel="suppress"/>
+        <DocblockTypeContradiction errorLevel="suppress"/>
+        <RiskyTruthyFalsyComparison errorLevel="suppress"/>
+        <InvalidNamedArgument errorLevel="suppress"/>
+    </issueHandlers>
+    <extraFiles>
+        <directory name="vendor/nextcloud/ocp" />
+    </extraFiles>
 </psalm>

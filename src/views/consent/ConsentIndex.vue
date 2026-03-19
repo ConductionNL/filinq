@@ -1,38 +1,39 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { consentStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
 	<div class="consent-index">
 		<h2 class="pageHeader">
-			Consent Management
+			{{ t('docudesk', 'Consent Management') }}
 		</h2>
 
 		<div class="consent-stats">
 			<div class="stat-card">
 				<span class="stat-number">{{ consentStore.consentStats.total }}</span>
-				<span class="stat-label">Total</span>
+				<span class="stat-label">{{ t('docudesk', 'Total') }}</span>
 			</div>
 			<div class="stat-card stat-pending">
 				<span class="stat-number">{{ consentStore.consentStats.pending }}</span>
-				<span class="stat-label">Pending</span>
+				<span class="stat-label">{{ t('docudesk', 'Pending') }}</span>
 			</div>
 			<div class="stat-card stat-approved">
 				<span class="stat-number">{{ consentStore.consentStats.approved }}</span>
-				<span class="stat-label">Approved</span>
+				<span class="stat-label">{{ t('docudesk', 'Approved') }}</span>
 			</div>
 			<div class="stat-card stat-objected">
 				<span class="stat-number">{{ consentStore.consentStats.objected }}</span>
-				<span class="stat-label">Objected</span>
+				<span class="stat-label">{{ t('docudesk', 'Objected') }}</span>
 			</div>
 		</div>
 
 		<div v-if="consentStore.loading" class="loading">
-			<NcLoadingIcon :size="64" appearance="dark" name="Loading consents" />
+			<NcLoadingIcon :size="64" appearance="dark" :name="t('docudesk', 'Loading consents')" />
 		</div>
 
 		<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-			<NcEmptyContent name="No consent records" description="No publication consent records found. Consent records are created when entities are detected in documents.">
+			<NcEmptyContent :name="t('docudesk', 'No consent records')" :description="t('docudesk', 'No publication consent records found. Consent records are created when entities are detected in documents.')">
 				<template #icon>
 					<AccountCheck :size="64" />
 				</template>
@@ -43,12 +44,12 @@ import { consentStore, navigationStore } from '../../store/store.js'
 			<table class="consent-table">
 				<thead>
 					<tr>
-						<th>Entity</th>
-						<th>Type</th>
-						<th>Consent Status</th>
-						<th>Notification</th>
-						<th>Deadline</th>
-						<th>Decision</th>
+						<th>{{ t('docudesk', 'Entity') }}</th>
+						<th>{{ t('docudesk', 'Type') }}</th>
+						<th>{{ t('docudesk', 'Consent Status') }}</th>
+						<th>{{ t('docudesk', 'Notification') }}</th>
+						<th>{{ t('docudesk', 'Deadline') }}</th>
+						<th>{{ t('docudesk', 'Decision') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -106,27 +107,27 @@ export default {
 		},
 		formatStatus(status) {
 			const map = {
-				pending: 'Pending',
-				consent_given: 'Approved',
-				objection_received: 'Objected',
-				no_response: 'No Response',
-				anonymized: 'Anonymized',
-				sent: 'Sent',
-				delivered: 'Delivered',
-				failed: 'Failed',
-				skipped: 'Skipped',
+				pending: t('docudesk', 'Pending'),
+				consent_given: t('docudesk', 'Approved'),
+				objection_received: t('docudesk', 'Objected'),
+				no_response: t('docudesk', 'No Response'),
+				anonymized: t('docudesk', 'Anonymized'),
+				sent: t('docudesk', 'Sent'),
+				delivered: t('docudesk', 'Delivered'),
+				failed: t('docudesk', 'Failed'),
+				skipped: t('docudesk', 'Skipped'),
 			}
-			return map[status] || status || 'Unknown'
+			return map[status] || status || t('docudesk', 'Unknown')
 		},
 		formatDecision(decision) {
 			const map = {
-				pending: 'Pending',
-				anonymize: 'Anonymize',
-				publish_with_consent: 'Publish',
-				publish_anonymized: 'Publish Anonymized',
-				reject: 'Rejected',
+				pending: t('docudesk', 'Pending'),
+				anonymize: t('docudesk', 'Anonymize'),
+				publish_with_consent: t('docudesk', 'Publish'),
+				publish_anonymized: t('docudesk', 'Publish Anonymized'),
+				reject: t('docudesk', 'Rejected'),
 			}
-			return map[decision] || decision || 'Pending'
+			return map[decision] || decision || t('docudesk', 'Pending')
 		},
 		formatDate(dateStr) {
 			if (!dateStr) return '-'

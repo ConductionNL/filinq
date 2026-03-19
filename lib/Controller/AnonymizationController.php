@@ -21,8 +21,10 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -46,6 +48,8 @@ class AnonymizationController extends Controller
      * @param IRequest             $request              The request object
      * @param LoggerInterface      $logger               Logger for error reporting
      * @param AnonymizationService $anonymizationService Service for anonymization operations
+     * @param FileListingService   $fileListingService   Service for file listing operations
+     * @param IL10N                $l10n                 The localization service
      *
      * @return void
      */
@@ -53,9 +57,11 @@ class AnonymizationController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly AnonymizationService $anonymizationService
+        private readonly AnonymizationService $anonymizationService,
+        private readonly FileListingService $fileListingService,
+        private readonly IL10N $l10n
     ) {
-        parent::__construct(appName: $appName, request: $request);
+        parent::__construct($appName, $request);
 
     }//end __construct()
 
@@ -74,7 +80,7 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
-            $result = $this->anonymizationService->listProcessedFiles();
+            $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -88,7 +94,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to list processed files: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
         }
@@ -112,16 +118,16 @@ class AnonymizationController extends Controller
         try {
             $file = $this->request->getUploadedFile('file');
 
-            if ($file === null || isset($file['tmp_name']) === false) {
+            if (empty($file) === true || isset($file['tmp_name']) === false) {
                 return new JSONResponse(
-                    ['error' => 'No file uploaded'],
+                    ['error' => $this->l10n->t('No file uploaded')],
                     400
                 );
             }
 
             if ($file['error'] !== UPLOAD_ERR_OK) {
                 return new JSONResponse(
-                    ['error' => 'File upload failed with error code: '.$file['error']],
+                    ['error' => $this->l10n->t('File upload failed with error code: %s', [$file['error']])],
                     400
                 );
             }
@@ -131,12 +137,12 @@ class AnonymizationController extends Controller
 
             if ($fileContent === false) {
                 return new JSONResponse(
-                    ['error' => 'Failed to read uploaded file'],
+                    ['error' => $this->l10n->t('Failed to read uploaded file')],
                     500
                 );
             }
 
-            $result = $this->anonymizationService->uploadFile($fileName, $fileContent);
+            $result = $this->fileListingService->uploadFile($fileName, $fileContent);
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -150,7 +156,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to upload file: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to upload file: %s', [$e->getMessage()])],
                 $statusCode
             );
         }//end try
@@ -182,7 +188,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to extract and detect entities: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to extract and detect entities: %s', [$e->getMessage()])],
                 500
             );
         }
@@ -210,7 +216,7 @@ class AnonymizationController extends Controller
 
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(
-                    ['error' => 'No entities provided for anonymization'],
+                    ['error' => $this->l10n->t('No entities provided for anonymization')],
                     400
                 );
             }
@@ -224,7 +230,7 @@ class AnonymizationController extends Controller
                 ['exception' => $e]
             );
             return new JSONResponse(
-                ['error' => 'Failed to anonymize document: '.$e->getMessage()],
+                ['error' => $this->l10n->t('Failed to anonymize document: %s', [$e->getMessage()])],
                 500
             );
         }//end try

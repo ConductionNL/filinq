@@ -1,6 +1,3 @@
-includes:
-    - phpstan-baseline.neon
-
 parameters:
     level: 5
     paths:
@@ -11,11 +8,15 @@ parameters:
         - vendor/nextcloud/ocp
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
+        # Nextcloud internal classes not available via OCP stubs
         - '#Call to an undefined method OC::#'
         - '#Class OC not found#'
         - '#Access to static property \$server on an unknown class OC#'
         - '#unknown class OC\\\\#'
         - '#unknown class OCA\\\\DAV\\\\#'
         - '#unknown class OC_App#'
+        - '#not found in catched class OC\\\\#'
         - '#Caught class OC\\\\#'
         - '#Class OCA\\\\DAV\\\\#'
+        # OpenRegister is an optional runtime dependency (loaded via container)
+        - '#OCA\\OpenRegister#'

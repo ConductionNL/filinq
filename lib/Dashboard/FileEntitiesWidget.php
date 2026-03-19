@@ -39,9 +39,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     /**
      * Constructor for FileEntitiesWidget
      *
-     * @param IURLGenerator $urlGenerator URL generator for building URLs
-     *
-     * @return void
+     * @param IURLGenerator $urlGenerator The URL generator service
      */
     public function __construct(
         private readonly IURLGenerator $urlGenerator
@@ -51,9 +49,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the unique widget identifier
+     * Returns the unique widget identifier
      *
-     * @return string The widget ID
+     * @return string
      */
     public function getId(): string
     {
@@ -63,9 +61,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the widget display title
+     * Returns the widget display title
      *
-     * @return string The widget title
+     * @return string
      */
     public function getTitle(): string
     {
@@ -75,9 +73,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the widget display order
+     * Returns the widget display order
      *
-     * @return int The widget order
+     * @return int
      */
     public function getOrder(): int
     {
@@ -87,9 +85,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the widget icon CSS class
+     * Returns the CSS icon class for the widget
      *
-     * @return string The icon CSS class
+     * @return string
      */
     public function getIconClass(): string
     {
@@ -99,9 +97,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the widget icon URL
+     * Returns the URL to the widget icon
      *
-     * @return string The absolute URL to the widget icon
+     * @return string
      */
     public function getIconUrl(): string
     {
@@ -113,9 +111,9 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Get the widget URL
+     * Returns the URL the widget links to
      *
-     * @return string|null The URL the widget links to
+     * @return string|null
      */
     public function getUrl(): ?string
     {
@@ -125,7 +123,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
 
     /**
-     * Load the widget scripts
+     * Loads the widget scripts and styles
      *
      * @return void
      *

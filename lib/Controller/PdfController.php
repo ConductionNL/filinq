@@ -23,6 +23,7 @@ use OCA\DocuDesk\Service\PdfService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
@@ -46,6 +47,7 @@ class PdfController extends Controller
      * @param IRequest        $request    The request object
      * @param LoggerInterface $logger     Logger for error reporting
      * @param PdfService      $pdfService Service for PDF generation
+     * @param IL10N           $l10n       The localization service
      *
      * @return void
      */
@@ -53,9 +55,10 @@ class PdfController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly PdfService $pdfService
+        private readonly PdfService $pdfService,
+        private readonly IL10N $l10n
     ) {
-        parent::__construct(appName: $appName, request: $request);
+        parent::__construct($appName, $request);
 
     }//end __construct()
 
@@ -84,7 +87,7 @@ class PdfController extends Controller
 
             if (empty($template) === true) {
                 return new JSONResponse(
-                    data: ['error' => 'Template content is required'],
+                    data: ['error' => $this->l10n->t('Template content is required')],
                     statusCode: 400
                 );
             }

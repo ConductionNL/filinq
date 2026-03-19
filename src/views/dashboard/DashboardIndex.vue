@@ -1,48 +1,62 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
 import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 </script>
 
 <template>
-	<div class="dashboard-content">
-		<h2 class="pageHeader">
-			Dashboard
-		</h2>
-
-		<div class="dashboard-stats">
+	<CnDashboardPage
+		:title="t('docudesk', 'Dashboard')"
+		:widgets="widgetDefs"
+		:layout="dashboardLayout"
+		:loading="consentStore.loading">
+		<!-- KPI: Total Consents -->
+		<template #widget-total-consents>
 			<div class="stat-card">
-				<h5>Total Consents</h5>
+				<h5>{{ t('docudesk', 'Total Consents') }}</h5>
 				<div class="content">
 					{{ consentStore.consentStats.total }}
 				</div>
 			</div>
+		</template>
+
+		<!-- KPI: Pending -->
+		<template #widget-pending>
 			<div class="stat-card">
-				<h5>Pending</h5>
+				<h5>{{ t('docudesk', 'Pending') }}</h5>
 				<div class="content pending">
 					{{ consentStore.consentStats.pending }}
 				</div>
 			</div>
+		</template>
+
+		<!-- KPI: Approved -->
+		<template #widget-approved>
 			<div class="stat-card">
-				<h5>Approved</h5>
+				<h5>{{ t('docudesk', 'Approved') }}</h5>
 				<div class="content approved">
 					{{ consentStore.consentStats.approved }}
 				</div>
 			</div>
+		</template>
+
+		<!-- KPI: Objected -->
+		<template #widget-objected>
 			<div class="stat-card">
-				<h5>Objected</h5>
+				<h5>{{ t('docudesk', 'Objected') }}</h5>
 				<div class="content objected">
 					{{ consentStore.consentStats.objected }}
 				</div>
 			</div>
-		</div>
+		</template>
 
-		<div class="dashboard-section">
-			<h3>Recent Consent Activity</h3>
+		<!-- Recent Consent Activity -->
+		<template #widget-recent-activity>
 			<div v-if="consentStore.loading" class="loading-state">
 				<NcLoadingIcon :size="32" />
 			</div>
 			<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-				<p>No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.</p>
+				<p>{{ t('docudesk', 'No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.') }}</p>
 			</div>
 			<ul v-else class="recent-list">
 				<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
@@ -52,25 +66,49 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 					</span>
 				</li>
 			</ul>
-		</div>
+		</template>
 
-		<div class="dashboard-section">
-			<h3>Quick Anonymization</h3>
+		<!-- Quick Anonymization -->
+		<template #widget-anonymization>
 			<AnonymizationWidget />
-		</div>
-	</div>
+		</template>
+	</CnDashboardPage>
 </template>
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { CnDashboardPage } from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'DashboardIndex',
 	components: {
+		CnDashboardPage,
 		NcLoadingIcon,
 		AnonymizationWidget,
 	},
+	data() {
+		return {
+			dashboardLayout: [
+				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, showTitle: false },
+				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, showTitle: false },
+				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, showTitle: false },
+				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, showTitle: false },
+				{ id: 5, widgetId: 'recent-activity', gridX: 0, gridY: 1, gridWidth: 6 },
+				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 1, gridWidth: 6 },
+			],
+		}
+	},
 	computed: {
+		widgetDefs() {
+			return [
+				{ id: 'total-consents', title: t('docudesk', 'Total Consents') },
+				{ id: 'pending', title: t('docudesk', 'Pending') },
+				{ id: 'approved', title: t('docudesk', 'Approved') },
+				{ id: 'objected', title: t('docudesk', 'Objected') },
+				{ id: 'recent-activity', title: t('docudesk', 'Recent Consent Activity') },
+				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
+			]
+		},
 		recentConsents() {
 			return consentStore.consents.slice(0, 10)
 		},
@@ -81,35 +119,22 @@ export default {
 	methods: {
 		formatStatus(status) {
 			const map = {
-				pending: 'Pending',
-				consent_given: 'Approved',
-				objection_received: 'Objected',
-				no_response: 'No Response',
-				anonymized: 'Anonymized',
+				pending: t('docudesk', 'Pending'),
+				consent_given: t('docudesk', 'Approved'),
+				objection_received: t('docudesk', 'Objected'),
+				no_response: t('docudesk', 'No Response'),
+				anonymized: t('docudesk', 'Anonymized'),
 			}
-			return map[status] || status || 'Unknown'
+			return map[status] || status || t('docudesk', 'Unknown')
 		},
 	},
 }
 </script>
 
 <style scoped>
-.dashboard-content {
-	padding: 20px;
-	max-width: 1000px;
-}
-
-.dashboard-stats {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-	gap: 16px;
-	margin-bottom: 32px;
-}
-
 .stat-card {
 	padding: 16px;
 	border-radius: 8px;
-	border: 1px solid var(--color-border);
 	background-color: var(--color-main-background);
 }
 
@@ -129,14 +154,6 @@ export default {
 .stat-card .content.pending { color: var(--color-warning); }
 .stat-card .content.approved { color: var(--color-success); }
 .stat-card .content.objected { color: var(--color-error); }
-
-.dashboard-section {
-	margin-bottom: 24px;
-}
-
-.dashboard-section h3 {
-	margin-bottom: 12px;
-}
 
 .recent-list {
 	list-style: none;

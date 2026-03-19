@@ -1,11 +1,12 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { anonymizationStore } from '../../store/store.js'
 </script>
 
 <template>
 	<div class="anonymization-content">
 		<h2 class="pageHeader">
-			Anonymization
+			{{ t('docudesk', 'Anonymization') }}
 		</h2>
 
 		<!-- Step indicator bar -->
@@ -31,7 +32,7 @@ import { anonymizationStore } from '../../store/store.js'
 				@drop.prevent="handleDrop">
 				<Upload :size="48" />
 				<p class="drop-text">
-					Drag and drop a file here, or click to select
+					{{ t('docudesk', 'Drag and drop a file here, or click to select') }}
 				</p>
 				<input
 					ref="fileInput"
@@ -39,12 +40,12 @@ import { anonymizationStore } from '../../store/store.js'
 					class="file-input"
 					@change="handleFileSelect">
 				<NcButton type="secondary" @click="$refs.fileInput.click()">
-					Select File
+					{{ t('docudesk', 'Select File') }}
 				</NcButton>
 			</div>
 
 			<div v-if="anonymizationStore.currentStep === 'uploading'" class="progress-section">
-				<p>Uploading {{ selectedFileName }}...</p>
+				<p>{{ t('docudesk', 'Uploading {name}...', { name: selectedFileName }) }}</p>
 				<NcProgressBar :value="anonymizationStore.uploadProgress" />
 			</div>
 		</div>
@@ -53,7 +54,7 @@ import { anonymizationStore } from '../../store/store.js'
 		<div v-if="anonymizationStore.currentStep === 'extracting'" class="processing-section">
 			<NcLoadingIcon :size="44" />
 			<p class="processing-text">
-				Analyzing document for personal data...
+				{{ t('docudesk', 'Analyzing document for personal data...') }}
 			</p>
 		</div>
 
@@ -61,7 +62,7 @@ import { anonymizationStore } from '../../store/store.js'
 		<div v-if="anonymizationStore.currentStep === 'anonymizing'" class="processing-section">
 			<NcLoadingIcon :size="44" />
 			<p class="processing-text">
-				Anonymizing {{ anonymizationStore.extractionResult?.entityCount || 0 }} entities...
+				{{ t('docudesk', 'Anonymizing {count} entities...', { count: anonymizationStore.extractionResult?.entityCount || 0 }) }}
 			</p>
 		</div>
 
@@ -70,14 +71,14 @@ import { anonymizationStore } from '../../store/store.js'
 			<!-- No entities found -->
 			<template v-if="!anonymizationStore.extractionResult?.entities?.length">
 				<NcNoteCard type="info">
-					No personal data found in this document.
+					{{ t('docudesk', 'No personal data found in this document.') }}
 				</NcNoteCard>
 			</template>
 
 			<!-- Entities found and anonymized -->
 			<template v-else>
 				<NcNoteCard type="success">
-					Document anonymized successfully! {{ anonymizationStore.anonymizationResult?.replacementCount || 0 }} entities replaced.
+					{{ t('docudesk', 'Document anonymized successfully! {count} entities replaced.', { count: anonymizationStore.anonymizationResult?.replacementCount || 0 }) }}
 				</NcNoteCard>
 
 				<!-- Anonymized file info -->
@@ -88,13 +89,13 @@ import { anonymizationStore } from '../../store/store.js'
 
 				<!-- Entity table -->
 				<div class="entity-table-wrapper">
-					<h3>Detected Entities</h3>
+					<h3>{{ t('docudesk', 'Detected Entities') }}</h3>
 					<table class="entity-table">
 						<thead>
 							<tr>
-								<th>Type</th>
-								<th>Value</th>
-								<th>Confidence</th>
+								<th>{{ t('docudesk', 'Type') }}</th>
+								<th>{{ t('docudesk', 'Value') }}</th>
+								<th>{{ t('docudesk', 'Confidence') }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -111,7 +112,7 @@ import { anonymizationStore } from '../../store/store.js'
 			</template>
 
 			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
-				Anonymize Another
+				{{ t('docudesk', 'Anonymize Another') }}
 			</NcButton>
 		</div>
 
@@ -121,7 +122,7 @@ import { anonymizationStore } from '../../store/store.js'
 				{{ anonymizationStore.error || 'An unexpected error occurred.' }}
 			</NcNoteCard>
 			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
-				Try Again
+				{{ t('docudesk', 'Try Again') }}
 			</NcButton>
 		</div>
 	</div>
@@ -147,10 +148,10 @@ export default {
 			isDragging: false,
 			selectedFileName: '',
 			steps: [
-				{ label: 'Upload' },
-				{ label: 'Analyze' },
-				{ label: 'Anonymize' },
-				{ label: 'Done' },
+				{ label: t('docudesk', 'Upload') },
+				{ label: t('docudesk', 'Analyze') },
+				{ label: t('docudesk', 'Anonymize') },
+				{ label: t('docudesk', 'Done') },
 			],
 		}
 	},
