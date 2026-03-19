@@ -353,7 +353,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .selectionContainer {
 	display: grid;
 	grid-gap: 5px;

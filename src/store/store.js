@@ -6,8 +6,8 @@ import { useConsentStore } from './modules/consent.js'
 import { useAnonymizationStore } from './modules/anonymization.js'
 import { useSettingsStore } from './modules/settings.js'
 
-const navigationStore    = useNavigationStore(pinia)
-const consentStore       = useConsentStore(pinia)
+const navigationStore = useNavigationStore(pinia)
+const consentStore = useConsentStore(pinia)
 const anonymizationStore = useAnonymizationStore(pinia)
 
 /**
@@ -15,17 +15,16 @@ const anonymizationStore = useAnonymizationStore(pinia)
  *
  * @return {Promise<void>}
  */
-async function initializeStores()
-{
-    const settingsStore = useSettingsStore(pinia)
-    await settingsStore.fetchSettings()
+async function initializeStores() {
+	const settingsStore = useSettingsStore(pinia)
+	await settingsStore.fetchSettings()
 
 }
 
 export {
-    navigationStore,
-    consentStore,
-    anonymizationStore,
-    useSettingsStore,
-    initializeStores,
+	navigationStore,
+	consentStore,
+	anonymizationStore,
+	useSettingsStore,
+	initializeStores,
 }
