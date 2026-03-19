@@ -51,3 +51,4 @@ rules:
     - Test with OpenRegister to verify entity detection and anonymization work end-to-end
     - Verify consent status transitions are valid per GDPR requirements
     - Test with nldesign theme enabled for accessibility compliance
+    - Follow mandatory task categories from ADRs 005, 009, 010, 011
