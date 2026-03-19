@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<pmd version="@package_version@" timestamp="2026-03-19T08:32:32+00:00">
+<pmd version="@package_version@" timestamp="2026-03-19T08:58:27+00:00">
   <file name="OCA\DocuDesk\Controller\ConsentController">
     <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.69 bugs.
 
@@ -10,7 +10,7 @@
             Maybe you should check your unit tests for this class.</violation>
   </file>
   <file name="OCA\DocuDesk\Controller\MetricsController">
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.48 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.51 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
@@ -28,12 +28,7 @@
             Maybe you should check your unit tests for this class.</violation>
   </file>
   <file name="OCA\DocuDesk\Service\MetadataService">
-    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Max cyclomatic complexity of class methods is 22)
-
-            Maybe you should delegate some code to other objects or split complex method.</violation>
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 1.08 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.42 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
@@ -50,6 +45,15 @@
 
             Maybe you should check your unit tests for this class.</violation>
   </file>
+  <file name="OCA\DocuDesk\Service\TextAnalysisService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.51 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
   <file name="OCA\DocuDesk\Service\ConsentService">
     <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.5 bugs.
 
@@ -59,13 +63,17 @@
 
             Maybe you should check your unit tests for this class.</violation>
   </file>
+  <file name="OCA\DocuDesk\Service\FileListingService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.76 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
   <file name="OCA\DocuDesk\Service\PdfService">
-    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Max cyclomatic complexity of class methods is 11)
-
-            Maybe you should delegate some code to other objects or split complex method.</violation>
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.4 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.39 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
@@ -74,12 +82,7 @@
             Maybe you should check your unit tests for this class.</violation>
   </file>
   <file name="OCA\DocuDesk\Service\SettingsService">
-    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Max cyclomatic complexity of class methods is 11)
-
-            Maybe you should delegate some code to other objects or split complex method.</violation>
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.83 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.87 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
@@ -88,38 +91,16 @@
             Maybe you should check your unit tests for this class.</violation>
   </file>
   <file name="OCA\DocuDesk\Service\AnonymizationService">
-    <violation beginline="1" rule="Too complex class code" ruleset="Too complex class code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Total cyclomatic complexity of class is 54)
-            * Component uses 174 operators
-
-            Maybe you should delegate some code to other objects.</violation>
-    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Max cyclomatic complexity of class methods is 20)
-
-            Maybe you should delegate some code to other objects or split complex method.</violation>
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 1.34 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.64 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
             *  testsuites has dependency to this class.
 
             Maybe you should check your unit tests for this class.</violation>
-    <violation beginline="1" rule="Too long" ruleset="Too long" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="4">            This class looks really long.
-
-            * Class has 215 logical lines of code
-            * Class has 363 lines of code
-
-            Maybe your class should not exceed 200 lines of logical code</violation>
   </file>
   <file name="OCA\DocuDesk\EventListener\DocuDeskEventListener">
-    <violation beginline="1" rule="Too complex method code" ruleset="Too complex method code" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="2">            This class looks really complex.
-
-            * Algorithms are complex (Max cyclomatic complexity of class methods is 16)
-
-            Maybe you should delegate some code to other objects or split complex method.</violation>
-    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.58 bugs.
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.59 bugs.
 
             * Calculation is based on number of operators, operands, cyclomatic complexity
             * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
