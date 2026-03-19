@@ -22,7 +22,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\App\IAppManager;
 use OCP\IDBConnection;
 use OCP\IRequest;
-use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -41,10 +40,11 @@ class HealthController extends Controller
     /**
      * HealthController constructor
      *
-     * @param string          $appName  The name of the app
-     * @param IRequest        $request  The request object
-     * @param IDBConnection   $database The database connection
-     * @param LoggerInterface $logger   Logger for error reporting
+     * @param string          $appName    The name of the app
+     * @param IRequest        $request    The request object
+     * @param IDBConnection   $database   The database connection
+     * @param LoggerInterface $logger     Logger for error reporting
+     * @param IAppManager     $appManager The app manager service
      *
      * @return void
      */
@@ -52,7 +52,8 @@ class HealthController extends Controller
         string $appName,
         IRequest $request,
         private readonly IDBConnection $database,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IAppManager $appManager
     ) {
         parent::__construct($appName, $request);
 
@@ -65,8 +66,6 @@ class HealthController extends Controller
      * @return JSONResponse JSON response with health status and checks
      *
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function index(): JSONResponse
     {
@@ -88,9 +87,8 @@ class HealthController extends Controller
 
         // OpenRegister dependency check.
         try {
-            $appManager = Server::get(IAppManager::class);
             $checks['openregister'] = 'missing';
-            if ($appManager->isEnabledForUser('openregister') === true) {
+            if ($this->appManager->isEnabledForUser('openregister') === true) {
                 $checks['openregister'] = 'ok';
             }
 
