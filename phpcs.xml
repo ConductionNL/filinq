@@ -207,5 +207,6 @@
         <severity>0</severity>
     </rule>
 
-    <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Functions/NamedParametersSniff.php"/>
+    <!-- Disabled: too many false positives on internal method calls across codebase -->
+    <!-- <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Functions/NamedParametersSniff.php"/> -->
 </ruleset>
