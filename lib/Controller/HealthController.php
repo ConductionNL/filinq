@@ -41,10 +41,10 @@ class HealthController extends Controller
     /**
      * HealthController constructor
      *
-     * @param string          $appName The name of the app
-     * @param IRequest        $request The request object
+     * @param string          $appName  The name of the app
+     * @param IRequest        $request  The request object
      * @param IDBConnection   $database The database connection
-     * @param LoggerInterface $logger  Logger for error reporting
+     * @param LoggerInterface $logger   Logger for error reporting
      *
      * @return void
      */
@@ -82,14 +82,19 @@ class HealthController extends Controller
             $checks['database'] = 'ok';
         } catch (\Exception $e) {
             $checks['database'] = 'error';
-            $status              = 'error';
+            $status = 'error';
             $this->logger->error('Health check: database failed', ['exception' => $e->getMessage()]);
         }
 
         // OpenRegister dependency check.
         try {
             $appManager = Server::get(IAppManager::class);
-            $checks['openregister'] = $appManager->isEnabledForUser('openregister') === true ? 'ok' : 'missing';
+            if ($appManager->isEnabledForUser('openregister') === true) {
+                $checks['openregister'] = 'ok';
+            } else {
+                $checks['openregister'] = 'missing';
+            }
+
             if ($checks['openregister'] !== 'ok') {
                 $status = 'degraded';
             }

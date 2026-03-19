@@ -11,7 +11,7 @@
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  */
 
@@ -43,13 +43,16 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventListener implements IEventListener
 {
+
+
     /**
      * Constructor for DocuDeskEventListener
      */
     public function __construct()
     {
-        // Empty constructor - services are retrieved from the server container.
-    }
+
+    }//end __construct()
+
 
     /**
      * Handles events related to DocuDesk document objects
@@ -61,14 +64,17 @@ class DocuDeskEventListener implements IEventListener
     public function handle(Event $event): void
     {
         try {
-            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger          = \OC::$server->get(LoggerInterface::class);
             $metadataService = \OC::$server->get(MetadataService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
 
-            $logger->info('DocuDesk: Processing event', [
-                'eventType' => get_class($event),
-                'timestamp' => date('Y-m-d H:i:s'),
-            ]);
+            $logger->info(
+                'DocuDesk: Processing event',
+                [
+                    'eventType' => get_class($event),
+                    'timestamp' => date('Y-m-d H:i:s'),
+                ]
+            );
 
             if ($event instanceof ObjectCreatedEvent) {
                 $this->handleObjectCreated($event, $metadataService, $settingsService, $logger);
@@ -85,23 +91,31 @@ class DocuDeskEventListener implements IEventListener
                 return;
             }
 
-            $logger->debug('DocuDesk: Ignoring unhandled event type', [
-                'eventType' => get_class($event),
-            ]);
+            $logger->debug(
+                'DocuDesk: Ignoring unhandled event type',
+                [
+                    'eventType' => get_class($event),
+                ]
+            );
         } catch (\Exception $e) {
             try {
                 $logger = \OC::$server->get(LoggerInterface::class);
-                $logger->error('DocuDesk: Error in event handler', [
-                    'eventType' => get_class($event),
-                    'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]);
+                $logger->error(
+                    'DocuDesk: Error in event handler',
+                    [
+                        'eventType' => get_class($event),
+                        'exception' => $e->getMessage(),
+                        'file'      => $e->getFile(),
+                        'line'      => $e->getLine(),
+                    ]
+                );
             } catch (\Exception $logException) {
                 // Silently fail if logging fails.
-            }
-        }
-    }
+            }//end try
+        }//end try
+
+    }//end handle()
+
 
     /**
      * Handles object creation events
@@ -127,23 +141,26 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
-        $objectId = $object->getUuid();
-        $objectSchemaId = $object->getSchema();
+        $objectId         = $object->getUuid();
+        $objectSchemaId   = $object->getSchema();
         $objectRegisterId = $object->getRegister();
-        $objectData = $object->getObject();
+        $objectData       = $object->getObject();
 
-        $logger->info('DocuDesk: Processing object creation', [
-            'objectId'   => $objectId,
-            'schemaId'   => $objectSchemaId,
-            'registerId' => $objectRegisterId,
-        ]);
+        $logger->info(
+            'DocuDesk: Processing object creation',
+            [
+                'objectId'   => $objectId,
+                'schemaId'   => $objectSchemaId,
+                'registerId' => $objectRegisterId,
+            ]
+        );
 
         // Check settings for which enrichment features are enabled.
         try {
-            $settings = $settingsService->getAllSettings();
+            $settings       = $settingsService->getAllSettings();
             $enableLanguage = $settings['enable_language_detection'] ?? true;
             $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic = $settings['enable_topic_classification'] ?? true;
+            $enableTopic    = $settings['enable_topic_classification'] ?? true;
 
             // Only run enrichment if at least one feature is enabled.
             if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
@@ -157,19 +174,27 @@ class DocuDeskEventListener implements IEventListener
                         $metadata
                     );
 
-                    $logger->info('DocuDesk: Metadata enrichment completed for new object', [
-                        'objectId'       => $objectId,
-                        'enrichedFields' => array_keys($metadata),
-                    ]);
+                    $logger->info(
+                        'DocuDesk: Metadata enrichment completed for new object',
+                        [
+                            'objectId'       => $objectId,
+                            'enrichedFields' => array_keys($metadata),
+                        ]
+                    );
                 }
             }
         } catch (\Exception $e) {
-            $logger->error('DocuDesk: Failed to enrich metadata for new object', [
-                'objectId'  => $objectId,
-                'exception' => $e->getMessage(),
-            ]);
-        }
-    }
+            $logger->error(
+                'DocuDesk: Failed to enrich metadata for new object',
+                [
+                    'objectId'  => $objectId,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }//end try
+
+    }//end handleObjectCreated()
+
 
     /**
      * Handles object update events
@@ -192,7 +217,7 @@ class DocuDeskEventListener implements IEventListener
         SettingsService $settingsService,
         LoggerInterface $logger
     ): void {
-        $object = $event->getNewObject();
+        $object    = $event->getNewObject();
         $oldObject = $event->getOldObject();
 
         if ($object === null) {
@@ -200,20 +225,27 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
-        $objectId = $object->getUuid();
-        $objectSchemaId = $object->getSchema();
+        $objectId         = $object->getUuid();
+        $objectSchemaId   = $object->getSchema();
         $objectRegisterId = $object->getRegister();
-        $objectData = $object->getObject();
-        $oldObjectData = $oldObject !== null ? $oldObject->getObject() : [];
+        $objectData       = $object->getObject();
+        if ($oldObject !== null) {
+            $oldObjectData = $oldObject->getObject();
+        } else {
+            $oldObjectData = [];
+        }
 
-        $logger->info('DocuDesk: Processing object update', [
-            'objectId'   => $objectId,
-            'schemaId'   => $objectSchemaId,
-            'registerId' => $objectRegisterId,
-        ]);
+        $logger->info(
+            'DocuDesk: Processing object update',
+            [
+                'objectId'   => $objectId,
+                'schemaId'   => $objectSchemaId,
+                'registerId' => $objectRegisterId,
+            ]
+        );
 
         // Check if content fields have changed.
-        $contentFields = ['content', 'text', 'description', 'title'];
+        $contentFields  = ['content', 'text', 'description', 'title'];
         $contentChanged = false;
         foreach ($contentFields as $field) {
             if (($objectData[$field] ?? '') !== ($oldObjectData[$field] ?? '')) {
@@ -223,18 +255,21 @@ class DocuDeskEventListener implements IEventListener
         }
 
         if ($contentChanged === false) {
-            $logger->debug('DocuDesk: No content change detected, skipping metadata re-enrichment', [
-                'objectId' => $objectId,
-            ]);
+            $logger->debug(
+                'DocuDesk: No content change detected, skipping metadata re-enrichment',
+                [
+                    'objectId' => $objectId,
+                ]
+            );
             return;
         }
 
         // Re-enrich metadata since content changed.
         try {
-            $settings = $settingsService->getAllSettings();
+            $settings       = $settingsService->getAllSettings();
             $enableLanguage = $settings['enable_language_detection'] ?? true;
             $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic = $settings['enable_topic_classification'] ?? true;
+            $enableTopic    = $settings['enable_topic_classification'] ?? true;
 
             if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
                 $metadata = $metadataService->enhanceMetadata($objectData);
@@ -247,19 +282,27 @@ class DocuDeskEventListener implements IEventListener
                         $metadata
                     );
 
-                    $logger->info('DocuDesk: Metadata re-enrichment completed for updated object', [
-                        'objectId'       => $objectId,
-                        'enrichedFields' => array_keys($metadata),
-                    ]);
+                    $logger->info(
+                        'DocuDesk: Metadata re-enrichment completed for updated object',
+                        [
+                            'objectId'       => $objectId,
+                            'enrichedFields' => array_keys($metadata),
+                        ]
+                    );
                 }
             }
         } catch (\Exception $e) {
-            $logger->error('DocuDesk: Failed to re-enrich metadata for updated object', [
-                'objectId'  => $objectId,
-                'exception' => $e->getMessage(),
-            ]);
-        }
-    }
+            $logger->error(
+                'DocuDesk: Failed to re-enrich metadata for updated object',
+                [
+                    'objectId'  => $objectId,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }//end try
+
+    }//end handleObjectUpdated()
+
 
     /**
      * Handles object deletion events
@@ -277,10 +320,16 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
-        $logger->info('DocuDesk: Object deleted', [
-            'objectId'   => $object->getUuid(),
-            'schemaId'   => $object->getSchema(),
-            'registerId' => $object->getRegister(),
-        ]);
-    }
-}
+        $logger->info(
+            'DocuDesk: Object deleted',
+            [
+                'objectId'   => $object->getUuid(),
+                'schemaId'   => $object->getSchema(),
+                'registerId' => $object->getRegister(),
+            ]
+        );
+
+    }//end handleObjectDeleted()
+
+
+}//end class

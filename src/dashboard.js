@@ -8,7 +8,11 @@ import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWi
 Vue.use(PiniaVuePlugin)
 
 console.log('[DocuDesk] Registering anonymization widget callback')
-console.log('[DocuDesk] OCA.Dashboard:', window.OCA?.Dashboard)
+if (window.OCA) {
+    console.log('[DocuDesk] OCA.Dashboard:', window.OCA.Dashboard)
+} else {
+    console.log('[DocuDesk] OCA.Dashboard: undefined')
+}
 
 OCA.Dashboard.register(
         'docudesk-anonymization',

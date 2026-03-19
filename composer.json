@@ -22,8 +22,8 @@
 			"@composer bin all update --ansi"
 		],
 		"lint": "find . -name \\*.php -not -path './vendor/*' -not -path './vendor-bin/*' -not -path './build/*' -print0 | xargs -0 -n1 php -l",
-		"cs:check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php",
-		"cs:fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+		"cs:check": "./vendor/bin/phpcs --standard=phpcs.xml",
+		"cs:fix": "./vendor/bin/phpcbf --standard=phpcs.xml",
 		"phpcs": "./vendor/bin/phpcs --standard=phpcs.xml",
 		"phpcs:fix": "./vendor/bin/phpcbf --standard=phpcs.xml",
 		"phpmd": "phpmd lib text phpmd.xml || echo 'PHPMD not installed, skipping...'",

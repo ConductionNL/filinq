@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-// The store script handles app wide variables (or state)
+// The store script handles app wide variables (or state).
 import pinia from '../pinia.js'
 import { useNavigationStore } from './modules/navigation.ts'
 import { useConsentStore } from './modules/consent.js'
@@ -15,9 +15,11 @@ const anonymizationStore = useAnonymizationStore(pinia)
  *
  * @return {Promise<void>}
  */
-async function initializeStores() {
+async function initializeStores()
+{
     const settingsStore = useSettingsStore(pinia)
     await settingsStore.fetchSettings()
+
 }
 
 export {

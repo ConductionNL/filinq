@@ -41,11 +41,11 @@ class MetricsController extends Controller
     /**
      * MetricsController constructor
      *
-     * @param string          $appName The name of the app
-     * @param IRequest        $request The request object
-     * @param IConfig         $config  The config service
+     * @param string          $appName  The name of the app
+     * @param IRequest        $request  The request object
+     * @param IConfig         $config   The config service
      * @param IDBConnection   $database The database connection
-     * @param LoggerInterface $logger  Logger for error reporting
+     * @param LoggerInterface $logger   Logger for error reporting
      *
      * @return void
      */
@@ -134,7 +134,7 @@ class MetricsController extends Controller
                 return 0;
             }
 
-            $queryBuilder =$this->database->getQueryBuilder();
+            $queryBuilder = $this->database->getQueryBuilder();
             $queryBuilder->select($queryBuilder->createFunction('COUNT(*) AS cnt'))
                 ->from('openregister_objects')
                 ->where($queryBuilder->expr()->eq('register', $queryBuilder->createNamedParameter($registerId)))
@@ -148,7 +148,7 @@ class MetricsController extends Controller
         } catch (\Exception $e) {
             $this->logger->warning('Could not count documents for metrics', ['exception' => $e->getMessage()]);
             return 0;
-        }
+        }//end try
 
     }//end countDocuments()
 
@@ -168,7 +168,7 @@ class MetricsController extends Controller
                 return 0;
             }
 
-            $queryBuilder =$this->database->getQueryBuilder();
+            $queryBuilder = $this->database->getQueryBuilder();
             $queryBuilder->select($queryBuilder->createFunction('COUNT(*) AS cnt'))
                 ->from('openregister_objects')
                 ->where($queryBuilder->expr()->eq('register', $queryBuilder->createNamedParameter($registerId)))
@@ -182,7 +182,7 @@ class MetricsController extends Controller
         } catch (\Exception $e) {
             $this->logger->warning('Could not count templates for metrics', ['exception' => $e->getMessage()]);
             return 0;
-        }
+        }//end try
 
     }//end countTemplates()
 
