@@ -30,7 +30,6 @@ namespace OCA\DocuDesk\Settings;
 use OCA\DocuDesk\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IL10N;
 use OCP\Settings\ISettings;
 
 /**
@@ -48,13 +47,6 @@ class DocuDeskAdmin implements ISettings
 {
 
     /**
-     * L10N service for translations
-     *
-     * @var IL10N $l
-     */
-    private IL10N $l10n;
-
-    /**
      * App manager for retrieving app version
      *
      * @var IAppManager $appManager
@@ -65,14 +57,12 @@ class DocuDeskAdmin implements ISettings
     /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IL10N       $l10n       L10N service for translations
      * @param IAppManager $appManager App manager for retrieving app version
      *
      * @return void
      */
-    public function __construct(IL10N $l10n, IAppManager $appManager)
+    public function __construct(IAppManager $appManager)
     {
-        $this->l10n       = $l10n;
         $this->appManager = $appManager;
 
     }//end __construct()

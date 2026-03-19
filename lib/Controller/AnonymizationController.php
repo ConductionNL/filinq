@@ -115,7 +115,7 @@ class AnonymizationController extends Controller
         try {
             $file = $this->request->getUploadedFile('file');
 
-            if ($file === null || isset($file['tmp_name']) === false) {
+            if (empty($file) === true || isset($file['tmp_name']) === false) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('No file uploaded')],
                     400

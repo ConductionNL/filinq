@@ -177,7 +177,12 @@ class AnonymizationService
                 $userFolder->newFolder('DocuDesk');
             }
 
-            $docuDeskFolder = $userFolder->get('DocuDesk');
+            $docuDeskNode = $userFolder->get('DocuDesk');
+            if ($docuDeskNode instanceof \OCP\Files\Folder === false) {
+                throw new Exception('DocuDesk path exists but is not a folder.');
+            }
+
+            $docuDeskFolder = $docuDeskNode;
 
             // Handle duplicate file names by appending a number.
             $targetName = $fileName;
@@ -363,9 +368,14 @@ class AnonymizationService
             $anonymizedFilePath = null;
 
             if (is_object($result) === true && method_exists($result, 'getId') === true) {
-                $anonymizedFileId   = $result->getId();
-                $anonymizedFileName = $result->getName();
-                $anonymizedFilePath = $result->getPath();
+                $anonymizedFileId = $result->getId();
+                if (method_exists($result, 'getName') === true) {
+                    $anonymizedFileName = $result->getName();
+                }
+
+                if (method_exists($result, 'getPath') === true) {
+                    $anonymizedFilePath = $result->getPath();
+                }
             } else if (is_array($result) === true) {
                 $anonymizedFileId   = $result['fileId'] ?? $result['id'] ?? null;
                 $anonymizedFileName = $result['fileName'] ?? $result['name'] ?? null;
@@ -414,7 +424,12 @@ class AnonymizationService
                 return [];
             }
 
-            $docuDeskFolder = $userFolder->get('DocuDesk');
+            $docuDeskNode = $userFolder->get('DocuDesk');
+            if ($docuDeskNode instanceof \OCP\Files\Folder === false) {
+                return [];
+            }
+
+            $docuDeskFolder = $docuDeskNode;
             $files          = $docuDeskFolder->getDirectoryListing();
 
             $entityRelationMapper = null;

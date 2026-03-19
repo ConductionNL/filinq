@@ -23,7 +23,6 @@ use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Service for CRUD operations on document templates via OpenRegister
@@ -41,7 +40,6 @@ class TemplateService
     /**
      * Constructor for TemplateService
      *
-     * @param LoggerInterface    $logger          Logger for error reporting
      * @param ContainerInterface $container       Container for dependency injection
      * @param IAppManager        $appManager      App manager interface
      * @param SettingsService    $settingsService Settings service for register/schema IDs
@@ -49,7 +47,6 @@ class TemplateService
      * @return void
      */
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly SettingsService $settingsService
@@ -313,7 +310,7 @@ class TemplateService
             offset: 0
         );
 
-        return $result['results'] ?? [];
+        return $result['results'];
 
     }//end getTemplatesByNamespace()
 

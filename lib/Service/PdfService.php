@@ -231,7 +231,7 @@ class PdfService
                     );
 
             if ($title !== '') {
-                $mpdf->SetTitle(text: $title);
+                $mpdf->SetTitle($title);
             }
 
             $mpdf->WriteHTML(html: $html);

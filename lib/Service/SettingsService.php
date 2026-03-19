@@ -23,7 +23,6 @@ use Exception;
 use RuntimeException;
 use TypeError;
 use OCP\IAppConfig;
-use OCP\IRequest;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -67,7 +66,6 @@ class SettingsService
      * SettingsService constructor
      *
      * @param IAppConfig         $config          App configuration interface
-     * @param IRequest           $request         Request interface
      * @param ContainerInterface $container       Container for dependency injection
      * @param IAppManager        $appManager      App manager interface
      * @param LoggerInterface    $logger          Logger interface
@@ -77,7 +75,6 @@ class SettingsService
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,

@@ -367,7 +367,8 @@ class MetadataService
 
         $maxScore = max($scores);
         if ($maxScore > 0) {
-            return array_search($maxScore, $scores);
+            $topic = array_search($maxScore, $scores);
+            return $topic !== false ? (string) $topic : null;
         }
 
         return null;
