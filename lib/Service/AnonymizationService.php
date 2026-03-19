@@ -185,10 +185,9 @@ class AnonymizationService
             while ($docuDeskFolder->nodeExists($targetName) === true) {
                 $pathInfo = pathinfo($fileName);
                 $baseName = $pathInfo['filename'];
+                $extension = '';
                 if (isset($pathInfo['extension']) === true) {
                     $extension = '.'.$pathInfo['extension'];
-                } else {
-                    $extension = '';
                 }
 
                 $targetName = $baseName.'_'.$counter.$extension;
@@ -243,10 +242,9 @@ class AnonymizationService
             $textExtractor    = $this->getTextExtractionService();
             $extractionResult = $textExtractor->extractFile($fileId, true);
 
+            $resultKeys = 'non-array';
             if (is_array($extractionResult) === true) {
                 $resultKeys = array_keys($extractionResult);
-            } else {
-                $resultKeys = 'non-array';
             }
 
             $this->logger->debug(
@@ -266,10 +264,9 @@ class AnonymizationService
             // Normalize entity data to a consistent format.
             $normalizedEntities = [];
             foreach ($entities as $entity) {
+                $entityData = (array) $entity;
                 if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
                     $entityData = $entity->jsonSerialize();
-                } else {
-                    $entityData = (array) $entity;
                 }
 
                 $normalizedEntities[] = [

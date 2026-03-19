@@ -229,10 +229,9 @@ class DocuDeskEventListener implements IEventListener
         $objectSchemaId   = $object->getSchema();
         $objectRegisterId = $object->getRegister();
         $objectData       = $object->getObject();
+        $oldObjectData = [];
         if ($oldObject !== null) {
             $oldObjectData = $oldObject->getObject();
-        } else {
-            $oldObjectData = [];
         }
 
         $logger->info(

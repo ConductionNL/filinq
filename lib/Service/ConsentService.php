@@ -325,11 +325,12 @@ class ConsentService
 
             $consents = [];
             foreach ($results as $result) {
+                $consent = (array) $result;
                 if (is_object($result) === true && method_exists($result, 'getObject') === true) {
-                    $consents[] = $result->getObject();
-                } else {
-                    $consents[] = (array) $result;
+                    $consent = $result->getObject();
                 }
+
+                $consents[] = $consent;
             }
 
             return $consents;

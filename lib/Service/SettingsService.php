@@ -433,10 +433,9 @@ class SettingsService
                 }
 
                 // Handle arrays and objects by converting to JSON.
+                $stringValue = (string) $value;
                 if (is_string($value) === true) {
                     $stringValue = $value;
-                } else {
-                    $stringValue = (string) $value;
                 }
 
                 if (is_array($value) === true || is_object($value) === true) {

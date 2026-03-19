@@ -89,10 +89,9 @@ class HealthController extends Controller
         // OpenRegister dependency check.
         try {
             $appManager = Server::get(IAppManager::class);
+            $checks['openregister'] = 'missing';
             if ($appManager->isEnabledForUser('openregister') === true) {
                 $checks['openregister'] = 'ok';
-            } else {
-                $checks['openregister'] = 'missing';
             }
 
             if ($checks['openregister'] !== 'ok') {

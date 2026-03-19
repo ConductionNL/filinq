@@ -81,10 +81,9 @@ class AnonymizationController extends Controller
 
             return new JSONResponse($result);
         } catch (Exception $e) {
+            $statusCode = 500;
             if ($e->getCode() >= 400 && $e->getCode() < 600) {
                 $statusCode = $e->getCode();
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->error(
@@ -144,10 +143,9 @@ class AnonymizationController extends Controller
 
             return new JSONResponse($result);
         } catch (Exception $e) {
+            $statusCode = 500;
             if ($e->getCode() >= 400 && $e->getCode() < 600) {
                 $statusCode = $e->getCode();
-            } else {
-                $statusCode = 500;
             }
 
             $this->logger->error(
