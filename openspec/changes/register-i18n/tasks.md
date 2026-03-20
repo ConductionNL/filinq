@@ -1,6 +1,14 @@
 # Tasks: register-i18n
 
-## Task 1: Implementation planning
-- **Spec ref**: specs/register-i18n/spec.md
-- **Status**: todo
-- **Acceptance criteria**: Requirements from spec are decomposed into implementable tasks
+## Task 1: Core Implementation
+- [ ] Implement service classes
+- [ ] Add API endpoints
+- [ ] Add configuration settings
+
+## Task 2: Testing
+- [ ] Unit tests
+- [ ] Integration tests
+
+## Task 3: Documentation
+- [ ] API documentation
+- [ ] Admin guide

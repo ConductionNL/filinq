@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Template data model in OpenRegister
 The system SHALL store templates as OpenRegister objects in a new `template` schema within DocuDesk's register. The schema SHALL define the following properties:
