@@ -36,7 +36,7 @@ rules:
     - Consider GDPR compliance implications for all data handling changes
     - Ensure all document processing stays local (no external API calls)
     - Verify WOO compliance for consent/objection period changes
-    - "ADR-011: Check OpenRegister core for existing functionality before proposing new features"
+    - "ADR-011: Before implementing ANY utility (validation, formatting, parsing), search OpenRegister lib/Formats/, lib/Service/, and lib/Handler/ for existing implementations. Common duplications: BSN validation (BsnFormat.php), date formatting, slug generation, UUID handling. If found, reuse via DI or document why duplication is necessary."
   specs:
     - Include GDPR/AVG article references for privacy-related requirements
     - Specify consent status lifecycle transitions explicitly
