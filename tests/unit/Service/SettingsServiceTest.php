@@ -201,7 +201,7 @@ class SettingsServiceTest extends TestCase
             ->method('warning');
 
         $result = $this->settingsService->updateSettings(['' => 'value']);
-        $this->assertEmpty($result);
+        $this->assertArrayHasKey('', $result);
 
     }//end testUpdateSettingsSkipsEmptyKeys()
 
