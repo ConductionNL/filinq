@@ -36,18 +36,28 @@ rules:
     - Consider GDPR compliance implications for all data handling changes
     - Ensure all document processing stays local (no external API calls)
     - Verify WOO compliance for consent/objection period changes
+    - "ADR-011: Check OpenRegister core for existing functionality before proposing new features"
   specs:
     - Include GDPR/AVG article references for privacy-related requirements
     - Specify consent status lifecycle transitions explicitly
     - Document which OpenRegister services are used for each operation
     - Include entity type taxonomy (PERSON, ORGANIZATION) where applicable
+    - "ADR-009: Include test scenarios for all MUST/SHALL requirements"
   design:
     - Uses OpenRegister services for all data operations (no own database tables)
     - Register config in lib/Settings/docudesk_register.json (OpenAPI 3.0.0 format)
     - Imported via ConfigurationService::importFromApp() on Application::boot()
     - All anonymization delegated to OpenRegister's FileService::anonymizeDocument()
     - All entity detection delegated to OpenRegister's TextExtractionService::extractFile()
+    - "ADR-001: All data MUST be stored via OpenRegister — no custom database tables"
+    - "ADR-012: MUST use @conduction/nextcloud-vue components (CnIndexPage, CnDashboardPage, CnFormDialog, CnDataTable) — do NOT create custom equivalents"
+    - "ADR-008: Follow Controller → Service → Mapper layering pattern"
+    - "ADR-003: MUST use NL Design System tokens via Nextcloud CSS variables — no hardcoded colors"
   tasks:
     - Test with OpenRegister to verify entity detection and anonymization work end-to-end
     - Verify consent status transitions are valid per GDPR requirements
     - Test with nldesign theme enabled for accessibility compliance
+    - "ADR-010: MUST include documentation task with browser screenshots using Playwright MCP"
+    - "ADR-009: MUST include unit test tasks — minimum 75% coverage for new code"
+    - "ADR-005: MUST include i18n tasks — Dutch and English translations required"
+    - "ADR-010: Every user-facing feature MUST have docs in docs/features/ with screenshots"
