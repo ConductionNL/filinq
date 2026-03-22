@@ -1,5 +1,5 @@
 ---
-status: reviewed
+status: implemented
 ---
 
 # Consent Management
