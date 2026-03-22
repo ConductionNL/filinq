@@ -1,13 +1,12 @@
-# Proposal: document-signing
+# Document Signing
 
 ## Summary
-Add digital document signing capabilities to DocuDesk, enabling behandelaars to send documents for signing and track signing status through the case lifecycle.
+This change implements the document-signing feature as specified in the delta spec.
 
 ## Motivation
-Government processes require legally valid digital signatures on official documents. DocuDesk handles document generation but lacks signing workflow integration.
+Required by Dutch government tenders for document management capabilities.
 
 ## Scope
-- Sign document from case context
-- Signing status tracking
-- Integration with signing service providers
-- Audit trail for signed documents
+- New feature implementation
+- API endpoints
+- Configuration UI

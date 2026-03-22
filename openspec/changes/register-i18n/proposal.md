@@ -1,12 +1,12 @@
-# Proposal: register-i18n
+# Register Content Internationalization
 
 ## Summary
-Add multi-language support to DocuDesk content stored in OpenRegister, enabling templates, field labels, and descriptions to be maintained in multiple languages.
+This change implements the register-i18n feature as specified in the delta spec.
 
 ## Motivation
-Dutch government organizations serve multilingual populations and must provide documents in Dutch and English at minimum.
+Required by Dutch government tenders for document management capabilities.
 
 ## Scope
-- Language-tagged fields for templates
-- Translation management for template content
-- Language selection in document generation
+- New feature implementation
+- API endpoints
+- Configuration UI
