@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "3.0.0"
+        "version": "4.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -28,13 +28,25 @@
                     "publicationConsent"
                 ]
             },
+            "signing": {
+                "slug": "signing",
+                "title": "Signing Register",
+                "version": "1.0.0",
+                "description": "Register voor digitale ondertekeningsverzoeken, ondertekeningsrecords en auditlogs",
+                "schemas": [
+                    "signingRequest",
+                    "signerRecord",
+                    "signingAuditEntry"
+                ]
+            },
             "templates": {
                 "slug": "templates",
                 "title": "Template Register",
-                "version": "1.0.0",
-                "description": "Register voor herbruikbare PDF/document templates",
+                "version": "2.0.0",
+                "description": "Register voor herbruikbare PDF/document templates en template versiegeschiedenis",
                 "schemas": [
-                    "template"
+                    "template",
+                    "templateVersion"
                 ]
             }
         },
@@ -246,8 +258,8 @@
                 "uri": null,
                 "slug": "template",
                 "title": "Document Template",
-                "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.0.0",
+                "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld. Ondersteunt categorisering, tags en vergrendeling.",
+                "version": "2.0.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -311,24 +323,58 @@
                         ]
                     },
                     "orientation": {
-                        "description": "Standaard pagina-oriëntatie",
+                        "description": "Standaard pagina-ori\u00ebntatie",
                         "type": "string",
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Oriëntatie",
+                        "title": "Ori\u00ebntatie",
                         "default": "P",
                         "enum": [
                             "P",
                             "L"
                         ]
+                    },
+                    "category": {
+                        "description": "Primaire categorie van het template (bijv. beschikkingen, brieven, notities, rapporten)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Categorie",
+                        "maxLength": 64
+                    },
+                    "tags": {
+                        "description": "Tags voor aanvullende classificatie van het template",
+                        "type": "array",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Tags"
+                    },
+                    "lockedBy": {
+                        "description": "Nextcloud gebruikers-ID die het template vergrendeld heeft voor bewerking",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vergrendeld door"
+                    },
+                    "lockedAt": {
+                        "description": "Tijdstip waarop het template vergrendeld is",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Vergrendeld op"
                     }
                 },
                 "archive": [],
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2026-03-01T12:00:00+00:00",
+                "updated": "2026-03-22T12:00:00+00:00",
                 "created": "2026-03-01T12:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,
@@ -340,6 +386,540 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "templateVersion": {
+                "uri": null,
+                "slug": "templateVersion",
+                "title": "Template Versie",
+                "description": "Versiegeschiedenis voor document templates. Elke versie bevat de staat van het template op het moment van bewerking.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "History",
+                "required": [
+                    "templateId",
+                    "version",
+                    "content",
+                    "name",
+                    "editor"
+                ],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het bovenliggende template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Template ID"
+                    },
+                    "version": {
+                        "description": "Oplopend versienummer",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Versienummer"
+                    },
+                    "content": {
+                        "description": "Template HTML content op het moment van deze versie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Template inhoud",
+                        "format": "html"
+                    },
+                    "name": {
+                        "description": "Template naam op het moment van deze versie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Template beschrijving op het moment van deze versie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "maxLength": 2000
+                    },
+                    "format": {
+                        "description": "Paginaformaat op het moment van deze versie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Paginaformaat"
+                    },
+                    "orientation": {
+                        "description": "Pagina-ori\u00ebntatie op het moment van deze versie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Ori\u00ebntatie"
+                    },
+                    "editor": {
+                        "description": "Nextcloud gebruikers-ID van de persoon die de bewerking heeft gedaan",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Bewerker"
+                    },
+                    "changelog": {
+                        "description": "Optionele notitie over wat er gewijzigd is",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Wijzigingsnotitie",
+                        "maxLength": 500
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": true,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "changelog",
+                    "autoPublish": false
+                },
+                "searchable": true
+            }
+        },
+            "signingRequest": {
+                "uri": null,
+                "slug": "signingRequest",
+                "title": "Signing Request",
+                "description": "Ondertekeningsverzoek voor een document. Bevat informatie over het document, de ondertekenaars, het ondertekeningsniveau en de status.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileSign",
+                "required": [
+                    "documentFileId",
+                    "documentName",
+                    "initiatorUserId",
+                    "signatureLevel",
+                    "signingMode",
+                    "status",
+                    "provider"
+                ],
+                "properties": {
+                    "documentFileId": {
+                        "description": "Nextcloud bestand-ID van het te ondertekenen document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Document ID"
+                    },
+                    "documentName": {
+                        "description": "Naam van het te ondertekenen document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Documentnaam",
+                        "maxLength": 255
+                    },
+                    "initiatorUserId": {
+                        "description": "Nextcloud gebruikers-ID van de initiator",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Initiator"
+                    },
+                    "signatureLevel": {
+                        "description": "eIDAS ondertekeningsniveau",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Ondertekeningsniveau",
+                        "enum": [
+                            "SES",
+                            "AdES",
+                            "QES"
+                        ],
+                        "default": "SES"
+                    },
+                    "signingMode": {
+                        "description": "Ondertekeningsvolgorde",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Ondertekeningsvolgorde",
+                        "enum": [
+                            "sequential",
+                            "parallel"
+                        ],
+                        "default": "sequential"
+                    },
+                    "status": {
+                        "description": "Status van het ondertekeningsverzoek",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "DRAFT",
+                            "PENDING",
+                            "IN_PROGRESS",
+                            "COMPLETED",
+                            "DECLINED",
+                            "EXPIRED",
+                            "CANCELLED"
+                        ],
+                        "default": "DRAFT"
+                    },
+                    "provider": {
+                        "description": "Ondertekeningsprovider",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Provider",
+                        "enum": [
+                            "native",
+                            "validsign",
+                            "docusign",
+                            "adobesign",
+                            "libresign"
+                        ],
+                        "default": "native"
+                    },
+                    "deadline": {
+                        "description": "Deadline voor het ondertekeningsverzoek (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Deadline"
+                    },
+                    "signerIds": {
+                        "description": "Lijst van SignerRecord UUID's",
+                        "type": "array",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Ondertekenaars"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "documentName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "signerRecord": {
+                "uri": null,
+                "slug": "signerRecord",
+                "title": "Signer Record",
+                "description": "Individueel ondertekeningsrecord binnen een ondertekeningsverzoek. Bevat de identiteit, status en handtekening van een individuele ondertekenaar.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "AccountEdit",
+                "required": [
+                    "signingRequestId",
+                    "userId",
+                    "displayName",
+                    "status"
+                ],
+                "properties": {
+                    "signingRequestId": {
+                        "description": "UUID van het bovenliggende ondertekeningsverzoek",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Ondertekeningsverzoek ID"
+                    },
+                    "userId": {
+                        "description": "Nextcloud gebruikers-ID van de ondertekenaar",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Gebruiker"
+                    },
+                    "displayName": {
+                        "description": "Weergavenaam van de ondertekenaar",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "description": "E-mailadres van de ondertekenaar",
+                        "type": "string",
+                        "format": "email",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "E-mail",
+                        "maxLength": 255
+                    },
+                    "order": {
+                        "description": "Volgorde bij sequentieel ondertekenen (begint bij 0)",
+                        "type": "integer",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Volgorde",
+                        "default": 0
+                    },
+                    "status": {
+                        "description": "Status van deze individuele ondertekening",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "PENDING",
+                            "SIGNED",
+                            "DECLINED",
+                            "EXPIRED",
+                            "CANCELLED"
+                        ],
+                        "default": "PENDING"
+                    },
+                    "signedAt": {
+                        "description": "Datum/tijd van ondertekening",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Ondertekend op"
+                    },
+                    "declineReason": {
+                        "description": "Reden van weigering (indien van toepassing)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Reden weigering",
+                        "maxLength": 2000
+                    },
+                    "ipAddress": {
+                        "description": "IP-adres van de ondertekenaar op het moment van ondertekening",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "IP-adres",
+                        "maxLength": 45
+                    },
+                    "signatureData": {
+                        "description": "Base64-gecodeerde handtekeninggegevens",
+                        "type": "string",
+                        "visible": false,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Handtekeninggegevens"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "displayName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "signingAuditEntry": {
+                "uri": null,
+                "slug": "signingAuditEntry",
+                "title": "Signing Audit Entry",
+                "description": "Onveranderbaar auditlogrecord voor ondertekeningsgebeurtenissen. Voldoet aan de Archiefwet 1995 bewaartermijn van minimaal 10 jaar.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ShieldCheck",
+                "required": [
+                    "signingRequestId",
+                    "action",
+                    "actorUserId",
+                    "actorDisplayName",
+                    "timestamp"
+                ],
+                "properties": {
+                    "signingRequestId": {
+                        "description": "UUID van het gerelateerde ondertekeningsverzoek",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Ondertekeningsverzoek ID"
+                    },
+                    "action": {
+                        "description": "Type audit-actie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Actie",
+                        "enum": [
+                            "CREATED",
+                            "SIGNED",
+                            "DECLINED",
+                            "CANCELLED",
+                            "EXPIRED",
+                            "COMPLETED",
+                            "VIEWED"
+                        ]
+                    },
+                    "actorUserId": {
+                        "description": "Nextcloud gebruikers-ID van de actor",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Actor"
+                    },
+                    "actorDisplayName": {
+                        "description": "Weergavenaam van de actor",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Actornaam",
+                        "maxLength": 255
+                    },
+                    "timestamp": {
+                        "description": "Tijdstip van de gebeurtenis (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Tijdstip"
+                    },
+                    "ipAddress": {
+                        "description": "IP-adres van de actor",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "IP-adres",
+                        "maxLength": 45
+                    },
+                    "signatureLevel": {
+                        "description": "eIDAS ondertekeningsniveau (indien van toepassing)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Ondertekeningsniveau",
+                        "enum": [
+                            "SES",
+                            "AdES",
+                            "QES"
+                        ]
+                    },
+                    "provider": {
+                        "description": "Gebruikte ondertekeningsprovider",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Provider"
+                    },
+                    "metadata": {
+                        "description": "Aanvullende metadata als JSON",
+                        "type": "object",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Metadata"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": true,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "action",
+                    "objectDescriptionField": "actorDisplayName",
                     "autoPublish": false
                 },
                 "searchable": true

@@ -92,6 +92,70 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('docudesk', 'Digital Signing')"
+			:description="t('docudesk', 'Configure digital document signing settings')">
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'Enable Digital Signing') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:checked="settings.signing_enabled"
+					type="switch"
+					@update:checked="settings.signing_enabled = $event" />
+				<div class="setting-description">
+					{{ t('docudesk', 'Enable digital signing capabilities for documents') }}
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-provider">{{ t('docudesk', 'Signing Provider') }}</label>
+					<NcSelect
+						v-model="signingProviderOption"
+						:options="signingProviderOptions"
+						input-id="signing-provider"
+						:disabled="!settings.signing_enabled"
+						@input="onSigningProviderChange" />
+				</div>
+				<span class="setting-description">
+					{{ t('docudesk', 'Select the signing service provider. Native provides basic SES signatures locally.') }}
+				</span>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-level">{{ t('docudesk', 'Default Signature Level') }}</label>
+					<NcSelect
+						v-model="signingLevelOption"
+						:options="signingLevelOptions"
+						input-id="signing-level"
+						:disabled="!settings.signing_enabled"
+						@input="onSigningLevelChange" />
+				</div>
+				<span class="setting-description">
+					{{ t('docudesk', 'Default eIDAS signature level for new signing requests (SES = Simple, AdES = Advanced, QES = Qualified)') }}
+				</span>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-expiry">{{ t('docudesk', 'Request Expiry (days)') }}</label>
+					<input
+						id="signing-expiry"
+						v-model.number="settings.signing_request_expiry_days"
+						type="number"
+						min="1"
+						max="365"
+						:disabled="!settings.signing_enabled"
+						placeholder="30">
+				</div>
+				<span class="setting-description">
+					{{ t('docudesk', 'Number of days before a signing request expires if not all signers have responded') }}
+				</span>
+			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('docudesk', 'Data Storage')"
 			:description="t('docudesk', 'Configure Open Register integration for consent data storage')">
 			<div v-if="!loading">
@@ -199,13 +263,37 @@ export default {
 				enable_language_detection: true,
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
+				signing_enabled: false,
+				signing_provider: 'native',
+				signing_default_level: 'SES',
+				signing_request_expiry_days: 30,
 			},
+			signingProviderOption: null,
+			signingProviderOptions: [
+				{ value: 'native', label: 'Native (built-in SES)' },
+				{ value: 'validsign', label: 'ValidSign' },
+				{ value: 'docusign', label: 'DocuSign' },
+				{ value: 'adobesign', label: 'Adobe Sign' },
+				{ value: 'libresign', label: 'LibreSign' },
+			],
+			signingLevelOption: null,
+			signingLevelOptions: [
+				{ value: 'SES', label: 'SES - Simple Electronic Signature' },
+				{ value: 'AdES', label: 'AdES - Advanced Electronic Signature' },
+				{ value: 'QES', label: 'QES - Qualified Electronic Signature' },
+			],
 		}
 	},
 	mounted() {
 		this.fetchAll()
 	},
 	methods: {
+		onSigningProviderChange(option) {
+			this.settings.signing_provider = option?.value || 'native'
+		},
+		onSigningLevelChange(option) {
+			this.settings.signing_default_level = option?.value || 'SES'
+		},
 		onRegisterChange(type) {
 			this.sections = {
 				...this.sections,
@@ -229,6 +317,18 @@ export default {
 					this.settings.enable_language_detection = data.enable_language_detection ?? true
 					this.settings.enable_keyword_extraction = data.enable_keyword_extraction ?? true
 					this.settings.enable_topic_classification = data.enable_topic_classification ?? true
+					this.settings.signing_enabled = data.signing_enabled ?? false
+					this.settings.signing_provider = data.signing_provider ?? 'native'
+					this.settings.signing_default_level = data.signing_default_level ?? 'SES'
+					this.settings.signing_request_expiry_days = data.signing_request_expiry_days ?? 30
+
+					// Set signing select options
+					this.signingProviderOption = this.signingProviderOptions.find(
+						(opt) => opt.value === this.settings.signing_provider,
+					) || this.signingProviderOptions[0]
+					this.signingLevelOption = this.signingLevelOptions.find(
+						(opt) => opt.value === this.settings.signing_default_level,
+					) || this.signingLevelOptions[0]
 
 					// Build available registers options
 					this.availableRegistersOptions = {
@@ -320,6 +420,10 @@ export default {
 				enable_language_detection: this.settings.enable_language_detection ? '1' : '0',
 				enable_keyword_extraction: this.settings.enable_keyword_extraction ? '1' : '0',
 				enable_topic_classification: this.settings.enable_topic_classification ? '1' : '0',
+				signing_enabled: this.settings.signing_enabled ? '1' : '0',
+				signing_provider: this.settings.signing_provider || 'native',
+				signing_default_level: this.settings.signing_default_level || 'SES',
+				signing_request_expiry_days: String(this.settings.signing_request_expiry_days || 30),
 			}
 
 			// Add register/schema configs
