@@ -89,9 +89,8 @@ class AnonymizationService
      *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount,
-     *                              ocrProcessed, and optionally ocrConfidence
-     *
+     * @return array<string, mixed> Extraction result with entities, entityCount, riskLevel     * @return array<string, mixed> Extraction result with entities, entityCount,
+     *                              ocrProcessed, and optionally ocrConfidence     *
      * @throws Exception If extraction or detection fails
      */
     public function extractAndDetectEntities(int $fileId): array
@@ -123,11 +122,15 @@ class AnonymizationService
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
-            $result = [
+            $riskLevel = $this->getRiskLevelForFile(fileId: $fileId);
+
+            return [
+                'entities'    => $this->entityDetection->normalizeEntities($entities),
+                'entityCount' => count($entities),
+                'riskLevel'   => $riskLevel,            $result = [
                 'entities'     => $this->entityDetection->normalizeEntities($entities),
                 'entityCount'  => count($entities),
-                'ocrProcessed' => $ocrResult['ocrProcessed'],
-            ];
+                'ocrProcessed' => $ocrResult['ocrProcessed'],            ];
 
             if ($ocrResult['ocrProcessed'] === true) {
                 $result['ocrConfidence'] = $ocrResult['confidence'];
@@ -147,6 +150,31 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
+
+
+    /**
+     * Get risk level for a file, with graceful fallback
+     *
+     * @param int $fileId The Nextcloud file ID
+     *
+     * @return string The risk level or "unknown"
+     */
+    private function getRiskLevelForFile(int $fileId): string
+    {
+        try {
+            $riskLevelService = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Service\RiskLevelService'
+            );
+            return $riskLevelService->getRiskLevel($fileId);
+        } catch (RuntimeException $e) {
+            $this->logger->debug(
+                'RiskLevelService unavailable, using default',
+                ['fileId' => $fileId]
+            );
+            return 'unknown';
+        }
+
+    }//end getRiskLevelForFile()
 
 
     /**

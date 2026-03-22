@@ -589,8 +589,7 @@
                     "autoPublish": false
                 },
                 "searchable": false
-            },
-            "signingRequest": {
+            },            "signingRequest": {
                 "uri": null,
                 "slug": "signingRequest",
                 "title": "Signing Request",

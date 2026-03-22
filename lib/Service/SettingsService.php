@@ -170,7 +170,7 @@ class SettingsService
                 'enable_topic_classification',
                 '1'
             ) === '1',
-            'ocr_enabled'                       => $this->config->getValueString(
+            'signing_enabled'                   => $this->config->getValueString(            'ocr_enabled'                       => $this->config->getValueString(
                 $this->appName,
                 'ocr_enabled',
                 '1'
@@ -183,8 +183,7 @@ class SettingsService
             'ocr_dpi'                           => (int) $this->config->getValueString(
                 $this->appName,
                 'ocr_dpi',
-                '300'            'signing_enabled'                   => $this->config->getValueString(
-                $this->appName,
+                '300'            'signing_enabled'                   => $this->config->getValueString(                $this->appName,
                 'signing_enabled',
                 '0'
             ) === '1',
@@ -201,8 +200,8 @@ class SettingsService
             'signing_request_expiry_days'       => (int) $this->config->getValueString(
                 $this->appName,
                 'signing_request_expiry_days',
-                '30'            ),
-        ];
+                '30'
+            ),                '30'            ),        ];
 
     }//end loadFeatureToggles()
 
@@ -232,7 +231,7 @@ class SettingsService
     public function getAllSettings(): array
     {
         $data = [
-            'objectTypes'        => ['publicationConsent', 'template'],
+            'objectTypes'        => ['publicationConsent', 'template', 'templateVersion'],
             'openRegisters'      => false,
             'availableRegisters' => [],
         ];
