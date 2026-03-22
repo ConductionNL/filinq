@@ -183,8 +183,25 @@ class SettingsService
             'ocr_dpi'                           => (int) $this->config->getValueString(
                 $this->appName,
                 'ocr_dpi',
-                '300'
+                '300'            'signing_enabled'                   => $this->config->getValueString(
+                $this->appName,
+                'signing_enabled',
+                '0'
+            ) === '1',
+            'signing_provider'                  => $this->config->getValueString(
+                $this->appName,
+                'signing_provider',
+                'native'
             ),
+            'signing_default_level'             => $this->config->getValueString(
+                $this->appName,
+                'signing_default_level',
+                'SES'
+            ),
+            'signing_request_expiry_days'       => (int) $this->config->getValueString(
+                $this->appName,
+                'signing_request_expiry_days',
+                '30'            ),
         ];
 
     }//end loadFeatureToggles()
