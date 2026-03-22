@@ -3,15 +3,14 @@
  * DocuDesk Event Listener
  *
  * Listener for handling events from OpenRegister specific to DocuDesk.
- * When documents are created or updated in Open Register, this listener
- * triggers metadata enrichment and consent tracking.
+ * Delegates event handling to DocuDeskEventHandler.
  *
  * @category  EventListener
  * @package   OCA\DocuDesk\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   1.0.0
+ * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  */
 
@@ -31,10 +30,6 @@ use Psr\Log\LoggerInterface;
 /**
  * Event listener for handling DocuDesk-specific events from OpenRegister
  *
- * When documents are created or updated in Open Register, this listener
- * runs metadata enrichment (language detection, keyword extraction, topic
- * classification) and checks whether consent tracking is needed.
- *
  * @category EventListener
  * @package  OCA\DocuDesk\EventListener
  * @author   Conduction B.V. <info@conduction.nl>
@@ -43,13 +38,16 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventListener implements IEventListener
 {
+
+
     /**
      * Constructor for DocuDeskEventListener
      */
     public function __construct()
     {
-        // Empty constructor - services are retrieved from the server container.
-    }
+
+    }//end __construct()
+
 
     /**
      * Handles events related to DocuDesk document objects
@@ -61,217 +59,118 @@ class DocuDeskEventListener implements IEventListener
     public function handle(Event $event): void
     {
         try {
-            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger          = \OC::$server->get(LoggerInterface::class);
             $metadataService = \OC::$server->get(MetadataService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
+            $eventHandler    = new DocuDeskEventHandler();
+            $enrichRunner    = new EnrichmentRunner();
 
-            $logger->info('DocuDesk: Processing event', [
+            $logger->info(
+                'DocuDesk: Processing event',
+                [
+                    'eventType' => get_class($event),
+                    'timestamp' => date('Y-m-d H:i:s'),
+                ]
+            );
+
+            $this->dispatchEvent(
+                $event,
+                $metadataService,
+                $settingsService,
+                $logger,
+                $eventHandler,
+                $enrichRunner
+            );
+        } catch (\Exception $e) {
+            $this->logHandlerError($e, $event);
+        }//end try
+
+    }//end handle()
+
+
+    /**
+     * Dispatch the event to the appropriate handler
+     *
+     * @param Event                $event           The event to dispatch
+     * @param MetadataService      $metadataService The metadata service
+     * @param SettingsService      $settingsService The settings service
+     * @param LoggerInterface      $logger          The logger instance
+     * @param DocuDeskEventHandler $eventHandler    The event handler
+     * @param EnrichmentRunner     $enrichRunner    The enrichment runner
+     *
+     * @return void
+     */
+    private function dispatchEvent(
+        Event $event,
+        MetadataService $metadataService,
+        SettingsService $settingsService,
+        LoggerInterface $logger,
+        DocuDeskEventHandler $eventHandler,
+        EnrichmentRunner $enrichRunner
+    ): void {
+        if ($event instanceof ObjectCreatedEvent) {
+            $eventHandler->handleObjectCreated(
+                $event,
+                $metadataService,
+                $settingsService,
+                $logger,
+                $enrichRunner
+            );
+            return;
+        }
+
+        if ($event instanceof ObjectUpdatedEvent) {
+            $eventHandler->handleObjectUpdated(
+                $event,
+                $metadataService,
+                $settingsService,
+                $logger,
+                $enrichRunner
+            );
+            return;
+        }
+
+        if ($event instanceof ObjectDeletedEvent) {
+            $eventHandler->handleObjectDeleted($event, $logger);
+            return;
+        }
+
+        $logger->debug(
+            'DocuDesk: Ignoring unhandled event type',
+            [
                 'eventType' => get_class($event),
-                'timestamp' => date('Y-m-d H:i:s'),
-            ]);
+            ]
+        );
 
-            if ($event instanceof ObjectCreatedEvent) {
-                $this->handleObjectCreated($event, $metadataService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectUpdatedEvent) {
-                $this->handleObjectUpdated($event, $metadataService, $settingsService, $logger);
-            } elseif ($event instanceof ObjectDeletedEvent) {
-                $this->handleObjectDeleted($event, $logger);
-            } else {
-                $logger->debug('DocuDesk: Ignoring unhandled event type', [
-                    'eventType' => get_class($event),
-                ]);
-            }
-        } catch (\Exception $e) {
-            try {
-                $logger = \OC::$server->get(LoggerInterface::class);
-                $logger->error('DocuDesk: Error in event handler', [
-                    'eventType' => get_class($event),
-                    'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]);
-            } catch (\Exception $logException) {
-                // Silently fail if logging fails.
-            }
-        }
-    }
+    }//end dispatchEvent()
+
 
     /**
-     * Handles object creation events
+     * Log an error from the event handler
      *
-     * When a document is created in Open Register, run metadata enrichment.
-     *
-     * @param ObjectCreatedEvent $event           The creation event
-     * @param MetadataService    $metadataService The metadata service
-     * @param SettingsService    $settingsService The settings service
-     * @param LoggerInterface    $logger          The logger instance
+     * @param \Exception $exception The exception that occurred
+     * @param Event      $event     The event being processed
      *
      * @return void
      */
-    private function handleObjectCreated(
-        ObjectCreatedEvent $event,
-        MetadataService $metadataService,
-        SettingsService $settingsService,
-        LoggerInterface $logger
-    ): void {
-        $object = $event->getObject();
-        if ($object === null) {
-            $logger->warning('DocuDesk: ObjectCreatedEvent received with null object');
-            return;
-        }
-
-        $objectId = $object->getUuid();
-        $objectSchemaId = $object->getSchema();
-        $objectRegisterId = $object->getRegister();
-        $objectData = $object->getObject();
-
-        $logger->info('DocuDesk: Processing object creation', [
-            'objectId'   => $objectId,
-            'schemaId'   => $objectSchemaId,
-            'registerId' => $objectRegisterId,
-        ]);
-
-        // Check settings for which enrichment features are enabled.
-        try {
-            $settings = $settingsService->getAllSettings();
-            $enableLanguage = $settings['enable_language_detection'] ?? true;
-            $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic = $settings['enable_topic_classification'] ?? true;
-
-            // Only run enrichment if at least one feature is enabled.
-            if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
-                $metadata = $metadataService->enhanceMetadata($objectData);
-
-                if (empty($metadata) === false) {
-                    $metadataService->saveEnrichedMetadata(
-                        $objectId,
-                        (string) $objectRegisterId,
-                        (string) $objectSchemaId,
-                        $metadata
-                    );
-
-                    $logger->info('DocuDesk: Metadata enrichment completed for new object', [
-                        'objectId'       => $objectId,
-                        'enrichedFields' => array_keys($metadata),
-                    ]);
-                }
-            }
-        } catch (\Exception $e) {
-            $logger->error('DocuDesk: Failed to enrich metadata for new object', [
-                'objectId'  => $objectId,
-                'exception' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Handles object update events
-     *
-     * When a document is updated in Open Register, re-run metadata enrichment
-     * if content has changed.
-     *
-     * @param ObjectUpdatedEvent $event           The update event
-     * @param MetadataService    $metadataService The metadata service
-     * @param SettingsService    $settingsService The settings service
-     * @param LoggerInterface    $logger          The logger instance
-     *
-     * @return void
-     */
-    private function handleObjectUpdated(
-        ObjectUpdatedEvent $event,
-        MetadataService $metadataService,
-        SettingsService $settingsService,
-        LoggerInterface $logger
-    ): void {
-        $object = $event->getNewObject();
-        $oldObject = $event->getOldObject();
-
-        if ($object === null) {
-            $logger->warning('DocuDesk: ObjectUpdatedEvent received with null object');
-            return;
-        }
-
-        $objectId = $object->getUuid();
-        $objectSchemaId = $object->getSchema();
-        $objectRegisterId = $object->getRegister();
-        $objectData = $object->getObject();
-        $oldObjectData = $oldObject !== null ? $oldObject->getObject() : [];
-
-        $logger->info('DocuDesk: Processing object update', [
-            'objectId'   => $objectId,
-            'schemaId'   => $objectSchemaId,
-            'registerId' => $objectRegisterId,
-        ]);
-
-        // Check if content fields have changed.
-        $contentFields = ['content', 'text', 'description', 'title'];
-        $contentChanged = false;
-        foreach ($contentFields as $field) {
-            if (($objectData[$field] ?? '') !== ($oldObjectData[$field] ?? '')) {
-                $contentChanged = true;
-                break;
-            }
-        }
-
-        if ($contentChanged === false) {
-            $logger->debug('DocuDesk: No content change detected, skipping metadata re-enrichment', [
-                'objectId' => $objectId,
-            ]);
-            return;
-        }
-
-        // Re-enrich metadata since content changed.
-        try {
-            $settings = $settingsService->getAllSettings();
-            $enableLanguage = $settings['enable_language_detection'] ?? true;
-            $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
-            $enableTopic = $settings['enable_topic_classification'] ?? true;
-
-            if ($enableLanguage === true || $enableKeywords === true || $enableTopic === true) {
-                $metadata = $metadataService->enhanceMetadata($objectData);
-
-                if (empty($metadata) === false) {
-                    $metadataService->saveEnrichedMetadata(
-                        $objectId,
-                        (string) $objectRegisterId,
-                        (string) $objectSchemaId,
-                        $metadata
-                    );
-
-                    $logger->info('DocuDesk: Metadata re-enrichment completed for updated object', [
-                        'objectId'       => $objectId,
-                        'enrichedFields' => array_keys($metadata),
-                    ]);
-                }
-            }
-        } catch (\Exception $e) {
-            $logger->error('DocuDesk: Failed to re-enrich metadata for updated object', [
-                'objectId'  => $objectId,
-                'exception' => $e->getMessage(),
-            ]);
-        }
-    }
-
-    /**
-     * Handles object deletion events
-     *
-     * @param ObjectDeletedEvent $event  The deletion event
-     * @param LoggerInterface    $logger The logger instance
-     *
-     * @return void
-     */
-    private function handleObjectDeleted(ObjectDeletedEvent $event, LoggerInterface $logger): void
+    private function logHandlerError(\Exception $exception, Event $event): void
     {
-        $object = $event->getObject();
-        if ($object === null) {
-            $logger->warning('DocuDesk: ObjectDeletedEvent received with null object');
-            return;
-        }
+        try {
+            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger->error(
+                'DocuDesk: Error in event handler',
+                [
+                    'eventType' => get_class($event),
+                    'exception' => $exception->getMessage(),
+                    'file'      => $exception->getFile(),
+                    'line'      => $exception->getLine(),
+                ]
+            );
+        } catch (\Exception $logException) {
+            // Silently fail if logging fails.
+        }//end try
 
-        $logger->info('DocuDesk: Object deleted', [
-            'objectId'   => $object->getUuid(),
-            'schemaId'   => $object->getSchema(),
-            'registerId' => $object->getRegister(),
-        ]);
-    }
-}
+    }//end logHandlerError()
+
+
+}//end class

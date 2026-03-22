@@ -1,4 +1,5 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { consentStore, navigationStore } from '../../store/store.js'
 </script>
 
@@ -9,25 +10,29 @@ import { consentStore, navigationStore } from '../../store/store.js'
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back to Consents
+				{{ t('docudesk', 'Back to Consents') }}
 			</NcButton>
-			<h2>Consent Detail</h2>
+			<h2>{{ t('docudesk', 'Consent Detail') }}</h2>
 		</div>
 
 		<div v-if="!consentStore.consentItem" class="empty-state">
-			<p>No consent record selected.</p>
+			<p>{{ t('docudesk', 'No consent record selected.') }}</p>
 		</div>
 
 		<div v-else class="detail-content">
 			<div class="detail-section">
-				<h3>Entity Information</h3>
+				<h3>{{ t('docudesk', 'Entity Information') }}</h3>
 				<table class="detail-table">
 					<tr>
-						<td class="label">Entity Text</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Text') }}
+						</td>
 						<td>{{ consentStore.consentItem.entityText }}</td>
 					</tr>
 					<tr>
-						<td class="label">Entity Type</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Type') }}
+						</td>
 						<td>
 							<span class="badge" :class="'badge-' + (consentStore.consentItem.entityType || '').toLowerCase()">
 								{{ consentStore.consentItem.entityType }}
@@ -35,73 +40,95 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.entityKey">
-						<td class="label">Entity Key</td>
+						<td class="label">
+							{{ t('docudesk', 'Entity Key') }}
+						</td>
 						<td>{{ consentStore.consentItem.entityKey }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.contactEmail">
-						<td class="label">Contact Email</td>
+						<td class="label">
+							{{ t('docudesk', 'Contact Email') }}
+						</td>
 						<td>{{ consentStore.consentItem.contactEmail }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.contactAddress">
-						<td class="label">Contact Address</td>
+						<td class="label">
+							{{ t('docudesk', 'Contact Address') }}
+						</td>
 						<td>{{ consentStore.consentItem.contactAddress }}</td>
 					</tr>
 				</table>
 			</div>
 
 			<div class="detail-section">
-				<h3>Consent Status</h3>
+				<h3>{{ t('docudesk', 'Consent Status') }}</h3>
 				<table class="detail-table">
 					<tr>
-						<td class="label">Consent Status</td>
+						<td class="label">
+							{{ t('docudesk', 'Consent Status') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.consentStatus"
 								:options="consentStatusOptions"
-								input-label="Consent Status" />
+								:input-label="t('docudesk', 'Consent Status')" />
 						</td>
 					</tr>
 					<tr>
-						<td class="label">Notification Status</td>
+						<td class="label">
+							{{ t('docudesk', 'Notification Status') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.notificationStatus"
 								:options="notificationStatusOptions"
-								input-label="Notification Status" />
+								:input-label="t('docudesk', 'Notification Status')" />
 						</td>
 					</tr>
 					<tr>
-						<td class="label">Publication Decision</td>
+						<td class="label">
+							{{ t('docudesk', 'Publication Decision') }}
+						</td>
 						<td>
 							<NcSelect
 								v-model="editData.publicationDecision"
 								:options="publicationDecisionOptions"
-								input-label="Publication Decision" />
+								:input-label="t('docudesk', 'Publication Decision')" />
 						</td>
 					</tr>
 					<tr>
-						<td class="label">Objection Deadline</td>
+						<td class="label">
+							{{ t('docudesk', 'Objection Deadline') }}
+						</td>
 						<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.objectionReceivedAt">
-						<td class="label">Objection Received</td>
+						<td class="label">
+							{{ t('docudesk', 'Objection Received') }}
+						</td>
 						<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
 					</tr>
 					<tr v-if="consentStore.consentItem.legalBasis">
-						<td class="label">Legal Basis</td>
+						<td class="label">
+							{{ t('docudesk', 'Legal Basis') }}
+						</td>
 						<td>{{ consentStore.consentItem.legalBasis }}</td>
 					</tr>
 				</table>
 			</div>
 
 			<div v-if="consentStore.consentItem.objectionReason" class="detail-section">
-				<h3>Objection Reason</h3>
-				<p class="notes-text">{{ consentStore.consentItem.objectionReason }}</p>
+				<h3>{{ t('docudesk', 'Objection Reason') }}</h3>
+				<p class="notes-text">
+					{{ consentStore.consentItem.objectionReason }}
+				</p>
 			</div>
 
 			<div v-if="consentStore.consentItem.notes" class="detail-section">
-				<h3>Notes</h3>
-				<p class="notes-text">{{ consentStore.consentItem.notes }}</p>
+				<h3>{{ t('docudesk', 'Notes') }}</h3>
+				<p class="notes-text">
+					{{ consentStore.consentItem.notes }}
+				</p>
 			</div>
 
 			<div class="detail-actions">
@@ -110,7 +137,7 @@ import { consentStore, navigationStore } from '../../store/store.js'
 						<NcLoadingIcon v-if="consentStore.loading" :size="20" />
 						<ContentSave v-else :size="20" />
 					</template>
-					Save Changes
+					{{ t('docudesk', 'Save Changes') }}
 				</NcButton>
 			</div>
 		</div>
@@ -140,25 +167,25 @@ export default {
 				publicationDecision: null,
 			},
 			consentStatusOptions: [
-				{ label: 'Pending', value: 'pending' },
-				{ label: 'Consent Given', value: 'consent_given' },
-				{ label: 'Objection Received', value: 'objection_received' },
-				{ label: 'No Response', value: 'no_response' },
-				{ label: 'Anonymized', value: 'anonymized' },
+				{ label: t('docudesk', 'Pending'), value: 'pending' },
+				{ label: t('docudesk', 'Consent Given'), value: 'consent_given' },
+				{ label: t('docudesk', 'Objection Received'), value: 'objection_received' },
+				{ label: t('docudesk', 'No Response'), value: 'no_response' },
+				{ label: t('docudesk', 'Anonymized'), value: 'anonymized' },
 			],
 			notificationStatusOptions: [
-				{ label: 'Pending', value: 'pending' },
-				{ label: 'Sent', value: 'sent' },
-				{ label: 'Delivered', value: 'delivered' },
-				{ label: 'Failed', value: 'failed' },
-				{ label: 'Skipped', value: 'skipped' },
+				{ label: t('docudesk', 'Pending'), value: 'pending' },
+				{ label: t('docudesk', 'Sent'), value: 'sent' },
+				{ label: t('docudesk', 'Delivered'), value: 'delivered' },
+				{ label: t('docudesk', 'Failed'), value: 'failed' },
+				{ label: t('docudesk', 'Skipped'), value: 'skipped' },
 			],
 			publicationDecisionOptions: [
-				{ label: 'Pending', value: 'pending' },
-				{ label: 'Anonymize', value: 'anonymize' },
-				{ label: 'Publish with Consent', value: 'publish_with_consent' },
-				{ label: 'Publish Anonymized', value: 'publish_anonymized' },
-				{ label: 'Reject', value: 'reject' },
+				{ label: t('docudesk', 'Pending'), value: 'pending' },
+				{ label: t('docudesk', 'Anonymize'), value: 'anonymize' },
+				{ label: t('docudesk', 'Publish with Consent'), value: 'publish_with_consent' },
+				{ label: t('docudesk', 'Publish Anonymized'), value: 'publish_anonymized' },
+				{ label: t('docudesk', 'Reject'), value: 'reject' },
 			],
 		}
 	},
@@ -204,9 +231,9 @@ export default {
 
 			const result = await consentStore.updateConsent(id, updateData)
 			if (result) {
-				showSuccess('Consent record updated successfully')
+				showSuccess(t('docudesk', 'Consent record updated successfully'))
 			} else {
-				showError('Failed to update consent record')
+				showError(t('docudesk', 'Failed to update consent record'))
 			}
 		},
 	},

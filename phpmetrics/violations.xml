@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pmd version="@package_version@" timestamp="2026-03-19T09:59:07+00:00">
+  <file name="OCA\DocuDesk\Controller\ConsentController">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.69 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Controller\MetricsController">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.51 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Controller\TemplatesController">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.39 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\MetadataService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.42 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\TemplateService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.42 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\TextAnalysisService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.51 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\ConsentService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.5 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\FileListingService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.76 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\PdfService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.39 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\SettingsService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.87 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\Service\AnonymizationService">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.64 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+  <file name="OCA\DocuDesk\EventListener\DocuDeskEventListener">
+    <violation beginline="1" rule="Probably bugged" ruleset="Probably bugged" externalInfoUrl="http://www.phpmetrics.org/documentation/index.html" priority="3">            This component contains in theory 0.59 bugs.
+
+            * Calculation is based on number of operators, operands, cyclomatic complexity
+            * See more details at https://en.wikipedia.org/wiki/Halstead_complexity_measures
+            *  testsuites has dependency to this class.
+
+            Maybe you should check your unit tests for this class.</violation>
+  </file>
+</pmd>

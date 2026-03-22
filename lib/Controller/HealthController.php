@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Controller;
 
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\App\IAppManager;
 use OCP\IDBConnection;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -39,20 +40,22 @@ class HealthController extends Controller
     /**
      * HealthController constructor
      *
-     * @param string          $appName The name of the app
-     * @param IRequest        $request The request object
-     * @param IDBConnection   $db      The database connection
-     * @param LoggerInterface $logger  Logger for error reporting
+     * @param string          $appName    The name of the app
+     * @param IRequest        $request    The request object
+     * @param IDBConnection   $database   The database connection
+     * @param LoggerInterface $logger     Logger for error reporting
+     * @param IAppManager     $appManager The app manager service
      *
      * @return void
      */
     public function __construct(
         string $appName,
         IRequest $request,
-        private readonly IDBConnection $db,
-        private readonly LoggerInterface $logger
+        private readonly IDBConnection $database,
+        private readonly LoggerInterface $logger,
+        private readonly IAppManager $appManager
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -71,21 +74,24 @@ class HealthController extends Controller
 
         // Database check.
         try {
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('1'));
-            $result = $qb->executeQuery();
+            $queryBuilder = $this->database->getQueryBuilder();
+            $queryBuilder->select($queryBuilder->createFunction('1'));
+            $result = $queryBuilder->executeQuery();
             $result->closeCursor();
             $checks['database'] = 'ok';
         } catch (\Exception $e) {
             $checks['database'] = 'error';
-            $status              = 'error';
+            $status = 'error';
             $this->logger->error('Health check: database failed', ['exception' => $e->getMessage()]);
         }
 
         // OpenRegister dependency check.
         try {
-            $appManager = \OCP\Server::get(\OCP\App\IAppManager::class);
-            $checks['openregister'] = $appManager->isEnabledForUser('openregister') === true ? 'ok' : 'missing';
+            $checks['openregister'] = 'missing';
+            if ($this->appManager->isEnabledForUser('openregister') === true) {
+                $checks['openregister'] = 'ok';
+            }
+
             if ($checks['openregister'] !== 'ok') {
                 $status = 'degraded';
             }

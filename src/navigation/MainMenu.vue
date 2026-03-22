@@ -1,21 +1,22 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { navigationStore } from '../store/store.js'
 </script>
 
 <template>
 	<NcAppNavigation>
 		<NcAppNavigationList>
-			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" name="Dashboard" @click="navigationStore.setSelected('dashboard')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
 				<template #icon>
 					<Finance :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" name="Anonymization" @click="navigationStore.setSelected('anonymization')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
 					<ShieldLock :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" name="Consent Management" @click="navigationStore.setSelected('consent')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" :name="t('docudesk', 'Consent Management')" @click="navigationStore.setSelected('consent')">
 				<template #icon>
 					<AccountCheck :size="20" />
 				</template>

@@ -1,16 +1,39 @@
 <template>
 	<div>
+		<!-- Version Information -->
+		<CnVersionInfoCard
+			:app-name="'DocuDesk'"
+			:app-version="appVersion"
+			:is-up-to-date="true"
+			:show-update-button="true"
+			:title="t('docudesk', 'Version Information')"
+			:description="t('docudesk', 'Information about the current DocuDesk installation')">
+			<template #footer>
+				<div class="cn-support-info">
+					<h4>{{ t('docudesk', 'Support') }}</h4>
+					<p>
+						{{ t('docudesk', 'For support, contact us at') }}
+						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
+					</p>
+					<p>
+						{{ t('docudesk', 'For a Service Level Agreement (SLA), contact') }}
+						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
+					</p>
+				</div>
+			</template>
+		</CnVersionInfoCard>
+
 		<NcSettingsSection
 			name="DocuDesk"
-			description="GDPR publication consent management and document metadata enrichment for Nextcloud"
+			:description="t('docudesk', 'GDPR publication consent management and document metadata enrichment for Nextcloud')"
 			doc-url="https://docudesk.app" />
 
 		<NcSettingsSection
-			name="Consent Settings"
-			description="Configure GDPR publication consent tracking settings">
+			:name="t('docudesk', 'Consent Settings')"
+			:description="t('docudesk', 'Configure GDPR publication consent tracking settings')">
 			<div class="setting-item">
 				<div class="input-field">
-					<label for="objection-period">Objection Period (days)</label>
+					<label for="objection-period">{{ t('docudesk', 'Objection Period (days)') }}</label>
 					<input
 						id="objection-period"
 						v-model.number="settings.publication_objection_period_days"
@@ -20,77 +43,77 @@
 						placeholder="28">
 				</div>
 				<span class="setting-description">
-					Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)
+					{{ t('docudesk', 'Minimum number of days entities have to submit an objection before publication (Wet Open Overheid: minimum 4 weeks)') }}
 				</span>
 			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			name="Metadata Enrichment"
-			description="Configure automatic metadata enrichment for documents">
+			:name="t('docudesk', 'Metadata Enrichment')"
+			:description="t('docudesk', 'Configure automatic metadata enrichment for documents')">
 			<div class="setting-item">
 				<div class="setting-label">
-					Language Detection
+					{{ t('docudesk', 'Language Detection') }}
 				</div>
 				<NcCheckboxRadioSwitch
 					:checked="settings.enable_language_detection"
 					type="switch"
 					@update:checked="settings.enable_language_detection = $event" />
 				<div class="setting-description">
-					Automatically detect the language of documents
+					{{ t('docudesk', 'Automatically detect the language of documents') }}
 				</div>
 			</div>
 
 			<div class="setting-item">
 				<div class="setting-label">
-					Keyword Extraction
+					{{ t('docudesk', 'Keyword Extraction') }}
 				</div>
 				<NcCheckboxRadioSwitch
 					:checked="settings.enable_keyword_extraction"
 					type="switch"
 					@update:checked="settings.enable_keyword_extraction = $event" />
 				<div class="setting-description">
-					Automatically extract keywords from document content
+					{{ t('docudesk', 'Automatically extract keywords from document content') }}
 				</div>
 			</div>
 
 			<div class="setting-item">
 				<div class="setting-label">
-					Topic Classification
+					{{ t('docudesk', 'Topic Classification') }}
 				</div>
 				<NcCheckboxRadioSwitch
 					:checked="settings.enable_topic_classification"
 					type="switch"
 					@update:checked="settings.enable_topic_classification = $event" />
 				<div class="setting-description">
-					Automatically classify documents by topic
+					{{ t('docudesk', 'Automatically classify documents by topic') }}
 				</div>
 			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
-			name="Data Storage"
-			description="Configure Open Register integration for consent data storage">
+			:name="t('docudesk', 'Data Storage')"
+			:description="t('docudesk', 'Configure Open Register integration for consent data storage')">
 			<div v-if="!loading">
 				<div v-if="!openRegisterInstalled">
 					<NcNoteCard type="info">
-						Open Registers is not installed. It is required for DocuDesk to function properly.
+						{{ t('docudesk', 'Open Registers is not installed. It is required for DocuDesk to function properly.') }}
 					</NcNoteCard>
 					<NcButton type="primary" @click="openLink('/index.php/settings/apps/organization/openregister', '_blank')">
 						<template #icon>
 							<Restart :size="20" />
 						</template>
-						Install Open Registers
+						{{ t('docudesk', 'Install Open Registers') }}
 					</NcButton>
 				</div>
 
 				<div v-for="type in objectTypes" :key="type">
-					<h3>{{ type === 'publicationConsent' ? 'Publication Consent' : type }}</h3>
+					<h3>{{ type === 'publicationConsent' ? t('docudesk', 'Publication Consent') : type }}</h3>
 					<div class="selectionContainer">
 						<NcSelect
 							v-bind="availableRegistersOptions"
 							v-model="sections[type].selectedRegister"
-							input-label="Register"
+							:input-label="t('docudesk', 'Register')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading"
 							@input="onRegisterChange(type)" />
@@ -99,7 +122,7 @@
 							v-if="sections[type].selectedRegister?.value"
 							v-bind="globalSchemasOptions[sections[type].selectedRegister.value]"
 							v-model="sections[type].selectedSchema"
-							input-label="Schema"
+							:input-label="t('docudesk', 'Schema')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading" />
 
@@ -114,7 +137,7 @@
 								<NcLoadingIcon v-if="loading || sections[type].loading" :size="20" />
 								<Plus v-else :size="20" />
 							</template>
-							Save
+							{{ t('docudesk', 'Save') }}
 						</NcButton>
 					</div>
 				</div>
@@ -124,7 +147,7 @@
 				class="loadingIcon"
 				:size="64"
 				appearance="dark"
-				name="Loading settings" />
+				:name="t('docudesk', 'Loading settings')" />
 		</NcSettingsSection>
 
 		<div class="button-container">
@@ -133,7 +156,7 @@
 					<NcLoadingIcon v-if="saving" :size="20" />
 					<Plus v-else :size="20" />
 				</template>
-				Save All Settings
+				{{ t('docudesk', 'Save All Settings') }}
 			</NcButton>
 		</div>
 	</div>
@@ -141,12 +164,13 @@
 
 <script>
 import { NcSettingsSection, NcNoteCard, NcSelect, NcButton, NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
-	name: 'AdminSettings',
+	name: 'Settings',
 	components: {
 		NcSettingsSection,
 		NcNoteCard,
@@ -154,11 +178,13 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcCheckboxRadioSwitch,
+		CnVersionInfoCard,
 		Plus,
 		Restart,
 	},
 	data() {
 		return {
+			appVersion: document.getElementById('admin-settings')?.dataset?.version || 'Unknown',
 			loading: false,
 			saving: false,
 			openRegisterInstalled: false,
@@ -275,11 +301,11 @@ export default {
 			})
 				.then((response) => response.json())
 				.then(() => {
-					showSuccess('Configuration saved')
+					showSuccess(t('docudesk', 'Configuration saved'))
 				})
 				.catch((err) => {
 					console.error(err)
-					showError('Failed to save configuration')
+					showError(t('docudesk', 'Failed to save configuration'))
 				})
 				.finally(() => {
 					this.saving = false
@@ -310,11 +336,11 @@ export default {
 			})
 				.then((response) => response.json())
 				.then(() => {
-					showSuccess('All settings saved successfully')
+					showSuccess(t('docudesk', 'All settings saved successfully'))
 				})
 				.catch((err) => {
 					console.error(err)
-					showError('Failed to save settings')
+					showError(t('docudesk', 'Failed to save settings'))
 				})
 				.finally(() => {
 					this.saving = false
@@ -327,7 +353,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .selectionContainer {
 	display: grid;
 	grid-gap: 5px;

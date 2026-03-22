@@ -2,9 +2,12 @@
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="PHP_CodeSniffer" xsi:noNamespaceSchemaLocation="phpcs.xsd">
     <description>The coding standard for PHP_CodeSniffer itself, for more config -> for https://github.com/squizlabs/PHP_CodeSniffer/wiki/Configuration-Options.</description>
 
-    <file>README.md</file>
-    <file>src</file>
     <file>lib</file>
+
+    <exclude-pattern>*.js</exclude-pattern>
+    <exclude-pattern>*.vue</exclude-pattern>
+    <exclude-pattern>*.css</exclude-pattern>
+    <exclude-pattern>*.md</exclude-pattern>
 
     <arg name="basepath" value="."/>
     <arg name="colors"/>
@@ -33,6 +36,7 @@
     <rule ref="Squiz.Arrays.ArrayBracketSpacing"/>
     <rule ref="Squiz.ControlStructures.ControlSignature"/>
     <rule ref="Squiz.ControlStructures.ElseIfDeclaration"/>
+    <rule ref="Squiz.PHP.DisallowInlineIf"/>
     <rule ref="Squiz.Commenting.ClosingDeclarationComment"/>
     <rule ref="Squiz.Commenting.BlockComment"/>
     <rule ref="Squiz.Commenting.DocCommentAlignment"/>
@@ -44,7 +48,6 @@
     <!-- Removed the OperatorBracket rule to allow operations without brackets -->
     <rule ref="Squiz.Functions.FunctionDeclarationArgumentSpacing"/>
     <rule ref="Squiz.Operators.ComparisonOperatorUsage"/>
-    <rule ref="Squiz.PHP.DisallowInlineIf"/>
     <rule ref="Squiz.Scope.MethodScope"/>
     <rule ref="Squiz.Strings.ConcatenationSpacing"/>
     <rule ref="Squiz.WhiteSpace.ControlStructureSpacing"/>
@@ -204,4 +207,6 @@
         <severity>0</severity>
     </rule>
 
+    <!-- Disabled: too many false positives on internal method calls across codebase -->
+    <!-- <rule ref="./phpcs-custom-sniffs/CustomSniffs/Sniffs/Functions/NamedParametersSniff.php"/> -->
 </ruleset>

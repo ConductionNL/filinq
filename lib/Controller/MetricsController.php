@@ -3,6 +3,7 @@
  * Metrics Controller
  *
  * Controller for exposing Prometheus metrics in text exposition format.
+ * Delegates count queries to MetricsCollector.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
@@ -21,9 +22,7 @@ use OCA\DocuDesk\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TextPlainResponse;
 use OCP\IConfig;
-use OCP\IDBConnection;
 use OCP\IRequest;
-use Psr\Log\LoggerInterface;
 
 /**
  * Controller for exposing Prometheus metrics
@@ -41,11 +40,10 @@ class MetricsController extends Controller
     /**
      * MetricsController constructor
      *
-     * @param string          $appName The name of the app
-     * @param IRequest        $request The request object
-     * @param IConfig         $config  The config service
-     * @param IDBConnection   $db      The database connection
-     * @param LoggerInterface $logger  Logger for error reporting
+     * @param string           $appName          The name of the app
+     * @param IRequest         $request          The request object
+     * @param IConfig          $config           The config service
+     * @param MetricsCollector $metricsCollector Collector for document/template counts
      *
      * @return void
      */
@@ -53,10 +51,9 @@ class MetricsController extends Controller
         string $appName,
         IRequest $request,
         private readonly IConfig $config,
-        private readonly IDBConnection $db,
-        private readonly LoggerInterface $logger
+        private readonly MetricsCollector $metricsCollector
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -77,9 +74,11 @@ class MetricsController extends Controller
         $ncVersion  = $this->config->getSystemValueString('version', '0.0.0');
 
         // Info gauge.
-        $lines[] = '# HELP docudesk_info Application information';
-        $lines[] = '# TYPE docudesk_info gauge';
-        $lines[] = 'docudesk_info{version="'.$appVersion.'",php_version="'.$phpVersion.'",nextcloud_version="'.$ncVersion.'"} 1';
+        $lines[]     = '# HELP docudesk_info Application information';
+        $lines[]     = '# TYPE docudesk_info gauge';
+        $infoLabels  = 'version="'.$appVersion.'",php_version="'.$phpVersion.'"';
+        $infoLabels .= ',nextcloud_version="'.$ncVersion.'"';
+        $lines[]     = 'docudesk_info{'.$infoLabels.'} 1';
 
         // Up gauge.
         $lines[] = '# HELP docudesk_up Whether the application is up';
@@ -87,25 +86,33 @@ class MetricsController extends Controller
         $lines[] = 'docudesk_up 1';
 
         // Documents total.
-        $documentsTotal = $this->countDocuments();
+        $documentsTotal = $this->metricsCollector->countDocuments();
         $lines[]        = '# HELP docudesk_documents_total Total number of documents';
         $lines[]        = '# TYPE docudesk_documents_total gauge';
         $lines[]        = 'docudesk_documents_total '.$documentsTotal;
 
         // Templates total.
-        $templatesTotal = $this->countTemplates();
+        $templatesTotal = $this->metricsCollector->countTemplates();
         $lines[]        = '# HELP docudesk_templates_total Total number of templates';
         $lines[]        = '# TYPE docudesk_templates_total gauge';
         $lines[]        = 'docudesk_templates_total '.$templatesTotal;
 
         // PDF generations counter.
-        $pdfTotal = (int) $this->config->getAppValue(Application::APP_ID, 'pdf_generations_total', '0');
+        $pdfTotal = (int) $this->config->getAppValue(
+            Application::APP_ID,
+            'pdf_generations_total',
+            '0'
+        );
         $lines[]  = '# HELP docudesk_pdf_generations_total Total PDF generation operations';
         $lines[]  = '# TYPE docudesk_pdf_generations_total counter';
         $lines[]  = 'docudesk_pdf_generations_total '.$pdfTotal;
 
         // Anonymizations counter.
-        $anonTotal = (int) $this->config->getAppValue(Application::APP_ID, 'anonymizations_total', '0');
+        $anonTotal = (int) $this->config->getAppValue(
+            Application::APP_ID,
+            'anonymizations_total',
+            '0'
+        );
         $lines[]   = '# HELP docudesk_anonymizations_total Total anonymization operations';
         $lines[]   = '# TYPE docudesk_anonymizations_total counter';
         $lines[]   = 'docudesk_anonymizations_total '.$anonTotal;
@@ -117,74 +124,6 @@ class MetricsController extends Controller
         return $response;
 
     }//end index()
-
-
-    /**
-     * Count documents managed by DocuDesk via OpenRegister
-     *
-     * @return int The total document count
-     */
-    private function countDocuments(): int
-    {
-        try {
-            $registerId = $this->config->getAppValue(Application::APP_ID, 'document_register', '');
-            $schemaId   = $this->config->getAppValue(Application::APP_ID, 'document_schema', '');
-
-            if ($registerId === '' || $schemaId === '') {
-                return 0;
-            }
-
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('COUNT(*) AS cnt'))
-                ->from('openregister_objects')
-                ->where($qb->expr()->eq('register', $qb->createNamedParameter($registerId)))
-                ->andWhere($qb->expr()->eq('schema', $qb->createNamedParameter($schemaId)));
-
-            $result = $qb->executeQuery();
-            $count  = (int) $result->fetchOne();
-            $result->closeCursor();
-
-            return $count;
-        } catch (\Exception $e) {
-            $this->logger->warning('Could not count documents for metrics', ['exception' => $e->getMessage()]);
-            return 0;
-        }
-
-    }//end countDocuments()
-
-
-    /**
-     * Count templates managed by DocuDesk via OpenRegister
-     *
-     * @return int The total template count
-     */
-    private function countTemplates(): int
-    {
-        try {
-            $registerId = $this->config->getAppValue(Application::APP_ID, 'template_register', '');
-            $schemaId   = $this->config->getAppValue(Application::APP_ID, 'template_schema', '');
-
-            if ($registerId === '' || $schemaId === '') {
-                return 0;
-            }
-
-            $qb = $this->db->getQueryBuilder();
-            $qb->select($qb->createFunction('COUNT(*) AS cnt'))
-                ->from('openregister_objects')
-                ->where($qb->expr()->eq('register', $qb->createNamedParameter($registerId)))
-                ->andWhere($qb->expr()->eq('schema', $qb->createNamedParameter($schemaId)));
-
-            $result = $qb->executeQuery();
-            $count  = (int) $result->fetchOne();
-            $result->closeCursor();
-
-            return $count;
-        } catch (\Exception $e) {
-            $this->logger->warning('Could not count templates for metrics', ['exception' => $e->getMessage()]);
-            return 0;
-        }
-
-    }//end countTemplates()
 
 
 }//end class

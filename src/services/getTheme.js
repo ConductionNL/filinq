@@ -10,17 +10,21 @@
  * @return { 'light' | 'dark' } The current theme, either 'light' or 'dark'.
  */
 export const getTheme = () => {
-    if (document.body.hasAttribute('data-theme-light')) {
-        return 'light'
-    }
+	if (document.body.hasAttribute('data-theme-light')) {
+		return 'light'
+	}
 
-    if (document.body.hasAttribute('data-theme-dark')) {
-        return 'dark'
-    }
+	if (document.body.hasAttribute('data-theme-dark')) {
+		return 'dark'
+	}
 
-    if (document.body.hasAttribute('data-theme-default')) {
-        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-    }
+	if (document.body.hasAttribute('data-theme-default')) {
+		if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+			return 'light'
+		}
 
-    return 'light'
+		return 'dark'
+	}
+
+	return 'light'
 }

@@ -34,11 +34,10 @@ const useLocalLib = fs.existsSync(localLib)
 webpackConfig.resolve.alias = {
 	...webpackConfig.resolve.alias,
 	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
-	// Deduplicate shared packages so the aliased library source uses
-	// the same instances as the app (prevents dual-Pinia / dual-Vue bugs).
 	'vue$': path.resolve(__dirname, 'node_modules/vue'),
 	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
 	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
+	'@nextcloud/dialogs': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs'),
 }
 
 module.exports = webpackConfig
