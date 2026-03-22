@@ -4,7 +4,7 @@
  *
  * Shared service for generating PDF documents from Twig templates and data.
  * Uses mPDF for HTML-to-PDF conversion and delegates template rendering
- * to TemplateRenderer.
+ * to TemplateRenderer. Supports PDF/A-3b archival compliance mode.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -26,6 +26,10 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for generating PDF documents from Twig templates
+ *
+ * Supports standard PDF 1.4 output and PDF/A-3b archival compliance.
+ * When PDF/A mode is enabled, fonts are embedded and print-optimized
+ * CSS is injected automatically.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -63,6 +67,7 @@ class PdfService
      *                                - orientation: P (portrait) or L (landscape). Default: P
      *                                - margin: Array with top, right, bottom, left in mm. Default: 15
      *                                - title: PDF document title metadata. Default: empty
+     *                                - pdfa: Enable PDF/A-3b compliance. Default: false
      *
      * @return string PDF binary content
      *
@@ -78,6 +83,33 @@ class PdfService
         return $this->generatePdf(html: $html, options: $options);
 
     }//end renderPdf()
+
+
+    /**
+     * Render HTML from a Twig template string and data context (for print preview)
+     *
+     * @param string $templateContent Twig template content (HTML with Twig syntax)
+     * @param array  $data            Data context for template rendering
+     * @param array  $options         Options for CSS injection:
+     *                                - format: Page size (A4, A3, Letter, Legal). Default: A4
+     *                                - orientation: P (portrait) or L (landscape). Default: P
+     *
+     * @return string Rendered HTML with print-optimized CSS injected
+     */
+    public function renderHtmlPreview(string $templateContent, array $data=[], array $options=[]): string
+    {
+        $html = $this->templateRenderer->renderTemplate(
+            templateContent: $templateContent,
+            data: $data
+        );
+
+        $format      = $options['format'] ?? 'A4';
+        $orientation = $options['orientation'] ?? 'P';
+        $printCss    = $this->buildPrintCss(format: $format, orientation: $orientation);
+
+        return $printCss.$html;
+
+    }//end renderHtmlPreview()
 
 
     /**
@@ -101,6 +133,9 @@ class PdfService
     /**
      * Build mPDF configuration array from options
      *
+     * When PDF/A mode is enabled, configures mPDF for PDF/A-3b compliance
+     * with embedded DejaVu Sans fonts and automatic PDF/A metadata.
+     *
      * @param string $tempDir The temp directory path
      * @param array  $options PDF configuration options
      *
@@ -109,8 +144,9 @@ class PdfService
     private function buildMpdfConfig(string $tempDir, array $options): array
     {
         $margins = $options['margin'] ?? [];
+        $isPdfA  = ($options['pdfa'] ?? false) === true;
 
-        return [
+        $config = [
             'tempDir'       => $tempDir,
             'format'        => $options['format'] ?? 'A4',
             'orientation'   => $options['orientation'] ?? 'P',
@@ -120,7 +156,92 @@ class PdfService
             'margin_left'   => $margins['left'] ?? 15,
         ];
 
+        if ($isPdfA === true) {
+            $config['PDFA']     = true;
+            $config['PDFAauto'] = true;
+
+            $fontDir = $this->getFontDirectory();
+            if ($fontDir !== null) {
+                $config['fontDir']      = [
+                    $fontDir,
+                ];
+                $config['fontdata']     = [
+                    'dejavusans' => [
+                        'R'  => 'DejaVuSans.ttf',
+                        'B'  => 'DejaVuSans-Bold.ttf',
+                        'I'  => 'DejaVuSans-Oblique.ttf',
+                        'BI' => 'DejaVuSans-BoldOblique.ttf',
+                    ],
+                ];
+                $config['default_font'] = 'dejavusans';
+            }
+        }//end if
+
+        return $config;
+
     }//end buildMpdfConfig()
+
+
+    /**
+     * Get the path to the bundled font directory
+     *
+     * @return string|null The font directory path, or null if not found
+     */
+    private function getFontDirectory(): ?string
+    {
+        $fontDir = dirname(path: __DIR__).'/Fonts';
+        if (is_dir(filename: $fontDir) === true) {
+            return $fontDir;
+        }
+
+        return null;
+
+    }//end getFontDirectory()
+
+
+    /**
+     * Build print-optimized CSS for PDF/A and print preview output
+     *
+     * Generates a style block with @media print rules including page size,
+     * page-break-inside avoidance, and margin normalization.
+     *
+     * @param string $format      Page format (A4, A3, Letter, Legal)
+     * @param string $orientation Page orientation (P for portrait, L for landscape)
+     *
+     * @return string HTML style block with print-optimized CSS
+     */
+    public function buildPrintCss(string $format, string $orientation): string
+    {
+        $orientationName = 'portrait';
+        if ($orientation === 'L') {
+            $orientationName = 'landscape';
+        }
+
+        return '<style>
+@media print {
+    @page {
+        size: '.$format.' '.$orientationName.';
+        margin: 15mm;
+    }
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "DejaVu Sans", sans-serif;
+    }
+    table, figure, img, pre, blockquote {
+        page-break-inside: avoid;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    nav, .no-print {
+        display: none;
+    }
+}
+</style>
+';
+
+    }//end buildPrintCss()
 
 
     /**
@@ -128,6 +249,7 @@ class PdfService
      *
      * Creates the mPDF temp directory if it does not exist,
      * initializes mPDF with the given options, and returns the PDF binary.
+     * When PDF/A mode is enabled, injects print CSS and sets XMP metadata.
      *
      * @param string $html    Rendered HTML content
      * @param array  $options PDF configuration options
@@ -139,16 +261,29 @@ class PdfService
     private function generatePdf(string $html, array $options): string
     {
         $tempDir = '/tmp/mpdf';
-        $this->ensureTempDirectory($tempDir);
+        $this->ensureTempDirectory(tempDir: $tempDir);
 
-        $config = $this->buildMpdfConfig($tempDir, $options);
+        $config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
         $title  = $options['title'] ?? '';
+        $isPdfA = ($options['pdfa'] ?? false) === true;
+
+        if ($isPdfA === true) {
+            $format      = $options['format'] ?? 'A4';
+            $orientation = $options['orientation'] ?? 'P';
+            $printCss    = $this->buildPrintCss(format: $format, orientation: $orientation);
+            $html        = $printCss.$html;
+        }
 
         try {
             $mpdf = new Mpdf(config: $config);
 
             if ($title !== '') {
                 $mpdf->SetTitle($title);
+            }
+
+            if ($isPdfA === true) {
+                $mpdf->SetAuthor('DocuDesk');
+                $mpdf->SetCreator('DocuDesk PDF/A Generator');
             }
 
             $mpdf->WriteHTML(html: $html);
