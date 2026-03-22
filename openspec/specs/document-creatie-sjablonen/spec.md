@@ -18,13 +18,15 @@ Provides document creation from templates by merging zaak/object data into pre-d
 
 ### Data Resolution
 
+Data resolution is implemented in a dedicated `DataResolverService` class at `OCA\DocuDesk\Service\DataResolverService`, reusable by both the document-creatie-sjablonen workflow and the correspondence generation workflow.
+
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DCS-001 | Resolve merge data from OpenRegister objects by register + schema + object UUID | MUST | Planned |
+| DCS-001 | Resolve merge data from OpenRegister objects by register + schema + object UUID via `DataResolverService::resolve()` | MUST | Implemented |
 | DCS-002 | Resolve merge data from external API sources via OpenConnector (e.g., BRP, KVK, BAG) | SHOULD | Planned |
-| DCS-003 | Support nested data resolution: a zaak object references a persoon, which references an adres — all resolved recursively up to 3 levels deep | MUST | Planned |
-| DCS-004 | Data resolution failures return descriptive errors per field, not a generic 500 | MUST | Planned |
-| DCS-005 | Accept ad-hoc data context (JSON object) alongside or instead of object references, merged with resolved data | MUST | Planned |
+| DCS-003 | Support nested data resolution: a zaak object references a persoon, which references an adres — all resolved recursively up to 3 levels deep | MUST | Implemented |
+| DCS-004 | Data resolution failures return descriptive errors per field, not a generic 500 | MUST | Implemented |
+| DCS-005 | Accept ad-hoc data context (JSON object) alongside or instead of object references, merged with resolved data | MUST | Implemented |
 
 ### Template Merge Execution
 

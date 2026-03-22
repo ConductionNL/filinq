@@ -37,6 +37,11 @@ return [
 		// PDF generation route
 		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
 
+		// Correspondence routes
+		['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
+		['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],
+		['name' => 'correspondence#jobStatus', 'url' => 'api/correspondence/jobs/{jobId}', 'verb' => 'GET'],
+
 		// Template routes
 		['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
 		['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],

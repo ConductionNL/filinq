@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "3.0.0"
+        "version": "4.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -35,6 +35,16 @@
                 "description": "Register voor herbruikbare PDF/document templates",
                 "schemas": [
                     "template"
+                ]
+            },
+            "document": {
+                "slug": "document",
+                "title": "Document Register",
+                "version": "1.0.0",
+                "description": "Register voor correspondentie logging en huisstijl configuratie",
+                "schemas": [
+                    "correspondence",
+                    "huisstijl"
                 ]
             }
         },
@@ -343,6 +353,231 @@
                     "autoPublish": false
                 },
                 "searchable": true
+            },
+            "correspondence": {
+                "uri": null,
+                "slug": "correspondence",
+                "title": "Correspondence",
+                "description": "Audit log voor gegenereerde correspondentie. Bevat metadata over welk template is gebruikt, voor welke ontvanger, en het resultaat.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "EmailOutline",
+                "required": [
+                    "templateId",
+                    "recipientId",
+                    "generatedAt",
+                    "format",
+                    "status",
+                    "generatedBy"
+                ],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het gebruikte template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Template ID"
+                    },
+                    "templateName": {
+                        "description": "Naam van het gebruikte template",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Template naam",
+                        "maxLength": 255
+                    },
+                    "recipientId": {
+                        "description": "UUID van het ontvangerobject in OpenRegister",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Ontvanger ID"
+                    },
+                    "recipientType": {
+                        "description": "Type ontvanger",
+                        "type": "string",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Ontvanger type",
+                        "enum": [
+                            "PERSON",
+                            "ORGANIZATION"
+                        ]
+                    },
+                    "caseReference": {
+                        "description": "UUID verwijzing naar de bron zaak/case",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Zaak referentie"
+                    },
+                    "generatedAt": {
+                        "description": "Datum/tijd van generatie (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Gegenereerd op"
+                    },
+                    "format": {
+                        "description": "Uitvoerformaat van het document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Formaat",
+                        "enum": [
+                            "pdf",
+                            "docx",
+                            "html",
+                            "email"
+                        ]
+                    },
+                    "status": {
+                        "description": "Status van de generatie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "generated",
+                            "failed"
+                        ]
+                    },
+                    "generatedBy": {
+                        "description": "Nextcloud gebruikers-ID die de generatie heeft gestart",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Gegenereerd door",
+                        "maxLength": 64
+                    },
+                    "errorMessage": {
+                        "description": "Foutmelding bij mislukte generatie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Foutmelding",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "templateName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "huisstijl": {
+                "uri": null,
+                "slug": "huisstijl",
+                "title": "Huisstijl Configuration",
+                "description": "Configuratie voor organisatie huisstijl: logo, kleuren, kop-/voetteksten en standaard marges voor correspondentie.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "Palette",
+                "required": [],
+                "properties": {
+                    "name": {
+                        "description": "Naam van de huisstijl configuratie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "logo": {
+                        "description": "Logo als base64-gecodeerde string of bestandsreferentie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Logo"
+                    },
+                    "primaryColor": {
+                        "description": "Primaire kleur in CSS-formaat (bijv. #154273)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Primaire kleur",
+                        "maxLength": 25
+                    },
+                    "headerHtml": {
+                        "description": "Twig template voor de paginakoptekst",
+                        "type": "string",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Koptekst HTML",
+                        "format": "html"
+                    },
+                    "footerHtml": {
+                        "description": "Twig template voor de paginavoettekst",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Voettekst HTML",
+                        "format": "html"
+                    },
+                    "defaultMargins": {
+                        "description": "Standaard marges in mm (object met top, right, bottom, left)",
+                        "type": "object",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Standaard marges"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "primaryColor",
+                    "autoPublish": false
+                },
+                "searchable": false
             }
         },
         "objects": []
