@@ -21,6 +21,11 @@ import { navigationStore } from '../store/store.js'
 					<AccountCheck :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'templates' || navigationStore.selected === 'templateDetail'" :name="t('docudesk', 'Templates')" @click="navigationStore.setSelected('templates')">
+				<template #icon>
+					<FileDocumentMultiple :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
@@ -36,6 +41,7 @@ import {
 import Finance from 'vue-material-design-icons/Finance.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
+import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
 
 export default {
 	name: 'MainMenu',
@@ -46,6 +52,7 @@ export default {
 		Finance,
 		AccountCheck,
 		ShieldLock,
+		FileDocumentMultiple,
 	},
 }
 </script>

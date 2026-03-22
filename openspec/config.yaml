@@ -4,31 +4,6 @@ context: |
   Project: DocuDesk
   Repo: ConductionNL/docudesk
   Type: Nextcloud App (PHP backend + Vue 2 frontend)
-  Description: GDPR-compliant document processing — anonymization pipeline, publication consent management, metadata enrichment
-  Key components: AnonymizationService, ConsentService, MetadataService, DocuDeskEventListener
-  Database: PostgreSQL (via OpenRegister's ObjectService for consent data; Nextcloud filesystem for document files)
-  Mount path: /var/www/html/custom_apps/docudesk
-
-  Standards:
-    Compliance: GDPR / AVG for privacy-by-design data processing
-    Legal: Wet Open Overheid (WOO) — minimum 4-week objection period before publication
-    Processing: 100% local — no external cloud services for document processing
-    Data: OpenRegister ObjectService for consent records, OpenRegister schemas for data validation
-
-  Architecture:
-    Pattern: Service-oriented — DocuDesk provides business logic, OpenRegister handles data persistence and text processing
-    Data layer: OpenRegister (consent objects as register objects) + Nextcloud IRootFolder (uploaded files in DocuDesk/ folder)
-    Frontend: Vue 2.7 + Pinia stores with axios calls to DocuDesk API
-    Backend: Controllers delegate to services; services orchestrate OpenRegister (TextExtractionService, FileService, EntityRelationMapper, ObjectService, RiskLevelService)
-    Event-driven: DocuDeskEventListener handles ObjectCreated/Updated/Deleted events from OpenRegister for automatic metadata enrichment
-    Config: docudesk_register.json imported via ConfigurationService::importFromApp() on boot
-
-  Dependencies:
-    Required: OpenRegister >= v0.2.10
-    OpenRegister services used: TextExtractionService, FileService, EntityRelationMapper, RiskLevelService, ObjectService, ConfigurationService, RegisterService
-
-  Shared specs: See ../openspec/specs/ for cross-project conventions
-  Project guidelines: See ../project.md for workspace-wide standards
 
 rules:
   proposal:
