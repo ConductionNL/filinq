@@ -10,18 +10,69 @@ Provides GDPR-compliant publication consent tracking for entities (persons and o
 
 ## Requirements
 
-### Consent Record Creation
+### REQ-CONS-01: Consent Record Creation (Priority: Must)
+
+Consent records are created for detected entities in documents, initialized with pending status and an automatic objection deadline.
+
+#### Scenario: Create consent for a detected person
+- GIVEN a document with detected PERSON entities
+- WHEN a consent request is created via ConsentService for entity "Jan de Vries"
+- THEN a PublicationConsent object is stored in OpenRegister
+- AND the consentStatus is set to "pending"
+- AND the notificationStatus is set to "pending"
+- AND the publicationDecision is set to "pending"
+- AND the objectionDeadline is set to current date + configured objection period days
+
+#### Scenario: Create consent with extra data
+- GIVEN a document entity with additional contact information
+- WHEN createConsentRequest is called with extra fields (contactEmail, contactAddress)
+- THEN the extra fields are merged into the consent record
+- AND the base consent data (statuses, deadline) is preserved
+
+#### Scenario: Custom objection period
+- GIVEN the admin has configured an objection period of 42 days
+- WHEN a consent request is created
+- THEN the objectionDeadline is set to current date + 42 days
+- AND the deadline is stored in ISO 8601 datetime format
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| CONS-001 | Consent records can be created for detected entities in documents via ConsentService | MUST | Implemented |
+| CONS-001 | Consent records can be created for detected entities via ConsentService | MUST | Implemented |
 | CONS-002 | Each consent record links to a document via documentId | MUST | Implemented |
 | CONS-003 | Each consent record captures entityType (PERSON or ORGANIZATION) and entityText | MUST | Implemented |
 | CONS-004 | Consent records are initialized with status `pending` for notificationStatus, consentStatus, and publicationDecision | MUST | Implemented |
 | CONS-005 | An objection deadline is automatically calculated based on the configurable objection period (default 28 days) | MUST | Implemented |
 | CONS-006 | Consent records are stored in OpenRegister via ObjectService using the configured register and schema | MUST | Implemented |
 
-### Consent Status Lifecycle
+### REQ-CONS-02: Consent Status Lifecycle (Priority: Must)
+
+Consent records progress through defined status transitions for consent, notification, and publication decision fields.
+
+#### Scenario: Update consent status to consent_given
+- GIVEN a pending consent record
+- WHEN an administrator updates the consent status to "consent_given"
+- THEN the consent record is updated in OpenRegister
+- AND the updated record is returned with the new status
+
+#### Scenario: Record an objection
+- GIVEN a consent record with pending status
+- WHEN the entity submits an objection with a reason
+- THEN consentStatus transitions to "objection_received"
+- AND objectionReceivedAt is set to the current datetime
+- AND objectionReason stores the provided text
+
+#### Scenario: Notification delivery tracking
+- GIVEN a consent record with notificationStatus "pending"
+- WHEN the notification is sent successfully
+- THEN notificationStatus transitions to "sent"
+- AND when delivery is confirmed, it transitions to "delivered"
+- AND notificationSentAt is set to the send datetime
+
+#### Scenario: Publication decision after objection period
+- GIVEN a consent record where the objection deadline has passed
+- AND consentStatus is "no_response"
+- WHEN the administrator makes a publication decision
+- THEN publicationDecision can be set to "publish_anonymized" or "publish_with_consent"
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
@@ -29,25 +80,241 @@ Provides GDPR-compliant publication consent tracking for entities (persons and o
 | CONS-011 | notificationStatus transitions: `pending` -> `sent` -> `delivered` or `failed`; can also be `skipped` | MUST | Implemented |
 | CONS-012 | publicationDecision options: `pending`, `anonymize`, `publish_with_consent`, `publish_anonymized`, `reject` | MUST | Implemented |
 | CONS-013 | Consent status can be updated via `PUT /api/consents/{id}` | MUST | Implemented |
-| CONS-014 | Objection deadline expiry can be checked programmatically via ConsentService::checkObjectionDeadline() | MUST | Implemented |
+| CONS-014 | Objection deadline expiry can be checked via ConsentService::checkObjectionDeadline() | MUST | Implemented |
 
-### Consent Listing and Querying
+### REQ-CONS-03: Consent Listing and Querying (Priority: Must)
+
+Consent records can be listed, queried by ID, and filtered by document.
+
+#### Scenario: List all consent records
+- GIVEN multiple consent records exist across several documents
+- WHEN GET /api/consents is called
+- THEN all consent records are returned as serialized arrays
+- AND each record includes all status fields and entity information
+
+#### Scenario: Get consent by ID
+- GIVEN a consent record with UUID "abc-123"
+- WHEN GET /api/consents/abc-123 is called
+- THEN the specific consent record is returned with all fields
+
+#### Scenario: Get consents for a specific document
+- GIVEN a document with 5 detected entities and 5 consent records
+- WHEN GET /api/consents/document/{documentId} is called
+- THEN all 5 consent records linked to that document are returned
+
+#### Scenario: Register/schema not configured
+- GIVEN the publicationConsent register and schema are not configured in settings
+- WHEN any consent endpoint is called
+- THEN a 400 error is returned with message "PublicationConsent register/schema not configured"
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | CONS-020 | All consent records can be listed via `GET /api/consents` | MUST | Implemented |
 | CONS-021 | A specific consent record can be retrieved via `GET /api/consents/{id}` | MUST | Implemented |
-| CONS-022 | Consent records for a specific document can be queried via `GET /api/consents/document/{documentId}` | MUST | Implemented |
-| CONS-023 | Consent listing requires the publicationConsent register and schema to be configured in settings | MUST | Implemented |
-| CONS-024 | If register/schema is not configured, a 400 error is returned with a descriptive message | MUST | Implemented |
+| CONS-022 | Consent records for a document can be queried via `GET /api/consents/document/{documentId}` | MUST | Implemented |
+| CONS-023 | Consent listing requires the publicationConsent register and schema to be configured | MUST | Implemented |
+| CONS-024 | If register/schema is not configured, a 400 error is returned | MUST | Implemented |
 
-### WOO Compliance
+### REQ-CONS-04: WOO Objection Period Compliance (Priority: Must)
+
+The objection period complies with Wet Open Overheid requirements for a minimum 4-week notification period before publication.
+
+#### Scenario: Default 28-day objection period
+- GIVEN DocuDesk is configured with the default objection period
+- WHEN a consent record is created
+- THEN the objectionDeadline is 28 days from creation date
+- AND this satisfies the WOO minimum 4-week requirement
+
+#### Scenario: Check if objection deadline has passed
+- GIVEN a consent record created 30 days ago with a 28-day objection period
+- WHEN checkObjectionDeadline() is called
+- THEN it returns true (deadline has passed)
+- AND the publication decision can proceed
+
+#### Scenario: Objection deadline not yet passed
+- GIVEN a consent record created 14 days ago with a 28-day objection period
+- WHEN checkObjectionDeadline() is called
+- THEN it returns false (deadline has not passed)
+- AND publication should wait until the deadline expires
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| CONS-030 | The objection period defaults to 28 days (4 weeks) per Wet Open Overheid requirements | MUST | Implemented |
-| CONS-031 | The objection period is configurable via admin settings (publication_objection_period_days) | MUST | Implemented |
-| CONS-032 | The objection deadline is stored as an ISO 8601 datetime on each consent record | MUST | Implemented |
+| CONS-030 | The objection period defaults to 28 days per WOO requirements | MUST | Implemented |
+| CONS-031 | The objection period is configurable via admin settings | MUST | Implemented |
+| CONS-032 | The objection deadline is stored as ISO 8601 datetime | MUST | Implemented |
+
+### REQ-CONS-05: Controller Read Path Architecture (Priority: Must)
+
+ConsentController uses different service paths for read vs. write operations -- reading directly via ObjectService, writing via ConsentService.
+
+#### Scenario: Controller lists consents via ObjectService
+- GIVEN the consent endpoint is called for listing
+- WHEN ConsentController::index() processes the request
+- THEN it calls `settingsService->getAllSettings()` to get register/schema
+- AND calls `settingsService->getObjectService()` to get ObjectService directly
+- AND queries ObjectService via `searchObjects()` bypassing ConsentService
+
+#### Scenario: Controller updates consent via ConsentService
+- GIVEN a consent update request is received
+- WHEN ConsentController::update() processes the request
+- THEN it delegates to `ConsentService::updateConsentStatus()`
+- AND the update goes through the full service layer
+
+#### Scenario: Controller queries by document via ConsentService
+- GIVEN a document-specific consent query is received
+- WHEN ConsentController::byDocument() processes the request
+- THEN it delegates to `ConsentService::getConsentsByDocument()`
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-040 | `ConsentController::index()` queries ObjectService directly via SettingsService | MUST | Implemented |
+| CONS-041 | `ConsentController::show()` queries ObjectService directly via SettingsService | MUST | Implemented |
+| CONS-042 | `ConsentController::update()` delegates to ConsentService | MUST | Implemented |
+| CONS-043 | `ConsentController::byDocument()` delegates to ConsentService | MUST | Implemented |
+
+### REQ-CONS-06: RBAC and Multitenancy Configuration (Priority: Must)
+
+All consent ObjectService calls currently bypass RBAC and multitenancy, which is a known security concern for multi-tenant deployments.
+
+#### Scenario: Single-tenant deployment
+- GIVEN a single-tenant Nextcloud deployment
+- WHEN consent operations are performed with `_rbac: false` and `_multitenancy: false`
+- THEN all authenticated users can access all consent records
+- AND this is acceptable for single-tenant use
+
+#### Scenario: Multi-tenant deployment concern
+- GIVEN a multi-tenant Nextcloud deployment with multiple organizations
+- WHEN consent operations bypass RBAC and multitenancy
+- THEN users from Organization A could view and modify consent records of Organization B
+- AND this is a security concern that must be addressed
+
+#### Scenario: RBAC bypass scope
+- GIVEN ConsentService and ConsentController perform consent operations
+- WHEN any create, read, update operation is executed
+- THEN `_rbac: false` and `_multitenancy: false` are passed to ObjectService
+- AND no role-based access control is applied
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-044 | All ConsentService ObjectService calls bypass RBAC (`_rbac: false`) | MUST | Bug |
+| CONS-045 | All ConsentService ObjectService calls bypass multitenancy (`_multitenancy: false`) | MUST | Bug |
+| CONS-046 | ConsentController::show() bypasses RBAC when querying directly | MUST | Bug |
+
+### REQ-CONS-07: Consent Creation API Gap (Priority: Must)
+
+ConsentService::createConsentRequest() exists but has no REST API endpoint or automated trigger, making consent records impossible to create via the frontend.
+
+#### Scenario: Attempt to create consent via API
+- GIVEN a frontend user wants to create a consent record for a detected entity
+- WHEN they look for a POST /api/consents endpoint
+- THEN no such endpoint exists
+- AND consent records cannot be created via the REST API
+
+#### Scenario: Event listener does not create consents
+- GIVEN the DocuDeskEventListener handles ObjectCreated events
+- WHEN an object is created in OpenRegister
+- THEN only metadata enrichment is performed
+- AND ConsentService is NOT imported or called by the event listener
+
+#### Scenario: Programmatic consent creation works
+- GIVEN internal PHP code has access to ConsentService
+- WHEN createConsentRequest() is called directly
+- THEN a consent record is created successfully in OpenRegister
+- AND all status fields are initialized to "pending"
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-047 | `ConsentService::createConsentRequest()` exists as a public method | MUST | Implemented |
+| CONS-048 | No API endpoint exists for creating consent records | MUST | Dead Code |
+| CONS-049 | The event listener does NOT trigger consent creation | MUST | Implemented |
+| CONS-050 | Consent records cannot currently be created via REST API or UI | MUST | Bug |
+
+### REQ-CONS-08: Objection Period Configuration Reading (Priority: Must)
+
+ConsentService reads the objection period directly from IAppConfig, bypassing SettingsService.
+
+#### Scenario: Read objection period from config
+- GIVEN the objection period is configured as 42 days in IAppConfig
+- WHEN ConsentService::getObjectionPeriodDays() is called (via ObjectionDeadlineChecker)
+- THEN it reads directly from IAppConfig key 'publication_objection_period_days'
+- AND returns 42
+
+#### Scenario: Default objection period
+- GIVEN no custom objection period is configured
+- WHEN getObjectionPeriodDays() is called
+- THEN it returns the default of 28 days (hardcoded in getValueString)
+
+#### Scenario: Config key duplication risk
+- GIVEN SettingsService also reads the same config key in getAllSettings()
+- WHEN the config key name would change in one place
+- THEN the other place would break silently
+- AND this duplication is a maintenance risk
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-051 | ConsentService reads objection period directly from IAppConfig | MUST | Implemented |
+| CONS-052 | Default objection period is 28 days (hardcoded in getValueString default) | MUST | Implemented |
+
+### REQ-CONS-09: Duplicated ObjectService Resolution Pattern (Priority: Must)
+
+ConsentService and ObjectionDeadlineChecker have their own private getObjectService() methods duplicating the pattern found in SettingsService.
+
+#### Scenario: ConsentService resolves ObjectService
+- GIVEN ConsentService needs to create a consent record
+- WHEN it calls its private `getObjectService()`
+- THEN the same `getInstalledApps()` + `container->get()` pattern is used
+- AND this duplicates the public SettingsService::getObjectService()
+
+#### Scenario: ObjectionDeadlineChecker resolves ObjectService
+- GIVEN ObjectionDeadlineChecker needs to check a deadline
+- WHEN it calls its private `getObjectService()`
+- THEN the same pattern is used again
+- AND this is the third duplication of the same code
+
+#### Scenario: OpenRegister unavailable
+- GIVEN OpenRegister is not installed
+- WHEN any duplicated getObjectService() is called
+- THEN a RuntimeException is thrown with the same pattern across all services
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-053 | ConsentService has its own private `getObjectService()` duplicating SettingsService pattern | MUST | Implemented |
+| CONS-054 | ObjectionDeadlineChecker has its own private `getObjectService()` with the same pattern | MUST | Implemented |
+
+### REQ-CONS-10: Consent UI (Priority: Must)
+
+The consent management UI provides a list view with statistics and a detail view for editing consent records.
+
+#### Scenario: View consent statistics
+- GIVEN 12 consent records exist (3 pending, 7 approved, 2 objected)
+- WHEN the ConsentIndex view loads
+- THEN stat cards display Total: 12, Pending: 3, Approved: 7, Objected: 2
+- AND cards are color-coded (pending: orange, approved: green, objected: red)
+
+#### Scenario: Click consent to view details
+- GIVEN the consent list is displayed
+- WHEN the user clicks on a consent row
+- THEN the ConsentDetail view is displayed
+- AND entity information, consent status dropdowns, and objection details are shown
+- AND a Save button allows updating the consent record
+
+#### Scenario: Empty consent list
+- GIVEN no consent records exist
+- WHEN the ConsentIndex view loads
+- THEN NcEmptyContent is displayed with AccountCheck icon
+- AND guidance text indicates no records exist yet
+
+#### Scenario: Consent store state management
+- GIVEN the consent Pinia store is initialized
+- WHEN consents are fetched
+- THEN the store provides getters: pendingConsents, approvedConsents, objectedConsents, consentStats
+- AND actions: fetchConsents, fetchConsent, updateConsent, fetchConsentsByDocument
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| CONS-055 | Consent list view shows statistics with color-coded cards | MUST | Implemented |
+| CONS-056 | Consent detail view shows editable status dropdowns | MUST | Implemented |
+| CONS-057 | No automated consent creation exists -- manual or future automation needed | MUST | Implemented |
 
 ## Data Model
 
@@ -66,48 +333,12 @@ Defined in `lib/Settings/docudesk_register.json` and stored in OpenRegister.
 | notificationStatus | string (enum) | Yes | `pending`, `sent`, `delivered`, `failed`, `skipped` |
 | notificationSentAt | datetime | No | When notification was sent |
 | consentStatus | string (enum) | Yes | `pending`, `consent_given`, `objection_received`, `no_response`, `anonymized` |
-| objectionDeadline | datetime | No | Deadline for submitting objections (WOO: min 4 weeks) |
+| objectionDeadline | datetime | No | Deadline for objections (WOO: min 4 weeks) |
 | objectionReceivedAt | datetime | No | When objection was received |
 | objectionReason | string (markdown) | No | Reason for objection (max 2000 chars) |
 | publicationDecision | string (enum) | Yes | `pending`, `anonymize`, `publish_with_consent`, `publish_anonymized`, `reject` |
-| legalBasis | string | No | Legal basis for publication (e.g., "Wet Open Overheid art. 3.1", max 500 chars) |
+| legalBasis | string | No | Legal basis for publication (max 500 chars) |
 | notes | string (markdown) | No | Internal process notes (max 2000 chars) |
-
-### Consent Register
-
-| Property | Value |
-|----------|-------|
-| Slug | `consent` |
-| Title | Consent Register |
-| Description | Register voor GDPR publicatie toestemmingen |
-| Schemas | `publicationConsent` |
-
-## User Interface
-
-### Consent Index View (`ConsentIndex.vue`)
-
-- **Stats cards**: Total, Pending, Approved, Objected counts with color-coded borders
-- **Consent table**: Columns for Entity, Type, Consent Status, Notification, Deadline, Decision
-- **Entity type badges**: Color-coded (PERSON = warning/orange, ORGANIZATION = primary/blue)
-- **Status badges**: Color-coded per status value
-- **Click-to-detail**: Clicking a row navigates to ConsentDetail view
-- **Empty state**: NcEmptyContent with AccountCheck icon when no records exist
-- **Loading state**: NcLoadingIcon while fetching
-
-### Consent Detail View (`ConsentDetail.vue`)
-
-- **Entity Information section**: Entity text, type, key, contact email, contact address
-- **Consent Status section**: Editable dropdowns for consent status, notification status, publication decision; read-only objection deadline and received date
-- **Objection Reason section**: Displayed when objection reason exists
-- **Notes section**: Displayed when notes exist
-- **Save button**: Updates consent record via PUT endpoint
-- **Back button**: Returns to consent list
-
-### Frontend Store (`consent.js`)
-
-- Pinia store with `consents` array and `consentItem` for detail view
-- Getters: `pendingConsents`, `approvedConsents`, `objectedConsents`, `consentStats` (total/pending/approved/objected/noResponse/anonymized)
-- Actions: `fetchConsents`, `fetchConsent`, `updateConsent`, `fetchConsentsByDocument`, `setConsentItem`, `clearConsentItem`
 
 ## API Endpoints
 
@@ -118,203 +349,33 @@ Defined in `lib/Settings/docudesk_register.json` and stored in OpenRegister.
 | PUT | `/api/consents/{id}` | Update a consent record |
 | GET | `/api/consents/document/{documentId}` | Get consents for a specific document |
 
-## Scenarios
-
-### Create Consent for Detected Entity
-
-```
-GIVEN a document with detected PERSON entities
-WHEN a consent request is created for an entity
-THEN a PublicationConsent object is stored in OpenRegister
-AND the consentStatus is set to "pending"
-AND the notificationStatus is set to "pending"
-AND the publicationDecision is set to "pending"
-AND the objectionDeadline is set to current date + configured objection period days
-```
-
-### Update Consent Status
-
-```
-GIVEN a pending consent record
-WHEN an administrator updates the consent status to "consent_given"
-THEN the consent record is updated in OpenRegister
-AND the updated record is returned
-AND the local store is updated
-```
-
-### View Consents for a Document
-
-```
-GIVEN a document with multiple detected entities
-WHEN the user queries consents by document ID
-THEN all consent records linked to that document are returned
-AND each record includes its current notification, consent, and publication status
-```
-
-### Check Objection Deadline
-
-```
-GIVEN a consent record with an objection deadline of 28 days from creation
-WHEN the deadline date has passed
-THEN ConsentService::checkObjectionDeadline() returns true
-AND the publication decision can proceed
-```
-
-### Handle Unconfigured Register
-
-```
-GIVEN the publicationConsent register and schema are not configured in settings
-WHEN any consent endpoint is called
-THEN a 400 error is returned with message "PublicationConsent register/schema not configured"
-```
-
-## Internal Implementation Details
-
-### Controller Bypasses ConsentService for Read Operations (Gap 5)
-
-`ConsentController::index()` and `ConsentController::show()` do **not** use ConsentService for reading consent records. Instead, they:
-
-1. Call `$this->settingsService->getAllSettings()` to get the configured register/schema
-2. Call `$this->settingsService->getObjectService()` to get the ObjectService directly
-3. Query ObjectService directly (via `searchObjects()` for index, `find()` for show)
-
-Only `ConsentController::update()` and `ConsentController::byDocument()` delegate to ConsentService.
-
-**Rationale**: The ConsentService read methods (`getConsentsByDocument()`) are less flexible than the direct ObjectService calls used by the controller. The service was designed primarily for write operations and document-scoped queries.
-
-**Implication**: ConsentService is not a complete abstraction layer -- read paths bypass it entirely in the controller.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-040 | `ConsentController::index()` queries ObjectService directly via SettingsService, bypassing ConsentService | MUST | Implemented |
-| CONS-041 | `ConsentController::show()` queries ObjectService directly via SettingsService, bypassing ConsentService | MUST | Implemented |
-| CONS-042 | `ConsentController::update()` delegates to ConsentService::updateConsentStatus() | MUST | Implemented |
-| CONS-043 | `ConsentController::byDocument()` delegates to ConsentService::getConsentsByDocument() | MUST | Implemented |
-
-### RBAC/Multitenancy Bypass (Gap 6)
-
-**All** OpenRegister ObjectService calls in ConsentService and ConsentController pass `_rbac: false` and `_multitenancy: false`. This means:
-
-- **No role-based access control**: Any authenticated user can read/update any consent record regardless of their role or permissions
-- **No organization scoping**: Consent records are not filtered by the user's organization/tenant
-- **Security implication**: In a multi-tenant deployment, users from Organization A could view and modify consent records belonging to Organization B
-
-**Affected calls** (all in ConsentService):
-- `createConsentRequest()`: `saveObject(..., _rbac: false, _multitenancy: false)`
-- `updateConsentStatus()`: `find(..., _rbac: false, _multitenancy: false)` and `saveObject(..., _rbac: false, _multitenancy: false)`
-- `checkObjectionDeadline()`: `find(..., _rbac: false, _multitenancy: false)`
-- `getConsentsByDocument()`: `searchObjects()` (no RBAC params on search)
-
-**Additionally** in ConsentController:
-- `show()`: `find(..., _rbac: false, _multitenancy: false)` via SettingsService::getObjectService()
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-044 | All ConsentService ObjectService calls bypass RBAC (`_rbac: false`) | MUST | Bug |
-| CONS-045 | All ConsentService ObjectService calls bypass multitenancy (`_multitenancy: false`) | MUST | Bug |
-| CONS-046 | ConsentController::show() bypasses RBAC when querying directly via SettingsService | MUST | Bug |
-
-**Recommended fix**: Enable RBAC and multitenancy for production use, or document this as intentional for single-tenant deployments only.
-
-### createConsentRequest() Has No API Endpoint (Gap 7)
-
-`ConsentService::createConsentRequest()` is a public method but has **no corresponding API endpoint** in ConsentController and **no automated trigger**. The event listener (`DocuDeskEventListener`) does NOT call this method -- it only performs metadata enrichment.
-
-This means consent records can only be created by:
-1. Internal PHP code calling ConsentService directly
-2. Future automation that has not been implemented yet
-
-**There is no way for frontend users or API consumers to create consent records through the REST API.**
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-047 | `ConsentService::createConsentRequest()` exists as a public method | MUST | Implemented |
-| CONS-048 | No API endpoint exists for creating consent records (no POST /api/consents) | MUST | Dead Code |
-| CONS-049 | The event listener does NOT trigger consent creation -- only metadata enrichment | MUST | Implemented |
-| CONS-050 | Consent records cannot currently be created via the REST API or UI | MUST | Bug |
-
-### Objection Period Read From IAppConfig Directly (Gap 8)
-
-`ConsentService::getObjectionPeriodDays()` reads the objection period directly from `IAppConfig` using `$this->config->getValueString($this->appName, 'publication_objection_period_days', '28')`.
-
-This bypasses SettingsService, which also reads this same value in `getAllSettings()`. The duplication means:
-- ConsentService has a hard dependency on the config key name
-- If the config key name changes in SettingsService, ConsentService would break silently
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-051 | ConsentService reads objection period directly from IAppConfig, not via SettingsService | MUST | Implemented |
-| CONS-052 | Default objection period is 28 days (hardcoded in getValueString default) | MUST | Implemented |
-
-### Duplicated getObjectService() Pattern (Gap 9)
-
-ConsentService has its own private `getObjectService()` method that duplicates the same pattern found in SettingsService and MetadataService:
-
-```php
-private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
-{
-    if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-    }
-    throw new \RuntimeException('OpenRegister service is not available.');
-}
-```
-
-This identical code exists in 3 services (ConsentService, MetadataService, and as a public method in SettingsService). See also Gap 10 in metadata-enrichment spec.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-053 | ConsentService has its own private `getObjectService()` duplicating SettingsService pattern | MUST | Implemented |
-| CONS-054 | The duplicated method uses the same `getInstalledApps()` + `container->get()` pattern | MUST | Implemented |
-
-**Recommended fix**: Consolidate to use SettingsService::getObjectService() (which is public) instead of each service maintaining its own copy.
-
-### Event Listener Does NOT Trigger Consent Creation (Gap 18)
-
-The `DocuDeskEventListener` handles `ObjectCreatedEvent`, `ObjectUpdatedEvent`, and `ObjectDeletedEvent`, but performs **metadata enrichment only**. It does NOT:
-- Create consent records for detected entities
-- Call `ConsentService::createConsentRequest()`
-- Interact with the consent system in any way
-
-The listener only imports `MetadataService` and `SettingsService` -- `ConsentService` is not imported or referenced at all. The consent flow is entirely disconnected from the event-driven pipeline.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| CONS-055 | Event listener processes only metadata enrichment, not consent creation | MUST | Implemented |
-| CONS-056 | ~~ConsentService is imported but unused in the event listener~~ ConsentService is NOT imported in the event listener -- only MetadataService and SettingsService are imported | MUST | Verified |
-| CONS-057 | No automated consent creation exists -- consent records must be created manually or via future automation | MUST | Implemented |
-
 ## Dependencies
 
 - **OpenRegister ObjectService**: CRUD operations on consent records
-- **Nextcloud IAppConfig**: Storing objection period and register/schema configuration (read directly by ConsentService)
-- **SettingsService**: Retrieving register/schema configuration for consent endpoints; provides ObjectService access for controller read operations
-- **ConsentService**: Write operations (create, update) and document-scoped queries
+- **Nextcloud IAppConfig**: Storing objection period and register/schema configuration
+- **SettingsService**: Register/schema configuration and ObjectService access
+- **ConsentService**: Write operations and document-scoped queries
+- **ObjectionDeadlineChecker**: Deadline calculation and checking
+- **ConsentUpdateHandler**: Update and query delegation
+- **ConsentCrudService**: Controller-level CRUD operations
 
 ### Current Implementation Status
 - **Implemented** with file paths:
-  - `lib/Service/ConsentService.php` -- `createConsentRequest()`, `updateConsentStatus()`, `checkObjectionDeadline()`, `getConsentsByDocument()`, `getObjectionPeriodDays()`, private `getObjectService()`
-  - `lib/Controller/ConsentController.php` -- REST API: `index()`, `show()`, `update()`, `byDocument()` (no `create` endpoint)
-  - `src/views/consent/ConsentIndex.vue` -- consent listing with stats cards and table
-  - `src/views/consent/ConsentDetail.vue` -- consent detail/edit view with status dropdowns
-  - `src/store/modules/consent.js` -- Pinia store with consent CRUD and stats getters
-  - `lib/Settings/docudesk_register.json` -- PublicationConsent schema definition
-  - `appinfo/routes.php` -- routes for GET/PUT consents and document-scoped query
-- **Not yet implemented**:
-  - **No POST /api/consents endpoint** (CONS-048/CONS-050) -- consent records cannot be created via REST API or UI
-  - **No automated consent creation** (CONS-057) -- the event listener only does metadata enrichment, not consent creation
-  - **RBAC/multitenancy disabled** (CONS-044/045/046) -- all ObjectService calls bypass access control
-- **Partial**: The consent system is structurally complete but functionally disconnected -- `createConsentRequest()` is dead code with no trigger
+  - `lib/Service/ConsentService.php` -- consent creation, update, deadline checking
+  - `lib/Service/ConsentCrudService.php` -- controller-level CRUD operations
+  - `lib/Service/ConsentUpdateHandler.php` -- update and query delegation
+  - `lib/Service/ObjectionDeadlineChecker.php` -- deadline calculation and checking
+  - `lib/Controller/ConsentController.php` -- REST API endpoints
+  - `src/views/consent/ConsentIndex.vue` -- consent listing with stats
+  - `src/views/consent/ConsentDetail.vue` -- consent detail/edit view
+  - `src/store/modules/consent.js` -- Pinia store
+  - `lib/Settings/docudesk_register.json` -- PublicationConsent schema
+- **Known issues**:
+  - No POST /api/consents endpoint (CONS-048/050)
+  - RBAC/multitenancy disabled (CONS-044/045/046)
+  - No automated consent creation from entity detection
 
 ### Standards & References
-- **GDPR/AVG**: Consent management for personal data publication (Articles 6, 7, and 21 -- right to object)
-- **WOO (Wet open overheid)**: Article 4.4 requires minimum 4-week objection period before publication. The configurable `publication_objection_period_days` (default 28) satisfies this.
-- **ISO 8601**: Objection deadlines stored in ISO 8601 datetime format
-
-### Specificity Assessment
-- **Specific enough**: The data model and API are well-specified, but the creation flow is a critical gap.
-- **Missing/Ambiguous**: How are consent records actually created? The spec documents `createConsentRequest()` as implemented but there's no trigger. The intended workflow (manual creation? automated from entity detection? triggered from WOO case?) is not specified.
-- **Open questions**:
-  1. Should a `POST /api/consents` endpoint be added?
-  2. Should the event listener trigger consent creation when entities are detected?
-  3. Is the RBAC bypass intentional for single-tenant deployments, or a bug that needs fixing for production?
+- **GDPR/AVG Articles 6, 7, 21**: Consent management and right to object
+- **WOO (Wet open overheid) Article 4.4**: Minimum 4-week objection period
+- **ISO 8601**: Objection deadline datetime format
