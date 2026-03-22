@@ -1,13 +1,18 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { anonymizationStore } from '../../store/store.js'
+import { anonymizationStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
 	<div class="anonymization-content">
-		<h2 class="pageHeader">
-			{{ t('docudesk', 'Anonymization') }}
-		</h2>
+		<div class="page-header-row">
+			<h2 class="pageHeader">
+				{{ t('docudesk', 'Anonymization') }}
+			</h2>
+			<NcButton type="tertiary" @click="navigationStore.setSelected('batchAnonymization')">
+				{{ t('docudesk', 'Batch Mode') }}
+			</NcButton>
+		</div>
 
 		<!-- Step indicator bar -->
 		<div class="step-indicator">
@@ -187,6 +192,13 @@ export default {
 .anonymization-content {
 	padding: 20px;
 	max-width: 800px;
+}
+
+.page-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0;
 }
 
 /* Step indicator */

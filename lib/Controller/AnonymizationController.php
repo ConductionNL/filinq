@@ -211,14 +211,41 @@ class AnonymizationController extends Controller
     public function anonymize(int $fileId): JSONResponse
     {
         try {
-            $params   = $this->request->getParams();
-            $entities = $params['entities'] ?? [];
+            $params        = $this->request->getParams();
+            $entities      = $params['entities'] ?? [];
+            $excludeTypes  = $params['excludeTypes'] ?? [];
+            $minConfidence = isset($params['minConfidence']) ? (float) $params['minConfidence'] : null;
 
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(
                     ['error' => $this->l10n->t('No entities provided for anonymization')],
                     400
                 );
+            }
+
+            // Filter entities by excludeTypes if provided.
+            if (is_array($excludeTypes) === true && empty($excludeTypes) === false) {
+                $entities = array_values(
+                        array_filter(
+                        $entities,
+                        static function (array $entity) use ($excludeTypes): bool {
+                            $type = $entity['type'] ?? $entity['entityType'] ?? '';
+                            return in_array($type, $excludeTypes, true) === false;
+                        }
+                        )
+                        );
+            }
+
+            // Filter entities by minConfidence if provided.
+            if ($minConfidence !== null) {
+                $entities = array_values(
+                        array_filter(
+                        $entities,
+                        static function (array $entity) use ($minConfidence): bool {
+                            return (float) ($entity['confidence'] ?? 0.0) >= $minConfidence;
+                        }
+                        )
+                        );
             }
 
             $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);

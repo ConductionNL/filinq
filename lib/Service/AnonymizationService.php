@@ -103,9 +103,24 @@ class AnonymizationService
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
+            // Get risk level (graceful fallback).
+            $riskLevel = 'unknown';
+            try {
+                $riskLevelService = $this->getOpenRegisterService(
+                    'OCA\OpenRegister\Service\RiskLevelService'
+                );
+                $riskLevel        = $riskLevelService->getRiskLevel($fileId);
+            } catch (RuntimeException $e) {
+                $this->logger->debug(
+                    'RiskLevelService unavailable, using default',
+                    ['fileId' => $fileId]
+                );
+            }
+
             return [
                 'entities'    => $this->entityDetection->normalizeEntities($entities),
                 'entityCount' => count($entities),
+                'riskLevel'   => $riskLevel,
             ];
         } catch (Exception $e) {
             $this->logger->error(

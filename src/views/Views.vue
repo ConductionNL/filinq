@@ -10,6 +10,9 @@ import { navigationStore } from '../store/store.js'
 			<ConsentIndex v-if="navigationStore.selected === 'consent'" />
 			<ConsentDetail v-if="navigationStore.selected === 'consentDetail'" />
 			<AnonymizationWidget v-if="navigationStore.selected === 'anonymization'" />
+			<BatchAnonymizationView v-if="navigationStore.selected === 'batchAnonymization'" />
+			<TemplateIndex v-if="navigationStore.selected === 'templates'" />
+			<TemplateDetail v-if="navigationStore.selected === 'templateDetail'" />
 		</template>
 	</NcAppContent>
 </template>
@@ -21,6 +24,9 @@ import Dashboard from './dashboard/DashboardIndex.vue'
 import ConsentIndex from './consent/ConsentIndex.vue'
 import ConsentDetail from './consent/ConsentDetail.vue'
 import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
+import BatchAnonymizationView from './anonymization/BatchAnonymizationView.vue'
+import TemplateIndex from './templates/TemplateIndex.vue'
+import TemplateDetail from './templates/TemplateDetail.vue'
 
 export default {
 	name: 'Views',
@@ -30,6 +36,9 @@ export default {
 		ConsentIndex,
 		ConsentDetail,
 		AnonymizationWidget,
+		BatchAnonymizationView,
+		TemplateIndex,
+		TemplateDetail,
 	},
 }
 </script>
