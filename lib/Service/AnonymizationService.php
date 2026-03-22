@@ -46,6 +46,7 @@ class AnonymizationService
      * @param ContainerInterface     $container       Container for dependency injection
      * @param IAppManager            $appManager      App manager interface
      * @param EntityDetectionService $entityDetection Entity detection and mapping service
+     * @param OcrService             $ocrService      OCR text extraction service
      *
      * @return void
      */
@@ -53,7 +54,8 @@ class AnonymizationService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly EntityDetectionService $entityDetection
+        private readonly EntityDetectionService $entityDetection,
+        private readonly OcrService $ocrService
     ) {
 
     }//end __construct()
@@ -82,31 +84,56 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
+     * Runs OCR pre-processing for image-based documents before
+     * delegating to OpenRegister's TextExtractionService for entity detection.
+     *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount
+     * @return array<string, mixed> Extraction result with entities, entityCount,
+     *                              ocrProcessed, and optionally ocrConfidence
      *
      * @throws Exception If extraction or detection fails
      */
     public function extractAndDetectEntities(int $fileId): array
     {
         try {
+            // Run OCR pre-processing for scanned/image documents.
+            $ocrResult = $this->ocrService->processFile($fileId);
+
+            if ($ocrResult['ocrProcessed'] === true) {
+                $this->logger->info(
+                    'OCR text extracted before entity detection',
+                    [
+                        'fileId'     => $fileId,
+                        'confidence' => $ocrResult['confidence'],
+                        'textLength' => strlen($ocrResult['text']),
+                    ]
+                );
+            }
+
             $textExtractor = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Service\TextExtractionService'
+                className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
             $textExtractor->extractFile($fileId, true);
 
             $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
 
             $entityRelationMapper = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Db\EntityRelationMapper'
+                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
-            return [
-                'entities'    => $this->entityDetection->normalizeEntities($entities),
-                'entityCount' => count($entities),
+            $result = [
+                'entities'     => $this->entityDetection->normalizeEntities($entities),
+                'entityCount'  => count($entities),
+                'ocrProcessed' => $ocrResult['ocrProcessed'],
             ];
+
+            if ($ocrResult['ocrProcessed'] === true) {
+                $result['ocrConfidence'] = $ocrResult['confidence'];
+            }
+
+            return $result;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to extract and detect entities: '.$e->getMessage(),
@@ -135,7 +162,7 @@ class AnonymizationService
     public function anonymizeDocument(int $fileId, array $entities): array
     {
         try {
-            $fileService    = $this->getOpenRegisterService('OCA\OpenRegister\Service\FileService');
+            $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
             $result         = $fileService->anonymizeDocument($node, $mappedEntities);

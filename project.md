@@ -52,6 +52,7 @@ DocuDesk is a Nextcloud app for GDPR-compliant document processing, publication 
 | Dashboard | Consent stats cards, recent activity list, quick anonymization widget | Done |
 | Dashboard Widgets | AnonymizationWidget and FileEntitiesWidget for Nextcloud Dashboard | Done |
 | Risk Level Assessment | Risk level evaluation per file via OpenRegister RiskLevelService | Done |
+| OCR Document Scanning | Tesseract OCR for scanned documents and images, integrated into anonymization pipeline | Done |
 
 ### Planned
 
