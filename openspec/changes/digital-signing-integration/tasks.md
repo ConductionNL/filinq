@@ -55,8 +55,8 @@
 
 ## 9. Quality & Testing
 
-- [ ] 9.1 Run `composer check:strict` and fix all PHPCS, PHPMD, Psalm, and PHPStan issues in new PHP files
-- [ ] 9.2 Add PHPUnit tests for SigningService status machine transitions
-- [ ] 9.3 Add PHPUnit tests for SigningAuditService immutability enforcement
-- [ ] 9.4 Verify all new routes are accessible and return expected response shapes
-- [ ] 9.5 Test with nldesign theme enabled to verify WCAG AA compliance of signing UI components
+- [x] 9.1 Run `composer check:strict` and fix all PHPCS, PHPMD, Psalm, and PHPStan issues in new PHP files
+- [x] 9.2 Add PHPUnit tests for SigningService status machine transitions
+- [x] 9.3 Add PHPUnit tests for SigningAuditService immutability enforcement
+- [x] 9.4 Verify all new routes are accessible and return expected response shapes
+- [x] 9.5 Test with nldesign theme enabled to verify WCAG AA compliance of signing UI components
