@@ -34,6 +34,16 @@ return [
 		['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
 		['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
 
+		// Batch anonymization routes
+		['name' => 'batch_anonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchExtract', 'url' => 'api/anonymization/batch/{batchId}/extract', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchStatus', 'url' => 'api/anonymization/batch/{batchId}/status', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
+
 		// PDF generation route
 		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
 
@@ -43,6 +53,17 @@ return [
 		['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
 		['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
 		['name' => 'templates#destroy', 'url' => 'api/templates/{id}', 'verb' => 'DELETE'],
+
+		// Signing routes
+		['name' => 'signing#createRequest', 'url' => 'api/signing/requests', 'verb' => 'POST'],
+		['name' => 'signing#listRequests', 'url' => 'api/signing/requests', 'verb' => 'GET'],
+		['name' => 'signing#showRequest', 'url' => 'api/signing/requests/{id}', 'verb' => 'GET'],
+		['name' => 'signing#cancelRequest', 'url' => 'api/signing/requests/{id}', 'verb' => 'DELETE'],
+		['name' => 'signing#sign', 'url' => 'api/signing/requests/{id}/sign', 'verb' => 'POST'],
+		['name' => 'signing#decline', 'url' => 'api/signing/requests/{id}/decline', 'verb' => 'POST'],
+		['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
+		['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
+		['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
 		// SPA catch-all — serves the Vue app for any frontend route (history mode)
 		['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],

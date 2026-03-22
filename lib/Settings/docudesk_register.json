@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "3.0.0"
+        "version": "4.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -26,6 +26,17 @@
                 "description": "Register voor GDPR publicatie toestemmingen",
                 "schemas": [
                     "publicationConsent"
+                ]
+            },
+            "signing": {
+                "slug": "signing",
+                "title": "Signing Register",
+                "version": "1.0.0",
+                "description": "Register voor digitale ondertekeningsverzoeken, ondertekeningsrecords en auditlogs",
+                "schemas": [
+                    "signingRequest",
+                    "signerRecord",
+                    "signingAuditEntry"
                 ]
             },
             "templates": {
@@ -342,6 +353,85 @@
                     "objectDescriptionField": "description",
                     "autoPublish": false
                 },
+                "searchable": true
+            },
+            "signingRequest": {
+                "uri": null,
+                "slug": "signingRequest",
+                "title": "Signing Request",
+                "description": "Ondertekeningsverzoek voor een document",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileSign",
+                "required": ["documentFileId", "documentName", "initiatorUserId", "signatureLevel", "signingMode", "status", "provider"],
+                "properties": {
+                    "documentFileId": {"description": "Nextcloud bestand-ID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": false, "title": "Document ID"},
+                    "documentName": {"description": "Naam document", "type": "string", "required": true, "visible": true, "order": 2, "facetable": false, "title": "Documentnaam", "maxLength": 255},
+                    "initiatorUserId": {"description": "Initiator gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 3, "facetable": true, "title": "Initiator"},
+                    "signatureLevel": {"description": "eIDAS niveau", "type": "string", "required": true, "visible": true, "order": 4, "facetable": true, "title": "Niveau", "enum": ["SES", "AdES", "QES"], "default": "SES"},
+                    "signingMode": {"description": "Ondertekeningsvolgorde", "type": "string", "required": true, "visible": true, "order": 5, "facetable": true, "title": "Modus", "enum": ["sequential", "parallel"], "default": "sequential"},
+                    "status": {"description": "Status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["DRAFT", "PENDING", "IN_PROGRESS", "COMPLETED", "DECLINED", "EXPIRED", "CANCELLED"], "default": "DRAFT"},
+                    "provider": {"description": "Provider", "type": "string", "required": true, "visible": true, "order": 7, "facetable": true, "title": "Provider", "enum": ["native", "validsign", "docusign", "adobesign", "libresign"], "default": "native"},
+                    "deadline": {"description": "Deadline (ISO 8601)", "type": "string", "format": "date-time", "visible": true, "order": 8, "facetable": false, "title": "Deadline"},
+                    "signerIds": {"description": "SignerRecord UUID's", "type": "array", "visible": true, "order": 9, "facetable": false, "title": "Ondertekenaars"}
+                },
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
+                "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
+                "searchable": true
+            },
+            "signerRecord": {
+                "uri": null,
+                "slug": "signerRecord",
+                "title": "Signer Record",
+                "description": "Individueel ondertekeningsrecord",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "AccountEdit",
+                "required": ["signingRequestId", "userId", "displayName", "status"],
+                "properties": {
+                    "signingRequestId": {"description": "Ondertekeningsverzoek UUID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Verzoek ID"},
+                    "userId": {"description": "Gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 2, "facetable": true, "title": "Gebruiker"},
+                    "displayName": {"description": "Weergavenaam", "type": "string", "required": true, "visible": true, "order": 3, "facetable": false, "title": "Naam", "maxLength": 255},
+                    "email": {"description": "E-mailadres", "type": "string", "format": "email", "visible": true, "order": 4, "facetable": false, "title": "E-mail", "maxLength": 255},
+                    "order": {"description": "Volgorde", "type": "integer", "visible": true, "order": 5, "facetable": false, "title": "Volgorde", "default": 0},
+                    "status": {"description": "Status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["PENDING", "SIGNED", "DECLINED", "EXPIRED", "CANCELLED"], "default": "PENDING"},
+                    "signedAt": {"description": "Datum ondertekening", "type": "string", "format": "date-time", "visible": true, "order": 7, "facetable": false, "title": "Ondertekend op"},
+                    "declineReason": {"description": "Reden weigering", "type": "string", "visible": true, "order": 8, "facetable": false, "title": "Reden weigering", "maxLength": 2000},
+                    "ipAddress": {"description": "IP-adres", "type": "string", "visible": true, "order": 9, "facetable": false, "title": "IP-adres", "maxLength": 45},
+                    "signatureData": {"description": "Handtekeninggegevens (base64)", "type": "string", "visible": false, "order": 10, "facetable": false, "title": "Handtekeninggegevens"}
+                },
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
+                "configuration": {"objectNameField": "displayName", "objectDescriptionField": "status", "autoPublish": false},
+                "searchable": true
+            },
+            "signingAuditEntry": {
+                "uri": null,
+                "slug": "signingAuditEntry",
+                "title": "Signing Audit Entry",
+                "description": "Onveranderbaar auditlogrecord (Archiefwet 1995, min. 10 jaar)",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ShieldCheck",
+                "required": ["signingRequestId", "action", "actorUserId", "actorDisplayName", "timestamp"],
+                "properties": {
+                    "signingRequestId": {"description": "Ondertekeningsverzoek UUID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Verzoek ID"},
+                    "action": {"description": "Actie", "type": "string", "required": true, "visible": true, "order": 2, "facetable": true, "title": "Actie", "enum": ["CREATED", "SIGNED", "DECLINED", "CANCELLED", "EXPIRED", "COMPLETED", "VIEWED"]},
+                    "actorUserId": {"description": "Actor gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 3, "facetable": true, "title": "Actor"},
+                    "actorDisplayName": {"description": "Actornaam", "type": "string", "required": true, "visible": true, "order": 4, "facetable": false, "title": "Actornaam", "maxLength": 255},
+                    "timestamp": {"description": "Tijdstip (ISO 8601)", "type": "string", "format": "date-time", "required": true, "visible": true, "order": 5, "facetable": false, "title": "Tijdstip"},
+                    "ipAddress": {"description": "IP-adres", "type": "string", "visible": true, "order": 6, "facetable": false, "title": "IP-adres", "maxLength": 45},
+                    "signatureLevel": {"description": "eIDAS niveau", "type": "string", "visible": true, "order": 7, "facetable": true, "title": "Niveau", "enum": ["SES", "AdES", "QES"]},
+                    "provider": {"description": "Provider", "type": "string", "visible": true, "order": 8, "facetable": true, "title": "Provider"},
+                    "metadata": {"description": "Metadata (JSON)", "type": "object", "visible": true, "order": 9, "facetable": false, "title": "Metadata"}
+                },
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": true,
+                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
+                "configuration": {"objectNameField": "action", "objectDescriptionField": "actorDisplayName", "autoPublish": false},
                 "searchable": true
             }
         },
