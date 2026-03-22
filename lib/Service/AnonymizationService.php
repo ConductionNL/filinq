@@ -84,7 +84,7 @@ class AnonymizationService
      *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount
+     * @return array<string, mixed> Extraction result with entities, entityCount, riskLevel
      *
      * @throws Exception If extraction or detection fails
      */
@@ -92,20 +92,23 @@ class AnonymizationService
     {
         try {
             $textExtractor = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Service\TextExtractionService'
+                className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
             $textExtractor->extractFile($fileId, true);
 
             $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
 
             $entityRelationMapper = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Db\EntityRelationMapper'
+                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+            $riskLevel = $this->getRiskLevelForFile(fileId: $fileId);
 
             return [
                 'entities'    => $this->entityDetection->normalizeEntities($entities),
                 'entityCount' => count($entities),
+                'riskLevel'   => $riskLevel,
             ];
         } catch (Exception $e) {
             $this->logger->error(
@@ -123,6 +126,31 @@ class AnonymizationService
 
 
     /**
+     * Get risk level for a file, with graceful fallback
+     *
+     * @param int $fileId The Nextcloud file ID
+     *
+     * @return string The risk level or "unknown"
+     */
+    private function getRiskLevelForFile(int $fileId): string
+    {
+        try {
+            $riskLevelService = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Service\RiskLevelService'
+            );
+            return $riskLevelService->getRiskLevel($fileId);
+        } catch (RuntimeException $e) {
+            $this->logger->debug(
+                'RiskLevelService unavailable, using default',
+                ['fileId' => $fileId]
+            );
+            return 'unknown';
+        }
+
+    }//end getRiskLevelForFile()
+
+
+    /**
      * Anonymize entities in a document
      *
      * @param int                         $fileId   The Nextcloud file ID
@@ -135,7 +163,7 @@ class AnonymizationService
     public function anonymizeDocument(int $fileId, array $entities): array
     {
         try {
-            $fileService    = $this->getOpenRegisterService('OCA\OpenRegister\Service\FileService');
+            $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
             $result         = $fileService->anonymizeDocument($node, $mappedEntities);
