@@ -4,98 +4,187 @@ import { consentStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="consent-index">
-		<h2 class="pageHeader">
-			{{ t('docudesk', 'Consent Management') }}
-		</h2>
+	<CnIndexPage
+		ref="indexPage"
+		:title="t('docudesk', 'Consent Management')"
+		:description="t('docudesk', 'Manage publication consent records for detected entities')"
+		:show-title="true"
+		:objects="consentStore.consents"
+		:columns="tableColumns"
+		:pagination="paginationData"
+		:loading="consentStore.loading"
+		:selectable="false"
+		:show-edit-action="false"
+		:show-copy-action="false"
+		:show-delete-action="false"
+		:show-mass-import="false"
+		:show-mass-export="false"
+		:show-mass-copy="false"
+		:show-mass-delete="false"
+		:show-view-toggle="false"
+		:show-add="false"
+		row-key="id"
+		:empty-text="emptyContentName"
+		:refreshing="isRefreshing"
+		@refresh="handleRefresh"
+		@page-changed="onPageChanged"
+		@page-size-changed="onPageSizeChanged"
+		@row-click="viewConsent">
+		<!-- Stats above the table -->
+		<template #above-table>
+			<div class="consent-stats">
+				<CnStatsBlock
+					:title="t('docudesk', 'Total')"
+					:count="consentStore.consentStats.total"
+					:count-label="t('docudesk', 'records')"
+					variant="default"
+					horizontal
+					show-zero-count />
+				<CnStatsBlock
+					:title="t('docudesk', 'Pending')"
+					:count="consentStore.consentStats.pending"
+					:count-label="t('docudesk', 'pending')"
+					variant="warning"
+					horizontal
+					show-zero-count />
+				<CnStatsBlock
+					:title="t('docudesk', 'Approved')"
+					:count="consentStore.consentStats.approved"
+					:count-label="t('docudesk', 'approved')"
+					variant="success"
+					horizontal
+					show-zero-count />
+				<CnStatsBlock
+					:title="t('docudesk', 'Objected')"
+					:count="consentStore.consentStats.objected"
+					:count-label="t('docudesk', 'objected')"
+					variant="error"
+					horizontal
+					show-zero-count />
+			</div>
+		</template>
 
-		<div class="consent-stats">
-			<div class="stat-card">
-				<span class="stat-number">{{ consentStore.consentStats.total }}</span>
-				<span class="stat-label">{{ t('docudesk', 'Total') }}</span>
-			</div>
-			<div class="stat-card stat-pending">
-				<span class="stat-number">{{ consentStore.consentStats.pending }}</span>
-				<span class="stat-label">{{ t('docudesk', 'Pending') }}</span>
-			</div>
-			<div class="stat-card stat-approved">
-				<span class="stat-number">{{ consentStore.consentStats.approved }}</span>
-				<span class="stat-label">{{ t('docudesk', 'Approved') }}</span>
-			</div>
-			<div class="stat-card stat-objected">
-				<span class="stat-number">{{ consentStore.consentStats.objected }}</span>
-				<span class="stat-label">{{ t('docudesk', 'Objected') }}</span>
-			</div>
-		</div>
+		<!-- Entity type badge -->
+		<template #column-entityType="{ row }">
+			<CnStatusBadge
+				:label="row.entityType || t('docudesk', 'Unknown')"
+				:color-map="entityTypeColorMap" />
+		</template>
 
-		<div v-if="consentStore.loading" class="loading">
-			<NcLoadingIcon :size="64" appearance="dark" :name="t('docudesk', 'Loading consents')" />
-		</div>
+		<!-- Consent status badge -->
+		<template #column-consentStatus="{ row }">
+			<CnStatusBadge
+				:label="formatStatus(row.consentStatus)"
+				:color-map="consentStatusColorMap" />
+		</template>
 
-		<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-			<NcEmptyContent :name="t('docudesk', 'No consent records')" :description="t('docudesk', 'No publication consent records found. Consent records are created when entities are detected in documents.')">
+		<!-- Notification status badge -->
+		<template #column-notificationStatus="{ row }">
+			<CnStatusBadge
+				:label="formatStatus(row.notificationStatus)"
+				:color-map="notificationStatusColorMap" />
+		</template>
+
+		<!-- Deadline column -->
+		<template #column-objectionDeadline="{ row }">
+			{{ formatDate(row.objectionDeadline) }}
+		</template>
+
+		<!-- Publication decision badge -->
+		<template #column-publicationDecision="{ row }">
+			<CnStatusBadge
+				:label="formatDecision(row.publicationDecision)"
+				:color-map="decisionColorMap" />
+		</template>
+
+		<!-- Row actions: view detail -->
+		<template #row-actions="{ row }">
+			<NcActions>
 				<template #icon>
-					<AccountCheck :size="64" />
+					<DotsHorizontal :size="20" />
 				</template>
-			</NcEmptyContent>
-		</div>
-
-		<div v-else class="consent-list">
-			<table class="consent-table">
-				<thead>
-					<tr>
-						<th>{{ t('docudesk', 'Entity') }}</th>
-						<th>{{ t('docudesk', 'Type') }}</th>
-						<th>{{ t('docudesk', 'Consent Status') }}</th>
-						<th>{{ t('docudesk', 'Notification') }}</th>
-						<th>{{ t('docudesk', 'Deadline') }}</th>
-						<th>{{ t('docudesk', 'Decision') }}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="consent in consentStore.consents"
-						:key="consent.id || consent.uuid"
-						class="consent-row"
-						@click="viewConsent(consent)">
-						<td>{{ consent.entityText }}</td>
-						<td>
-							<span class="badge" :class="'badge-' + (consent.entityType || '').toLowerCase()">
-								{{ consent.entityType }}
-							</span>
-						</td>
-						<td>
-							<span class="badge" :class="'status-' + (consent.consentStatus || 'pending')">
-								{{ formatStatus(consent.consentStatus) }}
-							</span>
-						</td>
-						<td>
-							<span class="badge" :class="'notification-' + (consent.notificationStatus || 'pending')">
-								{{ formatStatus(consent.notificationStatus) }}
-							</span>
-						</td>
-						<td>{{ formatDate(consent.objectionDeadline) }}</td>
-						<td>
-							<span class="badge" :class="'decision-' + (consent.publicationDecision || 'pending')">
-								{{ formatDecision(consent.publicationDecision) }}
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+				<NcActionButton close-after-click @click="viewConsent(row)">
+					<template #icon>
+						<Eye :size="20" />
+					</template>
+					{{ t('docudesk', 'View Details') }}
+				</NcActionButton>
+			</NcActions>
+		</template>
+	</CnIndexPage>
 </template>
 
 <script>
-import { NcLoadingIcon, NcEmptyContent } from '@nextcloud/vue'
-import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
+import { NcActions, NcActionButton } from '@nextcloud/vue'
+import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
+import Eye from 'vue-material-design-icons/Eye.vue'
 
 export default {
 	name: 'ConsentIndex',
 	components: {
-		NcLoadingIcon,
-		NcEmptyContent,
-		AccountCheck,
+		CnIndexPage,
+		CnStatsBlock,
+		CnStatusBadge,
+		NcActions,
+		NcActionButton,
+		DotsHorizontal,
+		Eye,
+	},
+	data() {
+		return {
+			isRefreshing: false,
+			currentPage: 1,
+			pageSize: 20,
+			entityTypeColorMap: {
+				person: 'warning',
+				organization: 'primary',
+			},
+			consentStatusColorMap: {
+				[t('docudesk', 'Pending')]: 'default',
+				[t('docudesk', 'Approved')]: 'success',
+				[t('docudesk', 'Objected')]: 'error',
+				[t('docudesk', 'No Response')]: 'warning',
+				[t('docudesk', 'Anonymized')]: 'primary',
+			},
+			notificationStatusColorMap: {
+				[t('docudesk', 'Pending')]: 'default',
+				[t('docudesk', 'Sent')]: 'primary',
+				[t('docudesk', 'Delivered')]: 'success',
+				[t('docudesk', 'Failed')]: 'error',
+				[t('docudesk', 'Skipped')]: 'warning',
+			},
+			decisionColorMap: {
+				[t('docudesk', 'Pending')]: 'default',
+				[t('docudesk', 'Publish')]: 'success',
+				[t('docudesk', 'Publish Anonymized')]: 'primary',
+				[t('docudesk', 'Anonymize')]: 'warning',
+				[t('docudesk', 'Rejected')]: 'error',
+			},
+		}
+	},
+	computed: {
+		tableColumns() {
+			return [
+				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
+				{ key: 'entityType', label: t('docudesk', 'Type'), sortable: true },
+				{ key: 'consentStatus', label: t('docudesk', 'Consent Status'), sortable: true },
+				{ key: 'notificationStatus', label: t('docudesk', 'Notification'), sortable: true },
+				{ key: 'objectionDeadline', label: t('docudesk', 'Deadline'), sortable: true },
+				{ key: 'publicationDecision', label: t('docudesk', 'Decision'), sortable: true },
+			]
+		},
+		paginationData() {
+			const total = consentStore.consents.length
+			const pages = Math.ceil(total / this.pageSize)
+			return { page: this.currentPage, pages, total, limit: this.pageSize }
+		},
+		emptyContentName() {
+			if (consentStore.error) {
+				return consentStore.error
+			}
+			return t('docudesk', 'No consent records found')
+		},
 	},
 	mounted() {
 		consentStore.fetchConsents()
@@ -104,6 +193,21 @@ export default {
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
 			navigationStore.setSelected('consentDetail')
+		},
+		async handleRefresh() {
+			this.isRefreshing = true
+			try {
+				await consentStore.fetchConsents()
+			} finally {
+				this.isRefreshing = false
+			}
+		},
+		onPageChanged(page) {
+			this.currentPage = page
+		},
+		onPageSizeChanged(size) {
+			this.pageSize = size
+			this.currentPage = 1
 		},
 		formatStatus(status) {
 			const map = {
@@ -142,105 +246,10 @@ export default {
 </script>
 
 <style scoped>
-.consent-index {
-	padding: 20px;
-}
-
 .consent-stats {
 	display: flex;
 	gap: 16px;
-	margin-bottom: 24px;
+	margin-bottom: 16px;
 	flex-wrap: wrap;
-}
-
-.stat-card {
-	padding: 16px 24px;
-	border-radius: 8px;
-	border: 1px solid var(--color-border);
-	background-color: var(--color-main-background);
-	text-align: center;
-	min-width: 120px;
-}
-
-.stat-number {
-	display: block;
-	font-size: 2rem;
-	font-weight: bold;
-	color: var(--color-main-text);
-}
-
-.stat-label {
-	display: block;
-	font-size: 0.85rem;
-	color: var(--color-text-maxcontrast);
-	margin-top: 4px;
-}
-
-.stat-pending { border-left: 4px solid var(--color-warning); }
-.stat-approved { border-left: 4px solid var(--color-success); }
-.stat-objected { border-left: 4px solid var(--color-error); }
-
-.consent-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.consent-table th {
-	text-align: left;
-	padding: 12px 8px;
-	border-bottom: 2px solid var(--color-border);
-	font-weight: bold;
-	color: var(--color-main-text);
-}
-
-.consent-row {
-	cursor: pointer;
-}
-
-.consent-row:hover {
-	background-color: var(--color-background-hover);
-}
-
-.consent-row td {
-	padding: 10px 8px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 12px;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
-
-.badge-person { background-color: var(--color-warning); color: white; }
-.badge-organization { background-color: var(--color-primary); color: white; }
-
-.status-pending { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.status-consent_given { background-color: var(--color-success); color: white; }
-.status-objection_received { background-color: var(--color-error); color: white; }
-.status-no_response { background-color: var(--color-warning); color: white; }
-.status-anonymized { background-color: var(--color-primary); color: white; }
-
-.notification-pending { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.notification-sent { background-color: var(--color-primary); color: white; }
-.notification-delivered { background-color: var(--color-success); color: white; }
-.notification-failed { background-color: var(--color-error); color: white; }
-
-.decision-pending { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.decision-publish_with_consent { background-color: var(--color-success); color: white; }
-.decision-publish_anonymized { background-color: var(--color-primary); color: white; }
-.decision-anonymize { background-color: var(--color-warning); color: white; }
-.decision-reject { background-color: var(--color-error); color: white; }
-
-.loading {
-	display: flex;
-	justify-content: center;
-	padding: 40px;
-}
-
-.empty-state {
-	padding: 40px;
 }
 </style>
