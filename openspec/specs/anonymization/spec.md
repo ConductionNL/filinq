@@ -25,12 +25,13 @@ Provides a complete document anonymization pipeline: upload files to a user-scop
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| ANON-010 | Text extraction is performed via OpenRegister's `TextExtractionService::extractFile()` | MUST | Implemented |
+| ANON-010 | Text extraction is performed via OpenRegister's `TextExtractionService::extractFile()`, with OCR pre-processing for image-based documents via `OcrService::processFile()` | MUST | Implemented |
 | ANON-011 | Entity recognition runs during text extraction using the method configured in OpenRegister file settings (Presidio, OpenAnonymiser, or hybrid) | MUST | Implemented |
 | ANON-012 | Full entity details are retrieved via `EntityRelationMapper::findEntitiesForFile()` | MUST | Implemented |
 | ANON-013 | Entities are normalized to a consistent format: `type`, `value`, `confidence` | MUST | Implemented |
 | ANON-014 | Extraction endpoint is `POST /api/anonymization/extract/{fileId}` | MUST | Implemented |
 | ANON-015 | Response includes `entities` array and `entityCount` | MUST | Implemented |
+| ANON-016 | Response includes `ocrProcessed` boolean and `ocrConfidence` (0-100) when OCR was used | MUST | Implemented |
 
 ### Document Anonymization
 

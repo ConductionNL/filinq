@@ -57,6 +57,16 @@ Provides configuration management for DocuDesk, including OpenRegister integrati
 | SET-042 | Toggle topic classification on/off (`enable_topic_classification`, default: enabled) | MUST | Implemented |
 | SET-043 | Toggles use NcCheckboxRadioSwitch components with descriptive labels | MUST | Implemented |
 
+### OCR Document Scanning Settings
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| SET-090 | Toggle OCR processing on/off (`ocr_enabled`, default: enabled) | MUST | Implemented |
+| SET-091 | Configure OCR languages via checkboxes (nld, eng, deu, fra) stored as Tesseract language string (`ocr_languages`, default: "nld+eng") | MUST | Implemented |
+| SET-092 | Configure OCR DPI for PDF-to-image conversion (`ocr_dpi`, default: 300, range: 72-600) | MUST | Implemented |
+| SET-093 | Display Tesseract OCR installation status (available/version or warning NcNoteCard) | MUST | Implemented |
+| SET-094 | Include OCR settings and Tesseract status in `GET /api/settings` response | MUST | Implemented |
+
 ### Settings API
 
 | ID | Requirement | Priority | Status |
@@ -81,6 +91,9 @@ Provides configuration management for DocuDesk, including OpenRegister integrati
 | enable_keyword_extraction | string (boolean) | "1" | Enable keyword extraction |
 | enable_topic_classification | string (boolean) | "1" | Enable topic classification |
 | configuration_version | string | "0.0.0" | Current configuration schema version |
+| ocr_enabled | string (boolean) | "1" | Enable OCR document scanning |
+| ocr_languages | string | "nld+eng" | Tesseract language string for OCR |
+| ocr_dpi | string (integer) | "300" | DPI for PDF-to-image conversion |
 
 ### Settings API Response Structure
 
