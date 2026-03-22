@@ -34,6 +34,16 @@ return [
 		['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
 		['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
 
+		// Batch anonymization routes
+		['name' => 'batch_anonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchExtract', 'url' => 'api/anonymization/batch/{batchId}/extract', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchStatus', 'url' => 'api/anonymization/batch/{batchId}/status', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
+		['name' => 'batch_anonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
+		['name' => 'batch_anonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
+
 		// PDF generation route
 		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
 
