@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "3.0.0"
+        "version": "4.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -31,10 +31,11 @@
             "templates": {
                 "slug": "templates",
                 "title": "Template Register",
-                "version": "1.0.0",
-                "description": "Register voor herbruikbare PDF/document templates",
+                "version": "2.0.0",
+                "description": "Register voor herbruikbare PDF/document templates en template versiegeschiedenis",
                 "schemas": [
-                    "template"
+                    "template",
+                    "templateVersion"
                 ]
             }
         },
@@ -322,13 +323,47 @@
                             "P",
                             "L"
                         ]
+                    },
+                    "category": {
+                        "description": "Primaire categorie van het template",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Categorie",
+                        "maxLength": 64
+                    },
+                    "tags": {
+                        "description": "Tags voor aanvullende classificatie",
+                        "type": "array",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Tags"
+                    },
+                    "lockedBy": {
+                        "description": "Gebruikers-ID die het template vergrendeld heeft",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vergrendeld door"
+                    },
+                    "lockedAt": {
+                        "description": "Tijdstip waarop het template vergrendeld is",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Vergrendeld op"
                     }
                 },
                 "archive": [],
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2026-03-01T12:00:00+00:00",
+                "updated": "2026-03-22T12:00:00+00:00",
                 "created": "2026-03-01T12:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,
@@ -340,6 +375,118 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "templateVersion": {
+                "uri": null,
+                "slug": "templateVersion",
+                "title": "Template Versie",
+                "description": "Versiegeschiedenis voor document templates.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "History",
+                "required": ["templateId", "version", "content", "name", "editor"],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het bovenliggende template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Template ID"
+                    },
+                    "version": {
+                        "description": "Oplopend versienummer",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Versienummer"
+                    },
+                    "content": {
+                        "description": "Template HTML content op dit moment",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Inhoud",
+                        "format": "html"
+                    },
+                    "name": {
+                        "description": "Template naam op dit moment",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Template beschrijving op dit moment",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "maxLength": 2000
+                    },
+                    "format": {
+                        "description": "Paginaformaat op dit moment",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Paginaformaat"
+                    },
+                    "orientation": {
+                        "description": "Pagina-orientatie op dit moment",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Orientatie"
+                    },
+                    "editor": {
+                        "description": "Gebruikers-ID van de bewerker",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Bewerker"
+                    },
+                    "changelog": {
+                        "description": "Optionele wijzigingsnotitie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Wijzigingsnotitie",
+                        "maxLength": 500
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": true,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "changelog",
                     "autoPublish": false
                 },
                 "searchable": true
