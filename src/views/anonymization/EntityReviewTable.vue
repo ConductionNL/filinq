@@ -1,86 +1,52 @@
 <template>
 	<div class="entity-review">
-		<div class="summary-bar">
-			<span>{{ t('docudesk', '{selected} of {total} entities selected across {files} files', { selected: selectedCount, total: entities.length, files: fileCount }) }}</span>
-		</div>
+		<div class="summary-bar">{{ selectedCount }} of {{ entities.length }} entities selected across {{ fileCount }} files</div>
 		<div class="filter-bar">
-			<input v-model="searchQuery" type="text" class="search-input" :placeholder="t('docudesk', 'Search entities...')">
-			<select v-model="typeFilter" class="type-filter">
-				<option value="">{{ t('docudesk', 'All types') }}</option>
-				<option v-for="et in availableTypes" :key="et" :value="et">{{ et }}</option>
-			</select>
-			<div class="confidence-filter">
-				<label>{{ t('docudesk', 'Min confidence') }}</label>
-				<input v-model.number="confidenceThreshold" type="range" min="0" max="1" step="0.05" class="confidence-slider">
-				<span>{{ Math.round(confidenceThreshold * 100) }}%</span>
-			</div>
+			<input v-model="searchQuery" type="text" placeholder="Search entities...">
+			<select v-model="typeFilter"><option value="">All types</option><option v-for="t in availableTypes" :key="t" :value="t">{{ t }}</option></select>
 		</div>
 		<div class="bulk-actions">
-			<NcButton type="tertiary" @click="selectAllVisible">{{ t('docudesk', 'Select All Visible') }}</NcButton>
-			<NcButton type="tertiary" @click="deselectAllVisible">{{ t('docudesk', 'Deselect All Visible') }}</NcButton>
-			<span class="filter-count">{{ filteredEntities.length }} / {{ entities.length }}</span>
+			<NcButton type="tertiary" @click="$emit(\x27bulk-select\x27, filteredEntities.map(i => i.idx))">Select All Visible</NcButton>
+			<NcButton type="tertiary" @click="$emit(\x27bulk-deselect\x27, filteredEntities.map(i => i.idx))">Deselect All Visible</NcButton>
 		</div>
 		<table class="entity-table">
-			<thead><tr>
-				<th />
-				<th class="sortable" @click="sortBy('type')">{{ t('docudesk', 'Type') }}</th>
-				<th class="sortable" @click="sortBy('value')">{{ t('docudesk', 'Value') }}</th>
-				<th class="sortable" @click="sortBy('highestConfidence')">{{ t('docudesk', 'Confidence') }}</th>
-				<th class="sortable" @click="sortBy('fileCount')">{{ t('docudesk', 'Files') }}</th>
-			</tr></thead>
-			<tbody>
-				<tr v-for="item in filteredEntities" :key="item.originalIndex">
-					<td><input type="checkbox" :checked="item.entity.included" @change="$emit('toggle', item.originalIndex)"></td>
-					<td><span class="entity-type-badge">{{ item.entity.type }}</span></td>
-					<td>{{ item.entity.value }}</td>
-					<td>{{ ((item.entity.highestConfidence || 0) * 100).toFixed(1) }}%</td>
-					<td>{{ item.entity.fileCount }}</td>
-				</tr>
-			</tbody>
+			<thead><tr><th/><th @click="sortBy(\x27type\x27)">Type</th><th @click="sortBy(\x27value\x27)">Value</th><th @click="sortBy(\x27highestConfidence\x27)">Confidence</th><th @click="sortBy(\x27fileCount\x27)">Files</th></tr></thead>
+			<tbody><tr v-for="item in filteredEntities" :key="item.idx">
+				<td><input type="checkbox" :checked="item.e.included" @change="$emit(\x27toggle\x27, item.idx)"></td>
+				<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}</td>
+				<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
+			</tr></tbody>
 		</table>
 	</div>
 </template>
 <script>
-import { NcButton } from '@nextcloud/vue'
-import { translate as t } from '@nextcloud/l10n'
+import { NcButton } from \x27@nextcloud/vue\x27
 export default {
-	name: 'EntityReviewTable',
+	name: \x27EntityReviewTable\x27,
 	components: { NcButton },
 	props: { entities: { type: Array, required: true }, fileCount: { type: Number, default: 0 } },
-	emits: ['toggle', 'bulk-select', 'bulk-deselect', 'confidence-change'],
-	data() { return { searchQuery: '', typeFilter: '', confidenceThreshold: 0.0, sortField: 'highestConfidence', sortAsc: false } },
+	emits: [\x27toggle\x27, \x27bulk-select\x27, \x27bulk-deselect\x27, \x27confidence-change\x27],
+	data() { return { searchQuery: \x27\x27, typeFilter: \x27\x27, sf: \x27highestConfidence\x27, sa: false } },
 	computed: {
-		selectedCount() { return this.entities.filter((e) => e.included).length },
-		availableTypes() { return [...new Set(this.entities.map((e) => e.type))].sort() },
+		selectedCount() { return this.entities.filter(e => e.included).length },
+		availableTypes() { return [...new Set(this.entities.map(e => e.type))].sort() },
 		filteredEntities() {
 			const q = this.searchQuery.toLowerCase()
-			const items = this.entities.map((entity, index) => ({ entity, originalIndex: index }))
-				.filter(({ entity }) => (!q || entity.value.toLowerCase().includes(q)) && (!this.typeFilter || entity.type === this.typeFilter))
-			items.sort((a, b) => { const va = a.entity[this.sortField]; const vb = b.entity[this.sortField]; const c = typeof va === 'string' ? va.localeCompare(vb) : (va || 0) - (vb || 0); return this.sortAsc ? c : -c })
-			return items
+			return this.entities.map((e, i) => ({ e, idx: i }))
+				.filter(({ e }) => (!q || e.value.toLowerCase().includes(q)) && (!this.typeFilter || e.type === this.typeFilter))
+				.sort((a, b) => { const va = a.e[this.sf], vb = b.e[this.sf]; const c = typeof va === \x27string\x27 ? va.localeCompare(vb) : (va||0)-(vb||0); return this.sa ? c : -c })
 		},
 	},
-	watch: { confidenceThreshold(v) { this.$emit('confidence-change', v) } },
-	methods: {
-		t,
-		sortBy(f) { if (this.sortField === f) { this.sortAsc = !this.sortAsc } else { this.sortField = f; this.sortAsc = false } },
-		selectAllVisible() { this.$emit('bulk-select', this.filteredEntities.map((i) => i.originalIndex)) },
-		deselectAllVisible() { this.$emit('bulk-deselect', this.filteredEntities.map((i) => i.originalIndex)) },
-	},
+	methods: { sortBy(f) { if (this.sf === f) { this.sa = !this.sa } else { this.sf = f; this.sa = false } } },
 }
 </script>
 <style scoped>
 .entity-review { margin: 16px 0 }
-.summary-bar { padding: 12px 16px; background: var(--color-primary-element-light); border-radius: 8px; margin-bottom: 16px; font-weight: 500 }
-.filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap }
-.search-input { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px }
-.type-filter { padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 6px }
-.confidence-filter { display: flex; align-items: center; gap: 8px }
-.confidence-slider { width: 120px }
-.bulk-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 12px }
-.filter-count { margin-left: auto; font-size: 0.85rem; color: var(--color-text-maxcontrast) }
+.summary-bar { padding: 12px; background: var(--color-primary-element-light); border-radius: 8px; margin-bottom: 16px }
+.filter-bar { display: flex; gap: 12px; margin-bottom: 12px }
+.bulk-actions { display: flex; gap: 8px; margin-bottom: 12px }
 .entity-table { width: 100%; border-collapse: collapse }
-.entity-table th, .entity-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--color-border) }
-.sortable { cursor: pointer; user-select: none }
-.entity-type-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; background: var(--color-primary-element-light); color: var(--color-primary-element) }
+.entity-table th, .entity-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left }
+.entity-table th { cursor: pointer }
+.badge { padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; background: var(--color-primary-element-light); color: var(--color-primary-element) }
 </style>

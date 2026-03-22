@@ -70,6 +70,7 @@ class SettingsService
      * @param LoggerInterface          $logger           Logger interface
      * @param RegisterDiscoveryService $discoveryService Register discovery service
      * @param SettingsInitializer      $initializer      Settings initializer
+     * @param OcrService               $ocrService       OCR service for status checks
      *
      * @return void
      */
@@ -79,7 +80,8 @@ class SettingsService
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
         private readonly RegisterDiscoveryService $discoveryService,
-        private readonly SettingsInitializer $initializer
+        private readonly SettingsInitializer $initializer,
+        private readonly OcrService $ocrService
     ) {
         $this->appName = 'docudesk';
 
@@ -168,8 +170,20 @@ class SettingsService
                 'enable_topic_classification',
                 '1'
             ) === '1',
-            'signing_enabled'                   => $this->config->getValueString(
+            'signing_enabled'                   => $this->config->getValueString(            'ocr_enabled'                       => $this->config->getValueString(
                 $this->appName,
+                'ocr_enabled',
+                '1'
+            ) === '1',
+            'ocr_languages'                     => $this->config->getValueString(
+                $this->appName,
+                'ocr_languages',
+                'nld+eng'
+            ),
+            'ocr_dpi'                           => (int) $this->config->getValueString(
+                $this->appName,
+                'ocr_dpi',
+                '300'            'signing_enabled'                   => $this->config->getValueString(                $this->appName,
                 'signing_enabled',
                 '0'
             ) === '1',
@@ -187,10 +201,24 @@ class SettingsService
                 $this->appName,
                 'signing_request_expiry_days',
                 '30'
-            ),
-        ];
+            ),                '30'            ),        ];
 
     }//end loadFeatureToggles()
+
+
+    /**
+     * Get the OCR system status including Tesseract availability
+     *
+     * @return array<string, mixed> OCR status information
+     */
+    public function getOcrStatus(): array
+    {
+        return [
+            'tesseractAvailable' => $this->ocrService->isTesseractAvailable(),
+            'tesseractVersion'   => $this->ocrService->getTesseractVersion(),
+        ];
+
+    }//end getOcrStatus()
 
 
     /**
@@ -225,6 +253,7 @@ class SettingsService
                 $data['objectTypes']
             );
             $data = array_merge($data, $this->loadFeatureToggles());
+            $data['ocrStatus'] = $this->getOcrStatus();
 
             return $data;
         } catch (Exception $e) {
@@ -273,7 +302,7 @@ class SettingsService
                     continue;
                 }
 
-                $stringValue = $this->convertValueToString($value);
+                $stringValue = $this->convertValueToString(value: $value);
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach

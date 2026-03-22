@@ -2,8 +2,7 @@
 import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
-    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'templates' | 'templateDetail';
-    modal: string;
+    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'templates' | 'templateDetail';    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'batchAnonymization';    modal: string;
     dialog: string;
     transferData: string;
 }
