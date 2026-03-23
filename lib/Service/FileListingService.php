@@ -70,18 +70,32 @@ class FileListingService
         $fileId      = $file->getId();
         $entityStats = $this->entityStatsService->getEntityStats($fileId, $entityRelationMapper);
         $riskLevel   = $this->entityStatsService->getFileRiskLevel($fileId, $riskLevelService);
+        $mimeType    = $file->getMimeType();
+
+        // Determine if file is an OCR candidate based on MIME type.
+        $ocrMimeTypes   = [
+            'image/png',
+            'image/jpeg',
+            'image/tiff',
+            'image/bmp',
+            'image/gif',
+        ];
+        $isOcrCandidate = in_array($mimeType, $ocrMimeTypes, true) === true
+            || $mimeType === 'application/pdf';
 
         return [
             'fileId'          => $fileId,
             'fileName'        => $file->getName(),
             'filePath'        => $file->getPath(),
             'fileSize'        => $file->getSize(),
-            'mimeType'        => $file->getMimeType(),
+            'mimeType'        => $mimeType,
             'entityCount'     => $entityStats['entityCount'],
             'anonymizedCount' => $entityStats['anonymizedCount'],
             'status'          => $entityStats['status'],
             'riskLevel'       => $riskLevel,
             'modified'        => $file->getMTime(),
+            'ocrProcessed'    => $isOcrCandidate
+                && $entityStats['status'] !== 'uploaded',
         ];
 
     }//end buildFileInfo()
@@ -108,7 +122,11 @@ class FileListingService
                     continue;
                 }
 
-                $result[] = $this->buildFileInfo($file, $entityRelationMapper, $riskLevelService);
+                $result[] = $this->buildFileInfo(
+                    file: $file,
+                    entityRelationMapper: $entityRelationMapper,
+                    riskLevelService: $riskLevelService
+                );
             }
 
             usort(
