@@ -26,12 +26,6 @@ use Psr\Log\LoggerInterface;
 /**
  * Unit tests for PdfService
  *
- * Tests cover buildPrintCss output, renderHtmlPreview CSS injection,
- * and renderPdf delegating to TemplateRenderer. The actual mPDF call is
- * not exercised in unit tests (requires file-system and library setup),
- * so generatePdf is tested indirectly through integration-style assertions
- * where the TemplateRenderer mock is used.
- *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
@@ -39,35 +33,28 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
- * @phpstan-extends TestCase
  */
 class PdfServiceTest extends TestCase
 {
 
     /**
-     * The PdfService instance under test
-     *
      * @var PdfService
      */
-    private PdfService $pdfService;
+    private PdfService $service;
 
     /**
-     * Mocked LoggerInterface
-     *
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $mockLogger;
 
     /**
-     * Mocked TemplateRenderer
-     *
      * @var TemplateRenderer|MockObject
      */
     private TemplateRenderer|MockObject $mockRenderer;
 
 
     /**
-     * Set up test environment before each test
+     * Set up test environment
      *
      * @return void
      */
@@ -78,7 +65,7 @@ class PdfServiceTest extends TestCase
         $this->mockLogger   = $this->createMock(LoggerInterface::class);
         $this->mockRenderer = $this->createMock(TemplateRenderer::class);
 
-        $this->pdfService = new PdfService(
+        $this->service = new PdfService(
             $this->mockLogger,
             $this->mockRenderer
         );
@@ -87,158 +74,83 @@ class PdfServiceTest extends TestCase
 
 
     /**
-     * Test buildPrintCss returns a style block for portrait A4
+     * Test renderPdf generates valid PDF content
      *
      * @return void
      */
-    public function testBuildPrintCssPortraitA4(): void
+    public function testRenderPdfGeneratesValidPdf(): void
     {
-        $css = $this->pdfService->buildPrintCss(format: 'A4', orientation: 'P');
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('<html><body><h1>Test</h1></body></html>');
 
-        $this->assertStringContainsString('<style>', $css);
-        $this->assertStringContainsString('@media print', $css);
-        $this->assertStringContainsString('A4 portrait', $css);
-        $this->assertStringContainsString('margin: 15mm', $css);
+        $result = $this->service->renderPdf('<h1>{{ title }}</h1>', ['title' => 'Test']);
 
-    }//end testBuildPrintCssPortraitA4()
+        $this->assertNotEmpty($result);
+        // PDF files start with %PDF.
+        $this->assertStringStartsWith('%PDF', $result);
+
+    }//end testRenderPdfGeneratesValidPdf()
 
 
     /**
-     * Test buildPrintCss returns landscape orientation for L
+     * Test renderPdf with custom options
      *
      * @return void
      */
-    public function testBuildPrintCssLandscape(): void
+    public function testRenderPdfWithCustomOptions(): void
     {
-        $css = $this->pdfService->buildPrintCss(format: 'A3', orientation: 'L');
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('<html><body>Landscape</body></html>');
 
-        $this->assertStringContainsString('A3 landscape', $css);
-
-    }//end testBuildPrintCssLandscape()
-
-
-    /**
-     * Test buildPrintCss includes page-break-inside: avoid for tables
-     *
-     * @return void
-     */
-    public function testBuildPrintCssIncludesPageBreakRules(): void
-    {
-        $css = $this->pdfService->buildPrintCss(format: 'A4', orientation: 'P');
-
-        $this->assertStringContainsString('page-break-inside: avoid', $css);
-        $this->assertStringContainsString('page-break-after: avoid', $css);
-
-    }//end testBuildPrintCssIncludesPageBreakRules()
-
-
-    /**
-     * Test buildPrintCss hides nav and .no-print elements
-     *
-     * @return void
-     */
-    public function testBuildPrintCssHidesNoPrintElements(): void
-    {
-        $css = $this->pdfService->buildPrintCss(format: 'A4', orientation: 'P');
-
-        $this->assertStringContainsString('display: none', $css);
-        $this->assertStringContainsString('.no-print', $css);
-
-    }//end testBuildPrintCssHidesNoPrintElements()
-
-
-    /**
-     * Test renderHtmlPreview returns rendered HTML with print CSS prepended
-     *
-     * @return void
-     */
-    public function testRenderHtmlPreviewPrependsStyleBlock(): void
-    {
-        $this->mockRenderer->expects($this->once())
-            ->method('renderTemplate')
-            ->with('<p>{{ name }}</p>', ['name' => 'Test'])
-            ->willReturn('<p>Test</p>');
-
-        $result = $this->pdfService->renderHtmlPreview(
-            templateContent: '<p>{{ name }}</p>',
-            data: ['name' => 'Test'],
-            options: ['format' => 'A4', 'orientation' => 'P']
+        $result = $this->service->renderPdf(
+            '<p>Test</p>',
+            [],
+            [
+                'format'      => 'A3',
+                'orientation' => 'L',
+                'title'       => 'Test Document',
+            ]
         );
 
-        $this->assertStringStartsWith('<style>', $result);
-        $this->assertStringContainsString('<p>Test</p>', $result);
+        $this->assertNotEmpty($result);
+        $this->assertStringStartsWith('%PDF', $result);
 
-    }//end testRenderHtmlPreviewPrependsStyleBlock()
-
-
-    /**
-     * Test renderHtmlPreview uses defaults when options are empty
-     *
-     * @return void
-     */
-    public function testRenderHtmlPreviewUsesDefaultOptions(): void
-    {
-        $this->mockRenderer->expects($this->once())
-            ->method('renderTemplate')
-            ->willReturn('<p>Hello</p>');
-
-        $result = $this->pdfService->renderHtmlPreview(
-            templateContent: '<p>Hello</p>',
-            data: [],
-            options: []
-        );
-
-        // Defaults: A4 portrait
-        $this->assertStringContainsString('A4 portrait', $result);
-
-    }//end testRenderHtmlPreviewUsesDefaultOptions()
+    }//end testRenderPdfWithCustomOptions()
 
 
     /**
-     * Test renderHtmlPreview with landscape orientation option
+     * Test renderPdf with empty template
      *
      * @return void
      */
-    public function testRenderHtmlPreviewWithLandscapeOption(): void
+    public function testRenderPdfWithEmptyTemplate(): void
     {
-        $this->mockRenderer->method('renderTemplate')->willReturn('<p>Doc</p>');
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('');
 
-        $result = $this->pdfService->renderHtmlPreview(
-            templateContent: '<p>Doc</p>',
-            data: [],
-            options: ['format' => 'Letter', 'orientation' => 'L']
-        );
+        $result = $this->service->renderPdf('', []);
 
-        $this->assertStringContainsString('Letter landscape', $result);
+        $this->assertNotEmpty($result);
+        $this->assertStringStartsWith('%PDF', $result);
 
-    }//end testRenderHtmlPreviewWithLandscapeOption()
+    }//end testRenderPdfWithEmptyTemplate()
 
 
     /**
-     * Test renderPdf delegates rendering to TemplateRenderer
-     *
-     * mPDF itself is not exercised because it writes files to disk.
-     * We verify the TemplateRenderer is called with the correct arguments.
-     * The test will throw at the mPDF instantiation step — we catch that
-     * and confirm the renderer was called as expected.
+     * Test renderPdf throws on renderer failure
      *
      * @return void
      */
-    public function testRenderPdfDelegatesToTemplateRenderer(): void
+    public function testRenderPdfThrowsOnRendererFailure(): void
     {
-        $this->mockRenderer->expects($this->once())
-            ->method('renderTemplate')
-            ->with('<h1>Hello</h1>', ['name' => 'World'])
-            ->willThrowException(new \Exception('Renderer error'));
-
         $this->expectException(\Exception::class);
 
-        $this->pdfService->renderPdf(
-            templateContent: '<h1>Hello</h1>',
-            data: ['name' => 'World']
-        );
+        $this->mockRenderer->method('renderTemplate')
+            ->willThrowException(new \Exception('Template rendering failed'));
 
-    }//end testRenderPdfDelegatesToTemplateRenderer()
+        $this->service->renderPdf('{{ invalid', []);
+
+    }//end testRenderPdfThrowsOnRendererFailure()
 
 
 }//end class

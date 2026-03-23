@@ -37,12 +37,13 @@
 		"check": "E=0; for CMD in lint phpcs psalm test:unit; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:full": "E=0; for CMD in lint phpcs psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:strict": "E=0; for CMD in lint phpcs phpmd psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
-		"fix": ["@cs:fix"],
+		"fix": [
+			"@cs:fix"
+		],
 		"openapi": "generate-spec",
 		"phpqa": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa",
 		"phpqa:full": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa --tools phpcs:0,phpmd:0,phploc:0,phpmetrics,phpcpd:0,parallel-lint:0",
 		"phpqa:ci": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa --tools phpcs,phpmd,phploc,phpmetrics,phpcpd,parallel-lint",
-		"phpstan": "./vendor/bin/phpstan analyse --memory-limit=1G || echo 'PHPStan not installed, skipping...'",
 		"qa:check": [
 			"@phpqa"
 		],
@@ -103,5 +104,10 @@
 		},
 		"preferred-install": "dist",
 		"process-timeout": 600
+	},
+	"autoload-dev": {
+		"classmap": [
+			"vendor/nextcloud/ocp/OCP/"
+		]
 	}
 }
