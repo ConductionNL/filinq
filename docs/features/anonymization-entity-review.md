@@ -1,0 +1,52 @@
+---
+id: anonymization-entity-review
+title: Anonymization Entity Review
+sidebar_label: Entity Review
+sidebar_position: 6
+description: Consolidated entity review and selective inclusion/exclusion before batch anonymization is applied
+keywords:
+  - anonymization
+  - entity review
+  - GDPR
+  - batch
+  - WOO
+---
+
+# Anonymization Entity Review
+
+## Status: Proposed
+
+This feature is part of the batch anonymization workflow. It provides a consolidated view of all detected entities across a batch of documents, allowing users to selectively include or exclude entities before anonymization is applied.
+
+## Overview
+
+After text extraction is complete for all files in a batch, DocuDesk presents a unified entity list deduplicated by value (case-insensitive). Each entity shows its type, highest confidence score, and the number of files in which it appears. Entities are pre-selected based on the active WOO anonymization profile.
+
+Users can toggle individual entities on or off. The final selection is sent to the backend when the user triggers anonymization.
+
+## Key Capabilities
+
+- Consolidated, deduplicated entity list across all batch files
+- Pre-selection based on active WOO anonymize/keep profiles
+- Confidence threshold filter (default: entities above 0.7 included)
+- Per-entity toggle (frontend-only state, no intermediate API call)
+- Batch anonymization triggered with the reviewed entity list
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/anonymization/batch/{batchId}/entities` | Retrieve consolidated entity list for review (batch must be in "review" status) |
+| `POST` | `/api/anonymization/batch/{batchId}/anonymize` | Start anonymization with the reviewed entity list |
+
+## Standards
+
+- **GDPR / AVG** — Entity data is not persisted after anonymization; reviewed list is transient
+- **WOO** — Default entity profiles align with WOO publication anonymization requirements
+- **TEC-DMS-7** (Workflow Management) — Entity review is a step in the document workflow
+
+## Related Features
+
+- [Batch Processing](./batch-processing.md) — Provides the batch context
+- [Enhanced Anonymization](./enhanced-anonymization.md) — Full batch anonymization workflow
+- [Anonymization Pipeline](./anonymization.md) — Single-document anonymization
