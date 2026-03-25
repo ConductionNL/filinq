@@ -27,6 +27,17 @@
 			<MainMenu />
 			<Views />
 			<SideBars />
+			<CnObjectSidebar
+				v-if="objectSidebarState.active"
+				:title="objectSidebarState.title"
+				:subtitle="objectSidebarState.subtitle"
+				:object-type="objectSidebarState.objectType"
+				:object-id="objectSidebarState.objectId"
+				:register="objectSidebarState.register"
+				:schema="objectSidebarState.schema"
+				:hidden-tabs="objectSidebarState.hiddenTabs"
+				:open="objectSidebarState.open"
+				@update:open="objectSidebarState.open = $event" />
 			<Modals />
 			<Dialogs />
 		</template>
@@ -41,7 +52,9 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
+import { CnObjectSidebar } from '@conduction/nextcloud-vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import Modals from './modals/Modals.vue'
@@ -58,6 +71,7 @@ export default {
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
+		CnObjectSidebar,
 		MainMenu,
 		Modals,
 		Dialogs,
@@ -65,9 +79,26 @@ export default {
 		SideBars,
 	},
 
+	provide() {
+		return {
+			objectSidebarState: this.objectSidebarState,
+		}
+	},
+
 	data() {
 		return {
 			storesReady: false,
+			objectSidebarState: Vue.observable({
+				active: false,
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
+			}),
 		}
 	},
 
