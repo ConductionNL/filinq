@@ -9,7 +9,7 @@
 /tests/.phpunit.cache
 
 /node_modules/
-/js/
+/js
 
 /docs/node_modules/
 /docs/build/
