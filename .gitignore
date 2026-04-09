@@ -20,5 +20,10 @@
 /coverage/
 /coverage-frontend/
 
+<<<<<<< Updated upstream
 .phpunit.cache/
 phpmetrics/
+=======
+# Test/build artifacts
+.phpunit.result.cache
+>>>>>>> Stashed changes
