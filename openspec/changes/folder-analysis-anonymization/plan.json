@@ -1,0 +1,111 @@
+{
+  "change": "folder-analysis-anonymization",
+  "project": "docudesk",
+  "repo": "ConductionNL/docudesk",
+  "created": "2026-04-08",
+  "tracking_issue": 102,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create FolderBatchService with folder enumeration and batch creation",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "1.2",
+      "title": "Add folder validation (404, 400 errors)",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "2.1",
+      "title": "Create FolderExtractionJob (QueuedJob) for background extraction",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "2.2",
+      "title": "Register FolderExtractionJob in Application.php",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "3.1",
+      "title": "Add folderBatch() method to BatchAnonymizationController",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "3.2",
+      "title": "Add route POST /api/anonymization/batch/folder",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "4.1",
+      "title": "TTL keep-alive in BatchStateService::getBatch()",
+      "status": "pending",
+      "spec_ref": "batch-anonymization"
+    },
+    {
+      "id": "5.1",
+      "title": "Relax entity endpoint status gate to allow extracting",
+      "status": "pending",
+      "spec_ref": "batch-anonymization"
+    },
+    {
+      "id": "5.2",
+      "title": "Add complete and filesProcessed to entities response",
+      "status": "pending",
+      "spec_ref": "batch-anonymization"
+    },
+    {
+      "id": "6.1",
+      "title": "English translation strings",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "6.2",
+      "title": "Dutch translation strings",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "7.1",
+      "title": "FolderBatchServiceTest.php",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "7.2",
+      "title": "FolderExtractionJobTest.php",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "7.3",
+      "title": "BatchStateServiceKeepAliveTest.php",
+      "status": "pending",
+      "spec_ref": "batch-anonymization"
+    },
+    {
+      "id": "7.4",
+      "title": "BatchAnonymizationControllerFolderTest.php",
+      "status": "pending",
+      "spec_ref": "batch-anonymization"
+    },
+    {
+      "id": "7.5",
+      "title": "Verify 75% coverage threshold",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    },
+    {
+      "id": "8.1",
+      "title": "Create docs/features/folder-analysis-anonymization.md",
+      "status": "pending",
+      "spec_ref": "folder-batch-analysis"
+    }
+  ]
+}

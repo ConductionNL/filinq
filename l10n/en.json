@@ -129,6 +129,12 @@
         "Information about the current DocuDesk installation": "Information about the current DocuDesk installation",
         "Support": "Support",
         "For support, contact us at": "For support, contact us at",
-        "For a Service Level Agreement (SLA), contact": "For a Service Level Agreement (SLA), contact"
+        "For a Service Level Agreement (SLA), contact": "For a Service Level Agreement (SLA), contact",
+        "Folder not found": "Folder not found",
+        "Path is not a folder": "Path is not a folder",
+        "No files found in folder": "No files found in folder",
+        "Folder contains too many files (found: %1$s, maximum: %2$s)": "Folder contains too many files (found: %1$s, maximum: %2$s)",
+        "Extraction has not started": "Extraction has not started",
+        "No folder path provided": "No folder path provided"
     }
 }

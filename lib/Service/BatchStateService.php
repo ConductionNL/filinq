@@ -40,7 +40,10 @@ class BatchStateService
         $data = $this->cache->get(self::CACHE_PREFIX.$batchId);
         if ($data === null) { return null; }
         $batch = json_decode($data, true);
-        return is_array($batch) ? $batch : null;
+        if (is_array($batch) === false) { return null; }
+        // Reset TTL on read (keep-alive pattern) so active batches don't expire during human review.
+        $this->cache->set(self::CACHE_PREFIX.$batchId, $data, self::CACHE_TTL);
+        return $batch;
     }
     public function updateBatch(string $batchId, array $batch): void
     {

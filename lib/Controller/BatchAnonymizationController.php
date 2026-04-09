@@ -8,6 +8,7 @@ use OCA\DocuDesk\Service\BatchReportService;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCA\DocuDesk\Service\BatchUploadService;
 use OCA\DocuDesk\Service\EntityConsolidationService;
+use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -26,7 +27,7 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizationController extends Controller
 {
-    public function __construct(string $appName, IRequest $request, private readonly LoggerInterface $logger, private readonly BatchStateService $stateService, private readonly BatchUploadService $uploadService, private readonly BatchExtractionService $extractService, private readonly BatchAnonymizeService $anonService, private readonly BatchReportService $reportService, private readonly EntityConsolidationService $entityService, private readonly WooProfileService $profileService, private readonly IL10N $l10n)
+    public function __construct(string $appName, IRequest $request, private readonly LoggerInterface $logger, private readonly BatchStateService $stateService, private readonly BatchUploadService $uploadService, private readonly BatchExtractionService $extractService, private readonly BatchAnonymizeService $anonService, private readonly BatchReportService $reportService, private readonly EntityConsolidationService $entityService, private readonly WooProfileService $profileService, private readonly FolderBatchService $folderBatchService, private readonly IL10N $l10n)
     {
         parent::__construct($appName, $request);
     }
@@ -40,6 +41,16 @@ class BatchAnonymizationController extends Controller
             $batch = $this->uploadService->processBatchUpload($this->uploadService->getUserId(), $files);
             return new JSONResponse(['batchId' => $batch['batchId'], 'fileCount' => count($batch['files']), 'files' => $batch['files']]);
         } catch (Exception $e) { return $this->err('Batch upload failed', $e); }
+    }
+    /** @NoAdminRequired @NoCSRFRequired */
+    public function folderBatch(): JSONResponse
+    {
+        try {
+            $folderPath = $this->request->getParam('folderPath', '');
+            if (empty($folderPath)) { return new JSONResponse(['error' => $this->l10n->t('No folder path provided')], 400); }
+            $batch = $this->folderBatchService->createFolderBatch($folderPath);
+            return new JSONResponse(['batchId' => $batch['batchId'], 'fileCount' => count($batch['files']), 'files' => $batch['files']]);
+        } catch (Exception $e) { return $this->err('Folder batch failed', $e); }
     }
     /** @NoAdminRequired @NoCSRFRequired */
     public function batchExtract(string $batchId): JSONResponse
@@ -64,10 +75,14 @@ class BatchAnonymizationController extends Controller
         try {
             $batch = $this->stateService->getBatch($batchId);
             if ($batch === null) { return new JSONResponse(['error' => 'Batch not found'], 404); }
-            if ($batch['status'] !== 'review') { return new JSONResponse(['error' => 'Extraction not complete'], 409); }
+            if (in_array($batch['status'], ['extracting', 'review'], true) === false) {
+                return new JSONResponse(['error' => $this->l10n->t('Extraction has not started')], 409);
+            }
             $mc = (float) ($this->request->getParam('minConfidence', '0.0'));
             $entities = $this->entityService->consolidateEntities($batch, $mc);
-            return new JSONResponse(['entities' => $entities, 'entityCount' => count($entities)]);
+            $filesProcessed = 0;
+            foreach ($batch['files'] as $f) { if (in_array($f['status'], ['extracted', 'error'], true)) { $filesProcessed++; } }
+            return new JSONResponse(['entities' => $entities, 'entityCount' => count($entities), 'complete' => $batch['status'] === 'review', 'filesProcessed' => $filesProcessed]);
         } catch (Exception $e) { return $this->err('Failed to get entities', $e); }
     }
     /** @NoAdminRequired @NoCSRFRequired */

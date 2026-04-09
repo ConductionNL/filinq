@@ -6,13 +6,13 @@
 			<select v-model="typeFilter"><option value="">All types</option><option v-for="t in availableTypes" :key="t" :value="t">{{ t }}</option></select>
 		</div>
 		<div class="bulk-actions">
-			<NcButton type="tertiary" @click="$emit(\x27bulk-select\x27, filteredEntities.map(i => i.idx))">Select All Visible</NcButton>
-			<NcButton type="tertiary" @click="$emit(\x27bulk-deselect\x27, filteredEntities.map(i => i.idx))">Deselect All Visible</NcButton>
+			<NcButton type="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">Select All Visible</NcButton>
+			<NcButton type="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">Deselect All Visible</NcButton>
 		</div>
 		<table class="entity-table">
-			<thead><tr><th/><th @click="sortBy(\x27type\x27)">Type</th><th @click="sortBy(\x27value\x27)">Value</th><th @click="sortBy(\x27highestConfidence\x27)">Confidence</th><th @click="sortBy(\x27fileCount\x27)">Files</th></tr></thead>
+			<thead><tr><th/><th @click="sortBy('type')">Type</th><th @click="sortBy('value')">Value</th><th @click="sortBy('highestConfidence')">Confidence</th><th @click="sortBy('fileCount')">Files</th></tr></thead>
 			<tbody><tr v-for="item in filteredEntities" :key="item.idx">
-				<td><input type="checkbox" :checked="item.e.included" @change="$emit(\x27toggle\x27, item.idx)"></td>
+				<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
 				<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}</td>
 				<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 			</tr></tbody>
@@ -20,13 +20,14 @@
 	</div>
 </template>
 <script>
-import { NcButton } from \x27@nextcloud/vue\x27
+import { NcButton } from '@nextcloud/vue'
+
 export default {
-	name: \x27EntityReviewTable\x27,
+	name: 'EntityReviewTable',
 	components: { NcButton },
 	props: { entities: { type: Array, required: true }, fileCount: { type: Number, default: 0 } },
-	emits: [\x27toggle\x27, \x27bulk-select\x27, \x27bulk-deselect\x27, \x27confidence-change\x27],
-	data() { return { searchQuery: \x27\x27, typeFilter: \x27\x27, sf: \x27highestConfidence\x27, sa: false } },
+	emits: ['toggle', 'bulk-select', 'bulk-deselect', 'confidence-change'],
+	data() { return { searchQuery: '', typeFilter: '', sf: 'highestConfidence', sa: false } },
 	computed: {
 		selectedCount() { return this.entities.filter(e => e.included).length },
 		availableTypes() { return [...new Set(this.entities.map(e => e.type))].sort() },
@@ -34,7 +35,7 @@ export default {
 			const q = this.searchQuery.toLowerCase()
 			return this.entities.map((e, i) => ({ e, idx: i }))
 				.filter(({ e }) => (!q || e.value.toLowerCase().includes(q)) && (!this.typeFilter || e.type === this.typeFilter))
-				.sort((a, b) => { const va = a.e[this.sf], vb = b.e[this.sf]; const c = typeof va === \x27string\x27 ? va.localeCompare(vb) : (va||0)-(vb||0); return this.sa ? c : -c })
+				.sort((a, b) => { const va = a.e[this.sf], vb = b.e[this.sf]; const c = typeof va === 'string' ? va.localeCompare(vb) : (va||0)-(vb||0); return this.sa ? c : -c })
 		},
 	},
 	methods: { sortBy(f) { if (this.sf === f) { this.sa = !this.sa } else { this.sf = f; this.sa = false } } },
