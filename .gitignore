@@ -19,3 +19,6 @@
 
 /coverage/
 /coverage-frontend/
+
+# Test/build artifacts
+.phpunit.result.cache
