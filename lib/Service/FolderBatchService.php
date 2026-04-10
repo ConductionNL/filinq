@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCP\BackgroundJob\IJobList;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\IUserSession;
-use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use Psr\Log\LoggerInterface;
 
 /**
  * Service for creating batches from existing Nextcloud folders.
  *
  * Enumerates direct children of a folder (flat, no recursion),
- * creates a batch via BatchStateService, and queues a
- * FolderExtractionJob for background extraction.
+ * creates a batch via BatchStateService, and fires a
+ * FolderExtractionJob immediately for background extraction.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -57,7 +57,7 @@ class FolderBatchService
      * Create a batch from an existing Nextcloud folder
      *
      * Resolves the folder path, enumerates file children (flat),
-     * creates the batch, and queues a background extraction job.
+     * creates the batch, and fires extraction immediately in the background.
      *
      * @param string $folderPath Path relative to the user's root folder
      *
@@ -113,16 +113,49 @@ class FolderBatchService
         $batch['folderPath'] = $folderPath;
         $this->stateService->updateBatch($batch['batchId'], $batch);
 
+        // Queue the extraction job and fire it immediately (no cron wait).
         $this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
+        $this->fireJob($batch['batchId']);
 
         $this->logger->info(
-            'Folder batch created',
+            'Folder batch created, extraction job fired',
             ['batchId' => $batch['batchId'], 'folderPath' => $folderPath, 'fileCount' => count($batchFiles)]
         );
 
         return $batch;
 
     }//end createFolderBatch()
+
+
+    /**
+     * Find the queued job by batchId and execute it immediately via occ
+     *
+     * @param string $batchId The batch ID to match
+     *
+     * @return void
+     */
+    private function fireJob(string $batchId): void
+    {
+        $jobId = null;
+        foreach ($this->jobList->getJobs(FolderExtractionJob::class, 100, 0) as $job) {
+            $arg = $job->getArgument();
+            if (is_array($arg) === true && ($arg['batchId'] ?? '') === $batchId) {
+                $jobId = $job->getId();
+                break;
+            }
+        }
+
+        if ($jobId === null) {
+            $this->logger->warning('Could not find job to fire immediately', ['batchId' => $batchId]);
+            return;
+        }
+
+        $phpBinary  = PHP_BINARY ?: 'php';
+        $serverRoot = \OC::$SERVERROOT;
+
+        exec($phpBinary.' '.$serverRoot.'/occ background-job:execute '.$jobId.' > /dev/null 2>&1 &');
+
+    }//end fireJob()
 
 
     /**

@@ -9,6 +9,7 @@
 			<TemplateIndex v-if="navigationStore.selected === 'templates'" />
 			<TemplateDetail v-if="navigationStore.selected === 'templateDetail'" />
 			<BatchAnonymizationView v-if="navigationStore.selected === 'batchAnonymization'" />
+			<FolderAnonymizationView v-if="navigationStore.selected === 'folderAnonymization'" />
 		</template>
 	</NcAppContent>
 </template>
@@ -24,6 +25,7 @@ import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
 import TemplateIndex from './templates/TemplateIndex.vue'
 import TemplateDetail from './templates/TemplateDetail.vue'
 import BatchAnonymizationView from './anonymization/BatchAnonymizationView.vue'
+import FolderAnonymizationView from './anonymization/FolderAnonymizationView.vue'
 
 export default {
 	name: 'Views',
@@ -39,6 +41,7 @@ export default {
 		TemplateIndex,
 		TemplateDetail,
 		BatchAnonymizationView,
+		FolderAnonymizationView,
 	},
 }
 </script>

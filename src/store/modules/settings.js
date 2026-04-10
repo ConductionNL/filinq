@@ -26,7 +26,7 @@ export const useSettingsStore    = defineStore(
 
                     try {
                         const response = await fetch(
-                        '/apps/docudesk/api/settings',
+                        '/index.php/apps/docudesk/api/settings',
                         {
                             method: 'GET',
                             headers: {
@@ -75,7 +75,7 @@ export const useSettingsStore    = defineStore(
 
                     try {
                         const response = await fetch(
-                        '/apps/docudesk/api/settings',
+                        '/index.php/apps/docudesk/api/settings',
                         {
                             method: 'POST',
                             headers: {

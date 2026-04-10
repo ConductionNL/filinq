@@ -67,14 +67,16 @@ export const useAnonymizationStore = defineStore(
                 async processQueue() {
                     if (this.processing) {
                         return
-                        this.processing = true
+                    }
 
-                        for (const entry of this.files) {
-                            if (entry.status !== 'queued') {
-                                continue
-                                await this.processFile(entry)
-                            }
+                    this.processing = true
+
+                    for (const entry of this.files) {
+                        if (entry.status !== 'queued') {
+                            continue
                         }
+
+                        await this.processFile(entry)
                     }
 
                     this.processing = false
@@ -105,7 +107,7 @@ export const useAnonymizationStore = defineStore(
                         // Step 2: Extract entities.
                         entry.status          = 'extracting'
                         const extractResponse = await axios.post(
-                            generateUrl(` / apps / docudesk / api / anonymization / extract / ${entry.fileId}`),
+                            generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
                         )
 
                         const entities    = extractResponse.data.entities || []
@@ -120,7 +122,7 @@ export const useAnonymizationStore = defineStore(
                         // Step 3: Anonymize.
                         entry.status            = 'anonymizing'
                         const anonymizeResponse = await axios.post(
-                            generateUrl(` / apps / docudesk / api / anonymization / anonymize / ${entry.fileId}`),
+                            generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),
                             { entities },
                         )
 
