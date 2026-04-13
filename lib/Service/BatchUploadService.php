@@ -33,10 +33,10 @@ class BatchUploadService
         $index = 0;
         while (true) {
             $file = $request->getUploadedFile('files'.$index);
-            if (empty($file) || !isset($file['tmp_name'])) {
+            if (empty($file) === true || isset($file['tmp_name']) === false) {
                 if ($index === 0) {
                     $arr = $request->getUploadedFile('files');
-                    if (!empty($arr) && is_array($arr['tmp_name'])) {
+                    if (empty($arr) === false && is_array($arr['tmp_name']) === true) {
                         for ($i = 0; $i < count($arr['tmp_name']); $i++) {
                             $files[] = ['name' => $arr['name'][$i], 'tmp_name' => $arr['tmp_name'][$i], 'error' => $arr['error'][$i]];
                         }

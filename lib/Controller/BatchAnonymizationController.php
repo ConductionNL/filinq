@@ -59,7 +59,7 @@ class BatchAnonymizationController extends Controller
     {
         try {
             $files = $this->uploadService->collectFiles($this->request);
-            if (empty($files)) {
+            if (empty($files) === true) {
                 return new JSONResponse(['error' => $this->l10n->t('No files uploaded')], 400);
             }
 
@@ -146,7 +146,7 @@ class BatchAnonymizationController extends Controller
         $ext = 0;
         foreach ($batch['files'] as $f) {
             $ent += ($f['entityCount'] ?? 0);
-            if (in_array($f['status'], ['extracted', 'anonymized', 'error'], true)) {
+            if (in_array($f['status'], ['extracted', 'anonymized', 'error'], true) === true) {
                 $ext++;
             }
         }
@@ -192,7 +192,7 @@ class BatchAnonymizationController extends Controller
             $entities = $this->entityService->consolidateEntities($batch, $mc);
             $filesProcessed = 0;
             foreach ($batch['files'] as $f) {
-                if (in_array($f['status'], ['extracted', 'error'], true)) {
+                if (in_array($f['status'], ['extracted', 'error'], true) === true) {
                     $filesProcessed++;
                 }
             }
@@ -220,7 +220,7 @@ class BatchAnonymizationController extends Controller
     {
         try {
             $entities = $this->request->getParams()['entities'] ?? [];
-            if (!is_array($entities) || empty($entities)) {
+            if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(['error' => 'No entities provided'], 400);
             }
 
@@ -266,7 +266,7 @@ class BatchAnonymizationController extends Controller
     {
         try {
             $p = $this->request->getParams();
-            if (!is_array($p['anonymize'] ?? null) || !is_array($p['keep'] ?? null)) {
+            if (is_array($p['anonymize'] ?? null) === false || is_array($p['keep'] ?? null) === false) {
                 return new JSONResponse(['error' => 'Invalid format'], 400);
             }
 

@@ -69,14 +69,14 @@ class BatchExtractionService
             }
         }
 
-        if ($allDone) {
+        if ($allDone === true) {
             $batch['status'] = 'review';
         }
 
         $this->stateService->updateBatch($batchId, $batch);
         $ext = 0;
         foreach ($batch['files'] as $f) {
-            if (in_array($f['status'], ['extracted', 'error'], true)) {
+            if (in_array($f['status'], ['extracted', 'error'], true) === true) {
                 $ext++;
             }
         }

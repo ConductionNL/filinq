@@ -29,7 +29,7 @@ class WooProfileService
         $stored = $this->appConfig->getValueString('docudesk', 'docudesk_woo_entity_profiles', '');
         if ($stored !== '') {
             $decoded = json_decode($stored, true);
-            if (is_array($decoded) && isset($decoded['anonymize'], $decoded['keep'])) {
+            if (is_array($decoded) === true && isset($decoded['anonymize'], $decoded['keep']) === true) {
                 return $decoded;
             }
         }

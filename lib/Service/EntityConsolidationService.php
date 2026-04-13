@@ -68,7 +68,7 @@ class EntityConsolidationService
             return $map;
         }
 
-        if (isset($map[$key])) {
+        if (isset($map[$key]) === true) {
             $map[$key]['fileCount']++;
             if ($conf > $map[$key]['highestConfidence']) {
                 $map[$key]['highestConfidence'] = $conf;
@@ -91,7 +91,7 @@ class EntityConsolidationService
     private function getEntitiesForFile(int $fileId): array
     {
         try {
-            if (!in_array('openregister', $this->appManager->getInstalledApps(), true)) {
+            if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
                 throw new RuntimeException('OpenRegister not available');
             }
 
