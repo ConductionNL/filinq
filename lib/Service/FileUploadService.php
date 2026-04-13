@@ -143,7 +143,7 @@ class FileUploadService
     {
         try {
             $docuDeskFolder = $this->getDocuDeskFolder();
-            $targetName     = $this->resolveUniqueFileName($docuDeskFolder, $fileName);
+            $targetName     = $this->resolveUniqueFileName(folder: $docuDeskFolder, fileName: $fileName);
             $file           = $docuDeskFolder->newFile($targetName, $fileContent);
 
             $this->logger->info(

@@ -74,15 +74,15 @@ class DocuDeskEventListener implements IEventListener
             );
 
             $this->dispatchEvent(
-                $event,
-                $metadataService,
-                $settingsService,
-                $logger,
-                $eventHandler,
-                $enrichRunner
+                event: $event,
+                metadataService: $metadataService,
+                settingsService: $settingsService,
+                logger: $logger,
+                eventHandler: $eventHandler,
+                enrichRunner: $enrichRunner
             );
         } catch (\Exception $e) {
-            $this->logHandlerError($e, $event);
+            $this->logHandlerError(exception: $e, event: $event);
         }//end try
 
     }//end handle()

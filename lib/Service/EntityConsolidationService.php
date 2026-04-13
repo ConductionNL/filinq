@@ -78,8 +78,8 @@ class EntityConsolidationService
                 continue;
             }
 
-            foreach ($this->getEntitiesForFile((int) $file['fileId']) as $entity) {
-                $map = $this->mergeEntity($map, $entity);
+            foreach ($this->getEntitiesForFile(fileId: (int) $file['fileId']) as $entity) {
+                $map = $this->mergeEntity(map: $map, entity: $entity);
             }
         }
 

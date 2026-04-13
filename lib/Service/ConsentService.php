@@ -106,7 +106,12 @@ class ConsentService
             $deadline      = $this->deadlineChecker->calculateDeadline();
 
             $consentData = array_merge(
-                $this->buildConsentData($documentId, $entityType, $entityText, $deadline),
+                $this->buildConsentData(
+                    documentId: $documentId,
+                    entityType: $entityType,
+                    entityText: $entityText,
+                    deadline: $deadline
+                ),
                 $extra
             );
 

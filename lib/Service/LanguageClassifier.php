@@ -111,8 +111,8 @@ class LanguageClassifier
     {
         $text = strtolower($text);
 
-        $dutchCount   = $this->countWordOccurrences($text, self::DUTCH_WORDS);
-        $englishCount = $this->countWordOccurrences($text, self::ENGLISH_WORDS);
+        $dutchCount   = $this->countWordOccurrences(text: $text, words: self::DUTCH_WORDS);
+        $englishCount = $this->countWordOccurrences(text: $text, words: self::ENGLISH_WORDS);
 
         if ($dutchCount > $englishCount && $dutchCount > 5) {
             return 'nl';
@@ -140,7 +140,7 @@ class LanguageClassifier
 
         $scores = [];
         foreach (self::TOPIC_KEYWORDS as $topic => $keywords) {
-            $scores[$topic] = $this->countWordOccurrences($text, $keywords);
+            $scores[$topic] = $this->countWordOccurrences(text: $text, words: $keywords);
         }
 
         $maxScore = max($scores);

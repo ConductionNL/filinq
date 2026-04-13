@@ -119,7 +119,7 @@ class BatchAnonymizationController extends Controller
                 ]
             );
         } catch (Exception $e) {
-            return $this->err('Batch upload failed', $e);
+            return $this->err(msg: 'Batch upload failed', e: $e);
         }//end try
 
     }//end batchUpload()
@@ -180,7 +180,7 @@ class BatchAnonymizationController extends Controller
         try {
             return new JSONResponse($this->extractService->extractNext($batchId));
         } catch (Exception $e) {
-            return $this->err('Extraction failed', $e);
+            return $this->err(msg: 'Extraction failed', e: $e);
         }
 
     }//end batchExtract()
@@ -277,7 +277,7 @@ class BatchAnonymizationController extends Controller
                     ]
                     );
         } catch (Exception $e) {
-            return $this->err('Failed to get entities', $e);
+            return $this->err(msg: 'Failed to get entities', e: $e);
         }//end try
 
     }//end batchEntities()
@@ -303,7 +303,7 @@ class BatchAnonymizationController extends Controller
 
             return new JSONResponse($this->anonService->anonymizeBatch($batchId, $entities));
         } catch (Exception $e) {
-            return $this->err('Anonymization failed', $e);
+            return $this->err(msg: 'Anonymization failed', e: $e);
         }
 
     }//end batchAnonymize()
@@ -325,7 +325,7 @@ class BatchAnonymizationController extends Controller
             $csv = $this->reportService->generateReport($batchId);
             return new DataDownloadResponse($csv, 'anonymization-report-'.$batchId.'.csv', 'text/csv');
         } catch (Exception $e) {
-            return $this->err($e->getMessage(), $e);
+            return $this->err(msg: $e->getMessage(), e: $e);
         }
 
     }//end batchReport()
@@ -364,7 +364,7 @@ class BatchAnonymizationController extends Controller
             $this->profileService->saveProfile(['anonymize' => $p['anonymize'], 'keep' => $p['keep']]);
             return new JSONResponse(['message' => 'Profile updated']);
         } catch (Exception $e) {
-            return $this->err('Failed to update profile', $e);
+            return $this->err(msg: 'Failed to update profile', e: $e);
         }
 
     }//end updateProfiles()
