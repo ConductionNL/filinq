@@ -14,8 +14,11 @@ class BatchExtractionService
 {
 
 
-    public function __construct(private readonly LoggerInterface $logger, private readonly AnonymizationService $anonService, private readonly BatchStateService $stateService)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly AnonymizationService $anonService,
+        private readonly BatchStateService $stateService,
+    ) {
 
     }//end __construct()
 
@@ -38,7 +41,12 @@ class BatchExtractionService
         if ($idx === null) {
             $batch['status'] = 'review';
             $this->stateService->updateBatch($batchId, $batch);
-            return ['batchStatus' => 'review', 'message' => 'All files extracted', 'filesExtracted' => count($batch['files']), 'totalFiles' => count($batch['files'])];
+            return [
+                'batchStatus'    => 'review',
+                'message'        => 'All files extracted',
+                'filesExtracted' => count($batch['files']),
+                'totalFiles'     => count($batch['files']),
+            ];
         }
 
         $file = $batch['files'][$idx];
@@ -73,7 +81,15 @@ class BatchExtractionService
             }
         }
 
-        return ['batchStatus' => $batch['status'], 'fileId' => $file['fileId'], 'fileName' => $file['fileName'], 'entityCount' => $batch['files'][$idx]['entityCount'] ?? 0, 'error' => $batch['files'][$idx]['error'] ?? null, 'filesExtracted' => $ext, 'totalFiles' => count($batch['files'])];
+        return [
+            'batchStatus'    => $batch['status'],
+            'fileId'         => $file['fileId'],
+            'fileName'       => $file['fileName'],
+            'entityCount'    => $batch['files'][$idx]['entityCount'] ?? 0,
+            'error'          => $batch['files'][$idx]['error'] ?? null,
+            'filesExtracted' => $ext,
+            'totalFiles'     => count($batch['files']),
+        ];
 
     }//end extractNext()
 

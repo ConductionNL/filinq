@@ -33,7 +33,18 @@ class BatchReportService
         $output = fopen('php://temp', 'r+');
         fputcsv($output, ['fileName', 'originalFileId', 'anonymizedFileId', 'entityCount', 'replacementCount', 'status', 'timestamp']);
         foreach ($batch['files'] as $f) {
-            fputcsv($output, [$f['fileName'] ?? '', $f['fileId'] ?? '', $f['anonymizedFileId'] ?? '', $f['entityCount'] ?? 0, $f['replacementCount'] ?? 0, $f['status'] ?? '', date('c', $batch['createdAt'] ?? time())]);
+            fputcsv(
+                    $output,
+                    [
+                        $f['fileName'] ?? '',
+                        $f['fileId'] ?? '',
+                        $f['anonymizedFileId'] ?? '',
+                        $f['entityCount'] ?? 0,
+                        $f['replacementCount'] ?? 0,
+                        $f['status'] ?? '',
+                        date('c', $batch['createdAt'] ?? time()),
+                    ]
+                    );
         }
 
         rewind($output);

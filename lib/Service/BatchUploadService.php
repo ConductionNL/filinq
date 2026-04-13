@@ -59,7 +59,14 @@ class BatchUploadService
     {
         $batchFiles = [];
         foreach ($files as $uploaded) {
-            $base = ['fileId' => null, 'fileName' => $uploaded['name'], 'status' => 'error', 'entityCount' => 0, 'replacementCount' => 0, 'error' => null];
+            $base = [
+                'fileId'           => null,
+                'fileName'         => $uploaded['name'],
+                'status'           => 'error',
+                'entityCount'      => 0,
+                'replacementCount' => 0,
+                'error'            => null,
+            ];
             if ($uploaded['error'] !== UPLOAD_ERR_OK) {
                 $base['error'] = 'Upload error: '.$uploaded['error'];
                 $batchFiles[]  = $base;
@@ -74,8 +81,15 @@ class BatchUploadService
             }
 
             $result       = $this->uploadService->uploadFile($uploaded['name'], $content);
-            $batchFiles[] = ['fileId' => $result['fileId'], 'fileName' => $result['fileName'], 'status' => 'uploaded', 'entityCount' => 0, 'replacementCount' => 0, 'error' => null];
-        }
+            $batchFiles[] = [
+                'fileId'           => $result['fileId'],
+                'fileName'         => $result['fileName'],
+                'status'           => 'uploaded',
+                'entityCount'      => 0,
+                'replacementCount' => 0,
+                'error'            => null,
+            ];
+        }//end foreach
 
         return $this->stateService->createBatch($userId, $batchFiles);
 

@@ -14,8 +14,11 @@ class BatchAnonymizeService
 {
 
 
-    public function __construct(private readonly LoggerInterface $logger, private readonly AnonymizationService $anonService, private readonly BatchStateService $stateService)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly AnonymizationService $anonService,
+        private readonly BatchStateService $stateService,
+    ) {
 
     }//end __construct()
 
@@ -56,7 +59,13 @@ class BatchAnonymizeService
 
         $batch['status'] = 'completed';
         $this->stateService->updateBatch($batchId, $batch);
-        return ['batchId' => $batchId, 'batchStatus' => 'completed', 'processedFiles' => $processed, 'skippedFiles' => $skipped, 'totalFiles' => count($batch['files'])];
+        return [
+            'batchId'        => $batchId,
+            'batchStatus'    => 'completed',
+            'processedFiles' => $processed,
+            'skippedFiles'   => $skipped,
+            'totalFiles'     => count($batch['files']),
+        ];
 
     }//end anonymizeBatch()
 

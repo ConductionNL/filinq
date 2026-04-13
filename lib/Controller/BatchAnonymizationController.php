@@ -32,9 +32,21 @@ class BatchAnonymizationController extends Controller
 {
 
 
-    public function __construct(string $appName, IRequest $request, private readonly LoggerInterface $logger, private readonly BatchStateService $stateService, private readonly BatchUploadService $uploadService, private readonly BatchExtractionService $extractService, private readonly BatchAnonymizeService $anonService, private readonly BatchReportService $reportService, private readonly EntityConsolidationService $entityService, private readonly WooProfileService $profileService, private readonly FolderBatchService $folderBatchService, private readonly IL10N $l10n)
-    {
-        parent::__construct($appName, $request);
+    public function __construct(
+        string $appName,
+        IRequest $request,
+        private readonly LoggerInterface $logger,
+        private readonly BatchStateService $stateService,
+        private readonly BatchUploadService $uploadService,
+        private readonly BatchExtractionService $extractService,
+        private readonly BatchAnonymizeService $anonService,
+        private readonly BatchReportService $reportService,
+        private readonly EntityConsolidationService $entityService,
+        private readonly WooProfileService $profileService,
+        private readonly FolderBatchService $folderBatchService,
+        private readonly IL10N $l10n,
+    ) {
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -141,7 +153,16 @@ class BatchAnonymizationController extends Controller
 
         $total = count($batch['files']);
         $prog  = $total > 0 ? round(($ext / $total) * 100, 1) : 0;
-        return new JSONResponse(['batchId' => $batch['batchId'], 'batchStatus' => $batch['status'], 'files' => $batch['files'], 'totalEntities' => $ent, 'progress' => $prog, 'totalFiles' => $total]);
+        return new JSONResponse(
+                [
+                    'batchId'       => $batch['batchId'],
+                    'batchStatus'   => $batch['status'],
+                    'files'         => $batch['files'],
+                    'totalEntities' => $ent,
+                    'progress'      => $prog,
+                    'totalFiles'    => $total,
+                ]
+                );
 
     }//end batchStatus()
 
@@ -171,7 +192,14 @@ class BatchAnonymizationController extends Controller
                 }
             }
 
-            return new JSONResponse(['entities' => $entities, 'entityCount' => count($entities), 'complete' => $batch['status'] === 'review', 'filesProcessed' => $filesProcessed]);
+            return new JSONResponse(
+                    [
+                        'entities'       => $entities,
+                        'entityCount'    => count($entities),
+                        'complete'       => $batch['status'] === 'review',
+                        'filesProcessed' => $filesProcessed,
+                    ]
+                    );
         } catch (Exception $e) {
             return $this->err('Failed to get entities', $e);
         }//end try

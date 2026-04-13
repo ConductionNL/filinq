@@ -16,8 +16,12 @@ class EntityConsolidationService
 {
 
 
-    public function __construct(private readonly LoggerInterface $logger, private readonly WooProfileService $wooProfile, private readonly IAppManager $appManager, private readonly ContainerInterface $container)
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly WooProfileService $wooProfile,
+        private readonly IAppManager $appManager,
+        private readonly ContainerInterface $container,
+    ) {
 
     }//end __construct()
 
@@ -65,7 +69,13 @@ class EntityConsolidationService
                 $map[$key]['highestConfidence'] = $conf;
             }
         } else {
-            $map[$key] = ['type' => $type, 'value' => $value, 'highestConfidence' => $conf, 'fileCount' => 1, 'included' => $this->wooProfile->shouldAnonymize((string) $type)];
+            $map[$key] = [
+                'type'              => $type,
+                'value'             => $value,
+                'highestConfidence' => $conf,
+                'fileCount'         => 1,
+                'included'          => $this->wooProfile->shouldAnonymize((string) $type),
+            ];
         }
 
         return $map;
