@@ -362,7 +362,11 @@ class SigningService
     {
         $results = [];
         $user    = $this->userSession->getUser();
-        $userId  = $user !== null ? $user->getUID() : '';
+        if ($user !== null) {
+            $userId = $user->getUID();
+        } else {
+            $userId = '';
+        }
 
         foreach ($requestIds as $requestId) {
             try {

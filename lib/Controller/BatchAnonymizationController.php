@@ -152,7 +152,12 @@ class BatchAnonymizationController extends Controller
         }
 
         $total = count($batch['files']);
-        $prog  = $total > 0 ? round(($ext / $total) * 100, 1) : 0;
+        if ($total > 0) {
+            $prog = round(($ext / $total) * 100, 1);
+        } else {
+            $prog = 0;
+        }
+
         return new JSONResponse(
                 [
                     'batchId'       => $batch['batchId'],

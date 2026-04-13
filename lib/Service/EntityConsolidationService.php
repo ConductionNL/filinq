@@ -54,7 +54,12 @@ class EntityConsolidationService
 
     private function mergeEntity(array $map, mixed $entity): array
     {
-        $d     = is_object($entity) && method_exists($entity, 'jsonSerialize') ? $entity->jsonSerialize() : (array) $entity;
+        if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
+            $d = $entity->jsonSerialize();
+        } else {
+            $d = (array) $entity;
+        }
+
         $type  = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
         $value = $d['entity_value'] ?? $d['entityValue'] ?? '';
         $conf  = (float) ($d['confidence'] ?? 0.0);
