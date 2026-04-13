@@ -99,6 +99,8 @@ class DocuDeskEventListener implements IEventListener
      * @param EnrichmentRunner     $enrichRunner    The enrichment runner
      *
      * @return void
+     *
+     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
      */
     private function dispatchEvent(
         Event $event,
@@ -108,7 +110,6 @@ class DocuDeskEventListener implements IEventListener
         DocuDeskEventHandler $eventHandler,
         EnrichmentRunner $enrichRunner
     ): void {
-        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectCreatedEvent) {
             $eventHandler->handleObjectCreated(
                 $event,
@@ -120,7 +121,6 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
-        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectUpdatedEvent) {
             $eventHandler->handleObjectUpdated(
                 $event,
@@ -132,7 +132,6 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
-        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectDeletedEvent) {
             $eventHandler->handleObjectDeleted($event, $logger);
             return;

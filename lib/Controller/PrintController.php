@@ -150,6 +150,8 @@ class PrintController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      */
     public function preview(): JSONResponse
     {
@@ -181,7 +183,6 @@ class PrintController extends Controller
                 context: ['exception' => $e]
             );
 
-            /** @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599> above */
             return new JSONResponse(
                 data: ['error' => $e->getMessage()],
                 statusCode: $statusCode
@@ -206,6 +207,8 @@ class PrintController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      */
     public function downloadPdfA(): DataDownloadResponse | JSONResponse
     {
@@ -240,7 +243,6 @@ class PrintController extends Controller
                 context: ['exception' => $e]
             );
 
-            /** @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599> above */
             return new JSONResponse(
                 data: ['error' => $e->getMessage()],
                 statusCode: $statusCode

@@ -380,6 +380,8 @@ class BatchAnonymizationController extends Controller
      * @param Exception $e   Exception captured at the controller boundary.
      *
      * @return JSONResponse Error payload with an appropriate HTTP status.
+     *
+     * @psalm-suppress InvalidArgument $code is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      */
     private function err(string $msg, Exception $e): JSONResponse
     {
@@ -389,7 +391,7 @@ class BatchAnonymizationController extends Controller
         }
 
         $this->logger->error($msg.': '.$e->getMessage(), ['exception' => $e]);
-        /** @psalm-suppress InvalidArgument $code is clamped to int<400, 599> above */
+
         return new JSONResponse(['error' => $msg.': '.$e->getMessage()], $code);
 
     }//end err()
