@@ -181,6 +181,7 @@ class PrintController extends Controller
                 context: ['exception' => $e]
             );
 
+            /** @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599> above */
             return new JSONResponse(
                 data: ['error' => $e->getMessage()],
                 statusCode: $statusCode
@@ -239,6 +240,7 @@ class PrintController extends Controller
                 context: ['exception' => $e]
             );
 
+            /** @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599> above */
             return new JSONResponse(
                 data: ['error' => $e->getMessage()],
                 statusCode: $statusCode

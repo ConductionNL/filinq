@@ -85,9 +85,9 @@ class BatchUploadService
                     if (empty($arr) === false && is_array($arr['tmp_name']) === true) {
                         for ($i = 0; $i < count($arr['tmp_name']); $i++) {
                             $files[] = [
-                                'name'     => $arr['name'][$i],
-                                'tmp_name' => $arr['tmp_name'][$i],
-                                'error'    => $arr['error'][$i],
+                                'name'     => (string) $arr['name'][$i],
+                                'tmp_name' => (string) $arr['tmp_name'][$i],
+                                'error'    => (int) $arr['error'][$i],
                             ];
                         }
                     }
@@ -96,7 +96,11 @@ class BatchUploadService
                 break;
             }
 
-            $files[] = $file;
+            $files[] = [
+                'name'     => (string) ($file['name'] ?? ''),
+                'tmp_name' => (string) $file['tmp_name'],
+                'error'    => (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE),
+            ];
             $index++;
         }//end while
 

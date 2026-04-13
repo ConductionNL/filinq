@@ -108,6 +108,7 @@ class DocuDeskEventListener implements IEventListener
         DocuDeskEventHandler $eventHandler,
         EnrichmentRunner $enrichRunner
     ): void {
+        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectCreatedEvent) {
             $eventHandler->handleObjectCreated(
                 $event,
@@ -119,6 +120,7 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
+        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectUpdatedEvent) {
             $eventHandler->handleObjectUpdated(
                 $event,
@@ -130,6 +132,7 @@ class DocuDeskEventListener implements IEventListener
             return;
         }
 
+        /** @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; class may not be loaded */
         if ($event instanceof ObjectDeletedEvent) {
             $eventHandler->handleObjectDeleted($event, $logger);
             return;
@@ -152,6 +155,9 @@ class DocuDeskEventListener implements IEventListener
      * @param Event      $event     The event being processed
      *
      * @return void
+     *
+     * @psalm-suppress UnusedParam $exception and $event are passed to the runtime-resolved logger,
+     *                             but Psalm cannot see the call because \OC::$server->get() is mixed.
      */
     private function logHandlerError(\Exception $exception, Event $event): void
     {

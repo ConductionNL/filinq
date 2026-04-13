@@ -383,12 +383,13 @@ class BatchAnonymizationController extends Controller
      */
     private function err(string $msg, Exception $e): JSONResponse
     {
-        $code = $e->getCode();
+        $code = (int) $e->getCode();
         if ($code < 400 || $code >= 600) {
             $code = 500;
         }
 
         $this->logger->error($msg.': '.$e->getMessage(), ['exception' => $e]);
+        /** @psalm-suppress InvalidArgument $code is clamped to int<400, 599> above */
         return new JSONResponse(['error' => $msg.': '.$e->getMessage()], $code);
 
     }//end err()

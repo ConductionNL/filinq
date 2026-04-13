@@ -125,6 +125,7 @@ class TemplateRequestHandler
             context: ['exception' => $exception]
         );
 
+        /** @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599> above */
         return new JSONResponse(
             data: ['error' => $exception->getMessage()],
             statusCode: $statusCode
