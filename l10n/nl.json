@@ -135,6 +135,8 @@
         "No files found in folder": "Geen bestanden gevonden in map",
         "Folder contains too many files (found: %1$s, maximum: %2$s)": "Map bevat te veel bestanden (gevonden: %1$s, maximum: %2$s)",
         "Extraction has not started": "Extractie is nog niet gestart",
-        "No folder path provided": "Geen mappad opgegeven"
+        "No folder path provided": "Geen mappad opgegeven",
+        "Either folderId or folderPath must be provided": "Geef folderId of folderPath op",
+        "Provide only one of folderId or folderPath": "Geef slechts één van folderId of folderPath op"
     }
 }

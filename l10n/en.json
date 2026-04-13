@@ -135,6 +135,8 @@
         "No files found in folder": "No files found in folder",
         "Folder contains too many files (found: %1$s, maximum: %2$s)": "Folder contains too many files (found: %1$s, maximum: %2$s)",
         "Extraction has not started": "Extraction has not started",
-        "No folder path provided": "No folder path provided"
+        "No folder path provided": "No folder path provided",
+        "Either folderId or folderPath must be provided": "Either folderId or folderPath must be provided",
+        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath"
     }
 }

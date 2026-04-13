@@ -43,9 +43,10 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
- * @phpstan-extends TestCase
+ * @psalm-suppress                                 PropertyNotSetInConstructor
+ * @phpstan-extends                                TestCase
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class BatchAnonymizationControllerFolderTest extends TestCase
 {
@@ -131,56 +132,216 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
 
     /**
-     * Test folderBatch returns batch data on success
+     * Stub IRequest::getParam() to return given values for folderId and folderPath.
+     *
+     * Matches the controller's call pattern:
+     *   getParam('folderId')           => $folderIdReturn
+     *   getParam('folderPath', '')     => $folderPathReturn
+     *
+     * @param mixed $folderIdReturn   Value to return when getParam('folderId') is called
+     * @param mixed $folderPathReturn Value to return when getParam('folderPath', '') is called
      *
      * @return void
      */
-    public function testFolderBatchSuccess(): void
+    private function stubFolderParams(mixed $folderIdReturn, mixed $folderPathReturn): void
     {
-        $this->mockRequest->method('getParam')->with('folderPath', '')->willReturn('/Documents/WOB');
+        $this->mockRequest->method('getParam')->willReturnCallback(
+            function (string $key, mixed $default=null) use ($folderIdReturn, $folderPathReturn) {
+                if ($key === 'folderId') {
+                    return $folderIdReturn;
+                }
 
-        $this->mockFolderService->method('createFolderBatch')->willReturn([
-            'batchId' => 'uuid-1',
-            'files'   => [
-                ['fileId' => 1, 'fileName' => 'a.pdf'],
-                ['fileId' => 2, 'fileName' => 'b.pdf'],
-            ],
-        ]);
+                if ($key === 'folderPath') {
+                    return $folderPathReturn;
+                }
+
+                return $default;
+            }
+        );
+
+    }//end stubFolderParams()
+
+
+    /**
+     * Existing path flow still works; response now also includes folderId/folderPath.
+     *
+     * @return void
+     */
+    public function testFolderBatchAcceptsFolderPath(): void
+    {
+        $this->stubFolderParams(null, '/Documents/WOB');
+
+        $this->mockFolderService->expects($this->once())
+            ->method('createFolderBatch')
+            ->with(null, '/Documents/WOB')
+            ->willReturn(
+                    [
+                        'batchId'    => 'uuid-1',
+                        'folderId'   => 500,
+                        'folderPath' => '/Documents/WOB',
+                        'files'      => [
+                            ['fileId' => 1, 'fileName' => 'a.pdf'],
+                            ['fileId' => 2, 'fileName' => 'b.pdf'],
+                        ],
+                    ]
+                    );
 
         $response = $this->controller->folderBatch();
 
         $this->assertInstanceOf(JSONResponse::class, $response);
         $data = $response->getData();
         $this->assertEquals('uuid-1', $data['batchId']);
+        $this->assertEquals(500, $data['folderId']);
+        $this->assertEquals('/Documents/WOB', $data['folderPath']);
         $this->assertEquals(2, $data['fileCount']);
 
-    }//end testFolderBatchSuccess()
+    }//end testFolderBatchAcceptsFolderPath()
 
 
     /**
-     * Test folderBatch returns 400 when no path provided
+     * folderId-only request: controller delegates with int id and null path,
+     * response includes both identifiers.
      *
      * @return void
      */
-    public function testFolderBatchMissingPath(): void
+    public function testFolderBatchAcceptsFolderId(): void
     {
-        $this->mockRequest->method('getParam')->with('folderPath', '')->willReturn('');
+        $this->stubFolderParams('12345', '');
+
+        $this->mockFolderService->expects($this->once())
+            ->method('createFolderBatch')
+            ->with(12345, null)
+            ->willReturn(
+                    [
+                        'batchId'    => 'uuid-id',
+                        'folderId'   => 12345,
+                        'folderPath' => '/Shared/Cases',
+                        'files'      => [['fileId' => 1, 'fileName' => 'a.pdf']],
+                    ]
+                    );
 
         $response = $this->controller->folderBatch();
+        $data     = $response->getData();
 
-        $this->assertEquals(400, $response->getStatus());
+        $this->assertEquals('uuid-id', $data['batchId']);
+        $this->assertEquals(12345, $data['folderId']);
+        $this->assertEquals('/Shared/Cases', $data['folderPath']);
+        $this->assertEquals(1, $data['fileCount']);
 
-    }//end testFolderBatchMissingPath()
+    }//end testFolderBatchAcceptsFolderId()
 
 
     /**
-     * Test folderBatch propagates error codes
+     * Request with both folderId and folderPath is rejected with 400 at the
+     * controller boundary and the service is never invoked.
+     *
+     * @return void
+     */
+    public function testFolderBatchRejectsBothIdAndPath(): void
+    {
+        $this->stubFolderParams('12345', '/Documents/WOB');
+
+        $this->mockFolderService->expects($this->never())->method('createFolderBatch');
+
+        $response = $this->controller->folderBatch();
+        $data     = $response->getData();
+
+        $this->assertEquals(400, $response->getStatus());
+        $this->assertStringContainsString('Provide only one of folderId or folderPath', $data['error']);
+
+    }//end testFolderBatchRejectsBothIdAndPath()
+
+
+    /**
+     * Request with neither id nor path is rejected with 400 at the controller
+     * boundary.
+     *
+     * @return void
+     */
+    public function testFolderBatchRejectsNeitherIdNorPath(): void
+    {
+        $this->stubFolderParams(null, '');
+
+        $this->mockFolderService->expects($this->never())->method('createFolderBatch');
+
+        $response = $this->controller->folderBatch();
+        $data     = $response->getData();
+
+        $this->assertEquals(400, $response->getStatus());
+        $this->assertStringContainsString('Either folderId or folderPath must be provided', $data['error']);
+
+    }//end testFolderBatchRejectsNeitherIdNorPath()
+
+
+    /**
+     * Request param arrives as a string (HTTP default) — controller coerces to int
+     * before passing to the service.
+     *
+     * @return void
+     */
+    public function testFolderBatchCoercesFolderIdFromString(): void
+    {
+        $this->stubFolderParams('12345', '');
+
+        $this->mockFolderService->expects($this->once())
+            ->method('createFolderBatch')
+            ->with(
+                $this->identicalTo(12345),
+                $this->identicalTo(null)
+            )
+            ->willReturn(
+                    [
+                        'batchId'    => 'uuid',
+                        'folderId'   => 12345,
+                        'folderPath' => '/Shared/Cases',
+                        'files'      => [],
+                    ]
+                    );
+
+        $this->controller->folderBatch();
+
+    }//end testFolderBatchCoercesFolderIdFromString()
+
+
+    /**
+     * Empty-string folderId with a real folderPath: the empty id must be treated
+     * as unset (null) rather than coerced to int(0).
+     *
+     * @return void
+     */
+    public function testFolderBatchTreatsEmptyStringAsUnset(): void
+    {
+        $this->stubFolderParams('', '/Documents/WOB');
+
+        $this->mockFolderService->expects($this->once())
+            ->method('createFolderBatch')
+            ->with(
+                $this->identicalTo(null),
+                $this->identicalTo('/Documents/WOB')
+            )
+            ->willReturn(
+                    [
+                        'batchId'    => 'uuid',
+                        'folderId'   => 500,
+                        'folderPath' => '/Documents/WOB',
+                        'files'      => [],
+                    ]
+                    );
+
+        $this->controller->folderBatch();
+
+    }//end testFolderBatchTreatsEmptyStringAsUnset()
+
+
+    /**
+     * Test folderBatch propagates error codes from the service (e.g. 404).
      *
      * @return void
      */
     public function testFolderBatchNotFound(): void
     {
-        $this->mockRequest->method('getParam')->with('folderPath', '')->willReturn('/nonexistent');
+        $this->stubFolderParams(null, '/nonexistent');
+
         $this->mockFolderService->method('createFolderBatch')
             ->willThrowException(new Exception('Folder not found', 404));
 
@@ -192,7 +353,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
 
     /**
-     * Test batchEntities allows extracting status with partial results
+     * Test batchEntities allows extracting status with partial results.
      *
      * @return void
      */
@@ -209,9 +370,11 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
         $this->mockStateService->method('getBatch')->willReturn($batch);
         $this->mockRequest->method('getParam')->willReturn('0.0');
-        $this->mockEntityService->method('consolidateEntities')->willReturn([
-            ['type' => 'PERSON', 'value' => 'Jan', 'highestConfidence' => 0.9, 'fileCount' => 1],
-        ]);
+        $this->mockEntityService->method('consolidateEntities')->willReturn(
+                [
+                    ['type' => 'PERSON', 'value' => 'Jan', 'highestConfidence' => 0.9, 'fileCount' => 1],
+                ]
+                );
 
         $response = $this->controller->batchEntities('b1');
         $data     = $response->getData();
@@ -225,7 +388,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
 
     /**
-     * Test batchEntities returns complete=true for review status
+     * Test batchEntities returns complete=true for review status.
      *
      * @return void
      */
@@ -254,7 +417,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
 
     /**
-     * Test batchEntities returns 409 for uploading status
+     * Test batchEntities returns 409 for uploading status.
      *
      * @return void
      */
