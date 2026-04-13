@@ -1,21 +1,53 @@
 <?php
+/**
+ * Entity Consolidation Service
+ *
+ * Merges entity detections from every extracted file in a batch into a
+ * single de-duplicated list. Entities are grouped by lower-cased value,
+ * counted across files, and marked as "included" (subject to anonymization)
+ * based on the WOO profile and a minimum-confidence threshold.
+ *
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ */
+
 declare(strict_types=1);
+
 namespace OCA\DocuDesk\Service;
+
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+
 /**
+ * Consolidates per-file entity detections into a unified batch-level list.
+ *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
 class EntityConsolidationService
 {
 
 
+    /**
+     * Constructor for EntityConsolidationService
+     *
+     * @param LoggerInterface    $logger     Logger for error reporting.
+     * @param WooProfileService  $wooProfile Profile service describing which entity types to anonymize.
+     * @param IAppManager        $appManager App manager used to check for OpenRegister availability.
+     * @param ContainerInterface $container  DI container used to resolve OpenRegister mappers at runtime.
+     *
+     * @return void
+     */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly WooProfileService $wooProfile,
@@ -26,6 +58,18 @@ class EntityConsolidationService
     }//end __construct()
 
 
+    /**
+     * Consolidate entity detections across every extracted file in a batch.
+     *
+     * Entities below the supplied confidence threshold are kept in the
+     * result but flagged as `included => false` so the UI can still show
+     * them for manual review.
+     *
+     * @param array<string, mixed> $batch         Batch record whose file list should be consolidated.
+     * @param float                $minConfidence Minimum confidence required for an entity to be included by default.
+     *
+     * @return array<int, array<string, mixed>> Consolidated, confidence-sorted list of entities.
+     */
     public function consolidateEntities(array $batch, float $minConfidence=0.0): array
     {
         $map = [];
@@ -52,6 +96,17 @@ class EntityConsolidationService
     }//end consolidateEntities()
 
 
+    /**
+     * Merge a single entity detection into the running consolidation map.
+     *
+     * Entries are keyed by lower-cased entity value. Duplicate detections
+     * bump the file count and keep the highest confidence seen so far.
+     *
+     * @param array<string, array<string, mixed>> $map    Running consolidation map keyed by lower-cased value.
+     * @param mixed                               $entity Raw entity detection (object or array-like).
+     *
+     * @return array<string, array<string, mixed>> Updated consolidation map.
+     */
     private function mergeEntity(array $map, mixed $entity): array
     {
         if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
@@ -88,6 +143,17 @@ class EntityConsolidationService
     }//end mergeEntity()
 
 
+    /**
+     * Fetch the entity detections stored for a single file by OpenRegister.
+     *
+     * Returns an empty array and logs a warning when OpenRegister is not
+     * installed or the lookup fails — callers treat missing entities as a
+     * non-fatal condition.
+     *
+     * @param int $fileId Nextcloud file ID whose entities should be fetched.
+     *
+     * @return array<int, mixed> Raw entity detections, or an empty array on failure.
+     */
     private function getEntitiesForFile(int $fileId): array
     {
         try {

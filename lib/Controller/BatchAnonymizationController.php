@@ -1,4 +1,22 @@
 <?php
+/**
+ * Batch Anonymization Controller
+ *
+ * HTTP entry points for the multi-file anonymization workflow: uploading
+ * a batch (or adopting a folder), kicking off extraction, inspecting the
+ * consolidated entity list, applying the user-approved replacements, and
+ * downloading the final CSV report. Also exposes the WOO entity profile
+ * used to decide which entity types get anonymized by default.
+ *
+ * @category  Controller
+ * @package   OCA\DocuDesk\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ */
+
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
@@ -20,11 +38,14 @@ use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * @category                                       Controller
- * @package                                        OCA\DocuDesk\Controller
- * @author                                         Conduction B.V. <info@conduction.nl>
- * @license                                        EUPL-1.2
- * @link                                           https://www.DocuDesk.app
+ * Controller that wires the batch-anonymization routes to their service layer.
+ *
+ * @category Controller
+ * @package  OCA\DocuDesk\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
@@ -32,6 +53,24 @@ class BatchAnonymizationController extends Controller
 {
 
 
+    /**
+     * Constructor for BatchAnonymizationController
+     *
+     * @param string                     $appName            App name passed through to the base Controller.
+     * @param IRequest                   $request            Current HTTP request.
+     * @param LoggerInterface            $logger             Logger used by the err() helper for failure reporting.
+     * @param BatchStateService          $stateService       Service that stores and loads batch records.
+     * @param BatchUploadService         $uploadService      Service that persists uploaded files into a new batch.
+     * @param BatchExtractionService     $extractService     Service that drives per-file entity extraction.
+     * @param BatchAnonymizeService      $anonService        Service that applies approved entities across a batch.
+     * @param BatchReportService         $reportService      Service that produces the per-batch CSV report.
+     * @param EntityConsolidationService $entityService      Service that merges per-file entity detections into one list.
+     * @param WooProfileService          $profileService     Service that stores the WOO entity profile.
+     * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
+     * @param IL10N                      $l10n               Translator for user-facing error messages.
+     *
+     * @return void
+     */
     public function __construct(
         string $appName,
         IRequest $request,
@@ -52,6 +91,10 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Accept a multipart upload and create a new anonymization batch.
+     *
+     * @return JSONResponse Batch metadata (id, file count, per-file entries) or an error payload.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -68,10 +111,16 @@ class BatchAnonymizationController extends Controller
             }
 
             $batch = $this->uploadService->processBatchUpload($this->uploadService->getUserId(), $files);
-            return new JSONResponse(['batchId' => $batch['batchId'], 'fileCount' => count($batch['files']), 'files' => $batch['files']]);
+            return new JSONResponse(
+                [
+                    'batchId'   => $batch['batchId'],
+                    'fileCount' => count($batch['files']),
+                    'files'     => $batch['files'],
+                ]
+            );
         } catch (Exception $e) {
             return $this->err('Batch upload failed', $e);
-        }
+        }//end try
 
     }//end batchUpload()
 
@@ -117,6 +166,12 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Extract entities from the next pending file in a batch.
+     *
+     * @param string $batchId Identifier of the batch to advance.
+     *
+     * @return JSONResponse Per-file extraction result, or an error payload.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -132,6 +187,12 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Return progress, per-file status, and total entity count for a batch.
+     *
+     * @param string $batchId Identifier of the batch to inspect.
+     *
+     * @return JSONResponse Batch status snapshot, or 404 when the batch is unknown.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -173,6 +234,16 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Return the consolidated entity list for a batch once extraction has started.
+     *
+     * Accepts an optional `minConfidence` query parameter; entities below the
+     * threshold are returned but flagged as not-included so the UI can still
+     * surface them for manual review.
+     *
+     * @param string $batchId Identifier of the batch whose entities should be returned.
+     *
+     * @return JSONResponse Consolidated entity list plus progress metadata, or an error payload.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -213,6 +284,12 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Apply the user-approved entity list to every extracted file in a batch.
+     *
+     * @param string $batchId Identifier of the batch to anonymize.
+     *
+     * @return JSONResponse Summary of the run, or an error payload when the request body is malformed.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -233,6 +310,12 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Produce the CSV anonymization report for a batch as a file download.
+     *
+     * @param string $batchId Identifier of the batch to report on.
+     *
+     * @return JSONResponse|DataDownloadResponse CSV download on success, JSON error payload on failure.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -249,6 +332,10 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Return the active WOO anonymization profile.
+     *
+     * @return JSONResponse Profile with `anonymize` and `keep` entity-type arrays.
+     *
      * @NoAdminRequired
      * @NoCSRFRequired
      */
@@ -260,6 +347,10 @@ class BatchAnonymizationController extends Controller
 
 
     /**
+     * Persist a new WOO anonymization profile from the request body.
+     *
+     * @return JSONResponse Success message, or an error payload when the body is malformed.
+     *
      * @NoCSRFRequired
      */
     public function updateProfiles(): JSONResponse
@@ -279,6 +370,17 @@ class BatchAnonymizationController extends Controller
     }//end updateProfiles()
 
 
+    /**
+     * Build a JSON error response, logging the underlying exception.
+     *
+     * Exception codes outside the HTTP error range (400..599) are normalized
+     * to 500 so the client always receives a valid status.
+     *
+     * @param string    $msg Human-readable description of what failed.
+     * @param Exception $e   Exception captured at the controller boundary.
+     *
+     * @return JSONResponse Error payload with an appropriate HTTP status.
+     */
     private function err(string $msg, Exception $e): JSONResponse
     {
         $code = $e->getCode();
