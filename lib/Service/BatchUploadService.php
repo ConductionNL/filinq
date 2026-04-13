@@ -12,13 +12,21 @@ use OCP\IRequest;
  */
 class BatchUploadService
 {
+
+
     public function __construct(private readonly FileUploadService $uploadService, private readonly BatchStateService $stateService)
     {
-    }
+
+    }//end __construct()
+
+
     public function getUserId(): string
     {
         return $this->uploadService->getCurrentUserId();
-    }
+
+    }//end getUserId()
+
+
     public function collectFiles(IRequest $request): array
     {
         $files = [];
@@ -34,24 +42,44 @@ class BatchUploadService
                         }
                     }
                 }
+
                 break;
             }
+
             $files[] = $file;
             $index++;
         }
+
         return $files;
-    }
+
+    }//end collectFiles()
+
+
     public function processBatchUpload(string $userId, array $files): array
     {
         $batchFiles = [];
         foreach ($files as $uploaded) {
             $base = ['fileId' => null, 'fileName' => $uploaded['name'], 'status' => 'error', 'entityCount' => 0, 'replacementCount' => 0, 'error' => null];
-            if ($uploaded['error'] !== UPLOAD_ERR_OK) { $base['error'] = 'Upload error: '.$uploaded['error']; $batchFiles[] = $base; continue; }
+            if ($uploaded['error'] !== UPLOAD_ERR_OK) {
+                $base['error'] = 'Upload error: '.$uploaded['error'];
+                $batchFiles[]  = $base;
+                continue;
+            }
+
             $content = file_get_contents($uploaded['tmp_name']);
-            if ($content === false) { $base['error'] = 'Failed to read file'; $batchFiles[] = $base; continue; }
-            $result = $this->uploadService->uploadFile($uploaded['name'], $content);
+            if ($content === false) {
+                $base['error'] = 'Failed to read file';
+                $batchFiles[]  = $base;
+                continue;
+            }
+
+            $result       = $this->uploadService->uploadFile($uploaded['name'], $content);
             $batchFiles[] = ['fileId' => $result['fileId'], 'fileName' => $result['fileName'], 'status' => 'uploaded', 'entityCount' => 0, 'replacementCount' => 0, 'error' => null];
         }
+
         return $this->stateService->createBatch($userId, $batchFiles);
-    }
-}
+
+    }//end processBatchUpload()
+
+
+}//end class

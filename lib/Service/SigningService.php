@@ -58,13 +58,13 @@ class SigningService
     /**
      * Constructor
      *
-     * @param SettingsService        $settingsService        Settings service
-     * @param SigningAuditService    $auditService           Audit service
-     * @param SigningProviderFactory $providerFactory        Provider factory
-     * @param IAppConfig             $config                 App config
-     * @param IUserSession           $userSession            User session
-     * @param INotificationManager   $notificationManager    Notification manager
-     * @param LoggerInterface        $logger                 Logger
+     * @param SettingsService        $settingsService     Settings service
+     * @param SigningAuditService    $auditService        Audit service
+     * @param SigningProviderFactory $providerFactory     Provider factory
+     * @param IAppConfig             $config              App config
+     * @param IUserSession           $userSession         User session
+     * @param INotificationManager   $notificationManager Notification manager
+     * @param LoggerInterface        $logger              Logger
      *
      * @return void
      */
@@ -140,7 +140,7 @@ class SigningService
             $signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
         }//end foreach
 
-        $requestId                   = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
+        $requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
         $createdRequest['signerIds'] = $signerIds;
         $objectService->saveObject($register, $schema, $createdRequest);
 
@@ -237,7 +237,7 @@ class SigningService
             throw new \RuntimeException('Signer has already responded to this request');
         }
 
-        $now                 = new \DateTimeImmutable();
+        $now = new \DateTimeImmutable();
         $signer['status']    = 'SIGNED';
         $signer['signedAt']  = $now->format(\DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
@@ -366,8 +366,8 @@ class SigningService
 
         foreach ($requestIds as $requestId) {
             try {
-                $request       = $this->getRequest(requestId: $requestId);
-                $signerIds     = $request['signerIds'] ?? [];
+                $request        = $this->getRequest(requestId: $requestId);
+                $signerIds      = $request['signerIds'] ?? [];
                 $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
 
                 if ($targetSignerId !== null) {

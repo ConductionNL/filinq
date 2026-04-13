@@ -31,10 +31,10 @@ class FolderExtractionJob extends QueuedJob
     /**
      * Constructor for FolderExtractionJob
      *
-     * @param ITimeFactory          $time         Time factory
-     * @param AnonymizationService  $anonService  Anonymization/extraction service
-     * @param BatchStateService     $stateService Batch state management
-     * @param LoggerInterface       $logger       Logger for error reporting
+     * @param ITimeFactory         $time         Time factory
+     * @param AnonymizationService $anonService  Anonymization/extraction service
+     * @param BatchStateService    $stateService Batch state management
+     * @param LoggerInterface      $logger       Logger for error reporting
      *
      * @return void
      */
@@ -85,7 +85,7 @@ class FolderExtractionJob extends QueuedJob
             try {
                 $result = $this->anonService->extractAndDetectEntities((int) $file['fileId']);
                 $batch['files'][$i]['status']      = 'extracted';
-                $batch['files'][$i]['entityCount']  = $result['entityCount'];
+                $batch['files'][$i]['entityCount'] = $result['entityCount'];
             } catch (Exception $e) {
                 $this->logger->warning(
                     'FolderExtractionJob: extraction failed for file',
@@ -106,7 +106,7 @@ class FolderExtractionJob extends QueuedJob
         foreach ($batch['files'] as $f) {
             if ($f['status'] === 'extracted') {
                 $extracted++;
-            } elseif ($f['status'] === 'error') {
+            } else if ($f['status'] === 'error') {
                 $errors++;
             }
         }
