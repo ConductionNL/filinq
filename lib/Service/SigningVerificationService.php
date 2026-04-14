@@ -125,7 +125,7 @@ class SigningVerificationService
             }//end foreach
         }
 
-        if (empty($signatures) === true && $matches > 0) {
+        if (empty($signatures) === true) {
             for ($i = 0; $i < $matches; $i++) {
                 $signatures[] = [
                     'signer'    => 'External signer',

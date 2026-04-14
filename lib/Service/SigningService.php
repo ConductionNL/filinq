@@ -293,6 +293,9 @@ class SigningService
         $schema   = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
         $request  = $objectService->getObject($register, $schema, $requestId);
 
+        $signatureLevel = $request['signatureLevel'] ?? 'SES';
+        $provider       = $request['provider'] ?? 'native';
+
         $request['status'] = 'DECLINED';
         $objectService->saveObject($register, $schema, $request);
 
@@ -302,8 +305,8 @@ class SigningService
             actorUserId: $user->getUID(),
             actorDisplayName: $user->getDisplayName(),
             ipAddress: $this->getClientIp(),
-            signatureLevel: $request['signatureLevel'] ?? 'SES',
-            provider: $request['provider'] ?? 'native',
+            signatureLevel: $signatureLevel,
+            provider: $provider,
             metadata: ['reason' => $reason]
         );
 

@@ -171,7 +171,7 @@ class TemplatesController extends Controller
     public function update(string $id): JSONResponse
     {
         try {
-            $data   = $this->requestHandler->parseBodyParams(request: $this->request, exclude: ['id']);
+            $data   = $this->requestHandler->parseBodyParams(request: $this->request, stripKeys: ['id']);
             $result = $this->templateService->updateTemplate(id: $id, data: $data);
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
