@@ -26,7 +26,9 @@
 					</tr>
 				</tbody>
 			</table>
-			<p v-else>{{ t('docudesk', 'No audit entries yet.') }}</p>
+			<p v-else>
+				{{ t('docudesk', 'No audit entries yet.') }}
+			</p>
 		</template>
 	</div>
 </template>

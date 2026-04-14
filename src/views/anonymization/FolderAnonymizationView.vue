@@ -48,7 +48,9 @@
 				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeBatch()">
 					{{ t('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
 				</NcButton>
-				<NcButton type="tertiary" @click="store.reset()">{{ t('docudesk', 'Cancel') }}</NcButton>
+				<NcButton type="tertiary" @click="store.reset()">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
 			</div>
 		</div>
 
@@ -64,15 +66,23 @@
 				{{ t('docudesk', 'All documents in the folder have been anonymized. Anonymized copies have been saved with the _anonymized suffix.') }}
 			</NcNoteCard>
 			<div class="action-bar">
-				<NcButton type="secondary" @click="downloadReport">{{ t('docudesk', 'Download Report') }}</NcButton>
-				<NcButton type="primary" @click="store.reset()">{{ t('docudesk', 'Analyze Another Folder') }}</NcButton>
+				<NcButton type="secondary" @click="downloadReport">
+					{{ t('docudesk', 'Download Report') }}
+				</NcButton>
+				<NcButton type="primary" @click="store.reset()">
+					{{ t('docudesk', 'Analyze Another Folder') }}
+				</NcButton>
 			</div>
 		</div>
 
 		<!-- Error state -->
 		<div v-if="store.batchStatus === 'error'" class="error-section">
-			<NcNoteCard type="error">{{ store.error || t('docudesk', 'An error occurred') }}</NcNoteCard>
-			<NcButton type="primary" @click="store.reset()">{{ t('docudesk', 'Try Again') }}</NcButton>
+			<NcNoteCard type="error">
+				{{ store.error || t('docudesk', 'An error occurred') }}
+			</NcNoteCard>
+			<NcButton type="primary" @click="store.reset()">
+				{{ t('docudesk', 'Try Again') }}
+			</NcButton>
 		</div>
 	</div>
 </template>
