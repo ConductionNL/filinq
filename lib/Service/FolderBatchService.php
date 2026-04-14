@@ -49,11 +49,12 @@ class FolderBatchService
     /**
      * Constructor for FolderBatchService
      *
-     * @param LoggerInterface   $logger       Logger for error reporting
-     * @param IRootFolder       $rootFolder   Root folder for file operations
-     * @param IUserSession      $userSession  User session for current user
-     * @param BatchStateService $stateService Batch state management
-     * @param IJobList          $jobList      Background job list
+     * @param LoggerInterface      $logger       Logger for error reporting
+     * @param IRootFolder          $rootFolder   Root folder for file operations
+     * @param IUserSession         $userSession  User session for current user
+     * @param BatchStateService    $stateService Batch state management
+     * @param IJobList             $jobList      Background job list
+     * @param AnonymizationService $anonService  Anonymization/extraction service
      *
      * @return void
      */
@@ -62,7 +63,8 @@ class FolderBatchService
         private readonly IRootFolder $rootFolder,
         private readonly IUserSession $userSession,
         private readonly BatchStateService $stateService,
-        private readonly IJobList $jobList
+        private readonly IJobList $jobList,
+        private readonly AnonymizationService $anonService
     ) {
 
     }//end __construct()
@@ -136,9 +138,12 @@ class FolderBatchService
         $batch['folderPath'] = $resolvedFolderPath;
         $this->stateService->updateBatch($batch['batchId'], $batch);
 
-        // Queue the extraction job and fire it immediately (no cron wait).
+        // Run extraction asynchronously: the shutdown function fires after the
+        // HTTP response has been flushed to the client (via fastcgi_finish_request).
+        // The IJobList entry serves as a fallback if the shutdown handler is
+        // interrupted (e.g. process kill, memory limit).
         $this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
-        $this->fireJob(batchId: $batch['batchId']);
+        $this->scheduleExtraction(batchId: $batch['batchId']);
 
         $this->logger->info(
             'Folder batch created, extraction job fired',
@@ -231,34 +236,70 @@ class FolderBatchService
 
 
     /**
-     * Find the queued job by batchId and execute it immediately via occ
+     * Schedule extraction to run after the HTTP response is flushed
      *
-     * @param string $batchId The batch ID to match
+     * Registers a shutdown function that flushes the response to the client
+     * (via fastcgi_finish_request on PHP-FPM) and then runs extraction
+     * inline. If the extraction completes, the queued background job is
+     * removed since it is no longer needed.
+     *
+     * @param string $batchId The batch ID to extract
      *
      * @return void
      */
-    private function fireJob(string $batchId): void
+    private function scheduleExtraction(string $batchId): void
     {
-        $jobId = null;
-        foreach ($this->jobList->getJobs(FolderExtractionJob::class, 100, 0) as $job) {
-            $arg = $job->getArgument();
-            if (is_array($arg) === true && ($arg['batchId'] ?? '') === $batchId) {
-                $jobId = $job->getId();
-                break;
+        $stateService = $this->stateService;
+        $anonService  = $this->anonService;
+        $jobList      = $this->jobList;
+        $logger       = $this->logger;
+
+        register_shutdown_function(
+            static function () use ($batchId, $stateService, $anonService, $jobList, $logger): void {
+                // Flush the response to the client before doing heavy work.
+                if (function_exists('fastcgi_finish_request') === true) {
+                    fastcgi_finish_request();
+                }
+
+                $batch = $stateService->getBatch($batchId);
+                if ($batch === null) {
+                    return;
+                }
+
+                $batch['status'] = 'extracting';
+                $stateService->updateBatch($batchId, $batch);
+
+                foreach ($batch['files'] as $i => $file) {
+                    if ($file['status'] !== 'uploaded') {
+                        continue;
+                    }
+
+                    try {
+                        $result                            = $anonService->extractAndDetectEntities((int) $file['fileId']);
+                        $batch['files'][$i]['status']      = 'extracted';
+                        $batch['files'][$i]['entityCount'] = $result['entityCount'];
+                    } catch (\Exception $e) {
+                        $logger->warning(
+                            'Shutdown extraction failed for file',
+                            ['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
+                        );
+                        $batch['files'][$i]['status'] = 'error';
+                        $batch['files'][$i]['error']  = $e->getMessage();
+                    }
+
+                    $stateService->updateBatch($batchId, $batch);
+                }//end foreach
+
+                $batch['status'] = 'review';
+                $stateService->updateBatch($batchId, $batch);
+
+                // Extraction completed — remove the fallback background job.
+                $jobList->remove(FolderExtractionJob::class, ['batchId' => $batchId]);
             }
-        }
+        );
 
-        if ($jobId === null) {
-            $this->logger->warning('Could not find job to fire immediately', ['batchId' => $batchId]);
-            return;
-        }
+    }//end scheduleExtraction()
 
-        $phpBinary  = PHP_BINARY;
-        $serverRoot = \OC::$SERVERROOT;
-
-        exec($phpBinary.' '.$serverRoot.'/occ background-job:execute '.$jobId.' > /dev/null 2>&1 &');
-
-    }//end fireJob()
 
 
     /**
