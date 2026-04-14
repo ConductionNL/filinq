@@ -8,9 +8,9 @@ import { useBatchAnonymizationStore } from './modules/batchAnonymization.js'
 import { useFolderAnonymizationStore } from './modules/folderAnonymization.js'
 import { useSettingsStore } from './modules/settings.js'
 
-const navigationStore    = useNavigationStore(pinia)
-const consentStore       = useConsentStore(pinia)
-const anonymizationStore      = useAnonymizationStore(pinia)
+const navigationStore = useNavigationStore(pinia)
+const consentStore = useConsentStore(pinia)
+const anonymizationStore = useAnonymizationStore(pinia)
 const batchAnonymizationStore = useBatchAnonymizationStore(pinia)
 const folderAnonymizationStore = useFolderAnonymizationStore(pinia)
 
@@ -19,19 +19,18 @@ const folderAnonymizationStore = useFolderAnonymizationStore(pinia)
  *
  * @return {Promise<void>}
  */
-async function initializeStores()
-{
-    const settingsStore = useSettingsStore(pinia)
-    await settingsStore.fetchSettings()
+async function initializeStores() {
+	const settingsStore = useSettingsStore(pinia)
+	await settingsStore.fetchSettings()
 
 }
 
 export {
-    navigationStore,
-    consentStore,
-    anonymizationStore,
-    batchAnonymizationStore,
-    folderAnonymizationStore,
-    useSettingsStore,
-    initializeStores,
+	navigationStore,
+	consentStore,
+	anonymizationStore,
+	batchAnonymizationStore,
+	folderAnonymizationStore,
+	useSettingsStore,
+	initializeStores,
 }

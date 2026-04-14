@@ -12,16 +12,26 @@
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
-				<option value="SES">SES - Simple</option>
-				<option value="AdES">AdES - Advanced</option>
-				<option value="QES">QES - Qualified</option>
+				<option value="SES">
+					SES - Simple
+				</option>
+				<option value="AdES">
+					AdES - Advanced
+				</option>
+				<option value="QES">
+					QES - Qualified
+				</option>
 			</select>
 		</div>
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signing Mode') }}</label>
 			<select v-model="form.signingMode">
-				<option value="sequential">{{ t('docudesk', 'Sequential') }}</option>
-				<option value="parallel">{{ t('docudesk', 'Parallel') }}</option>
+				<option value="sequential">
+					{{ t('docudesk', 'Sequential') }}
+				</option>
+				<option value="parallel">
+					{{ t('docudesk', 'Parallel') }}
+				</option>
 			</select>
 		</div>
 		<NcButton type="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">

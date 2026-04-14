@@ -4,8 +4,14 @@
 		<div v-if="!batchAnonymizationStore.isActive" class="upload-section">
 			<div class="drop-zone" @dragover.prevent @drop.prevent="handleDrop">
 				<p>Drag and drop files here</p>
-				<input ref="fileInput" type="file" multiple style="display:none" @change="handleFileSelect">
-				<NcButton type="secondary" @click="$refs.fileInput.click()">Select Files</NcButton>
+				<input ref="fileInput"
+					type="file"
+					multiple
+					style="display:none"
+					@change="handleFileSelect">
+				<NcButton type="secondary" @click="$refs.fileInput.click()">
+					Select Files
+				</NcButton>
 			</div>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'extracting'">
@@ -23,19 +29,31 @@
 				@toggle="batchAnonymizationStore.toggleEntity($event)"
 				@bulk-select="batchAnonymizationStore.setVisibleEntities($event, true)"
 				@bulk-deselect="batchAnonymizationStore.setVisibleEntities($event, false)" />
-			<NcButton type="primary" @click="batchAnonymizationStore.anonymizeBatch()">Anonymize {{ batchAnonymizationStore.selectedEntityCount }} entities</NcButton>
+			<NcButton type="primary" @click="batchAnonymizationStore.anonymizeBatch()">
+				Anonymize {{ batchAnonymizationStore.selectedEntityCount }} entities
+			</NcButton>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'anonymizing'" style="text-align:center;padding:48px">
 			<NcLoadingIcon :size="44" /><p>Anonymizing...</p>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'completed'">
-			<NcNoteCard type="success">Batch anonymization completed!</NcNoteCard>
-			<NcButton type="secondary" @click="window.open(batchAnonymizationStore.getReportUrl(), '_blank')">Download Report</NcButton>
-			<NcButton type="primary" @click="batchAnonymizationStore.reset()">New Batch</NcButton>
+			<NcNoteCard type="success">
+				Batch anonymization completed!
+			</NcNoteCard>
+			<NcButton type="secondary" @click="window.open(batchAnonymizationStore.getReportUrl(), '_blank')">
+				Download Report
+			</NcButton>
+			<NcButton type="primary" @click="batchAnonymizationStore.reset()">
+				New Batch
+			</NcButton>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'error'">
-			<NcNoteCard type="error">{{ batchAnonymizationStore.error || 'Error occurred' }}</NcNoteCard>
-			<NcButton type="primary" @click="batchAnonymizationStore.reset()">Try Again</NcButton>
+			<NcNoteCard type="error">
+				{{ batchAnonymizationStore.error || 'Error occurred' }}
+			</NcNoteCard>
+			<NcButton type="primary" @click="batchAnonymizationStore.reset()">
+				Try Again
+			</NcButton>
 		</div>
 	</div>
 </template>
