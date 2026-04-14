@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
+use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCP\BackgroundJob\IJobList;
@@ -117,7 +118,8 @@ class FolderBatchServiceTest extends TestCase
             $this->mockRootFolder,
             $this->mockUserSession,
             $this->mockStateService,
-            $this->mockJobList
+            $this->mockJobList,
+            $this->createMock(AnonymizationService::class)
         );
 
     }//end setUp()
@@ -578,7 +580,8 @@ class FolderBatchServiceTest extends TestCase
             $this->mockRootFolder,
             $mockUserSession,
             $this->mockStateService,
-            $this->mockJobList
+            $this->mockJobList,
+            $this->createMock(AnonymizationService::class)
         );
 
         $this->expectException(Exception::class);
