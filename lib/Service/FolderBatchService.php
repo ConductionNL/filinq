@@ -275,7 +275,7 @@ class FolderBatchService
                     }
 
                     try {
-                        $result                            = $anonService->extractAndDetectEntities((int) $file['fileId']);
+                        $result = $anonService->extractAndDetectEntities((int) $file['fileId']);
                         $batch['files'][$i]['status']      = 'extracted';
                         $batch['files'][$i]['entityCount'] = $result['entityCount'];
                     } catch (\Exception $e) {
@@ -299,7 +299,6 @@ class FolderBatchService
         );
 
     }//end scheduleExtraction()
-
 
 
     /**
