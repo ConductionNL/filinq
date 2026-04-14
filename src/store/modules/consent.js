@@ -44,7 +44,7 @@ export const useConsentStore = defineStore(
 				this.loading = true
 				this.error = null
 				try {
-					const response = await axios.get(generateUrl(` / apps / docudesk / api / consents / ${id}`))
+					const response = await axios.get(generateUrl(`/apps/docudesk/api/consents/${id}`))
 					this.consentItem = response.data
 					return response.data
 				} catch (err) {
@@ -59,7 +59,7 @@ export const useConsentStore = defineStore(
 				this.loading = true
 				this.error = null
 				try {
-					const response = await axios.put(generateUrl(` / apps / docudesk / api / consents / ${id}`), data)
+					const response = await axios.put(generateUrl(`/apps/docudesk/api/consents/${id}`), data)
 					// Update in local list.
 					const index = this.consents.findIndex(c => (c.id || c.uuid) === id)
 					if (index !== -1) {
@@ -80,7 +80,7 @@ export const useConsentStore = defineStore(
 				this.loading = true
 				this.error = null
 				try {
-					const response = await axios.get(generateUrl(` / apps / docudesk / api / consents / document / ${documentId}`))
+					const response = await axios.get(generateUrl(`/apps/docudesk/api/consents/document/${documentId}`))
 					return response.data
 				} catch (err) {
 					console.error('Failed to fetch consents for document:', err)
