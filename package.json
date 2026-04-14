@@ -20,7 +20,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "^0.1.0-beta.3",
+    "@conduction/nextcloud-vue": "^0.1.0-beta.8",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/dialogs": "^3.2.0",
     "@nextcloud/initial-state": "^2.2.0",
@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@babel/preset-env": "^7.25.3",
-    "@cyclonedx/cyclonedx-npm": "^4.2.1",
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^8.4.1",
     "@nextcloud/stylelint-config": "^2.4.0",

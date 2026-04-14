@@ -16,6 +16,11 @@ import { navigationStore } from '../store/store.js'
 					<ShieldLock :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
+				<template #icon>
+					<FolderSearch :size="20" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" :name="t('docudesk', 'Consent Management')" @click="navigationStore.setSelected('consent')">
 				<template #icon>
 					<AccountCheck :size="20" />
@@ -42,6 +47,7 @@ import Finance from 'vue-material-design-icons/Finance.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
+import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
 
 export default {
 	name: 'MainMenu',
@@ -53,6 +59,7 @@ export default {
 		AccountCheck,
 		ShieldLock,
 		FileDocumentMultiple,
+		FolderSearch,
 	},
 }
 </script>
