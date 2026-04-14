@@ -52,8 +52,26 @@ export default {
 </script>
 
 <style scoped>
-.signing-request-detail { padding: 20px; }
-.detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-.audit-table { width: 100%; border-collapse: collapse; }
-.audit-table th, .audit-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--color-border); }
+.signing-request-detail {
+	padding: 20px;
+}
+
+.detail-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.audit-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.audit-table th,
+.audit-table td {
+	padding: 10px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
 </style>

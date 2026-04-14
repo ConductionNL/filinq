@@ -71,8 +71,27 @@ export default {
 </script>
 
 <style scoped>
-.signing-request-form { padding: 20px; max-width: 600px; }
-.form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-.form-group label { font-weight: bold; color: var(--color-main-text); }
-.form-group input, .form-group select { padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); }
+.signing-request-form {
+	padding: 20px;
+	max-width: 600px;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 16px;
+}
+
+.form-group label {
+	font-weight: bold;
+	color: var(--color-main-text);
+}
+
+.form-group input,
+.form-group select {
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
 </style>

@@ -68,12 +68,52 @@ export default {
 }
 </script>
 <style scoped>
-.entity-review { margin: 16px 0 }
-.summary-bar { padding: 12px; background: var(--color-primary-element-light); border-radius: 8px; margin-bottom: 16px }
-.filter-bar { display: flex; gap: 12px; margin-bottom: 12px }
-.bulk-actions { display: flex; gap: 8px; margin-bottom: 12px }
-.entity-table { width: 100%; border-collapse: collapse }
-.entity-table th, .entity-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); text-align: left }
-.entity-table th { cursor: pointer }
-.badge { padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; background: var(--color-primary-element-light); color: var(--color-primary-element) }
+.entity-review {
+	margin: 16px 0;
+}
+
+.summary-bar {
+	padding: 12px;
+	background: var(--color-primary-element-light);
+	border-radius: 8px;
+	margin-bottom: 16px;
+}
+
+.filter-bar {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.bulk-actions {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.entity-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.entity-table th,
+
+.entity-table td {
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--color-border);
+	text-align: left;
+}
+
+.entity-table th {
+	cursor: pointer;
+}
+
+.badge {
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 0.8rem;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element);
+}
+
 </style>

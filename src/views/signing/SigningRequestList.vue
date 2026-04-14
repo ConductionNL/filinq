@@ -49,9 +49,32 @@ export default {
 </script>
 
 <style scoped>
-.signing-request-list { padding: 20px; }
-.signing-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-.signing-table { width: 100%; border-collapse: collapse; }
-.signing-table th, .signing-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
-.status-badge { padding: 4px 8px; border-radius: var(--border-radius); font-size: 0.85em; font-weight: bold; }
+.signing-request-list {
+	padding: 20px;
+}
+
+.signing-header {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 20px;
+}
+
+.signing-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.signing-table th,
+.signing-table td {
+	padding: 12px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.status-badge {
+	padding: 4px 8px;
+	border-radius: var(--border-radius);
+	font-size: 0.85em;
+	font-weight: bold;
+}
 </style>

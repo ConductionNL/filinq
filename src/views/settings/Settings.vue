@@ -470,65 +470,66 @@ export default {
 
 <style scoped>
 .selectionContainer {
-  display: grid;
-  grid-gap: 5px;
-  grid-template-columns: 1fr;
+	display: grid;
+	grid-gap: 5px;
+	grid-template-columns: 1fr;
 }
+
 .selectionContainer > * {
-  margin-block-end: 10px;
+	margin-block-end: 10px;
 }
 
 .setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-border-dark-translucent);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--color-border-dark-translucent);
 }
 
 .setting-label {
-  font-weight: bold;
-  color: var(--color-main-text);
+	font-weight: bold;
+	color: var(--color-main-text);
 }
 
 .setting-description {
-  color: var(--color-text-lighter);
-  font-size: 0.9em;
+	color: var(--color-text-lighter);
+	font-size: 0.9em;
 }
 
 .input-field {
-  margin-bottom: 8px;
+	margin-bottom: 8px;
 }
 
 .input-field label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: var(--color-main-text);
+	display: block;
+	margin-bottom: 5px;
+	font-weight: bold;
+	color: var(--color-main-text);
 }
 
 .input-field input {
-  width: 100%;
-  max-width: 200px;
-  padding: 8px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  background-color: var(--color-main-background);
-  color: var(--color-main-text);
+	width: 100%;
+	max-width: 200px;
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
 }
 
 .ocr-languages {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 4px 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 4px 0;
 }
 
 .button-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-  padding: 16px;
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 16px;
+	padding: 16px;
 }
 
 </style>

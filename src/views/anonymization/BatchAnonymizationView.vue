@@ -76,7 +76,15 @@ export default {
 }
 </script>
 <style scoped>
-.batch-anonymization { padding: 20px; max-width: 900px }
-.drop-zone { border: 2px dashed var(--color-border); border-radius: 12px; padding: 48px; text-align: center }
-.file-item { padding: 8px 12px; border-bottom: 1px solid var(--color-border) }
+.batch-anonymization {
+	padding: 20px; max-width: 900px
+}
+
+.drop-zone {
+	border: 2px dashed var(--color-border); border-radius: 12px; padding: 48px; text-align: center
+}
+
+.file-item {
+	padding: 8px 12px; border-bottom: 1px solid var(--color-border)
+}
 </style>

@@ -116,25 +116,113 @@ export default {
 }
 </script>
 <style scoped>
-.folder-anonymization { padding: 20px; max-width: 900px }
-.input-section p { color: var(--color-text-maxcontrast); margin-bottom: 16px }
-.folder-input { display: flex; gap: 12px; align-items: center }
-.folder-path-input { flex: 1; padding: 8px 12px; border: 2px solid var(--color-border); border-radius: var(--border-radius-large); font-size: 14px }
-.folder-path-input:focus { border-color: var(--color-primary-element); outline: none }
-.progress-section { margin-top: 16px }
-.progress-text { margin: 8px 0 16px; color: var(--color-text-maxcontrast) }
-.file-list { border: 1px solid var(--color-border); border-radius: var(--border-radius-large); overflow: hidden }
-.file-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border) }
-.file-item:last-child { border-bottom: none }
-.file-name { flex: 1 }
-.status-badge { padding: 2px 10px; border-radius: 12px; font-size: 0.8rem }
-.status-uploaded { background: var(--color-background-dark); color: var(--color-text-maxcontrast) }
-.status-extracted { background: var(--color-success); color: white }
-.status-error { background: var(--color-error); color: white }
-.entity-count { color: var(--color-text-maxcontrast); font-size: 0.85rem }
-.review-section { margin-top: 16px }
-.action-bar { display: flex; gap: 12px; margin-top: 16px }
-.loading-section { text-align: center; padding: 48px }
-.completed-section { margin-top: 16px }
-.error-section { margin-top: 16px }
+.folder-anonymization {
+	padding: 20px;
+	max-width: 900px;
+}
+
+.input-section p {
+	color: var(--color-text-maxcontrast);
+	margin-bottom: 16px;
+}
+
+.folder-input {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.folder-path-input {
+	flex: 1;
+	padding: 8px 12px;
+	border: 2px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	font-size: 14px;
+}
+
+.folder-path-input:focus {
+	border-color: var(--color-primary-element);
+	outline: none;
+}
+
+.progress-section {
+	margin-top: 16px;
+}
+
+.progress-text {
+	margin: 8px 0 16px;
+	color: var(--color-text-maxcontrast);
+}
+
+.file-list {
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	overflow: hidden;
+}
+
+.file-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.file-item:last-child {
+	border-bottom: none;
+}
+
+.file-name {
+	flex: 1;
+}
+
+.status-badge {
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 0.8rem;
+}
+
+.status-uploaded {
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+}
+
+.status-extracted {
+	background: var(--color-success);
+	color: white;
+}
+
+.status-error {
+	background: var(--color-error);
+	color: white;
+}
+
+.entity-count {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85rem;
+}
+
+.review-section {
+	margin-top: 16px;
+}
+
+.action-bar {
+	display: flex;
+	gap: 12px;
+	margin-top: 16px;
+}
+
+.loading-section {
+	text-align: center;
+	padding: 48px;
+}
+
+.completed-section {
+	margin-top: 16px;
+}
+
+.error-section {
+	margin-top: 16px;
+}
+
 </style>
