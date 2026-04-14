@@ -62,9 +62,7 @@ export const useSettingsStore = defineStore(
 					this.error = error.message
 					console.error('Error fetching DocuDesk settings:', error)
 					return null
-				}// end try
-
-				finally {
+				} finally {
 					this.loading = false
 				}
 			},
@@ -99,9 +97,7 @@ export const useSettingsStore = defineStore(
 					this.error = error.message
 					console.error('Error saving DocuDesk settings:', error)
 					return null
-				}// end try
-
-				finally {
+				} finally {
 					this.loading = false
 				}
 			},
