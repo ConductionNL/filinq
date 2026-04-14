@@ -182,7 +182,7 @@ class TemplateRenderer
         $pattern  = '/<([a-z][a-z0-9]*)\b([^>]*?)';
         $pattern .= 'data-condition-field="([^"]*)"';
         $pattern .= '([^>]*?)data-condition-op="([^"]*)"';
-        $pattern .= '([^>]*?)(?:data-condition-value="([^"]*)")?';
+        $pattern .= '(\s*)(?:data-condition-value="([^"]*)")?';
         $pattern .= '([^>]*?)>([\s\S]*?)<\/\1>/i';
 
         $result = preg_replace_callback(
