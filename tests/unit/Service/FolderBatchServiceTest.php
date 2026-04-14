@@ -26,6 +26,7 @@ use OCP\Constants;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\Node;
 use OCP\Files\NotFoundException;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -171,7 +172,7 @@ class FolderBatchServiceTest extends TestCase
      * Build a user folder mock wrapping a target folder for get()/getById() lookups.
      *
      * @param array       $getByIdNodes       Array returned by getById(), or null to not stub
-     * @param Folder|null $getPathNode        Node returned by get(), or null to not stub
+     * @param Node|null $getPathNode        Node returned by get(), or null to not stub
      * @param bool        $pathThrowsNotFound When true, get() throws NotFoundException
      * @param string      $relativePath       The relative path reported by getRelativePath()
      *
@@ -179,7 +180,7 @@ class FolderBatchServiceTest extends TestCase
      */
     private function buildUserFolder(
         ?array $getByIdNodes=null,
-        ?Folder $getPathNode=null,
+        ?Node $getPathNode=null,
         bool $pathThrowsNotFound=false,
         string $relativePath='/Documents/WOB'
     ): Folder|MockObject {

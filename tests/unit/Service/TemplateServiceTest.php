@@ -20,8 +20,10 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use Exception;
 use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\TemplateService;
+use OCA\DocuDesk\Service\TemplateVersionService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -90,6 +92,8 @@ class TemplateServiceTest extends TestCase
         $this->mockContainer        = $this->createMock(ContainerInterface::class);
         $this->mockAppManager       = $this->createMock(IAppManager::class);
         $this->mockRegisterResolver = $this->createMock(OpenRegisterResolver::class);
+        $mockVersionService         = $this->createMock(TemplateVersionService::class);
+        $mockUserSession            = $this->createMock(IUserSession::class);
 
         // Default: getInstalledApps returns an empty array.
         $this->mockAppManager->method('getInstalledApps')
@@ -98,7 +102,9 @@ class TemplateServiceTest extends TestCase
         $this->templateService = new TemplateService(
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockRegisterResolver
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $mockUserSession
         );
 
     }//end setUp()
@@ -141,7 +147,9 @@ class TemplateServiceTest extends TestCase
         $this->templateService = new TemplateService(
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockRegisterResolver
+            $this->mockRegisterResolver,
+            $this->createMock(TemplateVersionService::class),
+            $this->createMock(IUserSession::class)
         );
 
     }//end setUpWithOpenRegister()

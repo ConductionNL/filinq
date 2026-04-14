@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use Exception;
 use OCA\DocuDesk\Service\DataResolverService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -116,9 +117,11 @@ class DataResolverServiceTest extends TestCase
     {
         $objectData = ['id' => 'abc-123', 'naam' => 'Test Persoon'];
 
+        $entity = $this->createMock(ObjectEntity::class);
+        $entity->method('jsonSerialize')->willReturn($objectData);
         $this->objectService->expects($this->once())
             ->method('find')
-            ->willReturn($objectData);
+            ->willReturn($entity);
 
         $result = $this->service->resolve(
             dataRefs: [
@@ -147,8 +150,10 @@ class DataResolverServiceTest extends TestCase
     {
         $objectData = ['id' => 'abc-123', 'naam' => 'Original'];
 
+        $entity = $this->createMock(ObjectEntity::class);
+        $entity->method('jsonSerialize')->willReturn($objectData);
         $this->objectService->method('find')
-            ->willReturn($objectData);
+            ->willReturn($entity);
 
         $result = $this->service->resolve(
             dataRefs: [
@@ -174,7 +179,7 @@ class DataResolverServiceTest extends TestCase
     public function testResolutionFailureProducesError(): void
     {
         $this->objectService->method('find')
-            ->willReturn([]);
+            ->willReturn(null);
 
         $result = $this->service->resolve(
             dataRefs: [
@@ -220,13 +225,16 @@ class DataResolverServiceTest extends TestCase
      */
     public function testPartialResolutionOnFailure(): void
     {
+        $goodEntity = $this->createMock(ObjectEntity::class);
+        $goodEntity->method('jsonSerialize')->willReturn(['id' => 'good-id', 'naam' => 'Success']);
+
         $this->objectService->method('find')
-            ->willReturnCallback(function ($id) {
+            ->willReturnCallback(function ($id) use ($goodEntity) {
                 if ($id === 'good-id') {
-                    return ['id' => 'good-id', 'naam' => 'Success'];
+                    return $goodEntity;
                 }
 
-                return [];
+                return null;
             });
 
         $result = $this->service->resolve(

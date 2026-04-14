@@ -23,6 +23,7 @@ use OCA\DocuDesk\Service\DataResolverService;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateRenderer;
 use OCA\DocuDesk\Service\TemplateService;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -178,8 +179,10 @@ class CorrespondenceServiceTest extends TestCase
         $this->pdfService->method('renderPdf')
             ->willReturn('%PDF-binary-content%');
 
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
         $this->objectSvc->method('saveObject')
-            ->willReturn(['id' => 'log-1']);
+            ->willReturn($logEntity);
 
         $result = $this->service->generate(
             templateId: 'tmpl-1',
@@ -216,8 +219,10 @@ class CorrespondenceServiceTest extends TestCase
         $this->renderer->method('renderTemplate')
             ->willReturn('<p>Hello</p>');
 
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
         $this->objectSvc->method('saveObject')
-            ->willReturn(['id' => 'log-1']);
+            ->willReturn($logEntity);
 
         $result = $this->service->generate(
             templateId: 'tmpl-1',
@@ -275,8 +280,10 @@ class CorrespondenceServiceTest extends TestCase
         $this->pdfService->method('renderPdf')
             ->willReturn('%PDF%');
 
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log']);
         $this->objectSvc->method('saveObject')
-            ->willReturn(['id' => 'log']);
+            ->willReturn($logEntity);
 
         $result = $this->service->generateBatch(
             templateId: 'tmpl-1',
@@ -342,6 +349,8 @@ class CorrespondenceServiceTest extends TestCase
         $this->pdfService->method('renderPdf')
             ->willReturn('%PDF%');
 
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-entry']);
         $this->objectSvc->expects($this->once())
             ->method('saveObject')
             ->with(
@@ -350,10 +359,11 @@ class CorrespondenceServiceTest extends TestCase
                         && $entry['status'] === 'generated'
                         && $entry['format'] === 'pdf';
                 }),
+                $this->anything(),
                 $this->equalTo('document'),
                 $this->equalTo('correspondence')
             )
-            ->willReturn(['id' => 'log-entry']);
+            ->willReturn($logEntity);
 
         $result = $this->service->generate(
             templateId: 'tmpl-1',
