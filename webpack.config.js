@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 
 const buildMode = process.env.NODE_ENV
@@ -31,13 +32,20 @@ webpackConfig.entry = {
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 const useLocalLib = fs.existsSync(localLib)
 
+webpackConfig.resolve = webpackConfig.resolve || {}
+webpackConfig.resolve.modules = [path.resolve(__dirname, 'node_modules'), 'node_modules']
 webpackConfig.resolve.alias = {
-	...webpackConfig.resolve.alias,
+	...(webpackConfig.resolve.alias || {}),
 	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
 	'vue$': path.resolve(__dirname, 'node_modules/vue'),
 	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
 	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
 	'@nextcloud/dialogs': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs'),
 }
+
+webpackConfig.plugins = [
+	...(webpackConfig.plugins || []),
+	new NodePolyfillPlugin({ additionalAliases: ['process'] }),
+]
 
 module.exports = webpackConfig

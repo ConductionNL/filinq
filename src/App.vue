@@ -37,12 +37,17 @@
 				<NcLoadingIcon :size="64" />
 			</div>
 		</NcAppContent>
+
+		<CnIndexSidebar v-if="sidebarState.active && !objectSidebarState.active" />
+		<CnObjectSidebar v-if="objectSidebarState.active" />
 	</NcContent>
 </template>
 
 <script>
+import Vue from 'vue'
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
+import { CnIndexSidebar, CnObjectSidebar } from '@conduction/nextcloud-vue'
 import MainMenu from './navigation/MainMenu.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
@@ -63,11 +68,31 @@ export default {
 		Dialogs,
 		Views,
 		SideBars,
+		CnIndexSidebar,
+		CnObjectSidebar,
+	},
+
+	provide() {
+		return {
+			sidebarState: this.sidebarState,
+			objectSidebarState: this.objectSidebarState,
+		}
 	},
 
 	data() {
 		return {
 			storesReady: false,
+			sidebarState: Vue.observable({
+				active: false,
+				component: null,
+				props: {},
+			}),
+			objectSidebarState: Vue.observable({
+				active: false,
+				objectType: null,
+				objectId: null,
+				props: {},
+			}),
 		}
 	},
 
