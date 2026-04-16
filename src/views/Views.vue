@@ -29,9 +29,6 @@ import FolderAnonymizationView from './anonymization/FolderAnonymizationView.vue
 
 export default {
 	name: 'Views',
-	setup() {
-		return { navigationStore }
-	},
 	components: {
 		NcAppContent,
 		Dashboard,
@@ -42,6 +39,9 @@ export default {
 		TemplateDetail,
 		BatchAnonymizationView,
 		FolderAnonymizationView,
+	},
+	setup() {
+		return { navigationStore }
 	},
 }
 </script>

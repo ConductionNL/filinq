@@ -1,4 +1,20 @@
 <?php
+/**
+ * Folder Extraction Background Job
+ *
+ * Background job that processes all files queued in a folder-based batch:
+ * extracts text, detects entities, and updates per-file batch state.
+ * Individual file failures are logged and recorded on the file entry
+ * without aborting the rest of the batch.
+ *
+ * @category  BackgroundJob
+ * @package   OCA\DocuDesk\BackgroundJob
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ */
 
 declare(strict_types=1);
 
@@ -31,10 +47,10 @@ class FolderExtractionJob extends QueuedJob
     /**
      * Constructor for FolderExtractionJob
      *
-     * @param ITimeFactory          $time         Time factory
-     * @param AnonymizationService  $anonService  Anonymization/extraction service
-     * @param BatchStateService     $stateService Batch state management
-     * @param LoggerInterface       $logger       Logger for error reporting
+     * @param ITimeFactory         $time         Time factory
+     * @param AnonymizationService $anonService  Anonymization/extraction service
+     * @param BatchStateService    $stateService Batch state management
+     * @param LoggerInterface      $logger       Logger for error reporting
      *
      * @return void
      */
@@ -85,7 +101,7 @@ class FolderExtractionJob extends QueuedJob
             try {
                 $result = $this->anonService->extractAndDetectEntities((int) $file['fileId']);
                 $batch['files'][$i]['status']      = 'extracted';
-                $batch['files'][$i]['entityCount']  = $result['entityCount'];
+                $batch['files'][$i]['entityCount'] = $result['entityCount'];
             } catch (Exception $e) {
                 $this->logger->warning(
                     'FolderExtractionJob: extraction failed for file',
@@ -106,7 +122,7 @@ class FolderExtractionJob extends QueuedJob
         foreach ($batch['files'] as $f) {
             if ($f['status'] === 'extracted') {
                 $extracted++;
-            } elseif ($f['status'] === 'error') {
+            } else if ($f['status'] === 'error') {
                 $errors++;
             }
         }

@@ -59,9 +59,29 @@ export default {
 </script>
 
 <style scoped>
-.bulk-signing-panel { padding: 20px; }
-.bulk-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-.bulk-table th, .bulk-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--color-border); }
-.bulk-table tr { cursor: pointer; }
-.bulk-table tr:hover { background: var(--color-background-hover); }
+.bulk-signing-panel {
+	padding: 20px;
+}
+
+.bulk-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 16px;
+}
+
+.bulk-table th,
+.bulk-table td {
+	padding: 10px;
+	text-align: left;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.bulk-table tr {
+	cursor: pointer;
+}
+
+.bulk-table tr:hover {
+	background: var(--color-background-hover);
+}
+
 </style>

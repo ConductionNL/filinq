@@ -92,14 +92,14 @@ class AnonymizationService
     {
         try {
             $textExtractor = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Service\TextExtractionService'
+                className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
             $textExtractor->extractFile($fileId, true);
 
             $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
 
             $entityRelationMapper = $this->getOpenRegisterService(
-                'OCA\OpenRegister\Db\EntityRelationMapper'
+                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
@@ -135,7 +135,7 @@ class AnonymizationService
     public function anonymizeDocument(int $fileId, array $entities): array
     {
         try {
-            $fileService    = $this->getOpenRegisterService('OCA\OpenRegister\Service\FileService');
+            $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
             $result         = $fileService->anonymizeDocument($node, $mappedEntities);

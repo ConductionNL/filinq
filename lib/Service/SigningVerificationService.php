@@ -69,7 +69,11 @@ class SigningVerificationService
             throw new \RuntimeException('File not found: '.$fileId);
         }
 
-        $file       = $nodes[0];
+        $file = $nodes[0];
+        if (($file instanceof \OCP\Files\File) === false) {
+            throw new \RuntimeException('Node is not a file: '.$fileId);
+        }
+
         $content    = $file->getContent();
         $signatures = $this->extractSignatures(pdfContent: $content);
 
@@ -121,7 +125,7 @@ class SigningVerificationService
             }//end foreach
         }
 
-        if (empty($signatures) === true && $matches > 0) {
+        if (empty($signatures) === true) {
             for ($i = 0; $i < $matches; $i++) {
                 $signatures[] = [
                     'signer'    => 'External signer',

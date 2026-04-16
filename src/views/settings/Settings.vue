@@ -468,12 +468,13 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .selectionContainer {
 	display: grid;
 	grid-gap: 5px;
 	grid-template-columns: 1fr;
 }
+
 .selectionContainer > * {
 	margin-block-end: 10px;
 }
@@ -530,4 +531,5 @@ export default {
 	margin-top: 16px;
 	padding: 16px;
 }
+
 </style>

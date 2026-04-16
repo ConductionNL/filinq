@@ -16,7 +16,7 @@
         </ignoreFiles>
     </projectFiles>
     <stubs>
-        <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <file name="../../lib/public/Capabilities/ICapability.php" preloadClasses="true" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass>
@@ -76,6 +76,6 @@
         <InvalidNamedArgument errorLevel="suppress"/>
     </issueHandlers>
     <extraFiles>
-        <directory name="vendor/nextcloud/ocp" />
+        <directory name="../../lib/public" />
     </extraFiles>
 </psalm>

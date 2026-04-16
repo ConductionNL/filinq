@@ -12,16 +12,26 @@
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
-				<option value="SES">SES - Simple</option>
-				<option value="AdES">AdES - Advanced</option>
-				<option value="QES">QES - Qualified</option>
+				<option value="SES">
+					SES - Simple
+				</option>
+				<option value="AdES">
+					AdES - Advanced
+				</option>
+				<option value="QES">
+					QES - Qualified
+				</option>
 			</select>
 		</div>
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signing Mode') }}</label>
 			<select v-model="form.signingMode">
-				<option value="sequential">{{ t('docudesk', 'Sequential') }}</option>
-				<option value="parallel">{{ t('docudesk', 'Parallel') }}</option>
+				<option value="sequential">
+					{{ t('docudesk', 'Sequential') }}
+				</option>
+				<option value="parallel">
+					{{ t('docudesk', 'Parallel') }}
+				</option>
 			</select>
 		</div>
 		<NcButton type="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">
@@ -61,8 +71,27 @@ export default {
 </script>
 
 <style scoped>
-.signing-request-form { padding: 20px; max-width: 600px; }
-.form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
-.form-group label { font-weight: bold; color: var(--color-main-text); }
-.form-group input, .form-group select { padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); }
+.signing-request-form {
+	padding: 20px;
+	max-width: 600px;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 16px;
+}
+
+.form-group label {
+	font-weight: bold;
+	color: var(--color-main-text);
+}
+
+.form-group input,
+.form-group select {
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
 </style>

@@ -273,7 +273,7 @@ class SettingsService
                     continue;
                 }
 
-                $stringValue = $this->convertValueToString($value);
+                $stringValue = $this->convertValueToString(value: $value);
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach

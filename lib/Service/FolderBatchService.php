@@ -113,7 +113,7 @@ class FolderBatchService
         // returned regardless of which input method the caller used.
         $resolvedFolderId   = $node->getId();
         $resolvedFolderPath = $userFolder->getRelativePath($node->getPath()) ?? $node->getPath();
-        $inputMethod = 'path';
+        $inputMethod        = 'path';
         if ($folderId !== null) {
             $inputMethod = 'id';
         }

@@ -647,6 +647,9 @@ class CorrespondenceService
      * @throws Exception If LibreOffice is not available or conversion fails
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $pdfOptions reserved for future page config
+     *
+     * @psalm-suppress UnusedParam $pdfOptions reserved for future page config
+     * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
      */
     private function convertToDocx(string $htmlContent, array $pdfOptions): string
     {

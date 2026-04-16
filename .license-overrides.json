@@ -1,3 +1,4 @@
 {
-  "@nextcloud/axios": "Nextcloud official package (GPL-3.0) — required dependency for all Nextcloud apps. Our apps run within the Nextcloud (AGPL-3.0) ecosystem. Approved 2026-03-15."
+  "@nextcloud/axios": "Nextcloud official package (GPL-3.0) — required dependency for all Nextcloud apps. Our apps run within the Nextcloud (AGPL-3.0) ecosystem. Approved 2026-03-15.",
+  "apexcharts": "License is MIT — license-checker misreads logo URL as custom license, see https://github.com/apexcharts/apexcharts.js/blob/main/LICENSE"
 }
