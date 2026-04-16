@@ -119,7 +119,7 @@ import { anonymizationStore, navigationStore } from '../../store/store.js'
 		<!-- Error state -->
 		<div v-if="anonymizationStore.currentStep === 'error'" class="error-section">
 			<NcNoteCard type="error">
-				{{ anonymizationStore.error || 'An unexpected error occurred.' }}
+				{{ anonymizationStore.error || t('docudesk', 'An unexpected error occurred.') }}
 			</NcNoteCard>
 			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
 				{{ t('docudesk', 'Try Again') }}

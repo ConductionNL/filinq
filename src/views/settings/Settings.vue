@@ -24,7 +24,7 @@
 		</CnVersionInfoCard>
 
 		<NcSettingsSection
-			name="DocuDesk"
+			:name="t('docudesk', 'DocuDesk')"
 			:description="t('docudesk', 'GDPR publication consent management and document metadata enrichment for Nextcloud')"
 			doc-url="https://docudesk.app" />
 

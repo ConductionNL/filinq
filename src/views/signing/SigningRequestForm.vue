@@ -12,9 +12,9 @@
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
-				<option value="SES">SES - Simple</option>
-				<option value="AdES">AdES - Advanced</option>
-				<option value="QES">QES - Qualified</option>
+				<option value="SES">{{ t('docudesk', 'SES - Simple') }}</option>
+				<option value="AdES">{{ t('docudesk', 'AdES - Advanced') }}</option>
+				<option value="QES">{{ t('docudesk', 'QES - Qualified') }}</option>
 			</select>
 		</div>
 		<div class="form-group">

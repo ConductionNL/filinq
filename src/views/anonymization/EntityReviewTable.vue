@@ -1,31 +1,31 @@
 <template>
 	<div class="entity-review">
 		<div class="summary-bar">
-			{{ selectedCount }} of {{ entities.length }} entities selected across {{ fileCount }} files
+			{{ t('docudesk', '{selected} of {total} entities selected across {files} files', { selected: selectedCount, total: entities.length, files: fileCount }) }}
 		</div>
 		<div class="filter-bar">
-			<input v-model="searchQuery" type="text" placeholder="Search entities...">
+			<input v-model="searchQuery" type="text" :placeholder="t('docudesk', 'Search entities...')">
 			<select v-model="typeFilter">
-				<option value="">All types</option>
-				<option v-for="t in availableTypes" :key="t" :value="t">{{ t }}</option>
+				<option value="">{{ t('docudesk', 'All types') }}</option>
+				<option v-for="tp in availableTypes" :key="tp" :value="tp">{{ tp }}</option>
 			</select>
 		</div>
 		<div class="bulk-actions">
 			<NcButton type="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">
-				Select All Visible
+				{{ t('docudesk', 'Select All Visible') }}
 			</NcButton>
 			<NcButton type="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">
-				Deselect All Visible
+				{{ t('docudesk', 'Deselect All Visible') }}
 			</NcButton>
 		</div>
 		<table class="entity-table">
 			<thead>
 				<tr>
 					<th />
-					<th @click="sortBy('type')">Type</th>
-					<th @click="sortBy('value')">Value</th>
-					<th @click="sortBy('highestConfidence')">Confidence</th>
-					<th @click="sortBy('fileCount')">Files</th>
+					<th @click="sortBy('type')">{{ t('docudesk', 'Type') }}</th>
+					<th @click="sortBy('value')">{{ t('docudesk', 'Value') }}</th>
+					<th @click="sortBy('highestConfidence')">{{ t('docudesk', 'Confidence') }}</th>
+					<th @click="sortBy('fileCount')">{{ t('docudesk', 'Files') }}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -43,6 +43,7 @@
 
 <script>
 import { NcButton } from '@nextcloud/vue'
+import { translate as t } from '@nextcloud/l10n'
 
 export default {
 	name: 'EntityReviewTable',
@@ -81,6 +82,7 @@ export default {
 		},
 	},
 	methods: {
+		t,
 		sortBy(field) {
 			if (this.sf === field) {
 				this.sa = !this.sa
