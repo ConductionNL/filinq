@@ -16,7 +16,7 @@ import { consentStore, navigationStore } from '../../store/store.js'
 			{ key: 'value', label: t('docudesk', 'Value') },
 		] : []">
 		<!-- Back button in header -->
-		<template #header-actions>
+		<template #actions>
 			<NcButton type="tertiary" @click="goBack">
 				<template #icon>
 					<ArrowLeft :size="20" />
