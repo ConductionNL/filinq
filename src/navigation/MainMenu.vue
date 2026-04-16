@@ -27,6 +27,15 @@ import { navigationStore } from '../store/store.js'
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
+		<template #footer>
+			<NcAppNavigationSettings>
+				<NcAppNavigationItem :name="t('docudesk', 'Settings')" @click="$emit('open-settings')">
+					<template #icon>
+						<Cog :size="20" />
+					</template>
+				</NcAppNavigationItem>
+			</NcAppNavigationSettings>
+		</template>
 	</NcAppNavigation>
 </template>
 <script>
@@ -35,6 +44,7 @@ import {
 	NcAppNavigation,
 	NcAppNavigationList,
 	NcAppNavigationItem,
+	NcAppNavigationSettings,
 } from '@nextcloud/vue'
 
 // Icons
@@ -42,6 +52,7 @@ import Finance from 'vue-material-design-icons/Finance.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
 
 export default {
 	name: 'MainMenu',
@@ -49,10 +60,12 @@ export default {
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
+		NcAppNavigationSettings,
 		Finance,
 		AccountCheck,
 		ShieldLock,
 		FileDocumentMultiple,
+		Cog,
 	},
 }
 </script>

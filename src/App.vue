@@ -24,11 +24,12 @@
 
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
+			<MainMenu @open-settings="settingsOpen = true" />
 			<Views />
 			<SideBars />
 			<Modals />
 			<Dialogs />
+			<UserSettings :open="settingsOpen" @update:open="settingsOpen = $event" />
 		</template>
 
 		<!-- Loading -->
@@ -39,7 +40,16 @@
 		</NcAppContent>
 
 		<CnIndexSidebar v-if="sidebarState.active && !objectSidebarState.active" />
-		<CnObjectSidebar v-if="objectSidebarState.active" />
+		<CnObjectSidebar
+			v-if="objectSidebarState.active"
+			:object-type="objectSidebarState.objectType"
+			:object-id="objectSidebarState.objectId"
+			:title="objectSidebarState.title"
+			:subtitle="objectSidebarState.subtitle"
+			:register="objectSidebarState.register"
+			:schema="objectSidebarState.schema"
+			:hidden-tabs="objectSidebarState.hiddenTabs"
+			:open.sync="objectSidebarState.open" />
 	</NcContent>
 </template>
 
@@ -53,6 +63,7 @@ import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
 import SideBars from './sidebars/SideBars.vue'
+import UserSettings from './views/settings/UserSettings.vue'
 import { initializeStores, useSettingsStore } from './store/store.js'
 
 export default {
@@ -68,6 +79,7 @@ export default {
 		Dialogs,
 		Views,
 		SideBars,
+		UserSettings,
 		CnIndexSidebar,
 		CnObjectSidebar,
 	},
@@ -82,6 +94,7 @@ export default {
 	data() {
 		return {
 			storesReady: false,
+			settingsOpen: false,
 			sidebarState: Vue.observable({
 				active: false,
 				component: null,
@@ -89,9 +102,14 @@ export default {
 			}),
 			objectSidebarState: Vue.observable({
 				active: false,
-				objectType: null,
-				objectId: null,
-				props: {},
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
 			}),
 		}
 	},
