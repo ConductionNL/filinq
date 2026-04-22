@@ -3,6 +3,7 @@ import { PiniaVuePlugin } from 'pinia'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
 import App from './App.vue'
+import '@conduction/nextcloud-vue/src/css/index.css'
 import './assets/app.css'
 Vue.mixin({ methods: { t, n } })
 

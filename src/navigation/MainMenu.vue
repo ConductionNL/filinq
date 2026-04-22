@@ -11,6 +11,11 @@ import { navigationStore } from '../store/store.js'
 					<Finance :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'myDocuments'" :name="t('docudesk', 'My Documents')" @click="navigationStore.setSelected('myDocuments')">
+				<template #icon>
+					<FileDocumentCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
 					<ShieldLock :size="20" />
@@ -47,6 +52,7 @@ import Finance from 'vue-material-design-icons/Finance.vue'
 import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
+import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
 import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
 
 export default {
@@ -59,6 +65,7 @@ export default {
 		AccountCheck,
 		ShieldLock,
 		FileDocumentMultiple,
+		FileDocumentCheck,
 		FolderSearch,
 	},
 }
