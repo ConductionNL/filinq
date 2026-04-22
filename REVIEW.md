@@ -4,6 +4,7 @@
 **Version:** 0.0.34-unstable.8
 **Reviewer:** Automated review via Claude Code
 
+
 ---
 
 ## 1. OpenSpec Status
