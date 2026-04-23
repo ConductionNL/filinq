@@ -2,6 +2,13 @@
     "translations": {
         "Dashboard": "Dashboard",
         "Anonymization": "Anonymization",
+        "Create dossier": "Create dossier",
+        "Create and upload": "Create and upload",
+        "Cancel": "Cancel",
+        "Folder name": "Folder name",
+        "Dossier": "Dossier",
+        "You selected {count} files. Give this dossier a name to group them in one folder.": "You selected {count} files. Give this dossier a name to group them in one folder.",
+        "Failed to create dossier": "Failed to create dossier",
         "Consent Management": "Consent Management",
         "My Documents": "My Documents",
         "Documents": "Documents",

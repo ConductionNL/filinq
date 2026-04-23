@@ -3,6 +3,13 @@ OC.L10N.register(
     {
     "Dashboard" : "Dashboard",
     "Anonymization" : "Anonimisering",
+    "Create dossier" : "Dossier aanmaken",
+    "Create and upload" : "Aanmaken en uploaden",
+    "Cancel" : "Annuleren",
+    "Folder name" : "Mapnaam",
+    "Dossier" : "Dossier",
+    "You selected {count} files. Give this dossier a name to group them in one folder." : "Je hebt {count} bestanden geselecteerd. Geef dit dossier een naam om ze in één map te groeperen.",
+    "Failed to create dossier" : "Dossier aanmaken mislukt",
     "Consent Management" : "Toestemmingsbeheer",
     "My Documents" : "Mijn documenten",
     "Documents" : "Documenten",

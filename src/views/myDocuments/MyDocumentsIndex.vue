@@ -195,6 +195,10 @@ export default {
 		myDocumentsStore.fetchDocuments()
 	},
 	methods: {
+		/**
+		 * Re-fetch the document list via the refresh button in CnIndexPage.
+		 * Shows a spinner on the refresh icon while in flight.
+		 */
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {
@@ -203,24 +207,39 @@ export default {
 				this.isRefreshing = false
 			}
 		},
+		/** Pagination: track which page is active. */
 		onPageChanged(page) {
 			this.currentPage = page
 		},
+		/** Pagination: apply new page size and reset to first page. */
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
+		/** Toggle between 'table' and 'cards' (Tegels/Lijst in the design). */
 		onViewModeChange(mode) {
 			this.viewMode = mode
 		},
+		/**
+		 * Open the file in the Nextcloud Files app in a new tab.
+		 * Triggered only from the kebab-menu action — row clicks do nothing.
+		 */
 		openFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/f/${row.fileId}`), '_blank')
 		},
+		/** Download the file via the classic Files app download endpoint. */
 		downloadFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
 		},
+		/**
+		 * Pick an icon component name based on the file's MIME type / extension.
+		 * Returned as a string because the components are registered via `components`.
+		 *
+		 * @param {object} row Document row.
+		 * @return {string} Component name.
+		 */
 		iconFor(row) {
 			const mime = row.mimeType || ''
 			const name = (row.fileName || '').toLowerCase()
@@ -229,16 +248,20 @@ export default {
 			if (mime.includes('word') || name.match(/\.(docx?|odt)$/)) return 'FileWordBox'
 			return 'FileDocumentOutline'
 		},
+		/** Strip the file extension for cleaner display in the list. */
 		displayName(row) {
 			const name = row.fileName || ''
 			return name.replace(/\.[^./]+$/, '')
 		},
+		/** Badge label for the "Soort" column: original vs anonymized copy. */
 		kindLabel(row) {
 			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
 		},
+		/** Placeholder status until the app has a real "checked" signal. */
 		statusLabel() {
 			return t('docudesk', 'Not checked')
 		},
+		/** Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY. */
 		formatDate(ts) {
 			if (!ts) return '-'
 			try {
@@ -251,6 +274,7 @@ export default {
 				return String(ts)
 			}
 		},
+		/** Human-readable size (e.g. "12 MB") from a raw byte count. */
 		formatSize(bytes) {
 			if (bytes === null || bytes === undefined) return '-'
 			const units = ['B', 'KB', 'MB', 'GB']
