@@ -15,6 +15,14 @@
 	</NcAppContent>
 </template>
 
+<style>
+.app-content {
+	border-radius: 20px !important;
+	background: var(--color-white-54, rgba(255, 255, 255, 0.54)) !important;
+	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08) !important;
+}
+</style>
+
 <script>
 import { NcAppContent } from '@nextcloud/vue'
 import { navigationStore } from '../store/store.js'

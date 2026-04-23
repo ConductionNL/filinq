@@ -70,3 +70,32 @@ export default {
 	},
 }
 </script>
+
+<style>
+.app-navigation {
+	--app-navigation-padding: 16px;
+	border-radius: 20px !important;
+	background: var(--color-white-54, rgba(255, 255, 255, 0.54)) !important;
+	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08) !important;
+	margin-right: 8px !important;
+}
+
+.app-navigation-entry-link {
+	border-radius: 11px !important;
+	padding-block: 12px !important;
+	padding-inline: 12px 36px !important;
+}
+
+.app-navigation-entry {
+	--color-primary-element-hover: #efefef;
+}
+
+.app-navigation-entry.active {
+	--color-primary-element: #fff;
+}
+
+.app-navigation-entry.active .app-navigation-entry-link,
+.app-navigation-entry.active .app-navigation-entry__name {
+	color: #000 !important;
+}
+</style>

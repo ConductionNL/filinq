@@ -96,6 +96,11 @@ export default {
 </script>
 
 <style scoped>
+.content {
+	padding: 8px;
+	background-color: var(--background-color, #EAE9E6);
+}
+
 .open-register-icon {
 	width: 64px;
 	height: 64px;
