@@ -1,19 +1,18 @@
 /* eslint-disable no-console */
 import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { generateRemoteUrl } from '@nextcloud/router'
+import { getCurrentUser } from '@nextcloud/auth'
 
 /*
- * Each document entry (mapped from OpenRegister's /api/files response):
+ * Each document entry:
  * {
  *   fileId: number,              - Nextcloud file id.
  *   fileName: string,            - File name including extension.
  *   mimeType: string,            - MIME type.
  *   fileSize: number,            - Size in bytes.
- *   entityCount: number,         - Entities detected by the pipeline.
- *   riskLevel: string,           - 'none' | 'low' | 'medium' | 'high' | 'very_high'.
- *   modified: string | number,   - Timestamp of last extraction.
- *   extractionStatus: string,    - Status from OpenRegister.
+ *   modified: string | number,   - Timestamp of last modification.
+ *   isFolder: boolean,           - True for folders/dossiers.
  *   isAnonymized: boolean,       - True when the file name contains '_anonymized'.
  * }
  */
@@ -26,6 +25,8 @@ export const useMyDocumentsStore = defineStore(
 			loading: false,
 			error: null,
 			total: 0,
+			currentPath: '/DocuDesk',
+			breadcrumbs: [{ name: 'DocuDesk', path: '/DocuDesk' }],
 		}),
 		getters: {
 			/**
@@ -43,42 +44,148 @@ export const useMyDocumentsStore = defineStore(
 		},
 		actions: {
 			/**
-			 * Fetch all files that went through the OpenRegister extraction
-			 * pipeline and map them to the shape our UI expects.
-			 * No server-side filter on anonymization — the My Documents page
-			 * shows originals and anonymized copies side by side.
+			 * Fetch files and folders from the current path using Nextcloud WebDAV API.
 			 *
+			 * @param {string|null} path Optional path to navigate to. Defaults to currentPath.
 			 * @return {Promise<void>}
 			 */
-			async fetchDocuments() {
+			async fetchDocuments(path = null) {
 				this.loading = true
 				this.error = null
 				try {
-					const response = await axios.get(generateUrl('/apps/openregister/api/files'), {
-						params: { limit: 500, offset: 0, sort: 'extractedAt', order: 'DESC' },
+					const targetPath = path || this.currentPath
+					const user = getCurrentUser()
+					if (!user) {
+						throw new Error('User not authenticated')
+					}
+
+					// Use Nextcloud WebDAV API to list folder contents
+					const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${targetPath}`)
+
+					const response = await axios({
+						method: 'PROPFIND',
+						url: webdavUrl,
+						headers: {
+							Depth: '1',
+							'Content-Type': 'application/xml',
+						},
+						data: `<?xml version="1.0"?>
+							<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+								<d:prop>
+									<d:resourcetype />
+									<d:getcontenttype />
+									<d:getcontentlength />
+									<d:getlastmodified />
+									<oc:fileid />
+									<oc:size />
+								</d:prop>
+							</d:propfind>`,
 					})
-					const payload = response.data || {}
-					const rows = Array.isArray(payload.data) ? payload.data : []
-					this.documents = rows.map((row) => ({
-						fileId: row.id,
-						fileName: row.fileName,
-						mimeType: row.mimeType,
-						fileSize: row.fileSize,
-						entityCount: row.entityCount || 0,
-						riskLevel: row.riskLevel || 'none',
-						modified: row.extractedAt,
-						extractionStatus: row.extractionStatus,
-						// `_anonymized` is the convention both Docudesk and OpenRegister
-						// use to mark anonymized copies — see DocumentProcessingHandler.
-						isAnonymized: typeof row.fileName === 'string' && row.fileName.includes('_anonymized'),
-					}))
-					this.total = payload.count || this.documents.length
+
+					// Parse WebDAV XML response
+					const parser = new DOMParser()
+					const xmlDoc = parser.parseFromString(response.data, 'text/xml')
+					const responses = xmlDoc.querySelectorAll('response')
+
+					console.log('[MyDocuments] WebDAV raw response:', response.data)
+					console.log('[MyDocuments] Found responses:', responses.length)
+
+					this.documents = []
+					responses.forEach((resp, index) => {
+						// Skip first response (it's the folder itself)
+						if (index === 0) {
+							console.log('[MyDocuments] Skipping first response (folder itself)')
+							return
+						}
+
+						const href = resp.querySelector('href')?.textContent || ''
+						const resourceType = resp.querySelector('resourcetype')
+						const isFolder = resourceType?.querySelector('collection') !== null
+						const mimeType = resp.querySelector('getcontenttype')?.textContent || (isFolder ? 'httpd/unix-directory' : 'application/octet-stream')
+						const fileSize = parseInt(resp.querySelector('getcontentlength')?.textContent || resp.querySelector('size')?.textContent || '0', 10)
+						const modified = resp.querySelector('getlastmodified')?.textContent || ''
+						const fileId = parseInt(resp.querySelector('fileid')?.textContent || '0', 10)
+
+						// Extract filename from href (strip trailing slash for folders first)
+						const hrefWithoutTrailingSlash = href.endsWith('/') ? href.slice(0, -1) : href
+						const fileName = decodeURIComponent(hrefWithoutTrailingSlash.split('/').pop() || '')
+
+						console.log(`[MyDocuments] Processing item ${index}:`, {
+							fileName,
+							isFolder,
+							mimeType,
+							fileId,
+							href,
+						})
+
+						if (fileName) {
+							this.documents.push({
+								fileId,
+								fileName,
+								mimeType,
+								fileSize,
+								modified: new Date(modified).getTime() / 1000,
+								isFolder,
+								isAnonymized: fileName.includes('_anonymized'),
+							})
+						}
+					})
+
+					console.log('[MyDocuments] Final documents array (before sort):', this.documents)
+
+					// Sort by modified date (newest first)
+					this.documents.sort((a, b) => b.modified - a.modified)
+
+					console.log('[MyDocuments] Final documents array (after sort):', this.documents)
+
+					this.total = this.documents.length
+
+					// Update current path and breadcrumbs if navigating
+					if (path && path !== this.currentPath) {
+						this.navigateTo(path)
+					}
 				} catch (err) {
 					console.error('Failed to fetch documents:', err)
-					this.error = err.message
+					this.error = err.message || 'Failed to load documents'
 				} finally {
 					this.loading = false
 				}
+			},
+
+			/**
+			 * Navigate to a specific folder path.
+			 *
+			 * @param {string} path The folder path to navigate to.
+			 */
+			navigateTo(path) {
+				console.log('[MyDocuments] navigateTo called with path:', path)
+				this.currentPath = path
+
+				// Build breadcrumbs from path
+				const parts = path.split('/').filter(Boolean)
+				this.breadcrumbs = [{ name: 'DocuDesk', path: '/DocuDesk' }]
+
+				let currentPath = '/DocuDesk'
+				for (let i = 1; i < parts.length; i++) {
+					currentPath += `/${parts[i]}`
+					this.breadcrumbs.push({
+						name: parts[i],
+						path: currentPath,
+					})
+				}
+
+				console.log('[MyDocuments] Breadcrumbs updated:', this.breadcrumbs)
+			},
+
+			/**
+			 * Navigate into a subfolder.
+			 *
+			 * @param {string} folderName The name of the folder to enter.
+			 */
+			async openFolder(folderName) {
+				const newPath = `${this.currentPath}/${folderName}`
+				console.log('[MyDocuments] openFolder called, navigating to:', newPath)
+				await this.fetchDocuments(newPath)
 			},
 		},
 	},
