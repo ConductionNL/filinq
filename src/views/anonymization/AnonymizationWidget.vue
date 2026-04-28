@@ -6,7 +6,8 @@ import { anonymizationStore } from '../../store/store.js'
 <template>
 	<div class="anonymization-widget">
 		<h2 class="page-title">
-			{{ t('docudesk', 'Anonymization') }}
+			{{ t('docudesk', 'Good afternoon {name},', { name: userName }) }}<br>
+			{{ t('docudesk', 'what would you like to anonymize today?') }}
 		</h2>
 
 		<!-- Results table -->
@@ -99,12 +100,17 @@ import { anonymizationStore } from '../../store/store.js'
 				@drop.prevent="handleDrop"
 				@click="$refs.fileInput.click()">
 				<img :src="uploadIcon" alt="" class="upload-icon">
-				<p class="drop-text">
-					{{ anonymizationStore.hasFiles
-						? t('docudesk', 'Drop more files to anonymize')
-						: t('docudesk', 'Drag and drop files here, or click to select')
-					}}
-				</p>
+				<div class="drop-content">
+					<p class="drop-title">
+						{{ t('docudesk', 'Drag and drop one or more documents') }}
+					</p>
+					<p class="drop-subtitle">
+						{{ t('docudesk', 'Only PDF, Word, TXT or EML files are supported. Maximum file size 500 MB.') }}
+					</p>
+					<span class="fake-button">
+						{{ t('docudesk', '+ Select files') }}
+					</span>
+				</div>
 				<input
 					ref="fileInput"
 					type="file"
@@ -152,6 +158,7 @@ import { anonymizationStore } from '../../store/store.js'
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
+import { getCurrentUser } from '@nextcloud/auth'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import uploadIcon from '../../assets/upload.png'
 
@@ -174,6 +181,17 @@ export default {
 			dossierError: '',
 			uploadIcon,
 		}
+	},
+	computed: {
+		/**
+		 * Display name of the currently logged-in Nextcloud user.
+		 *
+		 * @return {string} The user's display name, or their uid as fallback, or empty string when unauthenticated.
+		 */
+		userName() {
+			const user = getCurrentUser()
+			return user?.displayName || user?.uid || ''
+		},
 	},
 	methods: {
 		/**
@@ -325,6 +343,8 @@ export default {
 	flex-direction: column;
 	padding: 20px;
 	max-width: 900px;
+	margin-inline: auto;
+	width: 100%;
 }
 
 .page-title {
@@ -424,24 +444,15 @@ export default {
 	padding: 4px 0;
 }
 
-.upload-area.compact .drop-zone {
-	padding: 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 10px;
-}
-
-.upload-area.compact .drop-text {
-	margin: 0;
-}
-
 .drop-zone {
 	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 24px;
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
-	padding: 32px 20px;
-	text-align: center;
+	padding: 32px;
+	background-color: #fff;
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
 }
@@ -449,19 +460,48 @@ export default {
 .drop-zone:hover,
 .drop-zone.dragging {
 	border-color: var(--color-primary);
-	background-color: var(--color-primary-element-light);
+	background-color: #fff;
 }
 
 .upload-icon {
-	width: 28px;
-	height: 28px;
+	width: 107px;
+	height: 103px;
+	flex-shrink: 0;
 	object-fit: contain;
 }
 
-.drop-text {
-	margin: 8px 0 0 0;
+.drop-content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	text-align: left;
+}
+
+.drop-title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.drop-subtitle {
+	margin: 0;
+	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
+}
+
+.fake-button {
+	margin-top: 4px;
+	padding: 8px 16px;
+	border-radius: var(--border-radius);
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
 	font-size: 0.9rem;
+	font-weight: 500;
+	white-space: nowrap;
 }
 
 .file-input {
