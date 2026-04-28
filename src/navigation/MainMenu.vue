@@ -6,9 +6,9 @@ import { navigationStore } from '../store/store.js'
 <template>
 	<NcAppNavigation>
 		<NcAppNavigationList>
-			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
-					<Finance :size="20" />
+					<ShieldLock :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'myDocuments'" :name="t('docudesk', 'My Documents')" @click="navigationStore.setSelected('myDocuments')">
@@ -16,9 +16,9 @@ import { navigationStore } from '../store/store.js'
 					<FileDocumentCheck :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
+			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
 				<template #icon>
-					<ShieldLock :size="20" />
+					<Finance :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
@@ -71,8 +71,8 @@ export default {
 }
 </script>
 
-<style>
-.app-navigation {
+<style scoped>
+:deep(.app-navigation) {
 	--app-navigation-padding: 16px;
 	border-radius: 20px !important;
 	background: var(--color-white-54, rgba(255, 255, 255, 0.54)) !important;
@@ -80,22 +80,22 @@ export default {
 	margin-right: 8px !important;
 }
 
-.app-navigation-entry-link {
+:deep(.app-navigation-entry-link) {
 	border-radius: 11px !important;
 	padding-block: 12px !important;
 	padding-inline: 12px 36px !important;
 }
 
-.app-navigation-entry {
+:deep(.app-navigation-entry) {
 	--color-primary-element-hover: #efefef;
 }
 
-.app-navigation-entry.active {
+:deep(.app-navigation-entry.active) {
 	--color-primary-element: #fff;
 }
 
-.app-navigation-entry.active .app-navigation-entry-link,
-.app-navigation-entry.active .app-navigation-entry__name {
+:deep(.app-navigation-entry.active .app-navigation-entry-link),
+:deep(.app-navigation-entry.active .app-navigation-entry__name) {
 	color: #000 !important;
 }
 </style>

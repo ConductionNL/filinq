@@ -3,14 +3,14 @@ import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
     selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'batchAnonymization' | 'folderAnonymization' | 'templates' | 'templateDetail' | 'myDocuments';
-    modal: string;
-    dialog: string;
-    transferData: string;
+    modal: string | null;
+    dialog: string | null;
+    transferData: string | null;
 }
 
 export const useNavigationStore = defineStore('ui', {
 	state: () => ({
-		selected: 'dashboard',
+		selected: 'anonymization',
 		modal: null,
 		dialog: null,
 		transferData: null,
