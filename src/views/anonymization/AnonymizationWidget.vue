@@ -98,7 +98,7 @@ import { anonymizationStore } from '../../store/store.js'
 				@dragleave.prevent="isDragging = false"
 				@drop.prevent="handleDrop"
 				@click="$refs.fileInput.click()">
-				<Upload :size="28" />
+				<img :src="uploadIcon" alt="" class="upload-icon">
 				<p class="drop-text">
 					{{ anonymizationStore.hasFiles
 						? t('docudesk', 'Drop more files to anonymize')
@@ -152,8 +152,8 @@ import { anonymizationStore } from '../../store/store.js'
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
-import Upload from 'vue-material-design-icons/Upload.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import uploadIcon from '../../assets/upload.png'
 
 export default {
 	name: 'AnonymizationWidget',
@@ -162,7 +162,6 @@ export default {
 		NcDialog,
 		NcLoadingIcon,
 		NcTextField,
-		Upload,
 		FolderOutline,
 	},
 	data() {
@@ -173,12 +172,16 @@ export default {
 			dossierName: '',
 			dossierSubmitting: false,
 			dossierError: '',
+			uploadIcon,
 		}
 	},
 	methods: {
 		/**
 		 * Drop handler for the drag-and-drop zone.
 		 * Delegates to dispatchFiles so the dossier-dialog logic applies.
+		 *
+		 * @param {DragEvent} event Native drop event from the drop zone.
+		 * @return {void}
 		 */
 		handleDrop(event) {
 			this.isDragging = false
@@ -190,6 +193,9 @@ export default {
 		/**
 		 * Change handler for the hidden file input.
 		 * Resets the input value so the same file(s) can be picked again.
+		 *
+		 * @param {Event} event Native change event from the file input.
+		 * @return {void}
 		 */
 		handleFileSelect(event) {
 			const files = event.target?.files
@@ -444,6 +450,12 @@ export default {
 .drop-zone.dragging {
 	border-color: var(--color-primary);
 	background-color: var(--color-primary-element-light);
+}
+
+.upload-icon {
+	width: 28px;
+	height: 28px;
+	object-fit: contain;
 }
 
 .drop-text {
