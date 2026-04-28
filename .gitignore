@@ -24,3 +24,7 @@
 .phpunit.cache/
 .phpunit.result.cache
 phpmetrics/
+
+# Claude Code
+/.claude/
+/CLAUDE.md
