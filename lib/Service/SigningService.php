@@ -40,22 +40,6 @@ class SigningService
 {
 
     /**
-     * Valid status transitions for signing requests
-     *
-     * @var array<string, array<string>>
-     */
-    private const STATUS_TRANSITIONS = [
-        'DRAFT'       => ['PENDING', 'CANCELLED'],
-        'PENDING'     => ['IN_PROGRESS', 'CANCELLED', 'EXPIRED'],
-        'IN_PROGRESS' => ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'],
-        'COMPLETED'   => [],
-        'DECLINED'    => [],
-        'EXPIRED'     => [],
-        'CANCELLED'   => [],
-    ];
-
-
-    /**
      * Constructor
      *
      * @param SettingsService        $settingsService        Settings service
@@ -331,10 +315,9 @@ class SigningService
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
         $request       = $objectService->getObject($register, $schema, $requestId);
 
-        if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
-            throw new \RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
-        }
-
+        // OpenRegister's lifecycle annotation listener enforces the
+        // transition: a save attempt that moves status to CANCELLED from
+        // a terminal state is rejected via HookStoppedException.
         $request['status'] = 'CANCELLED';
         $objectService->saveObject($register, $schema, $request);
 
@@ -394,20 +377,7 @@ class SigningService
     }//end bulkSign()
 
 
-    /**
-     * Validate a status transition
-     *
-     * @param string $currentStatus The current status
-     * @param string $newStatus     The proposed new status
-     *
-     * @return bool True if transition is valid
-     */
-    public function isValidTransition(string $currentStatus, string $newStatus): bool
-    {
-        $allowed = self::STATUS_TRANSITIONS[$currentStatus] ?? [];
-        return in_array($newStatus, $allowed, true) === true;
 
-    }//end isValidTransition()
 
 
     /**

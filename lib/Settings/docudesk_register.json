@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "4.0.0"
+        "version": "4.1.0"
     },
     "x-openregister": {
         "type": "application",
@@ -594,7 +594,7 @@
                 "slug": "signingRequest",
                 "title": "Signing Request",
                 "description": "Ondertekeningsverzoek voor een document",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileSign",
                 "required": ["documentFileId", "documentName", "initiatorUserId", "signatureLevel", "signingMode", "status", "provider"],
@@ -612,7 +612,24 @@
                 "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
+                "configuration": {
+                    "objectNameField": "documentName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false,
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "DRAFT",
+                        "final": ["COMPLETED", "DECLINED", "EXPIRED", "CANCELLED"],
+                        "transitions": {
+                            "send":     { "from": ["DRAFT"],                          "to": "PENDING",     "description": "Send the request out to signers." },
+                            "start":    { "from": ["PENDING"],                        "to": "IN_PROGRESS", "description": "First signer has begun signing." },
+                            "complete": { "from": ["IN_PROGRESS"],                    "to": "COMPLETED",   "description": "All signers signed." },
+                            "decline":  { "from": ["IN_PROGRESS"],                    "to": "DECLINED",    "description": "A signer declined." },
+                            "expire":   { "from": ["PENDING", "IN_PROGRESS"],         "to": "EXPIRED",     "description": "Deadline passed without completion." },
+                            "cancel":   { "from": ["DRAFT", "PENDING", "IN_PROGRESS"], "to": "CANCELLED",  "description": "Request cancelled by the initiator." }
+                        }
+                    }
+                },
                 "searchable": true
             },
             "signerRecord": {
