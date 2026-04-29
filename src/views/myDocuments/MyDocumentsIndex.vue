@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { myDocumentsStore } from '../../store/store.js'
+import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -61,14 +61,12 @@ import { myDocumentsStore } from '../../store/store.js'
 			@refresh="handleRefresh"
 			@page-changed="onPageChanged"
 			@page-size-changed="onPageSizeChanged"
-			@update:view-mode="onViewModeChange">
+			@update:view-mode="onViewModeChange"
+			@row-click="onRowClick">
 
-		<!-- Name with file icon (clickable for folders) -->
+		<!-- Name with file icon (whole row is clickable via @row-click). -->
 		<template #column-fileName="{ row }">
-			<div
-				class="my-documents-name"
-				:class="{ 'my-documents-name--clickable': row.isFolder }"
-				@click="handleNameClick(row)">
+			<div class="my-documents-name">
 				<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
 				<span>{{ displayName(row) }}</span>
 			</div>
@@ -124,9 +122,15 @@ import { myDocumentsStore } from '../../store/store.js'
 				<template #icon>
 					<DotsHorizontal :size="20" />
 				</template>
-				<NcActionButton close-after-click @click="openFile(row)">
+				<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
 					<template #icon>
 						<Eye :size="20" />
+					</template>
+					{{ t('docudesk', 'View') }}
+				</NcActionButton>
+				<NcActionButton close-after-click @click="openFile(row)">
+					<template #icon>
+						<OpenInNew :size="20" />
 					</template>
 					{{ t('docudesk', 'Open in Files') }}
 				</NcActionButton>
@@ -148,6 +152,7 @@ import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
@@ -166,6 +171,7 @@ export default {
 		NcActionButton,
 		DotsHorizontal,
 		Eye,
+		OpenInNew,
 		EyeOffOutline,
 		Download,
 		Magnify,
@@ -242,15 +248,20 @@ export default {
 			}
 		},
 		/**
-		 * Handle click on file/folder name.
-		 * For folders: navigate into the folder.
-		 * For files: do nothing (row actions handle file operations).
+		 * Click handler for the entire table row / card.
+		 * Folders navigate into themselves; files open in the in-app viewer.
+		 * Kebab-menu clicks do not bubble (CnDataTable stops propagation).
+		 *
+		 * @param {object} row Document row.
 		 */
-		handleNameClick(row) {
+		onRowClick(row) {
+			if (!row) return
 			if (row.isFolder) {
 				myDocumentsStore.openFolder(row.fileName)
 				this.currentPage = 1
+				return
 			}
+			this.viewFile(row)
 		},
 		/**
 		 * Navigate to a breadcrumb path.
@@ -279,6 +290,22 @@ export default {
 		openFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/f/${row.fileId}`), '_blank')
+		},
+		/**
+		 * Preview the file inline using DocuDesk's own file viewer modal
+		 * (PDF / docx / text). Folders are ignored.
+		 *
+		 * @param {object} row Document row from the table.
+		 */
+		viewFile(row) {
+			if (!row || row.isFolder) return
+			const path = `${myDocumentsStore.currentPath}/${row.fileName}`
+			fileViewerStore.open({
+				fileId: row.fileId,
+				fileName: row.fileName,
+				mimeType: row.mimeType,
+				path,
+			})
 		},
 		/** Download the file via the classic Files app download endpoint. */
 		downloadFile(row) {
@@ -430,22 +457,23 @@ export default {
 	gap: 10px;
 }
 
-.my-documents-name--clickable {
-	cursor: pointer;
-}
-
-.my-documents-name--clickable:hover {
-	color: var(--color-primary-element);
-}
-
-.my-documents-name--clickable:hover .my-documents-name__icon {
-	color: var(--color-primary-element);
-}
-
 .my-documents-name__icon {
 	color: var(--color-text-maxcontrast);
 	flex-shrink: 0;
 	transition: color 0.15s ease;
+}
+
+/* Whole row is clickable (handled by @row-click on CnIndexPage). */
+.my-documents-wrapper :deep(.cn-table-row) {
+	cursor: pointer;
+}
+
+.my-documents-wrapper :deep(.cn-table-row:hover) {
+	background: var(--color-background-hover);
+}
+
+.my-documents-card {
+	cursor: pointer;
 }
 
 .my-documents-status {
