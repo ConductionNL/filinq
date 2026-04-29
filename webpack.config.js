@@ -11,6 +11,24 @@ webpackConfig.stats = {
 	modules: false,
 }
 
+// Inline-SVG handling for our custom icon set:
+// SVGs in src/assets/icons/ are loaded as raw source strings so DdIcon can
+// inject them with v-html and let CSS `currentColor` flow through.
+// All other assets (PNGs, fonts, SVGs elsewhere) keep the default
+// asset/inline (data URI) behavior from @nextcloud/webpack-vue-config.
+const iconsDir = path.resolve(__dirname, 'src/assets/icons')
+webpackConfig.module.rules = webpackConfig.module.rules.map((rule) => {
+	if (rule && rule.type === 'asset/inline') {
+		return { ...rule, exclude: [iconsDir] }
+	}
+	return rule
+})
+webpackConfig.module.rules.push({
+	test: /\.svg$/,
+	include: [iconsDir],
+	type: 'asset/source',
+})
+
 const appId = 'docudesk'
 webpackConfig.entry = {
 	main: {

@@ -26,14 +26,10 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 		<!-- Search bar -->
 		<div class="my-documents-toolbar">
-			<div class="my-documents-search">
-				<Magnify :size="18" class="my-documents-search__icon" />
-				<input
-					v-model="searchQuery"
-					type="text"
-					class="my-documents-search__input"
-					:placeholder="t('docudesk', 'Search by name')">
-			</div>
+			<DdSearchBar
+				v-model="searchQuery"
+				:placeholder="t('docudesk', 'Search by name')"
+				:clear-label="t('docudesk', 'Clear search')" />
 		</div>
 
 		<CnIndexPage
@@ -63,86 +59,85 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 			@page-size-changed="onPageSizeChanged"
 			@update:view-mode="onViewModeChange"
 			@row-click="onRowClick">
-
-		<!-- Name with file icon (whole row is clickable via @row-click). -->
-		<template #column-fileName="{ row }">
-			<div class="my-documents-name">
-				<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
-				<span>{{ displayName(row) }}</span>
-			</div>
-		</template>
-
-		<!-- Type badge (Concept / Geanonimiseerd) -->
-		<template #column-kind="{ row }">
-			<CnStatusBadge
-				:label="kindLabel(row)"
-				:color-map="kindColorMap" />
-		</template>
-
-		<!-- Status (placeholder: "Niet gecontroleerd") -->
-		<template #column-status="{ row }">
-			<span class="my-documents-status">
-				<EyeOffOutline :size="16" class="my-documents-status__icon" />
-				{{ statusLabel(row) }}
-			</span>
-		</template>
-
-		<!-- Date -->
-		<template #column-modified="{ row }">
-			{{ formatDate(row.modified) }}
-		</template>
-
-		<!-- Size -->
-		<template #column-fileSize="{ row }">
-			{{ formatSize(row.fileSize) }}
-		</template>
-
-		<!-- Card view -->
-		<template #card="{ object }">
-			<div class="my-documents-card">
-				<div class="my-documents-card__icon">
-					<component :is="iconFor(object)" :size="36" />
+			<!-- Name with file icon (whole row is clickable via @row-click). -->
+			<template #column-fileName="{ row }">
+				<div class="my-documents-name">
+					<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
+					<span>{{ displayName(row) }}</span>
 				</div>
-				<div class="my-documents-card__title">
-					{{ displayName(object) }}
-				</div>
+			</template>
+
+			<!-- Type badge (Concept / Geanonimiseerd) -->
+			<template #column-kind="{ row }">
 				<CnStatusBadge
-					:label="kindLabel(object)"
+					:label="kindLabel(row)"
 					:color-map="kindColorMap" />
-				<div class="my-documents-card__meta">
-					<span>{{ formatDate(object.modified) }}</span>
-					<span>{{ formatSize(object.fileSize) }}</span>
-				</div>
-			</div>
-		</template>
+			</template>
 
-		<!-- Row actions (kebab menu) -->
-		<template #row-actions="{ row }">
-			<NcActions>
-				<template #icon>
-					<DotsHorizontal :size="20" />
-				</template>
-				<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
+			<!-- Status (placeholder: "Niet gecontroleerd") -->
+			<template #column-status="{ row }">
+				<span class="my-documents-status">
+					<EyeOffOutline :size="16" class="my-documents-status__icon" />
+					{{ statusLabel(row) }}
+				</span>
+			</template>
+
+			<!-- Date -->
+			<template #column-modified="{ row }">
+				{{ formatDate(row.modified) }}
+			</template>
+
+			<!-- Size -->
+			<template #column-fileSize="{ row }">
+				{{ formatSize(row.fileSize) }}
+			</template>
+
+			<!-- Card view -->
+			<template #card="{ object }">
+				<div class="my-documents-card">
+					<div class="my-documents-card__icon">
+						<component :is="iconFor(object)" :size="36" />
+					</div>
+					<div class="my-documents-card__title">
+						{{ displayName(object) }}
+					</div>
+					<CnStatusBadge
+						:label="kindLabel(object)"
+						:color-map="kindColorMap" />
+					<div class="my-documents-card__meta">
+						<span>{{ formatDate(object.modified) }}</span>
+						<span>{{ formatSize(object.fileSize) }}</span>
+					</div>
+				</div>
+			</template>
+
+			<!-- Row actions (kebab menu) -->
+			<template #row-actions="{ row }">
+				<NcActions>
 					<template #icon>
-						<Eye :size="20" />
+						<DotsHorizontal :size="20" />
 					</template>
-					{{ t('docudesk', 'View') }}
-				</NcActionButton>
-				<NcActionButton close-after-click @click="openFile(row)">
-					<template #icon>
-						<OpenInNew :size="20" />
-					</template>
-					{{ t('docudesk', 'Open in Files') }}
-				</NcActionButton>
-				<NcActionButton close-after-click @click="downloadFile(row)">
-					<template #icon>
-						<Download :size="20" />
-					</template>
-					{{ t('docudesk', 'Download') }}
-				</NcActionButton>
-			</NcActions>
-		</template>
-	</CnIndexPage>
+					<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
+						<template #icon>
+							<Eye :size="20" />
+						</template>
+						{{ t('docudesk', 'View') }}
+					</NcActionButton>
+					<NcActionButton close-after-click @click="openFile(row)">
+						<template #icon>
+							<OpenInNew :size="20" />
+						</template>
+						{{ t('docudesk', 'Open in Files') }}
+					</NcActionButton>
+					<NcActionButton close-after-click @click="downloadFile(row)">
+						<template #icon>
+							<Download :size="20" />
+						</template>
+						{{ t('docudesk', 'Download') }}
+					</NcActionButton>
+				</NcActions>
+			</template>
+		</CnIndexPage>
 	</div>
 </template>
 
@@ -150,12 +145,12 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 import { generateUrl } from '@nextcloud/router'
 import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
+import DdSearchBar from '../../components/DdSearchBar.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
-import Magnify from 'vue-material-design-icons/Magnify.vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
@@ -169,12 +164,12 @@ export default {
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
+		DdSearchBar,
 		DotsHorizontal,
 		Eye,
 		OpenInNew,
 		EyeOffOutline,
 		Download,
-		Magnify,
 		ChevronRight,
 		FolderOutline,
 		FilePdfBox,
@@ -420,35 +415,6 @@ export default {
 	align-items: center;
 	gap: 16px;
 	margin-bottom: 16px;
-}
-
-.my-documents-search {
-	position: relative;
-	display: flex;
-	align-items: center;
-	max-width: 360px;
-	flex: 1;
-}
-
-.my-documents-search__icon {
-	position: absolute;
-	left: 14px;
-	color: var(--color-text-maxcontrast);
-	pointer-events: none;
-}
-
-.my-documents-search__input {
-	width: 100%;
-	padding: 10px 14px 10px 40px;
-	border: 1px solid var(--color-border);
-	border-radius: 999px;
-	background: var(--color-main-background);
-	font-size: 14px;
-}
-
-.my-documents-search__input:focus {
-	outline: none;
-	border-color: var(--color-primary-element);
 }
 
 .my-documents-name {
