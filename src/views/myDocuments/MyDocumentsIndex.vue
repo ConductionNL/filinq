@@ -5,37 +5,13 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 <template>
 	<div class="my-documents-wrapper">
-		<!-- Breadcrumb navigation -->
-		<div v-if="breadcrumbs.length > 1" class="my-documents-breadcrumbs">
-			<span
-				v-for="(crumb, index) in breadcrumbs"
-				:key="crumb.path"
-				class="my-documents-breadcrumb">
-				<span
-					class="my-documents-breadcrumb__link"
-					:class="{ 'my-documents-breadcrumb__link--active': index === breadcrumbs.length - 1 }"
-					@click="navigateToBreadcrumb(crumb)">
-					{{ crumb.name }}
-				</span>
-				<ChevronRight
-					v-if="index < breadcrumbs.length - 1"
-					:size="16"
-					class="my-documents-breadcrumb__separator" />
-			</span>
-		</div>
-
-		<!-- Search bar -->
-		<div class="my-documents-toolbar">
-			<DdSearchBar
-				v-model="searchQuery"
-				:placeholder="t('docudesk', 'Search by name')"
-				:clear-label="t('docudesk', 'Clear search')" />
-		</div>
+		<!-- Page header -->
+		<DdPageHeader :title="t('docudesk', 'Documents')" />
 
 		<CnIndexPage
 			ref="indexPage"
 			:title="t('docudesk', 'Documents')"
-			:show-title="true"
+			:show-title="false"
 			:objects="paginatedDocuments"
 			:columns="tableColumns"
 			:pagination="paginationData"
@@ -45,7 +21,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 			:show-copy-action="false"
 			:show-delete-action="false"
 			:show-mass-import="false"
-			:show-mass-export="false"
+			:show-mass-export="true"
 			:show-mass-copy="false"
 			:show-mass-delete="false"
 			:show-add="false"
@@ -59,6 +35,15 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 			@page-size-changed="onPageSizeChanged"
 			@update:view-mode="onViewModeChange"
 			@row-click="onRowClick">
+			<!-- Search bar inline with view-toggle + actions menu. -->
+			<template #header-actions>
+				<DdSearchBar
+					v-model="searchQuery"
+					class="my-documents-search"
+					:placeholder="t('docudesk', 'Search by name')"
+					:clear-label="t('docudesk', 'Clear search')" />
+			</template>
+
 			<!-- Name with file icon (whole row is clickable via @row-click). -->
 			<template #column-fileName="{ row }">
 				<div class="my-documents-name">
@@ -146,6 +131,7 @@ import { generateUrl } from '@nextcloud/router'
 import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
+import DdPageHeader from '../../components/DdPageHeader.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
@@ -165,6 +151,7 @@ export default {
 		NcActions,
 		NcActionButton,
 		DdSearchBar,
+		DdPageHeader,
 		DotsHorizontal,
 		Eye,
 		OpenInNew,
@@ -409,12 +396,8 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.my-documents-toolbar {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 16px;
+.my-documents-search {
+	max-width: 280px;
 }
 
 .my-documents-name {
