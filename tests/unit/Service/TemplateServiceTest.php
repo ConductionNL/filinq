@@ -205,6 +205,9 @@ class TemplateServiceTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Name is required');
 
+        $this->mockRegisterResolver->method('validateNamespace')
+            ->willReturn(true);
+
         $this->templateService->createTemplate([
             'namespace' => 'testapp',
             'content'   => '<h1>Hello</h1>',
@@ -222,6 +225,9 @@ class TemplateServiceTest extends TestCase
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Content is required');
+
+        $this->mockRegisterResolver->method('validateNamespace')
+            ->willReturn(true);
 
         $this->templateService->createTemplate([
             'namespace' => 'testapp',
