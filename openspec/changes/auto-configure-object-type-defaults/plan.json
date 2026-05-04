@@ -1,0 +1,116 @@
+{
+  "change": "auto-configure-object-type-defaults",
+  "project": "docudesk",
+  "repo": "ConductionNL/docudesk",
+  "created": "2026-05-04",
+  "tracking_issue": 118,
+  "tracking_issue_url": "https://github.com/ConductionNL/docudesk/issues/118",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Implement applyObjectTypeConfigurationDefaults() in SettingsInitializer",
+      "description": "Add a private helper that derives schema→register mapping from docudesk_register.json, then writes IAppConfig keys per object type with empty-check gating to preserve admin overrides.",
+      "status": "done",
+      "spec_ref": "specs/admin-settings/spec.md (REQ-SET-02 modified)",
+      "acceptance_criteria": [
+        "New private method applyObjectTypeConfigurationDefaults(array $importResult, array $jsonDef): void called from initialize() after importFromApp succeeds, including the up-to-date branch",
+        "Schema→register map derived at runtime from $jsonDef['components']['registers'][*]['schemas'][]; not hardcoded in PHP",
+        "For each schema in the derived map AND $importResult['schemas'], resolve register by slug and write {schemaSlug}_source / _register / _schema only when current IAppConfig value is empty; otherwise log info and skip",
+        "Missing schema or register slugs in the import result are skipped with a warning log, no exception",
+        "Empty or missing components.registers in JSON causes the method to log info and return cleanly; PHPCS / PHPMD / Psalm / PHPStan all clean"
+      ],
+      "files_likely_affected": [
+        "lib/Service/SettingsInitializer.php"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Wire the helper into SettingsInitializer::initialize()",
+      "description": "Capture importFromApp return value and call the helper from initialize(), including the version-up-to-date branch.",
+      "status": "done",
+      "spec_ref": "specs/admin-settings/spec.md (REQ-SET-02 modified)",
+      "acceptance_criteria": [
+        "Return value of $configurationService->importFromApp(...) is captured in a local variable",
+        "applyObjectTypeConfigurationDefaults(...) is invoked with both the import result and the parsed JSON definition",
+        "The helper is also invoked when importFromApp returns the up-to-date / no-changes path",
+        "On exception inside the helper, initialize() logs but does not propagate — helper failure must not break app boot"
+      ],
+      "files_likely_affected": [
+        "lib/Service/SettingsInitializer.php"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Unit tests for the helper",
+      "description": "Cover happy path, override preservation, partial override, missing-from-result, empty JSON, and _source-key behaviour.",
+      "status": "done",
+      "spec_ref": "specs/admin-settings/spec.md (REQ-SET-02 scenarios)",
+      "acceptance_criteria": [
+        "Test class follows DocuDesk conventions (declare strict_types=1, namespace Unit\\Service, PHPUnit\\Framework\\TestCase)",
+        "Six cases as separate test methods: fresh install, override preservation, partial override (per-key gating), missing-from-import-result, empty components.registers, _source key set to 'openregister'",
+        "Assertions confirm both expected writes AND expected non-writes via expects(never())->method('setValueString') for preserved keys; tests run via docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml --filter SettingsInitializerTest"
+      ],
+      "files_likely_affected": [
+        "tests/unit/Service/SettingsInitializerTest.php"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Integration test against ConsentCrudService::getConsentConfig()",
+      "description": "Confirm getConsentConfig returns the auto-populated values on fresh install, and still returns null when keys are cleared.",
+      "status": "done",
+      "spec_ref": "specs/consent-management/spec.md (CONS-006)",
+      "acceptance_criteria": [
+        "Test confirms that after SettingsInitializer::initialize() runs on a fresh-install fixture, getConsentConfig() returns ['register' => <id>, 'schema' => <id>] without admin interaction",
+        "Test confirms that when the IAppConfig keys are cleared, getConsentConfig() returns null (failure-mode preserved); documents that auto-default is the only path populating these keys"
+      ],
+      "files_likely_affected": [
+        "tests/unit/Service/ConsentCrudServiceTest.php"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Update the admin-settings spec",
+      "description": "Fold the change-folder delta into the canonical openspec/specs/admin-settings/spec.md after verification.",
+      "status": "done",
+      "spec_ref": "specs/admin-settings/spec.md",
+      "acceptance_criteria": [
+        "REQ-SET-02 gains 'Defaults are populated automatically on fresh install' scenario",
+        "REQ-SET-02 gains 'Administrator overrides are preserved on reboot' scenario",
+        "REQ-SET-02 gains 'Auto-default covers every schema declared in docudesk_register.json' scenario",
+        "Change-folder delta in openspec/changes/auto-configure-object-type-defaults/specs/admin-settings/spec.md folded into canonical spec via /opsx:sync after verification"
+      ],
+      "files_likely_affected": [
+        "openspec/specs/admin-settings/spec.md"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Documentation",
+      "description": "Add a 'Default register/schema configuration' section to consent docs with a Playwright screenshot per ADR-010.",
+      "status": "done",
+      "spec_ref": "ADR-010 (every user-facing feature must have docs)",
+      "acceptance_criteria": [
+        "Consent-management feature doc gains a 'Default register/schema configuration' section explaining the auto-population behaviour",
+        "Doc notes that admins may override defaults via the existing settings UI and that overrides persist across reboots",
+        "At least one Playwright-MCP screenshot of the auto-populated DocuDesk admin settings page added per ADR-010"
+      ],
+      "files_likely_affected": [
+        "docs/features/consent-management.md"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Manual verification",
+      "description": "End-to-end smoke test in docker-compose: fresh install gets working consent without UI; manual occ override is preserved across restart.",
+      "status": "pending",
+      "spec_ref": "specs/admin-settings/spec.md",
+      "acceptance_criteria": [
+        "On a clean docker-compose env, hitting consent list endpoint returns 200 without any settings-UI interaction",
+        "occ config:app:get docudesk publicationConsent_register and ... publicationConsent_schema both return non-empty integer values",
+        "After manually setting publicationConsent_register via occ config:app:set and restarting the container, the override is preserved"
+      ],
+      "files_likely_affected": []
+    }
+  ]
+}

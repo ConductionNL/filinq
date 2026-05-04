@@ -48,7 +48,56 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 
 ### REQ-SET-02: OpenRegister Integration Configuration (Priority: Must)
 
-Administrators can configure which OpenRegister register and schema to use for consent object storage, with validation and discovery of available registers.
+Administrators can configure which OpenRegister register and schema to use for consent object storage, with validation and discovery of available registers. **On fresh installs, sensible defaults are populated automatically from `docudesk_register.json` so consent and other object-type endpoints work without any admin interaction. Administrator overrides are preserved across reboots and version bumps via per-key empty-check gating.**
+
+#### Scenario: Defaults are populated automatically on fresh install
+- GIVEN OpenRegister is installed and enabled (>= v0.2.10)
+- AND no admin has previously configured DocuDesk
+- AND the IAppConfig keys `publicationConsent_register` and `publicationConsent_schema` are empty
+- WHEN the DocuDesk app boots and `SettingsInitializer::initialize()` runs
+- THEN `applyObjectTypeConfigurationDefaults($settings)` is invoked
+- AND `publicationConsent_source` is set to `"openregister"`
+- AND `publicationConsent_register` is set to the integer ID of the `consent` register (resolved via `RegisterMapper::find('consent')`)
+- AND `publicationConsent_schema` is set to the integer ID of the `publicationConsent` schema (resolved via `SchemaMapper::find('publicationConsent')`)
+- AND `ConsentCrudService::getConsentConfig()` returns a non-null array with both IDs without any admin interaction with the settings UI
+
+#### Scenario: Auto-default covers every schema declared in `docudesk_register.json`
+- GIVEN OpenRegister is installed and enabled
+- AND no admin has previously configured DocuDesk
+- WHEN `SettingsInitializer::initialize()` runs
+- THEN every schema declared in `docudesk_register.json`'s `components.registers[*].schemas[]` (currently `publicationConsent`, `signingRequest`, `signerRecord`, `signingAuditEntry`, `template`, `correspondence`, `huisstijl`) has its `{schemaSlug}_source`, `{schemaSlug}_register`, and `{schemaSlug}_schema` IAppConfig keys populated
+- AND each schema's register is resolved by inverting the JSON's `register.schemas[]` listing — the schema → register map is derived at runtime, never hardcoded in PHP
+
+#### Scenario: Administrator overrides are preserved on reboot
+- GIVEN an administrator has set `publicationConsent_register` to a custom value (e.g., a non-default register ID)
+- AND that value is non-empty in IAppConfig
+- WHEN `SettingsInitializer::initialize()` runs on a subsequent boot
+- THEN `publicationConsent_register` remains at the administrator's value
+- AND the auto-default helper logs an info message indicating the override is preserved
+- AND the auto-default helper does NOT call `setValueString` for that key
+
+#### Scenario: Per-key gating preserves partial overrides
+- GIVEN an administrator has set `publicationConsent_register` but `publicationConsent_schema` is still empty
+- WHEN `SettingsInitializer::initialize()` runs
+- THEN `publicationConsent_register` remains at the administrator's value
+- AND `publicationConsent_schema` is auto-populated with the integer ID of the `publicationConsent` schema
+- AND `publicationConsent_source` is auto-populated only if it was empty
+
+#### Scenario: Missing schema or register slug is silently skipped
+- GIVEN `RegisterMapper::find($slug)` or `SchemaMapper::find($slug)` throws `DoesNotExistException` for some schema slug declared in `docudesk_register.json`
+- WHEN the auto-default helper runs
+- THEN that schema's IAppConfig keys are not written
+- AND a warning is logged identifying the missing slug
+- AND no exception is raised
+- AND processing continues for the remaining schemas
+
+#### Scenario: Auto-default runs in the version-up-to-date branch
+- GIVEN DocuDesk has been initialized previously and `configuration_version` already matches the JSON version
+- AND an admin has manually cleared `publicationConsent_register` via `occ config:app:set ... ""`
+- WHEN the app boots and `SettingsInitializer::initialize()` runs
+- THEN the JSON re-import is correctly skipped (version-gated, per REQ-SET-03)
+- AND the auto-default helper is still invoked before returning
+- AND the cleared key is re-populated with the auto-default integer ID
 
 #### Scenario: Configure consent register and schema
 - GIVEN an administrator opens the DocuDesk admin settings
@@ -87,6 +136,9 @@ Administrators can configure which OpenRegister register and schema to use for c
 | SET-014 | Configure the publicationConsent object type with a selected register and schema | MUST | Implemented |
 | SET-015 | Store register/schema configuration as `publicationConsent_register`, `publicationConsent_schema`, `publicationConsent_source` in IAppConfig | MUST | Implemented |
 | SET-016 | Schema listing excludes the `properties` field for cleaner API responses | MUST | Implemented |
+| SET-017 | On every successful `SettingsInitializer::initialize()` (fresh import OR version-up-to-date branch), the helper `applyObjectTypeConfigurationDefaults()` seeds `{schemaSlug}_source`, `{schemaSlug}_register`, and `{schemaSlug}_schema` IAppConfig keys for every schema declared in `docudesk_register.json`. Register IDs are resolved via `RegisterMapper::find($registerSlug)` and schema IDs via `SchemaMapper::find($schemaSlug)`; both mappers accept slug, UUID, or integer ID. The schema → register map is derived at runtime by inverting `components.registers[*].schemas[]`; it is never hardcoded in PHP. | MUST | Implemented |
+| SET-018 | Each `setValueString` call inside the auto-default helper is gated by an empty-check (`getValueString(..., '') === ''`); existing administrator overrides are preserved verbatim and logged at info level. | MUST | Implemented |
+| SET-019 | The auto-default helper handles failures gracefully: missing register/schema slugs throw `DoesNotExistException` which is caught per-schema and logged as a warning; any other exception is caught at the helper boundary, logged at error level, and never propagated to `initialize()`. App boot is never blocked by a helper failure. | MUST | Implemented |
 
 ### REQ-SET-03: Auto-Initialization on Boot (Priority: Must)
 

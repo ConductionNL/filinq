@@ -28,6 +28,8 @@
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
                 <referencedClass name="OCA\OpenRegister\Service\TextExtractionService"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
@@ -43,6 +45,8 @@
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
                 <referencedClass name="OCA\OpenRegister\Service\TextExtractionService"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>

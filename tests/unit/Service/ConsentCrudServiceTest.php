@@ -39,16 +39,22 @@ class ConsentCrudServiceTest extends TestCase
 {
 
     /**
+     * The system under test.
+     *
      * @var ConsentCrudService
      */
     private ConsentCrudService $service;
 
     /**
+     * Mocked settings service exposing IAppConfig values via getAllSettings().
+     *
      * @var SettingsService|MockObject
      */
     private SettingsService|MockObject $mockSettingsService;
 
     /**
+     * Mocked consent service that the CRUD service delegates to.
+     *
      * @var ConsentService|MockObject
      */
     private ConsentService|MockObject $mockConsentService;
@@ -65,7 +71,7 @@ class ConsentCrudServiceTest extends TestCase
 
         $this->mockSettingsService = $this->createMock(SettingsService::class);
         $this->mockConsentService  = $this->createMock(ConsentService::class);
-        $mockLogger                = $this->createMock(LoggerInterface::class);
+        $mockLogger = $this->createMock(LoggerInterface::class);
 
         $this->service = new ConsentCrudService(
             $this->mockSettingsService,
@@ -77,19 +83,27 @@ class ConsentCrudServiceTest extends TestCase
 
 
     /**
-     * Test getConsentConfig returns null when not configured
+     * Test getConsentConfig returns null when both IAppConfig keys are empty.
+     *
+     * After the `auto-configure-object-type-defaults` change, the auto-default
+     * helper in `SettingsInitializer` is the only path that populates these
+     * keys (admins can override but rarely need to). When the keys are cleared,
+     * `getConsentConfig()` MUST still return `null` — this test documents that
+     * the failure-mode contract is preserved (admin-settings spec REQ-SET-02).
      *
      * @return void
      */
     public function testGetConsentConfigReturnsNullWhenNotConfigured(): void
     {
         $this->mockSettingsService->method('getAllSettings')
-            ->willReturn([
-                'configuration' => [
-                    'publicationConsent_register' => '',
-                    'publicationConsent_schema'   => '',
-                ],
-            ]);
+            ->willReturn(
+                    [
+                        'configuration' => [
+                            'publicationConsent_register' => '',
+                            'publicationConsent_schema'   => '',
+                        ],
+                    ]
+                    );
 
         $result = $this->service->getConsentConfig();
         $this->assertNull($result);
@@ -105,12 +119,14 @@ class ConsentCrudServiceTest extends TestCase
     public function testGetConsentConfigReturnsConfigWhenConfigured(): void
     {
         $this->mockSettingsService->method('getAllSettings')
-            ->willReturn([
-                'configuration' => [
-                    'publicationConsent_register' => 'reg-1',
-                    'publicationConsent_schema'   => 'schema-1',
-                ],
-            ]);
+            ->willReturn(
+                    [
+                        'configuration' => [
+                            'publicationConsent_register' => 'reg-1',
+                            'publicationConsent_schema'   => 'schema-1',
+                        ],
+                    ]
+                    );
 
         $result = $this->service->getConsentConfig();
         $this->assertNotNull($result);
@@ -118,6 +134,39 @@ class ConsentCrudServiceTest extends TestCase
         $this->assertEquals('schema-1', $result['schema']);
 
     }//end testGetConsentConfigReturnsConfigWhenConfigured()
+
+
+    /**
+     * Test getConsentConfig returns auto-populated integer IDs after init.
+     *
+     * After `SettingsInitializer::applyObjectTypeConfigurationDefaults()` runs
+     * on a fresh install, the IAppConfig keys hold integer IDs (cast to string)
+     * resolved from `docudesk_register.json` via `RegisterMapper::find()` /
+     * `SchemaMapper::find()`. This test confirms `getConsentConfig()` accepts
+     * those integer-string values transparently — the contract does not depend
+     * on whether the values are slugs or integer IDs (admin-settings REQ-SET-02
+     * scenario "Defaults are populated automatically on fresh install").
+     *
+     * @return void
+     */
+    public function testGetConsentConfigReturnsAutoPopulatedValues(): void
+    {
+        $this->mockSettingsService->method('getAllSettings')
+            ->willReturn(
+                [
+                    'configuration' => [
+                        'publicationConsent_register' => '11',
+                        'publicationConsent_schema'   => '22',
+                    ],
+                ]
+            );
+
+        $result = $this->service->getConsentConfig();
+        $this->assertNotNull($result);
+        $this->assertSame('11', $result['register']);
+        $this->assertSame('22', $result['schema']);
+
+    }//end testGetConsentConfigReturnsAutoPopulatedValues()
 
 
     /**

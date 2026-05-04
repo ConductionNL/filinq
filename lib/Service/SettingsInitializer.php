@@ -22,6 +22,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use RuntimeException;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -135,6 +136,52 @@ class SettingsInitializer
 
 
     /**
+     * Retrieve the OpenRegister RegisterMapper from the container
+     *
+     * @return \OCA\OpenRegister\Db\RegisterMapper The RegisterMapper
+     *
+     * @throws \RuntimeException If the mapper is not available
+     */
+    private function getRegisterMapper(): \OCA\OpenRegister\Db\RegisterMapper
+    {
+        if (in_array(
+            self::OPENREGISTER_APP_ID,
+            $this->appManager->getInstalledApps(),
+            true
+        ) === true
+        ) {
+            return $this->container->get('OCA\OpenRegister\Db\RegisterMapper');
+        }
+
+        throw new RuntimeException('RegisterMapper is not available.');
+
+    }//end getRegisterMapper()
+
+
+    /**
+     * Retrieve the OpenRegister SchemaMapper from the container
+     *
+     * @return \OCA\OpenRegister\Db\SchemaMapper The SchemaMapper
+     *
+     * @throws \RuntimeException If the mapper is not available
+     */
+    private function getSchemaMapper(): \OCA\OpenRegister\Db\SchemaMapper
+    {
+        if (in_array(
+            self::OPENREGISTER_APP_ID,
+            $this->appManager->getInstalledApps(),
+            true
+        ) === true
+        ) {
+            return $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+        }
+
+        throw new RuntimeException('SchemaMapper is not available.');
+
+    }//end getSchemaMapper()
+
+
+    /**
      * Load settings from the docudesk_register.json file
      *
      * @return array<string, mixed> The loaded settings configuration
@@ -225,6 +272,12 @@ class SettingsInitializer
                 $message           = 'Configuration version '.$currentVersion;
                 $message          .= ' is up to date or newer than '.$settingsVersion;
                 $results['info'][] = $message;
+
+                // Even when the JSON import is skipped, IAppConfig keys may
+                // have been cleared (or never written). Re-apply per-object-type
+                // defaults from the existing OpenRegister registers/schemas.
+                $this->applyObjectTypeConfigurationDefaults($settings);
+
                 return $results;
             }
 
@@ -233,6 +286,11 @@ class SettingsInitializer
                 data: $settings,
                 version: $settings['info']['version']
             );
+
+            // Seed IAppConfig keys for every object type declared in the JSON
+            // so consent and other endpoints work without the admin having to
+            // pick a register/schema in the settings UI on a fresh install.
+            $this->applyObjectTypeConfigurationDefaults($settings);
 
             $results['configuration'] = true;
             $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
@@ -247,6 +305,144 @@ class SettingsInitializer
         return $results;
 
     }//end initialize()
+
+
+    /**
+     * Seed per-object-type IAppConfig keys from the existing OpenRegister state.
+     *
+     * Derives a `schemaSlug → registerSlug` map at runtime by walking
+     * `$jsonDef['components']['registers'][*]['schemas'][]` so the mapping stays
+     * in sync with `lib/Settings/docudesk_register.json` without a hardcoded PHP
+     * table. For every (schemaSlug, registerSlug) pair, looks up the actual
+     * Register and Schema by slug via `RegisterMapper::find()` /
+     * `SchemaMapper::find()` (both accept ID, UUID, or slug) and writes:
+     *
+     * - `{schemaSlug}_source`   = `'openregister'`
+     * - `{schemaSlug}_register` = the integer register ID
+     * - `{schemaSlug}_schema`   = the integer schema ID
+     *
+     * Each `setValueString` call is gated by an empty-check so administrator
+     * overrides are preserved across reboots and version bumps. Missing slugs
+     * (e.g., a partial import) are skipped with a warning log; failures inside
+     * the helper never propagate to `initialize()`.
+     *
+     * @param array<string, mixed> $jsonDef The parsed `docudesk_register.json` payload.
+     *
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.NPathComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) Length is dominated by structured logging, not logic.
+     */
+    private function applyObjectTypeConfigurationDefaults(array $jsonDef): void
+    {
+        try {
+            $registers = $jsonDef['components']['registers'] ?? [];
+            if (is_array($registers) === false || $registers === []) {
+                $this->logger->info(
+                    'Auto-default skipped: no registers declared in JSON',
+                    ['app' => $this->appName]
+                );
+                return;
+            }
+
+            // Build the schema-slug → register-slug map by inverting each
+            // register's schemas[] list. The map is derived, not hardcoded.
+            $schemaToRegister = [];
+            foreach ($registers as $registerEntry) {
+                if (is_array($registerEntry) === false) {
+                    continue;
+                }
+
+                $registerSlug = $registerEntry['slug'] ?? null;
+                $schemaSlugs  = $registerEntry['schemas'] ?? [];
+                if (is_string($registerSlug) === false || is_array($schemaSlugs) === false) {
+                    continue;
+                }
+
+                foreach ($schemaSlugs as $schemaSlug) {
+                    if (is_string($schemaSlug) === true) {
+                        $schemaToRegister[$schemaSlug] = $registerSlug;
+                    }
+                }
+            }
+
+            if ($schemaToRegister === []) {
+                $this->logger->info(
+                    'Auto-default skipped: no schema → register pairs derived from JSON',
+                    ['app' => $this->appName]
+                );
+                return;
+            }
+
+            $registerMapper = $this->getRegisterMapper();
+            $schemaMapper   = $this->getSchemaMapper();
+
+            foreach ($schemaToRegister as $schemaSlug => $registerSlug) {
+                try {
+                    $register = $registerMapper->find(id: $registerSlug);
+                } catch (DoesNotExistException $e) {
+                    $this->logger->warning(
+                        'Auto-default skipped schema: register not found',
+                        [
+                            'app'          => $this->appName,
+                            'schemaSlug'   => $schemaSlug,
+                            'registerSlug' => $registerSlug,
+                        ]
+                    );
+                    continue;
+                }
+
+                try {
+                    $schema = $schemaMapper->find(id: $schemaSlug);
+                } catch (DoesNotExistException $e) {
+                    $this->logger->warning(
+                        'Auto-default skipped schema: schema not found',
+                        [
+                            'app'          => $this->appName,
+                            'schemaSlug'   => $schemaSlug,
+                            'registerSlug' => $registerSlug,
+                        ]
+                    );
+                    continue;
+                }
+
+                $writes = [
+                    "{$schemaSlug}_source"   => 'openregister',
+                    "{$schemaSlug}_register" => (string) $register->getId(),
+                    "{$schemaSlug}_schema"   => (string) $schema->getId(),
+                ];
+
+                foreach ($writes as $key => $value) {
+                    $current = $this->config->getValueString($this->appName, $key, '');
+                    if ($current !== '') {
+                        $this->logger->info(
+                            'Preserving existing override for '.$key,
+                            ['app' => $this->appName, 'key' => $key]
+                        );
+                        continue;
+                    }
+
+                    $this->config->setValueString($this->appName, $key, $value);
+                    $this->logger->info(
+                        'Auto-default wrote IAppConfig key',
+                        [
+                            'app'   => $this->appName,
+                            'key'   => $key,
+                            'value' => $value,
+                        ]
+                    );
+                }
+            }//end foreach
+        } catch (Exception $e) {
+            // Helper failure must never break app boot.
+            $this->logger->error(
+                'Auto-default helper failed: '.$e->getMessage(),
+                ['app' => $this->appName, 'exception' => $e]
+            );
+        }//end try
+
+    }//end applyObjectTypeConfigurationDefaults()
 
 
 }//end class
