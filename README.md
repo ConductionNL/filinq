@@ -204,4 +204,7 @@ EUPL-1.2
 
 ## Authors
 
-Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations.
+Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations. 
+
+## Front-end
+Acato / Marco
