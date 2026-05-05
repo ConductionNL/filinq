@@ -130,6 +130,9 @@ class AnonymizationWidget implements IWidget, IIconWidget
      */
     public function load(): void
     {
+        // Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-vendor');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-nc-vue');
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
 
     }//end load()
