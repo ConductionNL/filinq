@@ -1,12 +1,16 @@
 /* eslint-disable no-console */
 import { defineStore } from 'pinia'
+import { useNavigationStore } from './navigation.ts'
 
 /**
- * Pinia store for the in-app file viewer modal.
+ * Pinia store for the in-app file viewer page.
  *
- * Tracks which file is currently being previewed and the UI state of the modal
- * (open/closed, anonymized-toggle stub, latest text selection). Actual file
- * loading happens inside the per-MIME viewer component.
+ * Tracks which file is currently being previewed and the UI state of the viewer
+ * (anonymized-toggle stub, latest text selection). Actual file loading happens
+ * inside the per-MIME viewer component.
+ *
+ * Navigation: opening a file switches the active view to 'fileViewer' and
+ * remembers the previous view so close() can return to where the user came from.
  *
  * Future-ready hooks (no logic yet, only state):
  *   - selection:        latest highlighted text from the viewer.
@@ -16,14 +20,15 @@ export const useFileViewerStore = defineStore(
 	'fileViewer',
 	{
 		state: () => ({
-			isOpen: false,
 			currentFile: null, // { fileId, fileName, mimeType, path }
+			previousView: null,
 			showAnonymized: false,
 			selection: '',
 		}),
 		actions: {
 			/**
-			 * Open the modal for a given file.
+			 * Open the viewer page for a given file.
+			 * Remembers the current navigation view so close() can return to it.
 			 *
 			 * @param {object} file File descriptor.
 			 * @param {number} file.fileId   Nextcloud file id.
@@ -32,18 +37,23 @@ export const useFileViewerStore = defineStore(
 			 * @param {string} file.path     Absolute path inside the user's storage (e.g. /DocuDesk/foo.pdf).
 			 */
 			open(file) {
+				const navigationStore = useNavigationStore()
+				this.previousView = navigationStore.selected
 				this.currentFile = file
 				this.showAnonymized = false
 				this.selection = ''
-				this.isOpen = true
+				navigationStore.setSelected('fileViewer')
 			},
 			/**
-			 * Close the modal and reset state.
+			 * Close the viewer page and navigate back to the previous view.
 			 */
 			close() {
-				this.isOpen = false
+				const navigationStore = useNavigationStore()
+				const back = this.previousView || 'myDocuments'
 				this.currentFile = null
 				this.selection = ''
+				this.previousView = null
+				navigationStore.setSelected(back)
 			},
 			/**
 			 * Toggle preview between original and anonymized variant.

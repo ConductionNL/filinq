@@ -1,62 +1,62 @@
 <template>
-	<NcModal
-		v-if="fileViewerStore.isOpen"
-		size="large"
-		:name="modalTitle"
-		@close="onClose">
-		<div class="file-viewer-modal">
-			<div class="file-viewer-modal__header">
-				<div class="file-viewer-modal__title">
-					<component :is="fileTypeIcon" :size="24" />
-					<span>{{ modalTitle }}</span>
-				</div>
-				<div class="file-viewer-modal__actions">
-					<!-- Stub: toggle between original and anonymised version. Wired up in a follow-up task. -->
-					<NcButton
-						v-if="canToggleAnonymized"
-						type="secondary"
-						:disabled="true"
-						:title="t('docudesk', 'Toggle between original and anonymised (coming soon)')"
-						@click="fileViewerStore.toggleAnonymized()">
-						<template #icon>
-							<EyeOffOutline v-if="fileViewerStore.showAnonymized" :size="18" />
-							<Eye v-else :size="18" />
-						</template>
-						{{ fileViewerStore.showAnonymized ? t('docudesk', 'Show original') : t('docudesk', 'Show anonymised') }}
-					</NcButton>
-					<NcButton type="tertiary" @click="downloadCurrent">
-						<template #icon>
-							<Download :size="18" />
-						</template>
-						{{ t('docudesk', 'Download') }}
-					</NcButton>
-				</div>
-			</div>
+	<div class="file-viewer-page">
+		<DdPageHeader :title="pageTitle">
+			<template #icon>
+				<component :is="fileTypeIcon" :size="28" />
+			</template>
+			<template #actions>
+				<NcButton type="tertiary" @click="onBack">
+					<template #icon>
+						<ArrowLeft :size="18" />
+					</template>
+					{{ t('docudesk', 'Back') }}
+				</NcButton>
+				<!-- Stub: toggle between original and anonymised version. Wired up in a follow-up task. -->
+				<NcButton
+					v-if="canToggleAnonymized"
+					type="secondary"
+					:disabled="true"
+					:title="t('docudesk', 'Toggle between original and anonymised (coming soon)')"
+					@click="fileViewerStore.toggleAnonymized()">
+					<template #icon>
+						<EyeOffOutline v-if="fileViewerStore.showAnonymized" :size="18" />
+						<Eye v-else :size="18" />
+					</template>
+					{{ fileViewerStore.showAnonymized ? t('docudesk', 'Show original') : t('docudesk', 'Show anonymised') }}
+				</NcButton>
+				<NcButton type="primary" @click="downloadCurrent">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('docudesk', 'Download') }}
+				</NcButton>
+			</template>
+		</DdPageHeader>
 
-			<div class="file-viewer-modal__body">
-				<component
-					:is="viewerComponent"
-					v-if="viewerComponent"
-					:path="fileViewerStore.currentFile.path" />
-				<div v-else class="file-viewer-modal__unsupported">
-					<FileAlertOutline :size="48" />
-					<p>{{ t('docudesk', 'This file type cannot be previewed.') }}</p>
-					<NcButton type="primary" @click="downloadCurrent">
-						<template #icon>
-							<Download :size="18" />
-						</template>
-						{{ t('docudesk', 'Download') }}
-					</NcButton>
-				</div>
+		<div class="file-viewer-page__body">
+			<component
+				:is="viewerComponent"
+				v-if="viewerComponent && fileViewerStore.currentFile"
+				:path="fileViewerStore.currentFile.path" />
+			<div v-else-if="fileViewerStore.currentFile" class="file-viewer-page__unsupported">
+				<FileAlertOutline :size="48" />
+				<p>{{ t('docudesk', 'This file type cannot be previewed.') }}</p>
+				<NcButton type="primary" @click="downloadCurrent">
+					<template #icon>
+						<Download :size="18" />
+					</template>
+					{{ t('docudesk', 'Download') }}
+				</NcButton>
 			</div>
 		</div>
-	</NcModal>
+	</div>
 </template>
 
 <script>
-import { NcModal, NcButton } from '@nextcloud/vue'
+import { NcButton } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -64,10 +64,11 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
-import { fileViewerStore } from '../store/store.js'
-import PdfViewer from '../components/viewers/PdfViewer.vue'
-import WordViewer from '../components/viewers/WordViewer.vue'
-import TextViewer from '../components/viewers/TextViewer.vue'
+import { fileViewerStore } from '../../store/store.js'
+import DdPageHeader from '../../components/DdPageHeader.vue'
+import PdfViewer from '../../components/viewers/PdfViewer.vue'
+import WordViewer from '../../components/viewers/WordViewer.vue'
+import TextViewer from '../../components/viewers/TextViewer.vue'
 
 /**
  * Match a file (by MIME + name) to one of the supported in-app viewers.
@@ -89,10 +90,10 @@ function detectViewer(file) {
 }
 
 export default {
-	name: 'FileViewerModal',
+	name: 'FileViewerPage',
 	components: {
-		NcModal,
 		NcButton,
+		ArrowLeft,
 		Eye,
 		EyeOffOutline,
 		Download,
@@ -100,6 +101,7 @@ export default {
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
+		DdPageHeader,
 		PdfViewer,
 		WordViewer,
 		TextViewer,
@@ -111,12 +113,11 @@ export default {
 	},
 	computed: {
 		/**
-		 * Title shown in the modal header — falls back to a generic label
-		 * when no file is loaded yet.
+		 * Page title — current file name with a generic fallback.
 		 *
 		 * @return {string}
 		 */
-		modalTitle() {
+		pageTitle() {
 			return fileViewerStore.currentFile?.fileName || t('docudesk', 'File preview')
 		},
 		/**
@@ -164,8 +165,8 @@ export default {
 	},
 	methods: {
 		t,
-		/** Close the modal via the store. */
-		onClose() {
+		/** Navigate back to the previous view via the store. */
+		onBack() {
 			fileViewerStore.close()
 		},
 		/** Download the currently previewed file via Nextcloud's file URL. */
@@ -179,49 +180,22 @@ export default {
 </script>
 
 <style scoped>
-.file-viewer-modal {
+.file-viewer-page {
 	display: flex;
 	flex-direction: column;
-	height: 80vh;
+	height: 100%;
+	min-height: 0;
 }
 
-.file-viewer-modal__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 16px;
-	padding: 12px 16px;
-	border-bottom: 1px solid var(--color-border);
-	background: var(--color-main-background);
-}
-
-.file-viewer-modal__title {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-weight: 600;
-	min-width: 0;
-}
-
-.file-viewer-modal__title span {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.file-viewer-modal__actions {
-	display: flex;
-	gap: 8px;
-	flex-shrink: 0;
-}
-
-.file-viewer-modal__body {
+.file-viewer-page__body {
 	flex: 1;
+	min-height: 0;
 	overflow: auto;
 	background: var(--color-background-dark);
+	border-top: 1px solid var(--color-border);
 }
 
-.file-viewer-modal__unsupported {
+.file-viewer-page__unsupported {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
