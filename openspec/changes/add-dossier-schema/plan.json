@@ -1,0 +1,98 @@
+{
+  "change": "add-dossier-schema",
+  "project": "docudesk",
+  "repo": "ConductionNL/docudesk",
+  "created": "2026-04-23",
+  "tracking_issue": 110,
+  "tracking_issue_url": "https://github.com/ConductionNL/docudesk/issues/110",
+  "labels": ["openspec", "docudesk", "dossier-register"],
+  "sections": [
+    {
+      "number": 1,
+      "title": "Register & schema definitions in docudesk_register.json",
+      "tasks": [
+        { "id": "1.1", "status": "pending", "title": "Add dossier register entry under components.registers" },
+        { "id": "1.2", "status": "pending", "title": "Add base schema under components.schemas.base" },
+        { "id": "1.3", "status": "pending", "title": "Add dossier schema under components.schemas.dossier" },
+        { "id": "1.4", "status": "pending", "title": "Verify JSON validity and composer check:strict" }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Seed data",
+      "tasks": [
+        { "id": "2.1", "status": "pending", "title": "Add six canonical base seed objects (immutable)" },
+        { "id": "2.2", "status": "pending", "title": "Add five seed dossier objects across the three personas" },
+        { "id": "2.3", "status": "pending", "title": "Ensure at least one seed has empty bases and null checkedOn" }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Install and verify seeding",
+      "tasks": [
+        { "id": "3.1", "status": "pending", "title": "Reset local env and bring up default docker-compose profile" },
+        { "id": "3.2", "status": "pending", "title": "Enable DocuDesk and verify RegistersLoader runs clean" },
+        { "id": "3.3", "status": "pending", "title": "Confirm dossier register via occ" },
+        { "id": "3.4", "status": "pending", "title": "Verify six base seed objects returned by GET /api/objects/base" },
+        { "id": "3.5", "status": "pending", "title": "Verify five dossier seed objects returned by GET /api/objects/dossier" },
+        { "id": "3.6", "status": "pending", "title": "Confirm seed dossiers bind to real Nextcloud folders" }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Binding and referential-integrity verification",
+      "tasks": [
+        { "id": "4.1", "status": "pending", "title": "POST dossier with existing @self.folder node ID" },
+        { "id": "4.2", "status": "pending", "title": "PUT dossier updating @self.folder" },
+        { "id": "4.3", "status": "pending", "title": "DELETE referenced base is blocked by referential integrity" },
+        { "id": "4.4", "status": "pending", "title": "POST dossier with invalid base reference is rejected" },
+        { "id": "4.5", "status": "pending", "title": "PUT immutable base seed is rejected" }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Audit trail verification",
+      "tasks": [
+        { "id": "5.1", "status": "pending", "title": "Update checkedOn as non-admin user" },
+        { "id": "5.2", "status": "pending", "title": "Audit trail entry has actor, diff, and timestamp" },
+        { "id": "5.3", "status": "pending", "title": "Second update by different user shows latest actor" }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Unit tests (ADR-009)",
+      "tasks": [
+        { "id": "6.1", "status": "pending", "title": "Add DossierRegisterConfigTest asserting register/schema/seed contract" },
+        { "id": "6.2", "status": "pending", "title": "Run unit tests inside Nextcloud container" },
+        { "id": "6.3", "status": "pending", "title": "Confirm ≥75% coverage for new code" }
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Translations (ADR-005)",
+      "tasks": [
+        { "id": "7.1", "status": "pending", "title": "Add Dutch translations for schema/property titles" },
+        { "id": "7.2", "status": "pending", "title": "Add English translations for schema/property titles and grondslag glosses" },
+        { "id": "7.3", "status": "pending", "title": "Verify translations surface in the Nextcloud UI" }
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Documentation & screenshots (ADR-010)",
+      "tasks": [
+        { "id": "8.1", "status": "pending", "title": "Write docs/features/dossier-register.md" },
+        { "id": "8.2", "status": "pending", "title": "Capture Playwright MCP screenshots via browser-1" },
+        { "id": "8.3", "status": "pending", "title": "Reference screenshots from feature doc" },
+        { "id": "8.4", "status": "pending", "title": "Update docs/FEATURES.md" }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Follow-up hand-off",
+      "tasks": [
+        { "id": "9.1", "status": "pending", "title": "Open or reference validate-self-folder-access tracking issue in OpenRegister" },
+        { "id": "9.2", "status": "pending", "title": "Document current @self.folder trust model in feature doc" }
+      ]
+    }
+  ]
+}

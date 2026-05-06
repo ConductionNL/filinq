@@ -1,0 +1,370 @@
+{
+  "change": "entity-publication-policies",
+  "project": "docudesk",
+  "repo": "ConductionNL/docudesk",
+  "created": "2026-04-29",
+  "tracking_issue": 112,
+  "tracking_issue_url": "https://github.com/ConductionNL/docudesk/issues/112",
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Schema additions in docudesk_register.json",
+      "title": "Add mandatoryAnonymization schema definition",
+      "description": "Define mandatoryAnonymization in lib/Settings/docudesk_register.json: primaryName, entityType, matchRules, reason, legalAuthority, caseReference, severity, jurisdiction, addedBy, validFrom, validUntil, active, notes.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-a-mandatoryanonymization-schema-must-exist-in-the-consent-register",
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "1.2",
+      "section": "Schema additions in docudesk_register.json",
+      "title": "Add publicationAllowance schema definition",
+      "description": "Define publicationAllowance in the same register: primaryName, entityType, matchRules, reason, consentDocument, consentMethod, consentScope, addedBy, validFrom, validUntil, active, notes.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-a-publicationallowance-schema-must-exist-in-the-consent-register",
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "1.3",
+      "section": "Schema additions in docudesk_register.json",
+      "title": "Extend publicationConsent.consentStatus enum",
+      "description": "Add mandatory_anonymized and blanket_consent_given to the consentStatus enum.",
+      "status": "pending",
+      "spec_ref": "consent-management/spec.md#requirement-consentstatus-enum-must-include-two-new-policy-pre-emption-values",
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "1.4",
+      "section": "Schema additions in docudesk_register.json",
+      "title": "Add policyMatch polymorphic reference field",
+      "description": "Add policyMatch to publicationConsent: type object, oneOf $ref to both policy schemas, objectConfiguration.handling: related-object.",
+      "status": "pending",
+      "spec_ref": "consent-management/spec.md#requirement-publicationconsent-must-gain-a-typed-polymorphic-reference-field-policymatch",
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "1.5",
+      "section": "Schema additions in docudesk_register.json",
+      "title": "Verify schema imports cleanly",
+      "description": "Run composer test:unit (or equivalent) - no JSON syntax errors, no schema validation rejections.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "2.1",
+      "section": "Seed data per ADR-016",
+      "title": "Seed 4 mandatoryAnonymization records",
+      "description": "Court order, minor protection, undercover officer, categorical exemption. @self envelope with stable slugs.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "2.2",
+      "section": "Seed data per ADR-016",
+      "title": "Seed 4 publicationAllowance records",
+      "description": "Mayor blanket consent, KvK opt-in, council member, recorded verbal consent. @self envelope.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "2.3",
+      "section": "Seed data per ADR-016",
+      "title": "Verify seed import is idempotent",
+      "description": "Re-running the import skips existing objects matched by slug. Smoke test on clean install + double import.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": []
+    },
+    {
+      "id": "3.1",
+      "section": "Detection-time matching service",
+      "title": "Create PolicyMatchService with in-memory rule cache",
+      "description": "Load all active rules from both schemas at init. O(1) per-tuple lookup keyed by (matchType, entityType, value).",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-detector-must-consult-an-in-memory-rule-cache",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php", "lib/Service/ConsentService.php"]
+    },
+    {
+      "id": "3.2",
+      "section": "Detection-time matching service",
+      "title": "Implement match-order: deny first, then allow",
+      "description": "At most one match. Multi-deny tie-break: lowest UUID lexicographically (deterministic).",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-conflict-resolution-must-be-deny-wins-deterministically",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php"]
+    },
+    {
+      "id": "3.3",
+      "section": "Detection-time matching service",
+      "title": "Honor time bounds at match time",
+      "description": "Future validFrom / past validUntil / active false MUST NOT match.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-time-bounds-must-be-honored-at-match-time",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php"]
+    },
+    {
+      "id": "3.4",
+      "section": "Detection-time matching service",
+      "title": "Implement match types exact, normalized, bsn, kvk",
+      "description": "normalized strips case + accents (Transliterator). Reject unknown types defensively.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-both-policy-schemas-must-support-the-v1-match-rule-types",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php"]
+    },
+    {
+      "id": "3.5",
+      "section": "Detection-time matching service",
+      "title": "Subscribe to object-changed events for cache invalidation",
+      "description": "On any change to either policy schema, invalidate and rebuild the in-memory index.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-detector-must-consult-an-in-memory-rule-cache",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php", "lib/AppInfo/Application.php"]
+    },
+    {
+      "id": "3.6",
+      "section": "Detection-time matching service",
+      "title": "Unit-test PolicyMatchService",
+      "description": "Each match type, time bounds, active flag, multi-rule precedence, multi-deny tie-break, deny-vs-allow conflict.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/unit/Service/PolicyMatchServiceTest.php"]
+    },
+    {
+      "id": "4.1",
+      "section": "Consent service integration",
+      "title": "Extend ConsentService::createConsentRequest with policy lookup",
+      "description": "Deny match → mandatory_anonymized + policyMatch + skipped notification. Allow match → blanket_consent_given + policyMatch + skipped notification. No match → existing WOO unchanged.",
+      "status": "pending",
+      "spec_ref": "consent-management/spec.md#requirement-consentservice-must-consult-policy-schemas-before-creating-woo-flow-records",
+      "files_likely_affected": ["lib/Service/ConsentService.php"]
+    },
+    {
+      "id": "4.2",
+      "section": "Consent service integration",
+      "title": "Block transitions out of policy-pre-empted states",
+      "description": "FROM mandatory_anonymized or blanket_consent_given TO any WOO state must be rejected.",
+      "status": "pending",
+      "spec_ref": "consent-management/spec.md#requirement-consentstatus-enum-must-include-two-new-policy-pre-emption-values",
+      "files_likely_affected": ["lib/Service/ConsentService.php", "lib/Service/ConsentCrudService.php"]
+    },
+    {
+      "id": "4.3",
+      "section": "Consent service integration",
+      "title": "Unit-test the four detection-time outcomes",
+      "description": "no match → WOO; deny → mandatory_anonymized; allow → blanket_consent_given; both → deny wins.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/unit/Service/ConsentServiceTest.php"]
+    },
+    {
+      "id": "5.1",
+      "section": "Retroactive handling on rule changes",
+      "title": "Force-resolve in-flight records on deny rule INSERT",
+      "description": "On deny rule add (or update making it match more entities), update matching in-flight publicationConsent records to mandatory_anonymized + policyMatch + cancel notifications.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-adding-a-deny-list-rule-must-force-resolve-in-flight-records",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php", "lib/Service/ConsentService.php"]
+    },
+    {
+      "id": "5.2",
+      "section": "Retroactive handling on rule changes",
+      "title": "Do NOT modify in-flight records on allow rule INSERT",
+      "description": "Allow-list addition leaves existing publicationConsent records as-is. Future detections benefit.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-adding-an-allow-list-rule-must-not-alter-in-flight-records",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php"]
+    },
+    {
+      "id": "5.3",
+      "section": "Retroactive handling on rule changes",
+      "title": "Preserve past records on rule DELETE / expiry",
+      "description": "Past publicationConsent records keep their final state. Future detections fall through.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-rule-removal-or-expiry-must-not-alter-past-records",
+      "files_likely_affected": ["lib/Service/PolicyMatchService.php"]
+    },
+    {
+      "id": "5.4",
+      "section": "Retroactive handling on rule changes",
+      "title": "Unit-test retroactive force-resolve",
+      "description": "Including the case where in-flight record had objection_received (deny overrides explicit objection — privacy default).",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/unit/Service/ConsentServiceTest.php"]
+    },
+    {
+      "id": "6.1",
+      "section": "UI toggle behavior",
+      "title": "Render anonymization toggle per consentStatus",
+      "description": "mandatory_anonymized → ON locked. blanket_consent_given → OFF defaulted enabled. Others → existing UX.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-reflect-the-consentstatus",
+      "files_likely_affected": ["src/views/", "src/components/"]
+    },
+    {
+      "id": "6.2",
+      "section": "UI toggle behavior",
+      "title": "Override-up flow for blanket_consent_given",
+      "description": "Flipping the toggle records the override; updates publicationDecision: anonymize while preserving consentStatus.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-ui-toggle-behavior-must-reflect-the-consentstatus",
+      "files_likely_affected": ["src/views/", "src/store/"]
+    },
+    {
+      "id": "6.3",
+      "section": "UI toggle behavior",
+      "title": "Use @conduction/nextcloud-vue components",
+      "description": "CnFormDialog / CnDataTable / CnIndexPage per ADR-012. No custom equivalents.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["src/"]
+    },
+    {
+      "id": "6.4",
+      "section": "UI toggle behavior",
+      "title": "Add CnIndexPage view for policy list management",
+      "description": "Tab per schema. Read-only by default; write gated by RBAC.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["src/views/"]
+    },
+    {
+      "id": "6.5",
+      "section": "UI toggle behavior",
+      "title": "Browser tests for toggle states",
+      "description": "Locked for mandatory_anonymized; defaulted-off-overridable for blanket_consent_given; existing flow unaffected.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/browser/"]
+    },
+    {
+      "id": "7.1",
+      "section": "RBAC configuration",
+      "title": "Configure default RBAC for both policy schemas",
+      "description": "read open to authenticated; write restricted to docudesk-policy-admins (or equivalent privileged group). Document in schema authorization block.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-rbac-governs-writes-to-both-policy-schemas",
+      "files_likely_affected": ["lib/Settings/docudesk_register.json"]
+    },
+    {
+      "id": "7.2",
+      "section": "RBAC configuration",
+      "title": "Smoke-test unprivileged write rejection",
+      "description": "An unprivileged user POSTing to either schema gets 403.",
+      "status": "pending",
+      "spec_ref": "entity-publication-policies/spec.md#requirement-rbac-governs-writes-to-both-policy-schemas",
+      "files_likely_affected": []
+    },
+    {
+      "id": "8.1",
+      "section": "Documentation",
+      "title": "Document policy layer in publication-consent-process.md",
+      "description": "Add section describing deny/allow lists, conflict resolution, retroactive behavior, UI toggle. Three-layer-model diagram.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["docs/features/publication-consent-process.md"]
+    },
+    {
+      "id": "8.2",
+      "section": "Documentation",
+      "title": "CHANGELOG entry under Added",
+      "description": "New schemas + new enum values + new policyMatch field.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["CHANGELOG.md"]
+    },
+    {
+      "id": "8.3",
+      "section": "Documentation",
+      "title": "CHANGELOG entry under Behavior changes",
+      "description": "Detection-time policy lookup may pre-empt WOO. Consumers SHOULD handle the new enum values.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["CHANGELOG.md"]
+    },
+    {
+      "id": "8.4",
+      "section": "Documentation",
+      "title": "Verify ADR compliance",
+      "description": "ADR-001, ADR-008, ADR-012, ADR-013, ADR-016 — confirm no amendments needed.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": []
+    },
+    {
+      "id": "9.1",
+      "section": "Testing — integration",
+      "title": "Newman tests for policy CRUD endpoints",
+      "description": "Both schemas - create / read / update / delete / list with auth.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/newman/docudesk-api.postman_collection.json"]
+    },
+    {
+      "id": "9.2",
+      "section": "Testing — integration",
+      "title": "Newman tests for the four detection-time outcomes",
+      "description": "no match / deny / allow / both → deny wins.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/newman/docudesk-api.postman_collection.json"]
+    },
+    {
+      "id": "9.3",
+      "section": "Testing — integration",
+      "title": "Newman tests for retroactive force-resolve on deny add",
+      "description": "Create in-flight pending publicationConsent → create matching deny rule → verify transition to mandatory_anonymized.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/newman/docudesk-api.postman_collection.json"]
+    },
+    {
+      "id": "9.4",
+      "section": "Testing — integration",
+      "title": "Newman tests for allow-rule non-application to in-flight",
+      "description": "Create in-flight objection_received publicationConsent → create matching allow rule → verify record stays as-is.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": ["tests/newman/docudesk-api.postman_collection.json"]
+    },
+    {
+      "id": "9.5",
+      "section": "Testing — integration",
+      "title": "Schema validation: out-of-class policyMatch ref rejected",
+      "description": "Save publicationConsent with policyMatch pointing to a non-policy schema (e.g. template) → verify rejection.",
+      "status": "pending",
+      "spec_ref": "consent-management/spec.md#requirement-publicationconsent-must-gain-a-typed-polymorphic-reference-field-policymatch",
+      "files_likely_affected": ["tests/newman/docudesk-api.postman_collection.json"]
+    },
+    {
+      "id": "10.1",
+      "section": "Quality and verification",
+      "title": "composer check:strict clean",
+      "description": "Lint + PHPCS + PHPMD + Psalm + PHPStan + tests. Fix pre-existing issues in touched files.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": []
+    },
+    {
+      "id": "10.2",
+      "section": "Quality and verification",
+      "title": "Manual smoke against live stack",
+      "description": "curl the four outcomes; verify retroactive flow; verify UI toggle behavior.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": []
+    },
+    {
+      "id": "10.3",
+      "section": "Quality and verification",
+      "title": "Run /opsx:verify entity-publication-policies",
+      "description": "Confirm artifacts ↔ code agreement after implementation.",
+      "status": "pending",
+      "spec_ref": null,
+      "files_likely_affected": []
+    }
+  ]
+}
