@@ -12,3 +12,55 @@
  * and only add !important when the lib itself sets the property with
  * !important on a higher-specificity (`[data-v-…]`) selector.
  */
+
+/* DocuDesk design tokens. This stylesheet is only loaded inside the
+   DocuDesk bundle (see main.js), so a `:root` override applies to this
+   app only and does not leak into other Nextcloud apps. */
+:root {
+	--dd-color-dark-blue: #02162E;
+
+	/* Remap Nextcloud's `--color-main-text` token so all components that
+	   honour it — including @nextcloud/vue internals — pick up the brand
+	   colour for default text. */
+	--color-main-text: var(--dd-color-dark-blue, #02162E);
+
+	/* Remap Nextcloud's `--border-radius-pill` token so all components that
+	   honour it pick up the brand radius. */
+	--border-radius-pill: var(--dd-border-radius-pill, 6px);
+}
+
+#content {
+	color: var(--color-main-text);
+}
+
+/* CnStatusBadge: each variant resolves its text colour through a Nextcloud
+   token (--color-success, --color-warning-text, etc.). Remap those tokens
+   on the badge itself so every variant picks up the dark-blue brand colour
+   without overriding `color` directly. Background tokens use distinct
+   `*-light` vars and remain untouched. */
+.cn-status-badge {
+	--color-main-text: var(--dd-color-dark-blue, #02162E);
+	--color-primary-element: var(--dd-color-dark-blue, #02162E);
+	--color-success: var(--dd-color-dark-blue, #02162E);
+	--color-warning: var(--dd-color-dark-blue, #02162E);
+	--color-warning-text: var(--dd-color-dark-blue, #02162E);
+	--color-error: var(--dd-color-dark-blue, #02162E);
+	--color-info: var(--dd-color-dark-blue, #02162E);
+
+	border: 1px solid var(--dd-badge-border-color, var(--color-primary-element));
+}
+
+.cn-status-badge--success {
+	--dd-badge-border-color: #8ABC75;
+	--color-success-light: #BDFFA0;
+}
+
+.cn-status-badge--warning {
+	--dd-badge-border-color: #EFD68B;
+	--color-warning-light: #FFE7A0;
+}
+
+.cn-status-badge--info {
+	--dd-badge-border-color: #8ABCE0;
+	--color-info-light: #A0D7FF;
+}

@@ -5,37 +5,29 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 <template>
 	<div class="my-documents-wrapper">
-		<!-- Page header -->
 		<DdPageHeader :title="t('docudesk', 'Documents')" />
 
-		<CnIndexPage
-			ref="indexPage"
-			:title="t('docudesk', 'Documents')"
-			:show-title="false"
+		<DdIndexPage
 			:objects="paginatedDocuments"
 			:columns="tableColumns"
 			:pagination="paginationData"
 			:loading="myDocumentsStore.loading"
-			:selectable="false"
-			:show-edit-action="false"
-			:show-copy-action="false"
-			:show-delete-action="false"
-			:show-mass-import="false"
-			:show-mass-export="true"
-			:show-mass-copy="false"
-			:show-mass-delete="false"
-			:show-add="false"
-			:show-view-toggle="true"
 			:view-mode="viewMode"
 			row-key="fileId"
 			:empty-text="emptyContentName"
-			:refreshing="isRefreshing"
-			@refresh="handleRefresh"
+			:table-label="t('docudesk', 'List')"
+			:cards-label="t('docudesk', 'Tiles')"
+			:view-toggle-label="t('docudesk', 'View mode')"
+			:items-per-page-label="t('docudesk', 'Items per page:')"
+			:page-info-format="t('docudesk', 'Page {current} of {total}')"
+			:first-label="t('docudesk', 'First')"
+			:previous-label="t('docudesk', 'Previous')"
+			:next-label="t('docudesk', 'Next')"
+			:last-label="t('docudesk', 'Last')"
 			@page-changed="onPageChanged"
 			@page-size-changed="onPageSizeChanged"
 			@update:view-mode="onViewModeChange"
 			@row-click="onRowClick">
-			<!-- Search bar inline with view-toggle + actions menu. -->
 			<template #header-actions>
 				<DdSearchBar
 					v-model="searchQuery"
@@ -44,7 +36,6 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 					:clear-label="t('docudesk', 'Clear search')" />
 			</template>
 
-			<!-- Name with file icon (whole row is clickable via @row-click). -->
 			<template #column-fileName="{ row }">
 				<div class="my-documents-name">
 					<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
@@ -52,14 +43,12 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</div>
 			</template>
 
-			<!-- Type badge (Concept / Geanonimiseerd) -->
 			<template #column-kind="{ row }">
 				<CnStatusBadge
 					:label="kindLabel(row)"
 					:color-map="kindColorMap" />
 			</template>
 
-			<!-- Status (placeholder: "Niet gecontroleerd") -->
 			<template #column-status="{ row }">
 				<span class="my-documents-status">
 					<EyeOffOutline :size="16" class="my-documents-status__icon" />
@@ -67,17 +56,14 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</span>
 			</template>
 
-			<!-- Date -->
 			<template #column-modified="{ row }">
 				{{ formatDate(row.modified) }}
 			</template>
 
-			<!-- Size -->
 			<template #column-fileSize="{ row }">
 				{{ formatSize(row.fileSize) }}
 			</template>
 
-			<!-- Card view -->
 			<template #card="{ object }">
 				<div class="my-documents-card">
 					<div class="my-documents-card__icon">
@@ -96,11 +82,18 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</div>
 			</template>
 
-			<!-- Row actions (kebab menu) -->
+			<template #actions-header>
+				<FilterOutline
+					:size="20"
+					class="my-documents-filter-icon"
+					:title="t('docudesk', 'Filter')"
+					@click="onFilterClick" />
+			</template>
+
 			<template #row-actions="{ row }">
-				<NcActions>
+				<NcActions class="my-documents-row-actions">
 					<template #icon>
-						<DotsHorizontal :size="20" />
+						<DotsHorizontal :size="24" />
 					</template>
 					<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
 						<template #icon>
@@ -122,22 +115,23 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 					</NcActionButton>
 				</NcActions>
 			</template>
-		</CnIndexPage>
+		</DdIndexPage>
 	</div>
 </template>
 
 <script>
 import { generateUrl } from '@nextcloud/router'
 import { NcActions, NcActionButton } from '@nextcloud/vue'
-import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
+import DdIndexPage from '../../components/DdIndexPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
-import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
+import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
@@ -146,7 +140,7 @@ import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.v
 export default {
 	name: 'MyDocumentsIndex',
 	components: {
-		CnIndexPage,
+		DdIndexPage,
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
@@ -157,7 +151,7 @@ export default {
 		OpenInNew,
 		EyeOffOutline,
 		Download,
-		ChevronRight,
+		FilterOutline,
 		FolderOutline,
 		FilePdfBox,
 		FileWordBox,
@@ -165,7 +159,6 @@ export default {
 	},
 	data() {
 		return {
-			isRefreshing: false,
 			currentPage: 1,
 			pageSize: 20,
 			searchQuery: '',
@@ -178,16 +171,13 @@ export default {
 		}
 	},
 	computed: {
-		breadcrumbs() {
-			return myDocumentsStore.breadcrumbs
-		},
 		tableColumns() {
 			return [
-				{ key: 'fileName', label: t('docudesk', 'Name'), sortable: true },
-				{ key: 'kind', label: t('docudesk', 'Kind'), sortable: true },
-				{ key: 'status', label: t('docudesk', 'Status'), sortable: false },
-				{ key: 'modified', label: t('docudesk', 'Date'), sortable: true },
-				{ key: 'fileSize', label: t('docudesk', 'Size'), sortable: true },
+				{ key: 'fileName', label: t('docudesk', 'Name') },
+				{ key: 'kind', label: t('docudesk', 'Kind') },
+				{ key: 'status', label: t('docudesk', 'Status') },
+				{ key: 'modified', label: t('docudesk', 'Date') },
+				{ key: 'fileSize', label: t('docudesk', 'Size') },
 			]
 		},
 		filteredDocuments() {
@@ -218,21 +208,15 @@ export default {
 	},
 	methods: {
 		/**
-		 * Re-fetch the document list via the refresh button in CnIndexPage.
-		 * Shows a spinner on the refresh icon while in flight.
+		 * Click handler for the filter icon in the table header.
+		 * Placeholder until a filter panel is wired up.
 		 */
-		async handleRefresh() {
-			this.isRefreshing = true
-			try {
-				await myDocumentsStore.fetchDocuments()
-			} finally {
-				this.isRefreshing = false
-			}
+		onFilterClick() {
+			// TODO: open filter panel
 		},
 		/**
 		 * Click handler for the entire table row / card.
 		 * Folders navigate into themselves; files open in the in-app viewer.
-		 * Kebab-menu clicks do not bubble (CnDataTable stops propagation).
 		 *
 		 * @param {object} row Document row.
 		 */
@@ -246,28 +230,35 @@ export default {
 			this.viewFile(row)
 		},
 		/**
-		 * Navigate to a breadcrumb path.
+		 * Pagination: track which page is active.
+		 *
+		 * @param {number} page New active page number (1-based).
 		 */
-		async navigateToBreadcrumb(crumb) {
-			await myDocumentsStore.fetchDocuments(crumb.path)
-			this.currentPage = 1
-		},
-		/** Pagination: track which page is active. */
 		onPageChanged(page) {
 			this.currentPage = page
 		},
-		/** Pagination: apply new page size and reset to first page. */
+		/**
+		 * Pagination: apply new page size and reset to first page.
+		 *
+		 * @param {number} size New page size.
+		 */
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
-		/** Toggle between 'table' and 'cards' (Tegels/Lijst in the design). */
+		/**
+		 * Toggle between 'table' and 'cards' (Tegels/Lijst in the design).
+		 *
+		 * @param {string} mode New view mode ('table' or 'cards').
+		 */
 		onViewModeChange(mode) {
 			this.viewMode = mode
 		},
 		/**
 		 * Open the file in the Nextcloud Files app in a new tab.
 		 * Triggered only from the kebab-menu action — row clicks do nothing.
+		 *
+		 * @param {object} row Document row.
 		 */
 		openFile(row) {
 			if (!row || !row.fileId) return
@@ -289,14 +280,17 @@ export default {
 				path,
 			})
 		},
-		/** Download the file via the classic Files app download endpoint. */
+		/**
+		 * Download the file via the classic Files app download endpoint.
+		 *
+		 * @param {object} row Document row.
+		 */
 		downloadFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
 		},
 		/**
 		 * Pick an icon component name based on the file's MIME type / extension.
-		 * Returned as a string because the components are registered via `components`.
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} Component name.
@@ -309,13 +303,22 @@ export default {
 			if (mime.includes('word') || name.match(/\.(docx?|odt)$/)) return 'FileWordBox'
 			return 'FileDocumentOutline'
 		},
-		/** Strip the file extension for cleaner display (folders show full name). */
+		/**
+		 * Strip the file extension for cleaner display (folders show full name).
+		 *
+		 * @param {object} row Document row.
+		 * @return {string} Display name.
+		 */
 		displayName(row) {
 			const name = row.fileName || ''
-			// Folders/dossiers show full name, files strip extension
 			return row.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
-		/** Badge label for the "Soort" column: folder/dossier, original, or anonymized copy. */
+		/**
+		 * Badge label for the "Soort" column: folder/dossier, original, or anonymized copy.
+		 *
+		 * @param {object} row Document row.
+		 * @return {string} Badge label.
+		 */
 		kindLabel(row) {
 			if (row.isFolder) return t('docudesk', 'Dossier')
 			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
@@ -324,7 +327,12 @@ export default {
 		statusLabel() {
 			return t('docudesk', 'Not checked')
 		},
-		/** Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY. */
+		/**
+		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.
+		 *
+		 * @param {number|string} ts Timestamp.
+		 * @return {string} Formatted date.
+		 */
 		formatDate(ts) {
 			if (!ts) return '-'
 			try {
@@ -337,7 +345,12 @@ export default {
 				return String(ts)
 			}
 		},
-		/** Human-readable size (e.g. "12 MB") from a raw byte count. */
+		/**
+		 * Human-readable size (e.g. "12 MB") from a raw byte count.
+		 *
+		 * @param {number} bytes Raw size in bytes.
+		 * @return {string} Formatted size.
+		 */
 		formatSize(bytes) {
 			if (bytes === null || bytes === undefined) return '-'
 			const units = ['B', 'KB', 'MB', 'GB']
@@ -358,44 +371,6 @@ export default {
 	padding: 0;
 }
 
-.my-documents-breadcrumbs {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	padding: 12px 0;
-	font-size: 14px;
-	color: var(--color-text-maxcontrast);
-}
-
-.my-documents-breadcrumb {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.my-documents-breadcrumb__link {
-	cursor: pointer;
-	transition: color 0.15s ease;
-}
-
-.my-documents-breadcrumb__link:hover {
-	color: var(--color-primary-element);
-}
-
-.my-documents-breadcrumb__link--active {
-	color: var(--color-main-text);
-	font-weight: 600;
-	cursor: default;
-}
-
-.my-documents-breadcrumb__link--active:hover {
-	color: var(--color-main-text);
-}
-
-.my-documents-breadcrumb__separator {
-	color: var(--color-text-maxcontrast);
-}
-
 .my-documents-search {
 	max-width: 280px;
 }
@@ -403,26 +378,13 @@ export default {
 .my-documents-name {
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: var(--dd-my-documents-name-gap, 16px);
 }
 
 .my-documents-name__icon {
 	color: var(--color-text-maxcontrast);
 	flex-shrink: 0;
 	transition: color 0.15s ease;
-}
-
-/* Whole row is clickable (handled by @row-click on CnIndexPage). */
-.my-documents-wrapper :deep(.cn-table-row) {
-	cursor: pointer;
-}
-
-.my-documents-wrapper :deep(.cn-table-row:hover) {
-	background: var(--color-background-hover);
-}
-
-.my-documents-card {
-	cursor: pointer;
 }
 
 .my-documents-status {
@@ -435,6 +397,17 @@ export default {
 
 .my-documents-status__icon {
 	color: var(--color-text-maxcontrast);
+}
+
+.my-documents-filter-icon {
+	color: var(--color-text-maxcontrast);
+	cursor: pointer;
+}
+
+/* Compact kebab button in the table's row-actions cell.
+   NcActions sizes itself off Nextcloud's `--default-clickable-area` token. */
+.my-documents-row-actions {
+	--default-clickable-area: 32px;
 }
 
 .my-documents-card {
