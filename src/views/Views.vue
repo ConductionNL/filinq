@@ -11,6 +11,7 @@
 			<BatchAnonymizationView v-if="navigationStore.selected === 'batchAnonymization'" />
 			<FolderAnonymizationView v-if="navigationStore.selected === 'folderAnonymization'" />
 			<MyDocumentsIndex v-if="navigationStore.selected === 'myDocuments'" />
+			<SettingsIndex v-if="navigationStore.selected === 'settings'" />
 		</template>
 	</NcAppContent>
 </template>
@@ -28,6 +29,7 @@ import TemplateDetail from './templates/TemplateDetail.vue'
 import BatchAnonymizationView from './anonymization/BatchAnonymizationView.vue'
 import FolderAnonymizationView from './anonymization/FolderAnonymizationView.vue'
 import MyDocumentsIndex from './myDocuments/MyDocumentsIndex.vue'
+import SettingsIndex from './settings/SettingsIndex.vue'
 
 export default {
 	name: 'Views',
@@ -42,6 +44,7 @@ export default {
 		BatchAnonymizationView,
 		FolderAnonymizationView,
 		MyDocumentsIndex,
+		SettingsIndex,
 	},
 	setup() {
 		return { navigationStore }

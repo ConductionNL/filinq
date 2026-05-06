@@ -12,6 +12,7 @@ OC.L10N.register(
     "Failed to create dossier" : "Dossier aanmaken mislukt",
     "Consent Management" : "Toestemmingsbeheer",
     "My Documents" : "Mijn documenten",
+    "Settings" : "Instellingen",
     "Documents" : "Documenten",
     "Search by name" : "Zoeken op naam",
     "Name" : "Naam",

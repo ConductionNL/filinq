@@ -16,6 +16,11 @@ import { navigationStore } from '../store/store.js'
 					<TextBoxOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'settings'" :name="t('docudesk', 'Settings')" @click="navigationStore.setSelected('settings')">
+				<template #icon>
+					<TuneVertical :size="24" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
 				<template #icon>
 					<MonitorDashboard :size="24" />
@@ -54,6 +59,7 @@ import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
+import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 
 export default {
 	name: 'MainMenu',
@@ -67,6 +73,7 @@ export default {
 		FileDocumentMultipleOutline,
 		TextBoxOutline,
 		FolderSearchOutline,
+		TuneVertical,
 	},
 }
 </script>
