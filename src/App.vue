@@ -111,4 +111,21 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
 }
+
+/* NcAppContent main panel chrome — `--color-main-background` is honoured by
+   the lib; radius and shadow have no NC variable, so override directly. */
+:deep(.app-content) {
+	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	border-radius: 20px;
+	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Centre the NcEmptyContent when OpenRegister is not installed.
+   `!important` is required because the lib sets conflicting layout rules. */
+:deep(.open-register-missing) {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100% !important;
+}
 </style>

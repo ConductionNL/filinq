@@ -1,50 +1,14 @@
 /**
  * Global (unscoped) styles for DocuDesk.
  *
- * Styles that must be unscoped (e.g. overriding library components) belong here
- * instead of in Vue <style> blocks. The ESLint rule vue/enforce-style-attribute
- * enforces that all <style> blocks in .vue files use the `scoped` attribute.
+ * Component-specific overrides — including overrides of @nextcloud/vue
+ * internals — live in the relevant SFC's <style scoped> block, using
+ * `:deep(...)` to reach lib-rendered nodes. Only add rules here when a
+ * style genuinely needs to be unscoped (e.g. resets that must apply
+ * regardless of which component is mounted).
+ *
+ * Prefer overriding via Nextcloud CSS variables over selector + !important.
+ * Only fall back to direct property overrides when no NC variable exists,
+ * and only add !important when the lib itself sets the property with
+ * !important on a higher-specificity (`[data-v-…]`) selector.
  */
-
-/* Center the NcEmptyContent when OpenRegister is not installed. */
-.open-register-missing {
-	display: flex !important;
-	align-items: center !important;
-	justify-content: center !important;
-	min-height: 100% !important;
-}
-
-/* NcAppNavigation overrides (sidebar look). */
-.app-navigation {
-	--app-navigation-padding: 16px;
-	border-radius: 20px !important;
-	background: var(--color-white-54, rgba(255, 255, 255, 0.54)) !important;
-	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08) !important;
-	margin-right: 8px !important;
-}
-
-.app-navigation-entry-link {
-	border-radius: 11px !important;
-	padding-block: 12px !important;
-	padding-inline: 12px 36px !important;
-}
-
-.app-navigation-entry {
-	--color-primary-element-hover: #efefef;
-}
-
-.app-navigation-entry.active {
-	--color-primary-element: #fff;
-}
-
-.app-navigation-entry.active .app-navigation-entry-link,
-.app-navigation-entry.active .app-navigation-entry__name {
-	color: #000 !important;
-}
-
-/* NcAppContent override (main content panel look). */
-.app-content {
-	border-radius: 20px !important;
-	background: var(--color-white-54, rgba(255, 255, 255, 0.54)) !important;
-	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08) !important;
-}

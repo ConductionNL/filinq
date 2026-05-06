@@ -8,32 +8,32 @@ import { navigationStore } from '../store/store.js'
 		<NcAppNavigationList>
 			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
 				<template #icon>
-					<ShieldLock :size="20" />
+					<LockOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'myDocuments'" :name="t('docudesk', 'My Documents')" @click="navigationStore.setSelected('myDocuments')">
 				<template #icon>
-					<FileDocumentCheck :size="20" />
+					<TextBoxOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
 				<template #icon>
-					<Finance :size="20" />
+					<MonitorDashboard :size="24" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
 				<template #icon>
-					<FolderSearch :size="20" />
+					<FolderSearchOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" :name="t('docudesk', 'Consent Management')" @click="navigationStore.setSelected('consent')">
 				<template #icon>
-					<AccountCheck :size="20" />
+					<AccountCheckOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'templates' || navigationStore.selected === 'templateDetail'" :name="t('docudesk', 'Templates')" @click="navigationStore.setSelected('templates')">
 				<template #icon>
-					<FileDocumentMultiple :size="20" />
+					<FileDocumentMultipleOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
@@ -48,12 +48,12 @@ import {
 } from '@nextcloud/vue'
 
 // Icons
-import Finance from 'vue-material-design-icons/Finance.vue'
-import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
-import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
-import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
-import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
-import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
+import MonitorDashboard from 'vue-material-design-icons/MonitorDashboard.vue'
+import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
+import LockOutline from 'vue-material-design-icons/LockOutline.vue'
+import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
+import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
+import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
 
 export default {
 	name: 'MainMenu',
@@ -61,12 +61,39 @@ export default {
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
-		Finance,
-		AccountCheck,
-		ShieldLock,
-		FileDocumentMultiple,
-		FileDocumentCheck,
-		FolderSearch,
+		MonitorDashboard,
+		AccountCheckOutline,
+		LockOutline,
+		FileDocumentMultipleOutline,
+		TextBoxOutline,
+		FolderSearchOutline,
 	},
 }
 </script>
+
+<style scoped>
+/* NcAppNavigation overrides — prefer NC CSS variables, fall back to direct
+   property overrides only where the lib does not expose a variable. */
+:deep(.app-navigation) {
+	--app-navigation-padding: 16px;
+	--color-main-background-blur: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	border-radius: 20px;
+	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+	margin-right: 8px;
+}
+
+:deep(.app-navigation-entry) {
+	--default-clickable-area: 48px;
+	--border-radius-element: 11px;
+	--color-background-hover: #efefef;
+}
+
+/* Active item: `--color-primary-element-text` drives both link colour and
+   icon colour, so no per-element colour override is needed. */
+:deep(.app-navigation-entry.active) {
+	--color-primary-element: #fff;
+	--color-primary-element-hover: #fff;
+	--color-primary-element-text: var(--color-main-text);
+	box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24);
+}
+</style>
