@@ -26,7 +26,7 @@
 		<NcSettingsSection
 			name="DocuDesk"
 			:description="t('docudesk', 'GDPR publication consent management and document metadata enrichment for Nextcloud')"
-			doc-url="https://docudesk.app" />
+			doc-url="https://docudesk.conduction.nl/docs/intro" />
 
 		<NcSettingsSection
 			:name="t('docudesk', 'Consent Settings')"
