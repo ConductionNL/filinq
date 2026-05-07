@@ -185,6 +185,7 @@ export default function Home() {
       <main className="marketing-page">
         <DetailHero
           appId="docudesk"
+          background="cobalt"
           status={{ label: 'Stable', color: 'var(--c-mint-500)' }}
           version="v1.8"
           locales="NL · EN"
