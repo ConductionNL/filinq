@@ -216,15 +216,21 @@ export default {
 		},
 		/**
 		 * Click handler for the entire table row / card.
-		 * Folders navigate into themselves; files open in the in-app viewer.
+		 * Files open directly in the in-app viewer. Folders (dossiers) are flat
+		 * by design, so opening one navigates into it and immediately opens its
+		 * first file — the list view inside a dossier is intentionally skipped.
 		 *
 		 * @param {object} row Document row.
 		 */
-		onRowClick(row) {
+		async onRowClick(row) {
 			if (!row) return
 			if (row.isFolder) {
-				myDocumentsStore.openFolder(row.fileName)
+				await myDocumentsStore.openFolder(row.fileName)
 				this.currentPage = 1
+				const firstFile = myDocumentsStore.documents.find((d) => !d.isFolder)
+				if (firstFile) {
+					this.viewFile(firstFile)
+				}
 				return
 			}
 			this.viewFile(row)

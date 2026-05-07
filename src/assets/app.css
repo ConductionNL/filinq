@@ -52,15 +52,15 @@
 
 .cn-status-badge--success {
 	--dd-badge-border-color: #8ABC75;
-	--color-success-light: #BDFFA0;
+	--color-success-light: var(--dd-bg-success-light, #BDFFA0);
 }
 
 .cn-status-badge--warning {
 	--dd-badge-border-color: #EFD68B;
-	--color-warning-light: #FFE7A0;
+	--color-warning-light: var(--dd-bg-warning-light, #FFE7A0);
 }
 
 .cn-status-badge--info {
 	--dd-badge-border-color: #8ABCE0;
-	--color-info-light: #A0D7FF;
+	--color-info-light: var(--dd-bg-info-light, #A0D7FF);
 }

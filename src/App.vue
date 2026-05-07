@@ -24,7 +24,8 @@
 
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
+			<FolderFilesNavigation v-if="inDossier" />
+			<MainMenu v-else />
 			<Views />
 			<SideBars />
 			<Modals />
@@ -44,11 +45,12 @@
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
+import FolderFilesNavigation from './navigation/FolderFilesNavigation.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
 import SideBars from './sidebars/SideBars.vue'
-import { initializeStores, useSettingsStore } from './store/store.js'
+import { initializeStores, useSettingsStore, myDocumentsStore } from './store/store.js'
 
 export default {
 	name: 'App',
@@ -59,6 +61,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		MainMenu,
+		FolderFilesNavigation,
 		Modals,
 		Dialogs,
 		Views,
@@ -75,6 +78,15 @@ export default {
 		hasOpenRegisters() {
 			const settingsStore = useSettingsStore()
 			return settingsStore.hasOpenRegisters
+		},
+		/**
+		 * True when the user is browsing inside a dossier (a subfolder of /DocuDesk).
+		 * Triggers the dossier-files navigation in place of the main menu.
+		 *
+		 * @return {boolean}
+		 */
+		inDossier() {
+			return myDocumentsStore.currentPath !== '/DocuDesk'
 		},
 		isAdmin() {
 			const settingsStore = useSettingsStore()
