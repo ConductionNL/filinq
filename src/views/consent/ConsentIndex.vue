@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { consentStore, navigationStore } from '../../store/store.js'
+import { consentStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -192,7 +192,7 @@ export default {
 	methods: {
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
-			navigationStore.setSelected('consentDetail')
+			this.$router.push({ name: 'ConsentDetail', params: { id: consent.id || consent.uuid } })
 		},
 		async handleRefresh() {
 			this.isRefreshing = true

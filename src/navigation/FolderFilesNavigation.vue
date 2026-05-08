@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { myDocumentsStore, fileViewerStore, navigationStore } from '../store/store.js'
+import { myDocumentsStore, fileViewerStore } from '../store/store.js'
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import { myDocumentsStore, fileViewerStore, navigationStore } from '../store/sto
 		<template #list>
 			<NcAppNavigationItem
 				:name="t('docudesk', 'Back to menu')"
-				@click="onBack">
+				@click.prevent="onBack">
 				<template #icon>
 					<ArrowLeft :size="24" />
 				</template>
@@ -19,7 +19,7 @@ import { myDocumentsStore, fileViewerStore, navigationStore } from '../store/sto
 				:key="file.fileId"
 				:active="fileViewerStore.currentFile?.fileId === file.fileId"
 				:name="file.fileName"
-				@click="onFileClick(file)">
+				@click.prevent="onFileClick(file)">
 				<template #icon>
 					<component :is="iconFor(file)" :size="24" />
 				</template>
@@ -117,7 +117,9 @@ export default {
 				fileViewerStore.close()
 			}
 			await myDocumentsStore.fetchDocuments('/DocuDesk')
-			navigationStore.setSelected('myDocuments')
+			if (this.$route.name !== 'MyDocuments') {
+				this.$router.push({ name: 'MyDocuments' })
+			}
 		},
 	},
 }

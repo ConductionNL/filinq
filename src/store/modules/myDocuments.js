@@ -87,14 +87,10 @@ export const useMyDocumentsStore = defineStore(
 					const xmlDoc = parser.parseFromString(response.data, 'text/xml')
 					const responses = xmlDoc.querySelectorAll('response')
 
-					console.log('[MyDocuments] WebDAV raw response:', response.data)
-					console.log('[MyDocuments] Found responses:', responses.length)
-
 					this.documents = []
 					responses.forEach((resp, index) => {
 						// Skip first response (it's the folder itself)
 						if (index === 0) {
-							console.log('[MyDocuments] Skipping first response (folder itself)')
 							return
 						}
 
@@ -110,14 +106,6 @@ export const useMyDocumentsStore = defineStore(
 						const hrefWithoutTrailingSlash = href.endsWith('/') ? href.slice(0, -1) : href
 						const fileName = decodeURIComponent(hrefWithoutTrailingSlash.split('/').pop() || '')
 
-						console.log(`[MyDocuments] Processing item ${index}:`, {
-							fileName,
-							isFolder,
-							mimeType,
-							fileId,
-							href,
-						})
-
 						if (fileName) {
 							this.documents.push({
 								fileId,
@@ -131,12 +119,8 @@ export const useMyDocumentsStore = defineStore(
 						}
 					})
 
-					console.log('[MyDocuments] Final documents array (before sort):', this.documents)
-
 					// Sort by modified date (newest first)
 					this.documents.sort((a, b) => b.modified - a.modified)
-
-					console.log('[MyDocuments] Final documents array (after sort):', this.documents)
 
 					this.total = this.documents.length
 
@@ -158,7 +142,6 @@ export const useMyDocumentsStore = defineStore(
 			 * @param {string} path The folder path to navigate to.
 			 */
 			navigateTo(path) {
-				console.log('[MyDocuments] navigateTo called with path:', path)
 				this.currentPath = path
 
 				// Build breadcrumbs from path
@@ -173,8 +156,6 @@ export const useMyDocumentsStore = defineStore(
 						path: currentPath,
 					})
 				}
-
-				console.log('[MyDocuments] Breadcrumbs updated:', this.breadcrumbs)
 			},
 
 			/**
@@ -184,7 +165,6 @@ export const useMyDocumentsStore = defineStore(
 			 */
 			async openFolder(folderName) {
 				const newPath = `${this.currentPath}/${folderName}`
-				console.log('[MyDocuments] openFolder called, navigating to:', newPath)
 				await this.fetchDocuments(newPath)
 			},
 		},

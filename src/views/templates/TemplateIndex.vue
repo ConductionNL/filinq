@@ -2,7 +2,7 @@
 	<div class="template-index">
 		<div class="template-index__header">
 			<h2>{{ t('docudesk', 'Templates') }}</h2>
-			<NcButton type="primary" @click="navigationStore.setSelected('templateDetail')">
+			<NcButton type="primary" @click="$router.push({ name: 'TemplateNew' })">
 				{{ t('docudesk', 'New template') }}
 			</NcButton>
 		</div>
@@ -34,14 +34,10 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { useTemplateStore } from '../../store/modules/template.js'
-import { navigationStore } from '../../store/store.js'
 
 export default {
 	name: 'TemplateIndex',
 	components: { NcButton, NcEmptyContent, NcLoadingIcon },
-	data() {
-		return { navigationStore }
-	},
 	computed: {
 		templateStore() { return useTemplateStore() },
 	},

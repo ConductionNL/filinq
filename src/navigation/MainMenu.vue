@@ -1,42 +1,58 @@
-<script setup>
-import { translate as t } from '@nextcloud/l10n'
-import { navigationStore } from '../store/store.js'
-</script>
-
 <template>
 	<NcAppNavigation>
 		<NcAppNavigationList>
-			<NcAppNavigationItem :active="navigationStore.selected === 'anonymization'" :name="t('docudesk', 'Anonymization')" @click="navigationStore.setSelected('anonymization')">
+			<NcAppNavigationItem
+				:active="isActive('Anonymization')"
+				:name="t('docudesk', 'Anonymization')"
+				:to="{ name: 'Anonymization' }">
 				<template #icon>
 					<LockOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'myDocuments'" :name="t('docudesk', 'My Documents')" @click="navigationStore.setSelected('myDocuments')">
+			<NcAppNavigationItem
+				:active="isActive('MyDocuments')"
+				:name="t('docudesk', 'My Documents')"
+				:to="{ name: 'MyDocuments' }">
 				<template #icon>
 					<TextBoxOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'settings'" :name="t('docudesk', 'Settings')" @click="navigationStore.setSelected('settings')">
+			<NcAppNavigationItem
+				:active="isActive('Settings')"
+				:name="t('docudesk', 'Settings')"
+				:to="{ name: 'Settings' }">
 				<template #icon>
 					<TuneVertical :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'dashboard'" :name="t('docudesk', 'Dashboard')" @click="navigationStore.setSelected('dashboard')">
+			<NcAppNavigationItem
+				:active="isActive('Dashboard')"
+				:name="t('docudesk', 'Dashboard')"
+				:to="{ name: 'Dashboard' }">
 				<template #icon>
 					<MonitorDashboard :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
+			<NcAppNavigationItem
+				:active="isActive('FolderAnonymization')"
+				:name="t('docudesk', 'Folder Analysis')"
+				:to="{ name: 'FolderAnonymization' }">
 				<template #icon>
 					<FolderSearchOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" :name="t('docudesk', 'Consent Management')" @click="navigationStore.setSelected('consent')">
+			<NcAppNavigationItem
+				:active="isActive('Consent')"
+				:name="t('docudesk', 'Consent Management')"
+				:to="{ name: 'Consent' }">
 				<template #icon>
 					<AccountCheckOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'templates' || navigationStore.selected === 'templateDetail'" :name="t('docudesk', 'Templates')" @click="navigationStore.setSelected('templates')">
+			<NcAppNavigationItem
+				:active="isActive('Templates')"
+				:name="t('docudesk', 'Templates')"
+				:to="{ name: 'Templates' }">
 				<template #icon>
 					<FileDocumentMultipleOutline :size="24" />
 				</template>
@@ -44,15 +60,14 @@ import { navigationStore } from '../store/store.js'
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
-<script>
 
+<script>
 import {
 	NcAppNavigation,
 	NcAppNavigationList,
 	NcAppNavigationItem,
 } from '@nextcloud/vue'
 
-// Icons
 import MonitorDashboard from 'vue-material-design-icons/MonitorDashboard.vue'
 import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
@@ -60,6 +75,12 @@ import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentM
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
 import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
+
+const ACTIVE_GROUPS = {
+	Consent: ['Consent', 'ConsentDetail'],
+	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
+	Anonymization: ['Anonymization', 'BatchAnonymization'],
+}
 
 export default {
 	name: 'MainMenu',
@@ -74,6 +95,18 @@ export default {
 		TextBoxOutline,
 		FolderSearchOutline,
 		TuneVertical,
+	},
+	methods: {
+		/**
+		 * True when the current route matches the menu entry (or any of its grouped routes).
+		 *
+		 * @param {string} name Route name as registered in the router.
+		 * @return {boolean}
+		 */
+		isActive(name) {
+			const group = ACTIVE_GROUPS[name] || [name]
+			return group.includes(this.$route.name)
+		},
 	},
 }
 </script>

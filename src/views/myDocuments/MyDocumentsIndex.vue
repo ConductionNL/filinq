@@ -5,117 +5,121 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 <template>
 	<div class="my-documents-wrapper">
-		<DdPageHeader :title="t('docudesk', 'Documents')" />
+		<FileViewerPage v-if="fileViewerStore.currentFile" />
 
-		<DdIndexPage
-			:objects="paginatedDocuments"
-			:columns="tableColumns"
-			:pagination="paginationData"
-			:loading="myDocumentsStore.loading"
-			:view-mode="viewMode"
-			row-key="fileId"
-			:empty-text="emptyContentName"
-			:table-label="t('docudesk', 'List')"
-			:cards-label="t('docudesk', 'Tiles')"
-			:view-toggle-label="t('docudesk', 'View mode')"
-			:items-per-page-label="t('docudesk', 'Items per page:')"
-			:page-info-format="t('docudesk', 'Page {current} of {total}')"
-			:first-label="t('docudesk', 'First')"
-			:previous-label="t('docudesk', 'Previous')"
-			:next-label="t('docudesk', 'Next')"
-			:last-label="t('docudesk', 'Last')"
-			@page-changed="onPageChanged"
-			@page-size-changed="onPageSizeChanged"
-			@update:view-mode="onViewModeChange"
-			@row-click="onRowClick">
-			<template #header-actions>
-				<DdSearchBar
-					v-model="searchQuery"
-					class="my-documents-search"
-					:placeholder="t('docudesk', 'Search by name')"
-					:clear-label="t('docudesk', 'Clear search')" />
-			</template>
+		<template v-else>
+			<DdPageHeader :title="t('docudesk', 'Documents')" />
 
-			<template #column-fileName="{ row }">
-				<div class="my-documents-name">
-					<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
-					<span>{{ displayName(row) }}</span>
-				</div>
-			</template>
+			<DdIndexPage
+				:objects="paginatedDocuments"
+				:columns="tableColumns"
+				:pagination="paginationData"
+				:loading="myDocumentsStore.loading"
+				:view-mode="viewMode"
+				row-key="fileId"
+				:empty-text="emptyContentName"
+				:table-label="t('docudesk', 'List')"
+				:cards-label="t('docudesk', 'Tiles')"
+				:view-toggle-label="t('docudesk', 'View mode')"
+				:items-per-page-label="t('docudesk', 'Items per page:')"
+				:page-info-format="t('docudesk', 'Page {current} of {total}')"
+				:first-label="t('docudesk', 'First')"
+				:previous-label="t('docudesk', 'Previous')"
+				:next-label="t('docudesk', 'Next')"
+				:last-label="t('docudesk', 'Last')"
+				@page-changed="onPageChanged"
+				@page-size-changed="onPageSizeChanged"
+				@update:view-mode="onViewModeChange"
+				@row-click="onRowClick">
+				<template #header-actions>
+					<DdSearchBar
+						v-model="searchQuery"
+						class="my-documents-search"
+						:placeholder="t('docudesk', 'Search by name')"
+						:clear-label="t('docudesk', 'Clear search')" />
+				</template>
 
-			<template #column-kind="{ row }">
-				<CnStatusBadge
-					:label="kindLabel(row)"
-					:color-map="kindColorMap" />
-			</template>
-
-			<template #column-status="{ row }">
-				<span class="my-documents-status">
-					<EyeOffOutline :size="16" class="my-documents-status__icon" />
-					{{ statusLabel(row) }}
-				</span>
-			</template>
-
-			<template #column-modified="{ row }">
-				{{ formatDate(row.modified) }}
-			</template>
-
-			<template #column-fileSize="{ row }">
-				{{ formatSize(row.fileSize) }}
-			</template>
-
-			<template #card="{ object }">
-				<div class="my-documents-card">
-					<div class="my-documents-card__icon">
-						<component :is="iconFor(object)" :size="36" />
+				<template #column-fileName="{ row }">
+					<div class="my-documents-name">
+						<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
+						<span>{{ displayName(row) }}</span>
 					</div>
-					<div class="my-documents-card__title">
-						{{ displayName(object) }}
-					</div>
+				</template>
+
+				<template #column-kind="{ row }">
 					<CnStatusBadge
-						:label="kindLabel(object)"
+						:label="kindLabel(row)"
 						:color-map="kindColorMap" />
-					<div class="my-documents-card__meta">
-						<span>{{ formatDate(object.modified) }}</span>
-						<span>{{ formatSize(object.fileSize) }}</span>
+				</template>
+
+				<template #column-status="{ row }">
+					<span class="my-documents-status">
+						<EyeOffOutline :size="16" class="my-documents-status__icon" />
+						{{ statusLabel(row) }}
+					</span>
+				</template>
+
+				<template #column-modified="{ row }">
+					{{ formatDate(row.modified) }}
+				</template>
+
+				<template #column-fileSize="{ row }">
+					{{ formatSize(row.fileSize) }}
+				</template>
+
+				<template #card="{ object }">
+					<div class="my-documents-card">
+						<div class="my-documents-card__icon">
+							<component :is="iconFor(object)" :size="36" />
+						</div>
+						<div class="my-documents-card__title">
+							{{ displayName(object) }}
+						</div>
+						<CnStatusBadge
+							:label="kindLabel(object)"
+							:color-map="kindColorMap" />
+						<div class="my-documents-card__meta">
+							<span>{{ formatDate(object.modified) }}</span>
+							<span>{{ formatSize(object.fileSize) }}</span>
+						</div>
 					</div>
-				</div>
-			</template>
+				</template>
 
-			<template #actions-header>
-				<FilterOutline
-					:size="20"
-					class="my-documents-filter-icon"
-					:title="t('docudesk', 'Filter')"
-					@click="onFilterClick" />
-			</template>
+				<template #actions-header>
+					<FilterOutline
+						:size="20"
+						class="my-documents-filter-icon"
+						:title="t('docudesk', 'Filter')"
+						@click="onFilterClick" />
+				</template>
 
-			<template #row-actions="{ row }">
-				<NcActions class="my-documents-row-actions">
-					<template #icon>
-						<DotsHorizontal :size="24" />
-					</template>
-					<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
+				<template #row-actions="{ row }">
+					<NcActions class="my-documents-row-actions">
 						<template #icon>
-							<Eye :size="20" />
+							<DotsHorizontal :size="24" />
 						</template>
-						{{ t('docudesk', 'View') }}
-					</NcActionButton>
-					<NcActionButton close-after-click @click="openFile(row)">
-						<template #icon>
-							<OpenInNew :size="20" />
-						</template>
-						{{ t('docudesk', 'Open in Files') }}
-					</NcActionButton>
-					<NcActionButton close-after-click @click="downloadFile(row)">
-						<template #icon>
-							<Download :size="20" />
-						</template>
-						{{ t('docudesk', 'Download') }}
-					</NcActionButton>
-				</NcActions>
-			</template>
-		</DdIndexPage>
+						<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
+							<template #icon>
+								<Eye :size="20" />
+							</template>
+							{{ t('docudesk', 'View') }}
+						</NcActionButton>
+						<NcActionButton close-after-click @click="openFile(row)">
+							<template #icon>
+								<OpenInNew :size="20" />
+							</template>
+							{{ t('docudesk', 'Open in Files') }}
+						</NcActionButton>
+						<NcActionButton close-after-click @click="downloadFile(row)">
+							<template #icon>
+								<Download :size="20" />
+							</template>
+							{{ t('docudesk', 'Download') }}
+						</NcActionButton>
+					</NcActions>
+				</template>
+			</DdIndexPage>
+		</template>
 	</div>
 </template>
 
@@ -126,6 +130,7 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
+import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
@@ -146,6 +151,7 @@ export default {
 		NcActionButton,
 		DdSearchBar,
 		DdPageHeader,
+		FileViewerPage,
 		DotsHorizontal,
 		Eye,
 		OpenInNew,
