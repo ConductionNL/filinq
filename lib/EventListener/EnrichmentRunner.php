@@ -85,7 +85,7 @@ class EnrichmentRunner
         );
 
         try {
-            if ($this->isEnrichmentEnabled($settingsService) === false) {
+            if ($this->isEnrichmentEnabled(settingsService: $settingsService) === false) {
                 return;
             }
 

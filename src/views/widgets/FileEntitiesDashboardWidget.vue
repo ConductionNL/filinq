@@ -1,6 +1,5 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { ref, onMounted } from 'vue'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 </script>
@@ -45,6 +44,9 @@ import axios from '@nextcloud/axios'
 						<th class="col-status">
 							{{ t('docudesk', 'Status') }}
 						</th>
+						<th class="col-ocr">
+							{{ t('docudesk', 'OCR') }}
+						</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -69,6 +71,13 @@ import axios from '@nextcloud/axios'
 						<td class="col-status">
 							<span :class="'status-badge status-' + file.status">
 								{{ statusLabel(file.status) }}
+							</span>
+						</td>
+						<td class="col-ocr">
+							<span v-if="file.ocrProcessed"
+								class="ocr-badge"
+								:title="t('docudesk', 'Processed with OCR')">
+								{{ t('docudesk', 'OCR') }}
 							</span>
 						</td>
 					</tr>
@@ -272,6 +281,22 @@ export default {
 	text-align: right;
 	width: 90px;
 	white-space: nowrap;
+}
+
+.col-ocr {
+	text-align: center;
+	width: 50px;
+	white-space: nowrap;
+}
+
+.ocr-badge {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: var(--border-radius-pill);
+	font-size: 0.7rem;
+	font-weight: 600;
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element);
 }
 
 .file-link {

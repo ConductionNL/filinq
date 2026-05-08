@@ -61,7 +61,7 @@ class AnonymizationController extends Controller
         private readonly FileListingService $fileListingService,
         private readonly IL10N $l10n
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -200,6 +200,7 @@ class AnonymizationController extends Controller
      * Anonymize entities in a document
      *
      * Replaces detected entities in the document with anonymized placeholders.
+     * Supports optional excludeTypes and minConfidence filtering.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -221,6 +222,9 @@ class AnonymizationController extends Controller
                 );
             }
 
+            $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
+            $entities = $this->filterByConfidence(entities: $entities, params: $params);
+
             $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);
 
             return new JSONResponse($result);
@@ -236,6 +240,62 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+
+    /**
+     * Filter entities by excluded types
+     *
+     * @param array<int, array<string, mixed>> $entities The entities
+     * @param array<string, mixed>             $params   Request parameters
+     *
+     * @return array<int, array<string, mixed>> Filtered entities
+     */
+    private function filterByExcludeTypes(array $entities, array $params): array
+    {
+        $excludeTypes = $params['excludeTypes'] ?? [];
+        if (is_array($excludeTypes) === false || empty($excludeTypes) === true) {
+            return $entities;
+        }
+
+        return array_values(
+            array_filter(
+                $entities,
+                static function (array $entity) use ($excludeTypes): bool {
+                    $type = $entity['type'] ?? $entity['entityType'] ?? '';
+                    return in_array($type, $excludeTypes, true) === false;
+                }
+            )
+        );
+
+    }//end filterByExcludeTypes()
+
+
+    /**
+     * Filter entities by minimum confidence threshold
+     *
+     * @param array<int, array<string, mixed>> $entities The entities
+     * @param array<string, mixed>             $params   Request parameters
+     *
+     * @return array<int, array<string, mixed>> Filtered entities
+     */
+    private function filterByConfidence(array $entities, array $params): array
+    {
+        if (isset($params['minConfidence']) === false) {
+            return $entities;
+        }
+
+        $minConfidence = (float) $params['minConfidence'];
+
+        return array_values(
+            array_filter(
+                $entities,
+                static function (array $entity) use ($minConfidence): bool {
+                    return (float) ($entity['confidence'] ?? 0.0) >= $minConfidence;
+                }
+            )
+        );
+
+    }//end filterByConfidence()
 
 
 }//end class

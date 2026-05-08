@@ -9,7 +9,7 @@
 /tests/.phpunit.cache
 
 /node_modules/
-/js/
+/js
 
 /docs/node_modules/
 /docs/build/
@@ -19,3 +19,13 @@
 
 /coverage/
 /coverage-frontend/
+
+# Test/build artifacts
+.phpunit.cache/
+.phpunit.result.cache
+phpmetrics/
+
+# SBOM is published as release asset (see SECURITY.md), not stored in repo
+sbom.cdx.json
+bom-php.cdx.json
+bom-npm.cdx.json

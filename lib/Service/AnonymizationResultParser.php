@@ -42,11 +42,11 @@ class AnonymizationResultParser
     public function parseResult(mixed $result): array
     {
         if (is_object($result) === true && method_exists($result, 'getId') === true) {
-            return $this->extractFromObject($result);
+            return $this->extractFromObject(result: $result);
         }
 
         if (is_array($result) === true) {
-            return $this->extractFromArray($result);
+            return $this->extractFromArray(result: $result);
         }
 
         return [

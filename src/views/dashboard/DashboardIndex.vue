@@ -12,42 +12,42 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 		:loading="consentStore.loading">
 		<!-- KPI: Total Consents -->
 		<template #widget-total-consents>
-			<div class="stat-card">
-				<h5>{{ t('docudesk', 'Total Consents') }}</h5>
-				<div class="content">
-					{{ consentStore.consentStats.total }}
-				</div>
-			</div>
+			<CnStatsBlock
+				:title="t('docudesk', 'Total Consents')"
+				:count="consentStore.consentStats.total"
+				:count-label="t('docudesk', 'records')"
+				variant="default"
+				show-zero-count />
 		</template>
 
 		<!-- KPI: Pending -->
 		<template #widget-pending>
-			<div class="stat-card">
-				<h5>{{ t('docudesk', 'Pending') }}</h5>
-				<div class="content pending">
-					{{ consentStore.consentStats.pending }}
-				</div>
-			</div>
+			<CnStatsBlock
+				:title="t('docudesk', 'Pending')"
+				:count="consentStore.consentStats.pending"
+				:count-label="t('docudesk', 'pending')"
+				variant="warning"
+				show-zero-count />
 		</template>
 
 		<!-- KPI: Approved -->
 		<template #widget-approved>
-			<div class="stat-card">
-				<h5>{{ t('docudesk', 'Approved') }}</h5>
-				<div class="content approved">
-					{{ consentStore.consentStats.approved }}
-				</div>
-			</div>
+			<CnStatsBlock
+				:title="t('docudesk', 'Approved')"
+				:count="consentStore.consentStats.approved"
+				:count-label="t('docudesk', 'approved')"
+				variant="success"
+				show-zero-count />
 		</template>
 
 		<!-- KPI: Objected -->
 		<template #widget-objected>
-			<div class="stat-card">
-				<h5>{{ t('docudesk', 'Objected') }}</h5>
-				<div class="content objected">
-					{{ consentStore.consentStats.objected }}
-				</div>
-			</div>
+			<CnStatsBlock
+				:title="t('docudesk', 'Objected')"
+				:count="consentStore.consentStats.objected"
+				:count-label="t('docudesk', 'objected')"
+				variant="error"
+				show-zero-count />
 		</template>
 
 		<!-- Recent Consent Activity -->
@@ -61,9 +61,9 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 			<ul v-else class="recent-list">
 				<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
 					<span class="entity-text">{{ consent.entityText }}</span>
-					<span class="badge" :class="'status-' + (consent.consentStatus || 'pending')">
-						{{ formatStatus(consent.consentStatus) }}
-					</span>
+					<CnStatusBadge
+						:label="formatStatus(consent.consentStatus)"
+						:color-map="consentStatusColorMap" />
 				</li>
 			</ul>
 		</template>
@@ -77,12 +77,14 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { CnDashboardPage } from '@conduction/nextcloud-vue'
+import { CnDashboardPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'DashboardIndex',
 	components: {
 		CnDashboardPage,
+		CnStatsBlock,
+		CnStatusBadge,
 		NcLoadingIcon,
 		AnonymizationWidget,
 	},
@@ -96,6 +98,13 @@ export default {
 				{ id: 5, widgetId: 'recent-activity', gridX: 0, gridY: 1, gridWidth: 6 },
 				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 1, gridWidth: 6 },
 			],
+			consentStatusColorMap: {
+				[t('docudesk', 'Pending')]: 'default',
+				[t('docudesk', 'Approved')]: 'success',
+				[t('docudesk', 'Objected')]: 'error',
+				[t('docudesk', 'No Response')]: 'warning',
+				[t('docudesk', 'Anonymized')]: 'primary',
+			},
 		}
 	},
 	computed: {
@@ -132,29 +141,6 @@ export default {
 </script>
 
 <style scoped>
-.stat-card {
-	padding: 16px;
-	border-radius: 8px;
-	background-color: var(--color-main-background);
-}
-
-.stat-card h5 {
-	margin: 0 0 8px 0;
-	font-weight: normal;
-	color: var(--color-text-maxcontrast);
-}
-
-.stat-card .content {
-	font-size: 2.5rem;
-	font-weight: bold;
-	text-align: center;
-	color: var(--color-main-text);
-}
-
-.stat-card .content.pending { color: var(--color-warning); }
-.stat-card .content.approved { color: var(--color-success); }
-.stat-card .content.objected { color: var(--color-error); }
-
 .recent-list {
 	list-style: none;
 	padding: 0;
@@ -176,20 +162,6 @@ export default {
 .entity-text {
 	font-weight: 500;
 }
-
-.badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 12px;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
-
-.status-pending { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.status-consent_given { background-color: var(--color-success); color: white; }
-.status-objection_received { background-color: var(--color-error); color: white; }
-.status-no_response { background-color: var(--color-warning); color: white; }
-.status-anonymized { background-color: var(--color-primary); color: white; }
 
 .loading-state {
 	display: flex;

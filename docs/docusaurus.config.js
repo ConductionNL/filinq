@@ -1,23 +1,35 @@
 // @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
 
-/** @type {import('@docusaurus/types').Config} */
-const config = {
-  title: 'DocuDesk.app',
+/**
+ * DocuDesk documentation site.
+ *
+ * Built on @conduction/docusaurus-preset for brand defaults (tokens,
+ * theme swizzles for Navbar / Footer, four-locale i18n scaffolding,
+ * KvK / BTW copyright). Site-specific overrides — locales, sidebar
+ * path, mermaid theme, redocusaurus preset for the OpenAPI spec, and
+ * docudesk-only navbar items — are passed through createConfig() opts.
+ */
+
+const { createConfig, baseFooterLinks } = require('@conduction/docusaurus-preset');
+
+/* createConfig replaces themes wholesale when `themes:` is passed, so
+   we re-include the brand theme plugin alongside @docusaurus/theme-mermaid.
+   Without the brand theme entry the Navbar/Footer swizzles and
+   brand.css auto-load would silently drop. */
+const BRAND_THEME = require.resolve('@conduction/docusaurus-preset/theme');
+
+const config = createConfig({
+  title: 'DocuDesk',
   tagline: 'Flexible document management for your organization',
-  url: 'https://docudesk.app/',
+  url: 'https://docudesk.conduction.nl',
   baseUrl: '/',
-  
-  // GitHub pages deployment config
-  organizationName: 'conductionnl',
+
+  organizationName: 'ConductionNL',
   projectName: 'docudesk',
-  trailingSlash: false,
 
-  onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
-
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang
+  /* DocuDesk ships en + nl markdown; the brand preset's default i18n
+     block (nl/en/de/fr) is replaced wholesale here so we don't pull
+     in stub locales the docs don't translate yet. */
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'nl'],
@@ -27,113 +39,119 @@ const config = {
     },
   },
 
+  /* The docudesk docs source lives at the repo root of `docs/` rather
+     than under a `docs/` subfolder, so we override the preset's default
+     `presets:` block to point `docs.path` at './' and disable the blog
+     plugin. customCss carries docudesk-specific CSS only — brand tokens
+     and the theme swizzles are auto-loaded by the brand theme entry in
+     `themes:` below. The redocusaurus preset is appended for the
+     OpenAPI spec rendered at /api. */
   presets: [
     [
       'classic',
-      /** @type {import('@docusaurus/preset-classic').Options} */
-      ({
+      {
         docs: {
           path: './',
-          exclude: ['**/node_modules/**'],
+          /* docs.path: './' makes plugin-content-docs scan every file
+             in docs/, which collides with plugin-content-pages's own
+             scan of docs/src/pages/. Exclude src/ (pages live there)
+             plus the standard node_modules bucket. The
+             features/pdf-generation page contains a markdown table
+             with `{ top, right, bottom, left }` that the MDX parser
+             reads as an MDX expression and trips on at SSR time;
+             excluded until the page is rewritten with escaped braces
+             (same pattern as openregister PR #1444). */
+          exclude: [
+            '**/node_modules/**',
+            'src/**',
+            'features/pdf-generation.md',
+          ],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl:
-            'https://github.com/conductionnl/docudesk/tree/main/docs/',
+          editUrl: 'https://github.com/ConductionNL/docudesk/tree/main/docs/',
         },
         blog: false,
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-      }),
+      },
     ],
     [
       'redocusaurus',
       {
-        // Plugin Options for loading OpenAPI files
         specs: [
-          // Pass it a path to a local OpenAPI YAML file
           {
-            // Redocusaurus will automatically bundle your spec into a single file during the build
             spec: 'static/oas/docudesk-api.yaml',
             route: '/api',
           },
         ],
-        // Theme Options for modifying how redoc renders them
         theme: {
-          // Change with your site colors
           primaryColor: '#1890ff',
         },
       },
-    ]
+    ],
   ],
 
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      navbar: {
-        title: 'DocuDesk.app',
-        logo: {
-          alt: 'DocuDesk Logo',
-          src: 'img/logo.svg',
-        },
-        items: [
-          {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
-            position: 'left',
-            label: 'Documentation',
-          },
-          {
-            href: '/api',
-            label: 'API Documentation',
-            position: 'right',
-          },
-          {
-            href: 'https://github.com/conductionnl/docudesk',
-            label: 'GitHub',
-            position: 'right',
-          },
-          {
-            type: 'localeDropdown',
-            position: 'right',
-          },
-        ],
+  themes: [BRAND_THEME, '@docusaurus/theme-mermaid'],
+
+  /* Brand navbar provides locale dropdown + GitHub by default; we
+     replace items[] with docudesk's own (Documentation sidebar link,
+     API link, docudesk GitHub, locale dropdown). Object.assign in
+     createConfig is shallow, so items: replaces wholesale. */
+  navbar: {
+    items: [
+      {
+        type: 'docSidebar',
+        sidebarId: 'tutorialSidebar',
+        position: 'left',
+        label: 'Documentation',
       },
-      footer: {
-        style: 'dark',
-        links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'Documentation',
-                to: '/docs/intro',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'GitHub',
-                href: 'https://github.com/conductionnl/docudesk',
-              },
-            ],
-          },
-        ],
-        copyright: `Copyright © ${new Date().getFullYear()} for <a href="https://openwebconcept.nl">Open Webconcept</a> by <a href="https://conduction.nl">Conduction B.V.</a>`,
+      {
+        href: '/api',
+        label: 'API Documentation',
+        position: 'right',
       },
-      prism: {
-        theme: require('prism-react-renderer/themes/github'),
-        darkTheme: require('prism-react-renderer/themes/dracula'),
+      {
+        href: 'https://github.com/ConductionNL/docudesk',
+        label: 'GitHub',
+        position: 'right',
       },
-      mermaid: {
-        theme: { light: 'default', dark: 'dark' },
-      },
-    }),
-  markdown: {
-    mermaid: true,
+      { type: 'localeDropdown', position: 'right' },
+    ],
   },
-  themes: ['@docusaurus/theme-mermaid'],
+
+  /* Per-property footer override (preset 1.2.0+): we pass `links` only,
+     so the brand `style: 'dark'` and the brand KvK/BTW/IBAN/address
+     copyright string both inherit unchanged. Single column: the brand
+     "Conduction" anchor. Site-specific Product / Support columns may
+     be added later. */
+  footer: {
+    links: [
+      ...baseFooterLinks().filter((column) => column.title === 'Conduction'),
+    ],
+  },
+
+  /* Drop the canal-footer's boat-sinking + kade-cyclist mini-games
+     on this product-page footer (preset 1.3.0+). The static skyline +
+     canal decoration are kept; the interactive layer goes away. */
+  minigames: false,
+
+  /* themeConfig is shallow-merged into the preset's defaults
+     (colorMode + navbar + footer). prism + mermaid land alongside. */
+  themeConfig: {
+    prism: {
+      theme: require('prism-react-renderer/themes/github'),
+      darkTheme: require('prism-react-renderer/themes/dracula'),
+    },
+    mermaid: {
+      theme: { light: 'default', dark: 'dark' },
+    },
+  },
+});
+
+/* createConfig doesn't pass-through arbitrary top-level fields; assign
+   markdown directly so it makes it into the final Docusaurus config. */
+config.markdown = {
+  mermaid: true,
 };
 
 module.exports = config;

@@ -37,12 +37,13 @@
 		"check": "E=0; for CMD in lint phpcs psalm test:unit; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:full": "E=0; for CMD in lint phpcs psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
 		"check:strict": "E=0; for CMD in lint phpcs phpmd psalm phpstan test:all; do echo; echo \"=== $CMD ===\"; composer $CMD || E=1; done; echo; if [ $E -eq 0 ]; then echo \"ALL CHECKS PASSED\"; else echo \"SOME CHECKS FAILED (see above)\"; fi; exit $E",
-		"fix": ["@cs:fix"],
+		"fix": [
+			"@cs:fix"
+		],
 		"openapi": "generate-spec",
 		"phpqa": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa",
 		"phpqa:full": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa --tools phpcs:0,phpmd:0,phploc:0,phpmetrics,phpcpd:0,parallel-lint:0",
 		"phpqa:ci": "./vendor/bin/phpqa --report --analyzedDirs lib --buildDir phpqa --tools phpcs,phpmd,phploc,phpmetrics,phpcpd,parallel-lint",
-		"phpstan": "./vendor/bin/phpstan analyse --memory-limit=1G || echo 'PHPStan not installed, skipping...'",
 		"qa:check": [
 			"@phpqa"
 		],
@@ -63,20 +64,20 @@
 		]
 	},
 	"require": {
-		"php": "^8.1",
+		"php": "^8.2",
 		"adbario/php-dot-notation": "^3.3.0",
 		"bamarni/composer-bin-plugin": "^1.8",
 		"mpdf/mpdf": "^8.2",
 		"opis/json-schema": "^2.3",
-		"psr/log": "^1.1.4",
+		"psr/log": "^1.1.4 || ^2.0 || ^3.0",
 		"symfony/uid": "^6.4",
 		"symfony/yaml": "^6.4",
+		"thiagoalessio/tesseract_ocr": "^2.13",
 		"twig/twig": "^3.18"
 	},
 	"require-dev": {
 		"edgedesign/phpqa": "^1.27",
 		"nextcloud/coding-standard": "^1.4",
-		"nextcloud/ocp": "dev-stable29",
 		"phpcsstandards/phpcsextra": "^1.4",
 		"phpmd/phpmd": "^2.15",
 		"phpmetrics/phpmetrics": "^2.8",
@@ -98,9 +99,14 @@
 		"optimize-autoloader": true,
 		"sort-packages": true,
 		"platform": {
-			"php": "8.1.0"
+			"php": "8.2.0"
 		},
 		"preferred-install": "dist",
 		"process-timeout": 600
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"OCA\\DocuDesk\\Tests\\": "tests/"
+		}
 	}
 }

@@ -143,8 +143,8 @@ class FileEntityStatsService
 
             $stats['anonymizedCount'] = $anonymized;
             $stats['status']          = $this->determineFileStatus(
-                $stats['entityCount'],
-                $anonymized
+                entityCount: $stats['entityCount'],
+                anonymizedCount: $anonymized
             );
         } catch (\Exception $e) {
             $this->logger->debug(

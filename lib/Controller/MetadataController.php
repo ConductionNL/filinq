@@ -57,7 +57,7 @@ class MetadataController extends Controller
         private readonly MetadataService $metadataService,
         private readonly IL10N $l10n
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

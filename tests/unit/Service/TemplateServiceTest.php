@@ -18,14 +18,15 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use Exception;
-use OCA\DocuDesk\Service\SettingsService;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\TemplateService;
+use OCA\DocuDesk\Service\TemplateVersionService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use RuntimeException;
 
@@ -55,13 +56,6 @@ class TemplateServiceTest extends TestCase
     private TemplateService $templateService;
 
     /**
-     * Mocked LoggerInterface for logging operations
-     *
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
-
-    /**
      * Mocked ContainerInterface for dependency injection
      *
      * @var ContainerInterface|MockObject
@@ -76,11 +70,11 @@ class TemplateServiceTest extends TestCase
     private IAppManager|MockObject $mockAppManager;
 
     /**
-     * Mocked SettingsService for settings operations
+     * Mocked OpenRegisterResolver for register/schema resolution
      *
-     * @var SettingsService|MockObject
+     * @var OpenRegisterResolver|MockObject
      */
-    private SettingsService|MockObject $mockSettingsService;
+    private OpenRegisterResolver|MockObject $mockRegisterResolver;
 
 
     /**
@@ -95,20 +89,22 @@ class TemplateServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger          = $this->createMock(LoggerInterface::class);
-        $this->mockContainer       = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager      = $this->createMock(IAppManager::class);
-        $this->mockSettingsService = $this->createMock(SettingsService::class);
+        $this->mockContainer        = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager       = $this->createMock(IAppManager::class);
+        $this->mockRegisterResolver = $this->createMock(OpenRegisterResolver::class);
+        $mockVersionService         = $this->createMock(TemplateVersionService::class);
+        $mockUserSession            = $this->createMock(IUserSession::class);
 
         // Default: getInstalledApps returns an empty array.
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn([]);
 
         $this->templateService = new TemplateService(
-            $this->mockLogger,
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockSettingsService
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $mockUserSession
         );
 
     }//end setUp()
@@ -149,10 +145,11 @@ class TemplateServiceTest extends TestCase
             ->willReturn($mockObjectService);
 
         $this->templateService = new TemplateService(
-            $this->mockLogger,
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockSettingsService
+            $this->mockRegisterResolver,
+            $this->createMock(TemplateVersionService::class),
+            $this->createMock(IUserSession::class)
         );
 
     }//end setUpWithOpenRegister()
@@ -185,6 +182,9 @@ class TemplateServiceTest extends TestCase
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Invalid namespace');
+
+        $this->mockRegisterResolver->method('validateNamespace')
+            ->willThrowException(new \Exception('Invalid namespace: must be lowercase alphanumeric only', 400));
 
         $this->templateService->createTemplate([
             'namespace' => 'INVALID-NS!',
@@ -244,12 +244,10 @@ class TemplateServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenRegister service is not available');
 
-        $this->mockSettingsService->method('getAllSettings')
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
-                'configuration' => [
-                    'template_register' => 'reg-1',
-                    'template_schema'   => 'schema-1',
-                ],
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
             ]);
 
         $this->templateService->getTemplates();
@@ -271,13 +269,8 @@ class TemplateServiceTest extends TestCase
         $mockObjectService = $this->createMock(ObjectService::class);
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockSettingsService->method('getAllSettings')
-            ->willReturn([
-                'configuration' => [
-                    'template_register' => '',
-                    'template_schema'   => '',
-                ],
-            ]);
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willThrowException(new \Exception('Template register/schema not configured', 500));
 
         $this->templateService->getTemplates();
 
@@ -301,12 +294,10 @@ class TemplateServiceTest extends TestCase
 
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockSettingsService->method('getAllSettings')
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
-                'configuration' => [
-                    'template_register' => 'reg-1',
-                    'template_schema'   => 'schema-1',
-                ],
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
             ]);
 
         $this->templateService->getTemplate('non-existent-uuid');
@@ -337,12 +328,10 @@ class TemplateServiceTest extends TestCase
 
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockSettingsService->method('getAllSettings')
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
-                'configuration' => [
-                    'template_register' => 'reg-1',
-                    'template_schema'   => 'schema-1',
-                ],
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
             ]);
 
         $result = $this->templateService->createTemplate([
@@ -399,12 +388,10 @@ class TemplateServiceTest extends TestCase
 
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockSettingsService->method('getAllSettings')
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
-                'configuration' => [
-                    'template_register' => 'reg-1',
-                    'template_schema'   => 'schema-1',
-                ],
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
             ]);
 
         $result = $this->templateService->getTemplatesByNamespace('larpingapp');
@@ -428,16 +415,14 @@ class TemplateServiceTest extends TestCase
             ->willReturn([]);
         $mockObjectService->expects($this->once())
             ->method('searchObjectsPaginated')
-            ->willReturn(['total' => 0]);
+            ->willReturn(['results' => [], 'total' => 0]);
 
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockSettingsService->method('getAllSettings')
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
-                'configuration' => [
-                    'template_register' => 'reg-1',
-                    'template_schema'   => 'schema-1',
-                ],
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
             ]);
 
         $result = $this->templateService->getTemplatesByNamespace('emptyns');
