@@ -56,6 +56,15 @@ The summary lists ONLY entities whose `EntityRelation.anonymized` is true and wh
 
 - `anonymization`: the per-document anonymise endpoint accepts an optional `appendBasisSummary` field; when true (and `outputFormat: "pdf"`), the response file is the anonymised PDF with a summary page appended.
 
+## Cross-app Dependencies
+
+- **Hard** — `openregister:entity-relation-grondslagen` — provides `EntityRelation.bases` persistence. Without it, this change's summary template has no data to render.
+- **Hard** — `docudesk:add-dossier-schema` — provides the `base` schema (`bases[]` references) and the dossier `configuration.grondslagen` field used to record `fileId` / `lastGeneratedAt`.
+- **Soft** — `docudesk:anonymise-output-as-pdf-by-default` — the per-document append works against PDF output. Until that lands, `outputFormat: "preserve"` paths emit a separate summary PDF instead of an appended page.
+- **Soft** — `docudesk:anonymisation-output-folder-layout` — provides the `<dossier-folder>/anonymised/` destination. Without it, summaries land at `<dossier-folder>/grondslagen.pdf` and are relocated when the folder-layout change lands.
+
+Each row MUST be tracked as a `Depends on` link from this change's GitHub issue to the target's tracking issue once both issues exist.
+
 ## Impact
 
 - **Code (docudesk):**

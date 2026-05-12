@@ -21,7 +21,9 @@ When neither an OpenAnonymiser ExApp nor a custom anonymisation endpoint is conf
 - End-user (non-admin) messaging — anonymisation degradation is operator-facing only.
 - Auto-installation or AppAPI registration — explicitly forbidden by ADR-017.
 
-## Dependencies
+## Cross-app Dependencies
 
-- Companion change `openregister/anonymiser-backend-selection` must expose a backend-state query (PHP service or OCS endpoint) that DocuDesk reads.
-- AppAPI must be present on the Nextcloud instance for the deep links to be actionable. If AppAPI is missing, the banner additionally instructs the admin to install AppAPI first.
+- **Hard** — `openregister:anonymiser-backend-selection` — must expose a backend-state query (PHP service or OCS endpoint) that DocuDesk reads. The warning banner cannot resolve "no backend" without it.
+- **Hard** — `nextcloud:appapi` (instance-level, not a Conduction-owned change) — required for deep-link CTAs to be actionable. If AppAPI is missing on the instance, the banner additionally instructs the admin to install AppAPI first.
+
+The OpenRegister row MUST be tracked as a `Depends on` link from this change's GitHub issue once the OR-side issue exists. AppAPI is documented runtime-precondition, not a tracked-issue dependency.

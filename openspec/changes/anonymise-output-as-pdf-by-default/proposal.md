@@ -51,6 +51,12 @@ The cascade is described in the order tried; tenants can disable individual back
 
 - `anonymization`: the anonymise endpoint accepts an optional top-level `outputFormat: "pdf" | "preserve"` (default `pdf`); when `pdf`, the result is converted via the new `pdf-conversion` capability before being written to Nextcloud Files.
 
+## Cross-app Dependencies
+
+- **Soft** — `openregister:text-extraction-eml` (future) — provides EML text extraction. Until it lands, EML inputs fail with 422 in default `pdf` mode; operators bypass via `outputFormat: "preserve"`. The hard dep on the same OR change is owned by the consumer change `docudesk:eml-pdf-assembly`.
+
+Track as a `Depends on` link from this change's GitHub issue once the OR-side tracking issue exists.
+
 ## Impact
 
 - **Code (docudesk):**

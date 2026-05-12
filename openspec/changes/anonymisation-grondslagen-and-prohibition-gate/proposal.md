@@ -28,6 +28,13 @@ This change closes both gaps in the publication-prep / per-document anonymisatio
 - `anonymization`: the anonymise endpoint contract is extended — the request payload accepts an optional `bases` array per entity (forwarded verbatim to OpenRegister), and the response from the extract endpoint includes per-entity `prohibitionMatch` for UI hinting.
 - `anonymization-entity-review`: the consolidated-entities endpoint includes per-entity `prohibitionMatch` and `suggestedBases`, so the review UI can render prohibition state and pre-fill the grondslag picker.
 
+## Cross-app Dependencies
+
+- **Soft** — `openregister:entity-relation-grondslagen` — provides `EntityRelation.bases` persistence. DocuDesk's `bases[]` payload is a no-op until OR persists it. The gate + extract-flag work standalone; OR change is not required to land first.
+- **Soft** — `docudesk:entity-publication-policies` — provides the `publicationProhibition` schema. The gate has nothing to enforce until prohibition records exist; either change can land first.
+
+Each row MUST be tracked as a `Depends on` link from this change's GitHub issue once the target's tracking issue exists.
+
 ## Impact
 
 - **Code (docudesk):**

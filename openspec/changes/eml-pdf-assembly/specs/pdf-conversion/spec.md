@@ -207,11 +207,15 @@ The assembly MUST NOT abandon the entire conversion on partial failures. Per the
 - **AND** all three attachments are still embedded as PDF/A-3 files
 - **AND** the conversion succeeds (returns the assembled PDF)
 
-### Requirement: Output MUST be PDF/A-3b
+## MODIFIED Requirements
 
-The resulting file MUST declare PDF/A-3b conformance in its metadata. mPDF MUST be configured with the appropriate PDF/A-3 mode (`SetPDFAVersion('3-B')` or equivalent) before any content or embedded files are written.
+### Requirement: Output MUST be PDF/A-3b — backends that cannot guarantee this MUST fall through
 
-#### Scenario: Output declares PDF/A-3b
+A backend that can produce only plain PDF (not PDF/A-3b) MUST report `isAvailable()` as false for the conversion or throw from `convert()`, allowing the cascade to try the next backend. The service MUST NOT silently degrade to plain PDF.
+
+When the EML backend is the active path, mPDF MUST be configured with the appropriate PDF/A-3 mode (`SetPDFAVersion('3-B')` or equivalent) before any content or embedded files are written. The resulting file MUST declare PDF/A-3b conformance in its metadata.
+
+#### Scenario: EML assembly output declares PDF/A-3b
 
 - **WHEN** the assembly produces an output file
 - **THEN** the file's PDF metadata indicates PDF/A-3b conformance (verified via `pdfinfo` or `verapdf`)

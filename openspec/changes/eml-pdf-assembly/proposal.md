@@ -58,6 +58,13 @@ When an attachment is `message/rfc822` (nested email), `EmlStructure.attachments
 
 - `pdf-conversion`: the EmlBackend in the conversion cascade is upgraded from a placeholder plaintext path to a rich-rendering path. The EmlBackend's `isAvailable()` now requires both `text-extraction-eml` (OR) AND this change to be applied; until both land, the backend reports unavailable.
 
+## Cross-app Dependencies
+
+- **Hard** — `openregister:text-extraction-eml` — provides `parseEmlStructured()`. Until that lands, `EmlBackend.isAvailable()` returns false; EML inputs fall through to 422 in default `outputFormat: "pdf"` mode.
+- **Soft** — `docudesk:anonymise-output-as-pdf-by-default` — provides the conversion cascade and the `EmlBackend` placeholder. Until Change A lands, there is no cascade for this change to plug into.
+
+Each row MUST be tracked as a `Depends on` link from this change's GitHub issue to the target's tracking issue.
+
 ## Impact
 
 - **Code (docudesk):**
