@@ -142,13 +142,17 @@ When an override validates, the corresponding prohibition match is treated as "r
 
 #### Scenario: Valid override releases a low-confidence match
 
-- **GIVEN** a detected entity at confidence 0.62 matching prohibition rule `R-X`
+- **GIVEN** a detected entity at confidence 0.62 matching prohibition rule `R-X` (corresponding to EntityRelation row `R7`)
 - **AND** the anonymise payload omits this entity
-- **AND** the payload includes `acknowledgedOverrides: [{ruleId: "R-X", entityId: 7}]`
+- **AND** the payload includes `acknowledgedOverrides: [{ruleId: "R-X", entityId: 7, reason: "false positive — public figure"}]`
 - **WHEN** the endpoint processes the request
-- **THEN** the gate releases the match
-- **AND** the request is forwarded to OpenRegister
-- **AND** the entity is not anonymised
+- **THEN** DocuDesk MUST persist a side-side audit entry capturing `{ruleId: "R-X", entityRelationId: <R7's id>, fileId: <file>, reason: "false positive — public figure", acknowledgedBy: <user UID>, acknowledgedAt: <ISO-8601>}`
+- **AND** DocuDesk MUST call `EntityRelationMapper::updateDecisionMetadata(R7.id, ['skipAnonymization' => true])` via OR DI
+- **AND** the gate MUST release the match
+- **AND** the request MUST be forwarded to OpenRegister
+- **AND** the entity MUST NOT be redacted (OR's anonymise flow honours the skip flag — per OR's `entity-relation-grondslagen` spec)
+- **AND** OR's audit-trail MUST record one entry for the skip-flip on R7
+- **AND** DocuDesk's audit store MUST record one entry capturing the override's reason
 
 #### Scenario: Override for high-confidence match is rejected with 422
 
@@ -183,6 +187,44 @@ This change is read-only with respect to the consent register. The gate consults
 - **GIVEN** an anonymise request that fails the gate with 422
 - **WHEN** the response is returned
 - **THEN** zero `publicationConsent` records are created or modified
+
+### Requirement: Acknowledged overrides MUST persist a DocuDesk-side audit entry AND PATCH OpenRegister with `skipAnonymization=true`
+
+For every `acknowledgedOverrides` entry that validates per the previous Requirement, DocuDesk's controller MUST:
+
+1. **Persist a DocuDesk-side audit entry** capturing `{ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}`. The store is DocuDesk-owned (smallest implementation: a `prohibitionOverrideAudit` schema on `docudesk_register.json`; implementations MAY choose alternative persistent stores). This entry records *why* the operator chose to release a flagged entity from anonymisation — operator-commentary metadata that OpenRegister's audit-trail does not carry (OR's PATCH whitelist is decision-only).
+2. **PATCH OpenRegister's matching `EntityRelation` row** with `{skipAnonymization: true}` via `EntityRelationMapper::updateDecisionMetadata` (via OR's DI lookup). The DocuDesk-side audit entry MUST be written BEFORE the OR PATCH call so a failure of the OR call doesn't leave the override unrecorded on the DD side. If OR's PATCH fails (network error, authorization denied), DocuDesk MUST respond with HTTP 500 and the DD audit entry MAY remain (it documents the operator's intent even if commitment failed); a follow-up retry will idempotently PATCH again.
+3. **Proceed with the anonymise call** to OpenRegister. OR's `markAsAnonymized` will already exclude the skip-flagged row from the redaction set — no further DocuDesk work is needed for execution.
+
+The two persistence side-effects (DD audit + OR PATCH) MUST happen for every validated override. They MUST happen on the same request that carried the override; there is no deferred or asynchronous commit.
+
+#### Scenario: Override acknowledgement writes both audit and skip flag
+
+- **GIVEN** an anonymise request with `acknowledgedOverrides: [{ruleId: "R-X", entityId: 7, reason: "low-confidence false positive"}]` releasing a low-confidence match
+- **WHEN** DocuDesk's controller processes the request
+- **THEN** a new DocuDesk audit entry MUST exist with `{ruleId: "R-X", entityRelationId: <R7.id>, fileId: <file>, reason: "low-confidence false positive", acknowledgedBy: <UID>, acknowledgedAt: <ISO-8601>}`
+- **AND** OR's row R7 MUST have `skipAnonymization = true`
+- **AND** OR's audit-trail MUST record one entry for the skip-flip on R7 with the acting user UID
+- **AND** the anonymise call to OR MUST succeed
+- **AND** the file MUST be redacted with R7 not appearing in the redacted output
+
+#### Scenario: OR PATCH fails during override processing
+
+- **GIVEN** an anonymise request with a validated override
+- **AND** OR's `updateDecisionMetadata` raises an exception (e.g. relation no longer exists)
+- **WHEN** DocuDesk processes the request
+- **THEN** the response MUST be HTTP 500
+- **AND** no further EntityRelations MUST be PATCHed (atomic: all overrides commit, or none do)
+- **AND** the DocuDesk audit entry MAY remain on disk (it captures operator intent for retry/forensics)
+
+#### Scenario: Multiple overrides commit atomically
+
+- **GIVEN** an anonymise request with two validated overrides
+- **AND** OR's `updateDecisionMetadata` succeeds for both
+- **WHEN** the request processes
+- **THEN** two DocuDesk audit entries MUST be persisted
+- **AND** two OR PATCH operations MUST have committed
+- **AND** the anonymise call MUST be issued with both relations excluded from redaction
 
 ### Requirement: Prohibition matcher reuses the `PolicyMatchService` from `entity-publication-policies`
 
