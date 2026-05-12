@@ -17,7 +17,7 @@
 - [ ] Unit test: state query returns `regex` → banner data is exposed to the view
 - [ ] Unit test: state query returns `openanonymiser` → banner data is suppressed
 - [ ] Unit test: dismissal persists per-admin and survives logout
-- [ ] Component test: deep-link URLs match `/settings/apps/installed/{appid}` shape
+- [ ] Component test: deep-link URLs match `/settings/apps/discover/{appid}` shape
 
 ### Documentation
 - [ ] Screenshot the banner in admin settings (NL + EN) → `docs/screenshots/anonymiser-warning-*.png`

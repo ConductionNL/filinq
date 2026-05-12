@@ -76,19 +76,7 @@ The summary MUST NOT display entities released via `acknowledgedOverrides` from 
 
 The summary MUST include in its header: filename, anonymisation timestamp, operator identifier (Nextcloud user ID), anonymisation tool name ("OpenAnonymiser via OpenRegister"). The summary MUST include in its footer: total count of entities anonymised, count of distinct bases used.
 
-#### Scenario: Summary lists only anonymised + with-bases entities
-
-- **GIVEN** a file with three detected entities — A: anonymised with bases populated; B: anonymised with bases null (legacy); C: detected but released via override (not anonymised)
-- **WHEN** the summary is rendered
-- **THEN** only entity A appears with its bases
-- **AND** entity B appears with the `⟨geen grondslag vastgelegd⟩` placeholder (it WAS anonymised — visible)
-- **AND** entity C does NOT appear in the summary at all
-
-Wait — the previous statement contradicts the requirement. Let me restate clearly:
-
-A row appears in the summary IF AND ONLY IF `EntityRelation.anonymized = true`. The `bases` value drives the displayed grondslag (resolved name, placeholder, or `⟨geen grondslag vastgelegd⟩`). Entities not anonymised do NOT appear.
-
-#### Scenario: Restated — summary includes all anonymised entities, regardless of bases value
+#### Scenario: Summary includes all anonymised entities, regardless of bases value
 
 - **GIVEN** a file with anonymised entities, some with bases populated and some with `bases: null`
 - **WHEN** the summary is rendered

@@ -1,15 +1,6 @@
----
-status: proposed
-related_adrs: [adr-017]
----
-
-# Anonymiser Backend Warning
-
-## Summary
+## Why
 
 When neither an OpenAnonymiser ExApp nor a custom anonymisation endpoint is configured, DocuDesk silently falls back to regex-only entity recognition. Admins do not know that recognition quality is degraded, and they have no in-app guidance toward the two supported backends. This change adds a non-blocking admin warning banner with deep links to the App Store entries for OpenAnonymiser Light (CPU) and OpenAnonymiser (GPU), and a reference to the custom-endpoint alternative configured in OpenRegister.
-
-## Why
 
 - ADR-017 establishes that the user-facing app owns the warning UX for missing AI ExApp backends. DocuDesk is the user-facing app for anonymisation; OpenRegister owns the backend selection but not the discovery prompt.
 - The current behaviour matches Nextcloud's `context_chat` failure mode (silent or log-only) which is widely reported as confusing by admins.

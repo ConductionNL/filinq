@@ -14,7 +14,7 @@ This change also enables the destination convention used by `anonymisation-grond
 
 ## What Changes
 
-- **MODIFIED:** Folder / batch / dossier anonymisation writes redacted outputs to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<original-base>_anonymized.<ext>`. The subfolder name `anonymised` is fixed (lowercase, Dutch spelling — matches dossier-register convention; not configurable in v1).
+- **MODIFIED:** Folder / batch / dossier anonymisation writes redacted outputs to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<original-base>_anonymized.<ext>`. The subfolder name defaults to `anonymised` (lowercase, Dutch spelling — matches dossier-register convention) and is tenant-configurable via `docudesk.anonymisation.output_subfolder_name` — see the **NEW config** bullet below.
 - **MODIFIED:** Within the `anonymised/` subfolder, files keep their original filenames (the `_anonymized` suffix on the filename is dropped — the subfolder name is the signal). Example: `<dossier>/foo.pdf` (original) becomes `<dossier>/anonymised/foo.pdf` (redacted).
 - **UNCHANGED:** Single-file anonymisation. A one-off anonymise of a single file (not part of a folder/batch/dossier flow) continues to write `<file>_anonymized.pdf` in the same folder. Operators that want subfolder layout for single files can wrap them in a folder and use the batch flow.
 - **MODIFIED:** When `<source-folder>/anonymised/` already exists from a previous run, the batch reuses it. Files in the subfolder are overwritten by filename. **No automatic backup of the previous run** — operators that want history rename or move the subfolder before re-running.
