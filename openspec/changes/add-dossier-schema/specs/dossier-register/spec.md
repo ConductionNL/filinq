@@ -32,15 +32,11 @@ The system SHALL define a `dossier` schema with the following properties: `name`
 
 ### Requirement: Base schema defines the Dutch Woo Art. 5 grondslagen vocabulary
 
-The system SHALL define a `base` schema with the following properties: `name` (string, required, end-user-facing Dutch label), `description` (string, required, Dutch explanation referencing Woo Art. 5 and where relevant AVG articles). The schema SHALL be stored under `components.schemas.base` in `docudesk_register.json`, include `slug: "base"` and `configuration.objectNameField: "name"`, and be seeded with the six canonical Woo Art. 5 uitzonderingsgronden as `immutable` seed objects (see Seed Data in design.md).
+The system SHALL define a `base` schema with the following properties: `name` (string, required, end-user-facing Dutch label), `description` (string, required, Dutch explanation referencing Woo Art. 5 and where relevant AVG articles). The schema SHALL be stored under `components.schemas.base` in `docudesk_register.json`, include `slug: "base"` and `configuration.objectNameField: "name"`, and be seeded with the six canonical Woo Art. 5 uitzonderingsgronden (see Seed Data in design.md). The seeded objects are not enforced as immutable in v1 — OpenRegister does not currently gate instance writes by a schema/object flag; the contract is operator-discipline + audit-log.
 
 #### Scenario: All six canonical grondslagen are installed on fresh install
 - **WHEN** DocuDesk is installed on a clean Nextcloud instance
 - **THEN** `GET /api/objects/base` returns exactly six seed objects with slugs `persoonsgegevens`, `bijzondere-persoonsgegevens`, `strafrechtelijk`, `bedrijfs-fabricagegegevens`, `onevenredige-benadeling`, and `nationale-veiligheid`
-
-#### Scenario: Seed grondslagen are immutable
-- **WHEN** a client attempts `PUT /api/objects/base/<uuid-of-seed-persoonsgegevens>` with a changed `name`
-- **THEN** the update is rejected by OpenRegister's immutability check and the seed object remains unchanged
 
 #### Scenario: Tenants can add custom grondslagen alongside the seeded ones
 - **WHEN** a client posts `POST /api/objects/base` with a new `name` and `description` (and no collision with seed slugs)

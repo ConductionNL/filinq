@@ -7,7 +7,7 @@
 
 ## 2. Seed data
 
-- [ ] 2.1 Under `components.objects` (or the envelope's seed-object array), add the six canonical `base` seed objects from design.md's Seed Data table with the exact slugs, Dutch names, and Dutch descriptions. Mark each as `immutable: true` at the object level.
+- [ ] 2.1 Under `components.objects` (or the envelope's seed-object array), add the six canonical `base` seed objects from design.md's Seed Data table with the exact slugs, Dutch names, and Dutch descriptions.
 - [ ] 2.2 Add the five seed `dossier` objects from design.md's Seed Data section (Gemeente Demostad ×2, Conduction B.V. ×1, ReisBureau Zonnestraal ×2). Reference `bases` via the seed `base` UUIDs/slugs exactly as listed. Populate `@self.folder` with the placeholder folder identifiers (`seed-folder-<slug>`) so `RegistersLoader` creates real folders on install.
 - [ ] 2.3 Ensure seed coverage of the two optionality cases: at least one dossier with `bases: []` AND `checkedOn: null` (seed 5 — Zonnestraal incident).
 
@@ -16,7 +16,7 @@
 - [ ] 3.1 Reset the local env (`bash clean-env.sh` or `/clean-env`) and bring the stack up with the default docker-compose profile.
 - [ ] 3.2 Enable DocuDesk. Verify `RegistersLoader` runs without errors by tailing `docker logs nextcloud | grep -i registersloader`.
 - [ ] 3.3 Via `occ`, list registers (`docker exec -u www-data nextcloud php occ openregister:registers:list`) and confirm `dossier` is present with schemas `dossier` and `base`.
-- [ ] 3.4 Call `GET /api/objects/base` (against `localhost:80` with admin/admin) and confirm exactly six immutable seed objects are returned.
+- [ ] 3.4 Call `GET /api/objects/base` (against `localhost:80` with admin/admin) and confirm exactly six seed objects are returned with the canonical slugs.
 - [ ] 3.5 Call `GET /api/objects/dossier` and confirm the five seed dossiers are returned with their correct names, descriptions, `checkedOn` values, and `bases` arrays.
 - [ ] 3.6 Confirm the five seed dossiers have a non-empty `@self.folder` that points to an actual Nextcloud folder (spot-check via `docker exec -u www-data nextcloud php occ files:scan admin` plus `occ files:list`).
 
@@ -26,7 +26,6 @@
 - [ ] 4.2 PUT the same dossier with a different `@self.folder` value. Confirm the stored folder reference updates.
 - [ ] 4.3 Attempt `DELETE /api/objects/base/<uuid-of-persoonsgegevens>` while at least one dossier references it. Confirm OpenRegister blocks the deletion with a referential-integrity error.
 - [ ] 4.4 Attempt `POST /api/objects/dossier` with `bases: ["00000000-0000-0000-0000-000000000000"]`. Confirm OpenRegister returns a validation error identifying the invalid reference.
-- [ ] 4.5 Attempt `PUT /api/objects/base/<uuid-of-persoonsgegevens>` with a changed `name`. Confirm immutability is enforced and the seed value is unchanged.
 
 ## 5. Audit trail verification
 

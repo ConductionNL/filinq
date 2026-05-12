@@ -90,7 +90,7 @@ Both the six `base` objects and the 3–5 seed `dossier` objects are embedded in
 → Mitigation: acceptable for now. Deduplication is a UI concern (show a warning if the target folder already has a dossier). Adding a schema-level uniqueness constraint would require OpenRegister work that isn't justified by current use cases.
 
 **[Grondslag vocabulary drift]** — The six canonical grondslagen are seeded once. If a tenant edits or deletes a seed object, all dossiers referencing it carry a dangling or mutated reference.
-→ Mitigation: mark the seed grondslag objects as `immutable: true` on the `base` schema so the six canonical entries can't be changed after install. Tenants add their own custom grondslagen alongside them — this covers extension without risking the baseline.
+→ Mitigation: accepted residual risk in v1. OpenRegister does not currently enforce per-object or schema-level instance immutability (`Schema.immutable` locks the schema definition, not its instances; `SaveObject` only enforces immutability via archival status). The `slug` field on each seeded object is stable and used by consumer code for icon/colour mapping — referential integrity (`ReferentialIntegrityService`) prevents deletion of a `base` while any dossier references it, which covers the dangling-reference case. Editing-without-deletion remains possible; treated as operator-discipline / audit-log territory. If hard enforcement becomes necessary, open a follow-up OpenRegister change to add per-object immutability semantics on `SaveObject`.
 
 **[Name drift]** — Per D2, the stored name can disagree with the folder name.
 → Mitigation: document the intent (audit stability over liveness) in the schema's `description` so UI builders know not to "helpfully" re-sync names on render.
@@ -104,7 +104,7 @@ Per ADR-016, seed objects cover the three personas: a Dutch municipality ("Gemee
 
 ### `base` register — 6 canonical Woo Art. 5 grondslagen
 
-These are the *fixed* vocabulary from Wet open overheid Art. 5. Shipped as `immutable: true` seed objects so they cannot be edited after install. The `slug` is stable and used by the UI for icon / colour mapping; `name` and `description` are Dutch end-user strings.
+These are the *fixed* vocabulary from Wet open overheid Art. 5. Shipped as seed objects with stable `slug` values used by the UI for icon / colour mapping; `name` and `description` are Dutch end-user strings. No hard immutability enforcement in v1 — OpenRegister does not currently lock instance writes by a schema/object flag (only by archival status). Editing the seeded objects after install is not blocked by code; the contract is operator-discipline + audit-log.
 
 | slug | name (NL) | description (NL, excerpt) |
 |---|---|---|
@@ -169,4 +169,4 @@ Each seed dossier shows a realistic anonymisation scenario and references `base`
 ## Open Questions
 
 - **Folder-level vs. document-level `bases`** — when a dossier has `bases: [persoonsgegevens]` but a single document inside needs an extra grondslag, where does that live? Current answer: ignored for now. Per-document override can be added later via a `bases[]` on the document schema that falls back to the dossier's list.
-- **Immutability of the six canonical `base` objects** — we mark the schema `immutable: true`. Do we want to allow tenants to add *their own* grondslagen in the same register, or force them into a separate "custom-base" register? Current answer: same register. Immutability is per-object (via the `immutable` field on the schema), not per-register; the six seeded entries can be flagged immutable while tenant-created entries remain editable. Validate this assumption during apply; if the schema-level `immutable: true` affects all instances, switch to per-object immutability.
+- **Tenant extensibility of the `base` register** — same register: tenants can add their own grondslagen alongside the six seeded entries. No hard immutability enforcement for the seeded entries in v1 (see Risks → Grondslag vocabulary drift). If a hard lock becomes necessary, open a follow-up OpenRegister change to add per-object immutability on `SaveObject`.
