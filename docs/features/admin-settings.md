@@ -17,7 +17,7 @@ Navigate to **Admin Settings > DocuDesk** in the Nextcloud admin panel.
 
 ## Screenshot
 
-![Admin Settings](../screenshots/admin-settings.png)
+![Admin Settings](/screenshots/admin-settings.png)
 
 ## API
 

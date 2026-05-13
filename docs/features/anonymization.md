@@ -13,7 +13,7 @@ DocuDesk provides a 4-step document anonymization pipeline for GDPR-compliant pr
 
 ## Screenshot
 
-![Anonymization Pipeline](../screenshots/anonymization.png)
+![Anonymization Pipeline](/screenshots/anonymization.png)
 
 ## API Endpoints
 
