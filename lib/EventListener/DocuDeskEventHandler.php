@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\EventListener;
 
 use OCA\DocuDesk\Service\MetadataService;
+use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -62,6 +63,12 @@ class DocuDeskEventHandler
             $logger->warning('DocuDesk: ObjectCreatedEvent received with null object');
             return;
         }
+
+        $this->dispatchPolicyRetroactive(
+            objectData: $object->getObject(),
+            logger: $logger,
+            reason: 'created'
+        );
 
         $enrichmentRunner->enrichObject(
             $object,
@@ -106,6 +113,12 @@ class DocuDeskEventHandler
             $oldObjectData = $oldObject->getObject();
         }
 
+        $this->dispatchPolicyRetroactive(
+            objectData: $objectData,
+            logger: $logger,
+            reason: 'updated'
+        );
+
         if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
             $logger->debug(
                 'DocuDesk: No content change detected, skipping re-enrichment',
@@ -141,6 +154,12 @@ class DocuDeskEventHandler
             return;
         }
 
+        $this->dispatchPolicyRetroactive(
+            objectData: $object->getObject(),
+            logger: $logger,
+            reason: 'deleted'
+        );
+
         $logger->info(
             'DocuDesk: Object deleted',
             [
@@ -151,6 +170,119 @@ class DocuDeskEventHandler
         );
 
     }//end handleObjectDeleted()
+
+
+    /**
+     * Route policy-surface mutations to the retroactive layer.
+     *
+     * Identifies the changed object as a `publicationProhibition` or a
+     * `publicationConsent` (scope=entity / scope=document) using payload-shape
+     * heuristics rather than schema-ID lookups, since:
+     *   - the event's `$object->getSchema()` returns a schema *ID* (numeric),
+     *     not a slug, so we would need an extra DB round-trip per event;
+     *   - the discriminating fields (`reason` + `legalAuthority` for
+     *     prohibitions; `scope` for consents) are stable across versions.
+     *
+     * For non-policy events this is a cheap no-op and returns before allocating
+     * the retroactive service.
+     *
+     * @param array<string, mixed> $objectData The changed object's payload.
+     * @param LoggerInterface      $logger     Structured log sink.
+     * @param string               $reason     'created' | 'updated' | 'deleted'.
+     *
+     * @return void
+     *
+     * @psalm-suppress UnusedParam Both $logger and $reason are used in the conditional branches —
+     *                             Psalm misreads the path coverage through the try/catch.
+     */
+    private function dispatchPolicyRetroactive(
+        array $objectData,
+        LoggerInterface $logger,
+        string $reason
+    ): void {
+        $shape = $this->detectPolicyShape(objectData: $objectData);
+        if ($shape === null) {
+            return;
+        }
+
+        try {
+            $retroactive = \OC::$server->get(PolicyRetroactiveService::class);
+
+            if ($shape === 'prohibition') {
+                if ($reason === 'deleted') {
+                    $retroactive->applyRuleRemoval();
+                    return;
+                }
+
+                $resolved = $retroactive->applyProhibitionMutation(prohibition: $objectData);
+                if ($resolved > 0) {
+                    $logger->info(
+                        'DocuDesk: prohibition mutation force-resolved in-flight records',
+                        ['resolved' => $resolved, 'reason' => $reason]
+                    );
+                }
+
+                return;
+            }
+
+            if ($shape === 'standing_consent') {
+                if ($reason === 'deleted') {
+                    $retroactive->applyRuleRemoval();
+                    return;
+                }
+
+                $retroactive->applyStandingConsentMutation();
+                return;
+            }
+
+            // Document_consent shape (workflow record): not a policy rule, no-op.
+        } catch (\Exception $e) {
+            $logger->warning(
+                'DocuDesk: retroactive policy dispatch failed',
+                ['error' => $e->getMessage(), 'reason' => $reason]
+            );
+        }//end try
+
+    }//end dispatchPolicyRetroactive()
+
+
+    /**
+     * Classify a payload as a policy record by structural signature.
+     *
+     * @param array<string, mixed> $objectData The changed object's payload.
+     *
+     * @return string|null 'prohibition', 'standing_consent', 'document_consent', or null.
+     */
+    private function detectPolicyShape(array $objectData): ?string
+    {
+        // A prohibition is identified by the combination of `reason` + `matchRules`
+        // and the absence of a `consentStatus` field (consent records always carry it).
+        $hasMatchRules     = isset($objectData['matchRules']) === true
+            && is_array($objectData['matchRules']) === true
+            && count($objectData['matchRules']) > 0;
+        $hasReason         = isset($objectData['reason']) === true && (string) $objectData['reason'] !== '';
+        $hasLegalAuthority = isset($objectData['legalAuthority']) === true;
+        $hasConsentStatus  = isset($objectData['consentStatus']) === true;
+
+        if ($hasMatchRules === true
+            && ($hasReason === true || $hasLegalAuthority === true)
+            && $hasConsentStatus === false
+        ) {
+            return 'prohibition';
+        }
+
+        if ($hasConsentStatus === true) {
+            $scope = (string) ($objectData['scope'] ?? 'document');
+            if ($scope === 'entity') {
+                return 'standing_consent';
+            }
+
+            return 'document_consent';
+        }
+
+        return null;
+
+    }//end detectPolicyShape()
 
 
     /**
