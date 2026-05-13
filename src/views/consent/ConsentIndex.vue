@@ -6,10 +6,10 @@ import { consentStore, navigationStore } from '../../store/store.js'
 <template>
 	<CnIndexPage
 		ref="indexPage"
-		:title="t('docudesk', 'Consent Management')"
-		:description="t('docudesk', 'Manage publication consent records for detected entities')"
+		:title="t('docudesk', 'Consent Workflow')"
+		:description="t('docudesk', 'Per-document consent records produced by the publication-clearance workflow.')"
 		:show-title="true"
-		:objects="consentStore.consents"
+		:objects="workflowConsents"
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
@@ -62,6 +62,16 @@ import { consentStore, navigationStore } from '../../store/store.js'
 					horizontal
 					show-zero-count />
 			</div>
+		</template>
+
+		<!-- Entity text with policy-pre-empted indicator -->
+		<template #column-entityText="{ row }">
+			<span>{{ row.entityText }}</span>
+			<CnStatusBadge
+				v-if="row.policyMatch"
+				class="policy-preempted-badge"
+				:label="t('docudesk', 'policy')"
+				:color-map="{ [t('docudesk', 'policy')]: 'primary' }" />
 		</template>
 
 		<!-- Entity type badge -->
@@ -174,8 +184,12 @@ export default {
 				{ key: 'publicationDecision', label: t('docudesk', 'Decision'), sortable: true },
 			]
 		},
+		// Workflow records only — scope:"entity" rows live on the Standing Consents page.
+		workflowConsents() {
+			return consentStore.consents.filter(c => (c.scope || 'document') === 'document')
+		},
 		paginationData() {
-			const total = consentStore.consents.length
+			const total = this.workflowConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
@@ -251,5 +265,8 @@ export default {
 	gap: 16px;
 	margin-bottom: 16px;
 	flex-wrap: wrap;
+}
+.policy-preempted-badge {
+	margin-left: 8px;
 }
 </style>
