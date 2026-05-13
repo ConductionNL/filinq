@@ -7,6 +7,9 @@
 use OCP\Util;
 
 $appId = OCA\DocuDesk\AppInfo\Application::APP_ID;
+// Shared chunks must load before the entry — see webpack.config.js splitChunks.
+Util::addScript($appId, $appId . '-shared-vendor');
+Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-settings');
 Util::addStyle($appId, 'main');
 
