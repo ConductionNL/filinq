@@ -2,9 +2,24 @@ import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
+/**
+ * The six canonical Woo Art. 5 grondslagen (seeded by Wave 1.1's
+ * `add-dossier-schema` change). Used as the multi-select options on the
+ * dossier-creation step.
+ */
+const WOO_BASES = [
+	'persoonsgegevens',
+	'bijzondere-persoonsgegevens',
+	'strafrechtelijk',
+	'bedrijfs-fabricagegegevens',
+	'onevenredige-benadeling',
+	'nationale-veiligheid',
+]
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
 		folderPath: '',
+		folderId: null,
 		batchId: null,
 		batchStatus: null,
 		files: [],
@@ -16,12 +31,32 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		processing: false,
 		pollTimer: null,
 		minConfidence: 0.0,
+
+		// Wave 4a (anonymisation-grondslagen-summary) state.
+		// Operator can optionally create a dossier for the chosen folder so
+		// the per-dossier grondslagen report has something to operate on.
+		dossier: {
+			uuid: null,
+			name: '',
+			description: '',
+			bases: ['persoonsgegevens'],
+			creating: false,
+			error: null,
+		},
+		appendBasisSummary: true,
+		report: {
+			generating: false,
+			result: null,
+			error: null,
+		},
 	}),
 	getters: {
 		isActive: (state) => state.batchId !== null,
 		selectedEntityCount: (state) => state.entities.filter((e) => e.included).length,
 		filesWithEntities: (state) => state.files.filter((f) => (f.entityCount || 0) > 0).length,
 		extractedCount: (state) => state.files.filter((f) => f.status === 'extracted' || f.status === 'error').length,
+		basesOptions: () => WOO_BASES,
+		hasDossier: (state) => state.dossier.uuid !== null,
 	},
 	actions: {
 		async startFolderBatch(folderPath) {
@@ -34,15 +69,62 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					{ folderPath },
 				)
 				this.batchId = r.data.batchId
+				this.folderId = r.data.folderId || null
 				this.files = r.data.files || []
 				this.totalFiles = r.data.fileCount || this.files.length
 				this.batchStatus = 'extracting'
+
+				// Default the dossier name to the folder's basename so the
+				// operator just hits "Create" if they're happy with defaults.
+				if (!this.dossier.name) {
+					this.dossier.name = this.folderPath.split('/').filter(Boolean).pop() || this.folderPath
+				}
+
 				this.startPolling()
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
 				this.batchStatus = 'error'
 			} finally {
 				this.processing = false
+			}
+		},
+
+		/**
+		 * Create a dossier bound to the current folder.
+		 *
+		 * Issues a POST to OR's generic object-create endpoint, with
+		 * `@self.folder` set to the folder's node id so subsequent
+		 * `renderDossierSummary` calls find the right files. Bases are
+		 * defaulted to ['persoonsgegevens'] but the operator can multi-select
+		 * from the six canonical Woo Art. 5 grondslagen.
+		 */
+		async createDossier() {
+			if (!this.folderId) {
+				this.dossier.error = 'No folder bound yet — start the folder batch first.'
+				return
+			}
+			this.dossier.creating = true
+			this.dossier.error = null
+			try {
+				const payload = {
+					name: this.dossier.name || this.folderPath || 'Dossier',
+					description: this.dossier.description || '',
+					bases: this.dossier.bases || [],
+					'@self': { folder: String(this.folderId) },
+				}
+				const r = await axios.post(
+					generateUrl('/apps/openregister/api/objects/dossier/dossier'),
+					payload,
+				)
+				const data = r.data
+				this.dossier.uuid = data?.['@self']?.id || data?.id || data?.uuid || null
+				if (!this.dossier.uuid) {
+					this.dossier.error = 'Dossier created but UUID not found in response.'
+				}
+			} catch (e) {
+				this.dossier.error = e.response?.data?.error || e.message
+			} finally {
+				this.dossier.creating = false
 			}
 		},
 
@@ -114,7 +196,12 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence }))
 				await axios.post(
 					generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/anonymize'),
-					{ entities: selected },
+					{
+						entities: selected,
+						// Wave 4a flag — when true, each per-file anonymise call
+						// gets a grondslagen-summary page appended to its output.
+						appendBasisSummary: this.appendBasisSummary,
+					},
 				)
 				this.batchStatus = 'completed'
 			} catch (e) {
@@ -122,6 +209,33 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				this.batchStatus = 'error'
 			} finally {
 				this.processing = false
+			}
+		},
+
+		/**
+		 * Trigger the per-dossier grondslagen report regeneration.
+		 *
+		 * Only meaningful when a dossier has been created via
+		 * {@link createDossier}; without a dossier UUID the button stays
+		 * disabled on the view side.
+		 */
+		async generateDossierReport() {
+			if (!this.dossier.uuid) {
+				this.report.error = 'No dossier UUID — create a dossier first.'
+				return
+			}
+			this.report.generating = true
+			this.report.error = null
+			this.report.result = null
+			try {
+				const r = await axios.post(
+					generateUrl('/apps/docudesk/api/anonymization/dossier/' + this.dossier.uuid + '/grondslagen-pdf'),
+				)
+				this.report.result = r.data
+			} catch (e) {
+				this.report.error = e.response?.data?.error || e.message
+			} finally {
+				this.report.generating = false
 			}
 		},
 
@@ -133,6 +247,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			this.stopPolling()
 			Object.assign(this, {
 				folderPath: '',
+				folderId: null,
 				batchId: null,
 				batchStatus: null,
 				files: [],
@@ -143,6 +258,20 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				error: null,
 				processing: false,
 				minConfidence: 0.0,
+				dossier: {
+					uuid: null,
+					name: '',
+					description: '',
+					bases: ['persoonsgegevens'],
+					creating: false,
+					error: null,
+				},
+				appendBasisSummary: true,
+				report: {
+					generating: false,
+					result: null,
+					error: null,
+				},
 			})
 		},
 	},
