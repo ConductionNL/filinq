@@ -172,23 +172,41 @@ class ConsentUpdateHandler
             return;
         }
 
-        if (array_key_exists('consentStatus', $data) === false) {
+        // Guard the two operator-controlled transition fields. The
+        // prohibition lock applies to BOTH `consentStatus` AND
+        // `publicationDecision` — a record that's been pre-empted by a
+        // policy match must not be coaxed into "publish" via either
+        // field. Without this both-fields check, a PATCH carrying only
+        // `publicationDecision: "publish"` would bypass the lock.
+        $consentStatusChanged       = (
+            array_key_exists('consentStatus', $data) === true
+            && (string) $data['consentStatus'] !== (string) ($existing['consentStatus'] ?? '')
+        );
+        $publicationDecisionChanged = (
+            array_key_exists('publicationDecision', $data) === true
+            && (string) $data['publicationDecision'] !== (string) ($existing['publicationDecision'] ?? '')
+        );
+
+        if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
             return;
         }
 
-        $existingStatus = (string) ($existing['consentStatus'] ?? '');
-        $proposedStatus = (string) $data['consentStatus'];
-
-        if ($proposedStatus === $existingStatus) {
-            return;
+        if ($consentStatusChanged === true) {
+            $rejectedField = 'consentStatus';
+        } else {
+            $rejectedField = 'publicationDecision';
         }
+
+        $rejectedValue = (string) $data[$rejectedField];
+        $currentValue  = (string) ($existing[$rejectedField] ?? '');
 
         throw new InvalidArgumentException(
-            sprintf(
-                'consentStatus "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
-                $proposedStatus,
+            message: sprintf(
+                '%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
+                $rejectedField,
+                $rejectedValue,
                 (string) $existingMatch,
-                $existingStatus
+                $currentValue
             )
         );
 

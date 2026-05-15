@@ -171,6 +171,8 @@ import { consentStore, navigationStore } from '../../store/store.js'
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
@@ -265,28 +267,24 @@ export default {
 			}
 
 			try {
-				const resp = await fetch(OC.generateUrl(`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`), {
-					headers: { Accept: 'application/json' },
-				})
-				if (resp.ok) {
-					this.policyMatchKind = 'prohibition'
-					this.anonymiseToggle = true
-					return
-				}
+				await axios.get(
+					generateUrl(`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`),
+				)
+				this.policyMatchKind = 'prohibition'
+				this.anonymiseToggle = true
+				return
 			} catch (err) {
-				// Falls through to standing-consent probe.
+				// 404 / other → falls through to standing-consent probe.
 			}
 
 			try {
-				const resp = await fetch(OC.generateUrl(`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`), {
-					headers: { Accept: 'application/json' },
-				})
-				if (resp.ok) {
-					this.policyMatchKind = 'standing_consent'
-					// Default OFF for standing consent; user may override.
-					this.anonymiseToggle = (item.publicationDecision === 'anonymize')
-					return
-				}
+				await axios.get(
+					generateUrl(`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`),
+				)
+				this.policyMatchKind = 'standing_consent'
+				// Default OFF for standing consent; user may override.
+				this.anonymiseToggle = (item.publicationDecision === 'anonymize')
+				return
 			} catch (err) {
 				// Dangling reference — fall through to legacy.
 			}

@@ -114,11 +114,13 @@ import { standingConsentStore } from '../../store/store.js'
 				<NcSelect
 					v-model="form.entityType"
 					:options="entityTypeOptions"
+					:input-label="t('docudesk', 'Entity type')"
 					:label="t('docudesk', 'Entity type')"
 					required />
 				<NcSelect
 					v-model="form.consentMethod"
 					:options="consentMethodOptions"
+					:input-label="t('docudesk', 'Consent method')"
 					:label="t('docudesk', 'Consent method')"
 					required />
 				<NcTextField
@@ -154,6 +156,7 @@ import { standingConsentStore } from '../../store/store.js'
 					<NcSelect
 						v-model="rule.type"
 						:options="matchTypeOptions"
+						:input-label="t('docudesk', 'Match type')"
 						:label="t('docudesk', 'Match type')" />
 					<NcTextField
 						:value.sync="rule.value"

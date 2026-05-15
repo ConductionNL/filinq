@@ -1,6 +1,14 @@
 # Wave 1 Smoke-Test Checklist
 
-Use this to validate all four Wave 1 changes against a live dev stack before promoting to Wave 2. Commands assume the standard dev compose (`master-nextcloud-1` container, admin/admin, host port 8080).
+Use this to validate all four Wave 1 changes against a live dev stack before promoting to Wave 2. Commands assume the standard dev compose (`master-nextcloud-1` container, host port 8080). Set the following env vars before running any HTTP example below — never commit real credentials into a snippet:
+
+```bash
+export NC_USER="<your-test-admin-user>"
+export NC_PASS="<your-test-admin-password>"
+export NC_BASE="http://localhost:8080"
+```
+
+Any reference to `admin` / `admin` in this document below refers to the **local dev defaults** of the example compose stack and must NOT be used against a production deployment.
 
 **Branches under test:**
 - DD `feat/110/add-dossier-schema-impl` (Wave 1.1)

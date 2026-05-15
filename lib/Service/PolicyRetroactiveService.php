@@ -242,11 +242,19 @@ class PolicyRetroactiveService
                 'OCA\OpenRegister\Service\ObjectService'
             );
 
+            // Push the scope filter down to the DB. The schema is shared
+            // with scope=entity (standing-consent) records, so a naive
+            // `findAll(register, schema)` loads every consent row across
+            // every tenant / every file and discards most in PHP. Adding
+            // `scope=document` to the filter bounds the result set to
+            // what this method actually needs. The defensive PHP scope
+            // check below is retained as a belt-and-braces.
             $result = $objectService->findAll(
                 config: [
                     'filters' => [
                         'register' => 'consent',
                         'schema'   => 'publicationConsent',
+                        'scope'    => 'document',
                     ],
                 ],
                 _rbac: false

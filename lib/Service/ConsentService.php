@@ -375,17 +375,14 @@ class ConsentService
 
             $consentObject = $this->firstObject(result: $consentHits);
             if ($consentObject === null) {
-                $this->logger->warning(
-                    'ConsentService: policyMatch UUID does not resolve to any policy record',
-                    ['policyMatch' => $uuid]
-                );
-                return;
+                $msg = 'policyMatch UUID "%s" does not resolve to a known prohibition or entity-scope publicationConsent record.';
+                throw new InvalidArgumentException(message: sprintf($msg, $uuid));
             }
 
             $referentScope = (string) ($consentObject['scope'] ?? 'document');
             if ($referentScope !== 'entity') {
                 throw new InvalidArgumentException(
-                    sprintf(
+                    message: sprintf(
                         'policyMatch points at a publicationConsent with scope=%s; only entity-scope records are permitted.',
                         $referentScope
                     )
@@ -394,9 +391,23 @@ class ConsentService
         } catch (InvalidArgumentException $e) {
             throw $e;
         } catch (Exception $e) {
-            $this->logger->warning(
-                'ConsentService: policyMatch referent lookup failed — letting the write proceed',
+            // Treat lookup failure as a hard error rather than a silent
+            // pass — a write referencing a `policyMatch` we cannot
+            // validate must not be persisted, even if the underlying
+            // ObjectService threw an infrastructure error. Surfacing
+            // the failure (mapped to HTTP 5xx by the controller) is
+            // strictly safer than masking it with a warning log.
+            $this->logger->error(
+                'ConsentService: policyMatch referent lookup failed — rejecting write',
                 ['policyMatch' => $uuid, 'error' => $e->getMessage()]
+            );
+            throw new InvalidArgumentException(
+                message: sprintf(
+                    'policyMatch UUID "%s" could not be validated against the policy registry: %s',
+                    $uuid,
+                    $e->getMessage()
+                ),
+                previous: $e
             );
         }//end try
 

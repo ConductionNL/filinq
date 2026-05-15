@@ -43,11 +43,14 @@ class DocuDeskEventHandler
     /**
      * Handles object creation events
      *
-     * @param ObjectCreatedEvent $event            The creation event
-     * @param MetadataService    $metadataService  The metadata service
-     * @param SettingsService    $settingsService  The settings service
-     * @param LoggerInterface    $logger           The logger instance
-     * @param EnrichmentRunner   $enrichmentRunner The enrichment runner
+     * @param ObjectCreatedEvent       $event            The creation event
+     * @param MetadataService          $metadataService  The metadata service
+     * @param SettingsService          $settingsService  The settings service
+     * @param LoggerInterface          $logger           The logger instance
+     * @param EnrichmentRunner         $enrichmentRunner The enrichment runner
+     * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator
+     *                                                   (injected here, not via
+     *                                                   service-locator).
      *
      * @return void
      */
@@ -56,7 +59,8 @@ class DocuDeskEventHandler
         MetadataService $metadataService,
         SettingsService $settingsService,
         LoggerInterface $logger,
-        EnrichmentRunner $enrichmentRunner
+        EnrichmentRunner $enrichmentRunner,
+        PolicyRetroactiveService $retroactive
     ): void {
         $object = $event->getObject();
         if ($object === null) {
@@ -67,7 +71,8 @@ class DocuDeskEventHandler
         $this->dispatchPolicyRetroactive(
             objectData: $object->getObject(),
             logger: $logger,
-            reason: 'created'
+            reason: 'created',
+            retroactive: $retroactive
         );
 
         $enrichmentRunner->enrichObject(
@@ -84,11 +89,12 @@ class DocuDeskEventHandler
     /**
      * Handles object update events
      *
-     * @param ObjectUpdatedEvent $event            The update event
-     * @param MetadataService    $metadataService  The metadata service
-     * @param SettingsService    $settingsService  The settings service
-     * @param LoggerInterface    $logger           The logger instance
-     * @param EnrichmentRunner   $enrichmentRunner The enrichment runner
+     * @param ObjectUpdatedEvent       $event            The update event
+     * @param MetadataService          $metadataService  The metadata service
+     * @param SettingsService          $settingsService  The settings service
+     * @param LoggerInterface          $logger           The logger instance
+     * @param EnrichmentRunner         $enrichmentRunner The enrichment runner
+     * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator.
      *
      * @return void
      */
@@ -97,7 +103,8 @@ class DocuDeskEventHandler
         MetadataService $metadataService,
         SettingsService $settingsService,
         LoggerInterface $logger,
-        EnrichmentRunner $enrichmentRunner
+        EnrichmentRunner $enrichmentRunner,
+        PolicyRetroactiveService $retroactive
     ): void {
         $object    = $event->getNewObject();
         $oldObject = $event->getOldObject();
@@ -116,7 +123,8 @@ class DocuDeskEventHandler
         $this->dispatchPolicyRetroactive(
             objectData: $objectData,
             logger: $logger,
-            reason: 'updated'
+            reason: 'updated',
+            retroactive: $retroactive
         );
 
         if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
@@ -141,13 +149,17 @@ class DocuDeskEventHandler
     /**
      * Handles object deletion events
      *
-     * @param ObjectDeletedEvent $event  The deletion event
-     * @param LoggerInterface    $logger The logger instance
+     * @param ObjectDeletedEvent       $event       The deletion event
+     * @param LoggerInterface          $logger      The logger instance
+     * @param PolicyRetroactiveService $retroactive Retroactive policy applicator.
      *
      * @return void
      */
-    public function handleObjectDeleted(ObjectDeletedEvent $event, LoggerInterface $logger): void
-    {
+    public function handleObjectDeleted(
+        ObjectDeletedEvent $event,
+        LoggerInterface $logger,
+        PolicyRetroactiveService $retroactive
+    ): void {
         $object = $event->getObject();
         if ($object === null) {
             $logger->warning('DocuDesk: ObjectDeletedEvent received with null object');
@@ -157,7 +169,8 @@ class DocuDeskEventHandler
         $this->dispatchPolicyRetroactive(
             objectData: $object->getObject(),
             logger: $logger,
-            reason: 'deleted'
+            reason: 'deleted',
+            retroactive: $retroactive
         );
 
         $logger->info(
@@ -183,12 +196,14 @@ class DocuDeskEventHandler
      *   - the discriminating fields (`reason` + `legalAuthority` for
      *     prohibitions; `scope` for consents) are stable across versions.
      *
-     * For non-policy events this is a cheap no-op and returns before allocating
-     * the retroactive service.
+     * For non-policy events this is a cheap no-op and returns immediately.
      *
-     * @param array<string, mixed> $objectData The changed object's payload.
-     * @param LoggerInterface      $logger     Structured log sink.
-     * @param string               $reason     'created' | 'updated' | 'deleted'.
+     * @param array<string, mixed>     $objectData  The changed object's payload.
+     * @param LoggerInterface          $logger      Structured log sink.
+     * @param string                   $reason      'created' | 'updated' | 'deleted'.
+     * @param PolicyRetroactiveService $retroactive Retroactive policy applicator
+     *                                              (constructor/method-injected at
+     *                                              the calling public handler).
      *
      * @return void
      *
@@ -198,7 +213,8 @@ class DocuDeskEventHandler
     private function dispatchPolicyRetroactive(
         array $objectData,
         LoggerInterface $logger,
-        string $reason
+        string $reason,
+        PolicyRetroactiveService $retroactive
     ): void {
         $shape = $this->detectPolicyShape(objectData: $objectData);
         if ($shape === null) {
@@ -206,8 +222,6 @@ class DocuDeskEventHandler
         }
 
         try {
-            $retroactive = \OC::$server->get(PolicyRetroactiveService::class);
-
             if ($shape === 'prohibition') {
                 if ($reason === 'deleted') {
                     $retroactive->applyRuleRemoval();
