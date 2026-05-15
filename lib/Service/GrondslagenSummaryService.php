@@ -258,12 +258,416 @@ class GrondslagenSummaryService
      */
     public function renderDossierSummary(string $dossierUuid): File
     {
-        // Phase 5 will implement: resolve dossier → folder → walk files →
-        // load entities per file → aggregate → render
-        // summary_per_dossier.twig → save → update dossier config.
-        throw new RuntimeException('GrondslagenSummaryService::renderDossierSummary — not yet implemented (phase 5).');
+        $dossier = $this->loadDossierContext(dossierUuid: $dossierUuid);
+
+        $folder = $this->resolveDossierFolder(folderRef: ($dossier['folderRef'] ?? null));
+
+        $perFile = $this->walkDossierFiles(folder: $folder);
+
+        // Build the union of all base references used across files so the
+        // dossier-level render gets a single resolved-label map.
+        $allRefs = [];
+        foreach ($perFile as $fileRow) {
+            foreach (($fileRow['entities'] ?? []) as $entity) {
+                foreach (($entity['bases'] ?? []) as $ref) {
+                    $allRefs[(string) $ref] = true;
+                }
+            }
+        }
+
+        $labelMap = $this->resolveBaseLabels(baseRefs: array_keys($allRefs));
+
+        $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: $labelMap);
+
+        $data = [
+            'dossier'     => [
+                'name'        => (string) ($dossier['name'] ?? ''),
+                'description' => (string) ($dossier['description'] ?? ''),
+                'checkedOn'   => (string) ($dossier['checkedOn'] ?? ''),
+            ],
+            'generatedAt' => date('c'),
+            'perDocument' => $aggregated['perDocument'],
+            'perBasis'    => $aggregated['perBasis'],
+            'totals'      => $aggregated['totals'],
+        ];
+
+        try {
+            $pdfBytes = $this->pdfService->renderPdf(
+                templateContent: $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER),
+                data: $data,
+                options: ['pdfa' => true, 'title' => 'Grondslagen-rapportage']
+            );
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: per-dossier render failed for '.$dossierUuid.': '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        $summaryFile = $this->saveDossierSummary(folder: $folder, pdfBytes: $pdfBytes);
+
+        $this->updateDossierConfiguration(
+            dossierUuid: $dossierUuid,
+            summaryFileId: $summaryFile->getId()
+        );
+
+        $this->logger->info(
+            'GrondslagenSummaryService: rendered per-dossier summary',
+            [
+                'dossierUuid'   => $dossierUuid,
+                'summaryFileId' => $summaryFile->getId(),
+                'fileCount'     => count($perFile),
+                'totalEntities' => $aggregated['totals']['entityCount'],
+            ]
+        );
+
+        return $summaryFile;
 
     }//end renderDossierSummary()
+
+
+    /**
+     * Load the minimum dossier context the renderer needs.
+     *
+     * @param string $dossierUuid The OR object UUID.
+     *
+     * @return array<string, mixed> `{name, description, checkedOn, folderRef, configuration}`.
+     *
+     * @throws RuntimeException When the dossier cannot be resolved.
+     */
+    private function loadDossierContext(string $dossierUuid): array
+    {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            throw new RuntimeException('Grondslagen summary: OpenRegister ObjectService unavailable.');
+        }
+
+        try {
+            $object = $objectService->find(
+                id: $dossierUuid,
+                register: 'dossier',
+                schema: 'dossier',
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to load dossier '.$dossierUuid.': '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        if ($object === null) {
+            throw new RuntimeException('Grondslagen summary: dossier not found: '.$dossierUuid);
+        }
+
+        $payload = (array) $object;
+        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            $payload = $object->getObject();
+        }
+
+        $self      = ($payload['@self'] ?? []);
+        $folderRef = ($self['folder'] ?? null);
+
+        return [
+            'name'          => (string) ($payload['name'] ?? ''),
+            'description'   => (string) ($payload['description'] ?? ''),
+            'checkedOn'     => (string) ($payload['checkedOn'] ?? ''),
+            'folderRef'     => $folderRef,
+            'configuration' => ($payload['configuration'] ?? []),
+        ];
+
+    }//end loadDossierContext()
+
+
+    /**
+     * Resolve the dossier's `@self.folder` reference to a Nextcloud Folder node.
+     *
+     * @param mixed $folderRef The raw reference value — typically a file-node id (int/string).
+     *
+     * @return Folder The dossier's folder.
+     *
+     * @throws RuntimeException When the reference cannot be resolved.
+     */
+    private function resolveDossierFolder(mixed $folderRef): Folder
+    {
+        if ($folderRef === null || $folderRef === '') {
+            throw new RuntimeException('Grondslagen summary: dossier has no @self.folder reference.');
+        }
+
+        try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                throw new RuntimeException('Grondslagen summary: no session user to resolve folder.');
+            }
+
+            $userFolder = $this->rootFolder->getUserFolder($user->getUID());
+            $nodes      = $userFolder->getById((int) $folderRef);
+            $node       = ($nodes[0] ?? null);
+            if ($node === null) {
+                throw new RuntimeException(
+                    'Grondslagen summary: folder node id '.((string) $folderRef).' not found for user '.$user->getUID()
+                );
+            }
+        } catch (NotFoundException $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: dossier folder not found ('.((string) $folderRef).'): '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        if (($node instanceof Folder) === false) {
+            throw new RuntimeException(
+                'Grondslagen summary: dossier @self.folder ('.((string) $folderRef).') is not a folder node.'
+            );
+        }
+
+        return $node;
+
+    }//end resolveDossierFolder()
+
+
+    /**
+     * Walk every file under the dossier folder and collect its anonymised entities.
+     *
+     * Folders found inside the dossier folder are recursed; the summary
+     * subfolder produced by Wave 2's `anonymisation-output-folder-layout`
+     * (`anonymised/`) is skipped — it contains the redacted *outputs*,
+     * whereas the EntityRelation rows are keyed by the source file ids.
+     *
+     * @param Folder $folder The dossier folder.
+     *
+     * @return array<int, array{fileId: int, filename: string, entities: array<int, array<string, mixed>>}>
+     */
+    private function walkDossierFiles(Folder $folder): array
+    {
+        $rows = [];
+        foreach ($folder->getDirectoryListing() as $node) {
+            if ($node instanceof Folder) {
+                if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
+                    continue;
+                }
+
+                $rows = array_merge($rows, $this->walkDossierFiles(folder: $node));
+                continue;
+            }
+
+            if (($node instanceof File) === false) {
+                continue;
+            }
+
+            $entities = $this->loadAnonymisedEntitiesForFile(fileId: $node->getId());
+            if (count($entities) === 0) {
+                continue;
+            }
+
+            $rows[] = [
+                'fileId'   => $node->getId(),
+                'filename' => $node->getName(),
+                'entities' => $entities,
+            ];
+        }//end foreach
+
+        return $rows;
+
+    }//end walkDossierFiles()
+
+
+    /**
+     * Build the aggregate tables the per-dossier template renders.
+     *
+     * @param array<int, mixed>     $perFile  Per-file rows from {@see walkDossierFiles}
+     *                                        — each entry shaped as `{fileId, filename,
+     *                                        entities[]}`.
+     * @param array<string, string> $labelMap Map of base-ref → human-readable label.
+     *
+     * @return array<string, mixed> Shape:
+     *                              `{ perDocument: array, perBasis: array,
+     *                                 totals: { documentCount, entityCount, distinctBasesCount } }`.
+     */
+    private function aggregateForDossier(array $perFile, array $labelMap): array
+    {
+        $perDocument       = [];
+        $basisDocumentSets = [];
+        $basisEntityCounts = [];
+        $totalEntities     = 0;
+        $distinctBasisRefs = [];
+
+        foreach ($perFile as $fileRow) {
+            $perFileBases = [];
+            $entityCount  = 0;
+
+            foreach (($fileRow['entities'] ?? []) as $entity) {
+                $entityCount++;
+                $totalEntities++;
+
+                foreach (($entity['bases'] ?? []) as $ref) {
+                    $key = (string) $ref;
+                    $perFileBases[$key] = (($perFileBases[$key] ?? 0) + 1);
+                    $basisDocumentSets[$key][$fileRow['fileId']] = true;
+                    $basisEntityCounts[$key] = (($basisEntityCounts[$key] ?? 0) + 1);
+                    $distinctBasisRefs[$key] = true;
+                }
+            }
+
+            $basesWithCounts = [];
+            foreach ($perFileBases as $ref => $count) {
+                $basesWithCounts[] = [
+                    'name'  => ($labelMap[$ref] ?? $ref),
+                    'count' => $count,
+                ];
+            }
+
+            $perDocument[] = [
+                'fileId'          => $fileRow['fileId'],
+                'filename'        => $fileRow['filename'],
+                'entityCount'     => $entityCount,
+                'basesWithCounts' => $basesWithCounts,
+            ];
+        }//end foreach
+
+        $perBasis = [];
+        foreach ($basisEntityCounts as $ref => $entityCount) {
+            $perBasis[] = [
+                'ref'           => $ref,
+                'name'          => ($labelMap[$ref] ?? $ref),
+                'documentCount' => count(($basisDocumentSets[$ref] ?? [])),
+                'entityCount'   => $entityCount,
+            ];
+        }
+
+        return [
+            'perDocument' => $perDocument,
+            'perBasis'    => $perBasis,
+            'totals'      => [
+                'documentCount'      => count($perDocument),
+                'entityCount'        => $totalEntities,
+                'distinctBasesCount' => count($distinctBasisRefs),
+            ],
+        ];
+
+    }//end aggregateForDossier()
+
+
+    /**
+     * Save the rendered per-dossier summary PDF.
+     *
+     * Destination convention: `<dossier-folder>/grondslagen.pdf`. Wave 2
+     * (`anonymisation-output-folder-layout`) will introduce a
+     * `<dossier-folder>/anonymised/` subfolder; this method will follow
+     * that convention once the helper from Wave 2 lands. For v1, we use
+     * the flat path inside the dossier folder.
+     *
+     * @param Folder $folder   The dossier folder.
+     * @param string $pdfBytes The freshly-rendered PDF bytes.
+     *
+     * @return File The newly-written / refreshed summary file.
+     *
+     * @throws RuntimeException On write failure.
+     */
+    private function saveDossierSummary(Folder $folder, string $pdfBytes): File
+    {
+        $name = 'grondslagen.pdf';
+
+        try {
+            if ($folder->nodeExists($name) === true) {
+                $existing = $folder->get($name);
+                if ($existing instanceof File) {
+                    $existing->putContent($pdfBytes);
+                    return $existing;
+                }
+            }
+
+            $newFile = $folder->newFile(path: $name, content: $pdfBytes);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to write '.$name.' to dossier folder: '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        if (($newFile instanceof File) === false) {
+            throw new RuntimeException(
+                'Grondslagen summary: newFile() did not return a File instance for '.$name
+            );
+        }
+
+        return $newFile;
+
+    }//end saveDossierSummary()
+
+
+    /**
+     * Update the dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}`.
+     *
+     * Failure is logged but does not roll back the rendered file — the PDF
+     * is on disk and the operator can find it; the metadata refresh is
+     * convenience for the dossier UI's freshness-badge.
+     *
+     * @param string $dossierUuid   The OR dossier object UUID.
+     * @param int    $summaryFileId The newly-written summary file's NC node id.
+     *
+     * @return void
+     */
+    private function updateDossierConfiguration(string $dossierUuid, int $summaryFileId): void
+    {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: cannot update dossier configuration — ObjectService unavailable',
+                ['dossierUuid' => $dossierUuid]
+            );
+            return;
+        }
+
+        try {
+            $object = $objectService->find(
+                id: $dossierUuid,
+                register: 'dossier',
+                schema: 'dossier',
+                _rbac: false,
+                _multitenancy: false
+            );
+            if ($object === null) {
+                return;
+            }
+
+            $payload = (array) $object;
+            if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+                $payload = $object->getObject();
+            }
+
+            $configuration = [];
+            if (is_array(($payload['configuration'] ?? null)) === true) {
+                $configuration = $payload['configuration'];
+            }
+
+            $grondslagen = [];
+            if (is_array(($configuration['grondslagen'] ?? null)) === true) {
+                $grondslagen = $configuration['grondslagen'];
+            }
+
+            $grondslagen['fileId']          = $summaryFileId;
+            $grondslagen['lastGeneratedAt'] = date('c');
+            $configuration['grondslagen']   = $grondslagen;
+            $payload['configuration']       = $configuration;
+
+            $objectService->saveObject(
+                object: $payload,
+                register: 'dossier',
+                schema: 'dossier',
+                uuid: $dossierUuid,
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: failed to update dossier configuration.grondslagen',
+                ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
+            );
+        }//end try
+
+    }//end updateDossierConfiguration()
 
 
     /**
@@ -493,7 +897,9 @@ class GrondslagenSummaryService
 
             // FPDI extends FPDF; Output() is inherited from FPDF and Psalm
             // lacks stubs for it. When dest is 'S' it returns the PDF bytes.
-            /** @psalm-suppress UndefinedMethod */
+            /*
+             * @psalm-suppress UndefinedMethod
+             */
             return (string) $pdf->Output('S');
         } catch (Exception $e) {
             throw new RuntimeException(
