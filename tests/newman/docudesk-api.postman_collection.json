@@ -171,6 +171,87 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary: invalid type)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/anonymization/anonymize/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "anonymize", "999999"] },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\":[{\"type\":\"PERSON\",\"value\":\"Jan Janssen\"}],\"appendBasisSummary\":\"yes\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Non-boolean appendBasisSummary returns 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Error message references appendBasisSummary', function () { var json = pm.response.json(); pm.expect(json.error).to.match(/appendBasisSummary/i); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Grondslagen Summary",
+      "description": "Coverage for the anonymisation-grondslagen-summary change (Wave 4a) — per-document append flag and per-dossier endpoint.",
+      "item": [
+        {
+          "name": "POST /api/anonymization/dossier/non-existent-uuid/grondslagen-pdf",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/dossier/00000000-0000-0000-0000-000000000000/grondslagen-pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "anonymization", "dossier", "00000000-0000-0000-0000-000000000000", "grondslagen-pdf"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 500 for non-existent dossier', function () { pm.response.to.have.status(500); });",
+                  "pm.test('Error message present', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary accepted as boolean)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/anonymization/anonymize/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "anonymize", "999999"] },
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\":[{\"type\":\"PERSON\",\"value\":\"Jan Janssen\"}],\"appendBasisSummary\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Boolean appendBasisSummary does not 400 (file-not-found wins)', function () { pm.expect(pm.response.code).to.not.equal(400); });",
+                  "pm.test('Has error field (file 999999 is not real)', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

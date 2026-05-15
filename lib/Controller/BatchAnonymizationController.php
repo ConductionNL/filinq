@@ -296,15 +296,31 @@ class BatchAnonymizationController extends Controller
     public function batchAnonymize(string $batchId): JSONResponse
     {
         try {
-            $entities = $this->request->getParams()['entities'] ?? [];
+            $params   = $this->request->getParams();
+            $entities = $params['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(['error' => 'No entities provided'], 400);
             }
 
-            return new JSONResponse($this->anonService->anonymizeBatch($batchId, $entities));
+            // Wave 4a: optional `appendBasisSummary` flag — applied per file.
+            $appendBasisSummary = false;
+            if (array_key_exists('appendBasisSummary', $params) === true) {
+                if (is_bool($params['appendBasisSummary']) === false) {
+                    return new JSONResponse(
+                        ['error' => 'Invalid appendBasisSummary: must be a boolean'],
+                        400
+                    );
+                }
+
+                $appendBasisSummary = $params['appendBasisSummary'];
+            }
+
+            return new JSONResponse(
+                $this->anonService->anonymizeBatch($batchId, $entities, $appendBasisSummary)
+            );
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
-        }
+        }//end try
 
     }//end batchAnonymize()
 

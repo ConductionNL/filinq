@@ -222,10 +222,27 @@ class AnonymizationController extends Controller
                 );
             }
 
+            // Wave 4a: optional `appendBasisSummary` flag. Default false; type-strict.
+            $appendBasisSummary = false;
+            if (array_key_exists('appendBasisSummary', $params) === true) {
+                if (is_bool($params['appendBasisSummary']) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Invalid appendBasisSummary: must be a boolean')],
+                        400
+                    );
+                }
+
+                $appendBasisSummary = $params['appendBasisSummary'];
+            }
+
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
-            $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);
+            $result = $this->anonymizationService->anonymizeDocument(
+                $fileId,
+                $entities,
+                $appendBasisSummary
+            );
 
             return new JSONResponse($result);
         } catch (Exception $e) {

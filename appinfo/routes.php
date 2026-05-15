@@ -46,6 +46,9 @@ return [
 		['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
 		['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
 
+		// Dossier-level grondslagen summary regeneration (Wave 4a)
+		['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
+
 		// Batch anonymization routes
 		['name' => 'batch_anonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
 		['name' => 'batch_anonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
