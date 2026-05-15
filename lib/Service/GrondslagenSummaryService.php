@@ -189,13 +189,7 @@ class GrondslagenSummaryService
             sourceFileId: $sourceFileId
         );
 
-        $parent = $anonymisedFile->getParent();
-        if (($parent instanceof Folder) === false) {
-            throw new RuntimeException(
-                'Grondslagen summary: parent folder unavailable for '.$anonymisedFile->getPath()
-            );
-        }
-
+        $parent          = $anonymisedFile->getParent();
         $baseName        = pathinfo($anonymisedFile->getName(), PATHINFO_FILENAME);
         $summaryFileName = $baseName.self::SUMMARY_FILE_SUFFIX;
 
@@ -217,12 +211,6 @@ class GrondslagenSummaryService
             throw new RuntimeException(
                 'Grondslagen summary write failed: '.$summaryFileName.' — '.$e->getMessage(),
                 previous: $e
-            );
-        }
-
-        if (($newFile instanceof File) === false) {
-            throw new RuntimeException(
-                'Grondslagen summary: newFile() did not return a File instance for '.$summaryFileName
             );
         }
 
@@ -268,7 +256,7 @@ class GrondslagenSummaryService
         // dossier-level render gets a single resolved-label map.
         $allRefs = [];
         foreach ($perFile as $fileRow) {
-            foreach (($fileRow['entities'] ?? []) as $entity) {
+            foreach ($fileRow['entities'] as $entity) {
                 foreach (($entity['bases'] ?? []) as $ref) {
                     $allRefs[(string) $ref] = true;
                 }
@@ -586,12 +574,6 @@ class GrondslagenSummaryService
             );
         }
 
-        if (($newFile instanceof File) === false) {
-            throw new RuntimeException(
-                'Grondslagen summary: newFile() did not return a File instance for '.$name
-            );
-        }
-
         return $newFile;
 
     }//end saveDossierSummary()
@@ -863,6 +845,9 @@ class GrondslagenSummaryService
      * @return string Combined PDF bytes.
      *
      * @throws RuntimeException When FPDI import or output fails.
+     *
+     * @psalm-suppress UndefinedMethod FPDI extends FPDF; Output() is inherited from FPDF
+     *                                 and Psalm lacks stubs for it.
      */
     private function mergeSummaryIntoPdf(string $originalPdfBytes, string $summaryPdfBytes): string
     {
@@ -895,11 +880,8 @@ class GrondslagenSummaryService
                 $pdf->useTemplate($tplId);
             }
 
-            // FPDI extends FPDF; Output() is inherited from FPDF and Psalm
-            // lacks stubs for it. When dest is 'S' it returns the PDF bytes.
-            /*
-             * @psalm-suppress UndefinedMethod
-             */
+            // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
+            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis)
             return (string) $pdf->Output('S');
         } catch (Exception $e) {
             throw new RuntimeException(
