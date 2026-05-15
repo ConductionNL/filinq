@@ -1,3 +1,19 @@
+<!--
+  Delta-section convention per `.claude/docs/writing-specs.md`:
+  this change introduces a NEW capability (`dossier-register`); no prior
+  spec exists, so every Requirement below is net-new (ADDED). There are
+  no MODIFIED or REMOVED Requirements in this change.
+
+  The `bases is a string-array of base slugs` Requirement (further down)
+  WAS revised mid-proposal — the original draft had `bases.items.$ref`
+  per OpenRegister's native referential-integrity mechanism, but that
+  broke at register-config import time (opis/json-schema rejects
+  `#/components/schemas/<x>` references when validating in isolation).
+  The v1 fix is documented inline on the Requirement; the rewrite is not
+  a MODIFIED delta against any earlier spec — it's the only published
+  form, and the rationale is preserved for future readers.
+-->
+
 ## ADDED Requirements
 
 ### Requirement: Dossier register exists in DocuDesk's register configuration
@@ -19,8 +35,9 @@ The system SHALL define a new `dossier` register in `lib/Settings/docudesk_regis
 The system SHALL define a `dossier` schema with the following properties: `name` (string, required, mirrors folder name at creation), `description` (string, optional), `bases` (array of strings, optional, no `minItems` — each string is the slug of a `base` object), and `checkedOn` (date-time, optional). The schema SHALL be stored under `components.schemas.dossier` in `docudesk_register.json`, follow OpenRegister's OpenAPI 3.0.0 schema conventions (ADR-006), and MUST include `slug: "dossier"`, `title`, `description`, and `configuration.objectNameField: "name"` so list UIs render the stored name.
 
 #### Scenario: A dossier can be created with all fields set
-- **WHEN** a client posts `POST /api/objects/dossier` with `name`, `description`, `bases: [<base-uuid>]`, `checkedOn`, and `@self.folder` set to an existing folder node ID
-- **THEN** the response is 201 with a `uuid`, and subsequent `GET /api/objects/dossier/<uuid>` returns the same data
+- **GIVEN** the dossier register has been installed and the six canonical seed `base` objects exist
+- **WHEN** a client posts `POST /api/objects/dossier` with `name`, `description`, `bases: ["persoonsgegevens"]` (a known seed slug), `checkedOn`, and `@self.folder` set to an existing folder node ID
+- **THEN** the response is 201 with a `uuid`, and subsequent `GET /api/objects/dossier/<uuid>` returns the same data including `bases: ["persoonsgegevens"]` (slug preserved verbatim, not resolved to UUID)
 
 #### Scenario: A dossier can be created with only the required name
 - **WHEN** a client posts `POST /api/objects/dossier` with only `name` and `@self.folder` set
