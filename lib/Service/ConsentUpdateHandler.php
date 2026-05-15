@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use InvalidArgumentException;
 use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -106,7 +107,11 @@ class ConsentUpdateHandler
                 throw new Exception('Consent record not found: '.$consentId);
             }
 
-            $consentData = array_merge($object->getObject(), $data);
+            $existing = $object->getObject();
+
+            $this->guardPolicyPreemptedTransition(existing: $existing, data: $data);
+
+            $consentData = array_merge($existing, $data);
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
@@ -141,6 +146,71 @@ class ConsentUpdateHandler
         }//end try
 
     }//end updateConsentStatus()
+
+
+    /**
+     * Reject `consentStatus` changes on records pre-empted by a policy.
+     *
+     * When an existing consent record has a non-null `policyMatch`, its
+     * `consentStatus` is bound to the matched rule (prohibition → anonymized,
+     * standing consent → consent_given). Only updates that do NOT change
+     * `consentStatus` are permitted — including overrides like setting
+     * `publicationDecision: "anonymize"` on a standing-consent-matched record
+     * while leaving `consentStatus: "consent_given"` in place.
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
+     */
+    private function guardPolicyPreemptedTransition(array $existing, array $data): void
+    {
+        $existingMatch = ($existing['policyMatch'] ?? null);
+        if ($existingMatch === null || $existingMatch === '') {
+            return;
+        }
+
+        // Guard the two operator-controlled transition fields. The
+        // prohibition lock applies to BOTH `consentStatus` AND
+        // `publicationDecision` — a record that's been pre-empted by a
+        // policy match must not be coaxed into "publish" via either
+        // field. Without this both-fields check, a PATCH carrying only
+        // `publicationDecision: "publish"` would bypass the lock.
+        $consentStatusChanged       = (
+            array_key_exists('consentStatus', $data) === true
+            && (string) $data['consentStatus'] !== (string) ($existing['consentStatus'] ?? '')
+        );
+        $publicationDecisionChanged = (
+            array_key_exists('publicationDecision', $data) === true
+            && (string) $data['publicationDecision'] !== (string) ($existing['publicationDecision'] ?? '')
+        );
+
+        if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
+            return;
+        }
+
+        if ($consentStatusChanged === true) {
+            $rejectedField = 'consentStatus';
+        } else {
+            $rejectedField = 'publicationDecision';
+        }
+
+        $rejectedValue = (string) $data[$rejectedField];
+        $currentValue  = (string) ($existing[$rejectedField] ?? '');
+
+        throw new InvalidArgumentException(
+            message: sprintf(
+                '%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
+                $rejectedField,
+                $rejectedValue,
+                (string) $existingMatch,
+                $currentValue
+            )
+        );
+
+    }//end guardPolicyPreemptedTransition()
 
 
     /**

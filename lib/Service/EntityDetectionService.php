@@ -63,9 +63,15 @@ class EntityDetectionService
             }
 
             $normalizedEntities[] = [
-                'type'       => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',
-                'value'      => $entityData['entity_value'] ?? $entityData['entityValue'] ?? '',
-                'confidence' => $entityData['confidence'] ?? 0.0,
+                'type'              => $entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN',
+                'value'             => $entityData['entity_value'] ?? $entityData['entityValue'] ?? '',
+                'confidence'        => $entityData['confidence'] ?? 0.0,
+                // Forward-compat fields for the Wave 1.3 grondslagen flow.
+                // relationId is needed to PATCH the row; bases/skipAnonymization
+                // reflect any pre-existing decision metadata.
+                'relationId'        => $entityData['relation_id'] ?? $entityData['relationId'] ?? null,
+                'bases'             => $entityData['bases'] ?? null,
+                'skipAnonymization' => (bool) ($entityData['skip_anonymization'] ?? $entityData['skipAnonymization'] ?? false),
             ];
         }
 

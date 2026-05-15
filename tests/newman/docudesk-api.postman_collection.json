@@ -225,6 +225,168 @@
       ]
     },
     {
+      "name": "Policy — Prohibitions",
+      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
+      "item": [
+        {
+          "name": "GET /api/policy/prohibitions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON array', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); });",
+                  "pm.test('Seed prohibitions present', function () { var json = pm.response.json(); pm.expect(json.length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/prohibitions (create)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Test Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Returns UUID', function () { pm.expect(json['@self'] && json['@self'].id || json.id || json.uuid).to.be.a('string'); });",
+                  "if (json['@self'] && json['@self'].id) { pm.collectionVariables.set('createdProhibitionId', json['@self'].id); }",
+                  "else if (json.id) { pm.collectionVariables.set('createdProhibitionId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/policy/prohibitions/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Returns the created record', function () { var json = pm.response.json(); pm.expect(json.primaryName).to.equal('Newman Test Subject'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/policy/prohibitions/{id}",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Policy — Standing Consents",
+      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
+      "item": [
+        {
+          "name": "GET /api/policy/standing-consents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON array of scope=entity records', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); json.forEach(function (r) { pm.expect(r.scope || 'document').to.equal('entity'); }); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/standing-consents (scope validation: missing consentMethod)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Test Standing\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Standing\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });",
+                  "pm.test('Has error message', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/standing-consents (scope validation: documentId not allowed)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman\"}],\"consentMethod\":\"paper\",\"documentId\":\"some-doc\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Metadata",
       "item": [
         {
