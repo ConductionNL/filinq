@@ -401,14 +401,27 @@ class PolicyMatchService
             'OCA\OpenRegister\Service\ObjectService'
         );
 
+        // Push the scope filter down to the DB. The schema is shared with
+        // scope=document records, so a naive `findAll(register, schema)` loads
+        // every consent record across every tenant and every file, then
+        // discards most of them in PHP. Adding `scope=entity` to the filter
+        // bounds the result to standing-consent rows and lets ObjectService
+        // index on the column. The defensive PHP scope check is retained as
+        // a belt-and-braces in case the filter is later dropped.
         $result = $objectService->findAll(
-            config: ['filters' => ['register' => 'consent', 'schema' => 'publicationConsent']],
+            config: [
+                'filters' => [
+                    'register' => 'consent',
+                    'schema'   => 'publicationConsent',
+                    'scope'    => 'entity',
+                    'active'   => true,
+                ],
+            ],
             _rbac: false
         );
 
         $rules = [];
         foreach ($this->extractObjects(result: $result) as $obj) {
-            // Filter by scope here — schema is shared with scope=document records.
             if (($obj['scope'] ?? 'document') !== 'entity') {
                 continue;
             }

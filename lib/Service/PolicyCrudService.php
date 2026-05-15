@@ -71,6 +71,14 @@ class PolicyCrudService
      */
     public const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
 
+    /**
+     * Group whose members may create/update/delete publication-prohibition
+     * records. Prohibitions are operator-level blocking rules that override
+     * the standard anonymise flow, so write authorisation requires either
+     * admin role or membership in this group — never any authenticated user.
+     */
+    public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
+
 
     /**
      * Constructor.
@@ -223,6 +231,8 @@ class PolicyCrudService
      */
     public function createProhibition(array $data): array
     {
+        $this->assertProhibitionPermission(action: 'create');
+
         $payload = $this->stripFrameworkParams(data: $data);
 
         // Defaults the spec requires the record to carry.
@@ -249,6 +259,8 @@ class PolicyCrudService
      */
     public function updateProhibition(string $uuid, array $data): array
     {
+        $this->assertProhibitionPermission(action: 'update');
+
         $payload = $this->stripFrameworkParams(data: $data);
         return $this->saveObject(
             register: self::REGISTER,
@@ -271,6 +283,8 @@ class PolicyCrudService
      */
     public function deleteProhibition(string $uuid): void
     {
+        $this->assertProhibitionPermission(action: 'delete');
+
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
             id: $uuid,
@@ -422,6 +436,46 @@ class PolicyCrudService
         );
 
     }//end assertStandingConsentPermission()
+
+
+    /**
+     * Assert the current user can create/update/delete a prohibition record.
+     *
+     * Prohibitions are tenant-wide blocking rules; write authorisation requires
+     * admin role or membership in `PROHIBITION_GROUP`. Throws otherwise.
+     *
+     * @param string $action The operator action being authorised (`create`, `update`, `delete`).
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the current user is not authorised. Mapped to 403 by the controller.
+     */
+    private function assertProhibitionPermission(string $action): void
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            throw new RuntimeException(
+                message: 'Prohibition '.$action.' requires an authenticated user.'
+            );
+        }
+
+        if ($this->groupManager->isAdmin($user->getUID()) === true) {
+            return;
+        }
+
+        if ($this->groupManager->isInGroup($user->getUID(), self::PROHIBITION_GROUP) === true) {
+            return;
+        }
+
+        throw new RuntimeException(
+            message: sprintf(
+                'Prohibition %s requires membership in the "%s" group.',
+                $action,
+                self::PROHIBITION_GROUP
+            )
+        );
+
+    }//end assertProhibitionPermission()
 
 
     /**

@@ -100,91 +100,19 @@ import { prohibitionStore } from '../../store/store.js'
 			</template>
 		</CnIndexPage>
 
-		<NcDialog
-			v-if="dialogOpen"
-			:name="dialogTitle"
+		<!--
+			ADR-004 gate-13: modal lives in its own component, not inline.
+			ProhibitionFormModal handles its own form state; we only own
+			the open flag, the record being edited, and the save outcome.
+		-->
+		<ProhibitionFormModal
 			:open="dialogOpen"
-			size="normal"
-			@update:open="dialogOpen = $event">
-			<div class="prohibition-form">
-				<NcTextField
-					:value.sync="form.primaryName"
-					:label="t('docudesk', 'Primary name (Dutch)')"
-					required />
-				<NcSelect
-					v-model="form.entityType"
-					:options="entityTypeOptions"
-					:label="t('docudesk', 'Entity type')"
-					required />
-				<NcTextField
-					:value.sync="form.reason"
-					:label="t('docudesk', 'Reason (markdown allowed)')"
-					required />
-				<NcTextField
-					:value.sync="form.legalAuthority"
-					:label="t('docudesk', 'Legal authority (court order, statute, …)')" />
-				<NcTextField
-					:value.sync="form.caseReference"
-					:label="t('docudesk', 'Case reference (optional)')" />
-				<NcSelect
-					v-model="form.severity"
-					:options="severityOptions"
-					:label="t('docudesk', 'Severity')" />
-				<NcTextField
-					:value.sync="form.jurisdiction"
-					:label="t('docudesk', 'Jurisdiction (optional)')" />
-				<NcTextField
-					:value.sync="form.validUntil"
-					:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
-				<NcCheckboxRadioSwitch
-					v-model="form.active"
-					type="switch">
-					{{ t('docudesk', 'Active') }}
-				</NcCheckboxRadioSwitch>
-
-				<h4>{{ t('docudesk', 'Match rules') }}</h4>
-				<div v-if="!form.matchRules?.length" class="form-warning">
-					{{ t('docudesk', 'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches — names alone produce false positives.') }}
-				</div>
-				<div v-for="(rule, idx) in form.matchRules" :key="idx" class="match-rule-row">
-					<NcSelect
-						v-model="rule.type"
-						:options="matchTypeOptions"
-						:label="t('docudesk', 'Match type')" />
-					<NcTextField
-						:value.sync="rule.value"
-						:label="t('docudesk', 'Match value')" />
-					<NcButton type="tertiary" @click="removeRule(idx)">
-						<template #icon>
-							<Delete :size="20" />
-						</template>
-					</NcButton>
-				</div>
-				<NcButton type="secondary" @click="addRule">
-					{{ t('docudesk', 'Add match rule') }}
-				</NcButton>
-
-				<div v-if="onlyNameRules" class="form-warning">
-					{{ t('docudesk', 'Warning: only name-based rules are present. Names alone often produce false positives — consider adding a BSN or KvK match.') }}
-				</div>
-
-				<div v-if="formError" class="form-error">
-					{{ formError }}
-				</div>
-			</div>
-
-			<template #actions>
-				<NcButton type="tertiary" @click="dialogOpen = false">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
-					<template v-if="saving" #icon>
-						<NcLoadingIcon :size="20" />
-					</template>
-					{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			:editing-record="editingRecord"
+			:saving="saving"
+			:form-error="formError"
+			@update:open="dialogOpen = $event"
+			@submit="onModalSubmit"
+			@cancel="dialogOpen = false" />
 	</div>
 </template>
 
@@ -192,30 +120,12 @@ import { prohibitionStore } from '../../store/store.js'
 import {
 	NcActions,
 	NcActionButton,
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcLoadingIcon,
-	NcSelect,
-	NcTextField,
 } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-
-const blankForm = () => ({
-	primaryName: '',
-	entityType: 'PERSON',
-	reason: '',
-	legalAuthority: '',
-	caseReference: '',
-	severity: 'standard',
-	jurisdiction: '',
-	validUntil: '',
-	active: true,
-	matchRules: [],
-})
+import ProhibitionFormModal from './ProhibitionFormModal.vue'
 
 export default {
 	name: 'ProhibitionIndex',
@@ -225,12 +135,7 @@ export default {
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcDialog,
-		NcLoadingIcon,
-		NcSelect,
-		NcTextField,
+		ProhibitionFormModal,
 		Delete,
 		DotsHorizontal,
 		Pencil,
@@ -242,27 +147,25 @@ export default {
 			pageSize: 20,
 			dialogOpen: false,
 			saving: false,
-			editing: null,
-			form: blankForm(),
+			editing: null, // UUID of the record being edited, or null for create
+			editingRecord: null, // full record passed to the modal so it can hydrate its form
 			formError: '',
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
 				OTHER: 'default',
 			},
+			// Severity values must mirror the publicationProhibition schema
+			// enum (`high` / `medium` / `low`) in docudesk_register.json.
 			severityColorMap: {
+				high: 'error',
+				medium: 'warning',
 				low: 'default',
-				standard: 'primary',
-				high: 'warning',
-				critical: 'error',
 			},
 			activeColorMap: {
 				[t('docudesk', 'Active')]: 'error',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
-			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
-			severityOptions: ['low', 'standard', 'high', 'critical'],
-			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
 	computed: {
@@ -286,23 +189,6 @@ export default {
 				return prohibitionStore.error
 			}
 			return t('docudesk', 'No publication prohibitions defined.')
-		},
-		dialogTitle() {
-			return this.editing
-				? t('docudesk', 'Edit prohibition')
-				: t('docudesk', 'Add prohibition')
-		},
-		canSubmit() {
-			return this.form.primaryName.trim() !== ''
-				&& this.form.reason.trim() !== ''
-				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every(r => r.type && r.value !== '')
-		},
-		onlyNameRules() {
-			if (this.form.matchRules.length === 0) {
-				return false
-			}
-			return this.form.matchRules.every(r => r.type === 'exact' || r.type === 'normalized')
 		},
 	},
 	mounted() {
@@ -332,13 +218,13 @@ export default {
 		},
 		openCreateDialog() {
 			this.editing = null
-			this.form = blankForm()
+			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
-			this.form = {
+			this.editingRecord = {
 				primaryName: row.primaryName || '',
 				entityType: row.entityType || 'PERSON',
 				reason: row.reason || '',
@@ -355,20 +241,14 @@ export default {
 			this.formError = ''
 			this.dialogOpen = true
 		},
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
-		},
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
-		},
-		async submit() {
+		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
 			try {
 				if (this.editing) {
-					await prohibitionStore.updateProhibition(this.editing, this.form)
+					await prohibitionStore.updateProhibition(this.editing, formData)
 				} else {
-					await prohibitionStore.createProhibition(this.form)
+					await prohibitionStore.createProhibition(formData)
 				}
 				this.dialogOpen = false
 			} catch (err) {
