@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Anonimisatie-samenvatting — {{ document.filename|default('document')|escape }}</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  h1 { font-size: 16pt; margin: 0 0 4pt 0; }
+  h2 { font-size: 12pt; margin: 16pt 0 6pt 0; }
+  .header-grid { width: 100%; border-collapse: collapse; margin: 8pt 0 16pt 0; }
+  .header-grid td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
+  .header-grid td.label { color: #666; width: 32%; }
+  table.entities { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.entities th { background: #eee; padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #999; }
+  table.entities td { padding: 3pt 6pt; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
+  table.entities td.entity-type { white-space: nowrap; }
+  .placeholder { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; color: #555; }
+  .basis-cell { font-size: 8.5pt; }
+  .footer-totals { margin-top: 12pt; font-size: 9pt; color: #444; }
+  .empty-note { font-style: italic; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>Anonimisatie-samenvatting</h1>
+
+<table class="header-grid">
+  <tr>
+    <td class="label">Bestand</td>
+    <td>{{ document.filename|default('—')|escape }}</td>
+  </tr>
+  <tr>
+    <td class="label">Anonimisatietijdstip</td>
+    <td>{{ document.anonymisedAt|default('—')|escape }}</td>
+  </tr>
+  <tr>
+    <td class="label">Operator</td>
+    <td>{{ document.operator|default('—')|escape }}</td>
+  </tr>
+  <tr>
+    <td class="label">Anonimisatietool</td>
+    <td>{{ document.tool|default('OpenAnonymiser via OpenRegister')|escape }}</td>
+  </tr>
+</table>
+
+<h2>Geredacteerde entiteiten</h2>
+
+{% if entities|length == 0 %}
+  <p class="empty-note">Geen geanonimiseerde entiteiten op dit document.</p>
+{% else %}
+  <table class="entities">
+    <thead>
+      <tr>
+        <th>Entiteit</th>
+        <th>Type</th>
+        <th>Vervangen door</th>
+        <th>Grondslag</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entity in entities %}
+        <tr>
+          <td>{{ entity.entityText|default('—')|escape }}</td>
+          <td class="entity-type">{{ entity.entityType|default('—')|escape }}</td>
+          <td class="placeholder">{{ entity.anonymizedValue|default('—')|escape }}</td>
+          <td class="basis-cell">
+            {% if entity.baseLabels|default([])|length == 0 %}
+              <span class="empty-note">geen grondslag geregistreerd</span>
+            {% else %}
+              {{ entity.baseLabels|join(', ')|escape }}
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="footer-totals">
+    {{ entities|length }} entiteit{% if entities|length != 1 %}en{% endif %} ·
+    {{ distinctBasesCount|default(0) }} unieke grondsla{% if distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
+  </p>
+{% endif %}
+
+</body>
+</html>

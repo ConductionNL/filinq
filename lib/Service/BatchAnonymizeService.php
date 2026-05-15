@@ -60,8 +60,14 @@ class BatchAnonymizeService
      * Files with a non-extracted status are skipped (previous errors are
      * recorded in the skipped list; other states are ignored silently).
      *
-     * @param string                           $batchId  Identifier of the batch to anonymize.
-     * @param array<int, array<string, mixed>> $entities User-approved entities to anonymize.
+     * @param string                           $batchId            Identifier of the batch to anonymize.
+     * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
+     * @param bool                              $appendBasisSummary When true, each per-file anonymise
+     *                                                              call is invoked with the
+     *                                                              `appendBasisSummary` flag set; the
+     *                                                              per-file result's `warning` /
+     *                                                              `summaryFileId` outcomes propagate
+     *                                                              to that file's batch entry.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -74,7 +80,7 @@ class BatchAnonymizeService
      *
      * @throws Exception When the batch cannot be found.
      */
-    public function anonymizeBatch(string $batchId, array $entities): array
+    public function anonymizeBatch(string $batchId, array $entities, bool $appendBasisSummary=false): array
     {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -96,16 +102,29 @@ class BatchAnonymizeService
             }
 
             try {
-                $result = $this->anonService->anonymizeDocument((int) $file['fileId'], $entities);
+                $result = $this->anonService->anonymizeDocument(
+                    (int) $file['fileId'],
+                    $entities,
+                    $appendBasisSummary
+                );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
                 $batch['files'][$i]['anonymizedFileId'] = $result['anonymizedFileId'] ?? null;
+                // Wave 4a: per-file summary outcome / warning surfaced to the batch caller.
+                if (isset($result['warning']) === true) {
+                    $batch['files'][$i]['warning'] = $result['warning'];
+                }
+
+                if (isset($result['summaryFileId']) === true) {
+                    $batch['files'][$i]['summaryFileId'] = $result['summaryFileId'];
+                }
+
                 $processed++;
             } catch (Exception $e) {
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];
-            }
+            }//end try
         }//end foreach
 
         $batch['status'] = 'completed';
