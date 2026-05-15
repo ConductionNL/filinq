@@ -142,9 +142,26 @@ DocuDesk does NOT carry, forward, or persist bases. Bases are set on the OR `Ent
 
 For each acknowledged override processed by DocuDesk's anonymise endpoint, DocuDesk MUST persist an audit entry capturing `ruleId`, `entityRelationId`, `fileId`, `reason`, `acknowledgedBy` (user UID), and `acknowledgedAt` (ISO-8601). This entry captures *why* the operator released a flagged entity from anonymisation — operator-commentary metadata that OR's audit-trail (which records only the row mutation) does not carry.
 
-**Storage choice:** smallest implementation is a new `prohibitionOverrideAudit` schema in DocuDesk's `docudesk_register.json`, alongside existing schemas. Each acknowledged override becomes one object in that schema. Alternative: write to a dedicated audit log table or to Nextcloud's structured logger with a fixed payload shape. Pick whichever fits DocuDesk's existing audit-log conventions; behaviour is the load-bearing part, not storage.
+**Storage choice (mandated, not a preference).** Implementations MUST add a `prohibitionOverrideAudit` schema to DocuDesk's `docudesk_register.json`, alongside existing schemas. Each acknowledged override becomes one object in that schema. Implementations MAY ALSO write to an additional sink (dedicated audit-log table, Nextcloud structured logger) but the register-backed entry is the mandated one. Reasoning:
+
+- **Queryable via existing surfaces.** Operator audit lookups go through OR's `/objects` endpoints. A register-backed entry shows up in those queries automatically; a logger-only sink would require a parallel query path.
+- **Retention + RBAC reuse.** Register objects inherit OR's retention rules, schema-level RBAC, and multi-tenancy filtering. A separate audit table would need its own retention policy + access rules — duplicate infrastructure.
+- **Single source of truth.** Two storage locations means two writes that can disagree. Mandating one prevents the question "which audit do we trust?" from ever needing an answer.
 
 **Rationale for keeping this in DocuDesk (not OR):** the `reason` is operator commentary specific to DocuDesk's prohibition-gate workflow. Pushing it into OR's audit-trail or whitelist would couple OR to DocuDesk-specific semantics (the override concept doesn't exist in OR's domain). Per the new OR spec, OR's PATCH whitelist is decision-only (`bases`, `skipAnonymization`) — no `note` / `reason` field. The clean split is "OR records what changed; DocuDesk records why".
+
+### D10a. Sequential best-effort commit semantics (no request-level atomicity)
+
+The override-processing loop MUST iterate `acknowledgedOverrides` in submission order, committing each override's DD audit entry first and then its OR PATCH. There is NO request-level transaction — atomicity is per-override (audit then PATCH for ONE relation), not all-overrides-or-nothing.
+
+**Rationale for explicit best-effort over an earlier "atomic per request" wording.** The implementation calls OpenRegister via in-process DI for `EntityRelationMapper::updateDecisionMetadata`, but each PATCH is one autonomous DB write with its own audit-trail entry on OR. There is no shared transactional context spanning DD's audit write + OR's row UPDATE + OR's audit INSERT for relation 1 + relation 2 + relation 3. Pretending otherwise in the spec creates an undeliverable requirement.
+
+Best-effort with stop-on-first-failure preserves the auditable trail of operator intent: every PATCH that committed remains visible (in both DD's `prohibitionOverrideAudit` schema and OR's audit-trail), every PATCH that didn't run leaves no rows. The DD audit entry for the relation that triggered the failure also remains — it was written BEFORE its PATCH per the per-override audit-first ordering — and captures the operator's intent even though the OR commit itself failed. Retries are safe because the skip flag is idempotent on OR (a no-op for already-skipped relations).
+
+A reader thinking about edge cases should note:
+
+- Two operators acknowledging the same low-confidence match in parallel — the second PATCH lands as a no-op on OR (skip already true), and the second DD audit entry is written normally. Both operators are credited in DD audit; OR audit shows only the first flip. This is acceptable: the duplicate DD entries make the parallel intent visible.
+- A partial failure leaving relations 1 and 2 with skip=true but the anonymise call NOT forwarded — the operator retries the request. Relations 1 and 2 PATCH again as no-ops on OR; relations 3 and beyond commit fresh; the anonymise call goes through. The two extra DD audit rows on retry are correct — each is a distinct operator decision event.
 
 ## Risks / Trade-offs
 
