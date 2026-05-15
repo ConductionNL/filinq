@@ -4,166 +4,121 @@ status: draft
 
 # Anonymization — Delta for Publication-Clearance-via-Anonymise
 
-This delta extends the existing `anonymization` capability so the per-document and batch anonymise endpoints accept an optional `unredactedEntities[]` field. Entries in this field trigger publicationConsent records via `ConsentService::createConsentRequest()` — completing the "no automated caller" gap flagged in `consent-management` REQ-CONS-07. Prohibited entities placed in this field are rejected with HTTP 422; the response gains a `createdConsents[]` aggregation describing the records created or updated.
+This delta adds a defensive runtime check to the anonymise endpoint: a file MUST NOT be anonymised while any of its `skipAnonymization: true` relations still have a corresponding publicationConsent record in a blocking state. The endpoint payload and the success response shape are unchanged. HTTP 422 becomes a new failure response listing the blocking consent records.
+
+This delta does NOT add new request fields, new endpoints, or new consent-creation logic to the anonymise call. Consent creation is event-driven (see the `consent-management` delta of this change); the anonymise call only verifies that all decisions are resolved before mutating the file.
 
 ## ADDED Requirements
 
-### Requirement: The anonymise endpoint MUST accept an optional `unredactedEntities[]` field
+### Requirement: The anonymise endpoint MUST reject calls when any skip-marked relation has a blocking consent record
 
-The per-document anonymise endpoint payload MUST accept an optional top-level `unredactedEntities[]` array. Each entry MUST have shape:
+Before delegating to OpenRegister's `anonymizeDocument`, the anonymise endpoint MUST verify that every `EntityRelation` row for the target file with `skipAnonymization: true` has either no corresponding `publicationConsent` record OR a record in a non-blocking state. The classification:
 
-```json
-{
-  "entityId": <int|null>,
-  "entityText": "<string>",
-  "entityType": "PERSON" | "ORGANIZATION",
-  "entityKey": "<string, optional>",
-  "publicationBases": ["<string>", ...],
-  "contactEmail": "<string, optional>",
-  "contactAddress": "<string, optional>"
-}
-```
+| consentStatus | publicationDecision | objectionDeadline | Blocking? |
+|---|---|---|---|
+| `consent_given` | (any) | (any) | No |
+| `anonymized` | (any) | (any) | No |
+| `pending` | (any) | past | No |
+| `pending` | (any) | future | **YES** |
+| `objection_received` | `anonymize` | (any) | No |
+| `objection_received` | `publish_with_consent` | (any) | No |
+| `objection_received` | `pending` | (any) | **YES** |
+| `no_response` | (any) | (any) | No |
 
-Required fields per entry: `entityText`, `entityType`, `publicationBases` (MUST be a non-empty array of strings). Optional: `entityId`, `entityKey`, `contactEmail`, `contactAddress`.
-
-Behaviour when `unredactedEntities[]` is omitted or empty MUST be identical to the pre-change anonymise endpoint.
-
-The same field MUST be accepted on the batch anonymise endpoint, per-file in the batch payload.
-
-#### Scenario: Empty / omitted unredactedEntities preserves pre-change behaviour
-
-- **GIVEN** an anonymise request with no `unredactedEntities[]` field (or an empty array)
-- **WHEN** the request completes
-- **THEN** no publicationConsent records are created
-- **AND** the response shape is the pre-change shape (no `createdConsents[]` field)
-
-#### Scenario: Single unredacted entity creates a publicationConsent record
-
-- **GIVEN** an anonymise request with `unredactedEntities: [{entityId: 5, entityText: "Burgemeester De Vries", entityType: "PERSON", publicationBases: ["Woo art. 3.1"]}]`
-- **AND** no policy rule matches this entity
-- **WHEN** the request completes
-- **THEN** a new publicationConsent record exists with `documentId` matching the request's file, `entityText: "Burgemeester De Vries"`, `consentStatus: "pending"`, `legalBasis: "Woo art. 3.1"`, `notificationStatus: "pending"`, and a non-null `objectionDeadline`
-- **AND** the response includes a `createdConsents[]` array with one entry containing the new record's `consentId`, `entityId: 5`, `consentStatus: "pending"`, and `wasUpdated: false`
-
-#### Scenario: Standing-consent match resolves to consent_given
-
-- **GIVEN** an `unredactedEntities[]` entry whose entity matches an active `scope: "entity"` `publicationConsent` (standing consent)
-- **WHEN** the anonymise request processes the entry
-- **THEN** the resulting per-document publicationConsent record has `consentStatus: "consent_given"`, `notificationStatus: "skipped"`, `policyMatch` referencing the standing consent
-- **AND** `objectionDeadline` is null
-- **AND** the response's `createdConsents[]` entry reflects this state
-
-#### Scenario: Required field missing rejects with 400
-
-- **WHEN** an `unredactedEntities[]` entry is missing `entityText` or `entityType` or has empty `publicationBases`
-- **THEN** the request is rejected with HTTP 400 citing the missing field
-
-### Requirement: Prohibited entities in `unredactedEntities[]` MUST be rejected with HTTP 422
-
-If any `unredactedEntities[]` entry's `(entityType, entityText, resolvedIdentifiers)` matches an active `publicationProhibition` rule, the entire request MUST be rejected with HTTP 422. The response body MUST list each rejected entry with the matching `ruleId` and `ruleName`. No partial work MUST be performed — the anonymise pipeline MUST NOT run for any of the request's `entities[]`, and no publicationConsent records MUST be created for any of the request's `unredactedEntities[]`. The check fires at any confidence threshold (no override path on this gate).
+When at least one blocking record is found, the request MUST return HTTP 422 with a structured body listing every blocking consent. No file mutation MUST occur. No EntityRelation row MUST be modified.
 
 The 422 body shape MUST be:
 
 ```json
 {
   "error": "<localised string>",
-  "rejectedUnredacted": [
+  "blockingConsents": [
     {
-      "entityId": <int|null>,
+      "consentId": "<uuid>",
       "entityText": "<string>",
-      "ruleId": "<uuid>",
-      "ruleName": "<string>"
+      "consentStatus": "<enum>",
+      "objectionDeadline": "<ISO-8601 timestamp or null>",
+      "reason": "<one of: objection_window_open | objection_under_review>"
     }
-  ],
-  "fallback": "<localised hint pointing operator to move entries into entities[]>"
+  ]
 }
 ```
 
-#### Scenario: Prohibited entity rejected loudly
+#### Scenario: File with no skip-marked relations passes the check
 
-- **GIVEN** an active `publicationProhibition` rule matching "Beschermde Getuige A"
-- **AND** an anonymise request with `unredactedEntities: [{entityText: "Beschermde Getuige A", entityType: "PERSON", publicationBases: ["..."]}]`
-- **WHEN** the request is processed
+- **GIVEN** a file whose EntityRelations all have `skipAnonymization: false`
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes
+- **AND** anonymisation proceeds as before
+
+#### Scenario: Skip-marked relation with an auto-resolved consent passes the check
+
+- **GIVEN** a file with a `skipAnonymization: true` relation
+- **AND** a publicationConsent record for the entity has `consentStatus: "consent_given"` (standing-consent match)
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes
+- **AND** anonymisation proceeds
+
+#### Scenario: Skip-marked relation with a pending consent in window blocks the call
+
+- **GIVEN** a file with a `skipAnonymization: true` relation for entity "Anneke Jansen"
+- **AND** a publicationConsent record for that entity has `consentStatus: "pending"` and `objectionDeadline` 10 days in the future
+- **WHEN** the anonymise endpoint is called
 - **THEN** the response is HTTP 422
-- **AND** the body's `rejectedUnredacted[]` lists the entry with the matching rule UUID and name
-- **AND** no anonymise pipeline runs (no files written, no EntityRelation rows updated)
-- **AND** no publicationConsent records are created
+- **AND** `blockingConsents[]` lists exactly one entry referencing the consent record with `reason: "objection_window_open"`
+- **AND** no file mutation occurs
 
-#### Scenario: Both prohibited and unproblematic entries — entire request rejected
+#### Scenario: Skip-marked relation with a pending consent past window passes
 
-- **GIVEN** an `unredactedEntities[]` array with one prohibited entry and three unproblematic entries
-- **WHEN** the request is processed
+- **GIVEN** a file with a `skipAnonymization: true` relation
+- **AND** the publicationConsent's `objectionDeadline` has already passed
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes (window closed; "no objection received" is the operator's go-ahead)
+- **AND** anonymisation proceeds
+
+#### Scenario: Skip-marked relation with objection received, decision pending, blocks
+
+- **GIVEN** a publicationConsent record with `consentStatus: "objection_received"` and `publicationDecision: "pending"`
+- **WHEN** the anonymise endpoint is called for the associated file
+- **THEN** the response is HTTP 422 with `reason: "objection_under_review"`
+
+#### Scenario: Skip-marked relation with objection received and decision = anonymize passes
+
+- **GIVEN** a publicationConsent record with `consentStatus: "objection_received"` and `publicationDecision: "anonymize"`
+- **WHEN** the anonymise endpoint is called for the associated file
+- **THEN** the check passes (operator decided to anonymise despite the skip flag — the decision overrides)
+
+#### Scenario: Skip-marked relation with no consent record proceeds with a warning
+
+- **GIVEN** a `skipAnonymization: true` relation whose corresponding publicationConsent record is missing (likely listener failure)
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check logs a warning identifying the relation
+- **AND** the relation is treated as not-blocking
+- **AND** anonymisation proceeds (the operator's skip decision stands; the missing consent record is a system bug to investigate separately, not a reason to block the user)
+
+#### Scenario: Multiple skip-marked relations, mixed states
+
+- **GIVEN** three `skipAnonymization: true` relations:
+  - Relation A → consent `consent_given`
+  - Relation B → consent `pending` in window (blocking)
+  - Relation C → consent `pending` past window (not blocking)
+- **WHEN** the anonymise endpoint is called
 - **THEN** the response is HTTP 422
-- **AND** `rejectedUnredacted[]` lists only the prohibited entry
-- **AND** none of the three unproblematic entries result in publicationConsent records
-- **AND** the operator's path forward is to remove the prohibited entry (or move it to `entities[]`) and re-submit
+- **AND** `blockingConsents[]` lists only relation B's consent
+- **AND** no file mutation occurs
 
-#### Scenario: Confidence threshold does not apply on this gate
+### Requirement: The anonymise endpoint's success-path shape MUST be unchanged
 
-- **GIVEN** an `unredactedEntities[]` entry whose entity matches a prohibition rule at any (even low) confidence
-- **WHEN** the request is processed
-- **THEN** the entry is rejected
-- **AND** the operator cannot use `acknowledgedOverrides` to bypass (the override mechanism applies only to the prohibition gate on `entities[]`, not on `unredactedEntities[]`)
+This delta MUST NOT modify the anonymise endpoint's request payload or its successful (HTTP 200) response shape. Existing callers that pass the same payload they pass today MUST receive the same response they receive today.
 
-### Requirement: An entity MUST NOT appear in BOTH `entities[]` and `unredactedEntities[]`
+#### Scenario: Pre-change client is unaffected on the happy path
 
-The two sets MUST be disjoint per call. If the same entity appears in both, the request MUST be rejected with HTTP 400 ("entity cannot be both anonymised and published unredacted in the same call"). The error response MUST identify the conflicting entity.
+- **GIVEN** a pre-change client that sends an anonymise request with the existing payload (no `skipAnonymization: true` relations on the target file)
+- **WHEN** the request succeeds
+- **THEN** the response body matches the pre-change shape exactly (no new fields)
 
-#### Scenario: Same entity in both sets is rejected
+#### Scenario: HTTP 422 is the only new failure response
 
-- **GIVEN** a request where entity 5 appears in both `entities[]` and `unredactedEntities[]`
-- **WHEN** the request is processed
-- **THEN** the response is HTTP 400
-- **AND** the body identifies entity 5 as the conflict
-
-### Requirement: The response MUST include a `createdConsents[]` aggregation
-
-When `unredactedEntities[]` is supplied and the request succeeds (HTTP 200), the response MUST include a top-level `createdConsents[]` array. Each entry MUST report:
-
-- `consentId` (UUID of the publicationConsent record)
-- `entityId` (matching the request's entry, or null if not provided)
-- `entityText`
-- `consentStatus`
-- `policyMatch` (UUID of the matched rule, or null)
-- `notificationStatus`
-- `objectionDeadline` (or null when not applicable)
-- `wasUpdated` (boolean: true if an existing record was updated, false if newly created)
-
-The array's order MUST match the order of `unredactedEntities[]` in the request.
-
-#### Scenario: Aggregation reports per-entity outcome
-
-- **GIVEN** a request with three entries in `unredactedEntities[]` — one matching a standing consent, one not matching anything, one matching a record from a previous submit
-- **WHEN** the response is returned
-- **THEN** `createdConsents[]` has exactly three entries in the same order
-- **AND** entry 1 has `consentStatus: "consent_given"`, `policyMatch: <uuid>`, `wasUpdated: false`
-- **AND** entry 2 has `consentStatus: "pending"`, `policyMatch: null`, `wasUpdated: false`
-- **AND** entry 3 has `wasUpdated: true` (matched on documentId+entityKey)
-
-#### Scenario: Pre-change clients ignore the new field
-
-- **GIVEN** a pre-change client that doesn't read `createdConsents[]`
-- **WHEN** the response includes the new field
-- **THEN** the client's existing code is unaffected
-- **AND** the response is a strict superset of the pre-change shape
-
-### Requirement: Notification dispatch in v1 MUST be stubbed
-
-When a publicationConsent record is created with `consentStatus: "pending"` (the no-match case), the system MUST set `notificationStatus: "pending"` and compute the `objectionDeadline` per existing CONS-005 rules. The system MUST NOT automatically send any email or postal notification in v1.
-
-Operators MAY advance `notificationStatus` manually via the existing `PUT /api/consents/{id}` endpoint once they have sent the notification by their out-of-band means.
-
-#### Scenario: Pending record carries unset notificationStatus
-
-- **GIVEN** a successful unredactedEntities flow producing a `pending` publicationConsent
-- **WHEN** the record is inspected
-- **THEN** `notificationStatus: "pending"` and `notificationSentAt: null`
-- **AND** no email has been sent (no SMTP activity, no log entry indicating a send attempt)
-- **AND** `objectionDeadline` is set to the configured period from creation
-
-#### Scenario: Operator marks notification sent manually
-
-- **GIVEN** a pending publicationConsent record
-- **WHEN** the operator PUTs `{notificationStatus: "sent", notificationSentAt: "<timestamp>"}` to `/api/consents/{id}`
-- **THEN** the record is updated per the existing `consent-management` REQ-CONS-02 transitions
-- **AND** the WOO workflow proceeds normally from that point
+- **WHEN** any other anonymise error condition arises (file not found, permission denied, OR rejection, etc.)
+- **THEN** the response code and shape remain whatever the pre-change behaviour produced
+- **AND** the new 422 path applies ONLY to the blocking-consent case described above

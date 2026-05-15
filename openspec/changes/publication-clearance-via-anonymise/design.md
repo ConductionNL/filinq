@@ -1,237 +1,232 @@
 ## Context
 
-`ConsentService::createConsentRequest()` exists and is correct — given `{documentId, entityType, entityText, register, schema, extra}` it persists a publicationConsent record with `consentStatus: "pending"`, computes `objectionDeadline` from configuration, and (per `entity-publication-policies`) consults `PolicyMatchService` to apply pre-emption. The canonical `consent-management` spec (REQ-CONS-07: CONS-048 and CONS-050) flagged that this method has no automated caller — invocation is programmatic via direct `POST /api/consents` only. The publication-clearance stack is plumbing without a tap.
+`ConsentService::createConsentRequest()` exists and is correct — given `{documentId, entityType, entityText, register, schema, extra}` it persists a `publicationConsent` record with `consentStatus: "pending"`, computes `objectionDeadline` from configuration, and (per `entity-publication-policies`) consults `PolicyMatchService` to apply pre-emption. The canonical `consent-management` spec (REQ-CONS-07: CONS-048 / CONS-050) flagged that this method has no automated caller — invocation is programmatic via direct `POST /api/consents` only. The publication-clearance stack is plumbing without a tap.
 
-Building a separate "publication-prep" entry point with its own controller, session state, and stages (start → notify → wait → decide → publish) is a tempting design but over-engineered for the actual operator decision: per detected entity, what should we do? That's already what extract → review → anonymise expresses. We just need the anonymise endpoint to accept "publish unredacted under this basis" decisions alongside "anonymise these" decisions, and to call `createConsentRequest` for the unredacted ones.
+The first draft of this change proposed adding the tap on the anonymise endpoint: a parallel `unredactedEntities[]` field carrying per-entity decisions that the controller would route through `createConsentRequest()`. Two flaws were identified on review:
 
-This change is an additive extension of the existing endpoint plus a small idempotency upgrade to `createConsentRequest`. No new endpoints, no new state, no session lifecycle. Statelessness aligns with the rest of the anonymisation pipeline and reuses the operator's existing review-then-submit pattern.
+1. **Two decision channels for the same operator decision.** Wave 1.3 (`entity-relation-grondslagen`) already gives operators a per-entity decision primitive on the `EntityRelation` row — `skipAnonymization: true` means "leave this entity visible in the document". That's the same operator action publication-clearance regulates. A parallel `unredactedEntities[]` on anonymise duplicates the decision surface.
+2. **422-on-every-first-anonymise for WOO-pending entities.** With consent-creation at anonymise time, every entity that doesn't match a prohibition or standing consent (the common case requiring the 28-day WOO workflow) would 422 the anonymise call until the objection window closes. Operators can't run anonymise without first running anonymise. The 28-day clock has to start at decision time, not at anonymise time.
+
+This rewrite collapses the two channels into one and moves the trigger to decision time:
+
+- `skipAnonymization: false → true` on a relation IS the publication-clearance decision.
+- OR (Wave 1.3 + the amend on PR #1503) dispatches `EntityRelationDecisionUpdatedEvent` after the PATCH commits.
+- DocuDesk listens, calls `createConsentRequest()` per skip-flipped entity.
+- The 28-day clock starts the moment the operator flipped the switch.
+- The anonymise endpoint stays unchanged in shape; it gains a runtime guard against anonymising a file whose skip-marked entities still have unresolved-and-blocking consents.
 
 The change interacts with three already-specced or in-flight changes:
 
-- `entity-relation-grondslagen` (OR) — the per-entity anonymisation grondslag (`bases[]`) lands on `EntityRelation` rows for entities in `entities[]`. Independent of the new `unredactedEntities[]` work.
-- `anonymisation-grondslagen-and-prohibition-gate` (DocuDesk) — provides `PolicyMatchService` (or scaffolds it). The prohibition gate on `entities[]` runs before this change's logic.
-- `entity-publication-policies` (DocuDesk) — defines the policy-pre-emption logic that fires inside `createConsentRequest`. Standing-consent matches resolve to `consent_given`; prohibition matches CAN'T appear in `unredactedEntities[]` (this change rejects them at the gate).
+- `entity-relation-grondslagen` (OR — PR #1503) ships the `skipAnonymization` flag, the PATCH endpoint, and (in the amend) the `EntityRelationDecisionUpdatedEvent`. Hard dep.
+- `entity-publication-policies` (DocuDesk) defines `PolicyMatchService` and its pre-emption logic inside `createConsentRequest`. Hard dep.
+- `anonymisation-grondslagen-and-prohibition-gate` (DocuDesk) carries the prohibition-gate scaffold on the `entities[]` path. Soft dep — either side of the prohibition gate (anonymise-path or unredact-path) can land first; the second consumes the same `PolicyMatchService`.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Extend the per-document and batch anonymise endpoints with `unredactedEntities[]`. For each entry, create or update a publicationConsent record via `createConsentRequest`.
-- Make `createConsentRequest` idempotent on `(documentId, entityKey)`. Re-submits update the operator-set fields, preserve workflow state.
-- Reject prohibited entities placed in `unredactedEntities[]` with HTTP 422 — surfacing the privacy bug to the operator instead of silently anonymising or unmasking.
-- Serialise multiple bases into the existing `legalBasis` (single string) + `notes` (markdown) fields using a sentinel-tagged region for clean re-submits.
-- Stub notification dispatch in v1 — record `notificationStatus: pending` and the objection deadline; do not actually send email or postal notification.
+- Close the canonical `consent-management` REQ-CONS-07 gap — `createConsentRequest()` gets an automated caller.
+- Move the 28-day WOO objection clock to decision time so the legal timer starts when the operator commits to publishing unredacted, not when they hit anonymise.
+- Reuse `skipAnonymization` (Wave 1.3) as the single decision primitive — no parallel `unredactedEntities[]` array, no new request fields on the anonymise endpoint.
+- Keep `createConsentRequest` idempotent on `(documentId, entityKey)` so multiple relations for the same entity (multiple text positions of the same person) resolve to one consent record.
+- Guard the anonymise endpoint defensively: do not anonymise a file whose skip-marked entities still have pending consents in their objection window.
+- Prohibition handling: PATCH-time client-side warning + listener-side reversal — never silently anonymise or unmask a prohibition-matched entity.
 
 **Non-Goals:**
 
-- Build a separate publication-prep controller / endpoint. Out of scope.
+- Build a separate publication-prep controller / endpoint. The decision lives on the relation; the listener closes the loop.
 - Real notification dispatch (SMTP, postal address handling, retry logic). Separate change.
 - Multi-document publication-prep in a single call. Separate change.
-- A structured publication-grounds vocabulary (Woo Art. 3 / AVG Art. 6 as `base` records). Separate change.
-- Auto-resolution of contact information from external directories. Separate change.
-- Final publication action (output assembly, push to overheid.nl). Separate change — large scope.
+- Multi-basis legal-basis serialisation. Defer to follow-up — `legalBasis` is set later via `PUT /api/consents/{id}`.
+- Auto-resolution of contact information from external directories.
+- Final publication action (output assembly, push to overheid.nl).
+- Per-relation publication semantics. `skipAnonymization` stays per-relation for layout reasons; consent records are per-entity-per-document.
 
 ## Decisions
 
-### D1. Stateless extension, not a new endpoint
+### D1. The trigger is `EntityRelationDecisionUpdatedEvent`, not the anonymise call
 
-Adding an `unredactedEntities[]` field to the existing anonymise endpoint and routing the per-entity decisions through `createConsentRequest` collapses what would otherwise be a multi-stage workflow (start prep → review → submit decisions → ...) into the existing review-then-submit pattern. No session state, no preparation lifecycle, no separate controller.
-
-**Rationale:**
-
-- Operators already expect the anonymise call to express their per-entity intent. Splitting "anonymise" and "decide-on-publication" into separate endpoints would force them to make the same decision twice in two different shapes.
-- Statelessness simplifies error semantics — the call either succeeds atomically (entities anonymised, publicationConsent records created) or fails with no partial side-effects to clean up.
-- A separate endpoint would replicate plumbing (auth, document loading, file resolution) that the anonymise endpoint already has.
-
-**Trade-off:** the anonymise endpoint becomes more complex (two responsibilities: redact-this and clear-that). Mitigated by keeping the responsibilities cleanly separable in the controller / service layer — `unredactedEntities[]` processing happens after the existing anonymise pipeline completes.
-
-### D2. Idempotency on `(documentId, entityKey)` for createConsentRequest
-
-`createConsentRequest` is upgraded to:
-
-1. Look up an existing publicationConsent record matching `(documentId = $documentId, entityKey = $entityKey)` (or `entityText` if `entityKey` isn't supplied).
-2. If found:
-   - Update operator-controlled fields: `legalBasis`, `notes`, `contactEmail`, `contactAddress`, `entityType` (rare update — only if the detector's classification changed).
-   - Preserve workflow state: `notificationStatus`, `notificationSentAt`, `objectionDeadline`, `objectionReceivedAt`, `objectionReason`, `consentStatus`, `policyMatch`, `publicationDecision`.
-   - Re-run `PolicyMatchService` and update `policyMatch` only if the existing `policyMatch` is null and a match now exists (don't downgrade an existing match — that's a separate rule-mutation event handled by `entity-publication-policies` retroactive logic).
-3. If not found: create a new record (existing behaviour).
-
-**Why `entityKey` matches by, not `entityText`?** `entityKey` is the stable per-entity identifier. Two records for "Jan Janssen" in different roles (different keys) should be independent. If `entityKey` is null on legacy records, fall back to `entityText` matching.
+`skipAnonymization: false → true` on a relation IS the operator's "publish this entity unredacted" decision. OR's `EntityRelationMapper::updateDecisionMetadata` dispatches `EntityRelationDecisionUpdatedEvent` after persisting the change (added in the amend to PR #1503). DocuDesk's `DocuDeskEventListener` subscribes and routes the event to a handler that calls `ConsentService::createConsentRequest()` for the relation's entity.
 
 **Rationale:**
 
-- Operators re-submitting the same anonymise call (same set of unredacted entities) shouldn't accumulate duplicate records. Without idempotency: each re-submit would spawn a parallel record, polluting the consent register.
-- Preserving workflow state means the WOO timer keeps running across re-submits — operators don't accidentally restart the 28-day clock by re-issuing the call.
-- Updating operator-controlled fields keeps the system responsive to corrections (operator changes the basis, fixes a contact email).
+- The decision and the consent record happen in the same operator action — the click that flips skip. No follow-up "submit" step.
+- The 28-day WOO clock starts at decision time, which is the correct legal moment (the operator committed to publication; the clock should already be running by the time anonymise is invoked).
+- Single decision channel: there's no `unredactedEntities[]` to keep in sync with `skipAnonymization` on the relation.
+- Operationally separable: the anonymise endpoint stays focused on file mutation; the consent layer is event-driven.
 
-**Trade-off:** the lookup adds one query per `unredactedEntities[]` entry. Negligible.
+**Trade-off:** The trigger is post-commit — by the time DD's listener fires, the PATCH has already returned to the client. If the policy layer rejects the consent (prohibition match), the listener has to reverse the PATCH (a second write). This eventual-consistency split is the price of post-commit dispatch; the alternative (a vetoable pre-event in OR) would couple OR's persistence semantics to DD's policy logic and was rejected as cross-app leakage. See D4 for how reversal is handled.
 
-### D3. Hard 422 on prohibition match in `unredactedEntities[]`
+### D2. `createConsentRequest` is idempotent on `(documentId, entityKey)` for `scope: "document"` records
 
-Per Q1' from the exploration: prohibited entities cannot be in `unredactedEntities[]`. The check runs as part of input validation:
+A document can contain multiple relations for the same entity (multiple text positions of "Jan Janssen"). Each `skipAnonymization: true` PATCH fires its own event. Without idempotency, each event would create a duplicate consent record per relation. The fix: `createConsentRequest` first looks up an existing `scope: "document"` record matching `(documentId, entityKey)`; if found, it updates the operator-controlled fields and preserves workflow state.
+
+**Lookup semantics:**
+
+1. If `entityKey` is supplied: match by `(documentId, entityKey, scope = "document")`.
+2. If `entityKey` is null: fall back to `(documentId, entityText, scope = "document")`. Legacy records and edge cases.
+3. `scope: "entity"` records (standing consents) are NEVER matched as duplicates of a per-document call — they live in a different conceptual space.
+
+**On-match update rules:**
+
+| Field | Behaviour |
+|---|---|
+| `entityType` | Updated (rare — only when detector reclassified) |
+| `legalBasis` | Updated (operator may have set it via the consent UI between events) |
+| `notes` | Updated |
+| `contactEmail` | Updated |
+| `contactAddress` | Updated |
+| `notificationStatus` | **Preserved** |
+| `notificationSentAt` | **Preserved** |
+| `objectionDeadline` | **Preserved** (28-day clock keeps running across re-events) |
+| `objectionReceivedAt` | **Preserved** |
+| `objectionReason` | **Preserved** |
+| `consentStatus` | **Preserved** (workflow state) |
+| `policyMatch` | **Preserved unless it was null and is now non-null**: a rule that newly applies can be set; an existing reference is not cleared by re-event. |
+| `publicationDecision` | **Preserved** |
+
+**Rationale:**
+
+- Multiple relations on the same entity → one consent record. Operator-perceived semantic, not per-relation.
+- Re-event (e.g. operator toggles skip off then on again) doesn't restart the WOO clock.
+- The exception for `policyMatch` (null → non-null) lets a newly-added standing consent reach an in-flight pending record via the re-event path. The retroactive logic in `entity-publication-policies` handles the more aggressive cases (rule mutation) separately.
+
+### D3. Three outcomes from `PolicyMatchService` resolve as documented in `entity-publication-policies`
+
+The listener calls `createConsentRequest` and lets `PolicyMatchService` (already wired) decide the outcome. Three branches:
+
+| Match result | Consent record state | Listener follow-up |
+|---|---|---|
+| **Prohibition match** | Create rejected: `createConsentRequest` throws `PolicyRejectedException` (new typed exception — extends the existing exception hierarchy). | Reverse PATCH (D4). Dispatch notification (D4). |
+| **Standing-consent match** | `consentStatus: consent_given`, `notificationStatus: skipped`, `objectionDeadline: null`, `policyMatch: <standing-consent uuid>`. | None — consent is final, operator may proceed to anonymise. |
+| **No match** | `consentStatus: pending`, `notificationStatus: pending`, `objectionDeadline: <now + configured period>`, `policyMatch: null`. WOO timer starts. | None — operator monitors the consent record through its 28-day window via existing UI. |
+
+All three outcomes are pre-existing semantics from `entity-publication-policies`. This change adds no new branching logic to `PolicyMatchService`; only the trigger that hits `createConsentRequest`.
+
+### D4. Prohibition match: listener reverses the PATCH + dispatches a Nextcloud notification
+
+The post-commit event means the PATCH has already returned `200 OK` to the client by the time the listener discovers a prohibition match. The listener handles this with three actions:
+
+1. **Reverse the PATCH.** Call `EntityRelationMapper::updateDecisionMetadata($relation, ['skipAnonymization' => false], $actingUser)`. This emits its own audit-trail entry (recording the reversal explicitly) AND dispatches a follow-up event (idempotency in the listener prevents an infinite loop — see below).
+2. **Dispatch a Nextcloud notification.** Use the standard `\OCP\Notification\IManager` API to notify the acting user. The notification text identifies which prohibition rule matched and which entity was blocked. Clicking the notification navigates to the relevant document review surface so the operator can adjust.
+3. **Audit context.** The audit-trail entry from step 1 includes a structured note (`reason: "policy_rejection"`, `prohibitionRule: <uuid>`, `originalEvent: <ref>`) so reviewers can trace the operator's attempt + the system's reversal.
+
+**Loop prevention.** Reversing the PATCH dispatches `EntityRelationDecisionUpdatedEvent` again with `skipAnonymization: true → false`. The listener checks `isSkipAnonymizationActivated()` (returns true only for `false → true` transitions). Reversal events return false and are ignored — no further action.
+
+**Client-side widget pre-check (D6) is the first line of defence.** The listener's reversal is the backstop for non-widget clients (curl, automation, third-party UIs) that bypass the client check.
+
+**Rationale:**
+
+- Privacy-fail-loud principle. Silently anonymising a prohibited-but-skip-marked entity would betray the operator's expressed intent. Reversing the PATCH and notifying surfaces the conflict.
+- Eventual consistency (PATCH succeeded, then reversed) is acceptable because the consent layer is the authoritative truth. The state visible to a downstream consumer querying after the listener finishes is the consistent state.
+- A vetoable pre-event in OR would have prevented the brief inconsistency but would couple OR to DD's policy layer. The brief inconsistency is the cost of clean app boundaries.
+
+### D5. Defensive anonymise-time runtime check
+
+The anonymise endpoint gains a runtime check before delegating to OR's `anonymizeDocument`:
 
 ```
-   for each entry in unredactedEntities[]:
-     match = PolicyMatchService::matchProhibition(entry.entityText, entry.entityType, ...)
-     if match: collect into rejection list
-   if rejection list non-empty:
-     return 422 with body listing rejected entries
+1. Read all EntityRelation rows for the target file where skipAnonymization = true.
+2. For each, look up the corresponding publicationConsent record by (documentId, entityKey).
+3. For each consent record found:
+     - consentStatus in {consent_given, anonymized} → not blocking.
+     - consentStatus = pending AND objectionDeadline < now → not blocking (window closed).
+     - consentStatus = pending AND objectionDeadline >= now → BLOCKING (still in objection window).
+     - consentStatus = objection_received → status depends on publicationDecision:
+         - publicationDecision = anonymize → not blocking (operator decided to anonymise anyway).
+         - publicationDecision = publish_with_consent → not blocking (operator overrode).
+         - publicationDecision = pending → BLOCKING (objection still under review).
+4. If any relation is blocking, return HTTP 422 with a structured body listing the blocking entities and the consent records' current state.
+5. Otherwise, proceed to anonymisation as usual.
 ```
 
-The check fires regardless of confidence threshold (unlike the gate on `entities[]` which uses 0.85). The operator made an explicit decision to publish a prohibited person — there's no ambiguity to resolve via low-confidence override.
-
-**Response body shape on 422:**
+**The 422 body shape:**
 
 ```json
 {
-  "error": "Prohibited entities cannot be published unredacted.",
-  "rejectedUnredacted": [
-    {
-      "entityId": 5,
-      "entityText": "Beschermde Getuige A",
-      "ruleId": "<uuid>",
-      "ruleName": "<rule.primaryName>"
-    }
-  ],
-  "fallback": "Move these entities into entities[] (anonymise) and re-submit."
-}
-```
-
-**Rationale:**
-
-- Privacy-fail-loud principle. The whole point of `publicationProhibition` is "this person must not appear unredacted in publications" — silently overriding the operator's mistake or auto-anonymising is misleading.
-- Symmetric with the existing prohibition gate on `entities[]` (where missing-from-anonymise-set fails 422). Same UX pattern.
-- 422 is the right code: the input is structurally valid but semantically rejected.
-
-### D4. Multiple-bases via sentinel-tagged notes serialisation
-
-`publicationBases: string[]` from the request becomes:
-
-```php
-$record->setLegalBasis($publicationBases[0] ?? null);
-if (count($publicationBases) > 1) {
-    $record->setNotes($this->serialiseAdditionalBases($existingNotes, array_slice($publicationBases, 1)));
-}
-```
-
-`serialiseAdditionalBases` produces (Markdown):
-
-```
-<existing operator-authored notes content, if any>
-
-<!-- docudesk:additional-publication-bases:begin -->
-**Aanvullende publicatiegrondslagen:**
-- <basis 2>
-- <basis 3>
-<!-- docudesk:additional-publication-bases:end -->
-```
-
-On re-submit, the helper:
-
-1. Strips the existing bracketed region (begin → end) from current `notes`.
-2. Appends the new bracketed region with the current additional bases.
-
-If `publicationBases` shrinks to one element, the bracketed region is removed entirely (notes return to operator-authored content only).
-
-**Rationale:**
-
-- `publicationConsent.legalBasis` is `string` (max 500). Single field. Multiple bases need a home.
-- A new schema field (`legalBases[]`) would require a schema migration and ripple changes through every consumer of publicationConsent. Out of proportion to the rare multi-basis case.
-- Sentinel-tagged regions in markdown are a well-understood pattern (used by config managers, doc generators, etc.) — operators see exactly which content is auto-managed and don't accidentally overwrite their own notes.
-
-**Edge cases:**
-
-- Operator manually edits the bracketed region: their changes are overwritten on next re-submit. Document this as a known caveat — manual edits inside the brackets are not preserved.
-- Operator removes the closing tag: helper falls back to "preserve all current notes; append new region at the end". A linter at apply time can detect malformed sentinels.
-
-### D5. Notification dispatch stays stubbed in v1
-
-Per Q2' answer (stub): created publicationConsent records with `consentStatus: pending` carry `notificationStatus: pending` and a computed `objectionDeadline`. The system does NOT send any email or postal notification automatically.
-
-**What the operator sees:**
-
-- The publicationConsent record exists with `notificationStatus: pending`.
-- `objectionDeadline` is set (28 days from creation by default; configurable per CONS-031).
-- The 28-day clock starts ticking — that part isn't stubbed; only the dispatch is.
-- Operators advance status manually via `PUT /api/consents/{id}` to `notificationStatus: sent` once they've actually sent the notification by their out-of-band means (printed letter, email from a tracked address, whatever).
-
-**Rationale:**
-
-- Real dispatch involves: SMTP integration with the tenant's mail server, postal address handling (printing? digital→postal services?), template rendering for notification content, dispatch retry, delivery confirmation, bounce handling. Each is a real piece of work; bundling them with this change would 5x the scope.
-- The publication-clearance pipeline is operationally useful even with stub dispatch: operators send notifications via their existing channels (email signed by a privacy officer, printed mail, etc.), then mark the record's status. The structured record + the WOO timer + the operator's eventual `publicationDecision` are what compliance reporting cares about; how the notification was sent is a (recorded) detail, not a structural requirement.
-
-**Future work:** a separate change `publicationconsent-notification-dispatch` that adds the real email + postal stack. This change's stub doesn't need to be replaced when that lands; it just becomes "do real dispatch instead of stubbing".
-
-### D6. `createdConsents[]` aggregation in the response
-
-The anonymise response gains an optional `createdConsents[]` array. For each entry in `unredactedEntities[]` that resulted in a successful create or update:
-
-```json
-{
-  "anonymizedFileId": ...,
-  "anonymizedFilePath": ...,
-  "createdConsents": [
+  "error": "<localised string>",
+  "blockingConsents": [
     {
       "consentId": "<uuid>",
-      "entityId": 5,
-      "entityText": "Burgemeester De Vries",
-      "consentStatus": "consent_given",
-      "policyMatch": "<standing-consent uuid>",
-      "notificationStatus": "skipped",
-      "objectionDeadline": null,
-      "wasUpdated": true
-    },
-    {
-      "consentId": "<uuid>",
-      "entityId": 7,
-      "entityText": "Anneke Jansen",
+      "entityText": "<string>",
       "consentStatus": "pending",
-      "policyMatch": null,
-      "notificationStatus": "pending",
-      "objectionDeadline": "2026-06-04T11:00:00Z",
-      "wasUpdated": false
+      "objectionDeadline": "2026-05-22T11:00:00Z",
+      "reason": "objection_window_open"
     }
   ]
 }
 ```
 
-`wasUpdated` is true if an existing record was matched-and-updated; false if a new record was created. Frontends use this to render a per-entity confirmation in the UI.
+**Rationale:**
 
-**Rationale:** the operator submitted decisions; they need feedback on what each decision became. Without `createdConsents[]`, the frontend has to re-query `GET /api/consents/document/{documentId}` to see the result, which adds round-trips and can race with concurrent updates.
+- The "422 on first anonymise" failure mode the old draft suffered from required EVERY skip to delay anonymise. The new check only fires when the consent layer says "this is still blocking" — which is the legitimate case (the WOO window is open and the operator hasn't waited it out yet).
+- For most workflows, the operator marks skip → consent record is auto-resolved (standing-consent match) → anonymise call proceeds immediately. Only entities entering the WOO workflow block anonymise, and only until the window closes.
+- The check is defensive — the legitimate path is for the operator to wait for the objection window or trigger an early decision via the consent UI. Anonymise blocking is the safety net.
 
-### D7. Batch flow honours the same shape
+### D6. Widget pre-checks the prohibition list client-side
 
-`POST /api/anonymization/batch/{batchId}/anonymize` accepts `unredactedEntities[]` per file in the batch. The response aggregates `createdConsents[]` per file. A 422 from one file's prohibition violation does NOT block the rest of the batch — it surfaces as that file's per-file outcome (multi-status response shape).
+The Anonymisation widget (currently smoke-test grade, evolving toward production publication-prep) loads `GET /apps/docudesk/api/policy/prohibitions` once per session and caches the result. When the operator hovers or clicks the skip switch on an entity, the widget normalises the entity text and checks against the cached prohibition rules (exact, normalized, BSN, KvK match types). On a match:
 
-**Rationale:** consistency with the per-doc endpoint. Operators driving batch publications shouldn't have to flip back to per-doc just to use the unredacted-entities flow.
+- Switch is rendered disabled.
+- Tooltip / inline note explains "This entity is on the publication prohibition list (rule: <ruleName>). Cannot be published unredacted."
+- The widget never sends the PATCH for that entity.
+
+**Rationale:**
+
+- Operator UX: the skip is visibly impossible, no surprise notification + reversal flow.
+- Performance: prohibition list is typically small (a few dozen rules); client-side cache is cheap; the matching primitives mirror the server-side `PolicyMatchService`.
+- The listener's PATCH-reversal (D4) is the defensive backstop. Non-widget clients (curl, automation, third-party UIs) that bypass the client check still hit the reversal path.
+
+**Trade-off:** the client-side normalisation must match the server's. The widget uses the same four match types (`exact`, `normalized`, `bsn`, `kvk`) and the same normalisation rules (Latin transliteration + lowercase). A shared JS implementation can be extracted later if drift becomes a problem; for v1 each side implements independently with a documented spec for the normalisation rules.
+
+### D7. Notification dispatch stays stubbed in v1
+
+Per the original draft's D5 (unchanged in this rewrite): publicationConsent records created with `consentStatus: pending` carry `notificationStatus: pending` and a computed `objectionDeadline`. The system does NOT automatically send any email or postal notification.
+
+Operators advance `notificationStatus` to `sent` manually via the existing `PUT /api/consents/{id}` once they've sent the notification through their existing out-of-band channel. This reaffirms the canonical `consent-management` CONS-049.
+
+A separate change `publicationconsent-notification-dispatch` will add the real SMTP / postal stack. When it lands, the stub becomes a real dispatch; this change's spec doesn't need to be replaced.
 
 ## Risks / Trade-offs
 
-- **[Anonymise endpoint complexity creep]** → Mitigation: keep the new logic cleanly separable in the controller / service. The existing anonymise pipeline runs first; the publicationConsent creation runs after, with its own input validation and error path.
-- **[Idempotency edge: entityKey is null on legacy records]** → Mitigation: fall back to `entityText` matching when `entityKey` is null. Document the limitation. Future cleanup can backfill `entityKey` if needed.
-- **[Sentinel-tagged notes overwrites operator content]** → Mitigation per D4: documented; operators see the brackets and know the region is auto-managed. Linter at apply time catches malformed sentinels.
-- **[Stub notification means real WOO compliance is operator-driven]** → Mitigation: documented in CHANGELOG; until real dispatch lands, operators send by their existing channels and mark status manually. The 28-day clock starts; the structural record is correct; only automated dispatch is missing.
-- **[Operator submits an entity in BOTH entities[] and unredactedEntities[]]** → Edge case; logically incoherent. Server rejects with 400 ("entity X cannot be both anonymised and published unredacted") at input validation.
-- **[Re-submit while a notification was previously sent]** → Idempotency preserves `notificationStatus: sent` (workflow state). Operator-controlled fields update; no double-send.
-- **[Cross-change ordering — PolicyMatchService doesn't exist yet]** → Mitigation: hard fail-closed if `PolicyMatchService` isn't available (treat as "no policy matches"). The existing WOO workflow path keeps working. When `entity-publication-policies` apply lands the matcher, this change picks it up automatically.
+- **Listener failure means the consent record isn't created.** Mitigation: the listener wraps the `createConsentRequest` call in `try/catch`, logs failures loudly, and emits a notification to the acting user that the consent creation failed (so they can retry by toggling skip off and back on, or contact admin). Listener failure does NOT roll back the PATCH — eventual consistency.
+
+- **Reversal-loop on prohibition handling.** Mitigation: `isSkipAnonymizationActivated()` returns true only on `false → true` transitions. The reversal write is `true → false`, which doesn't re-trigger the prohibition handler. Verified by unit test.
+
+- **Race: operator runs anonymise WHILE the listener is mid-execution.** Possible if the operator clicks skip and immediately clicks anonymise. Mitigation: the anonymise defensive check (D5) re-reads the consent records, so by the time it runs the listener has either committed or failed. If the listener failed AND the operator is racing, anonymise proceeds as if no consent record exists — this is a degraded case the operator will see in the consent register afterward. For v1 acceptable; if it becomes a problem a small delay or a transactional read can be added.
+
+- **`(documentId, entityKey)` uniqueness across event re-events.** Mitigation per D2: lookup-before-create. If two events fire near-simultaneously for the same entity (rare — relations are sequenced one at a time per PATCH), the second event sees the record from the first and updates rather than duplicates. Database-level uniqueness constraint could be added later for belt-and-braces; not required for v1.
+
+- **Anonymise blocking the operator on a 28-day WOO window.** This is correct behaviour, not a bug — the legal workflow requires waiting. Operators can short-circuit a particular entity by toggling skip off (anonymise it instead) or by explicitly entering a `publicationDecision` via the consent UI. Document this in the user-facing help text.
+
+- **Widget client-side normalisation diverging from server.** Mitigation per D6: documented spec for normalisation rules, both sides implement independently. If drift is observed, extract a shared JS module.
+
+- **Cross-change ordering — `EntityRelationDecisionUpdatedEvent` doesn't exist yet on `development`.** Mitigation: hard dep on PR #1503's amend. This change's implementation cannot land before #1503 + the amend merge. If `PolicyMatchService` (`entity-publication-policies`) isn't available yet, the listener fails-closed (treat as "no policy matches" → `pending` record with WOO workflow). The check on `class_exists` covers this transition window.
 
 ## Migration Plan
 
-1. Land the idempotency upgrade in `ConsentService::createConsentRequest()` (with backward-compatible behaviour for existing direct callers — they don't pass `entityKey`, so the lookup falls back to `entityText` and works the same).
-2. Land the controller / service changes for `unredactedEntities[]` plus the 422 prohibition gate plus the `createdConsents[]` response aggregation.
-3. Land the sentinel-tagged notes serialisation helper.
-4. Update batch endpoints with the same additions.
-5. Release. Operators see the new field on per-doc and batch anonymise; the response carries the publicationConsent results.
+1. **Land OR PR #1503 + the amend.** This change's hard dep. Once merged on OR's `development`, the event class and dispatch are available.
+2. **Land DocuDesk `entity-publication-policies` (PR #147).** This change's other hard dep. Once merged, `PolicyMatchService` is available.
+3. **This change's apply phase** delivers:
+   - `DocuDeskEventHandler` branch for `EntityRelationDecisionUpdatedEvent`.
+   - `ConsentService::createConsentRequest` idempotency upgrade.
+   - `AnonymizationService` defensive runtime check.
+   - Widget client-side prohibition pre-check.
+   - Tests, docs, CHANGELOG entry.
+4. **Release.** The publication-clearance pipeline is now operationally driveable.
 
-**Rollback:** Remove the `unredactedEntities[]` handling — the field is silently ignored on the way in, no consent records are created. Existing consent records are unaffected. The endpoint reverts to its pre-change shape for `unredactedEntities[]`-passing callers; their next call still creates consents via direct `POST /api/consents`.
+**Rollback:** Disable the event listener (remove the branch in `DocuDeskEventHandler::dispatchPolicyRetroactive` or the equivalent location). The PATCH endpoint stays functional but no consent records are created automatically. Existing consent records are untouched. The system reverts to the canonical CONS-048 / CONS-050 "no automated caller" gap — recoverable to pre-change behaviour.
 
 ## Seed Data
 
-Not applicable — this change introduces no new schemas or seed objects. publicationConsent records are created at runtime via the new flow; no fixtures needed beyond the existing test data.
+Not applicable — this change introduces no new schemas or seed objects. publicationConsent records are created at runtime via the new listener-driven flow.
 
 ## Open Questions
 
-- **`PolicyMatchService` availability at apply time** — confirm whether `entity-publication-policies` apply has scaffolded it, or whether this change's apply phase needs to scaffold it. Either way, this change consumes it; whichever change lands first builds it.
-- **Sentinel-tagged region malformation handling** — when the operator manually edits notes and breaks the sentinel pair, what's the expected recovery? Provisional: log a warning, treat as "no managed region present", append fresh region at the end of notes. Confirm during apply.
-- **Should `createConsentRequest` upgrade to also accept an explicit `policyMatch` parameter** for callers that want to bypass `PolicyMatchService` (e.g. tests, or a future hook from other apps)? Provisional: no — the matcher is the single source of truth; bypass would create inconsistent records.
-- **Decision on `(documentId, entityKey)` matching when entityKey is null on the input but exists on a record** — for v1 we match by `entityText` in that case; should we instead require entityKey on input? Provisional: accept entityText fallback for v1 (operators / frontend may not always have entityKey at hand). Resolve at apply time if it causes confusion.
+- **Should we add a `consentId` field to `EntityRelation` so the listener can record the consent record's UUID back on the relation?** Provisional: no — the lookup by `(documentId, entityKey)` is fast (indexed). Adding a denormalised back-reference would couple OR's schema to DD's consent records, which violates the app-boundary discipline elsewhere in the design. Confirm at apply time.
+
+- **Notification UX details** — what does the prohibition-blocked notification look like? Provisional: standard Nextcloud notification with title "Publication of '<entity>' was prevented by a privacy rule", body referencing the rule name + a deep link to the document. Confirm at apply time with frontend.
+
+- **`PolicyRejectedException` — new typed exception, or reuse existing?** Provisional: introduce a new exception in `lib/Exception/PolicyRejectedException.php`. The existing exception hierarchy is for generic validation; this is a semantic rejection from the policy layer specifically. Confirm at apply time.
+
+- **Should the defensive check be runnable as a dry-run query** (`GET /api/anonymization/precheck/{fileId}` returning the list of blocking consents without attempting anonymise)? Provisional: defer — the 422 from the actual anonymise call gives the same information; the dry-run is a polish feature for a follow-up.
