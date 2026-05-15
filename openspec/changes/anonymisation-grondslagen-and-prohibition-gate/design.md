@@ -2,27 +2,28 @@
 
 DocuDesk's anonymise pipeline today (per the canonical `anonymization` and `anonymization-entity-review` capabilities) runs upload → extract → review → anonymise. The review step exists in batch flows (with toggle endpoints), but two backend-side gaps remain:
 
-1. **No grondslag is recorded for any anonymised entity.** The anonymise call accepts an `entities[]` array; each entry has `text`, `entityType`, `score`. There is no place for a per-entity legal basis. After the OpenRegister paired change `entity-relation-grondslagen` lands, OpenRegister's `EntityRelation` row will accept an optional `bases` JSON column and the anonymise endpoint will persist + strip it. DocuDesk's job is to forward operator-picked bases verbatim to OpenRegister.
+1. **No grondslag is recorded for any anonymised entity.** The OpenRegister `EntityRelation` row has no `bases` field. After OR's paired change `entity-relation-grondslagen` lands (with its post-explore-mode rework), the row gains `bases` and `skipAnonymization` columns and an audited `PATCH /api/entity-relations/{id}` endpoint backed by `EntityRelationMapper::updateDecisionMetadata`. **Bases are set per-relation on the OR API directly** — by the frontend, batch tooling, or any caller — between detect and anonymise. DocuDesk's controllers do not thread bases through their own payloads; the per-relation API on OR is the canonical write surface, naturally idempotent and audited.
 2. **The `publicationProhibition` list is not consulted by the anonymise flow.** A user could deselect (or fail to detect) a court-order witness or undercover officer and still anonymise the document — silently. The design from `entity-publication-policies` explicitly stated generic anonymisation flows do not touch the policy layer. That bound is right *for workflow integration* (creating publicationConsent records, pre-empting WOO) but too tight *for read-only safety*. We refine it.
 
-The frontend team is building the per-entity review UI on top of these endpoints. This change is the backend contract.
+The frontend team is building the per-entity review UI on top of these endpoints. The bases-set step is now a direct OR API call from the frontend; the prohibition gate + override acknowledgement remain on the DocuDesk anonymise endpoint (overrides need DD-side audit-context recording, see decisions D7+). This change is the backend contract for the gate and the override mechanism.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Forward per-entity `bases[]` from the operator's picker into OpenRegister's anonymise call. DocuDesk does not persist bases itself.
-- Surface a per-entity `prohibitionMatch` on the extract-time response and on the per-batch consolidated entities response, so the frontend can render prohibition-locked entities without re-running the matcher client-side.
+- Make per-entity prohibition matches visible on the extract-time response and the per-batch consolidated entities response, so the frontend can render prohibition-locked entities without re-running the matcher client-side.
 - Gate the anonymise call: no high-confidence prohibition-listed entity may be missing from the to-be-anonymised set. Fail with HTTP 422 + a structured body listing the missing entities (using OpenRegister Entity record canonical names, not literal document text).
 - Allow operators to override low-confidence (< 0.85) prohibition matches via an `acknowledgedOverrides[]` field on the request. Overrides for ≥ 0.85 matches are rejected.
+- For each acknowledged override, write a DocuDesk-side audit entry (capturing `ruleId`, `entityRelationId`, `fileId`, `reason`, `acknowledgedBy`, `acknowledgedAt`) AND PATCH OR's matching `EntityRelation` with `{skipAnonymization: true}` via the `EntityRelationMapper::updateDecisionMetadata` DI method. The DD audit captures *why*; OR's audit captures *what changed and when*.
 - Edit the wording of `entity-publication-policies` (in-flight change, not yet implemented) so its trigger-boundary correctly distinguishes "workflow integration" from "read-only data access".
 
 **Non-Goals:**
 
+- **Thread bases through the DocuDesk anonymise endpoint.** Bases are set per-relation on OR's API directly (the new `PATCH /api/entity-relations/{id}` endpoint or its DI parallel). The frontend, batch tooling, or any caller does this between extract and anonymise. DocuDesk does NOT relay or translate bases.
 - Build the publication-prep flow that creates `publicationConsent` records. Out of scope; tracked separately.
 - Change the existing per-document anonymise UI. The frontend team owns review-screen design; this change provides API contract only.
-- Persist bases anywhere DocuDesk-side. Storage lives on `EntityRelation` (paired OpenRegister change).
-- Validate that base UUIDs resolve. Frontend picker output is trusted; downstream OpenRegister accepts any UUID.
+- Persist bases or skip-flags anywhere DocuDesk-side. Both columns live on `EntityRelation` per OR's paired change.
+- Validate that base UUIDs resolve. Frontend picker output is trusted; OR accepts any UUID.
 - Build a separate prohibition admin page. That's part of `entity-publication-policies`.
 - Touch the canonical `consent-management` capability. The publication-clearance workflow is unchanged; this gate is a different surface.
 
@@ -115,7 +116,7 @@ The consolidated-entities endpoint includes a `suggestedBases[]` array per entit
 
 - File not in a dossier (orphan): `suggestedBases` is empty. Operator picks from full vocabulary.
 - Dossier has empty `bases[]` (draft dossier): `suggestedBases` is empty. Same handling.
-- Operator overrides at the entity level: supplied `bases` in the anonymise payload is taken verbatim. `suggestedBases` is a hint, not an enforced default.
+- Operator overrides at the entity level: the operator's bases choice (committed via OR's PATCH endpoint) wins; `suggestedBases` is a hint surfaced in the review UI, not an enforced default. The DocuDesk anonymise endpoint doesn't see the operator's bases at all (those are persisted on the relation before the anonymise call).
 
 ### D8. In-place wording fix to `entity-publication-policies`
 
@@ -133,13 +134,39 @@ This edit is captured as a task in this change's `tasks.md`. It does NOT introdu
 
 ### D9. No DocuDesk-side persistence of bases
 
-DocuDesk's controller forwards `bases[]` to OpenRegister and does not persist them locally. There is no DocuDesk schema for "anonymisation log with bases" — all bases live on `EntityRelation` after the OR paired change.
+DocuDesk does NOT carry, forward, or persist bases. Bases are set on the OR `EntityRelation` row via the OR PATCH endpoint (or its DI parallel `EntityRelationMapper::updateDecisionMetadata`) — by the frontend, batch tooling, or any caller — between the extract step and the anonymise call.
 
-**Rationale:** Single source of truth. Two storage locations means two writes that can disagree, and the data model gets confused. Reading bases for an EntityRelation goes through OR; DocuDesk can join when it needs to render summaries.
+**Rationale:** Single source of truth, with each decision being an atomic idempotent write. Two storage locations means two writes that can disagree; one batched-translation step (the original design) means one bundled mutation that can fail halfway. Setting bases per-relation on OR is both simpler (one verb, one row) and more robust (each PATCH is independently retry-safe).
+
+### D10. DocuDesk-side persistence of override audit entries
+
+For each acknowledged override processed by DocuDesk's anonymise endpoint, DocuDesk MUST persist an audit entry capturing `ruleId`, `entityRelationId`, `fileId`, `reason`, `acknowledgedBy` (user UID), and `acknowledgedAt` (ISO-8601). This entry captures *why* the operator released a flagged entity from anonymisation — operator-commentary metadata that OR's audit-trail (which records only the row mutation) does not carry.
+
+**Storage choice (mandated, not a preference).** Implementations MUST add a `prohibitionOverrideAudit` schema to DocuDesk's `docudesk_register.json`, alongside existing schemas. Each acknowledged override becomes one object in that schema. Implementations MAY ALSO write to an additional sink (dedicated audit-log table, Nextcloud structured logger) but the register-backed entry is the mandated one. Reasoning:
+
+- **Queryable via existing surfaces.** Operator audit lookups go through OR's `/objects` endpoints. A register-backed entry shows up in those queries automatically; a logger-only sink would require a parallel query path.
+- **Retention + RBAC reuse.** Register objects inherit OR's retention rules, schema-level RBAC, and multi-tenancy filtering. A separate audit table would need its own retention policy + access rules — duplicate infrastructure.
+- **Single source of truth.** Two storage locations means two writes that can disagree. Mandating one prevents the question "which audit do we trust?" from ever needing an answer.
+
+**Rationale for keeping this in DocuDesk (not OR):** the `reason` is operator commentary specific to DocuDesk's prohibition-gate workflow. Pushing it into OR's audit-trail or whitelist would couple OR to DocuDesk-specific semantics (the override concept doesn't exist in OR's domain). Per the new OR spec, OR's PATCH whitelist is decision-only (`bases`, `skipAnonymization`) — no `note` / `reason` field. The clean split is "OR records what changed; DocuDesk records why".
+
+### D10a. Sequential best-effort commit semantics (no request-level atomicity)
+
+The override-processing loop MUST iterate `acknowledgedOverrides` in submission order, committing each override's DD audit entry first and then its OR PATCH. There is NO request-level transaction — atomicity is per-override (audit then PATCH for ONE relation), not all-overrides-or-nothing.
+
+**Rationale for explicit best-effort over an earlier "atomic per request" wording.** The implementation calls OpenRegister via in-process DI for `EntityRelationMapper::updateDecisionMetadata`, but each PATCH is one autonomous DB write with its own audit-trail entry on OR. There is no shared transactional context spanning DD's audit write + OR's row UPDATE + OR's audit INSERT for relation 1 + relation 2 + relation 3. Pretending otherwise in the spec creates an undeliverable requirement.
+
+Best-effort with stop-on-first-failure preserves the auditable trail of operator intent: every PATCH that committed remains visible (in both DD's `prohibitionOverrideAudit` schema and OR's audit-trail), every PATCH that didn't run leaves no rows. The DD audit entry for the relation that triggered the failure also remains — it was written BEFORE its PATCH per the per-override audit-first ordering — and captures the operator's intent even though the OR commit itself failed. Retries are safe because the skip flag is idempotent on OR (a no-op for already-skipped relations).
+
+A reader thinking about edge cases should note:
+
+- Two operators acknowledging the same low-confidence match in parallel — the second PATCH lands as a no-op on OR (skip already true), and the second DD audit entry is written normally. Both operators are credited in DD audit; OR audit shows only the first flip. This is acceptable: the duplicate DD entries make the parallel intent visible.
+- A partial failure leaving relations 1 and 2 with skip=true but the anonymise call NOT forwarded — the operator retries the request. Relations 1 and 2 PATCH again as no-ops on OR; relations 3 and beyond commit fresh; the anonymise call goes through. The two extra DD audit rows on retry are correct — each is a distinct operator decision event.
 
 ## Risks / Trade-offs
 
-- **[Order-of-landing — DocuDesk's bases payload is a no-op until OR's column exists]** → Mitigation: the bases field is forwarded but silently lost on the OR side until the OR migration runs. The persist-then-strip semantics on OR's side are unchanged for callers that don't pass bases. Acceptable.
+- **[Order-of-landing — DocuDesk now has a hard dep on OR's rework]** → DocuDesk's override-acknowledge path calls `EntityRelationMapper::updateDecisionMetadata` directly. That method must exist on the local OR install. Mitigation: OR's reworked `entity-relation-grondslagen` MUST apply before DocuDesk's `anonymisation-grondslagen-and-prohibition-gate`. Apply ordering tracked in cross-app dependency table (proposal.md).
+- **[Frontend needs to know EntityRelation IDs]** → To call OR's PATCH endpoint for bases-set, callers need the relation IDs. DocuDesk's existing extract response (the entity-listing endpoint) already surfaces these IDs (they come from `EntityRelationMapper::findEntitiesForFile`). Frontend uses them to PATCH OR per-entity. No DocuDesk-side change required.
 - **[PolicyMatchService doesn't exist as code yet]** → Mitigation: tasks include "verify PolicyMatchService is available; if not, scaffold from spec or block on `entity-publication-policies` apply". Either change is the natural implementer; whichever lands first builds the matcher.
 - **[Prohibition rule deleted between extract and anonymise]** → Mitigation: cache invalidation on object-changed events ensures the gate sees current rules. If a rule is deleted between the extract response (which flagged the entity) and the anonymise call (which gates), the gate releases — operator may anonymise or not as they prefer. This is the right outcome: deletion of a prohibition is an explicit decision; it should propagate.
 - **[Operator submits an override for a rule that's no longer active]** → Override is ignored (rule isn't matching). No harm.

@@ -4,13 +4,16 @@
 - [ ] 1.2 If `PolicyMatchService` is being scaffolded here, ensure standing-consent matching (from `entity-publication-policies`) can be added without a refactor — separate the prohibition cache from the standing-consent cache so each side can land independently.
 - [ ] 1.3 Unit test `matchProhibition` on its own: high-confidence match, low-confidence match, no match, multi-rule deterministic precedence.
 
-## 2. Anonymise endpoint — bases pass-through
+## 2. Anonymise endpoint — bases handling (REMOVED from this change per 2026-05-12 rework)
 
-- [ ] 2.1 Update `lib/Controller/AnonymizationController::anonymize` and `lib/Controller/BatchAnonymizationController::batchAnonymize` to accept an optional `bases` field on each `entities[]` entry. Validate at the entry: when present, it MUST be an array of strings; reject malformed input with 400.
-- [ ] 2.2 Update `lib/Service/AnonymizationService::anonymizeDocument` to forward the `bases` field verbatim to OpenRegister's anonymise endpoint. Do NOT validate UUIDs (per spec, OpenRegister also doesn't validate).
-- [ ] 2.3 Update `lib/Service/BatchAnonymizeService` similarly.
-- [ ] 2.4 Confirm DocuDesk does not persist bases anywhere locally — single source of truth is the `EntityRelation` row on the OpenRegister side.
-- [ ] 2.5 Unit test the controller / service: bases forwarded; empty array forwarded as empty array; missing field results in no `bases` key in the forwarded body.
+The original tasks here forwarded `bases[]` from DocuDesk's payload to OpenRegister's anonymise call. **That mechanism is removed** by the post-explore-mode rework. Bases are now set directly on OR's `PATCH /api/entity-relations/{id}` endpoint (or via the `EntityRelationMapper::updateDecisionMetadata` DI method) — by the frontend, batch tooling, or any caller — between the extract and anonymise steps.
+
+DocuDesk's anonymise endpoint payload's `entities[]` shape does NOT gain a `bases` field. Replace the original tasks with:
+
+- [ ] 2.1 Confirm `lib/Controller/AnonymizationController::anonymize` and `lib/Controller/BatchAnonymizationController::batchAnonymize` do NOT add a `bases` field to their accepted payload schema. If any incoming `entities[]` entry includes a stray `bases` field, the controller MUST silently drop it (do not error) — preserves compatibility with any caller still on the old contract.
+- [ ] 2.2 Confirm `lib/Service/AnonymizationService::anonymizeDocument` does NOT thread bases through to OR. The OR anonymise call signature is unchanged (`Node $node, array $entities` with entries shaped `{text, entityType, key, ...}`).
+- [ ] 2.3 Unit test that a stray `bases` field on an incoming entity entry is silently dropped: payload `entities: [{text, entityType, key, bases: ["x"]}]` succeeds without erroring AND no `bases` key reaches OR's anonymise call.
+- [ ] 2.4 Document the bases-set mechanism in the API docs: callers call `PATCH /api/entity-relations/{id}` (or use the DI mapper in PHP-in-process consumers) to set bases. Bases-set is independent of and decoupled from the anonymise call.
 
 ## 3. Extract endpoint — prohibitionMatch flag
 
@@ -36,13 +39,18 @@
 - [ ] 5.3 The `entityName` in the response body MUST come from the OpenRegister `Entity` record's canonical name (NOT the literal detected text, NOT the rule's `primaryName`). Use `EntityMapper::find($entityId)` (or the equivalent OR helper) to resolve the canonical name.
 - [ ] 5.4 Application logging: log `ruleId`, `entityId`, `fileId` on a 422 firing. Do NOT log the literal detected text. Canonical entity name MAY appear in logs if it's already in the response payload.
 
-## 6. acknowledgedOverrides
+## 6. acknowledgedOverrides — validation, audit, and OR PATCH
 
 - [ ] 6.1 Update the anonymise request payload to accept an optional top-level `acknowledgedOverrides` array. Each entry: `{ruleId, entityId, reason?}`.
 - [ ] 6.2 Implement validation: each override MUST correspond to an actual `(ruleId, entityId)` match in the current extraction. Match's confidence MUST be < threshold to release.
 - [ ] 6.3 If an override is for a ≥ threshold match: reject with 422 + body containing a `rejectedOverrides` array alongside `missingProhibitionMatches` (the response can have both).
 - [ ] 6.4 If an override doesn't correspond to any active match: silently ignore (do not error).
-- [ ] 6.5 Unit test the override validator: valid release, rejected for high-confidence, ignored for non-matching, override array missing/empty.
+- [ ] 6.5 **NEW (per 2026-05-12 rework):** Add `lib/Service/PolicyOverrideAuditService.php` (or extend an existing audit-like service). For each validated override, write a persistent audit entry capturing `{ruleId, entityRelationId, fileId, reason, acknowledgedBy: <user UID — ADR-005>, acknowledgedAt: <ISO-8601>}`. Implementations MUST use a `prohibitionOverrideAudit` schema in `docudesk_register.json` (one object per override) — keeps DD audit volume queryable via the existing `/objects` endpoints and reuses OpenRegister's retention / RBAC story instead of adding a parallel one. Implementations MAY add an additional sink (structured logger payload, dedicated audit-log table) but the register-backed entry is the mandated one.
+- [ ] 6.6 **NEW:** For each validated override, call OR's `EntityRelationMapper::updateDecisionMetadata($entityRelationId, ['skipAnonymization' => true])` via OR's DI lookup (`getOpenRegisterService('OCA\\OpenRegister\\Db\\EntityRelationMapper')`). The DD audit entry MUST be written BEFORE the OR PATCH so a failure of the PATCH doesn't leave the override unrecorded on the DD side.
+- [ ] 6.7 **NEW (revised 2026-05-15):** Sequential best-effort commit semantics — overrides are processed in submission order; each override commits its DD audit entry first then its OR PATCH. If any one OR PATCH fails (network error, authorization denied), DocuDesk MUST stop processing further overrides and respond with HTTP 500. Already-committed DD audit entries and already-applied OR PATCHes from earlier overrides in the same request remain on disk and are NOT rolled back — each forms a per-relation audit trail of operator intent. The anonymise call MUST NOT be forwarded if any override failed. Retry semantics: the skip flag is idempotent on OR's side, so a follow-up retry replays cleanly (the repeat PATCH on already-skipped relations is a semantic no-op per OR's `entity-relation-grondslagen` spec; no duplicate OR audit entry). A retry MUST write a fresh DD audit entry — each operator intent event is a separate audit row, even if the underlying OR state is unchanged.
+- [ ] 6.8 Unit test the override validator: valid release, rejected for high-confidence, ignored for non-matching, override array missing/empty.
+- [ ] 6.9 Unit test the audit + PATCH side effects: validated override writes one DD audit entry + one OR PATCH; the audit entry contains the right shape; the OR PATCH carries `skipAnonymization: true`; OR's audit-trail (mockable) shows one entry for the skip-flip.
+- [ ] 6.10 Unit test failure handling: when OR's `updateDecisionMetadata` raises an exception, DD responds with HTTP 500 and stops processing further overrides.
 
 ## 7. In-place wording fix to `entity-publication-policies`
 
@@ -53,8 +61,9 @@
 ## 8. Unit tests
 
 - [ ] 8.1 `tests/unit/Service/PolicyMatchServiceTest.php` (extend or create) — match types covered, time bounds honoured, prohibition portion of cache populated correctly.
-- [ ] 8.2 `tests/unit/Service/AnonymizationServiceTest.php` — gate fires on missing high-confidence; gate passes when all high-confidence are included; gate ignores low-confidence by default; override releases low-confidence; override rejects high-confidence; bases are forwarded.
-- [ ] 8.3 `tests/unit/Controller/AnonymizationControllerTest.php` — 422 response shape; `acknowledgedOverrides` accepted on first request; payload validation rejects malformed `bases`.
+- [ ] 8.2 `tests/unit/Service/AnonymizationServiceTest.php` — gate fires on missing high-confidence; gate passes when all high-confidence are included; gate ignores low-confidence by default; override releases low-confidence; override rejects high-confidence. (Bases-forwarding tests removed; bases are out of this change's surface.)
+- [ ] 8.3 `tests/unit/Controller/AnonymizationControllerTest.php` — 422 response shape; `acknowledgedOverrides` accepted on first request; stray `bases` field on payload entry is silently dropped (not rejected, not forwarded).
+- [ ] 8.4 `tests/unit/Service/PolicyOverrideAuditServiceTest.php` (NEW) — audit entry shape is correct; one entry per validated override; OR PATCH side-effect order is "DD audit first, OR PATCH second"; OR PATCH failure leaves a 500 response and a DD audit entry on disk.
 
 ## 9. Integration tests
 
@@ -62,17 +71,18 @@
 - [ ] 9.2 Newman: anonymise gate fires 422 with the documented body shape when a high-confidence prohibition is missing.
 - [ ] 9.3 Newman: anonymise succeeds when all high-confidence prohibitions are included in the payload.
 - [ ] 9.4 Newman: `acknowledgedOverrides` releases a low-confidence match. Same mechanism rejects an override on a high-confidence match.
-- [ ] 9.5 Newman: bases pass-through — anonymise call with bases populated; verify the OpenRegister anonymise endpoint received the bases (mock OR side or assert via OR's `EntityRelation` row inspection if a live OR is available).
+- [ ] 9.5 Newman: bases-set lifecycle (replaces the old pass-through test) — PATCH OR's `/api/entity-relations/{id}` with `{bases: ["uuid-a"]}`; then call DocuDesk's anonymise endpoint without any bases on the payload; verify OR's row carries `bases: ["uuid-a"]` after the anonymise call (bases set via PATCH was preserved); verify OR's audit-trail has one entry for the PATCH.
+- [ ] 9.6 Newman: override-acknowledge lifecycle (NEW) — submit an anonymise request with `acknowledgedOverrides: [{ruleId, entityId, reason}]`; verify DD-side audit entry exists with the reason; verify OR's relation has `skipAnonymization=true`; verify OR's audit-trail has one entry for the skip-flip; verify the redacted file does not contain that entity's placeholder.
 
 ## 10. Documentation
 
 - [ ] 10.1 Update `docs/features/publication-consent-process.md` (or add a new doc `docs/features/anonymisation-prohibition-gate.md`) describing the gate, the override mechanism, the 422 response shape, and the threshold config. Link from the publication-consent-process doc since they share the prohibition concept.
-- [ ] 10.2 CHANGELOG entry under "Added": prohibition gate on anonymise endpoint; per-entity `bases[]` forwarded to OpenRegister; `prohibitionMatch` and `suggestedBases` on entity-listing responses.
+- [ ] 10.2 CHANGELOG entry under "Added": prohibition gate on anonymise endpoint; override-acknowledge audit + skip-flip wiring; `prohibitionMatch` and `suggestedBases` on entity-listing responses. (Bases set via OR's `PATCH /api/entity-relations/{id}` endpoint — documented separately as part of OR's `entity-relation-grondslagen` change.)
 - [ ] 10.3 CHANGELOG entry under "Behavior changes": anonymise endpoint may now respond with HTTP 422 when prohibition-listed entities are missing from the request; existing callers that don't have prohibition records configured see no behaviour change.
 
 ## 11. Quality and verification
 
 - [ ] 11.1 Run `composer check:strict` (PHPCS, PHPMD, Psalm, PHPStan, unit tests) — clean. Fix any pre-existing issues in touched files.
-- [ ] 11.2 Manual smoke against a live stack: configure a prohibition rule; extract a doc containing the prohibited entity; verify `prohibitionMatch` in response; submit anonymise without including the entity → 422; submit again with the entity included → 200; verify EntityRelation rows have bases populated (requires OR paired change deployed).
+- [ ] 11.2 Manual smoke against a live stack: configure a prohibition rule; extract a doc containing the prohibited entity; verify `prohibitionMatch` in response; submit anonymise without including the entity → 422; submit again with `acknowledgedOverrides` for a low-confidence match → 200 + DD audit entry + OR PATCH → relation has `skipAnonymization=true`. PATCH OR's relation with `bases` set; anonymise; verify the row retains its bases value (set via PATCH, not via anonymise). Requires OR paired change deployed.
 - [ ] 11.3 Run `openspec validate anonymisation-grondslagen-and-prohibition-gate` — clean.
 - [ ] 11.4 Run `openspec validate entity-publication-policies` after the in-place wording fix — clean.
