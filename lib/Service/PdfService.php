@@ -212,21 +212,42 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        // DIAGNOSTIC step 2b: return empty string to confirm whether the
-        // print-CSS injection itself causes the "every character on its
-        // own page" mPDF rendering bug. mPDF still receives `format` /
-        // `orientation` via the config array in `generatePdf`, so page
-        // dimensions are correct without this stylesheet. If the symptom
-        // disappears with an empty print-CSS, the bug is somewhere in
-        // the rules below — we'll bisect by adding blocks back one at
-        // a time once this confirms the upstream call sites are sound.
+        // DIAGNOSTIC step 2c: restore every print-CSS rule EXCEPT the
+        // `@page` block. mPDF's `format` / `orientation` config drives
+        // the actual page size, so skipping `@page` here is harmless;
+        // the rest of the rules are layout hints (page-break behaviour,
+        // body normalisation, hidden-print elements).
         //
-        // Suppress unused-parameter warnings — the parameters are still
-        // part of the public contract for callers and will be wired back
-        // up once the injection is restored.
+        // If this renders correctly, the bug was the `@page` rule
+        // nested inside `@media print` — mPDF's CSS parser has known
+        // issues with that nesting and we'll keep `@page` out of the
+        // injection. If still broken, we'll narrow to the remaining
+        // rules block by block.
+        //
+        // The `$format` / `$orientation` params remain part of the
+        // public contract for callers that may key off them later;
+        // unused locally while `@page` is suppressed.
         unset($format, $orientation);
 
-        return '';
+        return '<style>
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "DejaVu Sans", sans-serif;
+    }
+    table, figure, img, pre, blockquote {
+        page-break-inside: avoid;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    nav, .no-print {
+        display: none;
+    }
+}
+</style>
+';
 
     }//end buildPrintCss()
 
