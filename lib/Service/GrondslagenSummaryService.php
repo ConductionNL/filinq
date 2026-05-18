@@ -354,8 +354,22 @@ class GrondslagenSummaryService
             $payload = $object->getObject();
         }
 
-        $self      = ($payload['@self'] ?? []);
-        $folderRef = ($self['folder'] ?? null);
+        // The `@self.folder` reference is stored on the ObjectEntity's
+        // `folder` column, NOT inside the schema-typed payload returned by
+        // `getObject()`. OR's renderer reconstructs the `@self` block from
+        // the entity's columns when serialising for the API, but in-process
+        // callers must read the columns directly. Read the entity-level
+        // getter first; fall back to a payload-embedded `@self.folder` for
+        // future-compat in case the renderer ever inlines it.
+        $folderRef = null;
+        if (is_object($object) === true && method_exists($object, 'getFolder') === true) {
+            $folderRef = $object->getFolder();
+        }
+
+        if ($folderRef === null || $folderRef === '') {
+            $self      = ($payload['@self'] ?? []);
+            $folderRef = ($self['folder'] ?? null);
+        }
 
         return [
             'name'          => (string) ($payload['name'] ?? ''),
