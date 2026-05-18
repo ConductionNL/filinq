@@ -1,0 +1,27 @@
+# DocuDesk
+
+> DocuDesk is an open-source document-processing app for the Nextcloud workspace.
+
+DocuDesk is an open-source document-processing app for the Nextcloud workspace. It generates PDF, Word, HTML, and Excel documents from templates, anonymizes personal data through Presidio entity detection, and keeps a full audit trail for GDPR and WOO publication consent. All processing runs locally on the customer's Nextcloud instance, so sensitive files never leave the premises while still integrating with SharePoint, Office 365, and case-management systems. Released under EUPL-1.2 and maintained by Conduction since 2019.
+
+## Docs
+
+- [Tutorials](https://docudesk.conduction.nl/tutorials): step-by-step walkthroughs.
+- [Features](https://docudesk.conduction.nl/Features): what the app does, organised by capability.
+- [Use cases](https://docudesk.conduction.nl/UseCases): real customer scenarios.
+- [Integrations](https://docudesk.conduction.nl/Integrations): which external systems the app talks to.
+- [Technical](https://docudesk.conduction.nl/Technical): architecture, data model, security posture.
+- [User guide](https://docudesk.conduction.nl/user-guide): end-user documentation.
+- [API](https://docudesk.conduction.nl/api): OpenAPI reference.
+
+## Optional
+
+- [Install](https://docudesk.conduction.nl/installation): install from the Nextcloud app store.
+- [Source](https://docudesk.conduction.nl): repository and issue tracker.
+- [App page](https://www.conduction.nl/apps/docudesk): product positioning on conduction.nl.
+
+## Contact
+
+- Email: info@conduction.nl
+- GitHub: https://github.com/ConductionNL/docudesk
+- Conduction B.V. · KvK 76741850 · Lauriergracht 14h, Amsterdam, Netherlands
