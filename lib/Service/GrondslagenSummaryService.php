@@ -87,6 +87,21 @@ class GrondslagenSummaryService
      */
     private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
+    /**
+     * Validation-period debug flag.
+     *
+     * When `true`, every per-dossier render also writes the rendered HTML
+     * (including the print-CSS mPDF receives) to `grondslagen.html`
+     * alongside `grondslagen.pdf`. Lets us inspect the source the PDF was
+     * generated from when the PDF itself looks wrong — particularly the
+     * "every character on its own page" symptom in early validation.
+     *
+     * TODO: flip to `false` (or remove the constant + the corresponding
+     * `saveDossierSummaryHtml` call below) once the renderer output is
+     * trusted.
+     */
+    private const WRITE_DEBUG_HTML = true;
+
 
     /**
      * Constructor.
@@ -279,9 +294,11 @@ class GrondslagenSummaryService
             'totals'      => $aggregated['totals'],
         ];
 
+        $template = $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER);
+
         try {
             $pdfBytes = $this->pdfService->renderPdf(
-                templateContent: $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER),
+                templateContent: $template,
                 data: $data,
                 options: ['pdfa' => true, 'title' => 'Grondslagen-rapportage']
             );
@@ -293,6 +310,27 @@ class GrondslagenSummaryService
         }
 
         $summaryFile = $this->saveDossierSummary(folder: $folder, pdfBytes: $pdfBytes);
+
+        // Validation-period debug: also save the HTML the PDF was rendered
+        // from so we can eyeball the source when the PDF looks wrong. Off
+        // by default in production; controlled by `WRITE_DEBUG_HTML`.
+        if (self::WRITE_DEBUG_HTML === true) {
+            try {
+                $debugHtml = $this->pdfService->renderHtmlPreview(
+                    templateContent: $template,
+                    data: $data,
+                    options: ['format' => 'A4', 'orientation' => 'P']
+                );
+                $this->saveDossierSummaryHtml(folder: $folder, htmlBytes: $debugHtml);
+            } catch (Exception $e) {
+                // Debug-write failure MUST NOT mask the PDF generation
+                // success — log and continue.
+                $this->logger->warning(
+                    'GrondslagenSummaryService: debug HTML write failed (PDF write succeeded)',
+                    ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
+                );
+            }
+        }
 
         $this->updateDossierConfiguration(
             dossierUuid: $dossierUuid,
@@ -366,8 +404,15 @@ class GrondslagenSummaryService
         // class (auto-generated via `__call`, declared only as `@method`),
         // so `method_exists` returns false even when the call works. Probe
         // via `ObjectEntity` instanceof, then invoke directly.
-        $folderRef = null;
-        if ($object instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+        // OpenRegister's ObjectEntity is the expected runtime type, but
+        // Psalm doesn't see OR's lib (it's an optional dep). Probe by
+        // class_exists + instanceof + a runtime-safe `getFolder()` call.
+        $folderRef         = null;
+        $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+        if (is_object($object) === true
+            && class_exists($objectEntityClass) === true
+            && $object instanceof $objectEntityClass
+        ) {
             try {
                 $folderRef = $object->getFolder();
             } catch (\Throwable $e) {
@@ -600,6 +645,48 @@ class GrondslagenSummaryService
         return $newFile;
 
     }//end saveDossierSummary()
+
+
+    /**
+     * Save the rendered HTML the PDF was generated from (validation-period
+     * debug surface — gated behind `WRITE_DEBUG_HTML`).
+     *
+     * Writes to `<dossier-folder>/grondslagen.html`, overwriting any
+     * previous debug HTML in place so each regeneration leaves a single
+     * fresh source-of-truth for visual inspection. Identical save
+     * semantics to `saveDossierSummary` so the two files stay in lock-step.
+     *
+     * @param Folder $folder    The dossier folder (parent of grondslagen.pdf).
+     * @param string $htmlBytes Rendered HTML body (including print CSS).
+     *
+     * @return File The newly-written / refreshed debug HTML file.
+     *
+     * @throws RuntimeException On write failure.
+     */
+    private function saveDossierSummaryHtml(Folder $folder, string $htmlBytes): File
+    {
+        $name = 'grondslagen.html';
+
+        try {
+            if ($folder->nodeExists($name) === true) {
+                $existing = $folder->get($name);
+                if ($existing instanceof File) {
+                    $existing->putContent($htmlBytes);
+                    return $existing;
+                }
+            }
+
+            $newFile = $folder->newFile(path: $name, content: $htmlBytes);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to write '.$name.' to dossier folder: '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        return $newFile;
+
+    }//end saveDossierSummaryHtml()
 
 
     /**
