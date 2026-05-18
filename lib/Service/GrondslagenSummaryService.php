@@ -297,10 +297,17 @@ class GrondslagenSummaryService
         $template = $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER);
 
         try {
+            // TODO(pdfa): re-enable PDF/A once the print-CSS injection
+            // path is fixed. Currently `pdfa: true` makes mPDF render
+            // every character on its own page — most likely the
+            // `@page { size: A4 portrait; ... }` rule inside
+            // `@media print` upstream in PdfService::buildPrintCss
+            // confuses mPDF's CSS parser. Diagnostic step 1: drop the
+            // flag and confirm the basic render works without PDF/A.
             $pdfBytes = $this->pdfService->renderPdf(
                 templateContent: $template,
                 data: $data,
-                options: ['pdfa' => true, 'title' => 'Grondslagen-rapportage']
+                options: ['pdfa' => false, 'title' => 'Grondslagen-rapportage']
             );
         } catch (Exception $e) {
             throw new RuntimeException(
