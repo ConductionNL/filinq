@@ -212,21 +212,20 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        // DIAGNOSTIC step 2c: restore every print-CSS rule EXCEPT the
-        // `@page` block. mPDF's `format` / `orientation` config drives
-        // the actual page size, so skipping `@page` here is harmless;
-        // the rest of the rules are layout hints (page-break behaviour,
-        // body normalisation, hidden-print elements).
+        // Note on `@page`: this stylesheet intentionally omits the
+        // `@page { size: ...; margin: ...; }` rule. mPDF's CSS parser
+        // produced a degenerate page size (one character per page) when
+        // `@page` was nested inside `@media print`, regardless of
+        // whether `size: A4`, `size: A4 portrait`, or `size: A4
+        // landscape` was emitted. Page dimensions are driven by the
+        // mPDF config (`format` / `orientation` / `margin_*` in
+        // `buildMpdfConfig`) instead, which mPDF interprets reliably.
+        // The remaining rules are layout hints that don't touch page
+        // dimensions.
         //
-        // If this renders correctly, the bug was the `@page` rule
-        // nested inside `@media print` — mPDF's CSS parser has known
-        // issues with that nesting and we'll keep `@page` out of the
-        // injection. If still broken, we'll narrow to the remaining
-        // rules block by block.
-        //
-        // The `$format` / `$orientation` params remain part of the
-        // public contract for callers that may key off them later;
-        // unused locally while `@page` is suppressed.
+        // `$format` / `$orientation` remain part of the public contract
+        // for callers that may key off them later; not consumed locally
+        // since page sizing is delegated to the config path.
         unset($format, $orientation);
 
         return '<style>
