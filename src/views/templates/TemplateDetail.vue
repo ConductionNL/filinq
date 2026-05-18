@@ -1,23 +1,699 @@
 <template>
 	<div class="template-detail">
-		<NcButton type="tertiary" @click="navigationStore.setSelected('templates')">
-			{{ t('docudesk', 'Back to templates') }}
-		</NcButton>
-		<h2>{{ t('docudesk', 'Template editor') }}</h2>
-		<p>{{ t('docudesk', 'Advanced template editing with WYSIWYG, preview, versioning, and conditional sections.') }}</p>
+		<!-- Header bar -->
+		<div class="template-detail__header">
+			<NcButton type="tertiary" @click="handleBack">
+				{{ t('docudesk', 'Back to templates') }}
+			</NcButton>
+			<h2 class="template-detail__title">
+				{{ isNew ? t('docudesk', 'New template') : (form.name || t('docudesk', 'Edit template')) }}
+			</h2>
+			<div class="template-detail__header-actions">
+				<span v-if="lockOwner && !isLockMine" class="template-detail__lock-warning">
+					{{ t('docudesk', 'Locked by {user}', { user: lockOwner }) }}
+				</span>
+				<NcButton type="secondary" :disabled="saving" @click="handleBack">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" :disabled="saving || (lockOwner && !isLockMine)" @click="saveTemplate">
+					{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Save') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<!-- Tab navigation -->
+		<div class="template-detail__tabs">
+			<button :class="['template-detail__tab', { active: activeTab === 'edit' }]"
+				@click="activeTab = 'edit'">
+				{{ t('docudesk', 'Editor') }}
+			</button>
+			<button :class="['template-detail__tab', { active: activeTab === 'preview' }]"
+				@click="loadPreview">
+				{{ t('docudesk', 'Preview') }}
+			</button>
+			<button v-if="!isNew"
+				:class="['template-detail__tab', { active: activeTab === 'versions' }]"
+				@click="loadVersions">
+				{{ t('docudesk', 'Versions') }}
+			</button>
+		</div>
+
+		<!-- EDITOR TAB -->
+		<div v-if="activeTab === 'edit'" class="template-detail__editor-panel">
+			<!-- Metadata fields -->
+			<div class="template-detail__meta">
+				<NcTextField :value.sync="form.name"
+					:label="t('docudesk', 'Name')"
+					:required="true"
+					class="template-detail__field" />
+				<NcTextField :value.sync="form.namespace"
+					:label="t('docudesk', 'Namespace')"
+					:required="true"
+					:disabled="!isNew"
+					class="template-detail__field" />
+				<NcTextField :value.sync="form.category"
+					:label="t('docudesk', 'Category')"
+					:placeholder="t('docudesk', 'e.g. beschikkingen, brieven')"
+					class="template-detail__field" />
+				<NcTextField :value.sync="form.tagsInput"
+					:label="t('docudesk', 'Tags (comma-separated)')"
+					:placeholder="t('docudesk', 'tag1, tag2, tag3')"
+					class="template-detail__field" />
+				<NcTextField :value.sync="form.description"
+					:label="t('docudesk', 'Description')"
+					class="template-detail__field" />
+				<NcTextField :value.sync="form.changelog"
+					:label="t('docudesk', 'Change note (optional)')"
+					:placeholder="t('docudesk', 'Describe what changed...')"
+					class="template-detail__field" />
+			</div>
+
+			<!-- WYSIWYG toolbar -->
+			<div class="template-detail__toolbar">
+				<button type="button"
+					:title="t('docudesk', 'Bold')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execFormat('bold')">
+					<strong>B</strong>
+				</button>
+				<button type="button"
+					:title="t('docudesk', 'Italic')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execFormat('italic')">
+					<em>I</em>
+				</button>
+				<button type="button"
+					:title="t('docudesk', 'Underline')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execFormat('underline')">
+					<u>U</u>
+				</button>
+				<span class="template-detail__toolbar-sep" />
+				<button type="button"
+					:title="t('docudesk', 'Heading 1')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execBlock('h1')">
+					H1
+				</button>
+				<button type="button"
+					:title="t('docudesk', 'Heading 2')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execBlock('h2')">
+					H2
+				</button>
+				<span class="template-detail__toolbar-sep" />
+				<button type="button"
+					:title="t('docudesk', 'Unordered list')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execFormat('insertUnorderedList')">
+					&#8226;&#8212;
+				</button>
+				<button type="button"
+					:title="t('docudesk', 'Ordered list')"
+					class="template-detail__toolbar-btn"
+					@mousedown.prevent="execFormat('insertOrderedList')">
+					1&#8212;
+				</button>
+				<span class="template-detail__toolbar-sep" />
+				<button type="button"
+					:title="t('docudesk', 'Insert merge field')"
+					class="template-detail__toolbar-btn"
+					@click="showMergeFieldDialog = true">
+					{{ t('docudesk', '{ }') }}
+				</button>
+				<button type="button"
+					:title="t('docudesk', 'Insert conditional section')"
+					class="template-detail__toolbar-btn"
+					@click="showConditionalDialog = true">
+					{{ t('docudesk', 'if…') }}
+				</button>
+			</div>
+
+			<!-- Content-editable WYSIWYG area -->
+			<div ref="editor"
+				class="template-detail__content-editor"
+				contenteditable="true"
+				:aria-label="t('docudesk', 'Template content')"
+				@input="syncFromEditor"
+				v-html="editorHtml" />
+
+			<!-- Raw HTML toggle -->
+			<div class="template-detail__raw-toggle">
+				<button type="button"
+					class="template-detail__raw-btn"
+					@click="showRaw = !showRaw">
+					{{ showRaw ? t('docudesk', 'Hide HTML') : t('docudesk', 'Edit HTML') }}
+				</button>
+			</div>
+			<textarea v-if="showRaw"
+				:value="form.content"
+				class="template-detail__raw-area"
+				:aria-label="t('docudesk', 'Raw HTML')"
+				@input="syncFromRaw" />
+		</div>
+
+		<!-- PREVIEW TAB -->
+		<div v-else-if="activeTab === 'preview'" class="template-detail__preview-panel">
+			<div class="template-detail__preview-header">
+				<h3>{{ t('docudesk', 'Preview') }}</h3>
+				<NcButton type="secondary" @click="loadPreview">
+					{{ t('docudesk', 'Refresh preview') }}
+				</NcButton>
+			</div>
+			<div class="template-detail__sample-data">
+				<NcTextField :value.sync="sampleDataJson"
+					:label="t('docudesk', 'Sample data (JSON)')"
+					:placeholder="'{ &quot;name&quot;: &quot;Jan de Vries&quot; }'"
+					class="template-detail__field" />
+			</div>
+			<NcLoadingIcon v-if="previewLoading" />
+			<div v-else-if="previewError" class="template-detail__error">
+				{{ previewError }}
+			</div>
+			<!-- eslint-disable-next-line vue/no-v-html -->
+			<div v-else-if="previewHtml"
+				class="template-detail__preview-output"
+				v-html="previewHtml" />
+			<NcEmptyContent v-else
+				:name="t('docudesk', 'No preview yet')"
+				:description="t('docudesk', 'Click \'Refresh preview\' to render the template.')" />
+		</div>
+
+		<!-- VERSIONS TAB -->
+		<div v-else-if="activeTab === 'versions'" class="template-detail__versions-panel">
+			<h3>{{ t('docudesk', 'Version history') }}</h3>
+			<NcLoadingIcon v-if="versionsLoading" />
+			<NcEmptyContent v-else-if="!versions.length"
+				:name="t('docudesk', 'No versions yet')"
+				:description="t('docudesk', 'Versions are saved automatically on each update.')" />
+			<table v-else class="template-detail__versions-table">
+				<thead>
+					<tr>
+						<th>{{ t('docudesk', 'Version') }}</th>
+						<th>{{ t('docudesk', 'Editor') }}</th>
+						<th>{{ t('docudesk', 'Change note') }}</th>
+						<th>{{ t('docudesk', 'Actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="ver in versions" :key="ver.id">
+						<td>{{ ver.version }}</td>
+						<td>{{ ver.editor }}</td>
+						<td>{{ ver.changelog || '-' }}</td>
+						<td>
+							<NcButton type="tertiary" @click="restoreVersion(ver)">
+								{{ t('docudesk', 'Restore') }}
+							</NcButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- MERGE FIELD DIALOG -->
+		<NcDialog v-if="showMergeFieldDialog"
+			:name="t('docudesk', 'Insert merge field')"
+			@closing="showMergeFieldDialog = false">
+			<template #default>
+				<NcTextField :value.sync="mergeFieldName"
+					:label="t('docudesk', 'Field name')"
+					:placeholder="t('docudesk', 'e.g. name, address, date')" />
+				<p class="template-detail__hint">
+					{{ t('docudesk', 'This inserts {{ fieldName }} into the template.', { fieldName: mergeFieldName || 'field' }) }}
+				</p>
+			</template>
+			<template #actions>
+				<NcButton @click="showMergeFieldDialog = false">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" @click="insertMergeField">
+					{{ t('docudesk', 'Insert') }}
+				</NcButton>
+			</template>
+		</NcDialog>
+
+		<!-- CONDITIONAL SECTION DIALOG -->
+		<NcDialog v-if="showConditionalDialog"
+			:name="t('docudesk', 'Insert conditional section')"
+			@closing="showConditionalDialog = false">
+			<template #default>
+				<NcTextField :value.sync="condField"
+					:label="t('docudesk', 'Field name')"
+					:placeholder="t('docudesk', 'e.g. zaaktype')" />
+				<NcSelect v-model="condOp"
+					:options="condOpOptions"
+					:inputLabel="t('docudesk', 'Operator')" />
+				<NcTextField v-if="condOpNeedsValue"
+					:value.sync="condValue"
+					:label="t('docudesk', 'Value')"
+					:placeholder="t('docudesk', 'e.g. omgevingsvergunning')" />
+				<p class="template-detail__hint">
+					{{ condPreview }}
+				</p>
+			</template>
+			<template #actions>
+				<NcButton @click="showConditionalDialog = false">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" @click="insertConditionalSection">
+					{{ t('docudesk', 'Insert') }}
+				</NcButton>
+			</template>
+		</NcDialog>
 	</div>
 </template>
+
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { useTemplateStore } from '../../store/modules/template.js'
 import { navigationStore } from '../../store/store.js'
 
 export default {
 	name: 'TemplateDetail',
-	components: { NcButton },
+	components: { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField },
 	data() {
-		return { navigationStore }
+		return {
+			navigationStore,
+			activeTab: 'edit',
+			form: {
+				name: '',
+				namespace: '',
+				description: '',
+				content: '',
+				category: '',
+				tagsInput: '',
+				changelog: '',
+				format: 'A4',
+				orientation: 'P',
+			},
+			// WYSIWYG
+			editorHtml: '',
+			showRaw: false,
+			// Preview
+			previewLoading: false,
+			previewHtml: '',
+			previewError: '',
+			sampleDataJson: '{}',
+			// Versions
+			versions: [],
+			versionsLoading: false,
+			// Lock
+			lockOwner: null,
+			// Saving
+			saving: false,
+			// Dialogs
+			showMergeFieldDialog: false,
+			mergeFieldName: '',
+			showConditionalDialog: false,
+			condField: '',
+			condOp: { label: 'is not empty', value: 'is_not_empty' },
+			condValue: '',
+		}
 	},
-	methods: { t },
+	computed: {
+		templateStore() { return useTemplateStore() },
+		isNew() { return this.templateStore.templateItem === null },
+		isLockMine() {
+			return this.lockOwner === null || this.lockOwner === this.currentUserId
+		},
+		currentUserId() {
+			return window.OC?.currentUser || ''
+		},
+		condOpOptions() {
+			return [
+				{ label: t('docudesk', 'equals'), value: 'equals' },
+				{ label: t('docudesk', 'not equals'), value: 'not_equals' },
+				{ label: t('docudesk', 'contains'), value: 'contains' },
+				{ label: t('docudesk', 'is empty'), value: 'is_empty' },
+				{ label: t('docudesk', 'is not empty'), value: 'is_not_empty' },
+			]
+		},
+		condOpNeedsValue() {
+			const op = this.condOp?.value || this.condOp
+			return op !== 'is_empty' && op !== 'is_not_empty'
+		},
+		condPreview() {
+			const field = this.condField || 'field'
+			const op = this.condOp?.value || this.condOp || 'is_not_empty'
+			const val = this.condValue
+			const opLabels = {
+				equals: `== "${val}"`,
+				not_equals: `!= "${val}"`,
+				contains: `contains "${val}"`,
+				is_empty: 'is empty',
+				is_not_empty: 'is not empty',
+			}
+			return `{% if ${field} ${opLabels[op] || op} %}…{% endif %}`
+		},
+	},
+	async mounted() {
+		if (!this.isNew) {
+			const tmpl = this.templateStore.templateItem
+			this.form.name = tmpl.name || ''
+			this.form.namespace = tmpl.namespace || ''
+			this.form.description = tmpl.description || ''
+			this.form.content = tmpl.content || ''
+			this.form.category = tmpl.category || ''
+			this.form.tagsInput = (tmpl.tags || []).join(', ')
+			this.form.format = tmpl.format || 'A4'
+			this.form.orientation = tmpl.orientation || 'P'
+			this.editorHtml = tmpl.content || ''
+			this.lockOwner = tmpl.lockedBy || null
+
+			// Acquire lock.
+			const locked = await this.templateStore.acquireLock(tmpl.id)
+			if (locked) {
+				this.lockOwner = locked.lockedBy || null
+			}
+		}
+	},
+	async beforeUnmount() {
+		await this.releaseLockIfMine()
+	},
+	methods: {
+		t,
+		async handleBack() {
+			await this.releaseLockIfMine()
+			navigationStore.setSelected('templates')
+		},
+		async releaseLockIfMine() {
+			const tmpl = this.templateStore.templateItem
+			if (!this.isNew && tmpl && this.isLockMine) {
+				await this.templateStore.releaseLock(tmpl.id)
+			}
+		},
+		execFormat(cmd) {
+			document.execCommand(cmd, false, null)
+			this.syncFromEditor()
+		},
+		execBlock(tag) {
+			document.execCommand('formatBlock', false, tag)
+			this.syncFromEditor()
+		},
+		syncFromEditor() {
+			if (this.$refs.editor) {
+				this.form.content = this.$refs.editor.innerHTML
+			}
+		},
+		syncFromRaw(event) {
+			this.form.content = event.target.value
+			this.editorHtml = event.target.value
+		},
+		async loadPreview() {
+			this.activeTab = 'preview'
+			this.previewLoading = true
+			this.previewError = ''
+			let sampleData = {}
+			try {
+				sampleData = JSON.parse(this.sampleDataJson || '{}')
+			} catch {
+				// Ignore JSON parse error; use empty data.
+			}
+			try {
+				this.previewHtml = await this.templateStore.previewTemplate(
+					this.form.content,
+					sampleData
+				)
+			} catch (err) {
+				this.previewError = err.message || t('docudesk', 'Preview failed')
+			} finally {
+				this.previewLoading = false
+			}
+		},
+		async loadVersions() {
+			this.activeTab = 'versions'
+			if (this.isNew) return
+			this.versionsLoading = true
+			const result = await this.templateStore.fetchVersions(this.templateStore.templateItem.id)
+			this.versions = result?.results || []
+			this.versionsLoading = false
+		},
+		async restoreVersion(ver) {
+			if (!window.confirm(t('docudesk', 'Restore to version {n}?', { n: ver.version }))) return
+			const result = await this.templateStore.restoreVersion(
+				this.templateStore.templateItem.id,
+				ver.id
+			)
+			if (result) {
+				this.form.content = result.content || ''
+				this.editorHtml = result.content || ''
+				this.activeTab = 'edit'
+			}
+		},
+		async saveTemplate() {
+			this.saving = true
+			const tags = this.form.tagsInput
+				.split(',')
+				.map(s => s.trim())
+				.filter(Boolean)
+			const payload = {
+				name: this.form.name,
+				namespace: this.form.namespace,
+				description: this.form.description,
+				content: this.form.content,
+				category: this.form.category,
+				tags,
+				format: this.form.format,
+				orientation: this.form.orientation,
+				_changelog: this.form.changelog || null,
+			}
+			try {
+				if (this.isNew) {
+					await this.templateStore.createTemplate(payload)
+				} else {
+					await this.templateStore.updateTemplate(
+						this.templateStore.templateItem.id,
+						payload
+					)
+				}
+				await this.releaseLockIfMine()
+				navigationStore.setSelected('templates')
+				await this.templateStore.fetchTemplates()
+			} finally {
+				this.saving = false
+			}
+		},
+		insertMergeField() {
+			if (!this.mergeFieldName) return
+			const token = `{{ ${this.mergeFieldName} }}`
+			document.execCommand('insertText', false, token)
+			this.syncFromEditor()
+			this.showMergeFieldDialog = false
+			this.mergeFieldName = ''
+		},
+		insertConditionalSection() {
+			const field = this.condField || 'field'
+			const op = this.condOp?.value || this.condOp || 'is_not_empty'
+			const opAttr = `data-condition-field="${field}" data-condition-op="${op}"`
+			const valAttr = this.condOpNeedsValue ? ` data-condition-value="${this.condValue}"` : ''
+			const html = `<div ${opAttr}${valAttr}>{{ ${field} }}</div>`
+			document.execCommand('insertHTML', false, html)
+			this.syncFromEditor()
+			this.showConditionalDialog = false
+			this.condField = ''
+			this.condValue = ''
+		},
+	},
 }
 </script>
+
+<style scoped>
+.template-detail {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 16px;
+}
+
+.template-detail__header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.template-detail__title {
+	flex: 1;
+	margin: 0;
+}
+
+.template-detail__header-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.template-detail__lock-warning {
+	color: var(--color-warning);
+	font-size: 13px;
+}
+
+.template-detail__tabs {
+	display: flex;
+	gap: 4px;
+	border-bottom: 2px solid var(--color-border);
+	margin-bottom: 16px;
+}
+
+.template-detail__tab {
+	background: none;
+	border: none;
+	padding: 8px 16px;
+	cursor: pointer;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+	color: var(--color-text-lighter);
+}
+
+.template-detail__tab.active {
+	border-bottom-color: var(--color-primary);
+	color: var(--color-primary);
+	font-weight: bold;
+}
+
+.template-detail__meta {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.template-detail__field {
+	width: 100%;
+}
+
+.template-detail__toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	padding: 6px 8px;
+	background: var(--color-background-dark);
+	border: 1px solid var(--color-border);
+	border-bottom: none;
+	border-radius: 4px 4px 0 0;
+}
+
+.template-detail__toolbar-btn {
+	background: var(--color-main-background);
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	padding: 2px 8px;
+	cursor: pointer;
+	min-width: 30px;
+}
+
+.template-detail__toolbar-btn:hover {
+	background: var(--color-background-hover);
+}
+
+.template-detail__toolbar-sep {
+	width: 1px;
+	background: var(--color-border);
+	margin: 0 4px;
+}
+
+.template-detail__content-editor {
+	min-height: 300px;
+	max-height: 500px;
+	overflow-y: auto;
+	border: 1px solid var(--color-border);
+	border-radius: 0 0 4px 4px;
+	padding: 12px;
+	background: var(--color-main-background);
+	font-family: inherit;
+	outline: none;
+	line-height: 1.5;
+}
+
+.template-detail__content-editor:focus {
+	border-color: var(--color-primary);
+}
+
+.template-detail__raw-toggle {
+	margin-top: 8px;
+}
+
+.template-detail__raw-btn {
+	background: none;
+	border: none;
+	color: var(--color-primary);
+	cursor: pointer;
+	text-decoration: underline;
+	font-size: 13px;
+	padding: 0;
+}
+
+.template-detail__raw-area {
+	width: 100%;
+	height: 200px;
+	font-family: monospace;
+	font-size: 13px;
+	margin-top: 8px;
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	box-sizing: border-box;
+}
+
+.template-detail__preview-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.template-detail__preview-header h3 {
+	margin: 0;
+	flex: 1;
+}
+
+.template-detail__sample-data {
+	margin-bottom: 12px;
+}
+
+.template-detail__preview-output {
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+	padding: 16px;
+	min-height: 200px;
+	background: white;
+	color: black;
+}
+
+.template-detail__versions-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.template-detail__versions-table th,
+.template-detail__versions-table td {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--color-border);
+	text-align: left;
+}
+
+.template-detail__error {
+	color: var(--color-error);
+	padding: 12px;
+	border: 1px solid var(--color-error);
+	border-radius: 4px;
+}
+
+.template-detail__hint {
+	font-size: 13px;
+	color: var(--color-text-lighter);
+	font-family: monospace;
+	background: var(--color-background-dark);
+	padding: 8px;
+	border-radius: 4px;
+	margin-top: 8px;
+}
+
+.template-detail__editor-panel,
+.template-detail__preview-panel,
+.template-detail__versions-panel {
+	flex: 1;
+	overflow: auto;
+}
+</style>

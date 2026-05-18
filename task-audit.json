@@ -1,0 +1,14 @@
+{
+  "spec": "openspec/changes/advanced-template-management",
+  "verified": [
+    {"task": "1", "file": "lib/Settings/docudesk_register.json", "ok": true},
+    {"task": "2", "file": "lib/Settings/docudesk_register.json", "ok": true},
+    {"task": "3", "file": "tests/stubs/OpenRegisterStubs.php", "ok": true},
+    {"task": "4", "file": "tests/unit/Service/TemplateVersionServiceTest.php", "ok": true},
+    {"task": "5", "file": "tests/unit/Service/TemplatePreviewServiceTest.php", "ok": true},
+    {"task": "6", "file": "src/views/templates/TemplateIndex.vue", "ok": true},
+    {"task": "7", "file": "src/views/templates/TemplateDetail.vue", "ok": true}
+  ],
+  "stubs": [],
+  "missing_routes": []
+}
