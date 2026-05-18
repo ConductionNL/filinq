@@ -87,21 +87,6 @@ class GrondslagenSummaryService
      */
     private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
-    /**
-     * Validation-period debug flag.
-     *
-     * When `true`, every per-dossier render also writes the rendered HTML
-     * (including the print-CSS mPDF receives) to `grondslagen.html`
-     * alongside `grondslagen.pdf`. Lets us inspect the source the PDF was
-     * generated from when the PDF itself looks wrong — particularly the
-     * "every character on its own page" symptom in early validation.
-     *
-     * TODO: flip to `false` (or remove the constant + the corresponding
-     * `saveDossierSummaryHtml` call below) once the renderer output is
-     * trusted.
-     */
-    private const WRITE_DEBUG_HTML = true;
-
 
     /**
      * Constructor.
@@ -310,27 +295,6 @@ class GrondslagenSummaryService
         }
 
         $summaryFile = $this->saveDossierSummary(folder: $folder, pdfBytes: $pdfBytes);
-
-        // Validation-period debug: also save the HTML the PDF was rendered
-        // from so we can eyeball the source when the PDF looks wrong. Off
-        // by default in production; controlled by `WRITE_DEBUG_HTML`.
-        if (self::WRITE_DEBUG_HTML === true) {
-            try {
-                $debugHtml = $this->pdfService->renderHtmlPreview(
-                    templateContent: $template,
-                    data: $data,
-                    options: ['format' => 'A4', 'orientation' => 'P']
-                );
-                $this->saveDossierSummaryHtml(folder: $folder, htmlBytes: $debugHtml);
-            } catch (Exception $e) {
-                // Debug-write failure MUST NOT mask the PDF generation
-                // success — log and continue.
-                $this->logger->warning(
-                    'GrondslagenSummaryService: debug HTML write failed (PDF write succeeded)',
-                    ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
-                );
-            }
-        }
 
         $this->updateDossierConfiguration(
             dossierUuid: $dossierUuid,
@@ -648,48 +612,6 @@ class GrondslagenSummaryService
 
 
     /**
-     * Save the rendered HTML the PDF was generated from (validation-period
-     * debug surface — gated behind `WRITE_DEBUG_HTML`).
-     *
-     * Writes to `<dossier-folder>/grondslagen.html`, overwriting any
-     * previous debug HTML in place so each regeneration leaves a single
-     * fresh source-of-truth for visual inspection. Identical save
-     * semantics to `saveDossierSummary` so the two files stay in lock-step.
-     *
-     * @param Folder $folder    The dossier folder (parent of grondslagen.pdf).
-     * @param string $htmlBytes Rendered HTML body (including print CSS).
-     *
-     * @return File The newly-written / refreshed debug HTML file.
-     *
-     * @throws RuntimeException On write failure.
-     */
-    private function saveDossierSummaryHtml(Folder $folder, string $htmlBytes): File
-    {
-        $name = 'grondslagen.html';
-
-        try {
-            if ($folder->nodeExists($name) === true) {
-                $existing = $folder->get($name);
-                if ($existing instanceof File) {
-                    $existing->putContent($htmlBytes);
-                    return $existing;
-                }
-            }
-
-            $newFile = $folder->newFile(path: $name, content: $htmlBytes);
-        } catch (Exception $e) {
-            throw new RuntimeException(
-                'Grondslagen summary: failed to write '.$name.' to dossier folder: '.$e->getMessage(),
-                previous: $e
-            );
-        }
-
-        return $newFile;
-
-    }//end saveDossierSummaryHtml()
-
-
-    /**
      * Update the dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}`.
      *
      * Failure is logged but does not roll back the rendered file — the PDF
@@ -743,6 +665,51 @@ class GrondslagenSummaryService
             $grondslagen['lastGeneratedAt'] = date('c');
             $configuration['grondslagen']   = $grondslagen;
             $payload['configuration']       = $configuration;
+
+            // Preserve the dossier's `@self.folder` across this save.
+            // `getObject()` returns the schema-typed payload only — the
+            // `folder` column lives on the ObjectEntity itself. Without
+            // explicit re-injection, OR's save path sees no folder ref
+            // on the incoming payload, hands the object to
+            // `ensureObjectFolderExists`, and that helper auto-creates
+            // a brand-new folder under the register's storage tree —
+            // overwriting `_folder` with the auto-folder's id. Operators
+            // see their original dossier folder mysteriously replaced
+            // by a generated one in OR's `Open Registers` folder.
+            //
+            // Read the existing folder ref off the entity (the magic
+            // `getFolder()` method on NC's `Entity` base class) and
+            // inject it back into the payload's `@self.folder`. OR's
+            // `setSelfMetadata` reads `@self.folder` and re-applies it
+            // via `setFolder()` on save (per the
+            // `validate-self-folder-access` change), so the original
+            // folder binding is preserved.
+            $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+            if (is_object($object) === true
+                && class_exists($objectEntityClass) === true
+                && $object instanceof $objectEntityClass
+            ) {
+                try {
+                    $existingFolder = $object->getFolder();
+                    if (is_string($existingFolder) === true && $existingFolder !== '') {
+                        $self = ($payload['@self'] ?? []);
+                        if (is_array($self) === false) {
+                            $self = [];
+                        }
+
+                        $self['folder']   = $existingFolder;
+                        $payload['@self'] = $self;
+                    }
+                } catch (\Throwable $e) {
+                    // Folder probe failure must not abort the
+                    // configuration update — log and proceed with the
+                    // save (the user-visible PDF is already on disk).
+                    $this->logger->warning(
+                        'GrondslagenSummaryService: could not read existing folder ref before save',
+                        ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
+                    );
+                }
+            }//end if
 
             $objectService->saveObject(
                 object: $payload,
