@@ -167,7 +167,17 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					url += '?minConfidence=' + this.minConfidence
 				}
 				const r = await axios.get(generateUrl(url))
-				this.entities = (r.data.entities || []).map((e) => ({ ...e, included: true }))
+				this.entities = (r.data.entities || []).map((e) => ({
+					...e,
+					included: true,
+					// Per-entity review state — mirrors AnonymizationWidget's
+					// single-file flow but operates on the consolidated
+					// (multi-file) view. _decisionBases applies to every
+					// underlying relationId on submit.
+					_decisionBases: [],
+					_decisionSkip: false,
+					_patchError: null,
+				}))
 				this.totalEntities = r.data.entityCount || 0
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
@@ -186,11 +196,69 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			})
 		},
 
+		setEntityBases(index, bases) {
+			if (this.entities[index]) {
+				this.entities[index]._decisionBases = Array.isArray(bases) ? [...bases] : []
+				this.entities[index]._patchError = null
+			}
+		},
+
+		setEntitySkip(index, skip) {
+			if (this.entities[index]) {
+				this.entities[index]._decisionSkip = !!skip
+				this.entities[index]._patchError = null
+			}
+		},
+
 		async anonymizeBatch() {
 			this.processing = true
 			this.error = null
 			this.batchStatus = 'anonymizing'
 			try {
+				// Step 1 — PATCH per-entity grondslagen / skip decisions onto
+				// every underlying EntityRelation row. Each consolidated entity
+				// may span many files; the relationIds array carries one id
+				// per occurrence. Decisions are applied to every relation so a
+				// single picker selection covers all instances of the value.
+				// Failures are surfaced per-entity but do not abort the batch.
+				for (const entity of this.entities) {
+					if (!entity.included) {
+						continue
+					}
+
+					const hasBases = Array.isArray(entity._decisionBases) && entity._decisionBases.length > 0
+					const hasSkip = !!entity._decisionSkip
+					if (!hasBases && !hasSkip) {
+						continue
+					}
+
+					const relationIds = Array.isArray(entity.relationIds) ? entity.relationIds : []
+					if (relationIds.length === 0) {
+						entity._patchError = 'No relation ids — decisions cannot persist.'
+						continue
+					}
+
+					const payload = {
+						bases: hasBases ? [...entity._decisionBases] : [],
+						skipAnonymization: hasSkip,
+					}
+					for (const relationId of relationIds) {
+						try {
+							await axios.patch(
+								generateUrl(`/apps/openregister/api/entity-relations/${relationId}`),
+								payload,
+							)
+						} catch (err) {
+							entity._patchError = err.response?.data?.error || err.message
+							// Continue with other relations + entities — partial
+							// application beats all-or-nothing in a review flow.
+						}
+					}
+				}
+
+				// Step 2 — trigger the batch anonymise. OR honours the
+				// skipAnonymization flag we just PATCHed, so skipped entities
+				// stay unredacted in the output.
 				const selected = this.entities
 					.filter((e) => e.included)
 					.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence }))

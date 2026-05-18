@@ -102,9 +102,12 @@
 			<EntityReviewTable
 				:entities="store.entities"
 				:file-count="store.filesWithEntities"
+				:default-bases="store.dossier.bases || []"
 				@toggle="store.toggleEntity($event)"
 				@bulk-select="store.setVisibleEntities($event, true)"
-				@bulk-deselect="store.setVisibleEntities($event, false)" />
+				@bulk-deselect="store.setVisibleEntities($event, false)"
+				@bases-change="store.setEntityBases($event.idx, $event.bases)"
+				@skip-change="store.setEntitySkip($event.idx, $event.skip)" />
 			<label class="flag-row">
 				<input v-model="store.appendBasisSummary" type="checkbox">
 				<span>{{ t('docudesk', 'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)') }}</span>

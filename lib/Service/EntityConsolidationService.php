@@ -115,18 +115,31 @@ class EntityConsolidationService
             $d = (array) $entity;
         }
 
-        $type  = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
-        $value = $d['entity_value'] ?? $d['entityValue'] ?? '';
-        $conf  = (float) ($d['confidence'] ?? 0.0);
-        $key   = mb_strtolower((string) $value);
+        $type       = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
+        $value      = $d['entity_value'] ?? $d['entityValue'] ?? '';
+        $conf       = (float) ($d['confidence'] ?? 0.0);
+        $relationId = $d['relation_id'] ?? $d['relationId'] ?? null;
+        $key        = mb_strtolower((string) $value);
         if ($key === '') {
             return $map;
+        }
+
+        // Collect every underlying EntityRelation row so the folder-flow
+        // review UI can PATCH grondslagen / skip decisions onto every
+        // occurrence in one go.
+        $seedRelationIds = [];
+        if ($relationId !== null) {
+            $seedRelationIds[] = (int) $relationId;
         }
 
         if (isset($map[$key]) === true) {
             $map[$key]['fileCount']++;
             if ($conf > $map[$key]['highestConfidence']) {
                 $map[$key]['highestConfidence'] = $conf;
+            }
+
+            if ($relationId !== null) {
+                $map[$key]['relationIds'][] = (int) $relationId;
             }
         } else {
             $map[$key] = [
@@ -135,8 +148,9 @@ class EntityConsolidationService
                 'highestConfidence' => $conf,
                 'fileCount'         => 1,
                 'included'          => $this->wooProfile->shouldAnonymize((string) $type),
+                'relationIds'       => $seedRelationIds,
             ];
-        }
+        }//end if
 
         return $map;
 
