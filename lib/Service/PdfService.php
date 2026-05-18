@@ -212,15 +212,22 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        $orientationName = 'portrait';
+        // CSS Paged Media spec accepts `size: <page-size>` or
+        // `size: <page-size> landscape`. The bare keyword `portrait` is
+        // ambiguous in the grammar (portrait is the implicit default).
+        // mPDF's CSS parser silently rejected the `size: A4 portrait`
+        // form, fell back to a degenerate page size, and produced the
+        // "every character on its own page" rendering bug. Emit only
+        // the keyword that's strictly required by the spec.
+        $sizeValue = $format;
         if ($orientation === 'L') {
-            $orientationName = 'landscape';
+            $sizeValue .= ' landscape';
         }
 
         return '<style>
 @media print {
     @page {
-        size: '.$format.' '.$orientationName.';
+        size: '.$sizeValue.';
         margin: 15mm;
     }
     body {
