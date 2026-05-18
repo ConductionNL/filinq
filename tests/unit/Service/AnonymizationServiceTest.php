@@ -13,6 +13,8 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -93,6 +95,70 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function anonymizeDocument', $content);
 
     }//end testFileContainsExpectedMethods()
+
+
+    /**
+     * Test anonymizeDocument signature accepts appendBasisSummary and outputFormat.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testAnonymizeDocumentSignatureAcceptsNewParams(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('appendBasisSummary', $content);
+        $this->assertStringContainsString('outputFormat', $content);
+
+    }//end testAnonymizeDocumentSignatureAcceptsNewParams()
+
+
+    /**
+     * Test that tryAppendBasisSummary is defined as a private method.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testTryAppendBasisSummaryMethodExists(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('function tryAppendBasisSummary', $content);
+
+    }//end testTryAppendBasisSummaryMethodExists()
+
+
+    /**
+     * Test the service records a structured warning field on summary failure.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testWarningFieldDefinedOnSummaryFailure(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('SUMMARY_APPEND_FAILED', $content);
+        $this->assertStringContainsString("'warning'", $content);
+
+    }//end testWarningFieldDefinedOnSummaryFailure()
+
+
+    /**
+     * Test that preserve mode path sets summaryFileId and summaryFilePath fields.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testPreserveModeSetsSummaryFields(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('summaryFileId', $content);
+        $this->assertStringContainsString('summaryFilePath', $content);
+        $this->assertStringContainsString("'preserve'", $content);
+
+    }//end testPreserveModeSetsSummaryFields()
 
 
 }//end class

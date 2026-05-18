@@ -200,7 +200,8 @@ class AnonymizationController extends Controller
      * Anonymize entities in a document
      *
      * Replaces detected entities in the document with anonymized placeholders.
-     * Supports optional excludeTypes and minConfidence filtering.
+     * Supports optional excludeTypes, minConfidence, appendBasisSummary, and
+     * outputFormat parameters.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -208,6 +209,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      */
     public function anonymize(int $fileId): JSONResponse
     {
@@ -222,10 +225,26 @@ class AnonymizationController extends Controller
                 );
             }
 
+            $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
+            if ($appendBasisSummary instanceof JSONResponse) {
+                return $appendBasisSummary;
+            }
+
+            if (isset($params['outputFormat']) === true) {
+                $outputFormat = (string) $params['outputFormat'];
+            } else {
+                $outputFormat = 'pdf';
+            }
+
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
-            $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);
+            $result = $this->anonymizationService->anonymizeDocument(
+                fileId: $fileId,
+                entities: $entities,
+                appendBasisSummary: $appendBasisSummary,
+                outputFormat: $outputFormat
+            );
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -240,6 +259,36 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+
+    /**
+     * Extract and validate the appendBasisSummary flag from request params.
+     *
+     * Returns a JSONResponse (HTTP 400) when the field is present but not boolean.
+     *
+     * @param array<string, mixed> $params Request parameters
+     *
+     * @return bool|JSONResponse False when omitted, true when set, 400 response on type error.
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+     */
+    private function extractAppendBasisSummary(array $params): bool|JSONResponse
+    {
+        if (array_key_exists('appendBasisSummary', $params) === false) {
+            return false;
+        }
+
+        $value = $params['appendBasisSummary'];
+        if (is_bool($value) === false) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
+                400
+            );
+        }
+
+        return $value;
+
+    }//end extractAppendBasisSummary()
 
 
     /**

@@ -20,5 +20,8 @@ define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Load Nextcloud OCP stubs (no NC server required).
+require_once __DIR__ . '/stubs/NextcloudStubs.php';
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
