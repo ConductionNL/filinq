@@ -763,23 +763,143 @@ class GrondslagenSummaryService
      */
     private function resolveBaseLabels(array $baseRefs): array
     {
-        // Phase 1 stub — implementation lives with phase 2 (templates) +
-        // phase 5 (dossier render). Returns the placeholder for every
-        // input until then so callers can wire end-to-end.
         $labels = [];
-        foreach ($baseRefs as $ref) {
-            $refString = (string) $ref;
-            $short     = $refString;
-            if (strlen($refString) > 8) {
-                $short = substr($refString, 0, 8);
+        if (count($baseRefs) === 0) {
+            return $labels;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            // ObjectService unavailable — best-effort: show the raw ref so
+            // the operator at least sees the slug, not a dangling
+            // placeholder. Better than masking the failure entirely.
+            foreach ($baseRefs as $ref) {
+                $labels[(string) $ref] = (string) $ref;
             }
 
-            $labels[$refString] = '⟨grondslag verwijderd: '.$short.'⟩';
+            return $labels;
+        }
+
+        // Pull every `base` object in one shot — the canonical set is six
+        // Woo Art. 5 grondslagen plus any tenant-added entries; very small
+        // cardinality, so a single findAll is cheaper than N per-ref
+        // find() calls. Build slug→name AND uuid→name lookups so the
+        // resolver works regardless of which reference shape the `bases`
+        // column carries (Wave 1.1's v1 trade-off stores slugs, but a
+        // future shape might switch to UUIDs).
+        $slugToName = [];
+        $uuidToName = [];
+        try {
+            $result = $objectService->findAll(
+                config: [
+                    'filters' => [
+                        'register' => 'dossier',
+                        'schema'   => 'base',
+                    ],
+                ],
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            $bases = $this->extractObjects(result: $result);
+            foreach ($bases as $base) {
+                $self = ($base['@self'] ?? []);
+                $name = (string) ($base['name'] ?? '');
+                if ($name === '') {
+                    continue;
+                }
+
+                $slug = '';
+                $uuid = '';
+                if (is_array($self) === true) {
+                    $slug = (string) ($self['slug'] ?? '');
+                    $uuid = (string) ($self['id'] ?? ($self['uuid'] ?? ''));
+                }
+
+                if ($slug !== '') {
+                    $slugToName[$slug] = $name;
+                }
+
+                if ($uuid !== '') {
+                    $uuidToName[$uuid] = $name;
+                }
+            }//end foreach
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: failed to load `base` objects for label resolution',
+                ['error' => $e->getMessage()]
+            );
+        }//end try
+
+        foreach ($baseRefs as $ref) {
+            $refString = (string) $ref;
+            if (isset($slugToName[$refString]) === true) {
+                $labels[$refString] = $slugToName[$refString];
+            } else if (isset($uuidToName[$refString]) === true) {
+                $labels[$refString] = $uuidToName[$refString];
+            } else {
+                $labels[$refString] = $refString;
+            }
         }
 
         return $labels;
 
     }//end resolveBaseLabels()
+
+
+    /**
+     * Coerce an ObjectService findAll result into a plain array of object payloads.
+     *
+     * `findAll` may return ObjectEntity instances, plain associative
+     * arrays, or a `{results: [...]}` envelope depending on the path that
+     * served it. Normalise to a flat array of `array<string, mixed>` so
+     * callers can iterate uniformly.
+     *
+     * @param mixed $result The raw findAll return value.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractObjects(mixed $result): array
+    {
+        if (is_array($result) === true && isset($result['results']) === true && is_array($result['results']) === true) {
+            $result = $result['results'];
+        }
+
+        $out = [];
+        if (is_iterable($result) === false) {
+            return $out;
+        }
+
+        $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+        foreach ($result as $item) {
+            // ObjectEntity::jsonSerialize() returns a flat payload that
+            // includes a synthetic `@self` block (id, slug, register,
+            // schema, …) reconstructed from the entity's columns. That's
+            // the shape resolveBaseLabels needs, so prefer it when the
+            // item is a real ObjectEntity.
+            if (is_object($item) === true
+                && class_exists($objectEntityClass) === true
+                && $item instanceof $objectEntityClass
+            ) {
+                try {
+                    $payload = $item->jsonSerialize();
+                    if (is_array($payload) === true) {
+                        $out[] = $payload;
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    // Fall through to other branches.
+                }
+            }
+
+            if (is_array($item) === true) {
+                $out[] = $item;
+            }
+        }//end foreach
+
+        return $out;
+
+    }//end extractObjects()
 
 
     /**
