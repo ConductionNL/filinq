@@ -118,7 +118,7 @@
 				<button type="button"
 					:title="t('docudesk', 'Insert merge field')"
 					class="template-detail__toolbar-btn"
-					@click="showMergeFieldDialog = true">
+					@click="showMergeDialog = true">
 					{{ t('docudesk', '{ }') }}
 				</button>
 				<button type="button"
@@ -210,68 +210,28 @@
 			</table>
 		</div>
 
-		<!-- MERGE FIELD DIALOG -->
-		<NcDialog v-if="showMergeFieldDialog"
-			:name="t('docudesk', 'Insert merge field')"
-			@closing="showMergeFieldDialog = false">
-			<template #default>
-				<NcTextField :value.sync="mergeFieldName"
-					:label="t('docudesk', 'Field name')"
-					:placeholder="t('docudesk', 'e.g. name, address, date')" />
-				<p class="template-detail__hint">
-					{{ t('docudesk', 'This inserts {{ fieldName }} into the template.', { fieldName: mergeFieldName || 'field' }) }}
-				</p>
-			</template>
-			<template #actions>
-				<NcButton @click="showMergeFieldDialog = false">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" @click="insertMergeField">
-					{{ t('docudesk', 'Insert') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<!-- Dialogs (extracted per ADR-004) -->
+		<MergeFieldDialog v-if="showMergeDialog"
+			@close="showMergeDialog = false"
+			@insert="insertMergeField" />
 
-		<!-- CONDITIONAL SECTION DIALOG -->
-		<NcDialog v-if="showConditionalDialog"
-			:name="t('docudesk', 'Insert conditional section')"
-			@closing="showConditionalDialog = false">
-			<template #default>
-				<NcTextField :value.sync="condField"
-					:label="t('docudesk', 'Field name')"
-					:placeholder="t('docudesk', 'e.g. zaaktype')" />
-				<NcSelect v-model="condOp"
-					:options="condOpOptions"
-					:inputLabel="t('docudesk', 'Operator')" />
-				<NcTextField v-if="condOpNeedsValue"
-					:value.sync="condValue"
-					:label="t('docudesk', 'Value')"
-					:placeholder="t('docudesk', 'e.g. omgevingsvergunning')" />
-				<p class="template-detail__hint">
-					{{ condPreview }}
-				</p>
-			</template>
-			<template #actions>
-				<NcButton @click="showConditionalDialog = false">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" @click="insertConditionalSection">
-					{{ t('docudesk', 'Insert') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+		<ConditionalSectionDialog v-if="showConditionalDialog"
+			@close="showConditionalDialog = false"
+			@insert="insertConditionalSection" />
 	</div>
 </template>
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 import { navigationStore } from '../../store/store.js'
+import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
+import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 
 export default {
 	name: 'TemplateDetail',
-	components: { NcButton, NcDialog, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField },
+	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog },
 	data() {
 		return {
 			navigationStore,
@@ -303,12 +263,8 @@ export default {
 			// Saving
 			saving: false,
 			// Dialogs
-			showMergeFieldDialog: false,
-			mergeFieldName: '',
+			showMergeDialog: false,
 			showConditionalDialog: false,
-			condField: '',
-			condOp: { label: 'is not empty', value: 'is_not_empty' },
-			condValue: '',
 		}
 	},
 	computed: {
@@ -319,32 +275,6 @@ export default {
 		},
 		currentUserId() {
 			return window.OC?.currentUser || ''
-		},
-		condOpOptions() {
-			return [
-				{ label: t('docudesk', 'equals'), value: 'equals' },
-				{ label: t('docudesk', 'not equals'), value: 'not_equals' },
-				{ label: t('docudesk', 'contains'), value: 'contains' },
-				{ label: t('docudesk', 'is empty'), value: 'is_empty' },
-				{ label: t('docudesk', 'is not empty'), value: 'is_not_empty' },
-			]
-		},
-		condOpNeedsValue() {
-			const op = this.condOp?.value || this.condOp
-			return op !== 'is_empty' && op !== 'is_not_empty'
-		},
-		condPreview() {
-			const field = this.condField || 'field'
-			const op = this.condOp?.value || this.condOp || 'is_not_empty'
-			const val = this.condValue
-			const opLabels = {
-				equals: `== "${val}"`,
-				not_equals: `!= "${val}"`,
-				contains: `contains "${val}"`,
-				is_empty: 'is empty',
-				is_not_empty: 'is not empty',
-			}
-			return `{% if ${field} ${opLabels[op] || op} %}…{% endif %}`
 		},
 	},
 	async mounted() {
@@ -474,25 +404,17 @@ export default {
 				this.saving = false
 			}
 		},
-		insertMergeField() {
-			if (!this.mergeFieldName) return
-			const token = `{{ ${this.mergeFieldName} }}`
+		insertMergeField(fieldName) {
+			const token = `{{ ${fieldName} }}`
 			document.execCommand('insertText', false, token)
 			this.syncFromEditor()
-			this.showMergeFieldDialog = false
-			this.mergeFieldName = ''
 		},
-		insertConditionalSection() {
-			const field = this.condField || 'field'
-			const op = this.condOp?.value || this.condOp || 'is_not_empty'
+		insertConditionalSection({ field, op, value }) {
 			const opAttr = `data-condition-field="${field}" data-condition-op="${op}"`
-			const valAttr = this.condOpNeedsValue ? ` data-condition-value="${this.condValue}"` : ''
+			const valAttr = (op !== 'is_empty' && op !== 'is_not_empty') ? ` data-condition-value="${value}"` : ''
 			const html = `<div ${opAttr}${valAttr}>{{ ${field} }}</div>`
 			document.execCommand('insertHTML', false, html)
 			this.syncFromEditor()
-			this.showConditionalDialog = false
-			this.condField = ''
-			this.condValue = ''
 		},
 	},
 }
@@ -678,16 +600,6 @@ export default {
 	padding: 12px;
 	border: 1px solid var(--color-error);
 	border-radius: 4px;
-}
-
-.template-detail__hint {
-	font-size: 13px;
-	color: var(--color-text-lighter);
-	font-family: monospace;
-	background: var(--color-background-dark);
-	padding: 8px;
-	border-radius: 4px;
-	margin-top: 8px;
 }
 
 .template-detail__editor-panel,
