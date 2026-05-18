@@ -68,7 +68,7 @@ class GrondslagenSummaryService
     /**
      * Relative path (from the app root) where the Twig templates live.
      */
-    private const TEMPLATE_DIR = '/lib/Resources/templates/grondslagen/';
+    private const TEMPLATE_DIR = '/Resources/templates/grondslagen/';
 
     /**
      * Template file for the per-document summary page.
