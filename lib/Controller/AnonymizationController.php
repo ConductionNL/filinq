@@ -265,7 +265,7 @@ class AnonymizationController extends Controller
     private function validateEntityBases(array $entities): ?JSONResponse
     {
         foreach ($entities as $entity) {
-            if (isset($entity['bases']) === false || $entity['bases'] === null) {
+            if (isset($entity['bases']) === false) {
                 continue;
             }
 
