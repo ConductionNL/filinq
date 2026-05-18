@@ -252,20 +252,10 @@ class GrondslagenSummaryService
 
         $perFile = $this->walkDossierFiles(folder: $folder);
 
-        // Build the union of all base references used across files so the
-        // dossier-level render gets a single resolved-label map.
-        $allRefs = [];
-        foreach ($perFile as $fileRow) {
-            foreach ($fileRow['entities'] as $entity) {
-                foreach (($entity['bases'] ?? []) as $ref) {
-                    $allRefs[(string) $ref] = true;
-                }
-            }
-        }
-
-        $labelMap = $this->resolveBaseLabels(baseRefs: array_keys($allRefs));
-
-        $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: $labelMap);
+        // loadAnonymisedEntitiesForFile already resolves base labels per
+        // file. aggregateForDossier just unfolds those rows across files
+        // and sorts. No second label-resolution pass needed here.
+        $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
 
         $data = [
             'dossier'     => [
@@ -274,8 +264,7 @@ class GrondslagenSummaryService
                 'checkedOn'   => (string) ($dossier['checkedOn'] ?? ''),
             ],
             'generatedAt' => date('c'),
-            'perDocument' => $aggregated['perDocument'],
-            'perBasis'    => $aggregated['perBasis'],
+            'rows'        => $aggregated['rows'],
             'totals'      => $aggregated['totals'],
         ];
 
@@ -494,75 +483,100 @@ class GrondslagenSummaryService
 
 
     /**
-     * Build the aggregate tables the per-dossier template renders.
+     * Build the flat row set the per-dossier template renders.
+     *
+     * Produces one row per `(entity, file)` pair. Same entity appearing
+     * in 3 files yields 3 rows — same placeholder, three different
+     * filenames. Rows are sorted primary-by-placeholder, secondary-by-
+     * filename so all occurrences of a given entity stay adjacent in
+     * the rendered table.
+     *
+     * Per-file entities arrive pre-aggregated from
+     * {@see loadAnonymisedEntitiesForFile}: each entry already has
+     * `placeholder`, `count`, and `basesText` (Dutch labels joined).
+     * This method just unfolds them across files and adds the filename
+     * column.
      *
      * @param array<int, mixed>     $perFile  Per-file rows from {@see walkDossierFiles}
      *                                        — each entry shaped as `{fileId, filename,
-     *                                        entities[]}`.
-     * @param array<string, string> $labelMap Map of base-ref → human-readable label.
+     *                                        entities[]}` where `entities[]` is the
+     *                                        per-entity-aggregated output of
+     *                                        loadAnonymisedEntitiesForFile.
+     * @param array<string, string> $labelMap Map of base-ref → human-readable label
+     *                                        (unused here — labels are already
+     *                                        resolved upstream; kept for signature
+     *                                        compat).
      *
      * @return array<string, mixed> Shape:
-     *                              `{ perDocument: array, perBasis: array,
-     *                                 totals: { documentCount, entityCount, distinctBasesCount } }`.
+     *                              `{ rows: array<int, {placeholder, filename,
+     *                                 fileId, count, baseLabels, basesText,
+     *                                 entityType, entityId}>,
+     *                                totals: { documentCount, entityCount,
+     *                                  distinctEntityCount, distinctBasesCount } }`.
      */
     private function aggregateForDossier(array $perFile, array $labelMap): array
     {
-        $perDocument       = [];
-        $basisDocumentSets = [];
-        $basisEntityCounts = [];
-        $totalEntities     = 0;
-        $distinctBasisRefs = [];
+        unset($labelMap);
+
+        $rows = [];
+        $totalOccurrences   = 0;
+        $distinctEntityKeys = [];
+        $distinctBasisRefs  = [];
 
         foreach ($perFile as $fileRow) {
-            $perFileBases = [];
-            $entityCount  = 0;
+            $fileId   = ($fileRow['fileId'] ?? 0);
+            $filename = (string) ($fileRow['filename'] ?? '');
 
             foreach (($fileRow['entities'] ?? []) as $entity) {
-                $entityCount++;
-                $totalEntities++;
+                $placeholder = (string) ($entity['placeholder'] ?? '');
+                $count       = (int) ($entity['count'] ?? 0);
+                $basesText   = (string) ($entity['basesText'] ?? '');
+                $baseLabels  = ($entity['baseLabels'] ?? []);
+                if (is_array($baseLabels) === false) {
+                    $baseLabels = [];
+                }
+
+                $totalOccurrences += $count;
+
+                $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
+                $distinctEntityKeys[$entityKey] = true;
 
                 foreach (($entity['bases'] ?? []) as $ref) {
-                    $key = (string) $ref;
-                    $perFileBases[$key] = (($perFileBases[$key] ?? 0) + 1);
-                    $basisDocumentSets[$key][$fileRow['fileId']] = true;
-                    $basisEntityCounts[$key] = (($basisEntityCounts[$key] ?? 0) + 1);
-                    $distinctBasisRefs[$key] = true;
+                    $distinctBasisRefs[(string) $ref] = true;
                 }
-            }
 
-            $basesWithCounts = [];
-            foreach ($perFileBases as $ref => $count) {
-                $basesWithCounts[] = [
-                    'name'  => ($labelMap[$ref] ?? $ref),
-                    'count' => $count,
+                $rows[] = [
+                    'placeholder' => $placeholder,
+                    'fileId'      => $fileId,
+                    'filename'    => $filename,
+                    'count'       => $count,
+                    'baseLabels'  => $baseLabels,
+                    'basesText'   => $basesText,
+                    'entityType'  => (string) ($entity['entityType'] ?? ''),
+                    'entityId'    => (int) ($entity['entityId'] ?? 0),
                 ];
-            }
-
-            $perDocument[] = [
-                'fileId'          => $fileRow['fileId'],
-                'filename'        => $fileRow['filename'],
-                'entityCount'     => $entityCount,
-                'basesWithCounts' => $basesWithCounts,
-            ];
+            }//end foreach
         }//end foreach
 
-        $perBasis = [];
-        foreach ($basisEntityCounts as $ref => $entityCount) {
-            $perBasis[] = [
-                'ref'           => $ref,
-                'name'          => ($labelMap[$ref] ?? $ref),
-                'documentCount' => count(($basisDocumentSets[$ref] ?? [])),
-                'entityCount'   => $entityCount,
-            ];
-        }
+        usort(
+            $rows,
+            static function (array $a, array $b): int {
+                $cmp = strcmp($a['placeholder'], $b['placeholder']);
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                return strcmp($a['filename'], $b['filename']);
+            }
+        );
 
         return [
-            'perDocument' => $perDocument,
-            'perBasis'    => $perBasis,
-            'totals'      => [
-                'documentCount'      => count($perDocument),
-                'entityCount'        => $totalEntities,
-                'distinctBasesCount' => count($distinctBasisRefs),
+            'rows'   => $rows,
+            'totals' => [
+                'documentCount'       => count($perFile),
+                'entityCount'         => $totalOccurrences,
+                'distinctEntityCount' => count($distinctEntityKeys),
+                'distinctBasesCount'  => count($distinctBasisRefs),
             ],
         ];
 
@@ -822,33 +836,67 @@ class GrondslagenSummaryService
 
         $labelMap = $this->resolveBaseLabels(baseRefs: array_keys($allRefs));
 
-        // Build the row shape the per-doc template consumes.
-        $shaped = [];
+        // Group raw relation rows by (entity_type, entity_id) so the
+        // template sees one row per entity rather than one row per
+        // occurrence. Each group carries:
+        // - placeholder: `[<TYPE>: <entity_id>]` — matches the in-file
+        // substitution produced by OR's `DocumentProcessingHandler`.
+        // - count: number of EntityRelation rows in the group (i.e.
+        // how many times this entity got redacted in this file).
+        // - bases: set-union of `bases` arrays across the group.
+        // - baseLabels: bases resolved to human-readable Dutch names,
+        // comma-joined for direct render.
+        $grouped = [];
         foreach ($rawRows as $row) {
-            $bases  = ($row['bases'] ?? null);
-            $labels = [];
-            if (is_array($bases) === true) {
-                foreach ($bases as $ref) {
-                    $key      = (string) $ref;
-                    $labels[] = ($labelMap[$key] ?? $key);
-                }
+            $entityId   = (int) ($row['entity_id'] ?? 0);
+            $entityType = (string) ($row['entity_type'] ?? '');
+            $entityText = (string) ($row['entity_value'] ?? '');
+            $key        = $entityType.':'.$entityId;
+
+            if (isset($grouped[$key]) === false) {
+                $grouped[$key] = [
+                    'entityId'    => $entityId,
+                    'entityType'  => $entityType,
+                    'entityText'  => $entityText,
+                    'placeholder' => '['.$entityType.': '.$entityId.']',
+                    'count'       => 0,
+                    'basesSet'    => [],
+                ];
             }
 
-            $basesOut = [];
+            $grouped[$key]['count']++;
+
+            $bases = ($row['bases'] ?? null);
             if (is_array($bases) === true) {
-                $basesOut = array_values($bases);
+                foreach ($bases as $ref) {
+                    $grouped[$key]['basesSet'][(string) $ref] = true;
+                }
+            }
+        }//end foreach
+
+        $shaped = [];
+        foreach ($grouped as $group) {
+            $basesRefs = array_keys($group['basesSet']);
+            $labels    = [];
+            foreach ($basesRefs as $ref) {
+                $labels[] = ($labelMap[$ref] ?? $ref);
             }
 
             $shaped[] = [
-                'relationId'      => (int) ($row['relation_id'] ?? 0),
-                'entityText'      => (string) ($row['entity_value'] ?? ''),
-                'entityType'      => (string) ($row['entity_type'] ?? ''),
-                'anonymizedValue' => (string) ($row['anonymized_value'] ?? ''),
-                'bases'           => $basesOut,
-                'baseLabels'      => $labels,
-                'confidence'      => (float) ($row['confidence'] ?? 0.0),
+                'placeholder' => $group['placeholder'],
+                'entityId'    => $group['entityId'],
+                'entityType'  => $group['entityType'],
+                'entityText'  => $group['entityText'],
+                'count'       => $group['count'],
+                'bases'       => $basesRefs,
+                'baseLabels'  => $labels,
+                'basesText'   => implode(', ', $labels),
             ];
-        }//end foreach
+        }
+
+        // Stable order — placeholder asc — so re-renders produce
+        // diff-friendly output.
+        usort($shaped, static fn(array $a, array $b): int => strcmp($a['placeholder'], $b['placeholder']));
 
         return $shaped;
 
@@ -874,6 +922,11 @@ class GrondslagenSummaryService
         $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId);
         $distinctBases = $this->countDistinctBases(entities: $entities);
 
+        $totalOccurrences = 0;
+        foreach ($entities as $entity) {
+            $totalOccurrences += (int) ($entity['count'] ?? 0);
+        }
+
         $operator = 'system';
         $user     = $this->userSession->getUser();
         if ($user !== null) {
@@ -881,14 +934,18 @@ class GrondslagenSummaryService
         }
 
         $data = [
-            'document'           => [
+            'document' => [
                 'filename'     => $anonymisedFile->getName(),
                 'anonymisedAt' => date('c'),
                 'operator'     => $operator,
                 'tool'         => 'OpenAnonymiser via OpenRegister',
             ],
-            'entities'           => $entities,
-            'distinctBasesCount' => $distinctBases,
+            'entities' => $entities,
+            'totals'   => [
+                'entityCount'         => $totalOccurrences,
+                'distinctEntityCount' => count($entities),
+                'distinctBasesCount'  => $distinctBases,
+            ],
         ];
 
         try {
