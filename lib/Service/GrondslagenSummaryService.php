@@ -782,21 +782,22 @@ class GrondslagenSummaryService
 
         // Pull every `base` object in one shot — the canonical set is six
         // Woo Art. 5 grondslagen plus any tenant-added entries; very small
-        // cardinality, so a single findAll is cheaper than N per-ref
-        // find() calls. Build slug→name AND uuid→name lookups so the
+        // cardinality. Build slug→name AND uuid→name lookups so the
         // resolver works regardless of which reference shape the `bases`
         // column carries (Wave 1.1's v1 trade-off stores slugs, but a
         // future shape might switch to UUIDs).
+        //
+        // searchObjectsBySlug is the path that resolves slug filters to
+        // numeric IDs and reaches the magic-mapped `dossier` register;
+        // findAll with slug filters returns nothing because the magic
+        // tables aren't visible to the generic getHandler path.
         $slugToName = [];
         $uuidToName = [];
         try {
-            $result = $objectService->findAll(
-                config: [
-                    'filters' => [
-                        'register' => 'dossier',
-                        'schema'   => 'base',
-                    ],
-                ],
+            $result = $objectService->searchObjectsBySlug(
+                registerSlug: 'dossier',
+                schemaSlug: 'base',
+                filters: [],
                 _rbac: false,
                 _multitenancy: false
             );
