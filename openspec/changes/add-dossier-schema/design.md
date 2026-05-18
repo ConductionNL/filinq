@@ -1,3 +1,7 @@
+---
+status: pr-created
+---
+
 ## Context
 
 DocuDesk currently treats "dossier" as a synonym for "Nextcloud folder containing documents to anonymise". The folder is the unit of work, but there is no object describing it: no stored legal basis, no review history, no per-folder description, no stable name that survives a rename. The anonymisation audit trail exists at document level, not dossier level.

@@ -137,6 +137,21 @@
         "Extraction has not started": "Extraction has not started",
         "No folder path provided": "No folder path provided",
         "Either folderId or folderPath must be provided": "Either folderId or folderPath must be provided",
-        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath"
+        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath",
+        "Dossier Register": "Dossier Register",
+        "Dossier": "Dossier",
+        "Dossiers": "Dossiers",
+        "Legal Basis": "Legal Basis",
+        "Legal Bases": "Legal Bases",
+        "Name": "Name",
+        "Description": "Description",
+        "Bases": "Bases",
+        "Checked On": "Checked On",
+        "Personal data": "Personal data",
+        "Special personal data": "Special personal data",
+        "Criminal data": "Criminal data",
+        "Business and manufacturing data": "Business and manufacturing data",
+        "Disproportionate disadvantage": "Disproportionate disadvantage",
+        "National security": "National security"
     }
 }

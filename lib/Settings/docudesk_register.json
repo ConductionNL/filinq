@@ -57,6 +57,16 @@
                     "correspondence",
                     "huisstijl"
                 ]
+            },
+            "dossier": {
+                "slug": "dossier",
+                "title": "Dossier Register",
+                "version": "1.0.0",
+                "description": "Register voor dossiers gekoppeld aan Nextcloud mappen: juridische grondslagen (Woo Art. 5), reviewhistorie en anonimiseringsverantwoording per map.",
+                "schemas": [
+                    "dossier",
+                    "base"
+                ]
             }
         },
         "schemas": {
@@ -667,8 +677,262 @@
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "action", "objectDescriptionField": "actorDisplayName", "autoPublish": false},
                 "searchable": true
+            },
+            "base": {
+                "uri": null,
+                "slug": "base",
+                "title": "Juridische Grondslag",
+                "description": "Woo Art. 5 uitzondering die de juridische grondslag vormt voor anonimisering van een dossier. De zes canonieke grondslagen worden als seeddata meegeleverd.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ScaleBalance",
+                "required": [
+                    "name",
+                    "description"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Nederlandse naam van de grondslag (eindgebruikersterm)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Nederlandse toelichting met verwijzing naar Woo Art. 5 en relevante AVG-artikelen",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Toelichting",
+                        "format": "markdown",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-05-18T12:00:00+00:00",
+                "created": "2026-05-18T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "dossier": {
+                "uri": null,
+                "slug": "dossier",
+                "title": "Dossier",
+                "description": "Dossier op mapniveau: beschrijft een Nextcloud-map die onderwerp is van een anonimiseringstraject. Koppelt juridische grondslagen (bases) aan de map en registreert de laatste reviewdatum (checkedOn). De mapkoppeling verloopt via het OpenRegister @self.folder-mechanisme.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FolderLock",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "Naam van het dossier — gespiegeld aan de mapnaam bij aanmaak voor auditlogstabiliteit. Wijzigt niet automatisch mee als de map wordt hernoemd.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Vrije tekst over het doel en de inhoud van het dossier",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "format": "markdown",
+                        "maxLength": 2000
+                    },
+                    "bases": {
+                        "description": "Woo Art. 5 grondslagen die de anonimisering van dit dossier rechtvaardigen",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/base"
+                        },
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Grondslagen"
+                    },
+                    "checkedOn": {
+                        "description": "Datum/tijd van de laatste inhoudelijke review (ISO 8601). Wie de review uitvoerde is terug te vinden in het OpenRegister-auditlog.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Beoordeeld op"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-05-18T12:00:00+00:00",
+                "created": "2026-05-18T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
             }
         },
-        "objects": []
+        "objects": [
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "persoonsgegevens"
+                },
+                "name": "Persoonsgegevens",
+                "description": "Herleidbare gegevens van een natuurlijke persoon (Art. 5.1 Woo jo. AVG Art. 4 lid 1). Denk aan namen, adressen, BSN, contactgegevens, functie gekoppeld aan persoon."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "bijzondere-persoonsgegevens"
+                },
+                "name": "Bijzondere persoonsgegevens",
+                "description": "Gegevens over ras/etniciteit, politieke opvattingen, religie, lidmaatschap vakbond, genetica/biometrie, gezondheid, seksueel leven of geaardheid (Art. 5.1 Woo jo. AVG Art. 9). Strikte anonimiseringsplicht."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "strafrechtelijk"
+                },
+                "name": "Strafrechtelijke gegevens",
+                "description": "Gegevens over strafrechtelijke veroordelingen en strafbare feiten (Art. 5.1 Woo jo. AVG Art. 10). Alleen onder wettelijke grondslag verwerkbaar; in openbaarmaking altijd geanonimiseerd."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "bedrijfs-fabricagegegevens"
+                },
+                "name": "Bedrijfs- en fabricagegegevens",
+                "description": "Vertrouwelijk meegedeelde bedrijfs- en fabricagegegevens (Art. 5.1 sub c Woo). Beschermt concurrentiepositie — bijv. offertebedragen, receptuur, leveranciersafspraken."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "onevenredige-benadeling"
+                },
+                "name": "Onevenredige benadeling",
+                "description": "Openbaarmaking zou leiden tot onevenredige benadeling van betrokkenen of derden (Art. 5.2 Woo). Brede restcategorie; belangenafweging per geval gedocumenteerd."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "nationale-veiligheid"
+                },
+                "name": "Nationale veiligheid",
+                "description": "Gegevens waarvan openbaarmaking de veiligheid van de Staat of de opsporing en vervolging van strafbare feiten schaadt (Art. 5.1 sub a/b Woo). Zelden van toepassing bij gemeenten."
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "woo-verzoek-2025-017",
+                    "folder": "seed-folder-demostad-woo-2025-017"
+                },
+                "name": "Woo-verzoek 2025-017 — Subsidietoekenningen cultuur",
+                "description": "Woo-verzoek van lokale krant over alle subsidietoekenningen cultuur 2022–2024. Folder bevat 47 beschikkingen, 12 bezwaarschriften en bijbehorende correspondentie. Anonimiseren vóór publicatie op overheid.nl.",
+                "bases": [
+                    {"slug": "persoonsgegevens"},
+                    {"slug": "onevenredige-benadeling"}
+                ],
+                "checkedOn": "2026-03-14T10:22:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "bezwaar-wmo-2024",
+                    "folder": "seed-folder-demostad-wmo-2024"
+                },
+                "name": "Bezwaarschriften WMO 2024",
+                "description": "Geanonimiseerd archief van WMO-bezwaarschriften 2024 ten behoeve van kwartaalrapportage Raad. Bevat medische onderbouwing — alles met AVG Art. 9-grondslag.",
+                "bases": [
+                    {"slug": "persoonsgegevens"},
+                    {"slug": "bijzondere-persoonsgegevens"}
+                ],
+                "checkedOn": "2026-02-28T15:45:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "conduction-demo",
+                    "folder": "seed-folder-conduction-demo"
+                },
+                "name": "Referentieproject — Anonimiseringsvoorbeelden",
+                "description": "Werkvoorbeelden voor klantendemonstraties. Alle persoonsgegevens zijn synthetisch maar behandeld alsof echt, om anonimiseringsflow end-to-end te tonen.",
+                "bases": [
+                    {"slug": "persoonsgegevens"}
+                ],
+                "checkedOn": "2026-04-01T09:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "klachten-zomerseizoen-2025",
+                    "folder": "seed-folder-zonnestraal-klachten-2025"
+                },
+                "name": "Klachtendossier zomerseizoen 2025",
+                "description": "Interne behandeling van klantklachten zomer 2025 t.b.v. verbetertraject. Gedeeld met verzekeraar en branchevereniging — namen klanten + accommodaties anonimiseren.",
+                "bases": [
+                    {"slug": "persoonsgegevens"},
+                    {"slug": "bedrijfs-fabricagegegevens"}
+                ],
+                "checkedOn": "2026-01-20T11:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "incident-analyse-2026-03",
+                    "folder": "seed-folder-zonnestraal-incident-2026-03"
+                },
+                "name": "Incident-analyse vlucht AMS-CAN 2026-03",
+                "description": "Nieuw dossier voor anonimiseringstraject — grondslagen nog te bepalen door privacy officer.",
+                "bases": [],
+                "checkedOn": null
+            }
+        ]
     }
 }

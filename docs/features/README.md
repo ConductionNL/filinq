@@ -83,6 +83,7 @@ Features that are fully implemented and available in the current release.
 | [Print Functionality](./print-functionality.md) | print-functionality.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [CI/CD Quality Checks](./ci-cd-quality-checks.md) | ci-cd-quality-checks.md | — | — | Done |
 | [Backend Services](./backend.md) | backend.md | — | — | Done |
+| [Dossier Register](./dossier-register.md) | dossier-register.md | Documentregistratiecomponent | TEC-DMS-4 | Done |
 
 ### Planned / In Progress
 

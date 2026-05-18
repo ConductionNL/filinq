@@ -1,0 +1,71 @@
+{
+    "spec": "openspec/changes/add-dossier-schema",
+    "verified": [
+        {
+            "task": "1",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "dossier register entry added to components.registers",
+            "ok": true
+        },
+        {
+            "task": "2",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "base schema added to components.schemas with required name + description",
+            "ok": true
+        },
+        {
+            "task": "3",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "dossier schema added with $ref bases, facetable flags, date-time checkedOn",
+            "ok": true
+        },
+        {
+            "task": "4",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "python3 json.load() returns no error; phpcs lib/ exits 0",
+            "ok": true
+        },
+        {
+            "task": "5",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "6 base seed objects with canonical Woo Art. 5 slugs",
+            "ok": true
+        },
+        {
+            "task": "6",
+            "file": "lib/Settings/docudesk_register.json",
+            "check": "5 dossier seed objects; incident-analyse has bases:[] and checkedOn:null",
+            "ok": true
+        },
+        {
+            "task": "10",
+            "file": "tests/unit/Settings/DossierRegisterConfigTest.php",
+            "check": "8 assertions pass; phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest exits 0",
+            "ok": true
+        },
+        {
+            "task": "11",
+            "file": "l10n/en.json + l10n/nl.json + l10n/en.js + l10n/nl.js",
+            "check": "Dossier Register, Legal Basis, Bases, Checked On and 6 grondslag names translated",
+            "ok": true
+        },
+        {
+            "task": "12",
+            "file": "docs/features/dossier-register.md",
+            "check": "Feature doc created; referenced from docs/features/README.md",
+            "ok": true
+        },
+        {
+            "task": "14",
+            "file": "docs/features/dossier-register.md",
+            "check": "validate-self-folder-access referenced and trust model documented in feature doc",
+            "ok": true
+        }
+    ],
+    "stubs": [],
+    "missing_routes": [],
+    "notes": [
+        "Tasks 7-9 (install/runtime verification) and task 13 (Playwright screenshots) require a running Nextcloud instance or browser; deferred to the CI verify stage.",
+        "No new PHP classes were added — this change is JSON-only — so test-coverage gate applies only to the new test file itself."
+    ]
+}

@@ -138,7 +138,22 @@ OC.L10N.register(
     "Extraction has not started" : "Extractie is nog niet gestart",
     "No folder path provided" : "Geen mappad opgegeven",
     "Either folderId or folderPath must be provided" : "Geef folderId of folderPath op",
-    "Provide only one of folderId or folderPath" : "Geef slechts één van folderId of folderPath op"
+    "Provide only one of folderId or folderPath" : "Geef slechts één van folderId of folderPath op",
+    "Dossier Register" : "Dossierregister",
+    "Dossier" : "Dossier",
+    "Dossiers" : "Dossiers",
+    "Legal Basis" : "Juridische grondslag",
+    "Legal Bases" : "Juridische grondslagen",
+    "Name" : "Naam",
+    "Description" : "Beschrijving",
+    "Bases" : "Grondslagen",
+    "Checked On" : "Beoordeeld op",
+    "Personal data" : "Persoonsgegevens",
+    "Special personal data" : "Bijzondere persoonsgegevens",
+    "Criminal data" : "Strafrechtelijke gegevens",
+    "Business and manufacturing data" : "Bedrijfs- en fabricagegegevens",
+    "Disproportionate disadvantage" : "Onevenredige benadeling",
+    "National security" : "Nationale veiligheid"
 },
 "nplurals=2; plural=(n != 1);"
 );
