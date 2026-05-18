@@ -212,41 +212,21 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        // CSS Paged Media spec accepts `size: <page-size>` or
-        // `size: <page-size> landscape`. The bare keyword `portrait` is
-        // ambiguous in the grammar (portrait is the implicit default).
-        // mPDF's CSS parser silently rejected the `size: A4 portrait`
-        // form, fell back to a degenerate page size, and produced the
-        // "every character on its own page" rendering bug. Emit only
-        // the keyword that's strictly required by the spec.
-        $sizeValue = $format;
-        if ($orientation === 'L') {
-            $sizeValue .= ' landscape';
-        }
+        // DIAGNOSTIC step 2b: return empty string to confirm whether the
+        // print-CSS injection itself causes the "every character on its
+        // own page" mPDF rendering bug. mPDF still receives `format` /
+        // `orientation` via the config array in `generatePdf`, so page
+        // dimensions are correct without this stylesheet. If the symptom
+        // disappears with an empty print-CSS, the bug is somewhere in
+        // the rules below — we'll bisect by adding blocks back one at
+        // a time once this confirms the upstream call sites are sound.
+        //
+        // Suppress unused-parameter warnings — the parameters are still
+        // part of the public contract for callers and will be wired back
+        // up once the injection is restored.
+        unset($format, $orientation);
 
-        return '<style>
-@media print {
-    @page {
-        size: '.$sizeValue.';
-        margin: 15mm;
-    }
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: "DejaVu Sans", sans-serif;
-    }
-    table, figure, img, pre, blockquote {
-        page-break-inside: avoid;
-    }
-    h1, h2, h3, h4, h5, h6 {
-        page-break-after: avoid;
-    }
-    nav, .no-print {
-        display: none;
-    }
-}
-</style>
-';
+        return '';
 
     }//end buildPrintCss()
 
