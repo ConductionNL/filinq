@@ -47,6 +47,17 @@ class Application extends App implements IBootstrap
     ) {
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
+        // Register the app's bundled vendor autoload so third-party
+        // packages (mpdf, fpdi, twig, …) declared in composer.json
+        // resolve at runtime. Nextcloud only autoloads the app's own
+        // PSR-4 namespace by default; vendor deps live outside that
+        // and need an explicit include. Mirrors OpenRegister's
+        // Application::__construct pattern.
+        $autoload = __DIR__.'/../../vendor/autoload.php';
+        if (is_file($autoload) === true) {
+            include_once $autoload;
+        }
+
     }//end __construct()
 
 
