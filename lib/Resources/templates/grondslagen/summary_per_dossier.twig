@@ -6,17 +6,17 @@
 <style>
   body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
   h1 { font-size: 18pt; margin: 0 0 4pt 0; }
-  h2 { font-size: 13pt; margin: 18pt 0 6pt 0; border-bottom: 1pt solid #999; padding-bottom: 3pt; }
   .description { font-size: 10pt; color: #444; margin: 4pt 0 10pt 0; }
   .header-grid { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt 0; }
   .header-grid td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
   .header-grid td.label { color: #666; width: 32%; }
-  table.summary { width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 6pt; }
+  table.summary { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 12pt 0 6pt 0; }
   table.summary th { background: #eee; padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #999; }
   table.summary td { padding: 3pt 6pt; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
   table.summary td.numeric { text-align: right; white-space: nowrap; }
   .totals-line { margin-top: 10pt; font-size: 9pt; color: #444; }
   .empty-note { font-style: italic; color: #888; }
+  .placeholder-cell { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; }
 </style>
 </head>
 <body>
@@ -44,31 +44,29 @@
   </tr>
 </table>
 
-<h2>Per document</h2>
-
-{% if perDocument|length == 0 %}
+{% if rows|length == 0 %}
   <p class="empty-note">Dit dossier bevat geen geanonimiseerde documenten.</p>
 {% else %}
   <table class="summary">
     <thead>
       <tr>
+        <th>Placeholder</th>
         <th>Bestand</th>
-        <th class="numeric">Aantal entiteiten</th>
-        <th>Gebruikte grondslagen (met aantal)</th>
+        <th class="numeric">Aantal keer geanonimiseerd</th>
+        <th>Grondslag</th>
       </tr>
     </thead>
     <tbody>
-      {% for doc in perDocument %}
+      {% for row in rows %}
         <tr>
-          <td>{{ doc.filename|default('—')|escape }}</td>
-          <td class="numeric">{{ doc.entityCount|default(0) }}</td>
+          <td class="placeholder-cell">{{ row.placeholder|escape }}</td>
+          <td>{{ row.filename|default('—')|escape }}</td>
+          <td class="numeric">{{ row.count|default(0) }}</td>
           <td>
-            {% if doc.basesWithCounts|default([])|length == 0 %}
-              <span class="empty-note">geen grondslag geregistreerd</span>
+            {% if row.basesText|default('') != '' %}
+              {{ row.basesText|escape }}
             {% else %}
-              {% for basis in doc.basesWithCounts %}
-                {{ basis.name|escape }} ({{ basis.count|default(0) }}){% if not loop.last %}, {% endif %}
-              {% endfor %}
+              <span class="empty-note">geen grondslag</span>
             {% endif %}
           </td>
         </tr>
@@ -77,34 +75,10 @@
   </table>
 {% endif %}
 
-<h2>Per grondslag</h2>
-
-{% if perBasis|length == 0 %}
-  <p class="empty-note">Geen grondslagen vastgelegd in dit dossier.</p>
-{% else %}
-  <table class="summary">
-    <thead>
-      <tr>
-        <th>Grondslag</th>
-        <th class="numeric">Aantal documenten</th>
-        <th class="numeric">Totaal entiteiten</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for basis in perBasis %}
-        <tr>
-          <td>{{ basis.name|escape }}</td>
-          <td class="numeric">{{ basis.documentCount|default(0) }}</td>
-          <td class="numeric">{{ basis.entityCount|default(0) }}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% endif %}
-
 <p class="totals-line">
   Totaal: {{ totals.documentCount|default(0) }} document{% if totals.documentCount|default(0) != 1 %}en{% endif %} ·
-  {{ totals.entityCount|default(0) }} entiteit{% if totals.entityCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.distinctEntityCount|default(0) }} unieke entiteit{% if totals.distinctEntityCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.entityCount|default(0) }} keer geanonimiseerd ·
   {{ totals.distinctBasesCount|default(0) }} unieke grondsla{% if totals.distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
 </p>
 
