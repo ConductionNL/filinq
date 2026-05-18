@@ -286,12 +286,17 @@ class BatchAnonymizationController extends Controller
     /**
      * Apply the user-approved entity list to every extracted file in a batch.
      *
+     * Each entity may carry an optional `bases[]` field (array of strings) that
+     * is forwarded verbatim to OpenRegister per the anonymisation-bases-passthrough spec.
+     *
      * @param string $batchId Identifier of the batch to anonymize.
      *
      * @return JSONResponse Summary of the run, or an error payload when the request body is malformed.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
@@ -299,6 +304,11 @@ class BatchAnonymizationController extends Controller
             $entities = $this->request->getParams()['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(['error' => 'No entities provided'], 400);
+            }
+
+            $basesError = $this->validateEntityBases(entities: $entities);
+            if ($basesError !== null) {
+                return $basesError;
             }
 
             return new JSONResponse($this->anonService->anonymizeBatch($batchId, $entities));
@@ -368,6 +378,46 @@ class BatchAnonymizationController extends Controller
         }
 
     }//end updateProfiles()
+
+
+    /**
+     * Validate that each entity's optional `bases` field is an array of strings
+     *
+     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
+     *
+     * @param array<int, array<string, mixed>> $entities The entities to validate
+     *
+     * @return JSONResponse|null Error response or null when all bases are valid
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+     */
+    private function validateEntityBases(array $entities): ?JSONResponse
+    {
+        foreach ($entities as $entity) {
+            if (isset($entity['bases']) === false || $entity['bases'] === null) {
+                continue;
+            }
+
+            if (is_array($entity['bases']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
+                    400
+                );
+            }
+
+            foreach ($entity['bases'] as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
+                        400
+                    );
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateEntityBases()
 
 
     /**

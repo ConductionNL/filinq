@@ -200,7 +200,9 @@ class AnonymizationController extends Controller
      * Anonymize entities in a document
      *
      * Replaces detected entities in the document with anonymized placeholders.
-     * Supports optional excludeTypes and minConfidence filtering.
+     * Supports optional excludeTypes and minConfidence filtering. Each entity
+     * may carry an optional `bases[]` array (array of strings) that is forwarded
+     * verbatim to OpenRegister.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -208,6 +210,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      */
     public function anonymize(int $fileId): JSONResponse
     {
@@ -220,6 +224,11 @@ class AnonymizationController extends Controller
                     ['error' => $this->l10n->t('No entities provided for anonymization')],
                     400
                 );
+            }
+
+            $basesError = $this->validateEntityBases(entities: $entities);
+            if ($basesError !== null) {
+                return $basesError;
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
@@ -240,6 +249,46 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+
+    /**
+     * Validate that each entity's optional `bases` field is an array of strings
+     *
+     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
+     *
+     * @param array<int, array<string, mixed>> $entities The entities to validate
+     *
+     * @return JSONResponse|null Error response or null when all bases are valid
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+     */
+    private function validateEntityBases(array $entities): ?JSONResponse
+    {
+        foreach ($entities as $entity) {
+            if (isset($entity['bases']) === false || $entity['bases'] === null) {
+                continue;
+            }
+
+            if (is_array($entity['bases']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
+                    400
+                );
+            }
+
+            foreach ($entity['bases'] as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
+                        400
+                    );
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateEntityBases()
 
 
     /**
