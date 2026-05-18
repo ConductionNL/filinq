@@ -51,8 +51,8 @@
     <thead>
       <tr>
         <th>Placeholder</th>
-        <th>Bestand</th>
         <th class="numeric">Aantal keer geanonimiseerd</th>
+        <th>Bestand</th>
         <th>Grondslag</th>
       </tr>
     </thead>
@@ -60,8 +60,8 @@
       {% for row in rows %}
         <tr>
           <td class="placeholder-cell">{{ row.placeholder|escape }}</td>
-          <td>{{ row.filename|default('—')|escape }}</td>
           <td class="numeric">{{ row.count|default(0) }}</td>
+          <td>{{ row.filename|default('—')|escape }}</td>
           <td>
             {% if row.basesText|default('') != '' %}
               {{ row.basesText|escape }}
