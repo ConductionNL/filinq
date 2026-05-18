@@ -361,9 +361,18 @@ class GrondslagenSummaryService
         // callers must read the columns directly. Read the entity-level
         // getter first; fall back to a payload-embedded `@self.folder` for
         // future-compat in case the renderer ever inlines it.
+        //
+        // NOTE: `getFolder` is a magic method on Nextcloud's `Entity` base
+        // class (auto-generated via `__call`, declared only as `@method`),
+        // so `method_exists` returns false even when the call works. Probe
+        // via `ObjectEntity` instanceof, then invoke directly.
         $folderRef = null;
-        if (is_object($object) === true && method_exists($object, 'getFolder') === true) {
-            $folderRef = $object->getFolder();
+        if ($object instanceof \OCA\OpenRegister\Db\ObjectEntity) {
+            try {
+                $folderRef = $object->getFolder();
+            } catch (\Throwable $e) {
+                $folderRef = null;
+            }
         }
 
         if ($folderRef === null || $folderRef === '') {
