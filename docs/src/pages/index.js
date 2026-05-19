@@ -180,7 +180,7 @@ export default function Home() {
   return (
     <Layout
       title="DocuDesk, document and contract generation for Nextcloud"
-      description="Generate, anonymise, sign, and template documents on Nextcloud. Templates ship for the most-used Dutch government documents."
+      description="Generate documents and contracts from Nextcloud. Template-driven Word, PDF, and email output. WOPI editing, anonymisation, OCR built in."
     >
       <main className="marketing-page">
         <DetailHero

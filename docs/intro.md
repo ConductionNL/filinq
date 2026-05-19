@@ -1,3 +1,8 @@
+---
+title: DocuDesk Documentation
+description: Get started with DocuDesk, document and contract generation on Nextcloud. Render Word, PDF and email from templates with OCR and anonymisation.
+---
+
 # DocuDesk Documentation
 
 DocuDesk provides services for generating and anonymizing PDF, Word, HTML or Excel documents in a GDPR and WCAG compliant manner, all while keeping your data secure within your local Nextcloud instance.
