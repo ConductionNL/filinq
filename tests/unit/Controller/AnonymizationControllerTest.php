@@ -15,6 +15,9 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
