@@ -15,6 +15,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -31,10 +34,12 @@ use OCA\DocuDesk\Service\EntityConsolidationService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -68,6 +73,7 @@ class BatchAnonymizationController extends Controller
      * @param WooProfileService          $profileService     Service that stores the WOO entity profile.
      * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
      * @param IL10N                      $l10n               Translator for user-facing error messages.
+     * @param IUserSession               $userSession        User session for authentication.
      *
      * @return void
      */
@@ -84,6 +90,7 @@ class BatchAnonymizationController extends Controller
         private readonly WooProfileService $profileService,
         private readonly FolderBatchService $folderBatchService,
         private readonly IL10N $l10n,
+        private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -101,6 +108,10 @@ class BatchAnonymizationController extends Controller
     public function batchUpload(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $files = $this->uploadService->collectFiles($this->request);
             if (empty($files) === true) {
                 return new JSONResponse(['error' => $this->l10n->t('No files uploaded')], 400);
@@ -136,6 +147,10 @@ class BatchAnonymizationController extends Controller
     public function folderBatch(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $folderId   = self::coerceFolderId(raw: $this->request->getParam('folderId'));
             $folderPath = self::coerceFolderPath(raw: $this->request->getParam('folderPath', ''));
 
@@ -178,6 +193,10 @@ class BatchAnonymizationController extends Controller
     public function batchExtract(string $batchId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             return new JSONResponse($this->extractService->extractNext($batchId));
         } catch (Exception $e) {
             return $this->err(msg: 'Extraction failed', e: $e);
@@ -198,6 +217,10 @@ class BatchAnonymizationController extends Controller
      */
     public function batchStatus(string $batchId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
             return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
@@ -250,6 +273,10 @@ class BatchAnonymizationController extends Controller
     public function batchEntities(string $batchId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $batch = $this->stateService->getBatch($batchId);
             if ($batch === null) {
                 return new JSONResponse(['error' => 'Batch not found'], 404);
@@ -301,6 +328,10 @@ class BatchAnonymizationController extends Controller
     public function batchAnonymize(string $batchId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $entities = $this->request->getParams()['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(['error' => 'No entities provided'], 400);
@@ -332,6 +363,10 @@ class BatchAnonymizationController extends Controller
     public function batchReport(string $batchId): JSONResponse|DataDownloadResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $csv = $this->reportService->generateReport($batchId);
             return new DataDownloadResponse($csv, 'anonymization-report-'.$batchId.'.csv', 'text/csv');
         } catch (Exception $e) {
@@ -351,6 +386,10 @@ class BatchAnonymizationController extends Controller
      */
     public function getProfiles(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse($this->profileService->getProfile());
 
     }//end getProfiles()
@@ -366,6 +405,10 @@ class BatchAnonymizationController extends Controller
     public function updateProfiles(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $p = $this->request->getParams();
             if (is_array($p['anonymize'] ?? null) === false || is_array($p['keep'] ?? null) === false) {
                 return new JSONResponse(['error' => 'Invalid format'], 400);

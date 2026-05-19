@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -23,6 +26,8 @@ use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -58,6 +63,11 @@ class AnonymizationControllerTest extends TestCase
     private IL10N|MockObject $mockL10n;
 
     /**
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
+    /**
      * @var AnonymizationController
      */
     private AnonymizationController $controller;
@@ -77,13 +87,18 @@ class AnonymizationControllerTest extends TestCase
         $this->mockL10n        = $this->createMock(IL10N::class);
         $this->mockL10n->method('t')->willReturnCallback(fn($s) => $s);
 
+        $mockUser                = $this->createMock(IUser::class);
+        $this->mockUserSession   = $this->createMock(IUserSession::class);
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new AnonymizationController(
             appName: 'docudesk',
             request: $this->mockRequest,
             logger: $this->createMock(LoggerInterface::class),
             anonymizationService: $this->mockAnonService,
             fileListingService: $this->createMock(FileListingService::class),
-            l10n: $this->mockL10n
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession
         );
 
     }//end setUp()

@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,9 +26,11 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -50,6 +55,7 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IUserSession         $userSession          User session for authentication
      *
      * @return void
      */
@@ -59,7 +65,8 @@ class AnonymizationController extends Controller
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -80,6 +87,10 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
@@ -97,7 +108,7 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
-        }
+        }//end try
 
     }//end files()
 
@@ -116,6 +127,10 @@ class AnonymizationController extends Controller
     public function upload(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $file = $this->request->getUploadedFile('file');
 
             if (empty($file) === true || isset($file['tmp_name']) === false) {
@@ -179,6 +194,10 @@ class AnonymizationController extends Controller
     public function extract(int $fileId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
 
             return new JSONResponse($result);
@@ -216,6 +235,10 @@ class AnonymizationController extends Controller
     public function anonymize(int $fileId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
 
