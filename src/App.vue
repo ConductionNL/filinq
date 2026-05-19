@@ -1,109 +1,101 @@
-<template>
-	<NcContent app-name="docudesk">
-		<!-- OpenRegister not installed: show empty state -->
-		<NcAppContent v-if="storesReady && !hasOpenRegisters" class="open-register-missing">
-			<NcEmptyContent
-				:name="t('docudesk', 'OpenRegister is required')"
-				:description="t('docudesk', 'DocuDesk needs the OpenRegister app to store and manage data. Please install OpenRegister from the app store to get started.')">
-				<template #icon>
-					<img :src="appIcon" class="open-register-icon">
-				</template>
-				<template #action>
-					<NcButton
-						v-if="isAdmin"
-						type="primary"
-						:href="appStoreUrl">
-						{{ t('docudesk', 'Install OpenRegister') }}
-					</NcButton>
-					<p v-else class="open-register-admin-hint">
-						{{ t('docudesk', 'Ask your administrator to install the OpenRegister app.') }}
-					</p>
-				</template>
-			</NcEmptyContent>
-		</NcAppContent>
+<!--
+  SPDX-License-Identifier: EUPL-1.2
+  SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
-		<!-- App loaded normally -->
-		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
-			<Views />
+  DocuDesk app shell. Mounts CnAppRoot with the bundled manifest and
+  the customComponents registry derived from registry.js.
+
+  The existing sidebar/modal/dialog overlays are preserved as slot
+  overrides so the current UX (consent sidebar, anonymization modals,
+  template dialogs) continues to work through the transition.
+-->
+<template>
+	<CnAppRoot
+		:manifest="manifest"
+		:custom-components="customComponents"
+		:page-types="pageTypes"
+		app-id="docudesk"
+		:translate="translateForApp"
+		:permissions="permissions">
+		<!--
+		  Preserve legacy sidebar/modal/dialog overlays. These are rendered
+		  outside the manifest page tree and manage their own visibility via
+		  the navigation store, so they continue to work unchanged.
+		-->
+		<template #sidebar>
 			<SideBars />
+		</template>
+		<template #footer>
 			<Modals />
 			<Dialogs />
 		</template>
-
-		<!-- Loading -->
-		<NcAppContent v-else>
-			<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-				<NcLoadingIcon :size="64" />
-			</div>
-		</NcAppContent>
-	</NcContent>
+	</CnAppRoot>
 </template>
 
 <script>
-import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
-import { generateUrl, imagePath } from '@nextcloud/router'
-import MainMenu from './navigation/MainMenu.vue'
+import { translate as ncT } from '@nextcloud/l10n'
+import { CnAppRoot } from '@conduction/nextcloud-vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
-import Views from './views/Views.vue'
 import SideBars from './sidebars/SideBars.vue'
-import { initializeStores, useSettingsStore } from './store/store.js'
 
 export default {
 	name: 'App',
+
 	components: {
-		NcContent,
-		NcAppContent,
-		NcButton,
-		NcEmptyContent,
-		NcLoadingIcon,
-		MainMenu,
+		CnAppRoot,
 		Modals,
 		Dialogs,
-		Views,
 		SideBars,
 	},
 
-	data() {
-		return {
-			storesReady: false,
-		}
+	props: {
+		/**
+		 * Manifest object — passed from main.js bootstrap. CnAppRoot reads
+		 * `manifest.dependencies` for the dependency-check phase and
+		 * `manifest.menu` for the default CnAppNav.
+		 */
+		manifest: {
+			type: Object,
+			required: true,
+		},
+		/**
+		 * Registry of consumer-injected components used by type:"custom" pages
+		 * (page.component) and other CnPageRenderer overrides.
+		 */
+		customComponents: {
+			type: Object,
+			default: () => ({}),
+		},
+		/**
+		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
+		 * Wired through to descendant CnPageRenderer instances via
+		 * provide/inject.
+		 */
+		pageTypes: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	computed: {
-		hasOpenRegisters() {
-			const settingsStore = useSettingsStore()
-			return settingsStore.hasOpenRegisters
-		},
-		isAdmin() {
-			const settingsStore = useSettingsStore()
-			return settingsStore.getIsAdmin
-		},
-		appIcon() {
-			return imagePath('docudesk', 'app-dark.svg')
-		},
-		appStoreUrl() {
-			return generateUrl('/settings/apps/integration/openregister')
+		permissions() {
+			return window.OC?.currentUser?.permissions ?? []
 		},
 	},
 
-	async created() {
-		await initializeStores()
-		this.storesReady = true
+	methods: {
+		/**
+		 * Translate function passed down to CnAppRoot / CnAppNav /
+		 * CnPageRenderer. Closes over the Nextcloud `translate` import
+		 * so the lib never has to know our app id.
+		 *
+		 * @param {string} key Translation key.
+		 * @return {string} Translated string (or the key on miss).
+		 */
+		translateForApp(key) {
+			return ncT('docudesk', key)
+		},
 	},
 }
 </script>
-
-<style scoped>
-.open-register-icon {
-	width: 64px;
-	height: 64px;
-	filter: var(--background-invert-if-dark);
-}
-
-.open-register-admin-hint {
-	color: var(--color-text-maxcontrast);
-	text-align: center;
-}
-</style>
