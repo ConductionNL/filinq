@@ -133,7 +133,7 @@ class MetadataService
             $text     = $this->textExtractor->extractTextContent($objectData);
 
             if (empty($text) === false) {
-                $metadata = $this->enhanceTextMetadata($text, $objectData);
+                $metadata = $this->enhanceTextMetadata(text: $text, objectData: $objectData);
             }
 
             if (empty($objectData['documentType']) === false) {

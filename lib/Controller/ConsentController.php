@@ -58,7 +58,7 @@ class ConsentController extends Controller
         private readonly ConsentCrudService $crudService,
         private readonly IL10N $l10n
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 
@@ -118,7 +118,7 @@ class ConsentController extends Controller
                 $this->crudService->listConsents($config['register'], $config['schema'])
             );
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to list consents: ', $e);
+            return $this->errorResponse(message: 'Failed to list consents: ', exception: $e);
         }//end try
 
     }//end index()
@@ -159,7 +159,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($result, 201);
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to create consent: ', $e);
+            return $this->errorResponse(message: 'Failed to create consent: ', exception: $e);
         }//end try
 
     }//end create()
@@ -195,7 +195,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($consent);
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to get consent: ', $e);
+            return $this->errorResponse(message: 'Failed to get consent: ', exception: $e);
         }//end try
 
     }//end show()
@@ -230,7 +230,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to update consent: ', $e);
+            return $this->errorResponse(message: 'Failed to update consent: ', exception: $e);
         }//end try
 
     }//end update()
@@ -262,7 +262,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($consents);
         } catch (Exception $e) {
-            return $this->errorResponse('Failed to get consents for document: ', $e);
+            return $this->errorResponse(message: 'Failed to get consents for document: ', exception: $e);
         }//end try
 
     }//end byDocument()

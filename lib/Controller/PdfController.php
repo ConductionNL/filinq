@@ -147,6 +147,8 @@ class PdfController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      */
     public function renderPdfA(): DataDownloadResponse | JSONResponse
     {

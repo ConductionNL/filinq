@@ -106,7 +106,7 @@ class DocuDeskEventHandler
             $oldObjectData = $oldObject->getObject();
         }
 
-        if ($this->hasContentChanged($objectData, $oldObjectData) === false) {
+        if ($this->hasContentChanged(objectData: $objectData, oldObjectData: $oldObjectData) === false) {
             $logger->debug(
                 'DocuDesk: No content change detected, skipping re-enrichment',
                 ['objectId' => $object->getUuid()]
