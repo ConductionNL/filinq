@@ -123,6 +123,8 @@ class PolicyController extends Controller
         try {
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createProhibition(data: $data), 201);
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => $e->getMessage()], 400);
         } catch (Exception $e) {
@@ -149,6 +151,8 @@ class PolicyController extends Controller
         try {
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->updateProhibition(uuid: $id, data: $data));
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (InvalidArgumentException $e) {
             return new JSONResponse(['error' => $e->getMessage()], 400);
         } catch (Exception $e) {
@@ -175,6 +179,8 @@ class PolicyController extends Controller
         try {
             $this->crudService->deleteProhibition(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to delete prohibition: ', exception: $e);
         }

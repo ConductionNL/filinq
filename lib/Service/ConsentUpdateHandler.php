@@ -172,6 +172,30 @@ class ConsentUpdateHandler
             return;
         }
 
+        // Guard against the "clear policyMatch then update freely" bypass.
+        // Without this check, a PUT carrying `{ "policyMatch": null }` would
+        // pass the both-fields check below (neither consentStatus nor
+        // publicationDecision changed), be merged into the record via the
+        // downstream array_merge, and silently clear policyMatch — at which
+        // point a follow-up PUT could change consentStatus freely because
+        // the guard's early-return on line 171 would now fire.
+        // Once a record has been pre-empted by a policy match, its
+        // policyMatch is immutable; rejecting clearing operations here
+        // closes that bypass.
+        if (array_key_exists('policyMatch', $data) === true) {
+            $newMatch = $data['policyMatch'];
+            if ($newMatch === null || $newMatch === '') {
+                throw new InvalidArgumentException(
+                    message: sprintf(
+                        'policyMatch cannot be cleared on a policy-pre-empted record (existing=%s). '
+                        .'The match is immutable once set; create a new consent record if the policy '
+                        .'no longer applies.',
+                        (string) $existingMatch
+                    )
+                );
+            }
+        }
+
         // Guard the two operator-controlled transition fields. The
         // prohibition lock applies to BOTH `consentStatus` AND
         // `publicationDecision` — a record that's been pre-empted by a

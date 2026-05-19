@@ -114,6 +114,7 @@ import { anonymizationStore } from '../../store/store.js'
 										v-model="entity._decisionBases"
 										:options="basesOptions"
 										:multiple="true"
+										:input-label="t('docudesk', 'Grondslagen')"
 										:placeholder="t('docudesk', 'Pick grondslagen…')"
 										:disabled="!entity.relationId" />
 								</td>
