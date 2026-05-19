@@ -4,7 +4,11 @@
 		<div v-if="!batchAnonymizationStore.isActive" class="upload-section">
 			<div class="drop-zone" @dragover.prevent @drop.prevent="handleDrop">
 				<p>{{ t('docudesk', 'Drag and drop files here') }}</p>
-				<input ref="fileInput" type="file" multiple style="display:none" @change="handleFileSelect">
+				<input ref="fileInput"
+					type="file"
+					multiple
+					style="display:none"
+					@change="handleFileSelect">
 				<NcButton type="secondary" @click="$refs.fileInput.click()">
 					{{ t('docudesk', 'Select Files') }}
 				</NcButton>
