@@ -39,6 +39,7 @@ use Psr\Log\LoggerInterface;
 class SigningService
 {
 
+
     /**
      * Constructor
      *
@@ -382,9 +383,6 @@ class SigningService
         return $results;
 
     }//end bulkSign()
-
-
-
 
 
     /**
