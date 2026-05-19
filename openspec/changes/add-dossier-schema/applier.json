@@ -1,11 +1,11 @@
 {
   "ran": true,
-  "pass": true,
+  "pass": null,
   "blocking": [],
-  "turns": 8,
-  "cost_usd": 0.3677,
-  "cost_eur": 0.3383,
+  "turns": 0,
+  "cost_usd": 0.0,
+  "cost_eur": 0.0,
   "pr": 184,
-  "commit": "6dfa83e",
-  "timestamp": "2026-05-19T05:38:26.056423+00:00"
+  "commit": "bd0301f",
+  "timestamp": "2026-05-19T06:05:11.323891+00:00"
 }
