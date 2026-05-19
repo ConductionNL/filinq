@@ -38,6 +38,10 @@ webpackConfig.resolve.alias = {
 	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
 	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
 	'@nextcloud/dialogs': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs'),
+	// ADR-024: Ajv standalone (CSP-safe) requires the CJS entry — the ESM
+	// default omits the standalone validator. Alias ensures nc-vue's Ajv
+	// import resolves to the CJS build in both dev and prod bundles.
+	'@nextcloud/axios$': path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.cjs'),
 }
 
 // Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
