@@ -11,7 +11,7 @@
 			<NcSelect v-model="selectedCategory"
 				:options="categoryOptions"
 				:placeholder="t('docudesk', 'Filter by category')"
-				:inputLabel="t('docudesk', 'Category filter')"
+				:input-label="t('docudesk', 'Category filter')"
 				class="template-index__filter-select"
 				@update:modelValue="applyFilters" />
 			<NcTextField :value.sync="searchQuery"
@@ -103,7 +103,7 @@ export default {
 			const cats = new Set(
 				this.templateStore.templates
 					.map(t => t.category)
-					.filter(Boolean)
+					.filter(Boolean),
 			)
 			return [
 				{ label: t('docudesk', 'All categories'), value: '' },

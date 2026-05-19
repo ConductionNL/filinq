@@ -7,7 +7,7 @@
 				:placeholder="t('docudesk', 'e.g. zaaktype')" />
 			<NcSelect v-model="condOp"
 				:options="opOptions"
-				:inputLabel="t('docudesk', 'Operator')" />
+				:input-label="t('docudesk', 'Operator')" />
 			<NcTextField v-if="needsValue"
 				:value.sync="condValue"
 				:label="t('docudesk', 'Value')"

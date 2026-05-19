@@ -343,7 +343,7 @@ export default {
 			try {
 				this.previewHtml = await this.templateStore.previewTemplate(
 					this.form.content,
-					sampleData
+					sampleData,
 				)
 			} catch (err) {
 				this.previewError = err.message || t('docudesk', 'Preview failed')
@@ -363,7 +363,7 @@ export default {
 			if (!window.confirm(t('docudesk', 'Restore to version {n}?', { n: ver.version }))) return
 			const result = await this.templateStore.restoreVersion(
 				this.templateStore.templateItem.id,
-				ver.id
+				ver.id,
 			)
 			if (result) {
 				this.form.content = result.content || ''
@@ -394,7 +394,7 @@ export default {
 				} else {
 					await this.templateStore.updateTemplate(
 						this.templateStore.templateItem.id,
-						payload
+						payload,
 					)
 				}
 				await this.releaseLockIfMine()

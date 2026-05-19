@@ -6,7 +6,7 @@
 				:label="t('docudesk', 'Field name')"
 				:placeholder="t('docudesk', 'e.g. name, address, date')" />
 			<p class="merge-field-dialog__hint">
-				{{ t('docudesk', 'This inserts {{ fieldName }} into the template.', { fieldName: fieldName || 'field' }) }}
+				{{ hintText }}
 			</p>
 		</template>
 		<template #actions>
@@ -30,6 +30,12 @@ export default {
 	emits: ['close', 'insert'],
 	data() {
 		return { fieldName: '' }
+	},
+	computed: {
+		hintText() {
+			const name = this.fieldName || 'field'
+			return t('docudesk', 'This inserts {placeholder} into the template.', { placeholder: '{{ ' + name + ' }}' })
+		},
 	},
 	methods: {
 		t,
