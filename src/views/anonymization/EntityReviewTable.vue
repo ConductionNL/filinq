@@ -6,8 +6,12 @@
 		<div class="filter-bar">
 			<input v-model="searchQuery" type="text" :placeholder="t('docudesk', 'Search entities...')">
 			<select v-model="typeFilter">
-				<option value="">{{ t('docudesk', 'All types') }}</option>
-				<option v-for="tp in availableTypes" :key="tp" :value="tp">{{ tp }}</option>
+				<option value="">
+					{{ t('docudesk', 'All types') }}
+				</option>
+				<option v-for="tp in availableTypes" :key="tp" :value="tp">
+					{{ tp }}
+				</option>
 			</select>
 		</div>
 		<div class="bulk-actions">
@@ -22,10 +26,18 @@
 			<thead>
 				<tr>
 					<th />
-					<th @click="sortBy('type')">{{ t('docudesk', 'Type') }}</th>
-					<th @click="sortBy('value')">{{ t('docudesk', 'Value') }}</th>
-					<th @click="sortBy('highestConfidence')">{{ t('docudesk', 'Confidence') }}</th>
-					<th @click="sortBy('fileCount')">{{ t('docudesk', 'Files') }}</th>
+					<th @click="sortBy('type')">
+						{{ t('docudesk', 'Type') }}
+					</th>
+					<th @click="sortBy('value')">
+						{{ t('docudesk', 'Value') }}
+					</th>
+					<th @click="sortBy('highestConfidence')">
+						{{ t('docudesk', 'Confidence') }}
+					</th>
+					<th @click="sortBy('fileCount')">
+						{{ t('docudesk', 'Files') }}
+					</th>
 				</tr>
 			</thead>
 			<tbody>
