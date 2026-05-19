@@ -75,7 +75,7 @@ class DashboardController extends Controller
                 $this->appName,
                 'error',
                 ['error' => $e->getMessage()],
-                '500'
+                'error'
             );
         }
 

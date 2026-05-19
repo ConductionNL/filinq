@@ -33,8 +33,26 @@ export default {
 </script>
 
 <style scoped>
-.signature-verification { padding: 20px; }
-.verify-form { display: flex; gap: 12px; margin-bottom: 20px; }
-.verify-form input { padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); min-width: 200px; }
-.results { padding: 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius); }
+.signature-verification {
+	padding: 20px;
+}
+
+.verify-form {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.verify-form input {
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	min-width: 200px;
+}
+
+.results {
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
 </style>

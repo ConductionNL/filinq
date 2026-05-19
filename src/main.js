@@ -9,8 +9,8 @@ Vue.mixin({ methods: { t, n } })
 Vue.use(PiniaVuePlugin)
 
 new Vue(
-    {
-        pinia,
-        render: h => h(App),
-    },
+	{
+		pinia,
+		render: h => h(App),
+	},
 ).$mount('#content')

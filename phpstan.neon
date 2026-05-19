@@ -5,13 +5,13 @@ parameters:
     bootstrapFiles:
         - vendor/autoload.php
     scanDirectories:
-        - vendor/nextcloud/ocp
+        - ../../lib/public
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Nextcloud internal classes not available via OCP stubs
         - '#Call to an undefined method OC::#'
         - '#Class OC not found#'
-        - '#Access to static property \$server on an unknown class OC#'
+        - '#Access to static property \$\w+ on an unknown class OC#'
         - '#unknown class OC\\\\#'
         - '#unknown class OCA\\\\DAV\\\\#'
         - '#unknown class OC_App#'
@@ -20,3 +20,7 @@ parameters:
         - '#Class OCA\\\\DAV\\\\#'
         # OpenRegister is an optional runtime dependency (loaded via container)
         - '#OCA\\OpenRegister#'
+        # TesseractOCR uses __call magic methods for lang(), dpi() etc.
+        - '#Call to an undefined method .+TesseractOCR::#'
+        # DI-injected properties in scaffold classes not yet using them
+        - '#Property .+ is never read, only written#'

@@ -13,7 +13,7 @@ The DocuDesk dashboard serves as the default landing page, providing a central o
 
 ## Screenshot
 
-![Dashboard](../screenshots/dashboard.png)
+![Dashboard](/screenshots/dashboard.png)
 
 ## Navigation
 
