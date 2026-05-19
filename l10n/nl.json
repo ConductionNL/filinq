@@ -129,6 +129,14 @@
         "Information about the current DocuDesk installation": "Informatie over de huidige DocuDesk-installatie",
         "Support": "Ondersteuning",
         "For support, contact us at": "Voor ondersteuning kunt u contact opnemen via",
-        "For a Service Level Agreement (SLA), contact": "Voor een Service Level Agreement (SLA) kunt u contact opnemen via"
+        "For a Service Level Agreement (SLA), contact": "Voor een Service Level Agreement (SLA) kunt u contact opnemen via",
+        "Folder not found": "Map niet gevonden",
+        "Path is not a folder": "Pad is geen map",
+        "No files found in folder": "Geen bestanden gevonden in map",
+        "Folder contains too many files (found: %1$s, maximum: %2$s)": "Map bevat te veel bestanden (gevonden: %1$s, maximum: %2$s)",
+        "Extraction has not started": "Extractie is nog niet gestart",
+        "No folder path provided": "Geen mappad opgegeven",
+        "Either folderId or folderPath must be provided": "Geef folderId of folderPath op",
+        "Provide only one of folderId or folderPath": "Geef slechts één van folderId of folderPath op"
     }
 }

@@ -61,7 +61,7 @@ class MetricsCollector
      */
     public function countDocuments(): int
     {
-        return $this->countObjects('document');
+        return $this->countObjects(type: 'document');
 
     }//end countDocuments()
 
@@ -73,7 +73,7 @@ class MetricsCollector
      */
     public function countTemplates(): int
     {
-        return $this->countObjects('template');
+        return $this->countObjects(type: 'template');
 
     }//end countTemplates()
 

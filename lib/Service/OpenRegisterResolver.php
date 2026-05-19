@@ -71,6 +71,31 @@ class OpenRegisterResolver
 
 
     /**
+     * Get the template version register and schema IDs from settings
+     *
+     * @return array{register: string, schema: string} Register and schema IDs
+     *
+     * @throws Exception If template version register/schema is not configured
+     */
+    public function getVersionRegisterAndSchema(): array
+    {
+        $settings = $this->settingsService->getAllSettings();
+        $register = $settings['configuration']['templateVersion_register'] ?? '';
+        $schema   = $settings['configuration']['templateVersion_schema'] ?? '';
+
+        if (empty($register) === true || empty($schema) === true) {
+            throw new Exception(
+                message: 'Template version register/schema not configured',
+                code: 500
+            );
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end getVersionRegisterAndSchema()
+
+
+    /**
      * Validate that a namespace string is a valid Nextcloud app ID
      *
      * @param string $namespace The namespace to validate

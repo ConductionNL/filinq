@@ -53,7 +53,7 @@ class MetricsController extends Controller
         private readonly IConfig $config,
         private readonly MetricsCollector $metricsCollector
     ) {
-        parent::__construct($appName, $request);
+        parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
 

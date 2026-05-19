@@ -4,122 +4,152 @@ import { consentStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="consent-detail">
-		<div class="detail-header">
+	<CnDetailPage
+		:title="consentStore.consentItem?.entityText || t('docudesk', 'Consent Detail')"
+		:loading="consentStore.loading"
+		:loading-label="t('docudesk', 'Loading consent record...')"
+		:error="!consentStore.consentItem"
+		:error-message="t('docudesk', 'No consent record selected.')"
+		:stats-title="consentStore.consentItem ? t('docudesk', 'Entity Information') : ''"
+		:stats-columns="consentStore.consentItem ? [
+			{ key: 'field', label: t('docudesk', 'Field') },
+			{ key: 'value', label: t('docudesk', 'Value') },
+		] : []">
+		<!-- Back button in header -->
+		<template #header-actions>
 			<NcButton type="tertiary" @click="goBack">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
 				{{ t('docudesk', 'Back to Consents') }}
 			</NcButton>
-			<h2>{{ t('docudesk', 'Consent Detail') }}</h2>
+		</template>
+
+		<!-- Error actions -->
+		<template #error-actions>
+			<NcButton @click="goBack">
+				{{ t('docudesk', 'Back to Consents') }}
+			</NcButton>
+		</template>
+
+		<!-- Entity info stats rows -->
+		<template v-if="consentStore.consentItem" #stats-rows>
+			<tr>
+				<td>{{ t('docudesk', 'Entity Text') }}</td>
+				<td>{{ consentStore.consentItem.entityText }}</td>
+			</tr>
+			<tr>
+				<td>{{ t('docudesk', 'Entity Type') }}</td>
+				<td>
+					<CnStatusBadge
+						:label="consentStore.consentItem.entityType || t('docudesk', 'Unknown')"
+						:color-map="entityTypeColorMap" />
+				</td>
+			</tr>
+			<tr v-if="consentStore.consentItem.entityKey">
+				<td>{{ t('docudesk', 'Entity Key') }}</td>
+				<td>{{ consentStore.consentItem.entityKey }}</td>
+			</tr>
+			<tr v-if="consentStore.consentItem.contactEmail">
+				<td>{{ t('docudesk', 'Contact Email') }}</td>
+				<td>{{ consentStore.consentItem.contactEmail }}</td>
+			</tr>
+			<tr v-if="consentStore.consentItem.contactAddress">
+				<td>{{ t('docudesk', 'Contact Address') }}</td>
+				<td>{{ consentStore.consentItem.contactAddress }}</td>
+			</tr>
+		</template>
+
+		<!-- Consent status section -->
+		<div v-if="consentStore.consentItem" class="detail-section">
+			<h3>{{ t('docudesk', 'Consent Status') }}</h3>
+			<table class="detail-table">
+				<tr>
+					<td class="label">
+						{{ t('docudesk', 'Consent Status') }}
+					</td>
+					<td>
+						<NcSelect
+							v-model="editData.consentStatus"
+							:options="consentStatusOptions"
+							:input-label="t('docudesk', 'Consent Status')" />
+					</td>
+				</tr>
+				<tr>
+					<td class="label">
+						{{ t('docudesk', 'Notification Status') }}
+					</td>
+					<td>
+						<NcSelect
+							v-model="editData.notificationStatus"
+							:options="notificationStatusOptions"
+							:input-label="t('docudesk', 'Notification Status')" />
+					</td>
+				</tr>
+				<tr>
+					<td class="label">
+						{{ t('docudesk', 'Publication Decision') }}
+					</td>
+					<td>
+						<NcSelect
+							v-model="editData.publicationDecision"
+							:options="publicationDecisionOptions"
+							:input-label="t('docudesk', 'Publication Decision')" />
+					</td>
+				</tr>
+				<tr>
+					<td class="label">
+						{{ t('docudesk', 'Objection Deadline') }}
+					</td>
+					<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.objectionReceivedAt">
+					<td class="label">
+						{{ t('docudesk', 'Objection Received') }}
+					</td>
+					<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
+				</tr>
+				<tr v-if="consentStore.consentItem.legalBasis">
+					<td class="label">
+						{{ t('docudesk', 'Legal Basis') }}
+					</td>
+					<td>{{ consentStore.consentItem.legalBasis }}</td>
+				</tr>
+			</table>
 		</div>
 
-		<div v-if="!consentStore.consentItem" class="empty-state">
-			<p>{{ t('docudesk', 'No consent record selected.') }}</p>
+		<!-- Objection reason -->
+		<div v-if="consentStore.consentItem?.objectionReason" class="detail-section">
+			<h3>{{ t('docudesk', 'Objection Reason') }}</h3>
+			<p class="notes-text">
+				{{ consentStore.consentItem.objectionReason }}
+			</p>
 		</div>
 
-		<div v-else class="detail-content">
-			<div class="detail-section">
-				<h3>{{ t('docudesk', 'Entity Information') }}</h3>
-				<table class="detail-table">
-					<tr>
-						<td class="label">{{ t('docudesk', 'Entity Text') }}</td>
-						<td>{{ consentStore.consentItem.entityText }}</td>
-					</tr>
-					<tr>
-						<td class="label">{{ t('docudesk', 'Entity Type') }}</td>
-						<td>
-							<span class="badge" :class="'badge-' + (consentStore.consentItem.entityType || '').toLowerCase()">
-								{{ consentStore.consentItem.entityType }}
-							</span>
-						</td>
-					</tr>
-					<tr v-if="consentStore.consentItem.entityKey">
-						<td class="label">{{ t('docudesk', 'Entity Key') }}</td>
-						<td>{{ consentStore.consentItem.entityKey }}</td>
-					</tr>
-					<tr v-if="consentStore.consentItem.contactEmail">
-						<td class="label">{{ t('docudesk', 'Contact Email') }}</td>
-						<td>{{ consentStore.consentItem.contactEmail }}</td>
-					</tr>
-					<tr v-if="consentStore.consentItem.contactAddress">
-						<td class="label">{{ t('docudesk', 'Contact Address') }}</td>
-						<td>{{ consentStore.consentItem.contactAddress }}</td>
-					</tr>
-				</table>
-			</div>
-
-			<div class="detail-section">
-				<h3>{{ t('docudesk', 'Consent Status') }}</h3>
-				<table class="detail-table">
-					<tr>
-						<td class="label">{{ t('docudesk', 'Consent Status') }}</td>
-						<td>
-							<NcSelect
-								v-model="editData.consentStatus"
-								:options="consentStatusOptions"
-								:input-label="t('docudesk', 'Consent Status')" />
-						</td>
-					</tr>
-					<tr>
-						<td class="label">{{ t('docudesk', 'Notification Status') }}</td>
-						<td>
-							<NcSelect
-								v-model="editData.notificationStatus"
-								:options="notificationStatusOptions"
-								:input-label="t('docudesk', 'Notification Status')" />
-						</td>
-					</tr>
-					<tr>
-						<td class="label">{{ t('docudesk', 'Publication Decision') }}</td>
-						<td>
-							<NcSelect
-								v-model="editData.publicationDecision"
-								:options="publicationDecisionOptions"
-								:input-label="t('docudesk', 'Publication Decision')" />
-						</td>
-					</tr>
-					<tr>
-						<td class="label">{{ t('docudesk', 'Objection Deadline') }}</td>
-						<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
-					</tr>
-					<tr v-if="consentStore.consentItem.objectionReceivedAt">
-						<td class="label">{{ t('docudesk', 'Objection Received') }}</td>
-						<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
-					</tr>
-					<tr v-if="consentStore.consentItem.legalBasis">
-						<td class="label">{{ t('docudesk', 'Legal Basis') }}</td>
-						<td>{{ consentStore.consentItem.legalBasis }}</td>
-					</tr>
-				</table>
-			</div>
-
-			<div v-if="consentStore.consentItem.objectionReason" class="detail-section">
-				<h3>{{ t('docudesk', 'Objection Reason') }}</h3>
-				<p class="notes-text">{{ consentStore.consentItem.objectionReason }}</p>
-			</div>
-
-			<div v-if="consentStore.consentItem.notes" class="detail-section">
-				<h3>{{ t('docudesk', 'Notes') }}</h3>
-				<p class="notes-text">{{ consentStore.consentItem.notes }}</p>
-			</div>
-
-			<div class="detail-actions">
-				<NcButton type="primary" :disabled="consentStore.loading" @click="saveChanges">
-					<template #icon>
-						<NcLoadingIcon v-if="consentStore.loading" :size="20" />
-						<ContentSave v-else :size="20" />
-					</template>
-					{{ t('docudesk', 'Save Changes') }}
-				</NcButton>
-			</div>
+		<!-- Notes -->
+		<div v-if="consentStore.consentItem?.notes" class="detail-section">
+			<h3>{{ t('docudesk', 'Notes') }}</h3>
+			<p class="notes-text">
+				{{ consentStore.consentItem.notes }}
+			</p>
 		</div>
-	</div>
+
+		<!-- Save button -->
+		<div v-if="consentStore.consentItem" class="detail-actions">
+			<NcButton type="primary" :disabled="consentStore.loading" @click="saveChanges">
+				<template #icon>
+					<NcLoadingIcon v-if="consentStore.loading" :size="20" />
+					<ContentSave v-else :size="20" />
+				</template>
+				{{ t('docudesk', 'Save Changes') }}
+			</NcButton>
+		</div>
+	</CnDetailPage>
 </template>
 
 <script>
 import { NcButton, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
@@ -130,6 +160,8 @@ export default {
 		NcButton,
 		NcSelect,
 		NcLoadingIcon,
+		CnDetailPage,
+		CnStatusBadge,
 		ArrowLeft,
 		ContentSave,
 	},
@@ -139,6 +171,10 @@ export default {
 				consentStatus: null,
 				notificationStatus: null,
 				publicationDecision: null,
+			},
+			entityTypeColorMap: {
+				person: 'warning',
+				organization: 'primary',
 			},
 			consentStatusOptions: [
 				{ label: t('docudesk', 'Pending'), value: 'pending' },
@@ -215,21 +251,6 @@ export default {
 </script>
 
 <style scoped>
-.consent-detail {
-	padding: 20px;
-}
-
-.detail-header {
-	display: flex;
-	align-items: center;
-	gap: 16px;
-	margin-bottom: 24px;
-}
-
-.detail-header h2 {
-	margin: 0;
-}
-
 .detail-section {
 	margin-bottom: 24px;
 	padding: 16px;
@@ -270,15 +291,4 @@ export default {
 	gap: 8px;
 	margin-top: 16px;
 }
-
-.badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 12px;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
-
-.badge-person { background-color: var(--color-warning); color: white; }
-.badge-organization { background-color: var(--color-primary); color: white; }
 </style>

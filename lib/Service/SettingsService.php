@@ -168,6 +168,26 @@ class SettingsService
                 'enable_topic_classification',
                 '1'
             ) === '1',
+            'signing_enabled'                   => $this->config->getValueString(
+                $this->appName,
+                'signing_enabled',
+                '0'
+            ) === '1',
+            'signing_provider'                  => $this->config->getValueString(
+                $this->appName,
+                'signing_provider',
+                'native'
+            ),
+            'signing_default_level'             => $this->config->getValueString(
+                $this->appName,
+                'signing_default_level',
+                'SES'
+            ),
+            'signing_request_expiry_days'       => (int) $this->config->getValueString(
+                $this->appName,
+                'signing_request_expiry_days',
+                '30'
+            ),
         ];
 
     }//end loadFeatureToggles()
@@ -253,7 +273,7 @@ class SettingsService
                     continue;
                 }
 
-                $stringValue = $this->convertValueToString($value);
+                $stringValue = $this->convertValueToString(value: $value);
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach

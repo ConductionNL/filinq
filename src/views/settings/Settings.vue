@@ -92,6 +92,85 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('docudesk', 'OCR Document Scanning')"
+			:description="t('docudesk', 'Configure Tesseract OCR for extracting text from scanned documents and images')">
+			<!-- Tesseract availability status -->
+			<div v-if="ocrStatus.tesseractAvailable" class="setting-item">
+				<NcNoteCard type="success">
+					{{ t('docudesk', 'Tesseract OCR is installed: {version}', { version: ocrStatus.tesseractVersion || 'unknown' }) }}
+				</NcNoteCard>
+			</div>
+			<div v-else class="setting-item">
+				<NcNoteCard type="warning">
+					{{ t('docudesk', 'Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.') }}
+				</NcNoteCard>
+			</div>
+
+			<!-- OCR enable/disable toggle -->
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'Enable OCR') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:checked="settings.ocr_enabled"
+					type="switch"
+					@update:checked="settings.ocr_enabled = $event" />
+				<div class="setting-description">
+					{{ t('docudesk', 'Automatically extract text from scanned documents and images using Tesseract OCR') }}
+				</div>
+			</div>
+
+			<!-- Language selection -->
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'OCR Languages') }}
+				</div>
+				<div class="ocr-languages">
+					<NcCheckboxRadioSwitch
+						:checked="ocrLanguages.nld"
+						@update:checked="ocrLanguages.nld = $event">
+						{{ t('docudesk', 'Dutch (nld)') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						:checked="ocrLanguages.eng"
+						@update:checked="ocrLanguages.eng = $event">
+						{{ t('docudesk', 'English (eng)') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						:checked="ocrLanguages.deu"
+						@update:checked="ocrLanguages.deu = $event">
+						{{ t('docudesk', 'German (deu)') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						:checked="ocrLanguages.fra"
+						@update:checked="ocrLanguages.fra = $event">
+						{{ t('docudesk', 'French (fra)') }}
+					</NcCheckboxRadioSwitch>
+				</div>
+				<div class="setting-description">
+					{{ t('docudesk', 'Select languages for OCR text recognition. At least one language must be selected.') }}
+				</div>
+			</div>
+
+			<!-- DPI configuration -->
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="ocr-dpi">{{ t('docudesk', 'OCR DPI') }}</label>
+					<input
+						id="ocr-dpi"
+						v-model.number="settings.ocr_dpi"
+						type="number"
+						min="72"
+						max="600"
+						placeholder="300">
+				</div>
+				<div class="setting-description">
+					{{ t('docudesk', 'DPI for PDF-to-image conversion during OCR. Higher values improve accuracy but increase processing time. Default: 300.') }}
+				</div>
+			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('docudesk', 'Data Storage')"
 			:description="t('docudesk', 'Configure Open Register integration for consent data storage')">
 			<div v-if="!loading">
@@ -199,6 +278,18 @@ export default {
 				enable_language_detection: true,
 				enable_keyword_extraction: true,
 				enable_topic_classification: true,
+				ocr_enabled: true,
+				ocr_dpi: 300,
+			},
+			ocrLanguages: {
+				nld: true,
+				eng: true,
+				deu: false,
+				fra: false,
+			},
+			ocrStatus: {
+				tesseractAvailable: false,
+				tesseractVersion: null,
 			},
 		}
 	},
@@ -229,6 +320,21 @@ export default {
 					this.settings.enable_language_detection = data.enable_language_detection ?? true
 					this.settings.enable_keyword_extraction = data.enable_keyword_extraction ?? true
 					this.settings.enable_topic_classification = data.enable_topic_classification ?? true
+					this.settings.ocr_enabled = data.ocr_enabled ?? true
+					this.settings.ocr_dpi = data.ocr_dpi ?? 300
+
+					// Parse OCR languages
+					const ocrLangStr = data.ocr_languages || 'nld+eng'
+					const activeLangs = ocrLangStr.split('+')
+					this.ocrLanguages = {
+						nld: activeLangs.includes('nld'),
+						eng: activeLangs.includes('eng'),
+						deu: activeLangs.includes('deu'),
+						fra: activeLangs.includes('fra'),
+					}
+
+					// OCR status
+					this.ocrStatus = data.ocrStatus || { tesseractAvailable: false, tesseractVersion: null }
 
 					// Build available registers options
 					this.availableRegistersOptions = {
@@ -315,11 +421,20 @@ export default {
 		saveAll() {
 			this.saving = true
 
+			// Build OCR language string from checkboxes
+			const ocrLangs = Object.entries(this.ocrLanguages)
+				.filter(([, enabled]) => enabled)
+				.map(([lang]) => lang)
+				.join('+') || 'eng'
+
 			const payload = {
 				publication_objection_period_days: String(this.settings.publication_objection_period_days),
 				enable_language_detection: this.settings.enable_language_detection ? '1' : '0',
 				enable_keyword_extraction: this.settings.enable_keyword_extraction ? '1' : '0',
 				enable_topic_classification: this.settings.enable_topic_classification ? '1' : '0',
+				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
+				ocr_languages: ocrLangs,
+				ocr_dpi: String(this.settings.ocr_dpi),
 			}
 
 			// Add register/schema configs
@@ -353,12 +468,13 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .selectionContainer {
 	display: grid;
 	grid-gap: 5px;
 	grid-template-columns: 1fr;
 }
+
 .selectionContainer > * {
 	margin-block-end: 10px;
 }
@@ -402,10 +518,18 @@ export default {
 	color: var(--color-main-text);
 }
 
+.ocr-languages {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 4px 0;
+}
+
 .button-container {
 	display: flex;
 	justify-content: flex-end;
 	margin-top: 16px;
 	padding: 16px;
 }
+
 </style>

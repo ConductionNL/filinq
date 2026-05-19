@@ -42,11 +42,11 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
     </documentation>
     <dependencies>
-        <php min-version="8.0" min-int-size="64"/>
+        <php min-version="8.2" min-int-size="64"/>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="28" max-version="32"/>
+        <nextcloud min-version="30" max-version="34"/>
     </dependencies>
     <navigations>
         <navigation>
