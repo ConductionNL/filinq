@@ -57,24 +57,20 @@
 					<FileDocumentMultipleOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-            <NcAppNavigationItem :active="navigationStore.selected === 'standingConsents'" :name="t('docudesk', 'Standing Consents')" @click="navigationStore.setSelected('standingConsents')">
+			<NcAppNavigationItem
+				:active="isActive('StandingConsents')"
+				:name="t('docudesk', 'Standing Consents')"
+				:to="{ name: 'StandingConsents' }">
 				<template #icon>
 					<AccountStar :size="20" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'prohibitions'" :name="t('docudesk', 'Prohibitions')" @click="navigationStore.setSelected('prohibitions')">
+			<NcAppNavigationItem
+				:active="isActive('Prohibitions')"
+				:name="t('docudesk', 'Prohibitions')"
+				:to="{ name: 'Prohibitions' }">
 				<template #icon>
 					<AlertOctagon :size="20" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem :active="navigationStore.selected === 'templates' || navigationStore.selected === 'templateDetail'" :name="t('docudesk', 'Templates')" @click="navigationStore.setSelected('templates')">
-				<template #icon>
-					<FileDocumentMultiple :size="20" />
-				</template>
-			</NcAppNavigationItem>
-            <NcAppNavigationItem :active="navigationStore.selected === 'consent' || navigationStore.selected === 'consentDetail'" :name="t('docudesk', 'Consent Workflow')" @click="navigationStore.setSelected('consent')">
-				<template #icon>
-					<AccountCheck :size="20" />
 				</template>
 			</NcAppNavigationItem>
 		</NcAppNavigationList>
@@ -96,13 +92,8 @@ import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
 import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 // Icons
-import Finance from 'vue-material-design-icons/Finance.vue'
-import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
-import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
-import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
-import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
@@ -123,13 +114,8 @@ export default {
 		TextBoxOutline,
 		FolderSearchOutline,
 		TuneVertical,
-		Finance,
-		AccountCheck,
 		AccountStar,
 		AlertOctagon,
-		ShieldLock,
-		FileDocumentMultiple,
-		FolderSearch,
 	},
 	methods: {
 		/**

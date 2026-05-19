@@ -12,6 +12,8 @@ import TemplateDetail from '../views/templates/TemplateDetail.vue'
 import MyDocumentsIndex from '../views/myDocuments/MyDocumentsIndex.vue'
 import SettingsIndex from '../views/settings/SettingsIndex.vue'
 import PrintPreview from '../components/PrintPreview.vue'
+import ProhibitionIndex from '../views/policy/ProhibitionIndex.vue'
+import StandingConsentIndex from '../views/policy/StandingConsentIndex.vue'
 
 Vue.use(Router)
 
@@ -26,6 +28,8 @@ export default new Router(
 			{ path: '/anonymization/folder', name: 'FolderAnonymization', component: FolderAnonymizationView },
 			{ path: '/consent', name: 'Consent', component: ConsentIndex },
 			{ path: '/consent/:id', name: 'ConsentDetail', component: ConsentDetail, props: route => ({ consentId: route.params.id }) },
+			{ path: '/policy/standing-consents', name: 'StandingConsents', component: StandingConsentIndex },
+			{ path: '/policy/prohibitions', name: 'Prohibitions', component: ProhibitionIndex },
 			{ path: '/templates', name: 'Templates', component: TemplateIndex },
 			{ path: '/templates/new', name: 'TemplateNew', component: TemplateDetail },
 			{ path: '/templates/:id', name: 'TemplateDetail', component: TemplateDetail, props: route => ({ templateId: route.params.id }) },
