@@ -30,6 +30,7 @@ use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -125,7 +126,8 @@ class BatchAnonymizationControllerFolderTest extends TestCase
             $this->mockEntityService,
             $this->createMock(WooProfileService::class),
             $this->mockFolderService,
-            $this->mockL10n
+            $this->mockL10n,
+            $this->createMock(IUserSession::class)
         );
 
     }//end setUp()
