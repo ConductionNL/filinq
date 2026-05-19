@@ -40,4 +40,43 @@ webpackConfig.resolve.alias = {
 	'@nextcloud/dialogs': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs'),
 }
 
+// Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue
+// across the main / settings / dashboard entry-points so each bundle no
+// longer inlines its own ~3 MB framework copy. Stable filenames mean each
+// entry's `Util::addScript` PHP call can reference the chunk directly
+// without a manifest. The shared chunks are loaded once per page and
+// cached across navigations between docudesk's own pages. As docudesk
+// grows additional dashboard widgets, every new widget adds only its
+// per-widget delta on top of the shared baseline.
+webpackConfig.optimization = {
+	...(webpackConfig.optimization || {}),
+	splitChunks: {
+		...(webpackConfig.optimization?.splitChunks || {}),
+		chunks: 'all',
+		cacheGroups: {
+			default: false,
+			defaultVendors: false,
+			ncVue: {
+				name: appId + '-shared-nc-vue',
+				// Matches both node_modules entries AND the monorepo-dev alias
+				// `../nextcloud-vue/src/...` which webpack resolves outside
+				// node_modules when @conduction/nextcloud-vue is aliased to it.
+				test: /[\\/]node_modules[\\/](@nextcloud[\\/]vue|@conduction[\\/]nextcloud-vue)[\\/]|[\\/]nextcloud-vue[\\/]src[\\/]/,
+				priority: 30,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-nc-vue.js',
+			},
+			vendor: {
+				name: appId + '-shared-vendor',
+				test: /[\\/]node_modules[\\/](vue|pinia|vue-material-design-icons|@vueuse|core-js)[\\/]/,
+				priority: 20,
+				reuseExistingChunk: true,
+				enforce: true,
+				filename: appId + '-shared-vendor.js',
+			},
+		},
+	},
+}
+
 module.exports = webpackConfig
