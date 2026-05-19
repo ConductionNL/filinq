@@ -1,43 +1,37 @@
 /* eslint-disable no-console */
 /**
- * Anonymisation store — queue-based pipeline with a manual review step.
+ * Anonymisation store — queue-based pipeline with a manual review step
+ * and optional dossier-folder placement.
  *
  * Per-file lifecycle:
- *   queued -> uploading -> extracting -> extracted [user reviews]
+ *   queued -> uploading -> (moving) -> extracting -> extracted
+ *     [user reviews per-entity bases + skipAnonymization]
  *     -> anonymising -> completed
  *
- * The review step is where Wave 1.3 (entity-relation-grondslagen) decisions
- * live: per-entity bases assignment + skipAnonymization flag. The widget
- * collects those decisions and calls `anonymiseEntry(entry, decisions)`,
- * which PATCHes each modified relation through OpenRegister's
- * `/api/entity-relations/{id}` endpoint and then triggers the anonymise
- * step on the OR side.
+ * Two entry points:
+ *   - `addFiles(fileList)` — uploads to /DocuDesk/ root, then queues
+ *     for extract + review.
+ *   - `addFilesAsDossier(fileList, folderName)` — creates
+ *     /DocuDesk/<folderName>/ via WebDAV MKCOL (idempotent on 405),
+ *     uploads into root, then MOVEs each file into the dossier folder
+ *     before extraction. The Nextcloud file id is preserved by MOVE so
+ *     the extract+anonymise pipeline still references the same node.
  *
- * `addFiles` no longer auto-anonymises. The widget must call
- * `anonymiseEntry` once the user is done reviewing.
+ * Review-then-anonymise is the canonical UX (Wave 1.3
+ * entity-relation-grondslagen requires per-entity bases assignment for
+ * compliance). The widget collects decisions and calls
+ * `anonymiseEntry(entry)`, which PATCHes each modified relation through
+ * OpenRegister's `/api/entity-relations/{id}` endpoint and then triggers
+ * the anonymise step on the OR side.
+ *
+ * `addFiles` / `addFilesAsDossier` no longer auto-anonymise. The widget
+ * must call `anonymiseEntry` (or `anonymiseAllExtracted`) once the user
+ * is done reviewing.
  */
 import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
-
-/*
- * Each file entry in the queue:
- * {
- *   id: string,                   - Unique client-side id.
- *   name: string,                 - Original file name.
- *   status: string,               - 'queued' | 'uploading' | 'extracting' | 'anonymizing' | 'completed' | 'error'.
- *   error: string | null,         - Error message if status is 'error'.
- *   fileId: number | null,        - Nextcloud file id after upload.
- *   filePath: string | null,      - Full path in Nextcloud files.
- *   entityCount: number,          - Number of entities detected.
- *   replacementCount: number,     - Number of entities replaced.
- *   anonymizedFileId: number | null,
- *   anonymizedFileName: string | null,
- *   anonymizedFilePath: string | null,
- *   dossier: string | null,       - Folder name (under /DocuDesk/) when part of a dossier, null otherwise.
- * }
- */
 
 let fileCounter = 0
 
@@ -66,6 +60,33 @@ function encodePath(path) {
 	return path.split('/').map(encodeURIComponent).join('/')
 }
 
+/**
+ * Build a fresh queue entry. Shared between addFiles + addFilesAsDossier
+ * so the entry shape stays a single source of truth.
+ *
+ * @param {File} file Source File object.
+ * @param {string|null} dossier Dossier folder name (under /DocuDesk/) or null.
+ * @return {object}
+ */
+function makeEntry(file, dossier) {
+	return {
+		id: `file-${++fileCounter}`,
+		name: file.name,
+		status: 'queued',
+		error: null,
+		fileId: null,
+		filePath: null,
+		entities: [],
+		entityCount: 0,
+		replacementCount: 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		dossier,
+		_file: file,
+	}
+}
+
 export const useAnonymizationStore = defineStore(
 	'anonymization',
 	{
@@ -83,48 +104,33 @@ export const useAnonymizationStore = defineStore(
 		},
 		actions: {
 			/**
-			 * Add files to the queue (no dossier) and start processing.
-			 * Each file is uploaded to /DocuDesk/ and pipelined through
-			 * extract + anonymize sequentially.
+			 * Add files to the queue (no dossier) and start uploading + extracting.
 			 *
-			 * @param {File[] | FileList} fileList Files selected by the user.
+			 * Stops at the `extracted` state — does NOT auto-anonymise.
+			 * The widget is responsible for calling `anonymiseEntry`
+			 * once the user has reviewed each file's entities.
+			 *
+			 * @param {File[] | FileList} fileList Files to enqueue.
 			 * @return {Promise<void>}
 			 */
 			async addFiles(fileList) {
-				const newEntries = Array.from(fileList).map(
-					(file) => ({
-						id: `file-${++fileCounter}`,
-						name: file.name,
-						status: 'queued',
-						error: null,
-						fileId: null,
-						filePath: null,
-						entities: [],
-						entityCount: 0,
-						replacementCount: 0,
-						anonymizedFileId: null,
-						anonymizedFileName: null,
-						anonymizedFilePath: null,
-						dossier: null,
-						_file: file,
-					}),
-				)
-
+				const newEntries = Array.from(fileList).map((file) => makeEntry(file, null))
 				this.files.push(...newEntries)
 				await this.processQueue()
 			},
 
 			/**
 			 * Add files to the queue grouped into a dossier folder.
-			 * Creates /DocuDesk/<folderName>/ via WebDAV MKCOL (if it does
-			 * not exist yet), then pipelines each file through upload →
-			 * MOVE-to-dossier → extract → anonymize.
 			 *
-			 * Anonymized copies automatically end up in the dossier folder
-			 * because OpenRegister writes them next to the original file.
+			 * Creates /DocuDesk/<folderName>/ via WebDAV MKCOL (idempotent —
+			 * a 405 means the folder already exists), then pipelines each
+			 * file through upload → MOVE-to-dossier → extract. Stops at
+			 * `extracted` for review just like `addFiles`. The Nextcloud
+			 * file id survives the MOVE, so subsequent steps keep working
+			 * with the same fileId.
 			 *
-			 * @param {File[] | FileList} fileList Files selected by the user.
-			 * @param {string} folderName Dossier/folder name under /DocuDesk/.
+			 * @param {File[] | FileList} fileList Files to enqueue.
+			 * @param {string} folderName Dossier folder name under /DocuDesk/.
 			 * @return {Promise<void>}
 			 * @throws {Error} If the folder name is empty or folder creation fails.
 			 */
@@ -141,24 +147,7 @@ export const useAnonymizationStore = defineStore(
 					throw err
 				}
 
-				const newEntries = Array.from(fileList).map(
-					(file) => ({
-						id: `file - ${++fileCounter}`,
-						name: file.name,
-						status: 'queued',
-						error: null,
-						fileId: null,
-						filePath: null,
-						entityCount: 0,
-						replacementCount: 0,
-						anonymizedFileId: null,
-						anonymizedFileName: null,
-						anonymizedFilePath: null,
-						dossier: cleanName,
-						_file: file,
-					}),
-				)
-
+				const newEntries = Array.from(fileList).map((file) => makeEntry(file, cleanName))
 				this.files.push(...newEntries)
 				await this.processQueue()
 			},
@@ -206,7 +195,7 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
-			 * Process all queued files sequentially.
+			 * Walk the queue running upload + extract on every `queued` entry.
 			 * Guards against concurrent invocations via the `processing` flag.
 			 *
 			 * @return {Promise<void>}
@@ -229,21 +218,16 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
-			 * Run the full pipeline for a single file entry:
-			 *   1. Upload to /DocuDesk/
-			 *   2. MOVE into dossier folder (if entry.dossier is set)
-			 *   3. Extract entities
-			 *   4. Anonymize (skipped when no entities were detected)
+			 * Upload + (optional) MOVE-to-dossier + extract for a single
+			 * entry. Stops at `extracted` so the user can review bases /
+			 * skipAnonymization decisions.
 			 *
-			 * Mutates the entry in place with intermediate status and results.
-			 * Errors bubble up into `entry.error` and `entry.status = 'error'`.
-			 *
-			 * @param {object} entry File entry from `this.files`.
+			 * @param {object} entry Queue entry.
 			 * @return {Promise<void>}
 			 */
-			async processFile(entry) {
+			async uploadAndExtract(entry) {
 				try {
-					// Step 1: Upload. Always lands in /DocuDesk/ root first.
+					// Step 1: upload. Always lands in /DocuDesk/ root first.
 					entry.status = 'uploading'
 					const formData = new FormData()
 					formData.append('file', entry._file)
@@ -255,17 +239,17 @@ export const useAnonymizationStore = defineStore(
 					entry.fileId = uploadResponse.data.fileId
 					entry.filePath = uploadResponse.data.filePath
 					delete entry._file
-					// Free memory.
 
-					// Step 1b: Move into the dossier folder when applicable.
+					// Step 1b: MOVE into the dossier folder when applicable.
 					// The fileId is preserved by MOVE, so later pipeline
 					// steps keep referencing the same Nextcloud node.
 					if (entry.dossier) {
+						entry.status = 'moving'
 						await this.moveToDossier(entry.name, entry.dossier)
 						entry.filePath = `/DocuDesk/${entry.dossier}/${entry.name}`
 					}
 
-					// Step 2: Extract entities.
+					// Step 2: extract.
 					entry.status = 'extracting'
 					const extractResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
@@ -273,7 +257,14 @@ export const useAnonymizationStore = defineStore(
 					const entities = extractResponse.data.entities || []
 					entry.entityCount = entities.length
 
-					// No entities? Nothing to anonymize — mark complete.
+					// Seed per-row review state on every detected entity.
+					entry.entities = entities.map((e) => ({
+						...e,
+						_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
+						_decisionSkip: !!e.skipAnonymization,
+						_patchError: null,
+					}))
+
 					if (entities.length === 0) {
 						// Nothing to anonymise; skip review and mark done.
 						entry.status = 'completed'
@@ -289,11 +280,13 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
-			 * Apply review decisions (bases / skipAnonymization) by PATCHing each
-			 * relation, then trigger anonymisation. Decisions that haven't changed
-			 * from the extracted state are skipped to avoid no-op writes.
+			 * Apply review decisions (bases / skipAnonymization) by PATCHing
+			 * each relation, then trigger anonymisation. Decisions that
+			 * haven't changed from the extracted state are skipped to avoid
+			 * no-op writes.
 			 *
 			 * @param {object} entry Queue entry (must be in `extracted` status).
+			 * @return {Promise<void>}
 			 */
 			async anonymiseEntry(entry) {
 				if (entry.status !== 'extracted') {
@@ -354,6 +347,20 @@ export const useAnonymizationStore = defineStore(
 					console.error(`Failed to anonymise ${entry.name}:`, err)
 					entry.error = err.response?.data?.error || err.message
 					entry.status = 'error'
+				}
+			},
+
+			/**
+			 * Bulk-anonymise every entry currently in the `extracted` state.
+			 * Useful for "review all then run" UX.
+			 *
+			 * @return {Promise<void>}
+			 */
+			async anonymiseAllExtracted() {
+				for (const entry of this.files) {
+					if (entry.status === 'extracted') {
+						await this.anonymiseEntry(entry)
+					}
 				}
 			},
 
