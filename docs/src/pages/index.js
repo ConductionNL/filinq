@@ -179,7 +179,7 @@ const WIDGETS = [
 export default function Home() {
   return (
     <Layout
-      title="DocuDesk"
+      title="DocuDesk, document and contract generation for Nextcloud"
       description="Generate, anonymise, sign, and template documents on Nextcloud. Templates ship for the most-used Dutch government documents."
     >
       <main className="marketing-page">
