@@ -13,7 +13,7 @@ DocuDesk provides GDPR-compliant publication consent tracking for entities detec
 
 ## Screenshot
 
-![Consent Management](../screenshots/consent-management.png)
+![Consent Management](/screenshots/consent-management.png)
 
 ## API Endpoints
 
