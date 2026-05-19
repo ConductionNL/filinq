@@ -4,174 +4,166 @@ import { anonymizationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="anonymization-content">
-		<h2 class="pageHeader">
-			{{ t('docudesk', 'Anonymisation') }}
+	<div class="anonymization-widget">
+		<h2 class="page-title">
+			{{ t('docudesk', 'Good afternoon {name},', { name: userName }) }}<br>
+			{{ t('docudesk', 'what would you like to anonymize today?') }}
 		</h2>
 		<p class="page-description">
 			{{ t('docudesk', 'Upload documents. Each file is uploaded and scanned for entities. Review the detected entities, optionally assign Woo Art. 5 grondslagen or mark entities to skip, then run anonymisation. (Smoke-test surface — not a production publication-prep page.)') }}
 		</p>
 
-		<!-- Drop zone -->
-		<div
-			class="drop-zone"
-			:class="{ dragging: isDragging, busy: anonymizationStore.isProcessing }"
-			@dragover.prevent="isDragging = true"
-			@dragleave.prevent="isDragging = false"
-			@drop.prevent="handleDrop">
-			<Upload :size="48" />
-			<p class="drop-text">
-				{{ t('docudesk', 'Drag and drop files here, or click to select') }}
-			</p>
-			<input
-				ref="fileInput"
-				type="file"
-				multiple
-				class="file-input"
-				@change="handleFileSelect">
-			<NcButton type="secondary" @click="openPicker">
-				{{ t('docudesk', 'Select files') }}
-			</NcButton>
-		</div>
+		<!-- Results table -->
+		<div v-if="anonymizationStore.hasFiles" class="results-area">
+			<table class="results-table">
+				<thead>
+					<tr>
+						<th>{{ t('docudesk', 'File') }}</th>
+						<th>{{ t('docudesk', 'Dossier') }}</th>
+						<th class="col-number">
+							{{ t('docudesk', 'Entities') }}
+						</th>
+						<th class="col-number">
+							{{ t('docudesk', 'Removed') }}
+						</th>
+						<th class="col-action">
+							{{ t('docudesk', 'Result') }}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="file in anonymizationStore.files" :key="file.id">
+						<td class="col-file" :title="file.name">
+							{{ file.name }}
+						</td>
+						<td class="col-dossier">
+							<span v-if="file.dossier" class="dossier-tag">
+								<FolderOutline :size="14" />
+								{{ file.dossier }}
+							</span>
+							<span v-else class="status-label">&mdash;</span>
+						</td>
+						<td class="col-number">
+							<template v-if="file.status === 'completed' || file.status === 'anonymizing'">
+								{{ file.entityCount }}
+							</template>
+							<template v-else-if="file.status === 'error'">
+								&mdash;
+							</template>
+							<NcLoadingIcon v-else :size="16" />
+						</td>
+						<td class="col-number">
+							<template v-if="file.status === 'completed'">
+								{{ file.replacementCount }}
+							</template>
+							<template v-else-if="file.status === 'error'">
+								&mdash;
+							</template>
+							<NcLoadingIcon v-else-if="file.status === 'anonymizing'" :size="16" />
+							<template v-else>
+								&mdash;
+							</template>
+						</td>
+						<td class="col-action">
+							<a
+								v-if="file.status === 'completed' && file.anonymizedFilePath"
+								:href="downloadUrl(file.anonymizedFilePath)"
+								download
+								class="download-link">
+								{{ t('docudesk', 'Download') }}
+							</a>
+							<span v-else-if="file.status === 'completed'" class="status-clean">
+								{{ t('docudesk', 'Clean') }}
+							</span>
+							<span v-else-if="file.status === 'error'" class="status-error" :title="file.error">
+								{{ t('docudesk', 'Error') }}
+							</span>
+							<span v-else class="status-label">
+								{{ statusLabel(file.status) }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 
-		<!-- File queue -->
-		<div v-if="anonymizationStore.hasFiles" class="queue">
-			<div class="queue-header">
-				<h3>{{ t('docudesk', 'Queue') }} ({{ anonymizationStore.files.length }})</h3>
-				<NcButton
-					v-if="anonymizationStore.hasExtracted"
-					type="primary"
-					:disabled="anonymizationStore.isProcessing"
-					@click="anonymizationStore.anonymiseAllExtracted()">
-					{{ t('docudesk', 'Anonymise all reviewed files') }}
-				</NcButton>
-				<NcButton
-					v-if="anonymizationStore.hasCompleted"
-					type="tertiary"
-					:disabled="anonymizationStore.isProcessing"
-					@click="anonymizationStore.clearCompleted()">
+			<div v-if="anonymizationStore.hasCompleted" class="table-actions">
+				<NcButton type="tertiary" @click="anonymizationStore.clearCompleted()">
 					{{ t('docudesk', 'Clear completed') }}
 				</NcButton>
-				<NcButton
-					type="tertiary"
-					:disabled="anonymizationStore.isProcessing"
-					@click="anonymizationStore.reset()">
-					{{ t('docudesk', 'Reset') }}
-				</NcButton>
-			</div>
-
-			<div v-for="entry in anonymizationStore.files" :key="entry.id" class="file-card">
-				<div class="file-card-header">
-					<FileDocument :size="20" />
-					<span class="file-name" :title="entry.name">{{ entry.name }}</span>
-					<CnStatusBadge
-						:label="statusLabel(entry.status)"
-						:color-map="statusColorMap" />
-					<span v-if="entry.entityCount" class="muted">
-						{{ entry.entityCount }} {{ t('docudesk', 'entities') }}
-					</span>
-				</div>
-
-				<!-- Loading state -->
-				<div v-if="isActiveStatus(entry.status)" class="file-loading">
-					<NcLoadingIcon :size="20" />
-					<span>{{ statusLabel(entry.status) }}…</span>
-				</div>
-
-				<!-- Review state — Wave 1.3 surface -->
-				<div v-if="entry.status === 'extracted'" class="review-section">
-					<table class="review-table">
-						<thead>
-							<tr>
-								<th>{{ t('docudesk', 'Entity') }}</th>
-								<th>{{ t('docudesk', 'Type') }}</th>
-								<th>{{ t('docudesk', 'Confidence') }}</th>
-								<th>{{ t('docudesk', 'Grondslag (bases)') }}</th>
-								<th>{{ t('docudesk', 'Skip') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(entity, idx) in entry.entities" :key="entity.relationId || idx">
-								<td class="entity-cell">
-									<span :title="entity.value">{{ truncate(entity.value, 60) }}</span>
-									<span v-if="!entity.relationId" class="warn-text">
-										{{ t('docudesk', '(no relation id — bases/skip will not persist)') }}
-									</span>
-									<span v-if="entity._patchError" class="error-text" :title="entity._patchError">
-										{{ truncate(entity._patchError, 80) }}
-									</span>
-								</td>
-								<td>
-									<CnStatusBadge
-										:label="entity.type"
-										:color-map="entityTypeColorMap" />
-								</td>
-								<td class="numeric">
-									{{ formatConfidence(entity.confidence) }}
-								</td>
-								<td class="bases-cell">
-									<NcSelect
-										v-model="entity._decisionBases"
-										:options="basesOptions"
-										:multiple="true"
-										:placeholder="t('docudesk', 'Pick grondslagen…')"
-										:disabled="!entity.relationId" />
-								</td>
-								<td>
-									<NcCheckboxRadioSwitch
-										:checked.sync="entity._decisionSkip"
-										:disabled="!entity.relationId" />
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					<div class="review-actions">
-						<NcButton
-							type="primary"
-							:disabled="anonymizationStore.isProcessing"
-							@click="anonymizationStore.anonymiseEntry(entry)">
-							{{ t('docudesk', 'Apply decisions and anonymise') }}
-						</NcButton>
-					</div>
-				</div>
-
-				<!-- Completed state -->
-				<div v-if="entry.status === 'completed'" class="completed-section">
-					<a
-						v-if="entry.anonymizedFileId"
-						:href="downloadUrl(entry.anonymizedFileId)"
-						target="_blank"
-						rel="noopener"
-						class="download-link">
-						<Download :size="18" />
-						{{ entry.anonymizedFileName || t('docudesk', 'Download anonymised copy') }}
-					</a>
-					<span v-else class="muted">
-						{{ t('docudesk', 'No entities detected — original file is fine to publish.') }}
-					</span>
-					<span v-if="entry.replacementCount" class="muted">
-						· {{ entry.replacementCount }} {{ t('docudesk', 'replacements') }}
-					</span>
-				</div>
-
-				<!-- Error state -->
-				<div v-if="entry.status === 'error'" class="error-section">
-					<span class="error-text" :title="entry.error">
-						{{ entry.error || t('docudesk', 'Unknown error') }}
-					</span>
-				</div>
 			</div>
 		</div>
+
+		<!-- Drop zone -->
+		<div class="upload-area" :class="{ compact: anonymizationStore.hasFiles }">
+			<div
+				class="drop-zone"
+				:class="{ dragging: isDragging }"
+				@dragover.prevent="isDragging = true"
+				@dragleave.prevent="isDragging = false"
+				@drop.prevent="handleDrop"
+				@click="$refs.fileInput.click()">
+				<img :src="uploadIcon" alt="" class="upload-icon">
+				<div class="drop-content">
+					<p class="drop-title">
+						{{ t('docudesk', 'Drag and drop one or more documents') }}
+					</p>
+					<p class="drop-subtitle">
+						{{ t('docudesk', 'Only PDF, Word, TXT or EML files are supported. Maximum file size 500 MB.') }}
+					</p>
+					<span class="fake-button">
+						{{ t('docudesk', '+ Select files') }}
+					</span>
+				</div>
+				<input
+					ref="fileInput"
+					type="file"
+					multiple
+					class="file-input"
+					@change="handleFileSelect">
+			</div>
+		</div>
+
+		<!-- Dossier name dialog -->
+		<NcDialog
+			v-if="showDossierDialog"
+			:name="t('docudesk', 'Create dossier')"
+			:can-close="!dossierSubmitting"
+			size="normal"
+			@closing="cancelDossier">
+			<div class="dossier-dialog">
+				<p class="dossier-dialog__intro">
+					{{ t('docudesk', 'You selected {count} files. Give this dossier a name to group them in one folder.', { count: pendingFiles.length }) }}
+				</p>
+				<NcTextField
+					ref="dossierInput"
+					:value.sync="dossierName"
+					:label="t('docudesk', 'Folder name')"
+					:disabled="dossierSubmitting"
+					:error="!!dossierError"
+					:helper-text="dossierError"
+					@keyup.enter="confirmDossier" />
+			</div>
+			<template #actions>
+				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" :disabled="dossierSubmitting || !dossierName.trim()" @click="confirmDossier">
+					<template v-if="dossierSubmitting" #icon>
+						<NcLoadingIcon :size="18" />
+					</template>
+					{{ t('docudesk', 'Create and upload') }}
+				</NcButton>
+			</template>
+		</NcDialog>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
-import { generateUrl } from '@nextcloud/router'
-import Upload from 'vue-material-design-icons/Upload.vue'
-import Download from 'vue-material-design-icons/Download.vue'
-import FileDocument from 'vue-material-design-icons/FileDocument.vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { generateRemoteUrl } from '@nextcloud/router'
+import { getCurrentUser } from '@nextcloud/auth'
+import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import uploadIcon from '../../assets/upload.png'
 
 // Woo Art. 5 grondslagen seeded by the dossier register (Wave 1.1).
 // Hardcoded for the smoke-test widget — a production page would fetch
@@ -190,252 +182,354 @@ export default {
 	name: 'AnonymizationWidget',
 	components: {
 		NcButton,
-		NcCheckboxRadioSwitch,
+		NcDialog,
 		NcLoadingIcon,
-		NcSelect,
-		CnStatusBadge,
-		Upload,
-		Download,
-		FileDocument,
+		NcTextField,
+		FolderOutline,
 	},
 	data() {
 		return {
 			isDragging: false,
-			basesOptions: BASES_OPTIONS,
-			statusColorMap: {
-				[t('docudesk', 'Queued')]: 'default',
-				[t('docudesk', 'Uploading')]: 'primary',
-				[t('docudesk', 'Extracting')]: 'primary',
-				[t('docudesk', 'Awaiting review')]: 'warning',
-				[t('docudesk', 'Anonymising')]: 'warning',
-				[t('docudesk', 'Completed')]: 'success',
-				[t('docudesk', 'Error')]: 'error',
-			},
-			entityTypeColorMap: {
-				PERSON: 'warning',
-				ORGANIZATION: 'primary',
-				OTHER: 'default',
-			},
+			showDossierDialog: false,
+			pendingFiles: [],
+			dossierName: '',
+			dossierSubmitting: false,
+			dossierError: '',
+			uploadIcon,
 		}
 	},
+	computed: {
+		/**
+		 * Display name of the currently logged-in Nextcloud user.
+		 *
+		 * @return {string} The user's display name, or their uid as fallback, or empty string when unauthenticated.
+		 */
+		userName() {
+			const user = getCurrentUser()
+			return user?.displayName || user?.uid || ''
+		},
+	},
 	methods: {
-		openPicker() {
-			this.$refs.fileInput.value = ''
-			this.$refs.fileInput.click()
-		},
-		handleFileSelect(event) {
-			const files = event.target.files
-			if (files && files.length > 0) {
-				anonymizationStore.addFiles(files)
-			}
-		},
+		/**
+		 * Drop handler for the drag-and-drop zone.
+		 * Delegates to dispatchFiles so the dossier-dialog logic applies.
+		 *
+		 * @param {DragEvent} event Native drop event from the drop zone.
+		 * @return {void}
+		 */
 		handleDrop(event) {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
 			if (files && files.length > 0) {
+				this.dispatchFiles(files)
+			}
+		},
+		/**
+		 * Change handler for the hidden file input.
+		 * Resets the input value so the same file(s) can be picked again.
+		 *
+		 * @param {Event} event Native change event from the file input.
+		 * @return {void}
+		 */
+		handleFileSelect(event) {
+			const files = event.target?.files
+			if (files && files.length > 0) {
+				this.dispatchFiles(files)
+			}
+			event.target.value = ''
+		},
+		/**
+		 * Route the incoming files to the right flow:
+		 *   - 2+ files → open the dossier dialog (user picks a folder name).
+		 *   - single file → straight into the queue under /DocuDesk/.
+		 *
+		 * @param {File[] | FileList} fileList Files from drop or input.
+		 */
+		dispatchFiles(fileList) {
+			const files = Array.from(fileList)
+			if (files.length >= 2) {
+				this.openDossierDialog(files)
+			} else {
 				anonymizationStore.addFiles(files)
 			}
 		},
-		statusLabel(status) {
-			const map = {
-				queued: t('docudesk', 'Queued'),
-				uploading: t('docudesk', 'Uploading'),
-				extracting: t('docudesk', 'Extracting'),
-				extracted: t('docudesk', 'Awaiting review'),
-				anonymising: t('docudesk', 'Anonymising'),
-				completed: t('docudesk', 'Completed'),
-				error: t('docudesk', 'Error'),
+		/**
+		 * Open the dossier-name dialog, pre-fill a timestamp-based name,
+		 * and focus the input on next tick.
+		 *
+		 * @param {File[]} files Files that will be placed into the dossier.
+		 */
+		openDossierDialog(files) {
+			this.pendingFiles = files
+			this.dossierName = this.defaultDossierName()
+			this.dossierError = ''
+			this.showDossierDialog = true
+			this.$nextTick(() => {
+				this.$refs.dossierInput?.focus?.()
+			})
+		},
+		/**
+		 * Confirm handler for the dossier dialog: creates the folder,
+		 * moves the files in, and starts the pipeline. Keeps the dialog
+		 * open on failure so the user sees the error inline.
+		 */
+		async confirmDossier() {
+			const name = this.dossierName.trim()
+			if (!name) return
+			this.dossierSubmitting = true
+			this.dossierError = ''
+			try {
+				await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+				this.closeDossierDialog()
+			} catch (err) {
+				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to create dossier'
+			} finally {
+				this.dossierSubmitting = false
 			}
-			return map[status] || status
 		},
-		isActiveStatus(status) {
-			return status === 'queued' || status === 'uploading' || status === 'extracting' || status === 'anonymising'
+		/**
+		 * Cancel handler — ignored while a submit is in flight to avoid
+		 * leaving the store in a half-created state.
+		 */
+		cancelDossier() {
+			if (this.dossierSubmitting) return
+			this.closeDossierDialog()
 		},
-		downloadUrl(fileId) {
-			return generateUrl(`/f/${fileId}`)
+		/** Reset all dialog state back to its initial values. */
+		closeDossierDialog() {
+			this.showDossierDialog = false
+			this.pendingFiles = []
+			this.dossierName = ''
+			this.dossierError = ''
 		},
-		formatConfidence(c) {
-			if (typeof c !== 'number') return '-'
-			return (c * 100).toFixed(0) + '%'
+		/**
+		 * Suggest a default dossier name based on the current date+time,
+		 * so the user can immediately confirm without typing.
+		 *
+		 * @return {string} e.g. "Dossier-2026-04-23-1045"
+		 */
+		defaultDossierName() {
+			const d = new Date()
+			const yyyy = d.getFullYear()
+			const mm = String(d.getMonth() + 1).padStart(2, '0')
+			const dd = String(d.getDate()).padStart(2, '0')
+			const hh = String(d.getHours()).padStart(2, '0')
+			const mi = String(d.getMinutes()).padStart(2, '0')
+			return `Dossier-${yyyy}-${mm}-${dd}-${hh}${mi}`
 		},
-		truncate(text, max) {
-			if (!text) return ''
-			return text.length > max ? text.slice(0, max - 1) + '…' : text
+		/**
+		 * Turn a Nextcloud file path ("/admin/files/DocuDesk/...") into
+		 * a WebDAV download URL. Falls back to the WebDAV root when the
+		 * path cannot be parsed.
+		 *
+		 * @param {string} filePath Path as returned by the upload endpoint.
+		 * @return {string} Download URL.
+		 */
+		downloadUrl(filePath) {
+			const parts = filePath.split('/')
+			const filesIndex = parts.indexOf('files')
+			if (filesIndex >= 0) {
+				const relativePath = parts.slice(filesIndex + 1).join('/')
+				return generateRemoteUrl('webdav') + '/' + relativePath
+			}
+			return generateRemoteUrl('webdav')
+		},
+		/**
+		 * Human-readable label for in-progress queue statuses.
+		 *
+		 * @param {string} status Raw entry.status value.
+		 * @return {string} Translated label.
+		 */
+		statusLabel(status) {
+			const labels = {
+				queued: t('docudesk', 'Queued'),
+				uploading: t('docudesk', 'Uploading...'),
+				extracting: t('docudesk', 'Detecting...'),
+				anonymizing: t('docudesk', 'Anonymizing...'),
+			}
+			return labels[status] || status
 		},
 	},
 }
 </script>
 
 <style scoped>
-.anonymization-content {
+.anonymization-widget {
+	display: flex;
+	flex-direction: column;
 	padding: 20px;
-	max-width: 1200px;
-	margin: 0 auto;
+	max-width: 900px;
+	margin-inline: auto;
+	width: 100%;
 }
 
-.pageHeader {
-	margin: 0 0 8px;
+.page-title {
+	margin: 0 0 16px 0;
 }
 
-.page-description {
+.results-area {
+	margin-bottom: 16px;
+}
+
+.results-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+
+.results-table th {
+	text-align: left;
+	font-weight: 600;
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--color-border);
 	color: var(--color-text-maxcontrast);
-	margin: 0 0 24px;
+	font-size: 0.85rem;
+	white-space: nowrap;
+}
+
+.results-table td {
+	padding: 8px 10px;
+	border-bottom: 1px solid var(--color-border-dark, var(--color-border));
+	vertical-align: middle;
+}
+
+.col-file {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 280px;
+}
+
+.col-dossier {
+	white-space: nowrap;
+}
+
+.dossier-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 12px;
+	background-color: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+	font-size: 0.8rem;
+}
+
+.col-number {
+	text-align: center;
+	width: 80px;
+}
+
+.col-action {
+	text-align: right;
+	width: 120px;
+	white-space: nowrap;
+}
+
+.download-link {
+	color: var(--color-primary);
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.download-link:hover {
+	text-decoration: underline;
+}
+
+.status-clean {
+	color: var(--color-text-maxcontrast);
+	font-style: italic;
+}
+
+.status-error {
+	color: var(--color-error);
+	cursor: help;
+}
+
+.status-label {
+	color: var(--color-text-maxcontrast);
+}
+
+.table-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 8px;
+}
+
+.upload-area {
+	padding: 4px 0;
 }
 
 .drop-zone {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 24px;
 	border: 2px dashed var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--border-radius-large);
 	padding: 32px;
-	text-align: center;
+	background-color: #fff;
+	cursor: pointer;
+	transition: border-color 0.2s, background-color 0.2s;
+}
+
+.drop-zone:hover,
+.drop-zone.dragging {
+	border-color: var(--color-primary);
+	background-color: #fff;
+}
+
+.upload-icon {
+	width: 107px;
+	height: 103px;
+	flex-shrink: 0;
+	object-fit: contain;
+}
+
+.drop-content {
+	flex: 1;
+	min-width: 0;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	gap: 12px;
-	transition: background-color 120ms ease, border-color 120ms ease;
-	background-color: var(--color-main-background);
+	align-items: flex-start;
+	gap: 8px;
+	text-align: left;
 }
 
-.drop-zone.dragging {
-	border-color: var(--color-primary-element);
-	background-color: var(--color-primary-element-light);
-}
-
-.drop-zone.busy {
-	opacity: 0.85;
-}
-
-.drop-text {
+.drop-title {
 	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.drop-subtitle {
+	margin: 0;
+	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
+}
+
+.fake-button {
+	margin-top: 4px;
+	padding: 8px 16px;
+	border-radius: var(--border-radius);
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+	font-size: 0.9rem;
+	font-weight: 500;
+	white-space: nowrap;
 }
 
 .file-input {
 	display: none;
 }
 
-.queue {
-	margin-top: 24px;
+.dossier-dialog {
+	padding: 8px 4px;
 }
 
-.queue-header {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 16px;
-	flex-wrap: wrap;
-}
-
-.queue-header h3 {
-	flex: 1;
-	margin: 0;
-}
-
-.file-card {
-	border: 1px solid var(--color-border);
-	border-radius: 8px;
-	padding: 16px;
-	margin-bottom: 16px;
-	background-color: var(--color-main-background);
-}
-
-.file-card-header {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin-bottom: 12px;
-}
-
-.file-name {
-	font-weight: 600;
-	flex: 1;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.file-loading {
-	display: flex;
-	align-items: center;
-	gap: 8px;
+.dossier-dialog__intro {
+	margin: 0 0 16px 0;
 	color: var(--color-text-maxcontrast);
-	padding: 12px 0;
-}
-
-.review-section {
-	margin-top: 12px;
-}
-
-.review-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.review-table th,
-.review-table td {
-	padding: 8px 12px;
-	text-align: left;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.review-table th {
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
-}
-
-.review-table th:nth-child(3),
-.review-table td.numeric {
-	text-align: right;
-	width: 90px;
-}
-
-.review-table .bases-cell {
-	min-width: 280px;
-}
-
-.entity-cell {
-	max-width: 280px;
-}
-
-.warn-text {
-	display: block;
-	color: var(--color-warning);
-	font-size: 12px;
-	margin-top: 4px;
-}
-
-.error-text {
-	display: block;
-	color: var(--color-error);
-	font-size: 12px;
-}
-
-.review-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 8px;
-	margin-top: 12px;
-}
-
-.completed-section {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 8px 0;
-}
-
-.download-link {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.error-section {
-	padding: 8px 0;
-}
-
-.muted {
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
 }
 </style>

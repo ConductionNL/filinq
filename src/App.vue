@@ -24,7 +24,8 @@
 
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
+			<FolderFilesNavigation v-if="inDossier" />
+			<MainMenu v-else />
 			<Views />
 			<SideBars />
 			<Modals />
@@ -44,11 +45,12 @@
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
+import FolderFilesNavigation from './navigation/FolderFilesNavigation.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
 import SideBars from './sidebars/SideBars.vue'
-import { initializeStores, useSettingsStore } from './store/store.js'
+import { initializeStores, useSettingsStore, myDocumentsStore } from './store/store.js'
 
 export default {
 	name: 'App',
@@ -59,6 +61,7 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		MainMenu,
+		FolderFilesNavigation,
 		Modals,
 		Dialogs,
 		Views,
@@ -75,6 +78,15 @@ export default {
 		hasOpenRegisters() {
 			const settingsStore = useSettingsStore()
 			return settingsStore.hasOpenRegisters
+		},
+		/**
+		 * True when the user is browsing inside a dossier (a subfolder of /DocuDesk).
+		 * Triggers the dossier-files navigation in place of the main menu.
+		 *
+		 * @return {boolean}
+		 */
+		inDossier() {
+			return myDocumentsStore.currentPath !== '/DocuDesk'
 		},
 		isAdmin() {
 			const settingsStore = useSettingsStore()
@@ -96,6 +108,11 @@ export default {
 </script>
 
 <style scoped>
+.content {
+	padding: 8px;
+	background-color: var(--background-color, #EAE9E6);
+}
+
 .open-register-icon {
 	width: 64px;
 	height: 64px;
@@ -105,5 +122,22 @@ export default {
 .open-register-admin-hint {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
+}
+
+/* NcAppContent main panel chrome — `--color-main-background` is honoured by
+   the lib; radius and shadow have no NC variable, so override directly. */
+:deep(.app-content) {
+	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	border-radius: 20px;
+	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+}
+
+/* Centre the NcEmptyContent when OpenRegister is not installed.
+   `!important` is required because the lib sets conflicting layout rules. */
+:deep(.open-register-missing) {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100% !important;
 }
 </style>

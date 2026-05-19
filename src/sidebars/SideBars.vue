@@ -1,10 +1,16 @@
 <template>
-	<!-- Sidebar Container - currently no sidebars needed -->
-	<div />
+	<div>
+		<FileViewerSidebar />
+	</div>
 </template>
 
 <script>
+import FileViewerSidebar from './FileViewerSidebar.vue'
+
 export default {
 	name: 'SideBars',
+	components: {
+		FileViewerSidebar,
+	},
 }
 </script>
