@@ -8,67 +8,40 @@ total_requirements: 555
 
 # Letter/Correspondence Generation
 
-## Summary
+## Why
 
-Add a dedicated letter and correspondence generation workflow to DocuDesk, enabling government users to generate letters, beschikkingen, and other correspondence from templates with merge fields populated from case/citizen data. This extends the existing template-management and pdf-generation capabilities with a higher-level correspondence-specific workflow including batch generation for multiple recipients.
+DocuDesk already has template CRUD (`TemplateService`), PDF rendering (`PdfService`), and a data-resolution layer (`DataResolverService` from `document-creatie-sjablonen`). These building blocks exist but there is no end-to-end correspondence workflow: no single service that orchestrates recipient data resolution → template merge → huisstijl application → output formatting → register logging in one cohesive call. Government users generating a beschikking, a citizen notification letter, or a batch of permit decisions must stitch together multiple capabilities manually. Market intelligence confirms 245 tenders and 555 requirements demand exactly this — letter generation from case data with merge fields, batch generation for multiple recipients, and email template support with huisstijl enforcement.
 
-## Demand Evidence
-
-### Cluster 45: Letter/correspondence generation
-- **129 tenders**, **257 requirements** (primarily Dutch government via TenderNed)
-- Country distribution: TenderNed 155 reqs, Belgium 15 reqs
-- Municipalities explicitly require letter generation from case data with merge fields
-
-### Cluster 55: Document creation/generation
-- **116 tenders**, **298 requirements**
-- Country distribution: TenderNed 131 reqs, Belgium 2 reqs
-
-### Sample Requirements from Tenders
-- **Gemeente Aa en Hunze**: "De Oplossing beschikt over documentcreatiefunctionaliteit om documenten op basis van sjablonen te creeren."
+Sample tender requirements:
 - **Gemeente Zuidplas**: "De Oplossing beschikt over documentcreatiefunctionaliteit om documenten en e-mails op basis van sjablonen te creeren."
 - **Gemeente Molenlanden**: "Als de Oplossing een eigen documentcreatiefunctionaliteit heeft, is het mogelijk om centraal emailsjablonen inclusief voet- en kopteksten te configureren."
-- **Gemeente Hilversum**: "De Oplossing moet kunnen koppelen met Xential via de ESB van de Opdrachtgever. De Opdrachtgever ziet een documentcreatietool als een belangrijk middel."
 - **Ministerie van VWS**: "Als gebruiker, wil ik emailtemplates kunnen creeren conform CIBG-huisstijl."
 
-## What Docudesk Already Does
+## What Changes
 
-- **Template Management** (implemented): CRUD for Twig/HTML templates stored as OpenRegister objects, with namespace scoping, format/orientation config
-- **PDF Generation** (implemented): Stateless PDF rendering via mPDF with Twig sandbox, page config options, injectable via DI
-- **Document Creatie Sjablonen** (planned spec): Data resolution from OpenRegister, template merge execution, output format support (PDF/ODF/HTML), huisstijl enforcement -- this spec covers the foundation but not correspondence-specific workflows
+- **NEW capability:** `correspondence-generation` — `CorrespondenceService` at `OCA\DocuDesk\Service\CorrespondenceService` orchestrates the full end-to-end correspondence flow: resolve recipient data from OpenRegister objects (delegating to `DataResolverService`), merge into a template (delegating to `TemplateService` + `TemplateRenderer`), apply huisstijl defaults (logo, header/footer HTML, margins), produce output in the requested format (PDF, DOCX, HTML, or email), and write an audit record to the `correspondence` schema in the document register.
+- **NEW:** `POST /api/correspondence/generate` — authenticated single-letter generation endpoint returning a `DataDownloadResponse`.
+- **NEW:** `CorrespondenceService::generateBatch()` — synchronous for ≤ 10 recipients; dispatches a Nextcloud background job for > 10 recipients, returning a `jobId`.
+- **NEW:** `POST /api/correspondence/generate/batch` — batch generation endpoint; returns 202 with job ID for large batches.
+- **NEW:** `GET /api/correspondence/jobs/{jobId}` — async job status polling endpoint.
+- **MODIFIED:** `docudesk_register.json` — `correspondence` and `huisstijl` schemas already present; seed data objects added (3–5 per schema) to support dev/test via the existing `importFromApp()` pipeline.
+- **MODIFIED:** `appinfo/routes.php` — three new API routes registered.
 
-## Scope
+## Capabilities
 
-### In Scope
-1. **Correspondence workflow API** -- dedicated endpoint for generating letters/correspondence with pre-configured defaults (margins, huisstijl, headers/footers)
-2. **Merge field resolution** -- populate templates with data from OpenRegister objects (zaak, persoon, adres) and external sources via OpenConnector (e.g., BRP)
-3. **Batch generation** -- generate the same letter for multiple recipients in one request (e.g., send beschikking to all aanvragers in a batch)
-4. **Multiple output formats** -- PDF (default), DOCX (via LibreOffice conversion), and ODF for editable output
-5. **Email template support** -- generate email body content from templates with the same merge logic
-6. **Correspondence register** -- log all generated correspondence with metadata (template used, recipient, date, case reference) in the document register
+### New Capabilities
 
-### Out of Scope
-- Actual email sending (handled by n8n or notification service)
-- Physical mail dispatch (handled by external print/mail services)
-- Template creation/editing UI (covered by advanced-template-management change)
+- `correspondence-generation`
 
-## Relation to Existing Specs
+## Cross-app Dependencies
 
-- Builds on **document-creatie-sjablonen** spec (data resolution, merge execution)
-- Uses **template-management** spec (template CRUD)
-- Uses **pdf-generation** spec (PDF rendering)
-- Integrates with **document-register** spec (audit trail)
+- **Hard** — `docudesk:template-management` — `TemplateService::getTemplate()` used for template lookup; namespace filtering used for email templates.
+- **Hard** — `docudesk:pdf-generation` — `PdfService::renderPdf()` used for PDF output.
+- **Hard** — `docudesk:document-creatie-sjablonen` — `DataResolverService` used for nested OpenRegister data resolution (up to 3 levels deep).
+- **Soft** — LibreOffice headless (`soffice --headless --convert-to docx`) — required only for DOCX output; graceful 503 degradation when unavailable.
 
-## Acceptance Criteria
+## Impact
 
-1. GIVEN a template with merge fields and a case object UUID, WHEN the correspondence API is called, THEN a letter is generated with all merge fields populated from the case data
-2. GIVEN a batch request with 50 recipient UUIDs, WHEN the batch correspondence endpoint is called, THEN 50 individual letters are generated, each with recipient-specific data
-3. GIVEN a correspondence template, WHEN output format "docx" is requested, THEN an editable DOCX file is returned
-4. GIVEN a generated letter, WHEN it is stored, THEN a correspondence register entry is created with template ID, recipient, date, and case reference
-5. GIVEN a template references huisstijl configuration, WHEN the letter is generated, THEN the organization's logo, header, footer, and styling are applied automatically
-
-## Risks and Dependencies
-
-- Depends on **document-creatie-sjablonen** spec being implemented first (data resolution layer)
-- DOCX output requires LibreOffice or equivalent server-side conversion
-- Batch generation needs queue/background job support for large volumes
-- OpenConnector integration needed for external data sources (BRP, BAG)
+- **Code (docudesk):** `lib/Service/CorrespondenceService.php` (new), `lib/Controller/CorrespondenceController.php` (new), `lib/Job/BatchCorrespondenceJob.php` (new), `appinfo/routes.php` (extended), `lib/Settings/docudesk_register.json` (seed data added).
+- **API contract:** Three new endpoints; no existing endpoints modified. Fully additive and non-breaking.
+- **Migration:** None — `correspondence` and `huisstijl` schemas are already registered; only seed data is added via idempotent `importFromApp()` with `force: false`.
