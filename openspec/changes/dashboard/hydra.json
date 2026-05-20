@@ -1,0 +1,8 @@
+{
+  "spec_slug": "dashboard",
+  "title": "Dashboard",
+  "app": "docudesk",
+  "repo": "https://github.com/ConductionNL/docudesk",
+  "depends_on": [],
+  "issue": null
+}
