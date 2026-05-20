@@ -182,7 +182,11 @@ OC.L10N.register(
     "what would you like to anonymize today?" : "wat wilt u vandaag anonimiseren?",
     "Drag and drop one or more documents" : "Sleep 1 of meerdere documenten",
     "Only PDF, Word, TXT or EML files are supported. Maximum file size 500 MB." : "Gebruik alleen PDF, Word, TXT of EML bestanden. Maximale bestandsgrootte 500 MB.",
-    "+ Select files" : "+ Selecteer bestanden"
+    "+ Select files" : "+ Selecteer bestanden",
+    "Review entities for {name}" : "Beoordeel entiteiten voor {name}",
+    "Review needed" : "Beoordeling nodig",
+    "Moving..." : "Verplaatsen...",
+    "Anonymize %n entity" : ["%n entiteit anonimiseren", "%n entiteiten anonimiseren"]
 },
 "nplurals=2; plural=(n != 1);"
 );

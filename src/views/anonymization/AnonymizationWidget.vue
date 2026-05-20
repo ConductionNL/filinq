@@ -44,7 +44,7 @@ import { anonymizationStore } from '../../store/store.js'
 							<span v-else class="status-label">&mdash;</span>
 						</td>
 						<td class="col-number">
-							<template v-if="file.status === 'completed' || file.status === 'anonymizing'">
+							<template v-if="file.status === 'completed' || file.status === 'anonymizing' || file.status === 'extracted'">
 								{{ file.entityCount }}
 							</template>
 							<template v-else-if="file.status === 'error'">
@@ -89,6 +89,36 @@ import { anonymizationStore } from '../../store/store.js'
 			<div v-if="anonymizationStore.hasCompleted" class="table-actions">
 				<NcButton type="tertiary" @click="anonymizationStore.clearCompleted()">
 					{{ t('docudesk', 'Clear completed') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<!-- Per-file entity review. Every file the store left in `extracted`
+		     gets its own review card so the operator can adjust grondslagen
+		     and skip flags before triggering anonymisation. The store's
+		     uploadAndExtract stops at `extracted` by design; without this
+		     section the file would be stuck with a spinner forever. -->
+		<div
+			v-for="file in extractedFiles"
+			:key="'review-' + file.id"
+			class="review-card">
+			<h3 class="review-title">
+				{{ t('docudesk', 'Review entities for {name}', { name: file.name }) }}
+			</h3>
+			<EntityReviewTable
+				:entities="file.entities"
+				:file-count="1"
+				@toggle="anonymizationStore.toggleEntity(file, $event)"
+				@bulk-select="anonymizationStore.setVisibleEntities(file, $event, true)"
+				@bulk-deselect="anonymizationStore.setVisibleEntities(file, $event, false)"
+				@bases-change="anonymizationStore.setEntityBases(file, $event.idx, $event.bases)"
+				@skip-change="anonymizationStore.setEntitySkip(file, $event.idx, $event.skip)" />
+			<div class="review-actions">
+				<NcButton
+					type="primary"
+					:disabled="includedCount(file) === 0"
+					@click="anonymizationStore.anonymiseEntry(file)">
+					{{ t('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount(file)) }}
 				</NcButton>
 			</div>
 		</div>
@@ -163,20 +193,13 @@ import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import EntityReviewTable from './EntityReviewTable.vue'
 import uploadIcon from '../../assets/upload.png'
 
-// Woo Art. 5 grondslagen seeded by the dossier register (Wave 1.1).
-// Hardcoded for the smoke-test widget — a production page would fetch
-// /apps/openregister/api/objects/dossier/base instead so custom bases
-// added by tenants surface too.
-const BASES_OPTIONS = [
-	'persoonsgegevens',
-	'bijzondere-persoonsgegevens',
-	'strafrechtelijk',
-	'bedrijfs-fabricagegegevens',
-	'onevenredige-benadeling',
-	'nationale-veiligheid',
-]
+// Woo Art. 5 grondslagen are owned by `EntityReviewTable` (it ships its own
+// BASES_OPTIONS for the per-row dropdown). The widget used to declare its
+// own copy too — removed since nothing on this surface consumed it, and
+// it left a no-unused-vars lint error behind.
 
 export default {
 	name: 'AnonymizationWidget',
@@ -186,6 +209,7 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 		FolderOutline,
+		EntityReviewTable,
 	},
 	data() {
 		return {
@@ -207,6 +231,16 @@ export default {
 		userName() {
 			const user = getCurrentUser()
 			return user?.displayName || user?.uid || ''
+		},
+		/**
+		 * Files that have finished extraction and are awaiting per-entity
+		 * review before anonymisation. Drives the review cards below the
+		 * results table.
+		 *
+		 * @return {object[]} Queue entries in the `extracted` state.
+		 */
+		extractedFiles() {
+			return anonymizationStore.files.filter((f) => f.status === 'extracted')
 		},
 	},
 	methods: {
@@ -344,10 +378,23 @@ export default {
 			const labels = {
 				queued: t('docudesk', 'Queued'),
 				uploading: t('docudesk', 'Uploading...'),
+				moving: t('docudesk', 'Moving...'),
 				extracting: t('docudesk', 'Detecting...'),
+				extracted: t('docudesk', 'Review needed'),
 				anonymizing: t('docudesk', 'Anonymizing...'),
 			}
 			return labels[status] || status
+		},
+		/**
+		 * Number of entities currently included for anonymisation on a
+		 * file. Drives the per-file "Anonymize N entities" button label
+		 * and disabled state in the review card.
+		 *
+		 * @param {object} file Queue entry.
+		 * @return {number} Count of entities with `included !== false`.
+		 */
+		includedCount(file) {
+			return (file?.entities || []).filter((e) => e.included !== false).length
 		},
 	},
 }
@@ -531,5 +578,24 @@ export default {
 .dossier-dialog__intro {
 	margin: 0 0 16px 0;
 	color: var(--color-text-maxcontrast);
+}
+
+.review-card {
+	margin: 24px 0;
+	padding: 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background-color: var(--color-main-background);
+}
+
+.review-title {
+	margin: 0 0 12px 0;
+	font-size: 1rem;
+}
+
+.review-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 12px;
 }
 </style>

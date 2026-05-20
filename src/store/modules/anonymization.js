@@ -258,8 +258,17 @@ export const useAnonymizationStore = defineStore(
 					entry.entityCount = entities.length
 
 					// Seed per-row review state on every detected entity.
+					// The extra fields (`included`, `highestConfidence`, `fileCount`,
+					// `relationIds`) are what `EntityReviewTable` expects — the
+					// folder/batch flows pre-aggregate into that shape too. Single
+					// file → fileCount 1 and a 1-element relationIds array (or
+					// empty when the entity has no relation, e.g. regex-only path).
 					entry.entities = entities.map((e) => ({
 						...e,
+						included: true,
+						highestConfidence: e.confidence ?? 0,
+						fileCount: 1,
+						relationIds: e.relationId != null ? [e.relationId] : [],
 						_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
 						_decisionSkip: !!e.skipAnonymization,
 						_patchError: null,
@@ -324,14 +333,19 @@ export const useAnonymizationStore = defineStore(
 						}
 					}
 
-					// Step 2 — anonymise. The OR side filters out skipAnonymization=true
-					// relations from the document mutation, so the user's skips take effect.
+					// Step 2 — anonymise. Only `included` entities are sent; the
+					// review checkbox in EntityReviewTable controls inclusion.
+					// The OR side additionally filters skipAnonymization=true
+					// relations, so an explicit skip still takes effect even
+					// when the entity was left included.
 					const anonymizePayload = {
-						entities: entry.entities.map((e) => ({
-							type: e.type,
-							value: e.value,
-							confidence: e.confidence,
-						})),
+						entities: entry.entities
+							.filter((e) => e.included !== false)
+							.map((e) => ({
+								type: e.type,
+								value: e.value,
+								confidence: e.confidence,
+							})),
 					}
 					const anonymizeResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),
@@ -362,6 +376,79 @@ export const useAnonymizationStore = defineStore(
 						await this.anonymiseEntry(entry)
 					}
 				}
+			},
+
+			/**
+			 * Flip the `included` flag on a single entity within a file entry.
+			 *
+			 * Backs the row checkbox in `EntityReviewTable`. Unchecking means
+			 * the entity won't be sent to the anonymise call (excluded from
+			 * the document mutation).
+			 *
+			 * @param {object} entry Queue entry that owns the entity.
+			 * @param {number} idx Index of the entity in `entry.entities`.
+			 * @return {void}
+			 */
+			toggleEntity(entry, idx) {
+				if (entry?.entities?.[idx] === undefined) {
+					return
+				}
+				entry.entities[idx].included = !entry.entities[idx].included
+			},
+
+			/**
+			 * Bulk-set the `included` flag for a list of entity indices in a
+			 * file entry. Used by the "Select / Deselect All Visible" buttons.
+			 *
+			 * @param {object} entry Queue entry that owns the entities.
+			 * @param {number[]} idxList Indices of entities to update.
+			 * @param {boolean} included New inclusion state.
+			 * @return {void}
+			 */
+			setVisibleEntities(entry, idxList, included) {
+				if (Array.isArray(entry?.entities) === false) {
+					return
+				}
+				for (const idx of idxList) {
+					if (entry.entities[idx]) {
+						entry.entities[idx].included = !!included
+					}
+				}
+			},
+
+			/**
+			 * Set the grondslagen (Woo Art. 5 bases) decision for a single
+			 * entity. Persisted on the relation via the PATCH step inside
+			 * `anonymiseEntry`.
+			 *
+			 * @param {object} entry Queue entry that owns the entity.
+			 * @param {number} idx Index of the entity in `entry.entities`.
+			 * @param {string[]} bases New bases array.
+			 * @return {void}
+			 */
+			setEntityBases(entry, idx, bases) {
+				if (entry?.entities?.[idx] === undefined) {
+					return
+				}
+				entry.entities[idx]._decisionBases = Array.isArray(bases) ? bases : []
+			},
+
+			/**
+			 * Set the skipAnonymization decision for a single entity. Persisted
+			 * on the relation via the PATCH step inside `anonymiseEntry`; the
+			 * OR side filters skipAnonymization=true relations out of the
+			 * document mutation.
+			 *
+			 * @param {object} entry Queue entry that owns the entity.
+			 * @param {number} idx Index of the entity in `entry.entities`.
+			 * @param {boolean} skip New skip state.
+			 * @return {void}
+			 */
+			setEntitySkip(entry, idx, skip) {
+				if (entry?.entities?.[idx] === undefined) {
+					return
+				}
+				entry.entities[idx]._decisionSkip = !!skip
 			},
 
 			/**
