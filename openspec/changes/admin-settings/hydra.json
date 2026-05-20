@@ -1,0 +1,8 @@
+{
+  "spec_slug": "admin-settings",
+  "title": "Admin Settings",
+  "app": "docudesk",
+  "repo": "https://github.com/ConductionNL/docudesk",
+  "depends_on": [],
+  "issue": null
+}
