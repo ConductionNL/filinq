@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "7.0.0"
+        "version": "8.0.0"
     },
     "x-openregister": {
         "type": "application",
@@ -325,6 +325,15 @@
                         "facetable": true,
                         "title": "Policy-match referentie",
                         "maxLength": 64
+                    },
+                    "matchKind": {
+                        "description": "Type van de policy-match: 'prohibition' (verbod, niet overrideable) of 'standing_consent' (staande toestemming, operator mag publicationDecision overriden). Wordt op service-niveau gezet door ConsentService::buildConsentData op basis van het resolved referent. Determines whether the override-via-publicationDecision toggle in ConsentDetail is permitted (spec §6.2).",
+                        "type": "string",
+                        "enum": ["prohibition", "standing_consent"],
+                        "visible": true,
+                        "order": 25,
+                        "facetable": true,
+                        "title": "Type policy-match"
                     }
                 },
                 "archive": [],

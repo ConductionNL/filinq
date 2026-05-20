@@ -77,7 +77,7 @@ class PolicyCrudService
      * the standard anonymise flow, so write authorisation requires either
      * admin role or membership in this group — never any authenticated user.
      */
-    public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
+    public const PROHIBITION_GROUP = 'docudesk-policy-admins';
 
 
     /**

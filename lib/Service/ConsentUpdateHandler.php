@@ -185,14 +185,11 @@ class ConsentUpdateHandler
         if (array_key_exists('policyMatch', $data) === true) {
             $newMatch = $data['policyMatch'];
             if ($newMatch === null || $newMatch === '') {
-                throw new InvalidArgumentException(
-                    message: sprintf(
-                        'policyMatch cannot be cleared on a policy-pre-empted record (existing=%s). '
-                        .'The match is immutable once set; create a new consent record if the policy '
-                        .'no longer applies.',
-                        (string) $existingMatch
-                    )
+                $msg = sprintf(
+                    'policyMatch cannot be cleared (existing=%s); it is immutable once set. Create a new consent record instead.',
+                    (string) $existingMatch
                 );
+                throw new InvalidArgumentException(message: $msg);
             }
         }
 
@@ -212,6 +209,24 @@ class ConsentUpdateHandler
         );
 
         if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
+            return;
+        }
+
+        // Standing-consent carve-out (spec §6.2): a record matched by a
+        // standing publication consent MAY be manually overridden via
+        // `publicationDecision` (e.g. operator flips the toggle on
+        // ConsentDetail to anonymise an entity that a standing consent
+        // would otherwise publish). The override is audit-logged
+        // separately by the consent register's mutation trail.
+        // Prohibition matches stay strictly locked — operators cannot
+        // override a prohibition through this endpoint.
+        $matchKind = (string) ($existing['matchKind'] ?? '');
+        $standingConsentOverride = (
+            $matchKind === 'standing_consent'
+            && $publicationDecisionChanged === true
+            && $consentStatusChanged === false
+        );
+        if ($standingConsentOverride === true) {
             return;
         }
 

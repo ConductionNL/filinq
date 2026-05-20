@@ -42,10 +42,28 @@ class DocuDeskEventListener implements IEventListener
 
 
     /**
-     * Constructor for DocuDeskEventListener
+     * Constructor for DocuDeskEventListener.
+     *
+     * Services are injected via Nextcloud's DI container — no more
+     * `\OC::$server->get()` lookups inside `handle()`. The static accessor
+     * is deprecated post-NC 30; constructor injection is the strict-DI
+     * path and matches the pattern used by other Nextcloud event listeners.
+     *
+     * @param LoggerInterface          $logger           Structured log sink.
+     * @param MetadataService          $metadataService  Metadata enricher.
+     * @param SettingsService          $settingsService  Settings accessor.
+     * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator.
+     * @param DocuDeskEventHandler     $eventHandler     Handler that contains the routing logic.
+     * @param EnrichmentRunner         $enrichmentRunner Document enrichment runner.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly MetadataService $metadataService,
+        private readonly SettingsService $settingsService,
+        private readonly PolicyRetroactiveService $retroactive,
+        private readonly DocuDeskEventHandler $eventHandler,
+        private readonly EnrichmentRunner $enrichmentRunner
+    ) {
 
     }//end __construct()
 
@@ -60,14 +78,7 @@ class DocuDeskEventListener implements IEventListener
     public function handle(Event $event): void
     {
         try {
-            $logger          = \OC::$server->get(LoggerInterface::class);
-            $metadataService = \OC::$server->get(MetadataService::class);
-            $settingsService = \OC::$server->get(SettingsService::class);
-            $retroactive     = \OC::$server->get(PolicyRetroactiveService::class);
-            $eventHandler    = new DocuDeskEventHandler();
-            $enrichRunner    = new EnrichmentRunner();
-
-            $logger->info(
+            $this->logger->info(
                 'DocuDesk: Processing event',
                 [
                     'eventType' => get_class($event),
@@ -77,12 +88,12 @@ class DocuDeskEventListener implements IEventListener
 
             $this->dispatchEvent(
                 event: $event,
-                metadataService: $metadataService,
-                settingsService: $settingsService,
-                logger: $logger,
-                eventHandler: $eventHandler,
-                enrichRunner: $enrichRunner,
-                retroactive: $retroactive
+                metadataService: $this->metadataService,
+                settingsService: $this->settingsService,
+                logger: $this->logger,
+                eventHandler: $this->eventHandler,
+                enrichRunner: $this->enrichmentRunner,
+                retroactive: $this->retroactive
             );
         } catch (\Exception $e) {
             $this->logHandlerError(exception: $e, event: $event);
@@ -161,15 +172,11 @@ class DocuDeskEventListener implements IEventListener
      * @param Event      $event     The event being processed
      *
      * @return void
-     *
-     * @psalm-suppress UnusedParam $exception and $event are passed to the runtime-resolved logger,
-     *                             but Psalm cannot see the call because \OC::$server->get() is mixed.
      */
     private function logHandlerError(\Exception $exception, Event $event): void
     {
         try {
-            $logger = \OC::$server->get(LoggerInterface::class);
-            $logger->error(
+            $this->logger->error(
                 'DocuDesk: Error in event handler',
                 [
                     'eventType' => get_class($event),
