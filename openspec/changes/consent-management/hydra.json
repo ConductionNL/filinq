@@ -1,0 +1,8 @@
+{
+  "spec_slug": "consent-management",
+  "title": "Consent Management",
+  "app": "docudesk",
+  "repo": "https://github.com/ConductionNL/docudesk",
+  "depends_on": [],
+  "issue": null
+}
