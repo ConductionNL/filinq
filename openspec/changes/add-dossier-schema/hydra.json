@@ -8,9 +8,9 @@
       "cycle": 1,
       "trigger": "orchestrator",
       "started_at": "2026-05-19T05:32:00Z",
-      "ended_at": "2026-05-19T05:38:36Z",
-      "outcome": "needs-input",
-      "outcome_reason": "applier returned fail verdict",
+      "ended_at": "2026-05-20T07:55:52Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
       "pattern_tags": [],
       "stages": [
         {
