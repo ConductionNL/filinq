@@ -1,0 +1,8 @@
+{
+  "spec_slug": "template-management",
+  "title": "Template Management",
+  "app": "docudesk",
+  "repo": "https://github.com/ConductionNL/docudesk",
+  "depends_on": [],
+  "issue": null
+}
