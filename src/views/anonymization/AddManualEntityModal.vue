@@ -56,7 +56,6 @@ export default {
 			form: {
 				value: '',
 				type: '',
-				category: '',
 				wholeWord: true,
 				caseSensitive: true,
 			},
@@ -94,7 +93,6 @@ export default {
 			this.form = {
 				value: '',
 				type: '',
-				category: '',
 				wholeWord: true,
 				caseSensitive: true,
 			}
@@ -131,9 +129,6 @@ export default {
 				type: this.normalisedType(),
 				wholeWord: !!this.form.wholeWord,
 				caseSensitive: !!this.form.caseSensitive,
-			}
-			if (this.form.category.trim().length > 0) {
-				payload.category = this.form.category.trim()
 			}
 
 			this.submitting = true
@@ -177,11 +172,6 @@ export default {
 				:input-label="t('docudesk', 'Entity type')"
 				:placeholder="t('docudesk', 'Pick an entity type…')"
 				required />
-
-			<NcTextField
-				:value.sync="form.category"
-				:label="t('docudesk', 'Category (optional)')"
-				:placeholder="t('docudesk', 'e.g. natural_person')" />
 
 			<div class="form-flags">
 				<NcCheckboxRadioSwitch

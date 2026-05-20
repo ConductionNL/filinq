@@ -222,7 +222,7 @@ export const useAnonymizationPocStore = defineStore(
 			 * POST `/apps/openregister/api/files/{fileId}/manual-entities`
 			 * for the given entry. On 201 / 200, merges the returned
 			 * relations into `entry.entities` (with the operator-supplied
-			 * value / type / category copied onto each row so the
+			 * value / type copied onto each row so the
 			 * existing review table can render them).
 			 *
 			 * Errors are mapped to display-friendly strings and returned
@@ -233,7 +233,6 @@ export const useAnonymizationPocStore = defineStore(
 			 * @param {object} body           Manual-entity request body.
 			 * @param {string} body.value     Operator-supplied text.
 			 * @param {string} body.type      Entity type tag.
-			 * @param {string} [body.category] Optional category.
 			 * @param {boolean} [body.wholeWord]     Whole-word match flag (default true).
 			 * @param {boolean} [body.caseSensitive] Case-sensitive match flag (default true).
 			 * @return {Promise<object>} Resolves with the response payload on success.
@@ -258,7 +257,6 @@ export const useAnonymizationPocStore = defineStore(
 					const entityShell = {
 						value: data?.entity?.value ?? body.value,
 						type: data?.entity?.type ?? body.type,
-						category: body.category || null,
 						confidence: 1.0,
 						bases: [],
 						skipAnonymization: false,
