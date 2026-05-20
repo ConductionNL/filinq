@@ -16,6 +16,11 @@ import { navigationStore } from '../store/store.js'
 					<ShieldLock :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'anonymizationPoc'" :name="t('docudesk', 'Anonymisation PoC')" @click="navigationStore.setSelected('anonymizationPoc')">
+				<template #icon>
+					<TestTube :size="20" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
 				<template #icon>
 					<FolderSearch :size="20" />
@@ -60,6 +65,7 @@ import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
 import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
+import TestTube from 'vue-material-design-icons/TestTube.vue'
 
 export default {
 	name: 'MainMenu',
@@ -74,6 +80,7 @@ export default {
 		ShieldLock,
 		FileDocumentMultiple,
 		FolderSearch,
+		TestTube,
 	},
 }
 </script>

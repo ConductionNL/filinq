@@ -8,6 +8,7 @@
 			<StandingConsentIndex v-if="navigationStore.selected === 'standingConsents'" />
 			<ProhibitionIndex v-if="navigationStore.selected === 'prohibitions'" />
 			<AnonymizationWidget v-if="navigationStore.selected === 'anonymization'" />
+			<AnonymizationPocWidget v-if="navigationStore.selected === 'anonymizationPoc'" />
 			<TemplateIndex v-if="navigationStore.selected === 'templates'" />
 			<TemplateDetail v-if="navigationStore.selected === 'templateDetail'" />
 			<BatchAnonymizationView v-if="navigationStore.selected === 'batchAnonymization'" />
@@ -26,6 +27,7 @@ import ConsentDetail from './consent/ConsentDetail.vue'
 import StandingConsentIndex from './policy/StandingConsentIndex.vue'
 import ProhibitionIndex from './policy/ProhibitionIndex.vue'
 import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
+import AnonymizationPocWidget from './anonymization/AnonymizationPocWidget.vue'
 import TemplateIndex from './templates/TemplateIndex.vue'
 import TemplateDetail from './templates/TemplateDetail.vue'
 import BatchAnonymizationView from './anonymization/BatchAnonymizationView.vue'
@@ -41,6 +43,7 @@ export default {
 		StandingConsentIndex,
 		ProhibitionIndex,
 		AnonymizationWidget,
+		AnonymizationPocWidget,
 		TemplateIndex,
 		TemplateDetail,
 		BatchAnonymizationView,
