@@ -33,8 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocumentTextExtractor
 {
-
-
     /**
      * Constructor for DocumentTextExtractor
      *
@@ -47,7 +45,6 @@ class DocumentTextExtractor
     ) {
 
     }//end __construct()
-
 
     /**
      * Extract text content from object data
@@ -67,7 +64,6 @@ class DocumentTextExtractor
         return $text;
 
     }//end extractTextContent()
-
 
     /**
      * Normalize date fields in object data
@@ -103,6 +99,4 @@ class DocumentTextExtractor
         return $metadata;
 
     }//end normalizeDateFields()
-
-
 }//end class

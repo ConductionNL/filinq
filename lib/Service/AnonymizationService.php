@@ -37,8 +37,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationService
 {
-
-
     /**
      * Constructor for AnonymizationService
      *
@@ -58,7 +56,6 @@ class AnonymizationService
 
     }//end __construct()
 
-
     /**
      * Get an OpenRegister service or mapper by class name
      *
@@ -77,7 +74,6 @@ class AnonymizationService
         throw new RuntimeException($className.' is not available.');
 
     }//end getOpenRegisterService()
-
 
     /**
      * Extract text from a file and detect entities
@@ -121,7 +117,6 @@ class AnonymizationService
 
     }//end extractAndDetectEntities()
 
-
     /**
      * Anonymize entities in a document
      *
@@ -158,6 +153,4 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
-
-
 }//end class

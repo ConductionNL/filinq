@@ -34,8 +34,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileEntityStatsService
 {
-
-
     /**
      * Constructor for FileEntityStatsService
      *
@@ -53,7 +51,6 @@ class FileEntityStatsService
 
     }//end __construct()
 
-
     /**
      * Check if OpenRegister app is installed
      *
@@ -64,7 +61,6 @@ class FileEntityStatsService
         return in_array('openregister', $this->appManager->getInstalledApps(), true) === true;
 
     }//end isOpenRegisterInstalled()
-
 
     /**
      * Try to get the EntityRelationMapper, returning null on failure
@@ -86,7 +82,6 @@ class FileEntityStatsService
 
     }//end tryGetEntityRelationMapper()
 
-
     /**
      * Try to get the RiskLevelService, returning null on failure
      *
@@ -106,7 +101,6 @@ class FileEntityStatsService
         }
 
     }//end tryGetRiskLevelService()
-
 
     /**
      * Get entity statistics for a file
@@ -156,7 +150,6 @@ class FileEntityStatsService
 
     }//end getEntityStats()
 
-
     /**
      * Determine file status based on entity counts
      *
@@ -178,7 +171,6 @@ class FileEntityStatsService
         return 'uploaded';
 
     }//end determineFileStatus()
-
 
     /**
      * Get risk level for a file
@@ -206,6 +198,4 @@ class FileEntityStatsService
         }
 
     }//end getFileRiskLevel()
-
-
 }//end class

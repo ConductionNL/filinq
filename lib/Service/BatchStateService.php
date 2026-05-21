@@ -46,7 +46,6 @@ class BatchStateService
      */
     private ICache $cache;
 
-
     /**
      * Constructor for BatchStateService
      *
@@ -65,7 +64,6 @@ class BatchStateService
 
     }//end __construct()
 
-
     /**
      * Return the maximum number of files allowed in a single batch.
      *
@@ -80,7 +78,6 @@ class BatchStateService
         );
 
     }//end getMaxFiles()
-
 
     /**
      * Create and persist a new batch record for a user.
@@ -105,7 +102,6 @@ class BatchStateService
         return $batch;
 
     }//end createBatch()
-
 
     /**
      * Load a batch record by ID and refresh its TTL.
@@ -132,7 +128,6 @@ class BatchStateService
 
     }//end getBatch()
 
-
     /**
      * Persist an updated batch record.
      *
@@ -147,7 +142,6 @@ class BatchStateService
 
     }//end updateBatch()
 
-
     /**
      * Remove a batch record from the store.
      *
@@ -160,7 +154,6 @@ class BatchStateService
         $this->cache->remove(self::CACHE_PREFIX.$batchId);
 
     }//end deleteBatch()
-
 
     /**
      * Generate an RFC 4122 version-4 UUID for use as a batch identifier.
@@ -175,6 +168,4 @@ class BatchStateService
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateUuid()
-
-
 }//end class

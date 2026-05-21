@@ -42,8 +42,6 @@ use Psr\Log\LoggerInterface;
  */
 class PrintController extends Controller
 {
-
-
     /**
      * Constructor for PrintController
      *
@@ -66,7 +64,6 @@ class PrintController extends Controller
 
     }//end __construct()
 
-
     /**
      * Get request options as an array, defaulting to empty array
      *
@@ -82,7 +79,6 @@ class PrintController extends Controller
         return [];
 
     }//end getRequestOptions()
-
 
     /**
      * Resolve template content and options from request parameters
@@ -133,7 +129,6 @@ class PrintController extends Controller
         );
 
     }//end resolveTemplate()
-
 
     /**
      * Generate a print preview with rendered HTML and print-optimized CSS
@@ -190,7 +185,6 @@ class PrintController extends Controller
         }//end try
 
     }//end preview()
-
 
     /**
      * Generate and download a PDF/A-3b compliant document
@@ -250,6 +244,4 @@ class PrintController extends Controller
         }//end try
 
     }//end downloadPdfA()
-
-
 }//end class

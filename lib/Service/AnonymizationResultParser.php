@@ -30,8 +30,6 @@ namespace OCA\DocuDesk\Service;
  */
 class AnonymizationResultParser
 {
-
-
     /**
      * Parse anonymization result into a structured array
      *
@@ -56,7 +54,6 @@ class AnonymizationResultParser
         ];
 
     }//end parseResult()
-
 
     /**
      * Extract file info from anonymization result object
@@ -85,7 +82,6 @@ class AnonymizationResultParser
 
     }//end extractFromObject()
 
-
     /**
      * Extract file info from anonymization result array
      *
@@ -102,6 +98,4 @@ class AnonymizationResultParser
         ];
 
     }//end extractFromArray()
-
-
 }//end class

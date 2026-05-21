@@ -34,8 +34,6 @@ use Psr\Log\LoggerInterface;
  */
 class EnrichmentRunner
 {
-
-
     /**
      * Check if enrichment is enabled based on settings
      *
@@ -53,7 +51,6 @@ class EnrichmentRunner
         return $enableLanguage === true || $enableKeywords === true || $enableTopic === true;
 
     }//end isEnrichmentEnabled()
-
 
     /**
      * Enrich an object with metadata if enrichment is enabled
@@ -120,6 +117,4 @@ class EnrichmentRunner
         }//end try
 
     }//end enrichObject()
-
-
 }//end class

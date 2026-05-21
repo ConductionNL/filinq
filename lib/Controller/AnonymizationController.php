@@ -39,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for AnonymizationController
      *
@@ -64,7 +62,6 @@ class AnonymizationController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * List all processed files with entity counts and status
@@ -100,7 +97,6 @@ class AnonymizationController extends Controller
         }
 
     }//end files()
-
 
     /**
      * Upload a file to the user's DocuDesk folder
@@ -163,7 +159,6 @@ class AnonymizationController extends Controller
 
     }//end upload()
 
-
     /**
      * Extract text and detect entities in a file
      *
@@ -194,7 +189,6 @@ class AnonymizationController extends Controller
         }
 
     }//end extract()
-
 
     /**
      * Anonymize entities in a document
@@ -241,7 +235,6 @@ class AnonymizationController extends Controller
 
     }//end anonymize()
 
-
     /**
      * Filter entities by excluded types
      *
@@ -269,7 +262,6 @@ class AnonymizationController extends Controller
 
     }//end filterByExcludeTypes()
 
-
     /**
      * Filter entities by minimum confidence threshold
      *
@@ -296,6 +288,4 @@ class AnonymizationController extends Controller
         );
 
     }//end filterByConfidence()
-
-
 }//end class

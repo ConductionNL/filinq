@@ -20,6 +20,7 @@ namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * ValidSign signing provider
@@ -32,8 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class ValidSignProvider implements SigningProviderInterface
 {
-
-
     /**
      * Constructor
      *
@@ -49,7 +48,6 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end __construct()
 
-
     /**
      * Get provider identifier
      *
@@ -60,7 +58,6 @@ class ValidSignProvider implements SigningProviderInterface
         return 'validsign';
 
     }//end getIdentifier()
-
 
     /**
      * Initiate a ValidSign signing flow (stub)
@@ -73,7 +70,7 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @return array<string, mixed> Result with ValidSign package ID
      *
-     * @throws \RuntimeException If provider is not configured
+     * @throws RuntimeException If provider is not configured
      */
     public function initiateSigning(
         string $documentPath,
@@ -85,7 +82,7 @@ class ValidSignProvider implements SigningProviderInterface
         $providerConfig = $this->getProviderConfig();
 
         if (empty($providerConfig['sourceId']) === true) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'ValidSign provider is not configured. Set the OpenConnector source ID in admin settings.'
             );
         }
@@ -99,7 +96,6 @@ class ValidSignProvider implements SigningProviderInterface
         ];
 
     }//end initiateSigning()
-
 
     /**
      * Check status of a ValidSign signing flow (stub)
@@ -118,7 +114,6 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end checkStatus()
 
-
     /**
      * Download the signed document from ValidSign (stub)
      *
@@ -126,16 +121,15 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @return string The signed document content
      *
-     * @throws \RuntimeException Always throws - not yet implemented
+     * @throws RuntimeException Always throws - not yet implemented
      */
     public function downloadSignedDocument(string $externalId): string
     {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'ValidSign document download not yet implemented. External ID: '.$externalId
         );
 
     }//end downloadSignedDocument()
-
 
     /**
      * Cancel a ValidSign signing flow (stub)
@@ -150,7 +144,6 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end cancelSigning()
 
-
     /**
      * Check if this provider supports the given signature level
      *
@@ -163,7 +156,6 @@ class ValidSignProvider implements SigningProviderInterface
         return in_array($level, ['SES', 'AdES', 'QES'], true) === true;
 
     }//end supportsLevel()
-
 
     /**
      * Get the provider configuration from app config
@@ -182,6 +174,4 @@ class ValidSignProvider implements SigningProviderInterface
         return $decoded;
 
     }//end getProviderConfig()
-
-
 }//end class

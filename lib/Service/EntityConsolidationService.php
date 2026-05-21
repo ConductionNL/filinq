@@ -36,8 +36,6 @@ use RuntimeException;
  */
 class EntityConsolidationService
 {
-
-
     /**
      * Constructor for EntityConsolidationService
      *
@@ -56,7 +54,6 @@ class EntityConsolidationService
     ) {
 
     }//end __construct()
-
 
     /**
      * Consolidate entity detections across every extracted file in a batch.
@@ -95,7 +92,6 @@ class EntityConsolidationService
 
     }//end consolidateEntities()
 
-
     /**
      * Merge a single entity detection into the running consolidation map.
      *
@@ -109,10 +105,9 @@ class EntityConsolidationService
      */
     private function mergeEntity(array $map, mixed $entity): array
     {
+        $d = (array) $entity;
         if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
             $d = $entity->jsonSerialize();
-        } else {
-            $d = (array) $entity;
         }
 
         $type  = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
@@ -123,12 +118,7 @@ class EntityConsolidationService
             return $map;
         }
 
-        if (isset($map[$key]) === true) {
-            $map[$key]['fileCount']++;
-            if ($conf > $map[$key]['highestConfidence']) {
-                $map[$key]['highestConfidence'] = $conf;
-            }
-        } else {
+        if (isset($map[$key]) === false) {
             $map[$key] = [
                 'type'              => $type,
                 'value'             => $value,
@@ -136,12 +126,18 @@ class EntityConsolidationService
                 'fileCount'         => 1,
                 'included'          => $this->wooProfile->shouldAnonymize((string) $type),
             ];
+
+            return $map;
+        }
+
+        $map[$key]['fileCount']++;
+        if ($conf > $map[$key]['highestConfidence']) {
+            $map[$key]['highestConfidence'] = $conf;
         }
 
         return $map;
 
     }//end mergeEntity()
-
 
     /**
      * Fetch the entity detections stored for a single file by OpenRegister.
@@ -168,6 +164,4 @@ class EntityConsolidationService
         }
 
     }//end getEntitiesForFile()
-
-
 }//end class

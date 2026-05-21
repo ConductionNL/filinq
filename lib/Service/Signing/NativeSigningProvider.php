@@ -18,8 +18,11 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service\Signing;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Native signing provider for SES-level signatures
@@ -40,7 +43,6 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     private array $sessions = [];
 
-
     /**
      * Constructor
      *
@@ -56,7 +58,6 @@ class NativeSigningProvider implements SigningProviderInterface
 
     }//end __construct()
 
-
     /**
      * Get provider identifier
      *
@@ -67,7 +68,6 @@ class NativeSigningProvider implements SigningProviderInterface
         return 'native';
 
     }//end getIdentifier()
-
 
     /**
      * Initiate a native SES signing flow
@@ -80,7 +80,7 @@ class NativeSigningProvider implements SigningProviderInterface
      *
      * @return array<string, mixed> Result with signing session identifier
      *
-     * @throws \RuntimeException If the signature level is not supported
+     * @throws RuntimeException If the signature level is not supported
      */
     public function initiateSigning(
         string $documentPath,
@@ -90,7 +90,7 @@ class NativeSigningProvider implements SigningProviderInterface
         array $options=[]
     ): array {
         if ($this->supportsLevel(level: $level) === false) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'Native provider only supports SES signature level, got: '.$level
             );
         }
@@ -104,7 +104,7 @@ class NativeSigningProvider implements SigningProviderInterface
             'level'        => $level,
             'status'       => 'pending',
             'signatures'   => [],
-            'createdAt'    => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'createdAt'    => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         ];
 
         return [
@@ -115,7 +115,6 @@ class NativeSigningProvider implements SigningProviderInterface
 
     }//end initiateSigning()
 
-
     /**
      * Check status of a native signing session
      *
@@ -123,12 +122,12 @@ class NativeSigningProvider implements SigningProviderInterface
      *
      * @return array<string, mixed> The session status
      *
-     * @throws \RuntimeException If session not found
+     * @throws RuntimeException If session not found
      */
     public function checkStatus(string $externalId): array
     {
         if (isset($this->sessions[$externalId]) === false) {
-            throw new \RuntimeException('Native signing session not found: '.$externalId);
+            throw new RuntimeException('Native signing session not found: '.$externalId);
         }
 
         $session = $this->sessions[$externalId];
@@ -142,7 +141,6 @@ class NativeSigningProvider implements SigningProviderInterface
 
     }//end checkStatus()
 
-
     /**
      * Download the signed document
      *
@@ -150,23 +148,22 @@ class NativeSigningProvider implements SigningProviderInterface
      *
      * @return string The signed document path
      *
-     * @throws \RuntimeException If session not found or not completed
+     * @throws RuntimeException If session not found or not completed
      */
     public function downloadSignedDocument(string $externalId): string
     {
         if (isset($this->sessions[$externalId]) === false) {
-            throw new \RuntimeException('Native signing session not found: '.$externalId);
+            throw new RuntimeException('Native signing session not found: '.$externalId);
         }
 
         $session = $this->sessions[$externalId];
         if ($session['status'] !== 'completed') {
-            throw new \RuntimeException('Signing session is not completed');
+            throw new RuntimeException('Signing session is not completed');
         }
 
         return $session['documentPath'];
 
     }//end downloadSignedDocument()
-
 
     /**
      * Cancel a native signing session
@@ -175,12 +172,12 @@ class NativeSigningProvider implements SigningProviderInterface
      *
      * @return bool True if cancelled
      *
-     * @throws \RuntimeException If session not found
+     * @throws RuntimeException If session not found
      */
     public function cancelSigning(string $externalId): bool
     {
         if (isset($this->sessions[$externalId]) === false) {
-            throw new \RuntimeException('Native signing session not found: '.$externalId);
+            throw new RuntimeException('Native signing session not found: '.$externalId);
         }
 
         $this->sessions[$externalId]['status'] = 'cancelled';
@@ -188,7 +185,6 @@ class NativeSigningProvider implements SigningProviderInterface
         return true;
 
     }//end cancelSigning()
-
 
     /**
      * Check if this provider supports the given signature level
@@ -202,6 +198,4 @@ class NativeSigningProvider implements SigningProviderInterface
         return $level === 'SES';
 
     }//end supportsLevel()
-
-
 }//end class

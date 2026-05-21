@@ -37,8 +37,6 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataController extends Controller
 {
-
-
     /**
      * Constructor for MetadataController
      *
@@ -60,7 +58,6 @@ class MetadataController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Trigger metadata enrichment for a document object
@@ -144,6 +141,4 @@ class MetadataController extends Controller
         }//end try
 
     }//end enrich()
-
-
 }//end class

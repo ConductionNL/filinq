@@ -48,7 +48,6 @@ class TemplateService
      */
     private const LOCK_TIMEOUT_MINUTES = 15;
 
-
     /**
      * Constructor for TemplateService
      *
@@ -69,7 +68,6 @@ class TemplateService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -93,7 +91,6 @@ class TemplateService
 
     }//end getObjectService()
 
-
     /**
      * Get the current user ID from the session
      *
@@ -109,7 +106,6 @@ class TemplateService
         return 'system';
 
     }//end getCurrentUserId()
-
 
     /**
      * List templates with optional filters
@@ -142,7 +138,6 @@ class TemplateService
         return $objectService->searchObjectsPaginated(query: $query);
 
     }//end getTemplates()
-
 
     /**
      * Get a single template by UUID
@@ -179,7 +174,6 @@ class TemplateService
         return $result;
 
     }//end getTemplate()
-
 
     /**
      * Create a new template
@@ -224,7 +218,6 @@ class TemplateService
         return $result;
 
     }//end createTemplate()
-
 
     /**
      * Update an existing template with version history
@@ -286,7 +279,6 @@ class TemplateService
 
     }//end updateTemplate()
 
-
     /**
      * Update a template without creating a version (used for restore operations)
      *
@@ -328,7 +320,6 @@ class TemplateService
 
     }//end updateTemplateWithoutVersion()
 
-
     /**
      * Delete a template
      *
@@ -350,7 +341,6 @@ class TemplateService
 
     }//end deleteTemplate()
 
-
     /**
      * Get all templates for a specific app namespace
      *
@@ -371,7 +361,6 @@ class TemplateService
         return $result['results'];
 
     }//end getTemplatesByNamespace()
-
 
     /**
      * Duplicate a template
@@ -420,7 +409,6 @@ class TemplateService
         return $result;
 
     }//end duplicateTemplate()
-
 
     /**
      * Acquire an edit lock on a template
@@ -471,7 +459,6 @@ class TemplateService
 
     }//end acquireLock()
 
-
     /**
      * Release an edit lock on a template
      *
@@ -511,7 +498,6 @@ class TemplateService
 
     }//end releaseLock()
 
-
     /**
      * Check if a template's lock has expired.
      *
@@ -537,6 +523,4 @@ class TemplateService
         }
 
     }//end isLockExpired()
-
-
 }//end class

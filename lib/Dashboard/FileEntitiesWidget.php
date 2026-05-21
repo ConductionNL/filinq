@@ -34,8 +34,6 @@ use OCP\Util;
  */
 class FileEntitiesWidget implements IWidget, IIconWidget
 {
-
-
     /**
      * Constructor for FileEntitiesWidget
      *
@@ -46,7 +44,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
     ) {
 
     }//end __construct()
-
 
     /**
      * Returns the unique widget identifier
@@ -59,7 +56,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getId()
 
-
     /**
      * Returns the widget display title
      *
@@ -70,7 +66,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
         return 'File Entities';
 
     }//end getTitle()
-
 
     /**
      * Returns the widget display order
@@ -83,7 +78,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getOrder()
 
-
     /**
      * Returns the CSS icon class for the widget
      *
@@ -94,7 +88,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
         return 'icon-docudesk';
 
     }//end getIconClass()
-
 
     /**
      * Returns the URL to the widget icon
@@ -109,7 +102,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getIconUrl()
 
-
     /**
      * Returns the URL the widget links to
      *
@@ -120,7 +112,6 @@ class FileEntitiesWidget implements IWidget, IIconWidget
         return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
 
     }//end getUrl()
-
 
     /**
      * Loads the widget scripts and styles
@@ -137,6 +128,4 @@ class FileEntitiesWidget implements IWidget, IIconWidget
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
 
     }//end load()
-
-
 }//end class

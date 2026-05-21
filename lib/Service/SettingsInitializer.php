@@ -60,7 +60,6 @@ class SettingsInitializer
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
-
     /**
      * Constructor for SettingsInitializer
      *
@@ -81,7 +80,6 @@ class SettingsInitializer
 
     }//end __construct()
 
-
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -98,7 +96,6 @@ class SettingsInitializer
 
     }//end isOpenRegisterInstalled()
 
-
     /**
      * Checks if OpenRegister is enabled
      *
@@ -109,7 +106,6 @@ class SettingsInitializer
         return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
 
     }//end isOpenRegisterEnabled()
-
 
     /**
      * Attempts to retrieve the Configuration service from the container
@@ -132,7 +128,6 @@ class SettingsInitializer
         throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
-
 
     /**
      * Load settings from the docudesk_register.json file
@@ -172,7 +167,6 @@ class SettingsInitializer
         }//end try
 
     }//end loadSettings()
-
 
     /**
      * Initializes the app with all required components
@@ -247,6 +241,4 @@ class SettingsInitializer
         return $results;
 
     }//end initialize()
-
-
 }//end class

@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use Imagick;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -82,7 +83,6 @@ class OcrService
      */
     private const APP_NAME = 'docudesk';
 
-
     /**
      * Constructor for OcrService
      *
@@ -101,7 +101,6 @@ class OcrService
     ) {
 
     }//end __construct()
-
 
     /**
      * Check if Tesseract OCR binary is available on the system
@@ -124,7 +123,6 @@ class OcrService
         }//end try
 
     }//end isTesseractAvailable()
-
 
     /**
      * Get the installed Tesseract version string
@@ -153,7 +151,6 @@ class OcrService
 
     }//end getTesseractVersion()
 
-
     /**
      * Determine if a file needs OCR processing based on MIME type and existing text
      *
@@ -179,7 +176,6 @@ class OcrService
 
     }//end needsOcr()
 
-
     /**
      * Check if OCR is enabled in admin settings
      *
@@ -194,7 +190,6 @@ class OcrService
         ) === '1';
 
     }//end isOcrEnabled()
-
 
     /**
      * Get configured OCR languages
@@ -211,7 +206,6 @@ class OcrService
 
     }//end getOcrLanguages()
 
-
     /**
      * Get configured OCR DPI for PDF conversion
      *
@@ -226,7 +220,6 @@ class OcrService
         );
 
     }//end getOcrDpi()
-
 
     /**
      * Extract text from an image file using Tesseract OCR
@@ -288,7 +281,6 @@ class OcrService
 
     }//end extractTextFromImage()
 
-
     /**
      * Extract text from a PDF by converting pages to images and running OCR
      *
@@ -322,7 +314,7 @@ class OcrService
         }
 
         try {
-            $imagick = new \Imagick();
+            $imagick = new Imagick();
             $imagick->setResolution($dpi, $dpi);
             $imagick->readImage($filePath);
 
@@ -358,10 +350,9 @@ class OcrService
                 rmdir($tempDir);
             }
 
+            $avgConfidence = 0.0;
             if ($pageCount > 0) {
                 $avgConfidence = ($totalConfidence / $pageCount);
-            } else {
-                $avgConfidence = 0.0;
             }
 
             $this->logger->debug(
@@ -390,7 +381,6 @@ class OcrService
         }//end try
 
     }//end extractTextFromPdf()
-
 
     /**
      * Process a file for OCR text extraction
@@ -445,10 +435,9 @@ class OcrService
             $tempFile = $this->writeToTemp(file: $file);
 
             try {
+                $result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
                 if (in_array($mimeType, self::IMAGE_MIME_TYPES, true) === true) {
                     $result = $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-                } else {
-                    $result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
                 }
 
                 return [
@@ -474,7 +463,6 @@ class OcrService
         }//end try
 
     }//end processFile()
-
 
     /**
      * Get a file by its Nextcloud file ID
@@ -506,7 +494,6 @@ class OcrService
 
     }//end getFileById()
 
-
     /**
      * Write a Nextcloud file to a temporary location for processing
      *
@@ -529,7 +516,6 @@ class OcrService
         return $tempFile;
 
     }//end writeToTemp()
-
 
     /**
      * Get OCR confidence score for a file
@@ -588,6 +574,4 @@ class OcrService
         }//end try
 
     }//end getConfidenceScore()
-
-
 }//end class

@@ -34,8 +34,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizeService
 {
-
-
     /**
      * Constructor for BatchAnonymizeService
      *
@@ -52,7 +50,6 @@ class BatchAnonymizeService
     ) {
 
     }//end __construct()
-
 
     /**
      * Anonymize every extracted file in a batch using the approved entity list.
@@ -119,6 +116,4 @@ class BatchAnonymizeService
         ];
 
     }//end anonymizeBatch()
-
-
 }//end class

@@ -40,8 +40,6 @@ use OCP\IUserSession;
  */
 class TemplatesController extends Controller
 {
-
-
     /**
      * Constructor for TemplatesController
      *
@@ -68,7 +66,6 @@ class TemplatesController extends Controller
 
     }//end __construct()
 
-
     /**
      * Get the current user ID
      *
@@ -84,7 +81,6 @@ class TemplatesController extends Controller
         return 'anonymous';
 
     }//end getCurrentUserId()
-
 
     /**
      * List templates with optional namespace filter and pagination
@@ -110,7 +106,6 @@ class TemplatesController extends Controller
 
     }//end index()
 
-
     /**
      * Get a single template by ID
      *
@@ -134,7 +129,6 @@ class TemplatesController extends Controller
 
     }//end show()
 
-
     /**
      * Create a new template
      *
@@ -154,7 +148,6 @@ class TemplatesController extends Controller
         }//end try
 
     }//end create()
-
 
     /**
      * Update an existing template
@@ -180,7 +173,6 @@ class TemplatesController extends Controller
 
     }//end update()
 
-
     /**
      * Delete a template
      *
@@ -203,7 +195,6 @@ class TemplatesController extends Controller
         }
 
     }//end destroy()
-
 
     /**
      * List version history for a template
@@ -233,7 +224,6 @@ class TemplatesController extends Controller
         }
 
     }//end versions()
-
 
     /**
      * Restore a template to a previous version
@@ -265,7 +255,6 @@ class TemplatesController extends Controller
 
     }//end restoreVersion()
 
-
     /**
      * Get two versions for diff comparison
      *
@@ -277,6 +266,7 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function diffVersions(string $id): JSONResponse
     {
@@ -301,7 +291,6 @@ class TemplatesController extends Controller
         }
 
     }//end diffVersions()
-
 
     /**
      * Preview raw template content with sample data
@@ -330,7 +319,6 @@ class TemplatesController extends Controller
 
     }//end preview()
 
-
     /**
      * Preview an existing template with sample data
      *
@@ -356,7 +344,6 @@ class TemplatesController extends Controller
 
     }//end previewTemplate()
 
-
     /**
      * Duplicate a template
      *
@@ -379,7 +366,6 @@ class TemplatesController extends Controller
         }
 
     }//end duplicate()
-
 
     /**
      * Acquire an edit lock on a template
@@ -414,7 +400,6 @@ class TemplatesController extends Controller
 
     }//end lock()
 
-
     /**
      * Release an edit lock on a template
      *
@@ -438,6 +423,4 @@ class TemplatesController extends Controller
         }
 
     }//end unlock()
-
-
 }//end class

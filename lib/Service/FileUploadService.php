@@ -35,8 +35,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileUploadService
 {
-
-
     /**
      * Constructor for FileUploadService
      *
@@ -53,7 +51,6 @@ class FileUploadService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the current user ID
@@ -72,7 +69,6 @@ class FileUploadService
         return $user->getUID();
 
     }//end getCurrentUserId()
-
 
     /**
      * Get the DocuDesk folder for the current user, creating it if needed
@@ -98,7 +94,6 @@ class FileUploadService
         return $docuDeskNode;
 
     }//end getDocuDeskFolder()
-
 
     /**
      * Resolve a unique file name within a folder by appending a counter
@@ -127,7 +122,6 @@ class FileUploadService
         return $targetName;
 
     }//end resolveUniqueFileName()
-
 
     /**
      * Upload a file to the user's DocuDesk folder
@@ -163,6 +157,4 @@ class FileUploadService
         }//end try
 
     }//end uploadFile()
-
-
 }//end class
