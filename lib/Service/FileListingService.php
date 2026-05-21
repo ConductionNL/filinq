@@ -33,8 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileListingService
 {
-
-
     /**
      * Constructor for FileListingService
      *
@@ -51,7 +49,6 @@ class FileListingService
     ) {
 
     }//end __construct()
-
 
     /**
      * Build info array for a single file
@@ -100,7 +97,6 @@ class FileListingService
 
     }//end buildFileInfo()
 
-
     /**
      * List all processed files in the user's DocuDesk folder
      *
@@ -109,7 +105,8 @@ class FileListingService
     public function listProcessedFiles(): array
     {
         try {
-            $userId         = $this->fileUploadService->getCurrentUserId();
+            // Ensures the user is authenticated (throws otherwise).
+            $this->fileUploadService->getCurrentUserId();
             $docuDeskFolder = $this->fileUploadService->getDocuDeskFolder();
 
             $files = $docuDeskFolder->getDirectoryListing();
@@ -151,7 +148,6 @@ class FileListingService
 
     }//end listProcessedFiles()
 
-
     /**
      * Upload a file to the user's DocuDesk folder
      *
@@ -167,6 +163,4 @@ class FileListingService
         return $this->fileUploadService->uploadFile($fileName, $fileContent);
 
     }//end uploadFile()
-
-
 }//end class

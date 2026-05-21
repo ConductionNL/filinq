@@ -44,8 +44,6 @@ use Psr\Log\LoggerInterface;
  */
 class FolderBatchService
 {
-
-
     /**
      * Constructor for FolderBatchService
      *
@@ -68,7 +66,6 @@ class FolderBatchService
     ) {
 
     }//end __construct()
-
 
     /**
      * Create a batch from an existing Nextcloud folder
@@ -160,7 +157,6 @@ class FolderBatchService
 
     }//end createFolderBatch()
 
-
     /**
      * Resolve the folder node from either a folder ID or folder path
      *
@@ -207,7 +203,6 @@ class FolderBatchService
 
     }//end resolveFolderNode()
 
-
     /**
      * Pick the preferred node when getById returns multiple mounts
      *
@@ -233,7 +228,6 @@ class FolderBatchService
         return $nodes[0];
 
     }//end pickPreferredNode()
-
 
     /**
      * Schedule extraction to run after the HTTP response is flushed
@@ -300,7 +294,6 @@ class FolderBatchService
 
     }//end scheduleExtraction()
 
-
     /**
      * Enumerate direct file children of a folder (flat, no recursion)
      *
@@ -321,7 +314,6 @@ class FolderBatchService
 
     }//end enumerateFiles()
 
-
     /**
      * Get the current user ID
      *
@@ -339,6 +331,4 @@ class FolderBatchService
         return $user->getUID();
 
     }//end getCurrentUserId()
-
-
 }//end class

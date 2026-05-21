@@ -32,8 +32,6 @@ use Exception;
  */
 class OpenRegisterResolver
 {
-
-
     /**
      * Constructor for OpenRegisterResolver
      *
@@ -46,7 +44,6 @@ class OpenRegisterResolver
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the template register and schema IDs from settings
@@ -68,7 +65,6 @@ class OpenRegisterResolver
         return ['register' => $register, 'schema' => $schema];
 
     }//end getRegisterAndSchema()
-
 
     /**
      * Get the template version register and schema IDs from settings
@@ -94,7 +90,6 @@ class OpenRegisterResolver
 
     }//end getVersionRegisterAndSchema()
 
-
     /**
      * Validate that a namespace string is a valid Nextcloud app ID
      *
@@ -116,6 +111,4 @@ class OpenRegisterResolver
         return true;
 
     }//end validateNamespace()
-
-
 }//end class

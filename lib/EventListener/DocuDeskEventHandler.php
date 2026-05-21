@@ -37,8 +37,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventHandler
 {
-
-
     /**
      * Handles object creation events
      *
@@ -72,7 +70,6 @@ class DocuDeskEventHandler
         );
 
     }//end handleObjectCreated()
-
 
     /**
      * Handles object update events
@@ -124,7 +121,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectUpdated()
 
-
     /**
      * Handles object deletion events
      *
@@ -152,7 +148,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectDeleted()
 
-
     /**
      * Check if content fields have changed between old and new object data
      *
@@ -173,6 +168,4 @@ class DocuDeskEventHandler
         return false;
 
     }//end hasContentChanged()
-
-
 }//end class

@@ -30,8 +30,6 @@ namespace OCA\DocuDesk\Service;
  */
 class TextAnalysisService
 {
-
-
     /**
      * Constructor for TextAnalysisService
      *
@@ -44,7 +42,6 @@ class TextAnalysisService
     ) {
 
     }//end __construct()
-
 
     /**
      * Count word occurrences for a list of target words in text
@@ -65,7 +62,6 @@ class TextAnalysisService
 
     }//end countWordOccurrences()
 
-
     /**
      * Detect language from text content
      *
@@ -78,7 +74,6 @@ class TextAnalysisService
         return $this->languageClassifier->detectLanguage($text);
 
     }//end detectLanguage()
-
 
     /**
      * Extract keywords from text content
@@ -134,7 +129,6 @@ class TextAnalysisService
 
     }//end extractKeywords()
 
-
     /**
      * Classify document topic based on text content
      *
@@ -147,7 +141,6 @@ class TextAnalysisService
         return $this->languageClassifier->classifyTopic($text);
 
     }//end classifyTopic()
-
 
     /**
      * Standardize document type classification
@@ -183,6 +176,4 @@ class TextAnalysisService
         return $typeMap[$documentType] ?? $documentType;
 
     }//end standardizeDocumentType()
-
-
 }//end class

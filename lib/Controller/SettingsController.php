@@ -49,7 +49,6 @@ class SettingsController extends Controller
      */
     private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
 
-
     /**
      * SettingsController constructor
      *
@@ -78,7 +77,6 @@ class SettingsController extends Controller
 
     }//end __construct()
 
-
     /**
      * Attempts to retrieve the OpenRegister service from the container.
      *
@@ -96,7 +94,6 @@ class SettingsController extends Controller
 
     }//end getObjectService()
 
-
     /**
      * Attempts to retrieve the Configuration service from the container.
      *
@@ -113,7 +110,6 @@ class SettingsController extends Controller
         throw new RuntimeException('Configuration service is not available.');
 
     }//end getConfigurationService()
-
 
     /**
      * Retrieve the current settings
@@ -151,7 +147,6 @@ class SettingsController extends Controller
 
     }//end index()
 
-
     /**
      * Handle the post request to update settings
      *
@@ -179,6 +174,4 @@ class SettingsController extends Controller
         }
 
     }//end create()
-
-
 }//end class

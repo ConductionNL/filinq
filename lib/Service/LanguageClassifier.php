@@ -79,7 +79,6 @@ class LanguageClassifier
         'technical' => ['system', 'software', 'technical', 'code', 'development', 'api'],
     ];
 
-
     /**
      * Count word occurrences for a list of target words in text
      *
@@ -98,7 +97,6 @@ class LanguageClassifier
         return $count;
 
     }//end countWordOccurrences()
-
 
     /**
      * Detect language from text content
@@ -125,7 +123,6 @@ class LanguageClassifier
         return null;
 
     }//end detectLanguage()
-
 
     /**
      * Classify document topic based on text content
@@ -156,6 +153,4 @@ class LanguageClassifier
         return null;
 
     }//end classifyTopic()
-
-
 }//end class

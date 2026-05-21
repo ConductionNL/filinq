@@ -35,8 +35,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentUpdateHandler
 {
-
-
     /**
      * Constructor for ConsentUpdateHandler
      *
@@ -54,7 +52,6 @@ class ConsentUpdateHandler
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -71,7 +68,6 @@ class ConsentUpdateHandler
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Update consent status for a consent record
@@ -142,7 +138,6 @@ class ConsentUpdateHandler
 
     }//end updateConsentStatus()
 
-
     /**
      * Get all consent records for a specific document
      *
@@ -198,6 +193,4 @@ class ConsentUpdateHandler
         }//end try
 
     }//end getConsentsByDocument()
-
-
 }//end class

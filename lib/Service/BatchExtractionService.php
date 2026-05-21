@@ -34,8 +34,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchExtractionService
 {
-
-
     /**
      * Constructor for BatchExtractionService
      *
@@ -52,7 +50,6 @@ class BatchExtractionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Extract and detect entities for the next pending file in a batch.
@@ -146,6 +143,4 @@ class BatchExtractionService
         ];
 
     }//end extractNext()
-
-
 }//end class

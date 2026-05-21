@@ -38,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventListener implements IEventListener
 {
-
-
     /**
      * Constructor for DocuDeskEventListener
      */
@@ -47,7 +45,6 @@ class DocuDeskEventListener implements IEventListener
     {
 
     }//end __construct()
-
 
     /**
      * Handles events related to DocuDesk document objects
@@ -86,7 +83,6 @@ class DocuDeskEventListener implements IEventListener
         }//end try
 
     }//end handle()
-
 
     /**
      * Dispatch the event to the appropriate handler
@@ -146,7 +142,6 @@ class DocuDeskEventListener implements IEventListener
 
     }//end dispatchEvent()
 
-
     /**
      * Log an error from the event handler
      *
@@ -176,6 +171,4 @@ class DocuDeskEventListener implements IEventListener
         }//end try
 
     }//end logHandlerError()
-
-
 }//end class

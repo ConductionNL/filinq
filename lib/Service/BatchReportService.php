@@ -32,8 +32,6 @@ use Exception;
  */
 class BatchReportService
 {
-
-
     /**
      * Constructor for BatchReportService
      *
@@ -45,7 +43,6 @@ class BatchReportService
     {
 
     }//end __construct()
-
 
     /**
      * Generate a CSV report for a completed batch.
@@ -101,6 +98,4 @@ class BatchReportService
         return $csv;
 
     }//end generateReport()
-
-
 }//end class

@@ -32,8 +32,6 @@ use Exception;
  */
 class TemplatePreviewService
 {
-
-
     /**
      * Constructor for TemplatePreviewService
      *
@@ -48,7 +46,6 @@ class TemplatePreviewService
     ) {
 
     }//end __construct()
-
 
     /**
      * Preview template content with sample data
@@ -77,7 +74,6 @@ class TemplatePreviewService
 
     }//end preview()
 
-
     /**
      * Preview an existing template with sample data
      *
@@ -100,6 +96,4 @@ class TemplatePreviewService
         );
 
     }//end previewTemplate()
-
-
 }//end class

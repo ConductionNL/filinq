@@ -47,7 +47,6 @@ class DocuDeskAdmin implements IIconSection
      */
     private IURLGenerator $urlGenerator;
 
-
     /**
      * Constructor for DocuDeskAdmin section
      *
@@ -63,7 +62,6 @@ class DocuDeskAdmin implements IIconSection
 
     }//end __construct()
 
-
     /**
      * Get the icon for the admin section
      *
@@ -77,7 +75,6 @@ class DocuDeskAdmin implements IIconSection
         return $this->urlGenerator->imagePath(appName: 'docudesk', file: 'app-dark.svg');
 
     }//end getIcon()
-
 
     /**
      * Get the ID of the admin section
@@ -93,7 +90,6 @@ class DocuDeskAdmin implements IIconSection
 
     }//end getID()
 
-
     /**
      * Get the name of the admin section
      *
@@ -108,7 +104,6 @@ class DocuDeskAdmin implements IIconSection
 
     }//end getName()
 
-
     /**
      * Get the priority of the admin section
      *
@@ -122,6 +117,4 @@ class DocuDeskAdmin implements IIconSection
         return 97;
 
     }//end getPriority()
-
-
 }//end class

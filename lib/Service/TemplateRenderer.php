@@ -103,7 +103,6 @@ class TemplateRenderer
         'autoescape',
     ];
 
-
     /**
      * Constructor for TemplateRenderer
      *
@@ -116,7 +115,6 @@ class TemplateRenderer
     ) {
 
     }//end __construct()
-
 
     /**
      * Render a Twig template string with the given data context
@@ -162,7 +160,6 @@ class TemplateRenderer
 
     }//end renderTemplate()
 
-
     /**
      * Convert conditional section data attributes to Twig if blocks.
      *
@@ -195,13 +192,14 @@ class TemplateRenderer
 
     }//end convertConditionalSections()
 
-
     /**
      * Replace a single conditional section match with Twig if block
      *
      * @param array $matches The regex match groups
      *
      * @return string The replacement string with Twig conditional
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function replaceConditionalSection(array $matches): string
     {
@@ -240,7 +238,6 @@ class TemplateRenderer
 
     }//end replaceConditionalSection()
 
-
     /**
      * Build a Twig condition expression from field, operator, and value
      *
@@ -271,7 +268,6 @@ class TemplateRenderer
 
     }//end buildTwigCondition()
 
-
     /**
      * Escape a string for safe use inside Twig string literals
      *
@@ -288,6 +284,4 @@ class TemplateRenderer
         );
 
     }//end escapeTwigString()
-
-
 }//end class
