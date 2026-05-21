@@ -246,4 +246,90 @@ class ConsentUpdateHandlerTest extends TestCase
     }//end testNoPolicyMatchAllowsArbitraryTransition()
 
 
+    /**
+     * Regression lock for the PR #147 fourth-pass blocker — step 1 of the
+     * 2-step prohibition-lock bypass. A PUT carrying ONLY `matchKind`
+     * (no consentStatus / publicationDecision change) would otherwise
+     * slip past the both-fields-false early-return and the downstream
+     * `array_merge` would corrupt the server-controlled field. The guard
+     * must reject the mutation before any merge can happen, regardless
+     * of whether other update fields are present.
+     *
+     * @return void
+     */
+    public function testProhibitionMatchKindMutationRejected(): void
+    {
+        $existing = [
+            'policyMatch'         => 'pro-uuid-1',
+            'matchKind'           => 'prohibition',
+            'consentStatus'       => 'anonymized',
+            'publicationDecision' => 'anonymize',
+        ];
+        $data     = [
+            'matchKind' => 'standing_consent',
+        ];
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches(regularExpression: '/matchKind is server-controlled/');
+        $this->invokeGuard(existing: $existing, data: $data);
+
+    }//end testProhibitionMatchKindMutationRejected()
+
+
+    /**
+     * Regression lock for the related shape of the same bypass — swapping
+     * `policyMatch` to a different non-empty UUID. The original
+     * clearing-only guard (rejected only `policyMatch: null`) left UUID
+     * swaps open; the broader server-controlled check rejects all
+     * non-equal proposals.
+     *
+     * @return void
+     */
+    public function testProhibitionPolicyMatchUuidSwapRejected(): void
+    {
+        $existing = [
+            'policyMatch'         => 'pro-uuid-1',
+            'matchKind'           => 'prohibition',
+            'consentStatus'       => 'anonymized',
+            'publicationDecision' => 'anonymize',
+        ];
+        $data     = [
+            'policyMatch' => 'pro-uuid-2',
+        ];
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches(regularExpression: '/policyMatch is server-controlled/');
+        $this->invokeGuard(existing: $existing, data: $data);
+
+    }//end testProhibitionPolicyMatchUuidSwapRejected()
+
+
+    /**
+     * A PUT carrying matchKind / policyMatch values EQUAL to the existing
+     * values is a no-op for those fields. The guard must NOT reject this
+     * — otherwise idempotent clients that re-send the full record state
+     * on every update would break. Only mutations to a different value
+     * are rejected.
+     *
+     * @return void
+     */
+    public function testEqualServerControlledValuesAreAllowed(): void
+    {
+        $existing = [
+            'policyMatch'         => 'pro-uuid-1',
+            'matchKind'           => 'prohibition',
+            'consentStatus'       => 'anonymized',
+            'publicationDecision' => 'anonymize',
+        ];
+        $data     = [
+            'policyMatch' => 'pro-uuid-1',
+            'matchKind'   => 'prohibition',
+        ];
+
+        $this->invokeGuard(existing: $existing, data: $data);
+        $this->addToAssertionCount(count: 1);
+
+    }//end testEqualServerControlledValuesAreAllowed()
+
+
 }//end class

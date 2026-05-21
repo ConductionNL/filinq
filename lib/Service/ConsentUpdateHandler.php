@@ -163,7 +163,11 @@ class ConsentUpdateHandler
      *
      * @return void
      *
-     * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
+     * @throws InvalidArgumentException When the update would change consentStatus / publicationDecision
+     *                                   on a policy-pre-empted record (carve-out aside), OR when the
+     *                                   update attempts to mutate a server-controlled field (`matchKind`,
+     *                                   `policyMatch`) — both are set at consent-create time by
+     *                                   `ConsentService::buildConsentData` and are immutable thereafter.
      */
     private function guardPolicyPreemptedTransition(array $existing, array $data): void
     {
@@ -172,24 +176,31 @@ class ConsentUpdateHandler
             return;
         }
 
-        // Guard against the "clear policyMatch then update freely" bypass.
-        // Without this check, a PUT carrying `{ "policyMatch": null }` would
-        // pass the both-fields check below (neither consentStatus nor
-        // publicationDecision changed), be merged into the record via the
-        // downstream array_merge, and silently clear policyMatch — at which
-        // point a follow-up PUT could change consentStatus freely because
-        // the guard's early-return on line 171 would now fire.
-        // Once a record has been pre-empted by a policy match, its
-        // policyMatch is immutable; rejecting clearing operations here
-        // closes that bypass.
-        if (array_key_exists('policyMatch', $data) === true) {
-            $newMatch = $data['policyMatch'];
-            if ($newMatch === null || $newMatch === '') {
-                $msg = sprintf(
-                    'policyMatch cannot be cleared (existing=%s); it is immutable once set. Create a new consent record instead.',
-                    (string) $existingMatch
-                );
-                throw new InvalidArgumentException(message: $msg);
+        // Server-controlled fields are immutable on update. Without this
+        // check, a 2-step prohibition bypass exists: PUT `{matchKind:
+        // "standing_consent"}` slips past the both-fields-false early-
+        // return below, `array_merge` corrupts the persisted matchKind,
+        // and a follow-up PUT `{publicationDecision: "publish"}` then
+        // fires the standing-consent carve-out and clears the lock. The
+        // same shape works on `policyMatch` (swap to a different non-
+        // empty UUID, or clear to null). Both fields are set ONCE at
+        // consent-create time by `ConsentService::buildConsentData`;
+        // mutation via the update endpoint is a security regression.
+        // PR #147 fourth-pass review for the full exploit walk-through.
+        foreach (['matchKind', 'policyMatch'] as $serverOnlyField) {
+            if (array_key_exists($serverOnlyField, $data) === true) {
+                $newValue      = $data[$serverOnlyField];
+                $existingValue = ($existing[$serverOnlyField] ?? null);
+                if ($newValue !== $existingValue) {
+                    throw new InvalidArgumentException(
+                        message: sprintf(
+                            '%s is server-controlled and cannot be modified via update (existing=%s, attempted=%s).',
+                            $serverOnlyField,
+                            (string) ($existingValue ?? ''),
+                            (string) ($newValue ?? '')
+                        )
+                    );
+                }
             }
         }
 
