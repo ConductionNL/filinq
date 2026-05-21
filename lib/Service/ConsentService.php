@@ -198,6 +198,7 @@ class ConsentService
                     'publicationDecision' => 'pending',
                     'objectionDeadline'   => $deadline->format('c'),
                     'policyMatch'         => null,
+                    'matchKind'           => null,
                 ]
             );
         }
@@ -214,6 +215,7 @@ class ConsentService
                     'publicationDecision' => 'anonymize',
                     'objectionDeadline'   => null,
                     'policyMatch'         => $uuid,
+                    'matchKind'           => PolicyMatchService::KIND_PROHIBITION,
                 ]
             );
         }
@@ -227,6 +229,7 @@ class ConsentService
                     'publicationDecision' => 'publish_with_consent',
                     'objectionDeadline'   => null,
                     'policyMatch'         => $uuid,
+                    'matchKind'           => PolicyMatchService::KIND_STANDING_CONSENT,
                 ]
             );
         }
@@ -245,6 +248,7 @@ class ConsentService
                 'publicationDecision' => 'pending',
                 'objectionDeadline'   => $deadline->format('c'),
                 'policyMatch'         => null,
+                'matchKind'           => null,
             ]
         );
 

@@ -137,4 +137,113 @@ class ConsentUpdateHandlerTest extends TestCase
     }//end testCanBeInstantiated()
 
 
+    /**
+     * Invoke the private `guardPolicyPreemptedTransition` method via reflection.
+     *
+     * The guard is private because nothing outside the handler should
+     * call it directly — but unit-testing its branch table is the
+     * tightest way to lock down the PR #147 Thread B regression
+     * (the matchKind-driven standing-consent carve-out).
+     *
+     * @param array<string, mixed> $existing Current record state.
+     * @param array<string, mixed> $data     Proposed update.
+     *
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the guard rejects the update.
+     */
+    private function invokeGuard(array $existing, array $data): void
+    {
+        $ref    = new \ReflectionClass($this->handler);
+        $method = $ref->getMethod('guardPolicyPreemptedTransition');
+        $method->setAccessible(true);
+        $method->invoke($this->handler, $existing, $data);
+
+    }//end invokeGuard()
+
+
+    /**
+     * Standing-consent carve-out fires when matchKind is the persisted
+     * 'standing_consent' marker and the operator flips publicationDecision
+     * only. This is the PR #147 Thread B regression case: pre-fix the
+     * guard read $existing['matchKind'] which was never persisted by
+     * ConsentService::buildConsentData, so the carve-out never fired
+     * and the override was 400-locked.
+     *
+     * @return void
+     */
+    public function testStandingConsentCarveOutAllowsPublicationDecisionOverride(): void
+    {
+        $existing = [
+            'policyMatch'         => 'sc-uuid-1',
+            'matchKind'           => 'standing_consent',
+            'consentStatus'       => 'consent_given',
+            'publicationDecision' => 'publish_with_consent',
+        ];
+        $data     = [
+            'publicationDecision' => 'anonymize',
+        ];
+
+        // Should NOT throw — the standing-consent carve-out permits the
+        // operator override on publicationDecision while consentStatus is
+        // preserved.
+        $this->invokeGuard(existing: $existing, data: $data);
+
+        // Reflection-invoke returns void; the absence of a thrown
+        // exception is the assertion. Anchor it explicitly so PHPUnit
+        // records a positive assertion.
+        $this->addToAssertionCount(count: 1);
+
+    }//end testStandingConsentCarveOutAllowsPublicationDecisionOverride()
+
+
+    /**
+     * Prohibition match locks both consentStatus AND publicationDecision —
+     * the carve-out MUST NOT fire when matchKind is 'prohibition'.
+     *
+     * @return void
+     */
+    public function testProhibitionMatchRejectsPublicationDecisionOverride(): void
+    {
+        $existing = [
+            'policyMatch'         => 'pro-uuid-1',
+            'matchKind'           => 'prohibition',
+            'consentStatus'       => 'anonymized',
+            'publicationDecision' => 'anonymize',
+        ];
+        $data     = [
+            'publicationDecision' => 'publish',
+        ];
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->invokeGuard(existing: $existing, data: $data);
+
+    }//end testProhibitionMatchRejectsPublicationDecisionOverride()
+
+
+    /**
+     * Records without a `policyMatch` are not policy-pre-empted; the
+     * guard returns early and the update flows through.
+     *
+     * @return void
+     */
+    public function testNoPolicyMatchAllowsArbitraryTransition(): void
+    {
+        $existing = [
+            'policyMatch'         => null,
+            'matchKind'           => null,
+            'consentStatus'       => 'pending',
+            'publicationDecision' => 'pending',
+        ];
+        $data     = [
+            'consentStatus'       => 'consent_given',
+            'publicationDecision' => 'publish',
+        ];
+
+        $this->invokeGuard(existing: $existing, data: $data);
+        $this->addToAssertionCount(count: 1);
+
+    }//end testNoPolicyMatchAllowsArbitraryTransition()
+
+
 }//end class

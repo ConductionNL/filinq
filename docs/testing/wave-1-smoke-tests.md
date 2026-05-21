@@ -22,7 +22,7 @@ Any reference to `admin` / `admin` in this document below refers to the **local 
 ## 0. Pre-flight
 
 - [ ] All four feature branches checked out and apps enabled (`occ app:list | grep -E "openregister|docudesk"`)
-- [ ] DocuDesk register imported at version 7.0.0 (`occ config:app:get openregister imported_config_docudesk_version` → `7.0.0`)
+- [ ] DocuDesk register imported at version 8.0.0 (`occ config:app:get openregister imported_config_docudesk_version` → `8.0.0`)
 - [ ] OR migrations applied (`occ migrations:execute openregister Version1Date20260512120000` ran cleanly on first enable)
 - [ ] Nextcloud UI loads at `http://localhost:8080`; DocuDesk app icon visible in the top bar
 

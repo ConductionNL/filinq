@@ -327,9 +327,9 @@
                         "maxLength": 64
                     },
                     "matchKind": {
-                        "description": "Type van de policy-match: 'prohibition' (verbod, niet overrideable) of 'standing_consent' (staande toestemming, operator mag publicationDecision overriden). Wordt op service-niveau gezet door ConsentService::buildConsentData op basis van het resolved referent. Determines whether the override-via-publicationDecision toggle in ConsentDetail is permitted (spec §6.2).",
-                        "type": "string",
-                        "enum": ["prohibition", "standing_consent"],
+                        "description": "Type van de policy-match: 'prohibition' (verbod, niet overrideable) of 'standing_consent' (staande toestemming, operator mag publicationDecision overriden). Wordt op service-niveau gezet door ConsentService::buildConsentData op basis van het resolved referent. Null voor WOO-default consent-records die niet door een policy zijn vooraf-bepaald — symmetrisch met policyMatch=null. Determines whether the override-via-publicationDecision toggle in ConsentDetail is permitted (spec §6.2).",
+                        "type": ["string", "null"],
+                        "enum": ["prohibition", "standing_consent", null],
                         "visible": true,
                         "order": 25,
                         "facetable": true,
