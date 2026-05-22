@@ -2,6 +2,17 @@ status: draft
 
 # Redaction at Scale
 
+## Placement & Information Architecture
+
+**Placement type:** `ACTION` — Action button or menu item on an existing surface. Implemented as a single button / context-menu entry that opens a modal/wizard or runs a backend operation — NOT a page.
+
+**Lives at:** Documenten > Bulk action "Batch redacteren" + detail Redactie tab / Documenten
+
+**Rationale:** Both ad-hoc and batch redaction surface together  
+_Source: /tmp/ia-doc-dec-cat-conn.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Provide a high-throughput redaction capability inside docudesk so that organisations can mask persoonsgegevens and other sensitive data in documents before publication, sharing, or production. The Dutch context drives most of the demand: every Woo-besluit requires that BSNs, contact details of ambtenaren beneath a certain seniority, third-party personal data, and confidential business information are masked before the document goes online; every AVG-inzageverzoek production must mask other data subjects' details; every dossier shared with a third party may require redaction of irrelevant personal data; and every contract or report shared externally may require masking of pricing, names, or trade secrets.
