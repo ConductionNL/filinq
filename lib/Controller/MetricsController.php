@@ -35,8 +35,6 @@ use OCP\IRequest;
  */
 class MetricsController extends Controller
 {
-
-
     /**
      * MetricsController constructor
      *
@@ -56,7 +54,6 @@ class MetricsController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Expose Prometheus metrics
@@ -124,6 +121,4 @@ class MetricsController extends Controller
         return $response;
 
     }//end index()
-
-
 }//end class

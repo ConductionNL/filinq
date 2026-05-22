@@ -53,7 +53,6 @@ class DocuDeskAdmin implements ISettings
      */
     private IAppManager $appManager;
 
-
     /**
      * Constructor for DocuDeskAdmin
      *
@@ -66,7 +65,6 @@ class DocuDeskAdmin implements ISettings
         $this->appManager = $appManager;
 
     }//end __construct()
-
 
     /**
      * Get the admin settings form
@@ -91,7 +89,6 @@ class DocuDeskAdmin implements ISettings
 
     }//end getForm()
 
-
     /**
      * Get the section ID for the admin settings
      *
@@ -106,7 +103,6 @@ class DocuDeskAdmin implements ISettings
 
     }//end getSection()
 
-
     /**
      * Get the priority for the admin settings
      *
@@ -120,6 +116,4 @@ class DocuDeskAdmin implements ISettings
         return 10;
 
     }//end getPriority()
-
-
 }//end class

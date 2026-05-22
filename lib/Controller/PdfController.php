@@ -38,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class PdfController extends Controller
 {
-
-
     /**
      * Constructor for PdfController
      *
@@ -61,7 +59,6 @@ class PdfController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Generate a PDF from a Twig template and data context
@@ -129,7 +126,6 @@ class PdfController extends Controller
         }//end try
 
     }//end render()
-
 
     /**
      * Generate a PDF/A-3b compliant document from a Twig template
@@ -204,6 +200,4 @@ class PdfController extends Controller
         }//end try
 
     }//end renderPdfA()
-
-
 }//end class

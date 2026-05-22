@@ -43,8 +43,6 @@ use Psr\Log\LoggerInterface;
  */
 class SigningController extends Controller
 {
-
-
     /**
      * Constructor
      *
@@ -73,7 +71,6 @@ class SigningController extends Controller
 
     }//end __construct()
 
-
     /**
      * Create a new signing request
      *
@@ -93,7 +90,6 @@ class SigningController extends Controller
 
     }//end createRequest()
 
-
     /**
      * List signing requests
      *
@@ -111,7 +107,6 @@ class SigningController extends Controller
         }
 
     }//end listRequests()
-
 
     /**
      * Get a specific signing request
@@ -133,7 +128,6 @@ class SigningController extends Controller
 
     }//end showRequest()
 
-
     /**
      * Cancel a signing request
      *
@@ -153,7 +147,6 @@ class SigningController extends Controller
         }
 
     }//end cancelRequest()
-
 
     /**
      * Sign a document
@@ -175,7 +168,6 @@ class SigningController extends Controller
         }
 
     }//end sign()
-
 
     /**
      * Decline a signing request
@@ -199,7 +191,6 @@ class SigningController extends Controller
 
     }//end decline()
 
-
     /**
      * Bulk sign multiple signing requests
      *
@@ -222,7 +213,6 @@ class SigningController extends Controller
         }
 
     }//end bulkSign()
-
 
     /**
      * Verify signatures in a document
@@ -252,7 +242,6 @@ class SigningController extends Controller
 
     }//end verify()
 
-
     /**
      * Get the audit trail for a signing request
      *
@@ -273,7 +262,6 @@ class SigningController extends Controller
 
     }//end getAudit()
 
-
     /**
      * Build an error JSON response with logging
      *
@@ -292,6 +280,4 @@ class SigningController extends Controller
         );
 
     }//end errorResponse()
-
-
 }//end class

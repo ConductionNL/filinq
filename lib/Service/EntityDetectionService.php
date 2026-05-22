@@ -30,8 +30,6 @@ namespace OCA\DocuDesk\Service;
  */
 class EntityDetectionService
 {
-
-
     /**
      * Constructor for EntityDetectionService
      *
@@ -44,7 +42,6 @@ class EntityDetectionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Normalize entity data to a consistent format
@@ -78,7 +75,6 @@ class EntityDetectionService
         return $normalizedEntities;
 
     }//end normalizeEntities()
-
 
     /**
      * Map entities to the format expected by OpenRegister's anonymizeDocument
@@ -114,7 +110,6 @@ class EntityDetectionService
 
     }//end mapEntitiesForAnonymization()
 
-
     /**
      * Parse anonymization result into a structured array
      *
@@ -127,7 +122,6 @@ class EntityDetectionService
         return $this->resultParser->parseResult($result);
 
     }//end parseAnonymizationResult()
-
 
     /**
      * Generate a UUID v4 string
@@ -143,6 +137,4 @@ class EntityDetectionService
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateUuid()
-
-
 }//end class

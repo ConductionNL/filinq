@@ -34,8 +34,6 @@ use Psr\Log\LoggerInterface;
  */
 class MetricsCollector
 {
-
-
     /**
      * Constructor for MetricsCollector
      *
@@ -53,7 +51,6 @@ class MetricsCollector
 
     }//end __construct()
 
-
     /**
      * Count documents managed by DocuDesk via OpenRegister
      *
@@ -65,7 +62,6 @@ class MetricsCollector
 
     }//end countDocuments()
 
-
     /**
      * Count templates managed by DocuDesk via OpenRegister
      *
@@ -76,7 +72,6 @@ class MetricsCollector
         return $this->countObjects(type: 'template');
 
     }//end countTemplates()
-
 
     /**
      * Count objects of a given type in OpenRegister
@@ -125,6 +120,4 @@ class MetricsCollector
         }//end try
 
     }//end countObjects()
-
-
 }//end class

@@ -37,8 +37,6 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataService
 {
-
-
     /**
      * Constructor for MetadataService
      *
@@ -60,7 +58,6 @@ class MetadataService
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -77,7 +74,6 @@ class MetadataService
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Enhance text-based metadata (language, keywords, topic)
@@ -115,7 +111,6 @@ class MetadataService
         return $metadata;
 
     }//end enhanceTextMetadata()
-
 
     /**
      * Enhance metadata for a document object
@@ -156,7 +151,6 @@ class MetadataService
         }//end try
 
     }//end enhanceMetadata()
-
 
     /**
      * Enrich a document object with metadata and save it back via ObjectService
@@ -218,6 +212,4 @@ class MetadataService
         }//end try
 
     }//end saveEnrichedMetadata()
-
-
 }//end class

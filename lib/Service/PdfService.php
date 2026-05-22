@@ -39,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class PdfService
 {
-
-
     /**
      * Constructor for PdfService
      *
@@ -55,7 +53,6 @@ class PdfService
     ) {
 
     }//end __construct()
-
 
     /**
      * Render a PDF from a Twig template string and data context
@@ -84,7 +81,6 @@ class PdfService
 
     }//end renderPdf()
 
-
     /**
      * Render HTML from a Twig template string and data context (for print preview)
      *
@@ -111,7 +107,6 @@ class PdfService
 
     }//end renderHtmlPreview()
 
-
     /**
      * Ensure the mPDF temp directory exists and is writable
      *
@@ -128,7 +123,6 @@ class PdfService
         chmod(filename: $tempDir, permissions: 0777);
 
     }//end ensureTempDirectory()
-
 
     /**
      * Build mPDF configuration array from options
@@ -181,7 +175,6 @@ class PdfService
 
     }//end buildMpdfConfig()
 
-
     /**
      * Get the path to the bundled font directory
      *
@@ -197,7 +190,6 @@ class PdfService
         return null;
 
     }//end getFontDirectory()
-
 
     /**
      * Build print-optimized CSS for PDF/A and print preview output
@@ -242,7 +234,6 @@ class PdfService
 ';
 
     }//end buildPrintCss()
-
 
     /**
      * Generate a PDF from rendered HTML content
@@ -302,6 +293,4 @@ class PdfService
         }//end try
 
     }//end generatePdf()
-
-
 }//end class

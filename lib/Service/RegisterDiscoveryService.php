@@ -44,7 +44,6 @@ class RegisterDiscoveryService
      */
     private readonly string $appName;
 
-
     /**
      * Constructor for RegisterDiscoveryService
      *
@@ -62,7 +61,6 @@ class RegisterDiscoveryService
         $this->appName = 'docudesk';
 
     }//end __construct()
-
 
     /**
      * Fetch available registers from OpenRegister with schemas
@@ -106,13 +104,14 @@ class RegisterDiscoveryService
 
     }//end fetchAvailableRegisters()
 
-
     /**
      * Serialize a register entity and filter its schemas
      *
      * @param mixed $register The register entity
      *
      * @return array<string, mixed> Serialized register with filtered schemas
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function serializeRegister(mixed $register): array
     {
@@ -129,13 +128,14 @@ class RegisterDiscoveryService
 
     }//end serializeRegister()
 
-
     /**
      * Filter out the properties field from a schema array
      *
      * @param mixed $schema The schema data
      *
      * @return mixed The filtered schema
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function filterSchemaProperties(mixed $schema): mixed
     {
@@ -148,7 +148,6 @@ class RegisterDiscoveryService
         return $schema;
 
     }//end filterSchemaProperties()
-
 
     /**
      * Load object type configuration defaults from app config
@@ -185,6 +184,4 @@ class RegisterDiscoveryService
         return $configuration;
 
     }//end loadObjectTypeConfiguration()
-
-
 }//end class

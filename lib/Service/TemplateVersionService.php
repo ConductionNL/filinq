@@ -35,8 +35,6 @@ use Psr\Container\ContainerInterface;
  */
 class TemplateVersionService
 {
-
-
     /**
      * Constructor for TemplateVersionService
      *
@@ -53,7 +51,6 @@ class TemplateVersionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -76,7 +73,6 @@ class TemplateVersionService
         throw new RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Create a version snapshot of a template's current state
@@ -128,7 +124,6 @@ class TemplateVersionService
 
     }//end createVersion()
 
-
     /**
      * List versions for a template, ordered by version number descending
      *
@@ -161,7 +156,6 @@ class TemplateVersionService
         return $objectService->searchObjectsPaginated(query: $query);
 
     }//end getVersions()
-
 
     /**
      * Get a single version by UUID
@@ -197,7 +191,6 @@ class TemplateVersionService
 
     }//end getVersion()
 
-
     /**
      * Get the next version number for a template
      *
@@ -218,7 +211,6 @@ class TemplateVersionService
         return $result['total'] + 1;
 
     }//end getNextVersionNumber()
-
 
     /**
      * Restore a template to a previous version
@@ -268,7 +260,6 @@ class TemplateVersionService
 
     }//end restoreVersion()
 
-
     /**
      * Get two versions for client-side diff comparison
      *
@@ -290,6 +281,4 @@ class TemplateVersionService
         ];
 
     }//end getDiff()
-
-
 }//end class

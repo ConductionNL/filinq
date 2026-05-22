@@ -38,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventHandler
 {
-
-
     /**
      * Handles object creation events
      *
@@ -84,7 +82,6 @@ class DocuDeskEventHandler
         );
 
     }//end handleObjectCreated()
-
 
     /**
      * Handles object update events
@@ -145,7 +142,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectUpdated()
 
-
     /**
      * Handles object deletion events
      *
@@ -183,7 +179,6 @@ class DocuDeskEventHandler
         );
 
     }//end handleObjectDeleted()
-
 
     /**
      * Route policy-surface mutations to the retroactive layer.
@@ -319,6 +314,4 @@ class DocuDeskEventHandler
         return false;
 
     }//end hasContentChanged()
-
-
 }//end class

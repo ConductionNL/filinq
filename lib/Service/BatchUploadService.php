@@ -33,8 +33,6 @@ use OCP\IRequest;
  */
 class BatchUploadService
 {
-
-
     /**
      * Constructor for BatchUploadService
      *
@@ -50,7 +48,6 @@ class BatchUploadService
 
     }//end __construct()
 
-
     /**
      * Return the current user's identifier.
      *
@@ -61,7 +58,6 @@ class BatchUploadService
         return $this->uploadService->getCurrentUserId();
 
     }//end getUserId()
-
 
     /**
      * Collect uploaded files from the request.
@@ -107,7 +103,6 @@ class BatchUploadService
         return $files;
 
     }//end collectFiles()
-
 
     /**
      * Persist a set of uploaded files and create a new batch record.
@@ -159,6 +154,4 @@ class BatchUploadService
         return $this->stateService->createBatch($userId, $batchFiles);
 
     }//end processBatchUpload()
-
-
 }//end class

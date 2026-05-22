@@ -51,7 +51,6 @@ class DataResolverService
      */
     private array $resolvedCache = [];
 
-
     /**
      * Constructor for DataResolverService
      *
@@ -68,7 +67,6 @@ class DataResolverService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -91,7 +89,6 @@ class DataResolverService
         throw new RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Resolve data from OpenRegister objects
@@ -145,7 +142,6 @@ class DataResolverService
 
     }//end resolve()
 
-
     /**
      * Validate that a data reference has the required fields
      *
@@ -168,7 +164,6 @@ class DataResolverService
         }//end foreach
 
     }//end validateReference()
-
 
     /**
      * Resolve a single object reference from OpenRegister
@@ -224,7 +219,6 @@ class DataResolverService
 
     }//end resolveReference()
 
-
     /**
      * Scan object data for nested UUID references and resolve them
      *
@@ -279,7 +273,6 @@ class DataResolverService
 
     }//end resolveNestedReferences()
 
-
     /**
      * Check if a string looks like a UUID
      *
@@ -294,7 +287,6 @@ class DataResolverService
 
     }//end isUuid()
 
-
     /**
      * Clear the per-request resolved object cache
      *
@@ -305,6 +297,4 @@ class DataResolverService
         $this->resolvedCache = [];
 
     }//end clearCache()
-
-
 }//end class

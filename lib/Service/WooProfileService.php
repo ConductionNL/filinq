@@ -36,7 +36,6 @@ class WooProfileService
     private const DEFAULT_ANONYMIZE = ['PERSON', 'BSN', 'PHONE', 'EMAIL', 'IBAN', 'ADDRESS'];
     private const DEFAULT_KEEP      = ['ORGANIZATION', 'LOCATION', 'DATE'];
 
-
     /**
      * Constructor for WooProfileService
      *
@@ -48,7 +47,6 @@ class WooProfileService
     {
 
     }//end __construct()
-
 
     /**
      * Return the active WOO anonymization profile.
@@ -77,7 +75,6 @@ class WooProfileService
 
     }//end getProfile()
 
-
     /**
      * Persist a WOO anonymization profile.
      *
@@ -91,7 +88,6 @@ class WooProfileService
 
     }//end saveProfile()
 
-
     /**
      * Check whether the given entity type is subject to anonymization under the active profile.
      *
@@ -104,6 +100,4 @@ class WooProfileService
         return in_array($entityType, $this->getProfile()['anonymize'], true);
 
     }//end shouldAnonymize()
-
-
 }//end class

@@ -1,3 +1,19 @@
+<!--
+  Delta-section convention per `.claude/docs/writing-specs.md`:
+  this change introduces a NEW capability (`dossier-register`); no prior
+  spec exists, so every Requirement below is net-new (ADDED). There are
+  no MODIFIED or REMOVED Requirements in this change.
+
+  The `bases is a string-array of base slugs` Requirement (further down)
+  WAS revised mid-proposal — the original draft had `bases.items.$ref`
+  per OpenRegister's native referential-integrity mechanism, but that
+  broke at register-config import time (opis/json-schema rejects
+  `#/components/schemas/<x>` references when validating in isolation).
+  The v1 fix is documented inline on the Requirement; the rewrite is not
+  a MODIFIED delta against any earlier spec — it's the only published
+  form, and the rationale is preserved for future readers.
+-->
+
 ## ADDED Requirements
 
 ### Requirement: Dossier register exists in DocuDesk's register configuration
@@ -16,11 +32,12 @@ The system SHALL define a new `dossier` register in `lib/Settings/docudesk_regis
 
 ### Requirement: Dossier schema captures folder-level anonymisation metadata
 
-The system SHALL define a `dossier` schema with the following properties: `name` (string, required, mirrors folder name at creation), `description` (string, optional), `bases` (array of `$ref` to `base`, optional, no `minItems`), and `checkedOn` (date-time, optional). The schema SHALL be stored under `components.schemas.dossier` in `docudesk_register.json`, follow OpenRegister's OpenAPI 3.0.0 schema conventions (ADR-006), and MUST include `slug: "dossier"`, `title`, `description`, and `configuration.objectNameField: "name"` so list UIs render the stored name.
+The system SHALL define a `dossier` schema with the following properties: `name` (string, required, mirrors folder name at creation), `description` (string, optional), `bases` (array of strings, optional, no `minItems` — each string is the slug of a `base` object), and `checkedOn` (date-time, optional). The schema SHALL be stored under `components.schemas.dossier` in `docudesk_register.json`, follow OpenRegister's OpenAPI 3.0.0 schema conventions (ADR-006), and MUST include `slug: "dossier"`, `title`, `description`, and `configuration.objectNameField: "name"` so list UIs render the stored name.
 
 #### Scenario: A dossier can be created with all fields set
-- **WHEN** a client posts `POST /api/objects/dossier` with `name`, `description`, `bases: [<base-uuid>]`, `checkedOn`, and `@self.folder` set to an existing folder node ID
-- **THEN** the response is 201 with a `uuid`, and subsequent `GET /api/objects/dossier/<uuid>` returns the same data
+- **GIVEN** the dossier register has been installed and the six canonical seed `base` objects exist
+- **WHEN** a client posts `POST /api/objects/dossier` with `name`, `description`, `bases: ["persoonsgegevens"]` (a known seed slug), `checkedOn`, and `@self.folder` set to an existing folder node ID
+- **THEN** the response is 201 with a `uuid`, and subsequent `GET /api/objects/dossier/<uuid>` returns the same data including `bases: ["persoonsgegevens"]` (slug preserved verbatim, not resolved to UUID)
 
 #### Scenario: A dossier can be created with only the required name
 - **WHEN** a client posts `POST /api/objects/dossier` with only `name` and `@self.folder` set
@@ -42,22 +59,36 @@ The system SHALL define a `base` schema with the following properties: `name` (s
 - **WHEN** a client posts `POST /api/objects/base` with a new `name` and `description` (and no collision with seed slugs)
 - **THEN** the object is created, is editable, and is visible alongside the six seed objects
 
-### Requirement: `bases` references are resolved via OpenRegister's `$ref` mechanism
+### Requirement: `bases` is a string-array of base slugs, resolved at runtime by consumers
 
-The `dossier.bases` field SHALL use OpenRegister's `$ref` syntax on the `items` key (`items.$ref: "#/components/schemas/base"`) so `ReferentialIntegrityService::extractTargetRef` walks the array and validates each referenced `base` UUID. Referential integrity SHALL prevent deletion of a `base` object while any `dossier` references it.
+The `dossier.bases` field SHALL be a JSON array of strings (`items.type: "string"`). Each element is the slug of a `base` object in the `dossier` register (e.g. `"persoonsgegevens"`).
 
-#### Scenario: Referencing a valid base succeeds
-- **WHEN** a client creates a dossier with `bases: [<uuid-of-persoonsgegevens>]`
-- **THEN** the dossier is created and the base is reachable by expanding `bases` in a subsequent read
+OpenRegister's `$ref`-based referential-integrity walker (`ReferentialIntegrityService::extractTargetRef`) is NOT used here in v1: the register-config import path runs schemas through a strict JSON-schema validator (`opis/json-schema`) that rejects `#/components/schemas/<x>` references when the schema is validated in isolation. Storing slugs as plain strings sidesteps that constraint. Consumer apps (DocuDesk's `anonymisation-grondslagen-summary` is the first one) resolve the slug against the `base` register at read time.
 
-#### Scenario: Referencing a non-existent base fails validation
-- **WHEN** a client creates a dossier with `bases: ["00000000-0000-0000-0000-000000000000"]`
-- **THEN** OpenRegister's referential-integrity check rejects the write with a validation error identifying the invalid reference
+**v1 consequences of the slug-only model:**
 
-#### Scenario: Deleting a referenced base is blocked
-- **GIVEN** a dossier exists with `bases: [<uuid-of-persoonsgegevens>]`
-- **WHEN** a client attempts `DELETE /api/objects/base/<uuid-of-persoonsgegevens>`
-- **THEN** OpenRegister refuses the deletion and reports at least one referencing dossier
+- OpenRegister does NOT validate that the slug resolves to a real `base` object. Storing `"bases": ["does-not-exist"]` succeeds; downstream readers MUST handle the unresolvable case gracefully (e.g. render as "onbekende grondslag").
+- OpenRegister does NOT block deletion of a `base` while a dossier references it. The seed bases are stable by operator-discipline + audit-log (per the `entity-relation-grondslagen` rework's analogous decision); tenant-created bases SHOULD NOT be deleted while in use, but this is not enforced at v1.
+
+If hard referential integrity becomes a real need, a follow-up change can either (a) make OR's `$ref` shape pass through the JSON-schema validator (e.g. an OR-specific `or-ref` keyword) or (b) introduce a separate validation step that resolves slugs before write.
+
+#### Scenario: Referencing a known base succeeds
+
+- **WHEN** a client creates a dossier with `bases: ["persoonsgegevens"]`
+- **THEN** the dossier is created with the slug stored verbatim
+- **AND** consumer code reading the dossier MUST be able to resolve `"persoonsgegevens"` → the seeded `base` object via the `base` register
+
+#### Scenario: Referencing an unknown slug is accepted by OR
+
+- **WHEN** a client creates a dossier with `bases: ["does-not-exist"]`
+- **THEN** the create succeeds and the slug is stored verbatim
+- **AND** downstream consumers MUST render the unresolvable case gracefully (this is consumer-side responsibility, not OR's)
+
+#### Scenario: Empty bases array is valid and distinct from absent
+
+- **WHEN** a client creates a dossier with `bases: []`
+- **THEN** the create succeeds and the row stores an empty array (semantically "no grondslagen yet")
+- **AND** the dossier with `bases` absent from the payload behaves equivalently for v1 reading
 
 ### Requirement: Dossier objects bind to a Nextcloud folder via `@self.folder`
 

@@ -40,8 +40,6 @@ use Psr\Log\LoggerInterface;
  */
 class CorrespondenceController extends Controller
 {
-
-
     /**
      * Constructor for CorrespondenceController
      *
@@ -65,7 +63,6 @@ class CorrespondenceController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Generate a single correspondence document
@@ -104,7 +101,6 @@ class CorrespondenceController extends Controller
         }//end try
 
     }//end generate()
-
 
     /**
      * Parse and validate generation request parameters
@@ -147,7 +143,6 @@ class CorrespondenceController extends Controller
 
     }//end parseGenerateParams()
 
-
     /**
      * Format the generate response based on output format
      *
@@ -183,7 +178,6 @@ class CorrespondenceController extends Controller
 
     }//end formatGenerateResponse()
 
-
     /**
      * Build a download response for binary document formats
      *
@@ -216,7 +210,6 @@ class CorrespondenceController extends Controller
         );
 
     }//end buildDownloadResponse()
-
 
     /**
      * Generate correspondence for a batch of recipients
@@ -279,7 +272,6 @@ class CorrespondenceController extends Controller
 
     }//end generateBatch()
 
-
     /**
      * Get the status of a batch correspondence job
      *
@@ -311,7 +303,6 @@ class CorrespondenceController extends Controller
 
     }//end jobStatus()
 
-
     /**
      * Get the current user ID from the session
      *
@@ -327,7 +318,6 @@ class CorrespondenceController extends Controller
         return '';
 
     }//end getCurrentUserId()
-
 
     /**
      * Handle exceptions and return appropriate JSON error responses
@@ -357,6 +347,4 @@ class CorrespondenceController extends Controller
         );
 
     }//end handleException()
-
-
 }//end class

@@ -36,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class HealthController extends Controller
 {
-
-
     /**
      * HealthController constructor
      *
@@ -57,7 +55,6 @@ class HealthController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Return health check status
@@ -109,6 +106,4 @@ class HealthController extends Controller
         );
 
     }//end index()
-
-
 }//end class

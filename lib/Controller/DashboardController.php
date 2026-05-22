@@ -31,8 +31,6 @@ use OCP\IRequest;
  */
 class DashboardController extends Controller
 {
-
-
     /**
      * Constructor for DashboardController
      *
@@ -46,7 +44,6 @@ class DashboardController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Render the main dashboard page
@@ -80,6 +77,4 @@ class DashboardController extends Controller
         }
 
     }//end page()
-
-
 }//end class

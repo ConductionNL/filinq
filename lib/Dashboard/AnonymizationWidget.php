@@ -33,8 +33,6 @@ use OCP\Util;
  */
 class AnonymizationWidget implements IWidget, IIconWidget
 {
-
-
     /**
      * Constructor for AnonymizationWidget
      *
@@ -45,7 +43,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
     ) {
 
     }//end __construct()
-
 
     /**
      * Returns the unique widget identifier
@@ -58,7 +55,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
 
     }//end getId()
 
-
     /**
      * Returns the widget display title
      *
@@ -69,7 +65,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
         return 'Document Anonymization';
 
     }//end getTitle()
-
 
     /**
      * Returns the widget display order
@@ -82,7 +77,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
 
     }//end getOrder()
 
-
     /**
      * Returns the CSS icon class for the widget
      *
@@ -93,7 +87,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
         return 'icon-docudesk';
 
     }//end getIconClass()
-
 
     /**
      * Returns the URL to the widget icon
@@ -108,7 +101,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
 
     }//end getIconUrl()
 
-
     /**
      * Returns the URL the widget links to
      *
@@ -119,7 +111,6 @@ class AnonymizationWidget implements IWidget, IIconWidget
         return $this->urlGenerator->linkToRouteAbsolute('docudesk.dashboard.page');
 
     }//end getUrl()
-
 
     /**
      * Loads the widget scripts and styles
@@ -136,6 +127,4 @@ class AnonymizationWidget implements IWidget, IIconWidget
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
 
     }//end load()
-
-
 }//end class

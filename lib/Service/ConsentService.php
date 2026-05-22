@@ -38,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentService
 {
-
-
     /**
      * Constructor for ConsentService
      *
@@ -63,7 +61,6 @@ class ConsentService
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -80,7 +77,6 @@ class ConsentService
         throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Create a consent request for a detected entity in a document
@@ -184,7 +180,6 @@ class ConsentService
 
     }//end createConsentRequest()
 
-
     /**
      * Build the base consent data array.
      *
@@ -278,7 +273,6 @@ class ConsentService
         );
 
     }//end buildConsentData()
-
 
     /**
      * Validate a `publicationConsent` payload at write time per spec REQ task 4.3.
@@ -532,7 +526,6 @@ class ConsentService
 
     }//end updateConsentStatus()
 
-
     /**
      * Check if an objection deadline has expired
      *
@@ -553,7 +546,6 @@ class ConsentService
 
     }//end checkObjectionDeadline()
 
-
     /**
      * Get all consent records for a specific document
      *
@@ -573,6 +565,4 @@ class ConsentService
         return $this->updateHandler->getConsentsByDocument($documentId, $register, $schema);
 
     }//end getConsentsByDocument()
-
-
 }//end class

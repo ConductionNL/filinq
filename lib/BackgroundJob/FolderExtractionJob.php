@@ -42,8 +42,6 @@ use Psr\Log\LoggerInterface;
  */
 class FolderExtractionJob extends QueuedJob
 {
-
-
     /**
      * Constructor for FolderExtractionJob
      *
@@ -63,7 +61,6 @@ class FolderExtractionJob extends QueuedJob
         parent::__construct(time: $time);
 
     }//end __construct()
-
 
     /**
      * Run the folder extraction job
@@ -133,6 +130,4 @@ class FolderExtractionJob extends QueuedJob
         );
 
     }//end run()
-
-
 }//end class

@@ -36,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchCorrespondenceJob extends QueuedJob
 {
-
-
     /**
      * Constructor for BatchCorrespondenceJob
      *
@@ -55,7 +53,6 @@ class BatchCorrespondenceJob extends QueuedJob
         parent::__construct(time: $time);
 
     }//end __construct()
-
 
     /**
      * Run the batch correspondence generation
@@ -94,7 +91,6 @@ class BatchCorrespondenceJob extends QueuedJob
 
     }//end run()
 
-
     /**
      * Initialize job status to processing
      *
@@ -117,7 +113,6 @@ class BatchCorrespondenceJob extends QueuedJob
         );
 
     }//end initializeJobStatus()
-
 
     /**
      * Process all recipients in the batch
@@ -210,6 +205,4 @@ class BatchCorrespondenceJob extends QueuedJob
         );
 
     }//end processRecipients()
-
-
 }//end class

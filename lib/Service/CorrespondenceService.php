@@ -63,7 +63,6 @@ class CorrespondenceService
      */
     private const VALID_FORMATS = ['pdf', 'docx', 'html', 'email'];
 
-
     /**
      * Constructor for CorrespondenceService
      *
@@ -91,7 +90,6 @@ class CorrespondenceService
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -113,7 +111,6 @@ class CorrespondenceService
         throw new RuntimeException(message: 'OpenRegister service is not available.');
 
     }//end getObjectService()
-
 
     /**
      * Generate a single correspondence document
@@ -192,7 +189,6 @@ class CorrespondenceService
 
     }//end generate()
 
-
     /**
      * Generate correspondence for a batch of recipients
      *
@@ -228,7 +224,6 @@ class CorrespondenceService
         );
 
     }//end generateBatch()
-
 
     /**
      * Process a batch synchronously
@@ -306,7 +301,6 @@ class CorrespondenceService
 
     }//end generateBatchSync()
 
-
     /**
      * Dispatch a batch generation as a background job
      *
@@ -353,7 +347,6 @@ class CorrespondenceService
 
     }//end dispatchBatchJob()
 
-
     /**
      * Get the status of a batch job
      *
@@ -366,7 +359,6 @@ class CorrespondenceService
         return $this->loadJobStatus(jobId: $jobId);
 
     }//end getJobStatus()
-
 
     /**
      * Update the status of a batch job
@@ -394,7 +386,6 @@ class CorrespondenceService
         }
 
     }//end storeJobStatus()
-
 
     /**
      * Load the status of a batch job from app config
@@ -429,7 +420,6 @@ class CorrespondenceService
 
     }//end loadJobStatus()
 
-
     /**
      * Validate the requested output format
      *
@@ -450,7 +440,6 @@ class CorrespondenceService
         }
 
     }//end validateFormat()
-
 
     /**
      * Load huisstijl configuration from OpenRegister
@@ -494,7 +483,6 @@ class CorrespondenceService
 
     }//end loadHuisstijl()
 
-
     /**
      * Build PDF options from template, huisstijl, and request options
      *
@@ -524,7 +512,6 @@ class CorrespondenceService
         return $pdfOptions;
 
     }//end buildPdfOptions()
-
 
     /**
      * Render template content with huisstijl header and footer
@@ -574,7 +561,6 @@ class CorrespondenceService
 
     }//end renderWithHuisstijl()
 
-
     /**
      * Produce output in the requested format
      *
@@ -612,7 +598,6 @@ class CorrespondenceService
 
     }//end produceOutput()
 
-
     /**
      * Strip page-specific CSS for email output
      *
@@ -634,7 +619,6 @@ class CorrespondenceService
         return $html;
 
     }//end stripPageStyling()
-
 
     /**
      * Convert HTML to DOCX using LibreOffice headless
@@ -707,7 +691,6 @@ class CorrespondenceService
 
     }//end convertToDocx()
 
-
     /**
      * Log correspondence generation to the document register
      *
@@ -774,7 +757,6 @@ class CorrespondenceService
 
     }//end logCorrespondence()
 
-
     /**
      * Generate a unique job ID
      *
@@ -795,6 +777,4 @@ class CorrespondenceService
         );
 
     }//end generateJobId()
-
-
 }//end class

@@ -45,7 +45,6 @@ class ObjectionDeadlineChecker
      */
     private readonly string $appName;
 
-
     /**
      * Constructor for ObjectionDeadlineChecker
      *
@@ -66,7 +65,6 @@ class ObjectionDeadlineChecker
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -84,7 +82,6 @@ class ObjectionDeadlineChecker
 
     }//end getObjectService()
 
-
     /**
      * Get the objection period in days from settings
      *
@@ -100,7 +97,6 @@ class ObjectionDeadlineChecker
 
     }//end getObjectionPeriodDays()
 
-
     /**
      * Calculate the objection deadline from now
      *
@@ -115,7 +111,6 @@ class ObjectionDeadlineChecker
         return $deadline;
 
     }//end calculateDeadline()
-
 
     /**
      * Check if an objection deadline has expired
@@ -172,6 +167,4 @@ class ObjectionDeadlineChecker
         }//end try
 
     }//end checkObjectionDeadline()
-
-
 }//end class

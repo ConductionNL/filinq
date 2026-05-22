@@ -35,8 +35,6 @@ use Psr\Log\LoggerInterface;
  */
 class TemplateRequestHandler
 {
-
-
     /**
      * Constructor for TemplateRequestHandler
      *
@@ -49,7 +47,6 @@ class TemplateRequestHandler
     ) {
 
     }//end __construct()
-
 
     /**
      * Parse list request parameters from the request
@@ -82,7 +79,6 @@ class TemplateRequestHandler
 
     }//end parseListParams()
 
-
     /**
      * Parse create/update request body and strip framework params
      *
@@ -103,7 +99,6 @@ class TemplateRequestHandler
         return $data;
 
     }//end parseBodyParams()
-
 
     /**
      * Build a JSON error response from an exception
@@ -133,6 +128,4 @@ class TemplateRequestHandler
         );
 
     }//end buildErrorResponse()
-
-
 }//end class

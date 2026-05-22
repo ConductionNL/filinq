@@ -60,7 +60,6 @@ class SettingsService
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
-
     /**
      * SettingsService constructor
      *
@@ -85,7 +84,6 @@ class SettingsService
 
     }//end __construct()
 
-
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -101,7 +99,6 @@ class SettingsService
         return version_compare($currentVersion, self::MIN_OPENREGISTER_VERSION, '>=') === true;
 
     }//end isOpenRegisterInstalled()
-
 
     /**
      * Attempts to retrieve the OpenRegister service from the container
@@ -125,7 +122,6 @@ class SettingsService
 
     }//end getObjectService()
 
-
     /**
      * Initializes the app with all required components
      *
@@ -138,7 +134,6 @@ class SettingsService
         return $this->initializer->initialize();
 
     }//end initialize()
-
 
     /**
      * Load feature toggle settings from app config
@@ -192,7 +187,6 @@ class SettingsService
 
     }//end loadFeatureToggles()
 
-
     /**
      * Retrieve all settings
      *
@@ -233,7 +227,6 @@ class SettingsService
 
     }//end getAllSettings()
 
-
     /**
      * Convert a setting value to string for storage
      *
@@ -250,7 +243,6 @@ class SettingsService
         return (string) $value;
 
     }//end convertValueToString()
-
 
     /**
      * Update the settings configuration
@@ -289,6 +281,4 @@ class SettingsService
         }//end try
 
     }//end updateSettings()
-
-
 }//end class

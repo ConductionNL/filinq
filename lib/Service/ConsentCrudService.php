@@ -33,8 +33,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentCrudService
 {
-
-
     /**
      * Constructor for ConsentCrudService
      *
@@ -51,7 +49,6 @@ class ConsentCrudService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the consent register and schema IDs from settings
@@ -71,7 +68,6 @@ class ConsentCrudService
         return ['register' => $register, 'schema' => $schema];
 
     }//end getConsentConfig()
-
 
     /**
      * List all consent records
@@ -106,7 +102,6 @@ class ConsentCrudService
 
     }//end listConsents()
 
-
     /**
      * Get a single consent record by ID
      *
@@ -140,7 +135,6 @@ class ConsentCrudService
         return (array) $object;
 
     }//end getConsent()
-
 
     /**
      * Server-controlled fields on a `publicationConsent` record. These are
@@ -216,7 +210,6 @@ class ConsentCrudService
 
     }//end createFromRequest()
 
-
     /**
      * Get all consent records for a specific document
      *
@@ -236,7 +229,6 @@ class ConsentCrudService
         return $this->consentService->getConsentsByDocument($documentId, $register, $schema);
 
     }//end getConsentsByDocument()
-
 
     /**
      * Update consent status for a consent record
@@ -259,6 +251,4 @@ class ConsentCrudService
         return $this->consentService->updateConsentStatus($consentId, $register, $schema, $data);
 
     }//end updateConsentStatus()
-
-
 }//end class

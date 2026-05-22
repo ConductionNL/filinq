@@ -38,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentController extends Controller
 {
-
-
     /**
      * Constructor for ConsentController
      *
@@ -62,7 +60,6 @@ class ConsentController extends Controller
 
     }//end __construct()
 
-
     /**
      * Build an error JSON response with logging
      *
@@ -82,7 +79,6 @@ class ConsentController extends Controller
 
     }//end errorResponse()
 
-
     /**
      * Build a not-configured error response
      *
@@ -96,7 +92,6 @@ class ConsentController extends Controller
         );
 
     }//end notConfiguredResponse()
-
 
     /**
      * List consent records
@@ -122,7 +117,6 @@ class ConsentController extends Controller
         }//end try
 
     }//end index()
-
 
     /**
      * Create a new consent request for a detected entity
@@ -164,7 +158,6 @@ class ConsentController extends Controller
 
     }//end create()
 
-
     /**
      * Get a specific consent record
      *
@@ -200,7 +193,6 @@ class ConsentController extends Controller
 
     }//end show()
 
-
     /**
      * Update a consent record
      *
@@ -235,7 +227,6 @@ class ConsentController extends Controller
 
     }//end update()
 
-
     /**
      * Get all consent records for a specific document
      *
@@ -266,6 +257,4 @@ class ConsentController extends Controller
         }//end try
 
     }//end byDocument()
-
-
 }//end class
