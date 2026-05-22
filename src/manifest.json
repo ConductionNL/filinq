@@ -1,0 +1,112 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest.schema.json",
+	"version": "1.0.0",
+	"dependencies": ["openregister"],
+	"menu": [
+		{ "id": "Dashboard",           "label": "Dashboard",          "icon": "icon-category-dashboard", "route": "Dashboard",           "order": 10 },
+		{ "id": "Consent",             "label": "Consent Management", "icon": "icon-user",               "route": "Consent",              "order": 20 },
+		{ "id": "Anonymization",       "label": "Anonymization",      "icon": "icon-password",           "route": "Anonymization",        "order": 30 },
+		{ "id": "FolderAnonymization", "label": "Folder Analysis",    "icon": "icon-folder",             "route": "FolderAnonymization",  "order": 40 },
+		{ "id": "Templates",           "label": "Templates",          "icon": "icon-files-dark",         "route": "Templates",            "order": 50 },
+		{ "id": "SigningRequests",     "label": "Signing Requests",   "icon": "icon-rename",             "route": "SigningRequests",      "order": 60 }
+	],
+	"pages": [
+		{
+			"id": "Dashboard",
+			"route": "/",
+			"type": "dashboard",
+			"title": "Dashboard",
+			"_note": "Dashboard uses custom CnDashboardPage widgets (consent KPIs + anonymization panel); all widgets are app-rendered via named slots in the existing DashboardIndex component.",
+			"config": {
+				"widgets": [
+					{ "id": "total-consents",  "type": "custom", "title": "Total Consents" },
+					{ "id": "pending",         "type": "custom", "title": "Pending" },
+					{ "id": "approved",        "type": "custom", "title": "Approved" },
+					{ "id": "objected",        "type": "custom", "title": "Objected" },
+					{ "id": "recent-activity", "type": "custom", "title": "Recent Activity" },
+					{ "id": "anonymization",   "type": "custom", "title": "Quick Anonymization" }
+				],
+				"layout": [
+					{ "id": 1, "widgetId": "total-consents",  "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 2, "widgetId": "pending",         "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 3, "widgetId": "approved",        "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 4, "widgetId": "objected",        "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
+					{ "id": 5, "widgetId": "recent-activity", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "showTitle": true  },
+					{ "id": 6, "widgetId": "anonymization",   "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "showTitle": true  }
+				]
+			}
+		},
+		{
+			"id": "Consent",
+			"route": "/consent",
+			"type": "custom",
+			"title": "Consent Management",
+			"component": "ConsentIndex",
+			"_note": "Consent objects are fetched from docudesk's own PHP controller (not a plain OR index endpoint) and rendered via CnIndexPage with custom column formatters; type:custom preserves the existing data path."
+		},
+		{
+			"id": "ConsentDetail",
+			"route": "/consent/:id",
+			"type": "custom",
+			"title": "Consent Detail",
+			"component": "ConsentDetail",
+			"_note": "Detail fetched via consent store; sidebar driven by navigationStore.selected. Uses custom layout; type:custom preserves the existing data path."
+		},
+		{
+			"id": "Anonymization",
+			"route": "/anonymization",
+			"type": "custom",
+			"title": "Anonymization",
+			"component": "AnonymizationIndex",
+			"_note": "Anonymization uses the anonymization store (docudesk API) not OpenRegister; type:custom preserves the existing data path."
+		},
+		{
+			"id": "FolderAnonymization",
+			"route": "/folder-anonymization",
+			"type": "custom",
+			"title": "Folder Analysis",
+			"component": "FolderAnonymizationView",
+			"_note": "Folder-level anonymization scan; fetches via folderAnonymizationStore (docudesk API); type:custom preserves the existing data path."
+		},
+		{
+			"id": "Templates",
+			"route": "/templates",
+			"type": "custom",
+			"title": "Templates",
+			"component": "TemplateIndex",
+			"_note": "Templates are managed by docudesk's own template controller. Future ADR may migrate to OR-backed index if a template schema is registered."
+		},
+		{
+			"id": "TemplateDetail",
+			"route": "/templates/:id",
+			"type": "custom",
+			"title": "Template Detail",
+			"component": "TemplateDetail",
+			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
+		},
+		{
+			"id": "SigningRequests",
+			"route": "/signing",
+			"type": "custom",
+			"title": "Signing Requests",
+			"component": "SigningRequestList",
+			"_note": "Signing requests are managed by docudesk's signing controller; type:custom preserves the existing data path."
+		},
+		{
+			"id": "SigningRequestDetail",
+			"route": "/signing/:id",
+			"type": "custom",
+			"title": "Signing Request Detail",
+			"component": "SigningRequestDetail",
+			"_note": "Signing request detail view driven by signingStore."
+		},
+		{
+			"id": "PrintPreview",
+			"route": "/print-preview/:templateId?",
+			"type": "custom",
+			"title": "Print Preview",
+			"component": "PrintPreview",
+			"_note": "Standalone print-preview page; no nav item; launched programmatically."
+		}
+	]
+}
