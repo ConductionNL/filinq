@@ -72,6 +72,8 @@ class PolicyController extends Controller
     {
         try {
             return new JSONResponse($this->crudService->listProhibitions());
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to list prohibitions: ', exception: $e);
         }
@@ -99,6 +101,8 @@ class PolicyController extends Controller
             }
 
             return new JSONResponse($record);
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to load prohibition: ', exception: $e);
         }
@@ -192,6 +196,8 @@ class PolicyController extends Controller
     {
         try {
             return new JSONResponse($this->crudService->listStandingConsents());
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to list standing consents: ', exception: $e);
         }
@@ -219,6 +225,8 @@ class PolicyController extends Controller
             }
 
             return new JSONResponse($record);
+        } catch (RuntimeException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], 403);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to load standing consent: ', exception: $e);
         }

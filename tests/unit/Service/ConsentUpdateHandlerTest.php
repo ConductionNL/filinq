@@ -163,6 +163,30 @@ class ConsentUpdateHandlerTest extends TestCase
 
 
     /**
+     * Invoke the private `guardServerControlledFields` method via
+     * reflection. This is the always-on immutability gate that runs
+     * ahead of `guardPolicyPreemptedTransition` in `updateConsentStatus`
+     * — see PR #147 sixth-pass review for why splitting the two guards
+     * was necessary.
+     *
+     * @param array<string, mixed> $existing Current record state.
+     * @param array<string, mixed> $data     Proposed update.
+     *
+     * @return void
+     *
+     * @throws \InvalidArgumentException When the guard rejects the update.
+     */
+    private function invokeServerControlledGuard(array $existing, array $data): void
+    {
+        $ref    = new \ReflectionClass($this->handler);
+        $method = $ref->getMethod('guardServerControlledFields');
+        $method->setAccessible(true);
+        $method->invoke($this->handler, $existing, $data);
+
+    }//end invokeServerControlledGuard()
+
+
+    /**
      * Standing-consent carve-out fires when matchKind is the persisted
      * 'standing_consent' marker and the operator flips publicationDecision
      * only. This is the PR #147 Thread B regression case: pre-fix the
@@ -223,11 +247,15 @@ class ConsentUpdateHandlerTest extends TestCase
 
     /**
      * Records without a `policyMatch` are not policy-pre-empted; the
-     * guard returns early and the update flows through.
+     * consent-status guard returns early and the
+     * consentStatus / publicationDecision update flows through. The
+     * server-controlled-fields guard still applies — see
+     * `testUnmatchedRecordRejectsServerControlledFieldInjection` for
+     * the regression lock on the sixth-pass bypass.
      *
      * @return void
      */
-    public function testNoPolicyMatchAllowsArbitraryTransition(): void
+    public function testNoPolicyMatchAllowsConsentStatusTransition(): void
     {
         $existing = [
             'policyMatch'         => null,
@@ -243,7 +271,75 @@ class ConsentUpdateHandlerTest extends TestCase
         $this->invokeGuard(existing: $existing, data: $data);
         $this->addToAssertionCount(count: 1);
 
-    }//end testNoPolicyMatchAllowsArbitraryTransition()
+    }//end testNoPolicyMatchAllowsConsentStatusTransition()
+
+
+    /**
+     * Regression lock for the PR #147 sixth-pass blocker
+     * (discussion_r3289219546). A PATCH that fabricates
+     * `policyMatch` + `matchKind` on a vanilla record (policyMatch:
+     * null, default WOO-objection state) was slipping past the
+     * `if ($existingMatch === null) return` early-return inside
+     * `guardPolicyPreemptedTransition` — because the foreach
+     * immutability check sat AFTER that early-return.
+     *
+     * Splitting the guards (server-controlled fields now run as
+     * `guardServerControlledFields` ahead of the consent-status lock)
+     * closes the hole on both the matched and unmatched branches.
+     * This test exercises the unmatched branch end-to-end.
+     *
+     * @return void
+     */
+    public function testUnmatchedRecordRejectsServerControlledFieldInjection(): void
+    {
+        $existing = [
+            'policyMatch'         => null,
+            'matchKind'           => null,
+            'consentStatus'       => 'pending',
+            'publicationDecision' => 'pending',
+            'objectionDeadline'   => '2026-06-20T00:00:00+00:00',
+        ];
+        $data     = [
+            'policyMatch'         => 'sc-uuid-attacker-picked',
+            'matchKind'           => 'standing_consent',
+            'consentStatus'       => 'consent_given',
+            'publicationDecision' => 'publish_with_consent',
+            'objectionDeadline'   => null,
+        ];
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches(regularExpression: '/(matchKind|policyMatch) is server-controlled/');
+        $this->invokeServerControlledGuard(existing: $existing, data: $data);
+
+    }//end testUnmatchedRecordRejectsServerControlledFieldInjection()
+
+
+    /**
+     * Symmetric to the above — a PATCH carrying ONLY `policyMatch`
+     * (no consentStatus / publicationDecision) on a `policyMatch:
+     * null` record must still be rejected. Without the split-guard
+     * fix the foreach immutability check was unreachable on this
+     * branch.
+     *
+     * @return void
+     */
+    public function testUnmatchedRecordRejectsPolicyMatchInjection(): void
+    {
+        $existing = [
+            'policyMatch'         => null,
+            'matchKind'           => null,
+            'consentStatus'       => 'pending',
+            'publicationDecision' => 'pending',
+        ];
+        $data     = [
+            'policyMatch' => 'pro-uuid-attacker-picked',
+        ];
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches(regularExpression: '/policyMatch is server-controlled/');
+        $this->invokeServerControlledGuard(existing: $existing, data: $data);
+
+    }//end testUnmatchedRecordRejectsPolicyMatchInjection()
 
 
     /**
@@ -271,7 +367,7 @@ class ConsentUpdateHandlerTest extends TestCase
 
         $this->expectException(exception: \InvalidArgumentException::class);
         $this->expectExceptionMessageMatches(regularExpression: '/matchKind is server-controlled/');
-        $this->invokeGuard(existing: $existing, data: $data);
+        $this->invokeServerControlledGuard(existing: $existing, data: $data);
 
     }//end testProhibitionMatchKindMutationRejected()
 
@@ -299,7 +395,7 @@ class ConsentUpdateHandlerTest extends TestCase
 
         $this->expectException(exception: \InvalidArgumentException::class);
         $this->expectExceptionMessageMatches(regularExpression: '/policyMatch is server-controlled/');
-        $this->invokeGuard(existing: $existing, data: $data);
+        $this->invokeServerControlledGuard(existing: $existing, data: $data);
 
     }//end testProhibitionPolicyMatchUuidSwapRejected()
 
@@ -326,7 +422,7 @@ class ConsentUpdateHandlerTest extends TestCase
             'matchKind'   => 'prohibition',
         ];
 
-        $this->invokeGuard(existing: $existing, data: $data);
+        $this->invokeServerControlledGuard(existing: $existing, data: $data);
         $this->addToAssertionCount(count: 1);
 
     }//end testEqualServerControlledValuesAreAllowed()

@@ -42,6 +42,7 @@ use Exception;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Transliterator;
 
 /**
@@ -323,7 +324,24 @@ class PolicyMatchService
     /**
      * Load both rule sources and normalise into a single cache.
      *
+     * The two arms fail DIFFERENTLY by design — prohibitions are a
+     * deny-list (court-ordered erasures, victim-protection cases,
+     * AVG categorical exemptions). A silent fail-open here would leak
+     * the names the feature exists to redact, so loadProhibitions()
+     * failures bubble as RuntimeException; the consent workflow then
+     * surfaces a 5xx and document publication stalls until OR
+     * recovers. Standing consents are an allow-list optimisation: if
+     * we can't load them, the worst case is that an entity which
+     * SHOULD have been auto-allowed sits in the WOO objection queue
+     * for a few weeks, so loadStandingConsents() failures degrade to
+     * an empty list. Future edits MUST preserve this asymmetry — do
+     * not "harmonise" the two arms to symmetric fail-open behaviour.
+     * PR #147 sixth-pass review (discussion_r3289222236) for the full
+     * threat model.
+     *
      * @return array<int, array<string, mixed>>
+     *
+     * @throws RuntimeException When the prohibition registry is unreachable.
      */
     private function loadRules(): array
     {
@@ -331,22 +349,38 @@ class PolicyMatchService
             return $this->rulesCache;
         }
 
-        $rules = [];
-
+        // Prohibitions: fail CLOSED. The deny-list semantics make
+        // silent empty-set substitution a privacy regression.
         try {
-            $rules = array_merge(
-                $this->loadProhibitions(),
-                $this->loadStandingConsents()
-            );
+            $prohibitions = $this->loadProhibitions();
         } catch (Exception $e) {
-            $this->logger->warning(
-                'PolicyMatchService: failed to load rules — falling through to no-match',
+            $this->logger->error(
+                'PolicyMatchService: failed to load prohibitions — failing CLOSED',
                 ['error' => $e->getMessage()]
+            );
+            throw new RuntimeException(
+                message: 'Prohibition registry unavailable; refusing to process consent without policy data',
+                code: 0,
+                previous: $e
             );
         }
 
-        $this->rulesCache = $rules;
-        return $rules;
+        // Standing consents: degrade to empty list on failure. Allow-
+        // list semantics — the cost of failing open is only that some
+        // records pass through the standard WOO objection workflow
+        // instead of getting auto-approved.
+        try {
+            $standingConsents = $this->loadStandingConsents();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'PolicyMatchService: failed to load standing consents — degraded mode, treating as empty',
+                ['error' => $e->getMessage()]
+            );
+            $standingConsents = [];
+        }
+
+        $this->rulesCache = array_merge($prohibitions, $standingConsents);
+        return $this->rulesCache;
 
     }//end loadRules()
 

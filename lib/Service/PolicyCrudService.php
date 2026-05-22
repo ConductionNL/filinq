@@ -109,6 +109,8 @@ class PolicyCrudService
      */
     public function listProhibitions(): array
     {
+        $this->assertProhibitionPermission(action: 'list');
+
         return $this->listByRegisterSchema(
             register: self::REGISTER,
             schema: self::SCHEMA_PROHIBITION
@@ -125,6 +127,8 @@ class PolicyCrudService
      */
     public function listStandingConsents(): array
     {
+        $this->assertStandingConsentPermission(action: 'list');
+
         $rows = $this->listByRegisterSchema(
             register: self::REGISTER,
             schema: self::SCHEMA_CONSENT
@@ -176,6 +180,8 @@ class PolicyCrudService
      */
     public function getProhibition(string $uuid): ?array
     {
+        $this->assertProhibitionPermission(action: 'get');
+
         return $this->findOne(
             register: self::REGISTER,
             schema: self::SCHEMA_PROHIBITION,
@@ -195,6 +201,8 @@ class PolicyCrudService
      */
     public function getStandingConsent(string $uuid): ?array
     {
+        $this->assertStandingConsentPermission(action: 'get');
+
         $record = $this->findOne(
             register: self::REGISTER,
             schema: self::SCHEMA_CONSENT,

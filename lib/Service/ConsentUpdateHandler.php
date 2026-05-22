@@ -105,6 +105,15 @@ class ConsentUpdateHandler
 
             $existing = $object->getObject();
 
+            // Server-controlled fields are immutable on EVERY record —
+            // not just policy-pre-empted ones. The check has to run
+            // ahead of the consent-status lock, otherwise records with
+            // `policyMatch: null` (default WOO-objection state) can be
+            // mutated into a fake standing-consent or fake prohibition
+            // via a single PATCH carrying `matchKind` + `policyMatch`.
+            // PR #147 sixth-pass review for the full exploit shape.
+            $this->guardServerControlledFields(existing: $existing, data: $data);
+
             $this->guardPolicyPreemptedTransition(existing: $existing, data: $data);
 
             $consentData = array_merge($existing, $data);
@@ -144,6 +153,57 @@ class ConsentUpdateHandler
     }//end updateConsentStatus()
 
     /**
+     * Reject mutations to server-controlled consent fields on update.
+     *
+     * `matchKind` and `policyMatch` are computed at consent-create time
+     * by `ConsentService::buildConsentData` (or by the retroactive sweep
+     * in `PolicyRetroactiveService::forceResolveToAnonymized`) and are
+     * immutable thereafter. This guard runs ahead of
+     * `guardPolicyPreemptedTransition` because the immutability rule
+     * applies to EVERY record — including records with `policyMatch:
+     * null` (default WOO-objection state). Co-locating the check
+     * inside `guardPolicyPreemptedTransition`, behind its early-return
+     * for unmatched records, leaves a bypass shape where a single PATCH
+     * carrying `{matchKind: "standing_consent", policyMatch: "<uuid>",
+     * consentStatus: "consent_given", publicationDecision: "publish"}`
+     * fabricates a fake standing-consent on a vanilla record and
+     * defeats the WOO objection deadline. PR #147 sixth-pass review
+     * walks the exploit; tests in `ConsentUpdateHandlerTest` lock the
+     * regression shut on both the matched-record and unmatched-record
+     * branches.
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When `matchKind` or `policyMatch` in the proposed update
+     *                                   carries a value different from the persisted one.
+     */
+    private function guardServerControlledFields(array $existing, array $data): void
+    {
+        foreach (['matchKind', 'policyMatch'] as $serverOnlyField) {
+            if (array_key_exists($serverOnlyField, $data) === false) {
+                continue;
+            }
+
+            $newValue      = $data[$serverOnlyField];
+            $existingValue = ($existing[$serverOnlyField] ?? null);
+            if ($newValue !== $existingValue) {
+                throw new InvalidArgumentException(
+                    message: sprintf(
+                        '%s is server-controlled and cannot be modified via update (existing=%s, attempted=%s).',
+                        $serverOnlyField,
+                        (string) ($existingValue ?? ''),
+                        (string) ($newValue ?? '')
+                    )
+                );
+            }
+        }
+
+    }//end guardServerControlledFields()
+
+    /**
      * Reject `consentStatus` changes on records pre-empted by a policy.
      *
      * When an existing consent record has a non-null `policyMatch`, its
@@ -153,50 +213,24 @@ class ConsentUpdateHandler
      * `publicationDecision: "anonymize"` on a standing-consent-matched record
      * while leaving `consentStatus: "consent_given"` in place.
      *
+     * Server-controlled-field immutability is enforced separately by
+     * `guardServerControlledFields`, which runs ahead of this guard
+     * because the immutability rule applies to records WITHOUT a
+     * policyMatch too.
+     *
      * @param array<string, mixed> $existing The record's current data.
      * @param array<string, mixed> $data     The proposed update.
      *
      * @return void
      *
      * @throws InvalidArgumentException When the update would change consentStatus / publicationDecision
-     *                                   on a policy-pre-empted record (carve-out aside), OR when the
-     *                                   update attempts to mutate a server-controlled field (`matchKind`,
-     *                                   `policyMatch`) — both are set at consent-create time by
-     *                                   `ConsentService::buildConsentData` and are immutable thereafter.
+     *                                   on a policy-pre-empted record (standing-consent carve-out aside).
      */
     private function guardPolicyPreemptedTransition(array $existing, array $data): void
     {
         $existingMatch = ($existing['policyMatch'] ?? null);
         if ($existingMatch === null || $existingMatch === '') {
             return;
-        }
-
-        // Server-controlled fields are immutable on update. Without this
-        // check, a 2-step prohibition bypass exists: PUT `{matchKind:
-        // "standing_consent"}` slips past the both-fields-false early-
-        // return below, `array_merge` corrupts the persisted matchKind,
-        // and a follow-up PUT `{publicationDecision: "publish"}` then
-        // fires the standing-consent carve-out and clears the lock. The
-        // same shape works on `policyMatch` (swap to a different non-
-        // empty UUID, or clear to null). Both fields are set ONCE at
-        // consent-create time by `ConsentService::buildConsentData`;
-        // mutation via the update endpoint is a security regression.
-        // PR #147 fourth-pass review for the full exploit walk-through.
-        foreach (['matchKind', 'policyMatch'] as $serverOnlyField) {
-            if (array_key_exists($serverOnlyField, $data) === true) {
-                $newValue      = $data[$serverOnlyField];
-                $existingValue = ($existing[$serverOnlyField] ?? null);
-                if ($newValue !== $existingValue) {
-                    throw new InvalidArgumentException(
-                        message: sprintf(
-                            '%s is server-controlled and cannot be modified via update (existing=%s, attempted=%s).',
-                            $serverOnlyField,
-                            (string) ($existingValue ?? ''),
-                            (string) ($newValue ?? '')
-                        )
-                    );
-                }
-            }
         }
 
         // Guard the two operator-controlled transition fields. The

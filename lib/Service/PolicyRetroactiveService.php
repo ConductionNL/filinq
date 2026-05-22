@@ -268,10 +268,18 @@ class PolicyRetroactiveService
                         return false;
                     }
 
-                    if (isset($r['policyMatch']) === true
-                        && $r['policyMatch'] !== null
-                        && $r['policyMatch'] !== ''
-                    ) {
+                    // Only skip records ALREADY locked by a prohibition —
+                    // standing-consent-matched records MUST flow through
+                    // to be force-resolved, otherwise the canonical
+                    // "prohibitions win" rule from
+                    // `PolicyMatchService::match()` is silently inverted
+                    // on the retroactive sweep (court order arriving
+                    // after a standing consent would never override it).
+                    // The earlier `policyMatch !== null` blanket filter
+                    // caused that inversion. PR #147 sixth-pass review
+                    // (discussion_r3289224924) for the full sequence.
+                    $existingKind = (string) ($r['matchKind'] ?? '');
+                    if ($existingKind === PolicyMatchService::KIND_PROHIBITION) {
                         return false;
                     }
 
@@ -296,7 +304,12 @@ class PolicyRetroactiveService
      * Preserves: `notificationSentAt`, `objectionReceivedAt`, all entity fields,
      * and the rest of the original payload. Sets: `consentStatus: "anonymized"`,
      * `notificationStatus: "skipped"`, `publicationDecision: "anonymize"`,
-     * `objectionDeadline: null`, `policyMatch: <prohibition uuid>`.
+     * `objectionDeadline: null`, `policyMatch: <prohibition uuid>`,
+     * `matchKind: "prohibition"` (parity with
+     * `ConsentService::buildConsentData` — retroactively-resolved records
+     * carry the same discriminator as detection-time matches so the
+     * `loadInFlightDocumentRecords` filter can recognise already-prohibited
+     * records on subsequent sweeps).
      *
      * @param array<string, mixed> $record          The current record data.
      * @param string               $prohibitionUuid UUID of the prohibition that triggered this.
@@ -324,6 +337,7 @@ class PolicyRetroactiveService
                     'publicationDecision' => 'anonymize',
                     'objectionDeadline'   => null,
                     'policyMatch'         => $prohibitionUuid,
+                    'matchKind'           => PolicyMatchService::KIND_PROHIBITION,
                 ]
             );
 

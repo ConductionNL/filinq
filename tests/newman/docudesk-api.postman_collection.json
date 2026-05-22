@@ -387,6 +387,323 @@
       ]
     },
     {
+      "name": "Policy — Detection-time outcomes",
+      "description": "Coverage for the canonical PolicyMatchService::match decision table (entity-publication-policies §3). Exercises the four outcomes — no-match (WOO default), prohibition-only, standing-consent-only, and both-match (prohibition wins). Each item that seeds a policy record cleans it up afterwards so the suite is idempotent across re-runs. Group-permission failures (403/500) are accepted by the seed POSTs because the test environment may not configure the docudesk-policy-admins / docudesk-standing-consent-admins groups; subsequent assertions are skipped when seeding fails.",
+      "item": [
+        {
+          "name": "no-match: POST /api/consent → WOO default (pending across the board)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-no-match\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Unseeded Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured in this env'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind is null (no rule fired)', function () { pm.expect(json.matchKind).to.satisfy(function (v) { return v === null || v === undefined; }); });",
+                  "pm.test('policyMatch is null', function () { pm.expect(json.policyMatch).to.satisfy(function (v) { return v === null || v === undefined; }); });",
+                  "pm.test('consentStatus = pending', function () { pm.expect(json.consentStatus).to.equal('pending'); });",
+                  "pm.test('publicationDecision = pending', function () { pm.expect(json.publicationDecision).to.equal('pending'); });",
+                  "pm.test('notificationStatus = pending', function () { pm.expect(json.notificationStatus).to.equal('pending'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: SEED publicationProhibition for Newman Detect Prohibition Subject",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Detect Prohibition Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture (detection-time prohibition outcome)\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Prohibition Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionProhibitionSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionProhibitionSeeded', 'true');",
+                  "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionProhibitionId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: POST /api/consent → prohibition wins (matchKind=prohibition)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-prohibition\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Prohibition Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = prohibition', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
+                  "pm.test('policyMatch = seeded UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionProhibitionId')); });",
+                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
+                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });",
+                  "pm.test('notificationStatus = skipped', function () { pm.expect(json.notificationStatus).to.equal('skipped'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: CLEANUP DELETE seeded prohibition",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
+                  "pm.test('Cleanup deleted seeded prohibition', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: SEED publicationConsent (scope=entity)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Detect Standing Subject\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Standing Subject\"}],\"consentMethod\":\"paper\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionStandingSeeded', 'false'); pm.test.skip('Seeding requires docudesk-standing-consent-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionStandingSeeded', 'true');",
+                  "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionStandingId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: POST /api/consent → consent_given + publish_with_consent",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-standing\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Standing Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = standing_consent', function () { pm.expect(json.matchKind).to.equal('standing_consent'); });",
+                  "pm.test('policyMatch = seeded UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionStandingId')); });",
+                  "pm.test('consentStatus = consent_given', function () { pm.expect(json.consentStatus).to.equal('consent_given'); });",
+                  "pm.test('publicationDecision = publish_with_consent', function () { pm.expect(json.publicationDecision).to.equal('publish_with_consent'); });",
+                  "pm.test('notificationStatus = skipped', function () { pm.expect(json.notificationStatus).to.equal('skipped'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: CLEANUP DELETE seeded standing consent",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents/{{detectionStandingId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents", "{{detectionStandingId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
+                  "pm.test('Cleanup deleted seeded standing consent', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: SEED conflicting prohibition + standing consent for same entity",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Detect Conflict Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture (both-match conflict — prohibition arm)\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Conflict Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionConflictSeeded', 'partial');",
+                  "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionConflictProhibitionId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: SEED conflicting standing consent for same entity",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Detect Conflict Subject\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Conflict Subject\"}],\"consentMethod\":\"paper\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'partial') { pm.test.skip('Prohibition seed skipped — cannot complete conflict setup'); return; }",
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Standing-consent seeding requires its admin group'); return; }",
+                  "pm.collectionVariables.set('detectionConflictSeeded', 'true');",
+                  "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionConflictStandingId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: POST /api/consent → prohibition wins over standing consent",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-conflict\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Conflict Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'true') { pm.test.skip('Conflict setup incomplete — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = prohibition (prohibition beats standing consent)', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
+                  "pm.test('policyMatch = prohibition UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionConflictProhibitionId')); });",
+                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
+                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: CLEANUP DELETE seeded prohibition",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionConflictProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionConflictProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('detectionConflictProhibitionId')) { pm.test.skip('No prohibition seed to clean'); return; }",
+                  "pm.test('Cleanup deleted prohibition arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: CLEANUP DELETE seeded standing consent",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents/{{detectionConflictStandingId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents", "{{detectionConflictStandingId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('detectionConflictStandingId')) { pm.test.skip('No standing-consent seed to clean'); return; }",
+                  "pm.test('Cleanup deleted standing-consent arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Metadata",
       "item": [
         {

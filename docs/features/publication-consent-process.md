@@ -480,11 +480,13 @@ The Vue UI surfaces these in three separate admin pages — they are **not** con
 
 | Surface | Read | Write |
 |---|---|---|
-| `publicationProhibition` | Authenticated users (no restriction by default) | `docudesk-policy-admins` group |
+| `publicationProhibition` | `docudesk-policy-admins` group (court orders, victim-protection cases and AVG categorical exemptions are need-to-know) | `docudesk-policy-admins` group |
 | `publicationConsent` (scope=document) | Existing consent-officer role | Existing consent-officer role |
-| `publicationConsent` (scope=entity, "standing consent") | Existing consent-officer role can read | Service-level gate: `docudesk-standing-consent-admins` group is required. A consent-officer without this membership can still write `scope: "document"` records, but writes to `scope: "entity"` return 403. |
+| `publicationConsent` (scope=entity, "standing consent") | `docudesk-standing-consent-admins` group | `docudesk-standing-consent-admins` group |
 
 Admin users implicitly belong to both groups (NC convention). Adjust group memberships via the OpenRegister authorization UI.
+
+READ-side gating is enforced service-side in `PolicyCrudService::listProhibitions` / `getProhibition` / `listStandingConsents` / `getStandingConsent` — the controller annotations keep `@NoAdminRequired` (the gating is by NC group, not by NC admin role). PR #147 sixth-pass review (discussion_r3289227460) added the read-side asserters after the original design only addressed write-side RBAC.
 
 ## Related Documentation
 
