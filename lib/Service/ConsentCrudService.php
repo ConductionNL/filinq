@@ -157,7 +157,6 @@ class ConsentCrudService
         'objectionDeadline',
     ];
 
-
     /**
      * Create a consent request from controller data
      *

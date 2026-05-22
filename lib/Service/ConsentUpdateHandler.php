@@ -257,7 +257,6 @@ class ConsentUpdateHandler
 
     }//end guardPolicyPreemptedTransition()
 
-
     /**
      * Get all consent records for a specific document
      *

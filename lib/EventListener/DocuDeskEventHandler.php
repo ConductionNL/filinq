@@ -254,7 +254,6 @@ class DocuDeskEventHandler
 
     }//end dispatchPolicyRetroactive()
 
-
     /**
      * Classify a payload as a policy record by structural signature.
      *
@@ -292,7 +291,6 @@ class DocuDeskEventHandler
         return null;
 
     }//end detectPolicyShape()
-
 
     /**
      * Check if content fields have changed between old and new object data

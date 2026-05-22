@@ -65,7 +65,6 @@ class PolicyRetroactiveService
         'no_response',
     ];
 
-
     /**
      * Constructor.
      *
@@ -80,7 +79,6 @@ class PolicyRetroactiveService
     ) {
 
     }//end __construct()
-
 
     /**
      * Apply a prohibition mutation retroactively to in-flight workflow records.
@@ -159,7 +157,6 @@ class PolicyRetroactiveService
 
     }//end applyProhibitionMutation()
 
-
     /**
      * Standing-consent mutations are intentionally NOT applied retroactively.
      *
@@ -173,7 +170,6 @@ class PolicyRetroactiveService
         $this->policyMatcher->invalidateCache();
 
     }//end applyStandingConsentMutation()
-
 
     /**
      * Rule deletions / deactivations / expiries do NOT modify past records.
@@ -189,7 +185,6 @@ class PolicyRetroactiveService
         $this->policyMatcher->invalidateCache();
 
     }//end applyRuleRemoval()
-
 
     /**
      * Decide whether a prohibition is eligible to drive a retroactive sweep.
@@ -222,7 +217,6 @@ class PolicyRetroactiveService
         return true;
 
     }//end isProhibitionEligible()
-
 
     /**
      * Load in-flight `scope: "document"` `publicationConsent` records.
@@ -296,7 +290,6 @@ class PolicyRetroactiveService
 
     }//end loadInFlightDocumentRecords()
 
-
     /**
      * Persist the force-resolved state on a single record.
      *
@@ -360,7 +353,6 @@ class PolicyRetroactiveService
 
     }//end forceResolveToAnonymized()
 
-
     /**
      * Coerce an ObjectService findAll result to a flat array of plain rows.
      *
@@ -412,7 +404,6 @@ class PolicyRetroactiveService
 
     }//end coerceToArray()
 
-
     /**
      * Pull `bsn` / `kvk` identifiers from a record if present.
      *
@@ -448,7 +439,6 @@ class PolicyRetroactiveService
 
     }//end extractIdentifiers()
 
-
     /**
      * Parse ISO-8601 to DateTimeImmutable; null on failure.
      *
@@ -469,6 +459,4 @@ class PolicyRetroactiveService
         }
 
     }//end parseDateTime()
-
-
 }//end class

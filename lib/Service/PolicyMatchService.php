@@ -84,7 +84,6 @@ class PolicyMatchService
      */
     private ?Transliterator $normaliser = null;
 
-
     /**
      * Constructor.
      *
@@ -99,7 +98,6 @@ class PolicyMatchService
     ) {
 
     }//end __construct()
-
 
     /**
      * Match a detected entity against the policy layer.
@@ -148,7 +146,6 @@ class PolicyMatchService
         );
 
     }//end match()
-
 
     /**
      * Find the first rule of the given kind that matches the entity.
@@ -212,7 +209,6 @@ class PolicyMatchService
 
     }//end firstMatchOf()
 
-
     /**
      * Test whether any rule in a `matchRules` array matches the given entity.
      *
@@ -248,7 +244,6 @@ class PolicyMatchService
         return false;
 
     }//end entityMatchesAnyRule()
-
 
     /**
      * Test a single match rule against an entity.
@@ -299,7 +294,6 @@ class PolicyMatchService
 
     }//end ruleMatches()
 
-
     /**
      * Lower-case + accent-strip a string for `normalized` matching.
      *
@@ -325,7 +319,6 @@ class PolicyMatchService
         return trim(mb_strtolower($value));
 
     }//end normalise()
-
 
     /**
      * Load both rule sources and normalise into a single cache.
@@ -357,7 +350,6 @@ class PolicyMatchService
 
     }//end loadRules()
 
-
     /**
      * Load active prohibition records.
      *
@@ -388,7 +380,6 @@ class PolicyMatchService
         return $rules;
 
     }//end loadProhibitions()
-
 
     /**
      * Load active standing-consent records (scope=entity).
@@ -438,7 +429,6 @@ class PolicyMatchService
         return $rules;
 
     }//end loadStandingConsents()
-
 
     /**
      * Extract plain-array objects from an ObjectService findAll result.
@@ -503,7 +493,6 @@ class PolicyMatchService
 
     }//end extractObjects()
 
-
     /**
      * Normalise a raw object into the cache shape.
      *
@@ -562,7 +551,6 @@ class PolicyMatchService
 
     }//end normaliseRule()
 
-
     /**
      * Parse an ISO-8601 string into DateTimeImmutable; null on failure.
      *
@@ -584,7 +572,6 @@ class PolicyMatchService
 
     }//end parseDateTime()
 
-
     /**
      * Invalidate the in-memory rule cache.
      *
@@ -599,6 +586,4 @@ class PolicyMatchService
         $this->rulesCache = null;
 
     }//end invalidateCache()
-
-
 }//end class

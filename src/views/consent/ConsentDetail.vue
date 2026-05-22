@@ -296,6 +296,8 @@ export default {
 		 * records an override: publicationDecision=anonymize while consentStatus
 		 * stays consent_given and policyMatch is preserved. The audit trail
 		 * comes from OpenRegister's mapper-level history.
+		 *
+		 * @param {boolean} checked New toggle state from NcCheckboxRadioSwitch.
 		 */
 		async onToggleAnonymise(checked) {
 			if (this.policyMatchKind === 'prohibition') {

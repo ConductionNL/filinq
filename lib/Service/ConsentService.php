@@ -348,7 +348,6 @@ class ConsentService
 
     }//end validatePublicationConsentData()
 
-
     /**
      * Verify a policyMatch UUID points at a permitted referent.
      *
@@ -436,7 +435,6 @@ class ConsentService
 
     }//end assertPolicyMatchReferentValid()
 
-
     /**
      * Return true when an ObjectService findAll result is non-empty.
      *
@@ -449,7 +447,6 @@ class ConsentService
         return $this->firstObject(result: $result) !== null;
 
     }//end resultHasAny()
-
 
     /**
      * Coerce the first hit of an ObjectService findAll result into a plain array.
@@ -502,7 +499,6 @@ class ConsentService
         return null;
 
     }//end firstObject()
-
 
     /**
      * Update consent status for a consent record
