@@ -28,20 +28,30 @@ So the work in this change is not "build a folder-binding mechanism". It is "def
 
 ## Decisions
 
-### D1. `bases` uses `$ref`, not inline objects
+### D1. `bases` is a string-array of slugs (v1) — `$ref`-based references deferred
 
-The `bases` field on `dossier` is an array of references to `base` objects via OpenRegister's native `$ref` syntax:
+The `bases` field on `dossier` is an array of strings — each string is the slug of a `base` object in the `dossier` register:
 
 ```json
 "bases": {
   "type": "array",
   "items": {
-    "$ref": "#/components/schemas/base"
+    "type": "string"
   }
 }
 ```
 
-**Rationale:** The six grondslagen are a closed, reusable vocabulary — inlining their definition on every dossier would duplicate the same text dozens of times and make wording changes a search-and-replace. `$ref` is the pattern OpenRegister already walks for referential integrity, so we get validation and backlinks for free.
+**Why not OpenRegister's `$ref` syntax?** The original design intended `items.$ref: "#/components/schemas/base"` so `ReferentialIntegrityService::extractTargetRef` could walk the array and validate each referenced base. That broke at apply-time: OpenRegister's register-config import path runs each schema through `opis/json-schema`, which rejects `#/components/schemas/<x>` references when the schema is validated in isolation (the parent `components` namespace isn't on the validator's URI stack). Every existing register-config in the codebase (opencatalogi, OR's own n8n_workflows, etc.) uses string arrays for cross-schema references; the `$ref` pattern is only used by the runtime ReferentialIntegrityService and isn't actually how register configs cross-reference at design time.
+
+**v1 trade-offs:**
+
+- OpenRegister does NOT validate that a stored slug resolves to a real `base` object. `"bases": ["does-not-exist"]` succeeds; consumers MUST handle unresolvable slugs gracefully (render as "onbekende grondslag", etc.).
+- OpenRegister does NOT block deletion of a `base` while a dossier references it. Same shape as the `entity-relation-grondslagen` decision on `EntityRelation.bases` (operator-discipline + audit-log; hard FK enforcement is a follow-up).
+- The closed-vocabulary benefit (single source of truth for the six canonical grondslagen) is preserved — they're seeded in `components.objects[]` and consumer code resolves slugs against the seeded register.
+
+**If hard referential integrity becomes load-bearing:** a follow-up change can either (a) introduce an OR-specific `or-ref` schema keyword that the JSON-schema validator passes through and the runtime resolver still walks, or (b) add a separate validate-on-write step that resolves slugs against the target register before commit. Both are deferred.
+
+**Rationale:** The six grondslagen are a closed, reusable vocabulary — string slugs against the seeded register give us reuse without the JSON-schema-validator friction. Inlining the grondslag definition on every dossier would duplicate the same text dozens of times and make wording changes a search-and-replace; the slug indirection is the same conceptual benefit as `$ref`, just resolved at read time by consumers instead of at validation time by OR.
 
 **Alternative considered:** An `enum` of grondslag codes (`persoonsgegevens`, `bijzondere-persoonsgegevens`, …). Rejected: closes extension (a tenant that needs a custom grondslag can't add one), loses the Dutch-law long descriptions, and doesn't scale to adding fields to a grondslag later (e.g. a link to the wetstekst).
 
@@ -117,7 +127,7 @@ These are the *fixed* vocabulary from Wet open overheid Art. 5. Shipped as seed 
 
 ### `dossier` register — 3–5 seed dossiers across personas
 
-Each seed dossier shows a realistic anonymisation scenario and references `base` objects via `$ref` (by slug, resolved by OpenRegister's referential-integrity walker). Folder IDs in the seed data use placeholder strings (`seed-folder-<slug>`) that the loader resolves to actual Nextcloud folder node IDs created for the seed registers at install time — same mechanism used by other apps' seed data.
+Each seed dossier shows a realistic anonymisation scenario and references `base` objects via slug strings in the `bases` array (consumer-side resolution; see D1). Folder IDs in the seed data use placeholder strings (`seed-folder-<slug>`) that the loader resolves to actual Nextcloud folder node IDs created for the seed registers at install time — same mechanism used by other apps' seed data.
 
 **Seed 1 — Gemeente Demostad (municipality)**
 
