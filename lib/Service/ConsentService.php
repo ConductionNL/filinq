@@ -112,6 +112,24 @@ class ConsentService
         array $resolvedIdentifiers=[]
     ): array {
         try {
+            // Defense-in-depth gate symmetric to the UPDATE-side
+            // immutability guard. The HTTP path strips these in
+            // `ConsentCrudService::createFromRequest`, but the service
+            // method is also a public DI surface — any internal caller
+            // who forwards user-influenced data without stripping
+            // would otherwise re-open the CREATE-side bypass (PR #147
+            // fifth-pass review). Throwing makes the misuse loud at
+            // the developer-facing layer; the controller-side strip
+            // handles HTTP-input quietly.
+            $injected = array_intersect_key($extra, array_flip(ConsentCrudService::SERVER_CONTROLLED_FIELDS));
+            if (empty($injected) === false) {
+                $msg = sprintf(
+                    'Server-controlled consent fields cannot be passed via $extra (rejected: %s).',
+                    implode(', ', array_keys($injected))
+                );
+                throw new InvalidArgumentException(message: $msg);
+            }
+
             $objectService = $this->getObjectService();
 
             $policyMatch = $this->policyMatcher->match(
@@ -149,6 +167,13 @@ class ConsentService
             );
 
             return $savedObject->getObject();
+        } catch (InvalidArgumentException $e) {
+            // Programmer-error path (injected server-controlled fields,
+            // validation failures). Surface as-is so the caller / test
+            // assertions see the precise reason; do NOT rewrap as the
+            // generic "Failed to create consent request" message, which
+            // would obscure the security signal at the DI boundary.
+            throw $e;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to create consent request: '.$e->getMessage(),

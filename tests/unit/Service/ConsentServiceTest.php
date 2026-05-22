@@ -346,4 +346,105 @@ class ConsentServiceTest extends TestCase
     }//end testValidateAcceptsValidScopeEntity()
 
 
+    /**
+     * Regression lock for PR #147 fifth-pass blocker — CREATE-side
+     * symmetric bypass. The DI-layer defense throws when `$extra`
+     * carries any server-controlled field, surfacing the misuse to
+     * the caller. Verified for each of the six server-controlled
+     * fields individually (one per data-provider row) so a future
+     * partial refactor that drops one from the guard list trips a
+     * test immediately.
+     *
+     * The HTTP path strips before reaching this method (see
+     * `ConsentCrudService::createFromRequest`), so this defense
+     * activates only for in-process DI callers — i.e. it catches
+     * developer error, not attacker traffic.
+     *
+     * @param string $field Server-controlled field name under test.
+     * @param mixed  $value Representative injection value for that field.
+     *
+     * @return void
+     *
+     * @dataProvider provideInjectedServerFields
+     */
+    public function testCreateConsentRequestRejectsInjectedServerFields(string $field, mixed $value): void
+    {
+        $this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches(regularExpression: '/Server-controlled consent fields cannot be passed via \$extra/');
+
+        $this->service->createConsentRequest(
+            documentId: 'doc-1',
+            entityType: 'PERSON',
+            entityText: 'Jan Janssen',
+            register: 'consent',
+            schema: 'publicationConsent',
+            extra: [$field => $value]
+        );
+
+    }//end testCreateConsentRequestRejectsInjectedServerFields()
+
+
+    /**
+     * Server-controlled fields and a representative injection value
+     * for each.
+     *
+     * @return array<string, array{0: string, 1: mixed}>
+     */
+    public static function provideInjectedServerFields(): array
+    {
+        return [
+            'policyMatch'         => ['policyMatch', 'attacker-supplied-uuid'],
+            'matchKind'           => ['matchKind', 'standing_consent'],
+            'consentStatus'       => ['consentStatus', 'consent_given'],
+            'publicationDecision' => ['publicationDecision', 'publish_with_consent'],
+            'notificationStatus'  => ['notificationStatus', 'skipped'],
+            'objectionDeadline'   => ['objectionDeadline', null],
+        ];
+
+    }//end provideInjectedServerFields()
+
+
+    /**
+     * A legitimate `$extra` carrying ONLY non-server-controlled fields
+     * (e.g. `consentScope`, structured `bases`) MUST NOT trip the guard.
+     * Locks the other edge of the regression: an over-strict guard
+     * that rejects legitimate fields would break the existing
+     * caller surface.
+     *
+     * Note: full createConsentRequest happy-path coverage requires
+     * mocking the OpenRegister ObjectService chain. This test only
+     * verifies the guard does not throw on a non-injected $extra by
+     * asserting NO InvalidArgumentException is raised before the
+     * OpenRegister-dependent code path takes over.
+     *
+     * @return void
+     */
+    public function testCreateConsentRequestAllowsLegitimateExtraFields(): void
+    {
+        $this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+
+        try {
+            $this->service->createConsentRequest(
+                documentId: 'doc-1',
+                entityType: 'PERSON',
+                entityText: 'Jan Janssen',
+                register: 'consent',
+                schema: 'publicationConsent',
+                extra: ['consentScope' => 'specific-decision-only']
+            );
+        } catch (\InvalidArgumentException $iae) {
+            $this->fail(message: 'Guard rejected a legitimate $extra field: '.$iae->getMessage());
+        } catch (\Throwable $other) {
+            // Expected — the downstream OpenRegister chain isn't mocked
+            // here (ObjectService is unreachable in this test fixture).
+            // The point of this test is the InvalidArgumentException
+            // branch does NOT fire; any other Throwable type is fine.
+            $this->addToAssertionCount(count: 1);
+        }
+
+    }//end testCreateConsentRequestAllowsLegitimateExtraFields()
+
+
 }//end class

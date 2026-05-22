@@ -143,6 +143,28 @@ class ConsentCrudService
 
 
     /**
+     * Server-controlled fields on a `publicationConsent` record. These are
+     * populated by `ConsentService::buildConsentData` from the
+     * `PolicyMatchService::match` outcome — an attacker who could inject
+     * them via the HTTP request body would defeat the WOO objection
+     * deadline or DOS publication via a fake prohibition. PR #147
+     * fifth-pass review locked this surface. Listed here once so the
+     * symmetric guard in `ConsentService::createConsentRequest` and the
+     * controller-side strip stay in sync.
+     *
+     * @var string[]
+     */
+    public const SERVER_CONTROLLED_FIELDS = [
+        'policyMatch',
+        'matchKind',
+        'consentStatus',
+        'publicationDecision',
+        'notificationStatus',
+        'objectionDeadline',
+    ];
+
+
+    /**
      * Create a consent request from controller data
      *
      * @param array<string, mixed> $data     The request data
@@ -161,6 +183,27 @@ class ConsentCrudService
 
         // Remove framework-injected params that are not consent data.
         unset($extra['_route'], $extra['_method']);
+
+        // Strip server-controlled fields the caller has no business setting.
+        // The HTTP-input boundary defense for the CREATE-side bypass class
+        // (PR #147 fifth-pass — symmetric to the UPDATE-side immutability
+        // guard added in the fourth pass). Without this strip,
+        // `array_merge($serverComputed, $extra)` in
+        // `ConsentService::createConsentRequest` would let the caller
+        // overwrite the policy-match outcome with attacker-supplied values.
+        $rejected = array_intersect_key($extra, array_flip(self::SERVER_CONTROLLED_FIELDS));
+        if (empty($rejected) === false) {
+            $this->logger->warning(
+                'Server-controlled consent fields stripped from create-request body',
+                [
+                    'register'     => $register,
+                    'schema'       => $schema,
+                    // ADR-005: log keys only; do not echo attacker-supplied values back into the log stream.
+                    'strippedKeys' => array_keys($rejected),
+                ]
+            );
+            $extra = array_diff_key($extra, $rejected);
+        }
 
         return $this->consentService->createConsentRequest(
             $data['documentId'],

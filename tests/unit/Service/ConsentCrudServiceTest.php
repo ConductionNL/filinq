@@ -53,6 +53,15 @@ class ConsentCrudServiceTest extends TestCase
      */
     private ConsentService|MockObject $mockConsentService;
 
+    /**
+     * Mock logger — promoted from a local variable to a property so the
+     * server-field-strip tests (PR #147 fifth-pass) can assert on its
+     * warning() calls.
+     *
+     * @var LoggerInterface|MockObject
+     */
+    private LoggerInterface|MockObject $mockLogger;
+
 
     /**
      * Set up test environment
@@ -65,12 +74,12 @@ class ConsentCrudServiceTest extends TestCase
 
         $this->mockSettingsService = $this->createMock(SettingsService::class);
         $this->mockConsentService  = $this->createMock(ConsentService::class);
-        $mockLogger                = $this->createMock(LoggerInterface::class);
+        $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
         $this->service = new ConsentCrudService(
             $this->mockSettingsService,
             $this->mockConsentService,
-            $mockLogger
+            $this->mockLogger
         );
 
     }//end setUp()
@@ -84,12 +93,14 @@ class ConsentCrudServiceTest extends TestCase
     public function testGetConsentConfigReturnsNullWhenNotConfigured(): void
     {
         $this->mockSettingsService->method('getAllSettings')
-            ->willReturn([
-                'configuration' => [
-                    'publicationConsent_register' => '',
-                    'publicationConsent_schema'   => '',
-                ],
-            ]);
+            ->willReturn(
+                    [
+                        'configuration' => [
+                            'publicationConsent_register' => '',
+                            'publicationConsent_schema'   => '',
+                        ],
+                    ]
+                    );
 
         $result = $this->service->getConsentConfig();
         $this->assertNull($result);
@@ -105,12 +116,14 @@ class ConsentCrudServiceTest extends TestCase
     public function testGetConsentConfigReturnsConfigWhenConfigured(): void
     {
         $this->mockSettingsService->method('getAllSettings')
-            ->willReturn([
-                'configuration' => [
-                    'publicationConsent_register' => 'reg-1',
-                    'publicationConsent_schema'   => 'schema-1',
-                ],
-            ]);
+            ->willReturn(
+                    [
+                        'configuration' => [
+                            'publicationConsent_register' => 'reg-1',
+                            'publicationConsent_schema'   => 'schema-1',
+                        ],
+                    ]
+                    );
 
         $result = $this->service->getConsentConfig();
         $this->assertNotNull($result);
@@ -161,6 +174,93 @@ class ConsentCrudServiceTest extends TestCase
         $this->assertCount(2, $result);
 
     }//end testGetConsentsByDocumentDelegatesToConsentService()
+
+
+    /**
+     * Regression lock for PR #147 fifth-pass blocker — HTTP-input
+     * boundary defense. The CrudService MUST strip server-controlled
+     * fields from `$extra` before forwarding to `ConsentService`, AND
+     * MUST log a structured security warning naming the stripped
+     * keys (so probing attempts are visible in the audit stream).
+     *
+     * ADR-005: the log payload MUST NOT echo the attacker-supplied
+     * VALUES — only the keys. The test asserts this explicitly.
+     *
+     * @return void
+     */
+    public function testCreateFromRequestStripsServerControlledFields(): void
+    {
+        $this->mockLogger->expects($this->once())
+            ->method('warning')
+            ->willReturnCallback(
+                callback: function (string $message, array $context): void {
+                    $this->assertStringContainsString(needle: 'stripped', haystack: $message);
+                    $this->assertArrayHasKey(key: 'strippedKeys', array: $context);
+                    $this->assertContains(needle: 'policyMatch', haystack: $context['strippedKeys']);
+                    $this->assertContains(needle: 'matchKind', haystack: $context['strippedKeys']);
+                    // ADR-005: values MUST NOT appear in the log payload.
+                    $jsonContext = json_encode($context);
+                    $this->assertStringNotContainsString(needle: 'attacker-supplied-uuid', haystack: (string) $jsonContext);
+                    $this->assertStringNotContainsString(needle: 'standing_consent', haystack: (string) $jsonContext);
+                }
+            );
+
+        // The downstream call MUST receive an $extra WITHOUT the server-
+        // controlled fields (here: empty, since the input only carried
+        // server-controlled fields and the framework keys).
+        $this->mockConsentService->expects($this->once())
+            ->method('createConsentRequest')
+            ->with('doc-1', 'PERSON', 'Jan de Vries', 'reg-1', 'schema-1', [])
+            ->willReturn(['id' => 'uuid-1']);
+
+        $this->service->createFromRequest(
+            [
+                'documentId'          => 'doc-1',
+                'entityType'          => 'PERSON',
+                'entityText'          => 'Jan de Vries',
+                // Injection attempt.
+                'policyMatch'         => 'attacker-supplied-uuid',
+                'matchKind'           => 'standing_consent',
+                'consentStatus'       => 'consent_given',
+                'publicationDecision' => 'publish_with_consent',
+                'notificationStatus'  => 'skipped',
+                'objectionDeadline'   => null,
+            ],
+            'reg-1',
+            'schema-1'
+        );
+
+    }//end testCreateFromRequestStripsServerControlledFields()
+
+
+    /**
+     * Legitimate `$extra` carrying only non-server-controlled fields
+     * (e.g. `consentScope`) MUST pass through to ConsentService
+     * unchanged. The strip MUST NOT over-reach.
+     *
+     * @return void
+     */
+    public function testCreateFromRequestForwardsLegitimateExtraFields(): void
+    {
+        $this->mockLogger->expects($this->never())->method('warning');
+
+        $this->mockConsentService->expects($this->once())
+            ->method('createConsentRequest')
+            ->with('doc-1', 'PERSON', 'Jan de Vries', 'reg-1', 'schema-1', ['consentScope' => 'limited'])
+            ->willReturn(['id' => 'uuid-1']);
+
+        $this->service->createFromRequest(
+            [
+                'documentId'   => 'doc-1',
+                'entityType'   => 'PERSON',
+                'entityText'   => 'Jan de Vries',
+                'consentScope' => 'limited',
+            ],
+            'reg-1',
+            'schema-1'
+        );
+
+    }//end testCreateFromRequestForwardsLegitimateExtraFields()
 
 
 }//end class
