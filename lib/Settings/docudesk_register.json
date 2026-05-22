@@ -1194,6 +1194,8 @@
                 "consentDocument": "seed-recording-bakker-2025-02-10.mp3",
                 "consentScope": "Beperkt tot het specifieke onderwerp (subsidieaanvraag bedrijvenpark Zuid).",
                 "policyMatch": null
+            },
+            {
                 "@self": {"register": "dossier", "schema": "base", "slug": "persoonsgegevens"},
                 "name": "Persoonsgegevens",
                 "description": "Herleidbare gegevens van een natuurlijke persoon (Art. 5.1 Woo jo. AVG Art. 4 lid 1). Denk aan namen, adressen, BSN, contactgegevens, functie gekoppeld aan persoon."
