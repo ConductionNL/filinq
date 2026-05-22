@@ -4,6 +4,17 @@ status: draft
 
 # WOO publicatie pipeline
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Archief > Woo-publicatie / Archief
+
+**Rationale:** Disclosure pipeline; hand-off to OpenCatalogi happens here  
+_Source: /tmp/ia-doc-dec-cat-conn.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Implement an end-to-end Wet Open Overheid (WOO) publication pipeline inside docudesk. The WOO came into force on 1 May 2022 and replaced the Wob; it actively obliges every Dutch government organisation to publish 17 information categories proactively (covenanten, jaarplannen, ontwerpwetten, bestuurlijke besluiten, raadsstukken, vergaderverslagen, onderzoeken, beschikkingen, etc.) on the national PLOOI platform (operated by KOOP, Kennis- en Exploitatiecentrum Officiële Overheidspublicaties). Each publication must be machine-readable, must carry DIWOO metadata, must be anonymised or otherwise lawfully redacted, and must be findable through the national zoekindex at open.overheid.nl. Non-publication is a finding by the supervising Inspectie Openbaarheid van Bestuur (operational since 2026).
