@@ -3,6 +3,17 @@ status: draft
 ---
 # TMLO / MDTO Metadata
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Archief > TMLO/MDTO metadata / Archief
+
+**Rationale:** Records-mgmt metadata model, only relevant when archiving  
+_Source: /tmp/ia-doc-dec-cat-conn.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Dutch local government (gemeenten, provincies, waterschappen, gemeenschappelijke regelingen) is bound by the Archiefwet to keep its records duurzaam toegankelijk — durably accessible, findable, interpretable, and transferable to a permanent archive (e-Depot) at the end of the retention period. The two metadata standards that govern this in 2026 are TMLO 1.2.1 (Toepassingsprofiel Metadatering Lokale Overheden), which is the schema that has been in production at most gemeenten for the past decade, and MDTO 1.0 (Metadata Duurzaam Toegankelijke Overheidsinformatie), the Nationaal Archief's successor that is rolling out as the new mandatory format for transfer to the rijks-e-Depot from 2025 onwards. Both standards must be supported in parallel: existing records ingested or born under TMLO need to remain valid TMLO until their transfer date, and new records — especially those destined for the Nationaal Archief — must be born MDTO.
