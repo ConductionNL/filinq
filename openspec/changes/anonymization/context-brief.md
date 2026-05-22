@@ -4,6 +4,17 @@ status: implemented
 
 # Anonymization Pipeline
 
+## Placement & Information Architecture
+
+**Placement type:** `DETAIL_TAB` — Tab on the detail view of an existing object. NOT a standalone page — appears inside the parent record's detail surface (e.g. an extra tab on the existing detail header).
+
+**Lives at:** Documenten > Document detail > Anonimisatie tab + Batch panel / Documenten
+
+**Rationale:** Single-file pipeline; lives on the document  
+_Source: /tmp/ia-doc-dec-cat-conn.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Provides a complete document anonymization pipeline: upload files to a user-scoped DocuDesk folder, extract text and detect personally identifiable entities (PII) using OpenRegister's TextExtractionService, and anonymize the document by replacing detected entities with placeholders via OpenRegister's FileService. The pipeline runs 100% locally with no external cloud dependencies, ensuring GDPR/AVG compliance through privacy-by-design processing.
