@@ -1,0 +1,8 @@
+{
+  "spec_slug": "eidas-qes-signature",
+  "title": "eIDAS Qualified Electronic Signature (QES)",
+  "app": "docudesk",
+  "repo": "https://github.com/ConductionNL/docudesk",
+  "depends_on": [],
+  "issue": null
+}
