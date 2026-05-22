@@ -2,6 +2,17 @@ status: draft
 
 # E-Discovery and Legal Hold
 
+## Placement & Information Architecture
+
+**Placement type:** `SUB_PAGE` — Sub-page beneath a top-level menu entry. Renders as a page inside the parent surface (usually reachable via a router child route or a tab on the parent index page).
+
+**Lives at:** Archief > Legal hold & e-discovery / Archief
+
+**Rationale:** Cases, holds, custodians, exports  
+_Source: /tmp/ia-doc-dec-cat-conn.md_
+
+> **Implementation note for builders:** Respect the placement above. Do not promote this spec to a top-level menu item, sub-page, or new route unless the placement type explicitly says so. If the placement is `DETAIL_TAB`, `WIDGET`, `ACTION`, `SETTING`, or `INFRA`, the feature must NOT introduce a new entry in the app sidebar. When in doubt, ask before creating a new top-level surface.
+
 ## Purpose
 
 Provide an e-discovery and legal-hold capability inside docudesk so that organisations facing litigation, regulatory investigation, Woo-verzoeken, AVG access requests, or internal investigations can preserve, search, review, and produce relevant documents in a defensible manner. Today docudesk has a retention engine that automatically deletes or archives content according to a policy. That is exactly the wrong behaviour when a matter is under legal hold: every byte must be preserved untouched until the hold is released, even if the routine retention schedule says "delete after 90 days". Without a first-class hold mechanism, organisations either disable retention globally (creating storage and AVG-compliance problems) or risk spoliation claims and dwangsommen.
