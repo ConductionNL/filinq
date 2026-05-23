@@ -4,135 +4,154 @@
 			{{ t('docudesk', 'Anonymization') }}
 		</h2>
 
-		<!-- Step indicator bar -->
-		<div class="step-indicator">
-			<div v-for="(step, index) in steps"
-				:key="step.label"
-				class="step"
-				:class="{ active: index < stepNumber, current: index === stepNumber }">
-				<div class="step-circle">
-					{{ index + 1 }}
-				</div>
-				<span class="step-label">{{ step.label }}</span>
-			</div>
-		</div>
-
-		<!-- Idle / Upload state -->
-		<div v-if="currentStep === 'idle' || currentStep === 'uploading' || currentStep === 'queued'" class="upload-section">
+		<!-- Drop zone — always present so users can queue more files at any time -->
+		<div class="upload-section">
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
-				@drop.prevent="handleDrop">
+				@drop.prevent="handleDrop"
+				@click="$refs.fileInput.click()">
 				<Upload :size="48" />
 				<p class="drop-text">
-					{{ t('docudesk', 'Drag and drop a file here, or click to select') }}
+					{{ anonymizationStore.hasFiles
+						? t('docudesk', 'Drop more files, or click to select')
+						: t('docudesk', 'Drag and drop files here, or click to select')
+					}}
 				</p>
 				<input
 					ref="fileInput"
 					type="file"
+					multiple
 					class="file-input"
 					@change="handleFileSelect">
-				<NcButton type="secondary" @click="$refs.fileInput.click()">
-					{{ t('docudesk', 'Select File') }}
+				<NcButton type="secondary" @click.stop="$refs.fileInput.click()">
+					{{ t('docudesk', 'Select Files') }}
+				</NcButton>
+			</div>
+		</div>
+
+		<!-- Empty state — only shown when no files queued yet -->
+		<NcEmptyContent
+			v-if="!anonymizationStore.hasFiles"
+			class="empty-state"
+			:name="t('docudesk', 'No files queued')"
+			:description="t('docudesk', 'Drop a document above to start the anonymization pipeline.')">
+			<template #icon>
+				<FileDocumentOutline />
+			</template>
+		</NcEmptyContent>
+
+		<!-- One card per file in the queue -->
+		<div v-if="anonymizationStore.hasFiles" class="file-list">
+			<div class="file-list-header">
+				<h3>{{ t('docudesk', 'Queue') }}</h3>
+				<NcButton
+					v-if="canClear"
+					type="tertiary"
+					@click="anonymizationStore.clearCompleted()">
+					{{ t('docudesk', 'Clear finished') }}
 				</NcButton>
 			</div>
 
-			<div v-if="currentStep === 'uploading'" class="progress-section">
-				<p>{{ t('docudesk', 'Uploading {name}...', { name: selectedFileName }) }}</p>
-				<NcProgressBar :value="uploadProgress" />
-			</div>
-		</div>
+			<div v-for="file in anonymizationStore.files" :key="file.id" class="file-card">
+				<!-- Header: name + status -->
+				<div class="file-card-header">
+					<div class="file-card-title">
+						<FileDocumentOutline :size="20" />
+						<span class="file-name" :title="file.name">{{ file.name }}</span>
+					</div>
+					<span class="file-status" :class="`status-${file.status}`">
+						{{ statusLabel(file.status) }}
+					</span>
+				</div>
 
-		<!-- Extracting state -->
-		<div v-if="currentStep === 'extracting'" class="processing-section">
-			<NcLoadingIcon :size="44" />
-			<p class="processing-text">
-				{{ t('docudesk', 'Analyzing document for personal data...') }}
-			</p>
-		</div>
+				<!-- Per-file step indicator -->
+				<div class="step-indicator">
+					<div
+						v-for="(step, index) in steps"
+						:key="step.label"
+						class="step"
+						:class="stepClass(file, index)">
+						<div class="step-circle">
+							{{ index + 1 }}
+						</div>
+						<span class="step-label">{{ step.label }}</span>
+					</div>
+				</div>
 
-		<!-- Anonymizing state -->
-		<div v-if="currentStep === 'anonymizing'" class="processing-section">
-			<NcLoadingIcon :size="44" />
-			<p class="processing-text">
-				{{ t('docudesk', 'Anonymizing {count} entities...', { count: extractionResult?.entityCount || 0 }) }}
-			</p>
-		</div>
+				<!-- In-flight state -->
+				<div
+					v-if="file.status === 'uploading' || file.status === 'extracting' || file.status === 'anonymizing'"
+					class="processing-section">
+					<NcLoadingIcon :size="32" />
+					<p class="processing-text">
+						{{ processingText(file) }}
+					</p>
+				</div>
 
-		<!-- Completed state -->
-		<div v-if="currentStep === 'completed'" class="results-section">
-			<!-- No entities found -->
-			<template v-if="!extractionResult?.entities?.length">
-				<NcNoteCard type="info">
+				<!-- Completed without entities -->
+				<NcNoteCard
+					v-if="file.status === 'completed' && file.entityCount === 0"
+					type="info">
 					{{ t('docudesk', 'No personal data found in this document.') }}
 				</NcNoteCard>
-			</template>
 
-			<!-- Entities found and anonymized -->
-			<template v-else>
-				<NcNoteCard type="success">
-					{{ t('docudesk', 'Document anonymized successfully! {count} entities replaced.', { count: anonymizationResult?.replacementCount || 0 }) }}
+				<!-- Completed with entities -->
+				<template v-if="file.status === 'completed' && file.entityCount > 0">
+					<NcNoteCard type="success">
+						{{ t('docudesk', 'Document anonymized successfully! {count} entities replaced.', { count: file.replacementCount }) }}
+					</NcNoteCard>
+
+					<div v-if="file.anonymizedFileName" class="file-info">
+						<FileDocumentOutline :size="20" />
+						<span>{{ file.anonymizedFileName }}</span>
+					</div>
+
+					<!-- Per-file entity table -->
+					<div v-if="file.entities && file.entities.length > 0" class="entity-table-wrapper">
+						<h4>{{ t('docudesk', 'Detected Entities') }}</h4>
+						<table class="entity-table">
+							<thead>
+								<tr>
+									<th>{{ t('docudesk', 'Type') }}</th>
+									<th>{{ t('docudesk', 'Value') }}</th>
+									<th>{{ t('docudesk', 'Confidence') }}</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="(entity, index) in file.entities" :key="index">
+									<td>
+										<span class="entity-type-badge">{{ entity.type }}</span>
+									</td>
+									<td>{{ entity.value }}</td>
+									<td>{{ formatConfidence(entity.confidence) }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</template>
+
+				<!-- Error state -->
+				<NcNoteCard v-if="file.status === 'error'" type="error">
+					{{ file.error || t('docudesk', 'An unexpected error occurred.') }}
 				</NcNoteCard>
-
-				<!-- Anonymized file info -->
-				<div v-if="anonymizationResult" class="file-info">
-					<FileDocumentOutline :size="20" />
-					<span>{{ anonymizationResult.anonymizedFileName }}</span>
-				</div>
-
-				<!-- Entity table -->
-				<div class="entity-table-wrapper">
-					<h3>{{ t('docudesk', 'Detected Entities') }}</h3>
-					<table class="entity-table">
-						<thead>
-							<tr>
-								<th>{{ t('docudesk', 'Type') }}</th>
-								<th>{{ t('docudesk', 'Value') }}</th>
-								<th>{{ t('docudesk', 'Confidence') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(entity, index) in extractionResult.entities" :key="index">
-								<td>
-									<span class="entity-type-badge">{{ entity.type }}</span>
-								</td>
-								<td>{{ entity.value }}</td>
-								<td>{{ formatConfidence(entity.confidence) }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</template>
-
-			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
-				{{ t('docudesk', 'Anonymize Another') }}
-			</NcButton>
-		</div>
-
-		<!-- Error state -->
-		<div v-if="currentStep === 'error'" class="error-section">
-			<NcNoteCard type="error">
-				{{ errorMessage }}
-			</NcNoteCard>
-			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
-				{{ t('docudesk', 'Try Again') }}
-			</NcButton>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcEmptyContent } from '@nextcloud/vue'
 import Upload from 'vue-material-design-icons/Upload.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import { anonymizationStore } from '../../store/store.js'
 
-// Map a file-entry `status` (per useAnonymizationStore — see
-// src/store/modules/anonymization.js) onto the 0-based step index
-// rendered by the step-indicator bar.
+// Per-file pipeline state → 0-based step index for the indicator bar.
+// 'queued' is treated as "about to start step 0" so the first dot is the
+// current one (not yet active).
 const STATUS_TO_STEP = {
 	queued: 0,
 	uploading: 0,
@@ -146,9 +165,9 @@ export default {
 	name: 'AnonymizationWidget',
 	components: {
 		NcButton,
-		NcProgressBar,
 		NcLoadingIcon,
 		NcNoteCard,
+		NcEmptyContent,
 		Upload,
 		FileDocumentOutline,
 	},
@@ -166,7 +185,6 @@ export default {
 	data() {
 		return {
 			isDragging: false,
-			selectedFileName: '',
 			steps: [
 				{ label: t('docudesk', 'Upload') },
 				{ label: t('docudesk', 'Analyze') },
@@ -176,62 +194,10 @@ export default {
 		}
 	},
 	computed: {
-		// The widget template was originally written against an older
-		// store API (`currentStep`, `stepNumber`, `uploadProgress`,
-		// `extractionResult`, `anonymizationResult`). The current
-		// `useAnonymizationStore` (Pinia) instead exposes a per-file
-		// queue under `files[]`, each with a `status` field. The
-		// computeds below adapt the new store shape to the old
-		// vocabulary so the existing template renders correctly without
-		// a wider refactor (see follow-up to unify on the queue model).
-		currentFile() {
-			const files = this.anonymizationStore.files
-			if (!files || files.length === 0) {
-				return null
-			}
-			return files[files.length - 1]
-		},
-		currentStep() {
-			if (!this.currentFile) {
-				return 'idle'
-			}
-			return this.currentFile.status
-		},
-		stepNumber() {
-			if (!this.currentFile) {
-				return 0
-			}
-			return STATUS_TO_STEP[this.currentFile.status] ?? 0
-		},
-		uploadProgress() {
-			// The store doesn't track per-byte upload progress yet;
-			// surface an indeterminate-style value while uploading.
-			return this.currentStep === 'uploading' ? 0 : 0
-		},
-		extractionResult() {
-			if (!this.currentFile) {
-				return null
-			}
-			return {
-				entityCount: this.currentFile.entityCount,
-				// The store currently doesn't persist individual
-				// entities returned by /extract — the table renders
-				// from this list, so leave it empty until the store
-				// is extended to keep them.
-				entities: [],
-			}
-		},
-		anonymizationResult() {
-			if (!this.currentFile || !this.currentFile.anonymizedFileName) {
-				return null
-			}
-			return {
-				anonymizedFileName: this.currentFile.anonymizedFileName,
-				replacementCount: this.currentFile.replacementCount,
-			}
-		},
-		errorMessage() {
-			return this.currentFile?.error || t('docudesk', 'An unexpected error occurred.')
+		canClear() {
+			return this.anonymizationStore.files.some(
+				(f) => f.status === 'completed' || f.status === 'error',
+			)
 		},
 	},
 	methods: {
@@ -240,18 +206,55 @@ export default {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
 			if (files && files.length > 0) {
-				this.startPipeline(files[0])
+				this.anonymizationStore.addFiles(files)
 			}
 		},
 		handleFileSelect(event) {
 			const files = event.target?.files
 			if (files && files.length > 0) {
-				this.startPipeline(files[0])
+				this.anonymizationStore.addFiles(files)
+			}
+			// Reset input so the same files can be re-selected.
+			event.target.value = ''
+		},
+		stepIndex(file) {
+			return STATUS_TO_STEP[file.status] ?? 0
+		},
+		stepClass(file, index) {
+			const current = this.stepIndex(file)
+			if (file.status === 'completed') {
+				return { active: true }
+			}
+			if (file.status === 'error') {
+				return { error: index === current }
+			}
+			return {
+				active: index < current,
+				current: index === current,
 			}
 		},
-		startPipeline(file) {
-			this.selectedFileName = file.name
-			this.anonymizationStore.addFiles([file])
+		statusLabel(status) {
+			const labels = {
+				queued: t('docudesk', 'Queued'),
+				uploading: t('docudesk', 'Uploading'),
+				extracting: t('docudesk', 'Analyzing'),
+				anonymizing: t('docudesk', 'Anonymizing'),
+				completed: t('docudesk', 'Done'),
+				error: t('docudesk', 'Error'),
+			}
+			return labels[status] || status
+		},
+		processingText(file) {
+			if (file.status === 'uploading') {
+				return t('docudesk', 'Uploading {name}...', { name: file.name })
+			}
+			if (file.status === 'extracting') {
+				return t('docudesk', 'Analyzing document for personal data...')
+			}
+			if (file.status === 'anonymizing') {
+				return t('docudesk', 'Anonymizing {count} entities...', { count: file.entityCount || 0 })
+			}
+			return ''
 		},
 		formatConfidence(confidence) {
 			if (typeof confidence === 'number') {
@@ -266,61 +269,7 @@ export default {
 <style scoped>
 .anonymization-content {
 	padding: 20px;
-	max-width: 800px;
-}
-
-/* Step indicator */
-.step-indicator {
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 32px;
-	padding: 0 16px;
-}
-
-.step {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	flex: 1;
-	position: relative;
-}
-
-.step-circle {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
-	border: 2px solid var(--color-border);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 0.85rem;
-	font-weight: 600;
-	color: var(--color-text-maxcontrast);
-	background-color: var(--color-main-background);
-	margin-bottom: 6px;
-}
-
-.step.active .step-circle {
-	border-color: var(--color-success);
-	background-color: var(--color-success);
-	color: white;
-}
-
-.step.current .step-circle {
-	border-color: var(--color-primary);
-	background-color: var(--color-primary);
-	color: white;
-}
-
-.step-label {
-	font-size: 0.8rem;
-	color: var(--color-text-maxcontrast);
-}
-
-.step.active .step-label,
-.step.current .step-label {
-	color: var(--color-main-text);
-	font-weight: 500;
+	max-width: 900px;
 }
 
 /* Upload section */
@@ -331,7 +280,7 @@ export default {
 .drop-zone {
 	border: 2px dashed var(--color-border);
 	border-radius: 12px;
-	padding: 48px 24px;
+	padding: 32px 24px;
 	text-align: center;
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
@@ -352,14 +301,135 @@ export default {
 	display: none;
 }
 
-.progress-section {
-	margin-top: 16px;
-	text-align: center;
+/* Empty state */
+.empty-state {
+	margin: 24px 0;
 }
 
-.progress-section p {
-	margin-bottom: 8px;
+/* File list */
+.file-list {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.file-list-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.file-list-header h3 {
+	margin: 0;
+}
+
+.file-card {
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 16px;
+	background-color: var(--color-main-background);
+}
+
+.file-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.file-card-title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	overflow: hidden;
+}
+
+.file-name {
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.file-status {
+	font-size: 0.85rem;
+	padding: 2px 10px;
+	border-radius: 12px;
+	background-color: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
+	white-space: nowrap;
+}
+
+.file-status.status-completed {
+	background-color: var(--color-success);
+	color: white;
+}
+
+.file-status.status-error {
+	background-color: var(--color-error);
+	color: white;
+}
+
+/* Step indicator */
+.step-indicator {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 16px;
+	padding: 0 8px;
+}
+
+.step {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+}
+
+.step-circle {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	border: 2px solid var(--color-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+	background-color: var(--color-main-background);
+	margin-bottom: 4px;
+}
+
+.step.active .step-circle {
+	border-color: var(--color-success);
+	background-color: var(--color-success);
+	color: white;
+}
+
+.step.current .step-circle {
+	border-color: var(--color-primary);
+	background-color: var(--color-primary);
+	color: white;
+}
+
+.step.error .step-circle {
+	border-color: var(--color-error);
+	background-color: var(--color-error);
+	color: white;
+}
+
+.step-label {
+	font-size: 0.75rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.step.active .step-label,
+.step.current .step-label,
+.step.error .step-label {
+	color: var(--color-main-text);
+	font-weight: 500;
 }
 
 /* Processing section */
@@ -367,36 +437,32 @@ export default {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 48px 24px;
+	padding: 24px;
 }
 
 .processing-text {
-	margin-top: 16px;
+	margin-top: 12px;
 	color: var(--color-text-maxcontrast);
-	font-size: 1.1rem;
 }
 
-/* Results section */
-.results-section {
-	margin-bottom: 24px;
-}
-
+/* Result info */
 .file-info {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 12px 16px;
-	margin: 16px 0;
+	padding: 10px 12px;
+	margin: 12px 0;
 	border-radius: 8px;
 	background-color: var(--color-background-dark);
 }
 
+/* Entity table */
 .entity-table-wrapper {
-	margin: 24px 0;
+	margin-top: 16px;
 }
 
-.entity-table-wrapper h3 {
-	margin-bottom: 12px;
+.entity-table-wrapper h4 {
+	margin: 0 0 8px 0;
 }
 
 .entity-table {
@@ -406,7 +472,7 @@ export default {
 
 .entity-table th,
 .entity-table td {
-	padding: 10px 12px;
+	padding: 8px 10px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
@@ -414,7 +480,7 @@ export default {
 .entity-table th {
 	font-weight: 600;
 	color: var(--color-text-maxcontrast);
-	font-size: 0.85rem;
+	font-size: 0.8rem;
 	text-transform: uppercase;
 }
 
@@ -426,14 +492,5 @@ export default {
 	font-weight: 500;
 	background-color: var(--color-primary-element-light);
 	color: var(--color-primary-element);
-}
-
-.reset-button {
-	margin-top: 24px;
-}
-
-/* Error section */
-.error-section {
-	margin-bottom: 24px;
 }
 </style>
