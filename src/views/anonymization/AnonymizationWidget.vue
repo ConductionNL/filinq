@@ -1,8 +1,3 @@
-<script setup>
-import { translate as t } from '@nextcloud/l10n'
-import { anonymizationStore } from '../../store/store.js'
-</script>
-
 <template>
 	<div class="anonymization-content">
 		<h2 class="pageHeader">
@@ -14,7 +9,7 @@ import { anonymizationStore } from '../../store/store.js'
 			<div v-for="(step, index) in steps"
 				:key="step.label"
 				class="step"
-				:class="{ active: index < anonymizationStore.stepNumber, current: index === anonymizationStore.stepNumber }">
+				:class="{ active: index < stepNumber, current: index === stepNumber }">
 				<div class="step-circle">
 					{{ index + 1 }}
 				</div>
@@ -23,7 +18,7 @@ import { anonymizationStore } from '../../store/store.js'
 		</div>
 
 		<!-- Idle / Upload state -->
-		<div v-if="anonymizationStore.currentStep === 'idle' || anonymizationStore.currentStep === 'uploading'" class="upload-section">
+		<div v-if="currentStep === 'idle' || currentStep === 'uploading' || currentStep === 'queued'" class="upload-section">
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
@@ -44,14 +39,14 @@ import { anonymizationStore } from '../../store/store.js'
 				</NcButton>
 			</div>
 
-			<div v-if="anonymizationStore.currentStep === 'uploading'" class="progress-section">
+			<div v-if="currentStep === 'uploading'" class="progress-section">
 				<p>{{ t('docudesk', 'Uploading {name}...', { name: selectedFileName }) }}</p>
-				<NcProgressBar :value="anonymizationStore.uploadProgress" />
+				<NcProgressBar :value="uploadProgress" />
 			</div>
 		</div>
 
 		<!-- Extracting state -->
-		<div v-if="anonymizationStore.currentStep === 'extracting'" class="processing-section">
+		<div v-if="currentStep === 'extracting'" class="processing-section">
 			<NcLoadingIcon :size="44" />
 			<p class="processing-text">
 				{{ t('docudesk', 'Analyzing document for personal data...') }}
@@ -59,17 +54,17 @@ import { anonymizationStore } from '../../store/store.js'
 		</div>
 
 		<!-- Anonymizing state -->
-		<div v-if="anonymizationStore.currentStep === 'anonymizing'" class="processing-section">
+		<div v-if="currentStep === 'anonymizing'" class="processing-section">
 			<NcLoadingIcon :size="44" />
 			<p class="processing-text">
-				{{ t('docudesk', 'Anonymizing {count} entities...', { count: anonymizationStore.extractionResult?.entityCount || 0 }) }}
+				{{ t('docudesk', 'Anonymizing {count} entities...', { count: extractionResult?.entityCount || 0 }) }}
 			</p>
 		</div>
 
 		<!-- Completed state -->
-		<div v-if="anonymizationStore.currentStep === 'completed'" class="results-section">
+		<div v-if="currentStep === 'completed'" class="results-section">
 			<!-- No entities found -->
-			<template v-if="!anonymizationStore.extractionResult?.entities?.length">
+			<template v-if="!extractionResult?.entities?.length">
 				<NcNoteCard type="info">
 					{{ t('docudesk', 'No personal data found in this document.') }}
 				</NcNoteCard>
@@ -78,13 +73,13 @@ import { anonymizationStore } from '../../store/store.js'
 			<!-- Entities found and anonymized -->
 			<template v-else>
 				<NcNoteCard type="success">
-					{{ t('docudesk', 'Document anonymized successfully! {count} entities replaced.', { count: anonymizationStore.anonymizationResult?.replacementCount || 0 }) }}
+					{{ t('docudesk', 'Document anonymized successfully! {count} entities replaced.', { count: anonymizationResult?.replacementCount || 0 }) }}
 				</NcNoteCard>
 
 				<!-- Anonymized file info -->
-				<div v-if="anonymizationStore.anonymizationResult" class="file-info">
+				<div v-if="anonymizationResult" class="file-info">
 					<FileDocumentOutline :size="20" />
-					<span>{{ anonymizationStore.anonymizationResult.anonymizedFileName }}</span>
+					<span>{{ anonymizationResult.anonymizedFileName }}</span>
 				</div>
 
 				<!-- Entity table -->
@@ -99,7 +94,7 @@ import { anonymizationStore } from '../../store/store.js'
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="(entity, index) in anonymizationStore.extractionResult.entities" :key="index">
+							<tr v-for="(entity, index) in extractionResult.entities" :key="index">
 								<td>
 									<span class="entity-type-badge">{{ entity.type }}</span>
 								</td>
@@ -117,9 +112,9 @@ import { anonymizationStore } from '../../store/store.js'
 		</div>
 
 		<!-- Error state -->
-		<div v-if="anonymizationStore.currentStep === 'error'" class="error-section">
+		<div v-if="currentStep === 'error'" class="error-section">
 			<NcNoteCard type="error">
-				{{ anonymizationStore.error || 'An unexpected error occurred.' }}
+				{{ errorMessage }}
 			</NcNoteCard>
 			<NcButton type="primary" class="reset-button" @click="anonymizationStore.reset()">
 				{{ t('docudesk', 'Try Again') }}
@@ -129,9 +124,23 @@ import { anonymizationStore } from '../../store/store.js'
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Upload from 'vue-material-design-icons/Upload.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
+import { anonymizationStore } from '../../store/store.js'
+
+// Map a file-entry `status` (per useAnonymizationStore — see
+// src/store/modules/anonymization.js) onto the 0-based step index
+// rendered by the step-indicator bar.
+const STATUS_TO_STEP = {
+	queued: 0,
+	uploading: 0,
+	extracting: 1,
+	anonymizing: 2,
+	completed: 3,
+	error: 3,
+}
 
 export default {
 	name: 'AnonymizationWidget',
@@ -142,6 +151,17 @@ export default {
 		NcNoteCard,
 		Upload,
 		FileDocumentOutline,
+	},
+	// Vue 2.7 setup() runs before data() and merges its return value into
+	// the component instance. Exposing the Pinia `anonymizationStore`
+	// here lets the template (and computeds/methods via `this`) reach
+	// the store reactively without the Vue 2.7 `<script setup>` SFC
+	// compiler quirk where imports declared in `<script setup>` do NOT
+	// bind into a sibling Options API `<script>` block — which
+	// previously left `anonymizationStore` undefined and broke every
+	// v-if in the template.
+	setup() {
+		return { anonymizationStore }
 	},
 	data() {
 		return {
@@ -155,7 +175,67 @@ export default {
 			],
 		}
 	},
+	computed: {
+		// The widget template was originally written against an older
+		// store API (`currentStep`, `stepNumber`, `uploadProgress`,
+		// `extractionResult`, `anonymizationResult`). The current
+		// `useAnonymizationStore` (Pinia) instead exposes a per-file
+		// queue under `files[]`, each with a `status` field. The
+		// computeds below adapt the new store shape to the old
+		// vocabulary so the existing template renders correctly without
+		// a wider refactor (see follow-up to unify on the queue model).
+		currentFile() {
+			const files = this.anonymizationStore.files
+			if (!files || files.length === 0) {
+				return null
+			}
+			return files[files.length - 1]
+		},
+		currentStep() {
+			if (!this.currentFile) {
+				return 'idle'
+			}
+			return this.currentFile.status
+		},
+		stepNumber() {
+			if (!this.currentFile) {
+				return 0
+			}
+			return STATUS_TO_STEP[this.currentFile.status] ?? 0
+		},
+		uploadProgress() {
+			// The store doesn't track per-byte upload progress yet;
+			// surface an indeterminate-style value while uploading.
+			return this.currentStep === 'uploading' ? 0 : 0
+		},
+		extractionResult() {
+			if (!this.currentFile) {
+				return null
+			}
+			return {
+				entityCount: this.currentFile.entityCount,
+				// The store currently doesn't persist individual
+				// entities returned by /extract — the table renders
+				// from this list, so leave it empty until the store
+				// is extended to keep them.
+				entities: [],
+			}
+		},
+		anonymizationResult() {
+			if (!this.currentFile || !this.currentFile.anonymizedFileName) {
+				return null
+			}
+			return {
+				anonymizedFileName: this.currentFile.anonymizedFileName,
+				replacementCount: this.currentFile.replacementCount,
+			}
+		},
+		errorMessage() {
+			return this.currentFile?.error || t('docudesk', 'An unexpected error occurred.')
+		},
+	},
 	methods: {
+		t,
 		handleDrop(event) {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
@@ -171,7 +251,7 @@ export default {
 		},
 		startPipeline(file) {
 			this.selectedFileName = file.name
-			anonymizationStore.runFullPipeline(file)
+			this.anonymizationStore.addFiles([file])
 		},
 		formatConfidence(confidence) {
 			if (typeof confidence === 'number') {
