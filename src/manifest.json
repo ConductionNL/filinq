@@ -1,40 +1,61 @@
 {
-	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest.schema.json",
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.0.0",
-	"dependencies": ["openregister"],
+	"dependencies": [
+		"openregister"
+	],
 	"menu": [
-		{ "id": "Dashboard",           "label": "Dashboard",          "icon": "icon-category-dashboard", "route": "Dashboard",           "order": 10 },
-		{ "id": "Consent",             "label": "Consent Management", "icon": "icon-user",               "route": "Consent",              "order": 20 },
-		{ "id": "Anonymization",       "label": "Anonymization",      "icon": "icon-password",           "route": "Anonymization",        "order": 30 },
-		{ "id": "FolderAnonymization", "label": "Folder Analysis",    "icon": "icon-folder",             "route": "FolderAnonymization",  "order": 40 },
-		{ "id": "Templates",           "label": "Templates",          "icon": "icon-files-dark",         "route": "Templates",            "order": 50 },
-		{ "id": "SigningRequests",     "label": "Signing Requests",   "icon": "icon-rename",             "route": "SigningRequests",      "order": 60 }
+		{
+			"id": "Dashboard",
+			"label": "Dashboard",
+			"icon": "icon-category-dashboard",
+			"route": "Dashboard",
+			"order": 10
+		},
+		{
+			"id": "Consent",
+			"label": "Consent Management",
+			"icon": "icon-user",
+			"route": "Consent",
+			"order": 20
+		},
+		{
+			"id": "Anonymization",
+			"label": "Anonymization",
+			"icon": "icon-password",
+			"route": "Anonymization",
+			"order": 30
+		},
+		{
+			"id": "FolderAnonymization",
+			"label": "Folder Analysis",
+			"icon": "icon-folder",
+			"route": "FolderAnonymization",
+			"order": 40
+		},
+		{
+			"id": "Templates",
+			"label": "Templates",
+			"icon": "icon-files-dark",
+			"route": "Templates",
+			"order": 50
+		},
+		{
+			"id": "SigningRequests",
+			"label": "Signing Requests",
+			"icon": "icon-rename",
+			"route": "SigningRequests",
+			"order": 60
+		}
 	],
 	"pages": [
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Dashboard",
-			"_note": "Dashboard uses custom CnDashboardPage widgets (consent KPIs + anonymization panel); all widgets are app-rendered via named slots in the existing DashboardIndex component.",
-			"config": {
-				"widgets": [
-					{ "id": "total-consents",  "type": "custom", "title": "Total Consents" },
-					{ "id": "pending",         "type": "custom", "title": "Pending" },
-					{ "id": "approved",        "type": "custom", "title": "Approved" },
-					{ "id": "objected",        "type": "custom", "title": "Objected" },
-					{ "id": "recent-activity", "type": "custom", "title": "Recent Activity" },
-					{ "id": "anonymization",   "type": "custom", "title": "Quick Anonymization" }
-				],
-				"layout": [
-					{ "id": 1, "widgetId": "total-consents",  "gridX": 0, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": 2, "widgetId": "pending",         "gridX": 3, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": 3, "widgetId": "approved",        "gridX": 6, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": 4, "widgetId": "objected",        "gridX": 9, "gridY": 0, "gridWidth": 3, "gridHeight": 2, "showTitle": false },
-					{ "id": 5, "widgetId": "recent-activity", "gridX": 0, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "showTitle": true  },
-					{ "id": 6, "widgetId": "anonymization",   "gridX": 6, "gridY": 2, "gridWidth": 6, "gridHeight": 4, "showTitle": true  }
-				]
-			}
+			"component": "DashboardIndex",
+			"_note": "Dashboard renders via the bespoke DashboardIndex view — consent KPIs, anonymization panel and recent activity are app-rendered slots without a v2 widget-registry counterpart yet. Stays type:\"custom\" until a lib KPI / activity-feed widget lands."
 		},
 		{
 			"id": "Consent",

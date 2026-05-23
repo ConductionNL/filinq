@@ -91,12 +91,23 @@ const router = new VueRouter({
 tryLoadTranslations()
 
 // Pass shallow copies of the registry maps to CnAppRoot. The lib exports
-// `defaultPageTypes` (and the app's `registry.pages`) as frozen module
+// `defaultPageTypes` (and the app's component maps) as frozen module
 // objects in some bundle shapes — Vue 2's `Vue.extend()` mutates component
 // definitions to attach an internal `_Ctor` cache, which throws against a
 // frozen source map. Cloning here yields extensible objects.
+//
+// `customComponents` is derived from the v2 registry's `kind:"page"`
+// entries because CnPageRenderer's `type:"custom"` dispatch path still
+// resolves through `customComponents` (see ADR-036 transition notes).
+// Future modal / widget entries in `registry.js` are consumed directly
+// from the `registry` prop by CnAppRoot.
 const pageTypesProp = { ...defaultPageTypes }
-const customComponentsProp = { ...registry.pages }
+const registryProp = { ...registry }
+const customComponentsProp = Object.fromEntries(
+	Object.entries(registryProp)
+		.filter(([, entry]) => entry && entry.kind === 'page')
+		.map(([key, entry]) => [key, entry.component]),
+)
 
 // Create and mount Vue instance immediately so the App renders.
 new Vue({
@@ -107,6 +118,7 @@ new Vue({
 			manifest: bundledManifest,
 			customComponents: customComponentsProp,
 			pageTypes: pageTypesProp,
+			registry: registryProp,
 		},
 	}),
 }).$mount('#content')
