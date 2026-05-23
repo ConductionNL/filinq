@@ -5,23 +5,36 @@
  * V2 component registry for docudesk (hydra ADR-036).
  *
  * Keys must match the `component` strings used in the manifest's
- * `type: "custom"` pages (and any future sidebar tabs / modals that
- * resolve by name). Each entry is `{ kind, component }`.
+ * `type: "custom"` pages and the `widgetKey` strings used in the
+ * manifest's top-level `widgets[]` arrays. Each entry is
+ * `{ kind, component }`.
  *
  * Recognised kinds: page, modal, widget, form-field, cell-renderer.
- * Every entry below is `kind: "page"` because docudesk's domain pages
- * fall back to bespoke views — consent, anonymization, templates and
- * signing have hybrid data paths (docudesk PHP controllers + custom
- * sidebars) that the library's built-in index/detail page-types do
- * not cover yet. See each page's `_note` in src/manifest.json for the
- * specific reason a `type:"custom"` entry stayed in place.
  *
- * Page resolution path at runtime:
+ * Resolution paths at runtime:
  *   - `pages[].type === 'custom'` → CnPageRenderer resolves
  *     `page.component` against `customComponents` (derived from the
  *     `kind:"page"` entries of this registry in src/main.js).
- *   - Future `kind:"modal"` / `kind:"widget"` entries are looked up
- *     directly from the `registry` prop by CnAppRoot / CnPageRenderer.
+ *   - `pages[].widgets[].widgetKey` (v2 uniform widget array) →
+ *     CnWidgetGrid resolves against the `registry` prop and mounts the
+ *     matching `kind:"widget"` entry's component.
+ *   - Future `kind:"modal"` entries are looked up directly from the
+ *     `registry` prop by CnAppRoot.
+ *
+ * Dashboard note: the Dashboard page is declared `type:"dashboard"` in
+ * the manifest with a single full-width body widget that wraps the
+ * bespoke `DashboardIndex` view (KPI cards + recent-activity list +
+ * quick-anonymization panel). Decomposing the dashboard into individual
+ * widget components is a future enhancement; for now `DashboardIndex`
+ * is registered as `kind:"widget"` so the manifest can reference it via
+ * the v2 uniform widgets[] array (no `type:"custom"` deviation needed).
+ *
+ * Every other page entry stays `kind:"page"` because docudesk's domain
+ * pages fall back to bespoke views — consent, anonymization, templates
+ * and signing have hybrid data paths (docudesk PHP controllers + custom
+ * sidebars) that the library's built-in index/detail page-types do not
+ * cover yet. See each page's `_note` in src/manifest.json for the
+ * specific reason a `type:"custom"` entry stayed in place.
  *
  * @type {Record<string, { kind: string, component: object }>}
  */
@@ -38,7 +51,7 @@ import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import PrintPreview from './components/PrintPreview.vue'
 
 export default {
-	DashboardIndex: { kind: 'page', component: DashboardIndex },
+	DashboardIndex: { kind: 'widget', component: DashboardIndex },
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },

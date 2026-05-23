@@ -52,10 +52,19 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "custom",
+			"type": "dashboard",
 			"title": "Dashboard",
-			"component": "DashboardIndex",
-			"_note": "Dashboard renders via the bespoke DashboardIndex view — consent KPIs, anonymization panel and recent activity are app-rendered slots without a v2 widget-registry counterpart yet. Stays type:\"custom\" until a lib KPI / activity-feed widget lands."
+			"widgets": [
+				{
+					"widgetKey": "DashboardIndex",
+					"slot": "body",
+					"gridX": 0,
+					"gridY": 0,
+					"gridWidth": 12,
+					"gridHeight": 1,
+					"_note": "Single full-width body widget that wraps the bespoke DashboardIndex view (KPI cards + recent-activity list + quick-anonymization panel). Decomposing into individual stats-block / activity-feed widgets is a future enhancement; registering DashboardIndex as kind:\"widget\" in registry.js keeps the v2 manifest free of a type:\"custom\" deviation while preserving the existing internally-sliced view."
+				}
+			]
 		},
 		{
 			"id": "Consent",
