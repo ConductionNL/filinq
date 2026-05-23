@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 use OCA\DocuDesk\Service\TemplatePreviewService;
 use OCA\DocuDesk\Service\TemplateService;
 use OCA\DocuDesk\Service\TemplateVersionService;
@@ -26,6 +27,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for template CRUD, versioning, preview, duplication and locking
@@ -50,6 +52,7 @@ class TemplatesController extends Controller
      * @param TemplateVersionService $versionService  Service for version operations
      * @param TemplatePreviewService $previewService  Service for preview rendering
      * @param IUserSession           $userSession     User session for current user
+     * @param LoggerInterface        $logger          Logger for not-configured info messages
      *
      * @return void
      */
@@ -61,6 +64,7 @@ class TemplatesController extends Controller
         private readonly TemplateVersionService $versionService,
         private readonly TemplatePreviewService $previewService,
         private readonly IUserSession $userSession,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -100,6 +104,21 @@ class TemplatesController extends Controller
                 offset: $params['offset']
             );
             return new JSONResponse(data: $result);
+        } catch (RegisterNotConfiguredException $e) {
+            // Configuration missing is a setup state, not a failure — emit
+            // an empty list with a notConfigured flag so the UI can render
+            // a calm "register not configured yet" empty state instead of
+            // surfacing a 500.
+            $this->logger->info(
+                'Templates list requested but register/schema is not configured: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
         } catch (Exception $e) {
             return $this->requestHandler->buildErrorResponse($e, 'Failed to list templates: ');
         }//end try
