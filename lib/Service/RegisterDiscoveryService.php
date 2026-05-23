@@ -19,8 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use Exception;
-use TypeError;
+use Throwable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Service\RegisterService;
@@ -72,7 +71,13 @@ class RegisterDiscoveryService
      * passes those through unchanged.
      *
      * Requires `nextcloud/openregister` with `findAllSerialized` available
-     * (see openregister#1428).
+     * (see openregister#1428). When the deployed OpenRegister is older than
+     * #1428 the call raises an `Error` ("Call to undefined method ..."); we
+     * catch `Throwable` (the only common ancestor of `Exception` and `Error`
+     * in PHP 7+) so the caller falls back to an empty registers list instead
+     * of bubbling a 500 to the controller. Without this widened catch, the
+     * `/api/settings` and `/api/consents` endpoints surface as HTTP 500s for
+     * every user on an environment where the OR sidecar lags this app.
      *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
      */
@@ -89,21 +94,18 @@ class RegisterDiscoveryService
             );
 
             return array_map([$this, 'filterSchemas'], $rawRegisters);
-        } catch (TypeError $e) {
+        } catch (Throwable $e) {
+            // Catches both Exception (runtime failures from OpenRegister) and
+            // Error (e.g. "Call to undefined method" when the deployed OR is
+            // older than #1428 — see openregister#1428). Either way the
+            // graceful fallback is an empty list; the controller still
+            // returns a 200 with whatever non-register settings it can
+            // assemble.
             $this->logger->warning(
-                'OpenRegister internal error - using empty registers list',
+                'OpenRegister findAllSerialized() unavailable - using empty registers list',
                 [
                     'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]
-            );
-            return [];
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'OpenRegister findAllSerialized() failed - using empty registers list',
-                [
-                    'exception' => $e->getMessage(),
+                    'class'     => get_class($e),
                     'file'      => $e->getFile(),
                     'line'      => $e->getLine(),
                 ]
