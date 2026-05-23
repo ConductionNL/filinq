@@ -65,12 +65,21 @@ class RegisterDiscoveryService
     /**
      * Fetch available registers from OpenRegister with schemas
      *
+     * Calls `RegisterService::findAllSerialized` with `_extend: ['schemas']` so
+     * each register's `schemas` field is returned as full schema objects (not
+     * bare IDs). On orphan schema IDs, OpenRegister retains the ID in place
+     * (heterogeneous array of objects + ints) — `filterSchemaProperties()`
+     * passes those through unchanged.
+     *
+     * Requires `nextcloud/openregister` with `findAllSerialized` available
+     * (see openregister#1428).
+     *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
      */
     public function fetchAvailableRegisters(): array
     {
         try {
-            $rawRegisters = $this->registerService->findAll(
+            $rawRegisters = $this->registerService->findAllSerialized(
                 limit: null,
                 offset: null,
                 filters: [],
@@ -79,7 +88,7 @@ class RegisterDiscoveryService
                 _extend: ['schemas']
             );
 
-            return array_map([$this, 'serializeRegister'], $rawRegisters);
+            return array_map([$this, 'filterSchemas'], $rawRegisters);
         } catch (TypeError $e) {
             $this->logger->warning(
                 'OpenRegister internal error - using empty registers list',
@@ -92,7 +101,7 @@ class RegisterDiscoveryService
             return [];
         } catch (Exception $e) {
             $this->logger->warning(
-                'OpenRegister findAll() failed - using empty registers list',
+                'OpenRegister findAllSerialized() failed - using empty registers list',
                 [
                     'exception' => $e->getMessage(),
                     'file'      => $e->getFile(),
@@ -105,18 +114,21 @@ class RegisterDiscoveryService
     }//end fetchAvailableRegisters()
 
     /**
-     * Serialize a register entity and filter its schemas
+     * Strip the `properties` field from each schema in a serialized register
      *
-     * @param mixed $register The register entity
+     * Input is the already-serialized register array from
+     * `RegisterService::findAllSerialized` — each entry in `schemas` is either
+     * a full schema array (when expansion succeeded) or a bare ID (orphan
+     * schema). `filterSchemaProperties()` handles both transparently.
+     *
+     * @param array<string, mixed> $registerArray Serialized register
      *
      * @return array<string, mixed> Serialized register with filtered schemas
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
-    private function serializeRegister(mixed $register): array
+    private function filterSchemas(array $registerArray): array
     {
-        $registerArray = $register->jsonSerialize();
-
         if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
             $registerArray['schemas'] = array_map(
                 [$this, 'filterSchemaProperties'],
@@ -126,7 +138,7 @@ class RegisterDiscoveryService
 
         return $registerArray;
 
-    }//end serializeRegister()
+    }//end filterSchemas()
 
     /**
      * Filter out the properties field from a schema array
