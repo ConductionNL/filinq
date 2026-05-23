@@ -51,7 +51,15 @@ import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import PrintPreview from './components/PrintPreview.vue'
 
 export default {
-	DashboardIndex: { kind: 'widget', component: DashboardIndex },
+	DashboardIndex: {
+		kind: 'widget',
+		component: DashboardIndex,
+		defaultSize: { w: 12, h: 'auto' },
+		minSize: { w: 12, h: 'auto' },
+		maxSize: { w: 12, h: 'auto' },
+		allowedSlots: [],
+		propsSchema: {},
+	},
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
