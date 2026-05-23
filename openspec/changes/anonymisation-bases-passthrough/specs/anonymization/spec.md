@@ -2,44 +2,42 @@
 status: draft
 ---
 
-# Anonymization — Delta for Grondslagen Pass-Through and Prohibition Flag
+# Anonymization — Delta for Prohibition Flag (Bases Pass-Through Removed)
 
-This delta extends the existing `anonymization` capability so the per-document anonymise endpoint can carry per-entity legal bases (grondslagen) through to OpenRegister, and so the extract endpoint surfaces prohibition matches in its response. No existing requirement is changed in behaviour; both additions are non-breaking and additive.
+This delta extends the existing `anonymization` capability so the extract endpoint surfaces prohibition matches in its response. **Bases pass-through was removed from this delta in the post-explore-mode rework (2026-05-12)** — bases are now set per-relation on OR's own `PATCH /api/entity-relations/{id}` endpoint, not threaded through DocuDesk's anonymise payload. The `entities[]` shape on DocuDesk's anonymise endpoint stays at `{text, entityType, key, ...}` — no `bases` field is added to it.
 
 ## ADDED Requirements
 
-### Requirement: The anonymise endpoint MUST accept optional `bases[]` per entity in the request payload
+### Requirement: The DocuDesk anonymise endpoint MUST NOT carry `bases` per entity in its payload
 
-The endpoint payload's `entities[]` array MUST accept an optional `bases` field on each entry — either absent, `null`, or an array of strings (UUIDs referencing `base` schema objects in DocuDesk's `dossier` register, per the in-flight `add-dossier-schema` change). When present, the field MUST be forwarded verbatim to OpenRegister's anonymise endpoint (which persists it on `EntityRelation` and strips it before forwarding to OpenAnonymiser, per the paired `entity-relation-grondslagen` change).
+The endpoint payload's `entities[]` array MUST NOT introduce a `bases` field on entries. Callers that wish to attach legal bases to a detected entity occurrence MUST do so via OpenRegister's `PATCH /api/entity-relations/{id}` endpoint (or the equivalent DI mapper method `EntityRelationMapper::updateDecisionMetadata`) BEFORE invoking DocuDesk's anonymise endpoint.
 
-DocuDesk MUST NOT validate that the UUIDs resolve. DocuDesk MUST NOT persist `bases` locally (single source of truth: the `EntityRelation` row).
+DocuDesk MUST ignore any `bases` field that erroneously appears on incoming payload entries — silently drop it (do NOT 400). This preserves backwards-compatibility with any caller still on the old contract; the field becomes a no-op rather than a hard failure.
 
-#### Scenario: Anonymise request without bases preserves today's behaviour
+DocuDesk MUST NOT persist bases locally. Single source of truth: the `EntityRelation` row, written via OR's audited PATCH endpoint.
+
+#### Scenario: Anonymise request without bases works exactly as before
 
 - **GIVEN** an anonymise request payload with entities that have no `bases` field
 - **WHEN** DocuDesk's controller processes it
-- **THEN** the request is forwarded to OpenRegister with no `bases` field on any entry
-- **AND** behaviour matches the pre-change `anonymization` capability exactly
+- **THEN** the call MUST succeed
+- **AND** behaviour MUST match the pre-change `anonymization` capability exactly
 
-#### Scenario: Anonymise request with bases is forwarded verbatim to OpenRegister
+#### Scenario: Stray `bases` field on a payload entry is silently ignored
 
-- **GIVEN** a payload with `entities: [{entityId: 42, text: "Jan Janssen", bases: ["uuid-base-a"]}]`
+- **GIVEN** a caller still using the old contract sends `entities: [{text: "Jan Janssen", entityType: "PERSON", key: "x", bases: ["uuid-a"]}]`
 - **WHEN** DocuDesk's controller processes it
-- **THEN** the request body forwarded to OpenRegister contains the same `bases` field on the same entry
-- **AND** DocuDesk does NOT inspect or validate the UUID
+- **THEN** the call MUST succeed
+- **AND** no `bases` value MUST be written to any EntityRelation row by DocuDesk's code path (bases-set is via OR's PATCH, which the caller has not invoked)
+- **AND** no error MUST be raised
 
-#### Scenario: Empty bases array is forwarded as empty array
+#### Scenario: Bases-attached entities are redacted under their bases when those were set via OR's PATCH first
 
-- **GIVEN** a payload entry with `bases: []`
-- **WHEN** DocuDesk forwards the request
-- **THEN** the forwarded body contains `bases: []` on that entry (not omitted, not null)
-
-#### Scenario: Mixed payload — some entries with bases, some without
-
-- **GIVEN** a payload with three entries, one of which has `bases` populated
-- **WHEN** DocuDesk forwards the request
-- **THEN** the forwarded body has the `bases` field on the one entry that supplied it
-- **AND** the other two entries have no `bases` field (or null, depending on JSON encoder defaults)
+- **GIVEN** an authorized caller PATCHes OR with `{bases: ["uuid-a"]}` for an EntityRelation row R
+- **AND** subsequently calls DocuDesk's anonymise endpoint without any `bases` field
+- **WHEN** the call processes
+- **THEN** R's `bases` value MUST remain `["uuid-a"]` (set via OR's PATCH; not overwritten by the anonymise call)
+- **AND** R MUST be redacted (no `skipAnonymization=true`)
 
 ### Requirement: The extract endpoint response MUST include a `prohibitionMatch` field per detected entity
 
