@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SigningVerificationService;
@@ -29,6 +30,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Controller for signing-specific endpoints
@@ -102,9 +104,41 @@ class SigningController extends Controller
         try {
             $result = $this->signingService->listRequests();
             return new JSONResponse($result);
-        } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to list signing requests: ', exception: $e);
-        }
+        } catch (RegisterNotConfiguredException $e) {
+            // Configuration missing is a setup state, not a failure —
+            // emit an empty list with a notConfigured flag so the UI can
+            // render a calm "register not configured yet" empty state.
+            $this->logger->info(
+                'Signing requests list called but register/schema is not configured: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
+        } catch (Throwable $e) {
+            // Cascade fallback for the OR-sidecar-lag scenario: when
+            // the deployed OpenRegister build lacks a method that
+            // SigningService calls (e.g. `getObjects`), PHP raises an
+            // `Error` which `catch (Exception)` would miss. Returning
+            // an empty list keeps the page rendering instead of 500ing
+            // while the sidecar catches up. The error is logged at
+            // warning level so ops still see drift.
+            $this->logger->warning(
+                'Signing requests list failed — returning empty list. '
+                .'Likely a missing OpenRegister method on the deployed sidecar. '
+                .'Underlying: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
+        }//end try
 
     }//end listRequests()
 

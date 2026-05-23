@@ -96,7 +96,13 @@ return [
 		['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
 		['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
-		// SPA catch-all — serves the Vue app for any frontend route (history mode)
-//		['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+		// SPA catch-all — serves the Vue app shell for any frontend deep
+		// link (vue-router HTML5 history mode). Must come LAST so it
+		// doesn't shadow specific routes above. The dedicated
+		// `dashboard#catchAll` controller method exists because
+		// `dashboard#page` takes a `getParameter` arg, not a `path`
+		// arg — matching arg names to the route placeholder lets NC's
+		// router inject the captured value cleanly.
+		['name' => 'dashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
 	],
 ];
