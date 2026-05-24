@@ -15,6 +15,14 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
  */
 
 declare(strict_types=1);
@@ -94,6 +102,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function batchUpload(): JSONResponse
     {
@@ -128,6 +138,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function folderBatch(): JSONResponse
     {
@@ -169,6 +181,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
     public function batchExtract(string $batchId): JSONResponse
     {
@@ -189,6 +203,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
      */
     public function batchStatus(string $batchId): JSONResponse
     {
@@ -238,6 +254,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     public function batchEntities(string $batchId): JSONResponse
     {
@@ -283,6 +301,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
@@ -308,6 +328,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
      */
     public function batchReport(string $batchId): JSONResponse|DataDownloadResponse
     {
@@ -327,6 +349,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function getProfiles(): JSONResponse
     {
@@ -340,6 +364,8 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Success message, or an error payload when the body is malformed.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function updateProfiles(): JSONResponse
     {
@@ -424,6 +450,8 @@ class BatchAnonymizationController extends Controller
      * @param string|null $folderPath Coerced folder path.
      *
      * @return JSONResponse|null Error response when validation fails, null when OK.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     private function validateFolderParams(?int $folderId, ?string $folderPath): ?JSONResponse
     {

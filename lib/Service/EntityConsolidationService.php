@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -66,6 +68,8 @@ class EntityConsolidationService
      * @param float                $minConfidence Minimum confidence required for an entity to be included by default.
      *
      * @return array<int, array<string, mixed>> Consolidated, confidence-sorted list of entities.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     public function consolidateEntities(array $batch, float $minConfidence=0.0): array
     {
@@ -102,6 +106,8 @@ class EntityConsolidationService
      * @param mixed                               $entity Raw entity detection (object or array-like).
      *
      * @return array<string, array<string, mixed>> Updated consolidation map.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     private function mergeEntity(array $map, mixed $entity): array
     {
@@ -149,6 +155,8 @@ class EntityConsolidationService
      * @param int $fileId Nextcloud file ID whose entities should be fetched.
      *
      * @return array<int, mixed> Raw entity detections, or an empty array on failure.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     private function getEntitiesForFile(int $fileId): array
     {

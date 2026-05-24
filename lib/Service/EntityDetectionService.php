@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -49,6 +52,8 @@ class EntityDetectionService
      * @param array<mixed> $entities Raw entity objects or arrays
      *
      * @return array<int, array<string, mixed>> Normalized entity list
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function normalizeEntities(array $entities): array
     {
@@ -76,6 +81,8 @@ class EntityDetectionService
      * @param array<array<string, mixed>> $entities The raw entities
      *
      * @return array<int, array<string, string>> Mapped entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function mapEntitiesForAnonymization(array $entities): array
     {
@@ -110,6 +117,8 @@ class EntityDetectionService
      * @param mixed $result The raw anonymization result
      *
      * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function parseAnonymizationResult(mixed $result): array
     {

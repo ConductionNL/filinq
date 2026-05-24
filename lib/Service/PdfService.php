@@ -13,6 +13,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
  */
 
 declare(strict_types=1);
@@ -69,6 +75,8 @@ class PdfService
      * @return string PDF binary content
      *
      * @throws Exception If Twig rendering or PDF generation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
      */
     public function renderPdf(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -91,6 +99,8 @@ class PdfService
      *                                - orientation: P (portrait) or L (landscape). Default: P
      *
      * @return string Rendered HTML with print-optimized CSS injected
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
      */
     public function renderHtmlPreview(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -113,6 +123,8 @@ class PdfService
      * @param string $tempDir The temp directory path
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
      */
     private function ensureTempDirectory(string $tempDir): void
     {
@@ -134,6 +146,8 @@ class PdfService
      * @param array  $options PDF configuration options
      *
      * @return array<string, mixed> mPDF configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
      */
     private function buildMpdfConfig(string $tempDir, array $options): array
     {
@@ -201,6 +215,8 @@ class PdfService
      * @param string $orientation Page orientation (P for portrait, L for landscape)
      *
      * @return string HTML style block with print-optimized CSS
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
@@ -248,6 +264,8 @@ class PdfService
      * @return string PDF binary content
      *
      * @throws Exception If mPDF fails to generate the PDF
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
      */
     private function generatePdf(string $html, array $options): string
     {

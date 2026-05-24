@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  */
 
 declare(strict_types=1);
@@ -80,6 +83,8 @@ class ConsentUpdateHandler
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
      */
     public function updateConsentStatus(
         string $consentId,
@@ -148,6 +153,8 @@ class ConsentUpdateHandler
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If query fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsentsByDocument(
         string $documentId,

@@ -14,6 +14,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
  */
 
 declare(strict_types=1);
@@ -106,6 +111,8 @@ class SettingsService
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service
      *
      * @throws \RuntimeException If the service is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -128,6 +135,8 @@ class SettingsService
      * @return array<string, mixed> The initialization results
      *
      * @throws \RuntimeException If initialization fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
      */
     public function initialize(): array
     {
@@ -139,6 +148,8 @@ class SettingsService
      * Load feature toggle settings from app config
      *
      * @return array<string, mixed> Feature toggle settings
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
      */
     private function loadFeatureToggles(): array
     {
@@ -193,6 +204,8 @@ class SettingsService
      * @return array<string, mixed> The current settings configuration
      *
      * @throws RuntimeException If settings retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
      */
     public function getAllSettings(): array
     {
@@ -252,6 +265,8 @@ class SettingsService
      * @return array<string, mixed> The updated settings configuration
      *
      * @throws \RuntimeException If settings update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function updateSettings(array $data): array
     {

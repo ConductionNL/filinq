@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
  */
 
 declare(strict_types=1);
@@ -52,6 +54,8 @@ class BatchReportService
      * @return string CSV document (header row + one row per file).
      *
      * @throws Exception When the batch cannot be found or is not yet completed.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
      */
     public function generateReport(string $batchId): string
     {
