@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
  */
 
 declare(strict_types=1);
@@ -128,6 +130,8 @@ class TemplateRenderer
      * @return string Rendered HTML
      *
      * @throws Exception If Twig rendering fails (syntax error, security violation)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
      */
     public function renderTemplate(string $templateContent, array $data): string
     {
