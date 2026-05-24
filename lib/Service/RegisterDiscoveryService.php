@@ -23,6 +23,7 @@ use Exception;
 use TypeError;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 
 /**
@@ -50,13 +51,15 @@ class RegisterDiscoveryService
      * @param IAppConfig      $config          App configuration interface
      * @param LoggerInterface $logger          Logger interface
      * @param RegisterService $registerService Register service for getting registers
+     * @param SchemaMapper    $schemaMapper    Schema mapper for expanding schema IDs
      *
      * @return void
      */
     public function __construct(
         private readonly IAppConfig $config,
         private readonly LoggerInterface $logger,
-        private readonly RegisterService $registerService
+        private readonly RegisterService $registerService,
+        private readonly SchemaMapper $schemaMapper
     ) {
         $this->appName = 'docudesk';
 
@@ -65,28 +68,54 @@ class RegisterDiscoveryService
     /**
      * Fetch available registers from OpenRegister with schemas
      *
-     * Calls `RegisterService::findAllSerialized` with `_extend: ['schemas']` so
-     * each register's `schemas` field is returned as full schema objects (not
-     * bare IDs). On orphan schema IDs, OpenRegister retains the ID in place
-     * (heterogeneous array of objects + ints) — `filterSchemaProperties()`
-     * passes those through unchanged.
+     * Calls `RegisterService::findAll`, serializes each register via
+     * `jsonSerialize`, then expands schema IDs to full schema objects
+     * (with `properties` stripped). On orphan schema IDs, the bare ID is
+     * retained in place (heterogeneous array of objects + ints) —
+     * `filterSchemaProperties()` passes those through unchanged.
      *
-     * Requires `nextcloud/openregister` with `findAllSerialized` available
-     * (see openregister#1428).
+     * Mirrors the expansion logic in OpenRegister's
+     * `RegistersController::index` for `_extend: ['schemas']`, but performed
+     * inline so docudesk doesn't depend on a non-existent serialized helper.
      *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
      */
     public function fetchAvailableRegisters(): array
     {
         try {
-            $rawRegisters = $this->registerService->findAllSerialized(
+            $registers = $this->registerService->findAll(
                 limit: null,
                 offset: null,
                 filters: [],
                 searchConditions: [],
                 searchParams: [],
-                _extend: ['schemas']
+                _multitenancy: false
             );
+
+            $rawRegisters = array_map(
+                fn($register) => $register->jsonSerialize(),
+                $registers
+            );
+
+            // Expand schema IDs to full schema objects.
+            foreach ($rawRegisters as &$registerArr) {
+                if (isset($registerArr['schemas']) === true && is_array($registerArr['schemas']) === true) {
+                    $expanded = [];
+                    foreach ($registerArr['schemas'] as $schemaId) {
+                        try {
+                            $schema     = $this->schemaMapper->find(id: $schemaId, _multitenancy: false);
+                            $expanded[] = $schema->jsonSerialize();
+                        } catch (Exception $schemaError) {
+                            // Orphan schema — retain bare ID for transparency.
+                            $expanded[] = $schemaId;
+                        }
+                    }
+
+                    $registerArr['schemas'] = $expanded;
+                }
+            }
+
+            unset($registerArr);
 
             return array_map([$this, 'filterSchemas'], $rawRegisters);
         } catch (TypeError $e) {
@@ -101,7 +130,7 @@ class RegisterDiscoveryService
             return [];
         } catch (Exception $e) {
             $this->logger->warning(
-                'OpenRegister findAllSerialized() failed - using empty registers list',
+                'OpenRegister findAll() failed - using empty registers list',
                 [
                     'exception' => $e->getMessage(),
                     'file'      => $e->getFile(),
@@ -116,10 +145,9 @@ class RegisterDiscoveryService
     /**
      * Strip the `properties` field from each schema in a serialized register
      *
-     * Input is the already-serialized register array from
-     * `RegisterService::findAllSerialized` — each entry in `schemas` is either
-     * a full schema array (when expansion succeeded) or a bare ID (orphan
-     * schema). `filterSchemaProperties()` handles both transparently.
+     * Input is the already-serialized register array — each entry in `schemas`
+     * is either a full schema array (when expansion succeeded) or a bare ID
+     * (orphan schema). `filterSchemaProperties()` handles both transparently.
      *
      * @param array<string, mixed> $registerArray Serialized register
      *
