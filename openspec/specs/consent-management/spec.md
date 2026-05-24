@@ -10,9 +10,8 @@ Provides GDPR-compliant publication consent tracking for entities (persons and o
 
 ## Requirements
 
-### Requirement: Consent Record Creation
+### Requirement: Consent Record Creation (REQ-CONS-01)
 
-**ID:** REQ-CONS-01
 **Priority:** Must
 
 Consent records are created for detected entities in documents, initialized with pending status and an automatic objection deadline.
@@ -47,9 +46,8 @@ Consent records are created for detected entities in documents, initialized with
 | CONS-005 | An objection deadline is automatically calculated based on the configurable objection period (default 28 days) | MUST | Implemented |
 | CONS-006 | Consent records are stored in OpenRegister via ObjectService using the configured register and schema | MUST | Implemented |
 
-### Requirement: Consent Status Lifecycle
+### Requirement: Consent Status Lifecycle (REQ-CONS-02)
 
-**ID:** REQ-CONS-02
 **Priority:** Must
 
 Consent records progress through defined status transitions for consent, notification, and publication decision fields.
@@ -88,9 +86,8 @@ Consent records progress through defined status transitions for consent, notific
 | CONS-013 | Consent status can be updated via `PUT /api/consents/{id}` | MUST | Implemented |
 | CONS-014 | Objection deadline expiry can be checked via ConsentService::checkObjectionDeadline() | MUST | Implemented |
 
-### Requirement: Consent Listing and Querying
+### Requirement: Consent Listing and Querying (REQ-CONS-03)
 
-**ID:** REQ-CONS-03
 **Priority:** Must
 
 Consent records can be listed, queried by ID, and filtered by document.
@@ -124,9 +121,8 @@ Consent records can be listed, queried by ID, and filtered by document.
 | CONS-023 | Consent listing requires the publicationConsent register and schema to be configured | MUST | Implemented |
 | CONS-024 | If register/schema is not configured, a 400 error is returned | MUST | Implemented |
 
-### Requirement: WOO Objection Period Compliance
+### Requirement: WOO Objection Period Compliance (REQ-CONS-04)
 
-**ID:** REQ-CONS-04
 **Priority:** Must
 
 The objection period complies with Wet Open Overheid requirements for a minimum 4-week notification period before publication.
@@ -155,9 +151,8 @@ The objection period complies with Wet Open Overheid requirements for a minimum 
 | CONS-031 | The objection period is configurable via admin settings | MUST | Implemented |
 | CONS-032 | The objection deadline is stored as ISO 8601 datetime | MUST | Implemented |
 
-### Requirement: Controller Read Path Architecture
+### Requirement: Controller Read Path Architecture (REQ-CONS-05)
 
-**ID:** REQ-CONS-05
 **Priority:** Must
 
 ConsentController uses different service paths for read vs. write operations -- reading directly via ObjectService, writing via ConsentService.
@@ -187,9 +182,8 @@ ConsentController uses different service paths for read vs. write operations -- 
 | CONS-042 | `ConsentController::update()` delegates to ConsentService | MUST | Implemented |
 | CONS-043 | `ConsentController::byDocument()` delegates to ConsentService | MUST | Implemented |
 
-### Requirement: RBAC and Multitenancy Configuration
+### Requirement: RBAC and Multitenancy Configuration (REQ-CONS-06)
 
-**ID:** REQ-CONS-06
 **Priority:** Must
 
 All consent ObjectService calls currently bypass RBAC and multitenancy, which is a known security concern for multi-tenant deployments.
@@ -218,9 +212,8 @@ All consent ObjectService calls currently bypass RBAC and multitenancy, which is
 | CONS-045 | All ConsentService ObjectService calls bypass multitenancy (`_multitenancy: false`) | MUST | Bug |
 | CONS-046 | ConsentController::show() bypasses RBAC when querying directly | MUST | Bug |
 
-### Requirement: Consent Creation API Gap
+### Requirement: Consent Creation API Gap (REQ-CONS-07)
 
-**ID:** REQ-CONS-07
 **Priority:** Must
 
 ConsentService::createConsentRequest() exists but has no REST API endpoint or automated trigger, making consent records impossible to create via the frontend.
@@ -250,9 +243,8 @@ ConsentService::createConsentRequest() exists but has no REST API endpoint or au
 | CONS-049 | The event listener does NOT trigger consent creation | MUST | Implemented |
 | CONS-050 | Consent records cannot currently be created via REST API or UI | MUST | Bug |
 
-### Requirement: Objection Period Configuration Reading
+### Requirement: Objection Period Configuration Reading (REQ-CONS-08)
 
-**ID:** REQ-CONS-08
 **Priority:** Must
 
 ConsentService reads the objection period directly from IAppConfig, bypassing SettingsService.
@@ -279,9 +271,8 @@ ConsentService reads the objection period directly from IAppConfig, bypassing Se
 | CONS-051 | ConsentService reads objection period directly from IAppConfig | MUST | Implemented |
 | CONS-052 | Default objection period is 28 days (hardcoded in getValueString default) | MUST | Implemented |
 
-### Requirement: Duplicated ObjectService Resolution Pattern
+### Requirement: Duplicated ObjectService Resolution Pattern (REQ-CONS-09)
 
-**ID:** REQ-CONS-09
 **Priority:** Must
 
 ConsentService and ObjectionDeadlineChecker have their own private getObjectService() methods duplicating the pattern found in SettingsService.
@@ -308,9 +299,8 @@ ConsentService and ObjectionDeadlineChecker have their own private getObjectServ
 | CONS-053 | ConsentService has its own private `getObjectService()` duplicating SettingsService pattern | MUST | Implemented |
 | CONS-054 | ObjectionDeadlineChecker has its own private `getObjectService()` with the same pattern | MUST | Implemented |
 
-### Requirement: Consent UI
+### Requirement: Consent UI (REQ-CONS-10)
 
-**ID:** REQ-CONS-10
 **Priority:** Must
 
 The consent management UI provides a list view with statistics and a detail view for editing consent records.

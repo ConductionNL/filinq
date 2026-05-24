@@ -10,9 +10,8 @@ Defines the data model for the `document` register used by DocuDesk to store doc
 
 ## Requirements
 
-### Requirement: Document Register Structure
+### Requirement: Document Register Structure (REQ-DREG-01)
 
-**ID:** REQ-DREG-01
 **Priority:** Must
 
 A dedicated document register exists with three schemas for storing analysis results, templates, and entity tracking.
@@ -45,9 +44,8 @@ A dedicated document register exists with three schemas for storing analysis res
 | DREG-004 | The JSON follows OpenAPI-like structure with components | MUST | Implemented |
 | DREG-005 | The register is separate from docudesk_register.json | MUST | Implemented |
 
-### Requirement: Report Schema for Analysis Results
+### Requirement: Report Schema for Analysis Results (REQ-DREG-02)
 
-**ID:** REQ-DREG-02
 **Priority:** Must
 
 The report schema stores document analysis results including file metadata, entity detection, risk assessment, and processing status.
@@ -96,9 +94,8 @@ The report schema stores document analysis results including file metadata, enti
 | DREG-017 | Report objects store file integrity hash (MD5) | MUST | Implemented |
 | DREG-018 | Report objects have anonymizationResults field (reserved) | MUST | Implemented |
 
-### Requirement: Planned Report Features
+### Requirement: Planned Report Features (REQ-DREG-03)
 
-**ID:** REQ-DREG-03
 **Priority:** Should
 
 Report objects include placeholder fields for future features: WCAG compliance, language level analysis, retention policy, and GDPR data controller tracking.
@@ -131,9 +128,8 @@ Report objects include placeholder fields for future features: WCAG compliance, 
 | DREG-023 | dataController for GDPR data controller assignment | SHOULD | Planned |
 | DREG-024 | Report schema has `hardValidation: false` for flexible usage | MUST | Implemented |
 
-### Requirement: Template Schema
+### Requirement: Template Schema (REQ-DREG-04)
 
-**ID:** REQ-DREG-04
 **Priority:** Must
 
 The template schema provides a placeholder for storing document templates within the document register.
@@ -158,9 +154,8 @@ The template schema provides a placeholder for storing document templates within
 | DREG-032 | Template schema has `hardValidation: false` | MUST | Implemented |
 | DREG-033 | Template objects intended for document template storage (TBD) | SHOULD | Planned |
 
-### Requirement: Entity Schema for Cross-Document Tracking
+### Requirement: Entity Schema for Cross-Document Tracking (REQ-DREG-05)
 
-**ID:** REQ-DREG-05
 **Priority:** Must
 
 The entity schema enables tracking detected entities across multiple documents for consistent entity management.
@@ -190,9 +185,8 @@ The entity schema enables tracking detected entities across multiple documents f
 | DREG-043 | Entity schema has no defined properties yet | MUST | Implemented |
 | DREG-044 | Entity schema has `hardValidation: false` | MUST | Implemented |
 
-### Requirement: Pre-Seeded Sample Objects
+### Requirement: Pre-Seeded Sample Objects (REQ-DREG-06)
 
-**ID:** REQ-DREG-06
 **Priority:** Must
 
 Three pre-seeded sample objects demonstrate the anonymization pipeline's output format.
@@ -225,9 +219,8 @@ Three pre-seeded sample objects demonstrate the anonymization pipeline's output 
 | DREG-051 | Anonymization result sample with replacement mappings | MUST | Implemented |
 | DREG-052 | Anonymized document re-analysis sample showing token detection limitation | MUST | Implemented |
 
-### Requirement: Register Loading Gap
+### Requirement: Register Loading Gap (REQ-DREG-07)
 
-**ID:** REQ-DREG-07
 **Priority:** Must
 
 The document_register.json is NOT loaded during application boot, which is a critical gap.

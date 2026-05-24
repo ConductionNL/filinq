@@ -10,9 +10,8 @@ Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister
 
 ## Requirements
 
-### Requirement: Template Data Model
+### Requirement: Template Data Model (REQ-TMPL-01)
 
-**ID:** REQ-TMPL-01
 **Priority:** Must
 
 Templates are stored as OpenRegister objects with defined properties for name, content, namespace, and page configuration.
@@ -40,9 +39,8 @@ Templates are stored as OpenRegister objects with defined properties for name, c
 | TMPL-003 | Schema in docudesk_register.json, imported on boot | MUST | Implemented |
 | TMPL-004 | Schema is searchable | MUST | Implemented |
 
-### Requirement: Template CRUD API
+### Requirement: Template CRUD API (REQ-TMPL-02)
 
-**ID:** REQ-TMPL-02
 **Priority:** Must
 
 Full CRUD operations for templates via REST API with pagination and filtering support.
@@ -85,9 +83,8 @@ Full CRUD operations for templates via REST API with pagination and filtering su
 | TMPL-014 | `DELETE /api/templates/{id}` to delete | MUST | Implemented |
 | TMPL-015 | All endpoints require authentication (@NoAdminRequired @NoCSRFRequired) | MUST | Implemented |
 
-### Requirement: Namespace Enforcement
+### Requirement: Namespace Enforcement (REQ-TMPL-03)
 
-**ID:** REQ-TMPL-03
 **Priority:** Must
 
 Templates are scoped to app namespaces with strict validation and immutability after creation.
@@ -120,9 +117,8 @@ Templates are scoped to app namespaces with strict validation and immutability a
 | TMPL-022 | Namespace immutable on update (silently ignored) | MUST | Implemented |
 | TMPL-023 | Invalid namespace returns 400 error | MUST | Implemented |
 
-### Requirement: TemplateService Programmatic Access
+### Requirement: TemplateService Programmatic Access (REQ-TMPL-04)
 
-**ID:** REQ-TMPL-04
 **Priority:** Must
 
 TemplateService is injectable via DI, enabling other Nextcloud apps to manage templates programmatically.
@@ -159,9 +155,8 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 | TMPL-035 | `getTemplatesByNamespace(namespace)` convenience method | MUST | Implemented |
 | TMPL-036 | Injectable via DI: `OCA\DocuDesk\Service\TemplateService::class` | MUST | Implemented |
 
-### Requirement: OpenRegister Integration
+### Requirement: OpenRegister Integration (REQ-TMPL-05)
 
-**ID:** REQ-TMPL-05
 **Priority:** Must
 
 TemplateService resolves register and schema configuration via OpenRegisterResolver and uses ObjectService for all data operations.
@@ -190,9 +185,8 @@ TemplateService resolves register and schema configuration via OpenRegisterResol
 | TMPL-041 | ObjectService resolved via container with OpenRegister availability check | MUST | Implemented |
 | TMPL-042 | Namespace validation delegated to OpenRegisterResolver | MUST | Implemented |
 
-### Requirement: Search and Pagination
+### Requirement: Search and Pagination (REQ-TMPL-06)
 
-**ID:** REQ-TMPL-06
 **Priority:** Must
 
 Template listing supports search, filtering, and pagination via OpenRegister's query builder.
@@ -219,9 +213,8 @@ Template listing supports search, filtering, and pagination via OpenRegister's q
 | TMPL-051 | Text search via _search param | MUST | Implemented |
 | TMPL-052 | Combined namespace filter and search | MUST | Implemented |
 
-### Requirement: Object Serialization
+### Requirement: Object Serialization (REQ-TMPL-07)
 
-**ID:** REQ-TMPL-07
 **Priority:** Must
 
 Template objects from OpenRegister are consistently serialized for API responses.
