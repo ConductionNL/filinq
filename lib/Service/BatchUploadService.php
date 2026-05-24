@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -68,6 +70,8 @@ class BatchUploadService
      * @param IRequest $request Incoming HTTP request holding the multipart uploads.
      *
      * @return array<int, array{name: string, tmp_name: string, error: int}> List of raw uploaded file entries.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function collectFiles(IRequest $request): array
     {
@@ -114,6 +118,8 @@ class BatchUploadService
      * @param array<int, array<string, mixed>> $files  Raw uploaded file entries as produced by collectFiles().
      *
      * @return array<string, mixed> The new batch record as returned by BatchStateService.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function processBatchUpload(string $userId, array $files): array
     {
