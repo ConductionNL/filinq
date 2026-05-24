@@ -10,7 +10,10 @@ Provides automatic metadata enrichment for documents stored in OpenRegister. Whe
 
 ## Requirements
 
-### REQ-META-01: Language Detection (Priority: Must)
+### Requirement: Language Detection
+
+**ID:** REQ-META-01
+**Priority:** Must
 
 Detect document language from text content using word frequency analysis for Dutch and English.
 
@@ -53,7 +56,10 @@ Detect document language from text content using word frequency analysis for Dut
 | META-006 | Skip detection if object already has `language` populated | MUST | Implemented |
 | META-007 | Toggle via admin settings (`enable_language_detection`) | MUST | Implemented |
 
-### REQ-META-02: Keyword Extraction (Priority: Must)
+### Requirement: Keyword Extraction
+
+**ID:** REQ-META-02
+**Priority:** Must
 
 Extract top keywords from document text using word frequency analysis with stop word filtering.
 
@@ -88,7 +94,10 @@ Extract top keywords from document text using word frequency analysis with stop 
 | META-014 | Skip if `keywords` already populated | MUST | Implemented |
 | META-015 | Toggle via admin settings (`enable_keyword_extraction`) | MUST | Implemented |
 
-### REQ-META-03: Topic Classification (Priority: Must)
+### Requirement: Topic Classification
+
+**ID:** REQ-META-03
+**Priority:** Must
 
 Classify documents into topic categories using keyword matching against predefined vocabularies.
 
@@ -122,7 +131,10 @@ Classify documents into topic categories using keyword matching against predefin
 | META-025 | Skip if `topic` already populated | MUST | Implemented |
 | META-026 | Toggle via admin settings (`enable_topic_classification`) | MUST | Implemented |
 
-### REQ-META-04: Document Type Standardization (Priority: Must)
+### Requirement: Document Type Standardization
+
+**ID:** REQ-META-04
+**Priority:** Must
 
 Standardize document type strings to canonical categories by mapping file extensions and names.
 
@@ -148,7 +160,10 @@ Standardize document type strings to canonical categories by mapping file extens
 | META-032 | Map extensions: doc/docx -> word, xls/xlsx -> spreadsheet, ppt/pptx -> presentation | MUST | Implemented |
 | META-033 | Unknown types passed through unchanged | MUST | Implemented |
 
-### REQ-META-05: Date Normalization (Priority: Must)
+### Requirement: Date Normalization
+
+**ID:** REQ-META-05
+**Priority:** Must
 
 Normalize date fields to ISO 8601 format across standard field names.
 
@@ -174,7 +189,10 @@ Normalize date fields to ISO 8601 format across standard field names.
 | META-041 | Normalize: created, modified, date, creationDate, modificationDate | MUST | Implemented |
 | META-042 | Skip unparseable dates gracefully (log debug, no throw) | MUST | Implemented |
 
-### REQ-META-06: Event-Driven Enrichment (Priority: Must)
+### Requirement: Event-Driven Enrichment
+
+**ID:** REQ-META-06
+**Priority:** Must
 
 Automatically enrich metadata when objects are created or updated in OpenRegister, with content change detection on updates.
 
@@ -221,7 +239,10 @@ Automatically enrich metadata when objects are created or updated in OpenRegiste
 | META-055 | Check admin settings before running enrichment | MUST | Implemented |
 | META-056 | Save enriched metadata back to OpenRegister | MUST | Implemented |
 
-### REQ-META-07: API On-Demand Enrichment (Priority: Must)
+### Requirement: API On-Demand Enrichment
+
+**ID:** REQ-META-07
+**Priority:** Must
 
 On-demand metadata enrichment via REST API for specific objects.
 
@@ -251,7 +272,10 @@ On-demand metadata enrichment via REST API for specific objects.
 | META-063 | Returns enriched fields list and updated object data | MUST | Implemented |
 | META-064 | Returns success if no enrichment needed | MUST | Implemented |
 
-### REQ-META-08: Duplicated ObjectService Resolution (Priority: Must)
+### Requirement: Duplicated ObjectService Resolution
+
+**ID:** REQ-META-08
+**Priority:** Must
 
 MetadataService has its own private getObjectService() duplicating the pattern found in other services.
 
@@ -272,7 +296,10 @@ MetadataService has its own private getObjectService() duplicating the pattern f
 | META-070 | MetadataService has private `getObjectService()` duplicating SettingsService | MUST | Implemented |
 | META-071 | Same `getInstalledApps()` + `container->get()` pattern used | MUST | Implemented |
 
-### REQ-META-09: Event Listener Service Resolution (Priority: Must)
+### Requirement: Event Listener Service Resolution
+
+**ID:** REQ-META-09
+**Priority:** Must
 
 The event listener resolves services via `\OC::$server->get()` at handle time rather than constructor DI to avoid circular dependencies.
 
@@ -306,7 +333,10 @@ The event listener resolves services via `\OC::$server->get()` at handle time ra
 | META-078 | Enrichment failures are non-fatal | MUST | Implemented |
 | META-079 | Nested try/catch re-resolves logger for error scope safety | MUST | Implemented |
 
-### REQ-META-10: Text Content Extraction from Object Data (Priority: Must)
+### Requirement: Text Content Extraction from Object Data
+
+**ID:** REQ-META-10
+**Priority:** Must
 
 MetadataService extracts text content from object data fields in a defined priority order for analysis.
 

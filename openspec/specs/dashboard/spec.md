@@ -10,7 +10,10 @@ Provides a central overview of DocuDesk activity, including consent tracking sta
 
 ## Requirements
 
-### REQ-DASH-01: DocuDesk Dashboard View (Priority: Must)
+### Requirement: DocuDesk Dashboard View
+
+**ID:** REQ-DASH-01
+**Priority:** Must
 
 The dashboard serves as the default landing page displaying consent statistics, recent activity, and quick anonymization access.
 
@@ -51,7 +54,10 @@ The dashboard serves as the default landing page displaying consent statistics, 
 | DASH-007 | Show empty state when no consent records exist | MUST | Implemented |
 | DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
 
-### REQ-DASH-02: Nextcloud Dashboard Widgets (Priority: Must)
+### Requirement: Nextcloud Dashboard Widgets
+
+**ID:** REQ-DASH-02
+**Priority:** Must
 
 DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
 
@@ -83,7 +89,10 @@ DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance d
 | DASH-016 | Both widgets load the `docudesk-dashboard` script bundle | MUST | Implemented |
 | DASH-017 | Widgets registered in Application::register() via registerDashboardWidget() | MUST | Implemented |
 
-### REQ-DASH-03: Navigation Menu (Priority: Must)
+### Requirement: Navigation Menu
+
+**ID:** REQ-DASH-03
+**Priority:** Must
 
 The main navigation provides three items with Material Design icons for switching between DocuDesk views.
 
@@ -122,7 +131,10 @@ The main navigation provides three items with Material Design icons for switchin
 | DASH-024 | Active navigation item is visually highlighted | MUST | Implemented |
 | DASH-025 | Consent Management item active for both list and detail views | MUST | Implemented |
 
-### REQ-DASH-04: Dashboard Controller (Priority: Must)
+### Requirement: Dashboard Controller
+
+**ID:** REQ-DASH-04
+**Priority:** Must
 
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
@@ -150,7 +162,10 @@ The DashboardController serves the main app page as a Nextcloud TemplateResponse
 | DASH-031 | Default Nextcloud CSP applies (no custom CSP) | MUST | Implemented |
 | DASH-032 | Error handling returns an error template on failure | MUST | Implemented |
 
-### REQ-DASH-05: Status Badge Display (Priority: Must)
+### Requirement: Status Badge Display
+
+**ID:** REQ-DASH-05
+**Priority:** Must
 
 Consent status values are displayed with consistent color-coded badges throughout the dashboard and consent views.
 
@@ -174,7 +189,10 @@ Consent status values are displayed with consistent color-coded badges throughou
 | DASH-040 | Status badges use consistent color mapping across all views | MUST | Implemented |
 | DASH-041 | Five status values mapped: pending, consent_given, objection_received, no_response, anonymized | MUST | Implemented |
 
-### REQ-DASH-06: Icon File Differentiation (Priority: Must)
+### Requirement: Icon File Differentiation
+
+**ID:** REQ-DASH-06
+**Priority:** Must
 
 DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
 
@@ -200,7 +218,10 @@ DocuDesk uses different icon files for navigation vs. dashboard widgets, followi
 | DASH-044 | Dashboard widgets use `app-dark.svg` icon | MUST | Implemented |
 | DASH-045 | Two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
 
-### REQ-DASH-07: Dead Code and Removed Features (Priority: Must)
+### Requirement: Dead Code and Removed Features
+
+**ID:** REQ-DASH-07
+**Priority:** Must
 
 Previously identified issues have been resolved through removal.
 

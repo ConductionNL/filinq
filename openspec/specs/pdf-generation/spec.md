@@ -10,7 +10,10 @@ Provides a shared, reusable PDF rendering service that any co-installed Nextclou
 
 ## Requirements
 
-### REQ-PDF-01: PDF Rendering Service (Priority: Must)
+### Requirement: PDF Rendering Service
+
+**ID:** REQ-PDF-01
+**Priority:** Must
 
 PdfService accepts a Twig template string and data context, renders HTML via a sandboxed Twig environment, and converts to PDF via mPDF.
 
@@ -48,7 +51,10 @@ PdfService accepts a Twig template string and data context, renders HTML via a s
 | PDF-004 | Empty data with static HTML produces valid PDF | MUST | Implemented |
 | PDF-005 | Invalid Twig syntax throws Exception with descriptive message | MUST | Implemented |
 
-### REQ-PDF-02: Page Configuration Options (Priority: Must)
+### Requirement: Page Configuration Options
+
+**ID:** REQ-PDF-02
+**Priority:** Must
 
 PDF output can be configured with page format, orientation, margins, and document title metadata.
 
@@ -80,7 +86,10 @@ PDF output can be configured with page format, orientation, margins, and documen
 | PDF-013 | `title` option: PDF document title metadata | MUST | Implemented |
 | PDF-014 | Empty options = A4 portrait with 15mm margins | MUST | Implemented |
 
-### REQ-PDF-03: Twig Sandbox Security Policy (Priority: Must)
+### Requirement: Twig Sandbox Security Policy
+
+**ID:** REQ-PDF-03
+**Priority:** Must
 
 Twig templates are rendered in a sandboxed environment with strict security policy to prevent template injection attacks.
 
@@ -121,7 +130,10 @@ Twig templates are rendered in a sandboxed environment with strict security poli
 | PDF-024 | Zero allowed methods and properties on objects | MUST | Implemented |
 | PDF-025 | Forbidden functions (system, exec, etc.) blocked by sandbox | MUST | Implemented |
 
-### REQ-PDF-04: mPDF Temp Directory Management (Priority: Must)
+### Requirement: mPDF Temp Directory Management
+
+**ID:** REQ-PDF-04
+**Priority:** Must
 
 mPDF requires a writable temp directory, which is created and configured automatically.
 
@@ -149,7 +161,10 @@ mPDF requires a writable temp directory, which is created and configured automat
 | PDF-031 | Temp directory created if not exists | MUST | Implemented |
 | PDF-032 | MpdfException caught, logged, and re-thrown as Exception with code 500 | MUST | Implemented |
 
-### REQ-PDF-05: PDF Rendering API Endpoint (Priority: Must)
+### Requirement: PDF Rendering API Endpoint
+
+**ID:** REQ-PDF-05
+**Priority:** Must
 
 An HTTP endpoint allows authenticated users to generate PDFs on demand.
 
@@ -181,7 +196,10 @@ An HTTP endpoint allows authenticated users to generate PDFs on demand.
 | PDF-042 | Returns DataDownloadResponse with PDF binary and application/pdf MIME | MUST | Implemented |
 | PDF-043 | Returns 400 if template field is missing or empty | MUST | Implemented |
 
-### REQ-PDF-06: Dependencies (Priority: Must)
+### Requirement: Dependencies
+
+**ID:** REQ-PDF-06
+**Priority:** Must
 
 PdfService requires mPDF and Twig libraries at specific minimum versions.
 
@@ -207,7 +225,10 @@ PdfService requires mPDF and Twig libraries at specific minimum versions.
 | PDF-051 | `twig/twig: ^3.18` in composer.json | MUST | Implemented |
 | PDF-052 | TemplateRenderer extracted from PdfService for separation of concerns | MUST | Implemented |
 
-### REQ-PDF-07: Twig Sandbox Configuration Details (Priority: Must)
+### Requirement: Twig Sandbox Configuration Details
+
+**ID:** REQ-PDF-07
+**Priority:** Must
 
 The sandbox configuration is centralized in TemplateRenderer with explicit whitelists.
 
