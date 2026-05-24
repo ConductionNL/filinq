@@ -10,6 +10,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
  */
 
 namespace OCA\DocuDesk\Sections;
@@ -69,6 +71,8 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getIcon(): string
     {
@@ -83,6 +87,8 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getID(): string
     {
@@ -97,6 +103,8 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getName(): string
     {
@@ -111,6 +119,8 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   int
      * @phpstan-return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getPriority(): int
     {

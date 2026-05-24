@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
  */
 
 declare(strict_types=1);
@@ -65,6 +67,8 @@ class BatchCorrespondenceJob extends QueuedJob
      *                        recipientIds, and options
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     protected function run(mixed $argument): void
     {
@@ -98,6 +102,8 @@ class BatchCorrespondenceJob extends QueuedJob
      * @param int    $total Total number of recipients
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function initializeJobStatus(string $jobId, int $total): void
     {
@@ -123,6 +129,8 @@ class BatchCorrespondenceJob extends QueuedJob
      * @param array  $options      Generation options
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function processRecipients(
         string $jobId,
