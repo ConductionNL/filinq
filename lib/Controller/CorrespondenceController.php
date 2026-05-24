@@ -12,6 +12,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
  */
 
 declare(strict_types=1);
@@ -77,6 +81,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
@@ -106,6 +112,8 @@ class CorrespondenceController extends Controller
      * Parse and validate generation request parameters
      *
      * @return array|JSONResponse Parsed params or error response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function parseGenerateParams(): array | JSONResponse
     {
@@ -150,6 +158,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse|JSONResponse The formatted response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function formatGenerateResponse(
         array $result,
@@ -186,6 +196,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse The download response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function buildDownloadResponse(
         array $result,
@@ -223,6 +235,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function generateBatch(): JSONResponse
     {
@@ -281,6 +295,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function jobStatus(string $jobId): JSONResponse
     {

@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -73,6 +78,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function files(): JSONResponse
     {
@@ -108,6 +115,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function upload(): JSONResponse
     {
@@ -170,6 +179,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function extract(int $fileId): JSONResponse
     {
@@ -202,6 +213,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function anonymize(int $fileId): JSONResponse
     {
@@ -242,6 +255,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByExcludeTypes(array $entities, array $params): array
     {
@@ -269,6 +284,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByConfidence(array $entities, array $params): array
     {

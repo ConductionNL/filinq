@@ -12,6 +12,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-22
  */
 
 declare(strict_types=1);
@@ -61,6 +63,8 @@ class MetricsController extends Controller
      * @return TextPlainResponse Plain text response with Prometheus metrics
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-22
      */
     public function index(): TextPlainResponse
     {

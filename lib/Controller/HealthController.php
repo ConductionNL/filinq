@@ -11,6 +11,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
  */
 
 declare(strict_types=1);
@@ -64,6 +66,8 @@ class HealthController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
      */
     public function index(): JSONResponse
     {
