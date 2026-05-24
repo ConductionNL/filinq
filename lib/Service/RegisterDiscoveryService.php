@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
  */
 
 declare(strict_types=1);
@@ -80,6 +82,8 @@ class RegisterDiscoveryService
      * every user on an environment where the OR sidecar lags this app.
      *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function fetchAvailableRegisters(): array
     {
@@ -128,6 +132,8 @@ class RegisterDiscoveryService
      * @return array<string, mixed> Serialized register with filtered schemas
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     private function filterSchemas(array $registerArray): array
     {
@@ -150,6 +156,8 @@ class RegisterDiscoveryService
      * @return mixed The filtered schema
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     private function filterSchemaProperties(mixed $schema): mixed
     {
@@ -169,6 +177,8 @@ class RegisterDiscoveryService
      * @param array<string> $objectTypes The object types to load config for
      *
      * @return array<string, string> Configuration key-value pairs
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function loadObjectTypeConfiguration(array $objectTypes): array
     {

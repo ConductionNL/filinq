@@ -13,6 +13,16 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
  */
 
 declare(strict_types=1);
@@ -106,6 +116,8 @@ class OcrService
      * Check if Tesseract OCR binary is available on the system
      *
      * @return bool True if Tesseract is installed and executable
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
      */
     public function isTesseractAvailable(): bool
     {
@@ -128,6 +140,8 @@ class OcrService
      * Get the installed Tesseract version string
      *
      * @return string|null The version string or null if not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
      */
     public function getTesseractVersion(): ?string
     {
@@ -158,6 +172,8 @@ class OcrService
      * @param string|null $existingText Existing extracted text content
      *
      * @return bool True if the file needs OCR processing
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
      */
     public function needsOcr(string $mimeType, ?string $existingText=null): bool
     {
@@ -180,6 +196,8 @@ class OcrService
      * Check if OCR is enabled in admin settings
      *
      * @return bool True if OCR is enabled
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
      */
     public function isOcrEnabled(): bool
     {
@@ -195,6 +213,8 @@ class OcrService
      * Get configured OCR languages
      *
      * @return string Tesseract language string (e.g., "nld+eng")
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
      */
     public function getOcrLanguages(): string
     {
@@ -210,6 +230,8 @@ class OcrService
      * Get configured OCR DPI for PDF conversion
      *
      * @return int DPI value
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
      */
     public function getOcrDpi(): int
     {
@@ -231,6 +253,8 @@ class OcrService
      * @return array{text: string, confidence: float} Extracted text and confidence
      *
      * @throws Exception If OCR processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
      */
     public function extractTextFromImage(
         string $filePath,
@@ -291,6 +315,8 @@ class OcrService
      * @return array{text: string, confidence: float} Extracted text and average confidence
      *
      * @throws Exception If PDF conversion or OCR processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
      */
     public function extractTextFromPdf(
         string $filePath,
@@ -391,6 +417,8 @@ class OcrService
      * @param int $fileId The Nextcloud file ID
      *
      * @return array{text: string, confidence: float, ocrProcessed: bool} OCR results
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
      */
     public function processFile(int $fileId): array
     {
@@ -527,6 +555,8 @@ class OcrService
      * @param int    $dpi       DPI setting
      *
      * @return float Confidence score (0-100)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
      */
     private function getConfidenceScore(string $filePath, string $languages, int $dpi): float
     {
