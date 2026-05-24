@@ -10,7 +10,9 @@ Provides a complete document anonymization pipeline: upload files to a user-scop
 
 ## Requirements
 
-### REQ-ANON-01: File Upload to User-Scoped Folder (Priority: Must)
+### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
+
+**Priority:** Must
 
 Users upload files via multipart form data, and files are stored in a per-user DocuDesk folder within Nextcloud Files.
 
@@ -52,7 +54,9 @@ Users upload files via multipart form data, and files are stored in a per-user D
 | ANON-005 | Upload response includes fileId, filePath, fileName, and fileSize | MUST | Implemented |
 | ANON-006 | Upload requires an authenticated user session | MUST | Implemented |
 
-### REQ-ANON-02: Text Extraction and Entity Detection (Priority: Must)
+### Requirement: Text Extraction and Entity Detection (REQ-ANON-02)
+
+**Priority:** Must
 
 Text is extracted from uploaded documents and entities (persons, organizations, emails, phone numbers) are detected using OpenRegister's NER capabilities.
 
@@ -90,7 +94,9 @@ Text is extracted from uploaded documents and entities (persons, organizations, 
 | ANON-014 | Extraction endpoint is `POST /api/anonymization/extract/{fileId}` | MUST | Implemented |
 | ANON-015 | Response includes `entities` array and `entityCount` | MUST | Implemented |
 
-### REQ-ANON-03: Document Anonymization with Entity Replacement (Priority: Must)
+### Requirement: Document Anonymization with Entity Replacement (REQ-ANON-03)
+
+**Priority:** Must
 
 Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy.
 
@@ -134,7 +140,9 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 | ANON-025 | Anonymization endpoint is `POST /api/anonymization/anonymize/{fileId}` with entities array in request body | MUST | Implemented |
 | ANON-026 | Response includes anonymizedFileId, anonymizedFileName, anonymizedFilePath, and replacementCount | MUST | Implemented |
 
-### REQ-ANON-04: Processed File Listing with Risk Assessment (Priority: Must)
+### Requirement: Processed File Listing with Risk Assessment (REQ-ANON-04)
+
+**Priority:** Must
 
 List all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
 
@@ -165,7 +173,9 @@ List all files in the user's DocuDesk folder with entity counts, anonymization s
 | ANON-034 | File listing includes fileId, fileName, filePath, fileSize, and mimeType | MUST | Implemented |
 | ANON-035 | Only actual files are listed (directories are skipped) | MUST | Implemented |
 
-### REQ-ANON-05: Lazy OpenRegister Service Resolution (Priority: Must)
+### Requirement: Lazy OpenRegister Service Resolution (REQ-ANON-05)
+
+**Priority:** Must
 
 AnonymizationService lazily resolves OpenRegister services at call time to gracefully handle the case where OpenRegister is not installed.
 
@@ -195,7 +205,9 @@ AnonymizationService lazily resolves OpenRegister services at call time to grace
 | ANON-042 | Service resolution is lazy (per-call), not eagerly loaded at construction time | MUST | Implemented |
 | ANON-043 | `listProcessedFiles()` gracefully handles unavailable services by catching RuntimeException | MUST | Implemented |
 
-### REQ-ANON-06: UUID v4 Generation for Anonymization Keys (Priority: Must)
+### Requirement: UUID v4 Generation for Anonymization Keys (REQ-ANON-06)
+
+**Priority:** Must
 
 Each anonymized entity is assigned a cryptographically secure UUID v4 key as its replacement identifier.
 
@@ -221,7 +233,9 @@ Each anonymized entity is assigned a cryptographically secure UUID v4 key as its
 | ANON-045 | Generated UUIDs conform to RFC 4122 version 4 format | MUST | Implemented |
 | ANON-046 | Each entity gets a unique UUID key in the anonymization mapping | MUST | Implemented |
 
-### REQ-ANON-07: User Session Authentication (Priority: Must)
+### Requirement: User Session Authentication (REQ-ANON-07)
+
+**Priority:** Must
 
 File operations require an authenticated user session to scope files to the correct user's folder.
 
@@ -247,7 +261,9 @@ File operations require an authenticated user session to scope files to the corr
 | ANON-047 | `getCurrentUserId()` throws `Exception` with code 401 when no user session exists | MUST | Implemented |
 | ANON-048 | `files()` and `upload()` correctly propagate 401; `extract()` and `anonymize()` return 500 on exception | MUST | Partial |
 
-### REQ-ANON-08: Anonymization Pipeline UI (Priority: Must)
+### Requirement: Anonymization Pipeline UI (REQ-ANON-08)
+
+**Priority:** Must
 
 The frontend provides a step-by-step UI for the complete anonymization workflow with drag-and-drop upload, progress tracking, and result display.
 
@@ -277,7 +293,9 @@ The frontend provides a step-by-step UI for the complete anonymization workflow 
 | ANON-052 | Return 500 with "Failed to read uploaded file" when temp file cannot be read | MUST | Implemented |
 | ANON-053 | Return 400 with "No entities provided for anonymization" when entities array is empty | MUST | Implemented |
 
-### REQ-ANON-09: EntityRelationMapper Method Usage (Priority: Must)
+### Requirement: EntityRelationMapper Method Usage (REQ-ANON-09)
+
+**Priority:** Must
 
 Two distinct EntityRelationMapper methods serve different purposes in the pipeline: entity detail retrieval vs. relation counting.
 
@@ -306,7 +324,9 @@ Two distinct EntityRelationMapper methods serve different purposes in the pipeli
 | ANON-055 | File listing uses `findByFileId()` for entity counts and status | MUST | Implemented |
 | ANON-056 | `findByFileId()` relations expose `getAnonymized()` for per-entity tracking | MUST | Implemented |
 
-### REQ-ANON-10: Frontend File Processing Queue (Priority: Must)
+### Requirement: Frontend File Processing Queue (REQ-ANON-10)
+
+**Priority:** Must
 
 The Pinia store manages a sequential file processing queue with status tracking through the pipeline stages.
 

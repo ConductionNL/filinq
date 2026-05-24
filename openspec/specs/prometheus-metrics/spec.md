@@ -10,7 +10,9 @@ Expose application metrics in Prometheus text exposition format at `GET /api/met
 
 ## Requirements
 
-### REQ-PROM-01: Metrics Endpoint (Priority: Must)
+### Requirement: Metrics Endpoint (REQ-PROM-01)
+
+**Priority:** Must
 
 Expose a Prometheus-compatible metrics endpoint with proper content type and authentication.
 
@@ -38,7 +40,9 @@ Expose a Prometheus-compatible metrics endpoint with proper content type and aut
 | PROM-002 | Content-Type: `text/plain; version=0.0.4; charset=utf-8` | MUST | Implemented |
 | PROM-003 | Require admin authentication | MUST | Implemented |
 
-### REQ-PROM-02: Standard Application Metrics (Priority: Must)
+### Requirement: Standard Application Metrics (REQ-PROM-02)
+
+**Priority:** Must
 
 Every DocuDesk installation exposes standard metrics for version info, health, and basic operational data.
 
@@ -63,7 +67,9 @@ Every DocuDesk installation exposes standard metrics for version info, health, a
 | PROM-011 | `docudesk_up` gauge (1 = healthy) | MUST | Implemented |
 | PROM-012 | Version labels from IConfig app values | MUST | Implemented |
 
-### REQ-PROM-03: App-Specific Metrics (Priority: Must)
+### Requirement: App-Specific Metrics (REQ-PROM-03)
+
+**Priority:** Must
 
 DocuDesk exposes metrics specific to its document processing capabilities.
 
@@ -98,7 +104,9 @@ DocuDesk exposes metrics specific to its document processing capabilities.
 | PROM-022 | `docudesk_pdf_generations_total` counter from IConfig | MUST | Implemented |
 | PROM-023 | `docudesk_anonymizations_total` counter from IConfig | MUST | Implemented |
 
-### REQ-PROM-04: Planned Standard Metrics (Priority: Should)
+### Requirement: Planned Standard Metrics (REQ-PROM-04)
+
+**Priority:** Should
 
 The app MUST expose additional standard metrics for request tracking and error monitoring.
 
@@ -123,7 +131,9 @@ The app MUST expose additional standard metrics for request tracking and error m
 | PROM-031 | `docudesk_request_duration_seconds` histogram | SHOULD | Planned |
 | PROM-032 | `docudesk_errors_total` counter with type label | SHOULD | Planned |
 
-### REQ-PROM-05: Planned Duration Metrics (Priority: Should)
+### Requirement: Planned Duration Metrics (REQ-PROM-05)
+
+**Priority:** Should
 
 The app MUST expose duration histograms for PDF generation and anonymization operations.
 
@@ -143,7 +153,9 @@ The app MUST expose duration histograms for PDF generation and anonymization ope
 | PROM-040 | `docudesk_pdf_generation_duration_seconds` histogram | SHOULD | Planned |
 | PROM-041 | `docudesk_anonymization_duration_seconds` histogram | SHOULD | Planned |
 
-### REQ-PROM-06: Health Check Endpoint (Priority: Must)
+### Requirement: Health Check Endpoint (REQ-PROM-06)
+
+**Priority:** Must
 
 A health check endpoint provides infrastructure monitoring with component-level status checks.
 
@@ -168,7 +180,9 @@ A health check endpoint provides infrastructure monitoring with component-level 
 | PROM-051 | Component-level checks: database, dependencies | MUST | Implemented |
 | PROM-052 | Status values: ok, degraded, error | MUST | Implemented |
 
-### REQ-PROM-07: MetricsCollector Delegation (Priority: Must)
+### Requirement: MetricsCollector Delegation (REQ-PROM-07)
+
+**Priority:** Must
 
 MetricsController delegates count queries to MetricsCollector for separation of concerns.
 
