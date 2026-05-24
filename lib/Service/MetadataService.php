@@ -14,6 +14,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
  */
 
 declare(strict_types=1);
@@ -82,6 +85,8 @@ class MetadataService
      * @param array<string, mixed> $objectData The document object data
      *
      * @return array<string, mixed> Enhanced metadata from text analysis
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
      */
     private function enhanceTextMetadata(string $text, array $objectData): array
     {
@@ -120,6 +125,8 @@ class MetadataService
      * @return array<string, mixed> Enhanced metadata fields
      *
      * @throws Exception If metadata enhancement fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
      */
     public function enhanceMetadata(array $objectData): array
     {
@@ -163,6 +170,8 @@ class MetadataService
      * @return array<string, mixed> Updated object data
      *
      * @throws Exception If saving fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
      */
     public function saveEnrichedMetadata(
         string $objectId,

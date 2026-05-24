@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 
 /**
  * Service for resolving OpenRegister configuration and namespace validation
@@ -50,7 +51,7 @@ class OpenRegisterResolver
      *
      * @return array{register: string, schema: string} Register and schema IDs
      *
-     * @throws Exception If template register/schema is not configured
+     * @throws RegisterNotConfiguredException If template register/schema is not configured
      */
     public function getRegisterAndSchema(): array
     {
@@ -59,7 +60,7 @@ class OpenRegisterResolver
         $schema   = $settings['configuration']['template_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(message: 'Template register/schema not configured', code: 500);
+            throw new RegisterNotConfiguredException(message: 'Template register/schema not configured');
         }
 
         return ['register' => $register, 'schema' => $schema];
@@ -71,7 +72,7 @@ class OpenRegisterResolver
      *
      * @return array{register: string, schema: string} Register and schema IDs
      *
-     * @throws Exception If template version register/schema is not configured
+     * @throws RegisterNotConfiguredException If template version register/schema is not configured
      */
     public function getVersionRegisterAndSchema(): array
     {
@@ -80,9 +81,8 @@ class OpenRegisterResolver
         $schema   = $settings['configuration']['templateVersion_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(
-                message: 'Template version register/schema not configured',
-                code: 500
+            throw new RegisterNotConfiguredException(
+                message: 'Template version register/schema not configured'
             );
         }
 

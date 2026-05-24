@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -76,6 +78,8 @@ class FileUploadService
      * @return \OCP\Files\Folder The DocuDesk folder
      *
      * @throws Exception If folder creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function getDocuDeskFolder(): \OCP\Files\Folder
     {
@@ -102,6 +106,8 @@ class FileUploadService
      * @param string            $fileName The desired file name
      *
      * @return string A unique file name
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function resolveUniqueFileName(\OCP\Files\Folder $folder, string $fileName): string
     {
@@ -132,6 +138,8 @@ class FileUploadService
      * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
      *
      * @throws Exception If the upload fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {

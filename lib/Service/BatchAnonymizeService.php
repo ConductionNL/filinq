@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -70,6 +72,8 @@ class BatchAnonymizeService
      *   }
      *
      * @throws Exception When the batch cannot be found.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function anonymizeBatch(string $batchId, array $entities): array
     {

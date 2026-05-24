@@ -14,6 +14,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
  */
 
 declare(strict_types=1);
@@ -135,6 +138,8 @@ class SettingsInitializer
      * @return array<string, mixed> The loaded settings configuration
      *
      * @throws \RuntimeException If settings loading fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
      */
     private function loadSettings(): array
     {
@@ -174,6 +179,8 @@ class SettingsInitializer
      * @return array<string, mixed> The initialization results
      *
      * @throws \RuntimeException If initialization fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
      */
     public function initialize(): array
     {

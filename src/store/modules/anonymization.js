@@ -11,6 +11,7 @@ import { generateUrl } from '@nextcloud/router'
 // error: string|null,
 // fileId: number|null,         - Nextcloud file ID after upload.
 // filePath: string|null,       - path in Nextcloud files.
+// entities: array,             - per-entity rows returned by /extract (type, value, confidence, ...).
 // entityCount: number,         - entities detected.
 // replacementCount: number,    - entities replaced.
 // anonymizedFileId: number|null,
@@ -47,6 +48,7 @@ export const useAnonymizationStore = defineStore(
 						error: null,
 						fileId: null,
 						filePath: null,
+						entities: [],
 						entityCount: 0,
 						replacementCount: 0,
 						anonymizedFileId: null,
@@ -111,6 +113,7 @@ export const useAnonymizationStore = defineStore(
 					)
 
 					const entities = extractResponse.data.entities || []
+					entry.entities = entities
 					entry.entityCount = entities.length
 
 					// No entities? Mark complete.

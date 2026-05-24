@@ -14,6 +14,7 @@
 		:manifest="manifest"
 		:custom-components="customComponents"
 		:page-types="pageTypes"
+		:registry="registry"
 		app-id="docudesk"
 		:translate="translateForApp"
 		:permissions="permissions">
@@ -75,6 +76,15 @@ export default {
 		pageTypes: {
 			type: Object,
 			default: null,
+		},
+		/**
+		 * 5-kind component registry for v2 manifests (hydra ADR-036).
+		 * Map of registry key → `{ kind, component, ...metadata }`.
+		 * See src/registry.js for the docudesk entries.
+		 */
+		registry: {
+			type: Object,
+			default: () => ({}),
 		},
 	},
 

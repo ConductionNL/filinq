@@ -13,14 +13,15 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
  */
 
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use Exception;
-use TypeError;
+use Throwable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
@@ -77,8 +78,14 @@ class RegisterDiscoveryService
      * Mirrors the expansion logic in OpenRegister's
      * `RegistersController::index` for `_extend: ['schemas']`, but performed
      * inline so docudesk doesn't depend on a non-existent serialized helper.
+     * Catches `Throwable` (the only common ancestor of `Exception` and
+     * `Error` in PHP 7+) so any failure — including a missing method on an
+     * older OR sidecar — falls back to an empty registers list rather than
+     * bubbling a 500 to the controller.
      *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function fetchAvailableRegisters(): array
     {
@@ -118,21 +125,18 @@ class RegisterDiscoveryService
             unset($registerArr);
 
             return array_map([$this, 'filterSchemas'], $rawRegisters);
-        } catch (TypeError $e) {
+        } catch (Throwable $e) {
+            // Catches both Exception (runtime failures from OpenRegister) and
+            // Error (e.g. "Call to undefined method" when the deployed OR is
+            // older than #1428 — see openregister#1428). Either way the
+            // graceful fallback is an empty list; the controller still
+            // returns a 200 with whatever non-register settings it can
+            // assemble.
             $this->logger->warning(
-                'OpenRegister internal error - using empty registers list',
+                'OpenRegister register list failed - using empty registers list',
                 [
                     'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]
-            );
-            return [];
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'OpenRegister findAll() failed - using empty registers list',
-                [
-                    'exception' => $e->getMessage(),
+                    'class'     => get_class($e),
                     'file'      => $e->getFile(),
                     'line'      => $e->getLine(),
                 ]
@@ -154,6 +158,8 @@ class RegisterDiscoveryService
      * @return array<string, mixed> Serialized register with filtered schemas
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     private function filterSchemas(array $registerArray): array
     {
@@ -176,6 +182,8 @@ class RegisterDiscoveryService
      * @return mixed The filtered schema
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     private function filterSchemaProperties(mixed $schema): mixed
     {
@@ -195,6 +203,8 @@ class RegisterDiscoveryService
      * @param array<string> $objectTypes The object types to load config for
      *
      * @return array<string, string> Configuration key-value pairs
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function loadObjectTypeConfiguration(array $objectTypes): array
     {

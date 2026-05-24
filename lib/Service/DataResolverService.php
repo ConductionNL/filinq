@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
  */
 
 declare(strict_types=1);
@@ -102,6 +104,8 @@ class DataResolverService
      * @param array $adHocData Ad-hoc data to merge on top of resolved data
      *
      * @return array{data: array, errors: array, warnings: array} Resolved data and any errors
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
      */
     public function resolve(array $dataRefs, array $adHocData=[]): array
     {
@@ -229,6 +233,8 @@ class DataResolverService
      * @param int   $depth Current recursion depth
      *
      * @return array The data with nested references resolved
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
      */
     private function resolveNestedReferences(array $data, int $depth): array
     {
