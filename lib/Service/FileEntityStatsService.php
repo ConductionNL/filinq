@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
  */
 
 declare(strict_types=1);
@@ -66,6 +69,8 @@ class FileEntityStatsService
      * Try to get the EntityRelationMapper, returning null on failure
      *
      * @return \OCA\OpenRegister\Db\EntityRelationMapper|null The mapper or null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
      */
     public function tryGetEntityRelationMapper(): ?\OCA\OpenRegister\Db\EntityRelationMapper
     {
@@ -86,6 +91,8 @@ class FileEntityStatsService
      * Try to get the RiskLevelService, returning null on failure
      *
      * @return \OCA\OpenRegister\Service\RiskLevelService|null The service or null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Service\RiskLevelService
     {
@@ -109,6 +116,8 @@ class FileEntityStatsService
      * @param \OCA\OpenRegister\Db\EntityRelationMapper|null $entityRelationMapper The mapper
      *
      * @return array{entityCount: int, anonymizedCount: int, status: string} Entity stats
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function getEntityStats(
         int $fileId,
@@ -157,6 +166,8 @@ class FileEntityStatsService
      * @param int $anonymizedCount Anonymized entity count
      *
      * @return string The status string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function determineFileStatus(int $entityCount, int $anonymizedCount): string
     {
@@ -179,6 +190,8 @@ class FileEntityStatsService
      * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
      *
      * @return string The risk level
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function getFileRiskLevel(
         int $fileId,

@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -58,6 +61,8 @@ class FileListingService
      * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService     The service
      *
      * @return array<string, mixed> File info
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     private function buildFileInfo(
         \OCP\Files\File $file,
@@ -101,6 +106,8 @@ class FileListingService
      * List all processed files in the user's DocuDesk folder
      *
      * @return array<int, array<string, mixed>> Array of file info
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function listProcessedFiles(): array
     {
@@ -157,6 +164,8 @@ class FileListingService
      * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
      *
      * @throws Exception If the upload fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {
