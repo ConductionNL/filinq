@@ -10,7 +10,9 @@ Provides configuration management for DocuDesk, including OpenRegister integrati
 
 ## Requirements
 
-### REQ-SET-01: Nextcloud Admin Panel Integration (Priority: Must)
+### Requirement: Nextcloud Admin Panel Integration (REQ-SET-01)
+
+**Priority:** Must
 
 DocuDesk registers a dedicated section in the Nextcloud admin settings panel with its own icon, accessible only to administrators.
 
@@ -46,7 +48,9 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 | SET-003 | The admin section is registered via `OCA\DocuDesk\Settings\DocuDeskAdmin` (ISettings) and `OCA\DocuDesk\Sections\DocuDeskAdmin` (IIconSection) -- two separate classes in different namespaces | MUST | Implemented |
 | SET-004 | Settings are rendered using a Vue component (`Settings.vue`) via the `settings` entry point | MUST | Implemented |
 
-### REQ-SET-02: OpenRegister Integration Configuration (Priority: Must)
+### Requirement: OpenRegister Integration Configuration (REQ-SET-02)
+
+**Priority:** Must
 
 Administrators can configure which OpenRegister register and schema to use for consent object storage, with validation and discovery of available registers.
 
@@ -88,7 +92,9 @@ Administrators can configure which OpenRegister register and schema to use for c
 | SET-015 | Store register/schema configuration as `publicationConsent_register`, `publicationConsent_schema`, `publicationConsent_source` in IAppConfig | MUST | Implemented |
 | SET-016 | Schema listing excludes the `properties` field for cleaner API responses | MUST | Implemented |
 
-### REQ-SET-03: Auto-Initialization on Boot (Priority: Must)
+### Requirement: Auto-Initialization on Boot (REQ-SET-03)
+
+**Priority:** Must
 
 On application boot, DocuDesk automatically imports its register/schema definitions from a versioned JSON file, ensuring the required data structures exist in OpenRegister.
 
@@ -135,7 +141,9 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 | SET-022 | Initialization failures are logged but do not prevent app startup (silent failure) | MUST | Implemented |
 | SET-023 | The `docudesk_register.json` file follows OpenAPI 3.0.0 format with `x-openregister` extensions | MUST | Implemented |
 
-### REQ-SET-04: WOO Consent Period Configuration (Priority: Must)
+### Requirement: WOO Consent Period Configuration (REQ-SET-04)
+
+**Priority:** Must
 
 Administrators can configure the publication objection period per WOO requirements, with validation ensuring compliance with the minimum 4-week objection period.
 
@@ -164,7 +172,9 @@ Administrators can configure the publication objection period per WOO requiremen
 | SET-031 | Objection period input accepts values from 1 to 365 | MUST | Implemented |
 | SET-032 | Display descriptive text referencing WOO minimum 4-week requirement | MUST | Implemented |
 
-### REQ-SET-05: Metadata Enrichment Feature Toggles (Priority: Must)
+### Requirement: Metadata Enrichment Feature Toggles (REQ-SET-05)
+
+**Priority:** Must
 
 Administrators can independently toggle language detection, keyword extraction, and topic classification features on or off.
 
@@ -196,7 +206,9 @@ Administrators can independently toggle language detection, keyword extraction, 
 | SET-042 | Toggle topic classification on/off (`enable_topic_classification`, default: enabled) | MUST | Implemented |
 | SET-043 | Toggles use NcCheckboxRadioSwitch components with descriptive labels | MUST | Implemented |
 
-### REQ-SET-06: Settings REST API (Priority: Must)
+### Requirement: Settings REST API (REQ-SET-06)
+
+**Priority:** Must
 
 Settings can be retrieved and updated programmatically via REST API endpoints.
 
@@ -233,7 +245,9 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 | SET-053 | Array/object values are JSON-encoded before storage in IAppConfig | MUST | Implemented |
 | SET-054 | Empty keys are skipped with a warning log during update | MUST | Implemented |
 
-### REQ-SET-07: SettingsService Public Helper Methods (Priority: Must)
+### Requirement: SettingsService Public Helper Methods (REQ-SET-07)
+
+**Priority:** Must
 
 SettingsService exposes reusable public methods for OpenRegister service resolution and availability checking, used by other DocuDesk services and controllers.
 
@@ -264,7 +278,9 @@ SettingsService exposes reusable public methods for OpenRegister service resolut
 | SET-063 | `getConfigurationService()` provides public access to the OpenRegister ConfigurationService via lazy resolution | MUST | Implemented |
 | SET-064 | Both service getters throw `\RuntimeException` when OpenRegister is not available | MUST | Implemented |
 
-### REQ-SET-08: App Metadata and Compatibility (Priority: Must)
+### Requirement: App Metadata and Compatibility (REQ-SET-08)
+
+**Priority:** Must
 
 DocuDesk declares platform compatibility and app identity in its `appinfo/info.xml`.
 
@@ -291,7 +307,9 @@ DocuDesk declares platform compatibility and app identity in its `appinfo/info.x
 | SET-071 | App requires PHP 8.0+ with 64-bit integer support | MUST | Implemented |
 | SET-072 | App is compatible with Nextcloud versions 28 through 32 | MUST | Implemented |
 
-### REQ-SET-09: External Documentation URLs (Priority: Must)
+### Requirement: External Documentation URLs (REQ-SET-09)
+
+**Priority:** Must
 
 DocuDesk references external documentation for users, administrators, and developers.
 
@@ -313,7 +331,9 @@ DocuDesk references external documentation for users, administrators, and develo
 | SET-074 | All doc types (user, admin, developer) in info.xml use the same Gitbook URL | MUST | Implemented |
 | SET-075 | Roadmap is tracked at GitHub Projects | MUST | Implemented |
 
-### REQ-SET-10: Configuration File Resolution and Validation (Priority: Must)
+### Requirement: Configuration File Resolution and Validation (REQ-SET-10)
+
+**Priority:** Must
 
 SettingsService resolves and validates the configuration JSON file with a strict validation chain.
 
@@ -340,7 +360,9 @@ SettingsService resolves and validates the configuration JSON file with a strict
 | SET-076 | Settings file path is resolved relative to SettingsService via `__DIR__.'/../Settings/docudesk_register.json'` | MUST | Implemented |
 | SET-077 | File existence, readability, JSON validity, and version presence are all validated with descriptive RuntimeException messages | MUST | Implemented |
 
-### REQ-SET-11: TypeError Catch Fallback for OpenRegister (Priority: Must)
+### Requirement: TypeError Catch Fallback for OpenRegister (REQ-SET-11)
+
+**Priority:** Must
 
 Settings retrieval gracefully handles TypeErrors from OpenRegister internals to prevent crashes.
 

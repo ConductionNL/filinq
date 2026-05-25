@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SigningVerificationService;
@@ -29,6 +30,7 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Controller for signing-specific endpoints
@@ -43,8 +45,6 @@ use Psr\Log\LoggerInterface;
  */
 class SigningController extends Controller
 {
-
-
     /**
      * Constructor
      *
@@ -73,7 +73,6 @@ class SigningController extends Controller
 
     }//end __construct()
 
-
     /**
      * Create a new signing request
      *
@@ -93,7 +92,6 @@ class SigningController extends Controller
 
     }//end createRequest()
 
-
     /**
      * List signing requests
      *
@@ -106,12 +104,43 @@ class SigningController extends Controller
         try {
             $result = $this->signingService->listRequests();
             return new JSONResponse($result);
-        } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to list signing requests: ', exception: $e);
-        }
+        } catch (RegisterNotConfiguredException $e) {
+            // Configuration missing is a setup state, not a failure —
+            // emit an empty list with a notConfigured flag so the UI can
+            // render a calm "register not configured yet" empty state.
+            $this->logger->info(
+                'Signing requests list called but register/schema is not configured: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
+        } catch (Throwable $e) {
+            // Cascade fallback for the OR-sidecar-lag scenario: when
+            // the deployed OpenRegister build lacks a method that
+            // SigningService calls (e.g. `getObjects`), PHP raises an
+            // `Error` which `catch (Exception)` would miss. Returning
+            // an empty list keeps the page rendering instead of 500ing
+            // while the sidecar catches up. The error is logged at
+            // warning level so ops still see drift.
+            $this->logger->warning(
+                'Signing requests list failed — returning empty list. '
+                .'Likely a missing OpenRegister method on the deployed sidecar. '
+                .'Underlying: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
+        }//end try
 
     }//end listRequests()
-
 
     /**
      * Get a specific signing request
@@ -133,7 +162,6 @@ class SigningController extends Controller
 
     }//end showRequest()
 
-
     /**
      * Cancel a signing request
      *
@@ -153,7 +181,6 @@ class SigningController extends Controller
         }
 
     }//end cancelRequest()
-
 
     /**
      * Sign a document
@@ -175,7 +202,6 @@ class SigningController extends Controller
         }
 
     }//end sign()
-
 
     /**
      * Decline a signing request
@@ -199,7 +225,6 @@ class SigningController extends Controller
 
     }//end decline()
 
-
     /**
      * Bulk sign multiple signing requests
      *
@@ -222,7 +247,6 @@ class SigningController extends Controller
         }
 
     }//end bulkSign()
-
 
     /**
      * Verify signatures in a document
@@ -252,7 +276,6 @@ class SigningController extends Controller
 
     }//end verify()
 
-
     /**
      * Get the audit trail for a signing request
      *
@@ -273,7 +296,6 @@ class SigningController extends Controller
 
     }//end getAudit()
 
-
     /**
      * Build an error JSON response with logging
      *
@@ -292,6 +314,4 @@ class SigningController extends Controller
         );
 
     }//end errorResponse()
-
-
 }//end class

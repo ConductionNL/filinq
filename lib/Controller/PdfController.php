@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
  */
 
 declare(strict_types=1);
@@ -38,8 +41,6 @@ use Psr\Log\LoggerInterface;
  */
 class PdfController extends Controller
 {
-
-
     /**
      * Constructor for PdfController
      *
@@ -62,7 +63,6 @@ class PdfController extends Controller
 
     }//end __construct()
 
-
     /**
      * Generate a PDF from a Twig template and data context
      *
@@ -76,6 +76,8 @@ class PdfController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
      */
     public function render(): DataDownloadResponse | JSONResponse
     {
@@ -130,7 +132,6 @@ class PdfController extends Controller
 
     }//end render()
 
-
     /**
      * Generate a PDF/A-3b compliant document from a Twig template
      *
@@ -149,6 +150,8 @@ class PdfController extends Controller
      * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
      */
     public function renderPdfA(): DataDownloadResponse | JSONResponse
     {
@@ -204,6 +207,4 @@ class PdfController extends Controller
         }//end try
 
     }//end renderPdfA()
-
-
 }//end class

@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 
 /**
  * Service for resolving OpenRegister configuration and namespace validation
@@ -32,8 +33,6 @@ use Exception;
  */
 class OpenRegisterResolver
 {
-
-
     /**
      * Constructor for OpenRegisterResolver
      *
@@ -47,13 +46,14 @@ class OpenRegisterResolver
 
     }//end __construct()
 
-
     /**
      * Get the template register and schema IDs from settings
      *
      * @return array{register: string, schema: string} Register and schema IDs
      *
-     * @throws Exception If template register/schema is not configured
+     * @throws RegisterNotConfiguredException If template register/schema is not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function getRegisterAndSchema(): array
     {
@@ -62,20 +62,21 @@ class OpenRegisterResolver
         $schema   = $settings['configuration']['template_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(message: 'Template register/schema not configured', code: 500);
+            throw new RegisterNotConfiguredException(message: 'Template register/schema not configured');
         }
 
         return ['register' => $register, 'schema' => $schema];
 
     }//end getRegisterAndSchema()
 
-
     /**
      * Get the template version register and schema IDs from settings
      *
      * @return array{register: string, schema: string} Register and schema IDs
      *
-     * @throws Exception If template version register/schema is not configured
+     * @throws RegisterNotConfiguredException If template version register/schema is not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function getVersionRegisterAndSchema(): array
     {
@@ -84,16 +85,14 @@ class OpenRegisterResolver
         $schema   = $settings['configuration']['templateVersion_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(
-                message: 'Template version register/schema not configured',
-                code: 500
+            throw new RegisterNotConfiguredException(
+                message: 'Template version register/schema not configured'
             );
         }
 
         return ['register' => $register, 'schema' => $schema];
 
     }//end getVersionRegisterAndSchema()
-
 
     /**
      * Validate that a namespace string is a valid Nextcloud app ID
@@ -103,6 +102,8 @@ class OpenRegisterResolver
      * @return bool True if valid
      *
      * @throws Exception If the namespace is invalid
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function validateNamespace(string $namespace): bool
     {
@@ -116,6 +117,4 @@ class OpenRegisterResolver
         return true;
 
     }//end validateNamespace()
-
-
 }//end class

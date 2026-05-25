@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
  */
 
 declare(strict_types=1);
@@ -36,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchCorrespondenceJob extends QueuedJob
 {
-
-
     /**
      * Constructor for BatchCorrespondenceJob
      *
@@ -56,7 +56,6 @@ class BatchCorrespondenceJob extends QueuedJob
 
     }//end __construct()
 
-
     /**
      * Run the batch correspondence generation
      *
@@ -68,6 +67,8 @@ class BatchCorrespondenceJob extends QueuedJob
      *                        recipientIds, and options
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     protected function run(mixed $argument): void
     {
@@ -94,7 +95,6 @@ class BatchCorrespondenceJob extends QueuedJob
 
     }//end run()
 
-
     /**
      * Initialize job status to processing
      *
@@ -102,6 +102,8 @@ class BatchCorrespondenceJob extends QueuedJob
      * @param int    $total Total number of recipients
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function initializeJobStatus(string $jobId, int $total): void
     {
@@ -118,7 +120,6 @@ class BatchCorrespondenceJob extends QueuedJob
 
     }//end initializeJobStatus()
 
-
     /**
      * Process all recipients in the batch
      *
@@ -128,6 +129,8 @@ class BatchCorrespondenceJob extends QueuedJob
      * @param array  $options      Generation options
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function processRecipients(
         string $jobId,
@@ -210,6 +213,4 @@ class BatchCorrespondenceJob extends QueuedJob
         );
 
     }//end processRecipients()
-
-
 }//end class

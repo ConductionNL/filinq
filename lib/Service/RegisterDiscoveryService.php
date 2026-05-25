@@ -13,16 +13,18 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
  */
 
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use Exception;
-use TypeError;
+use Throwable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 
 /**
@@ -44,59 +46,97 @@ class RegisterDiscoveryService
      */
     private readonly string $appName;
 
-
     /**
      * Constructor for RegisterDiscoveryService
      *
      * @param IAppConfig      $config          App configuration interface
      * @param LoggerInterface $logger          Logger interface
      * @param RegisterService $registerService Register service for getting registers
+     * @param SchemaMapper    $schemaMapper    Schema mapper for expanding schema IDs
      *
      * @return void
      */
     public function __construct(
         private readonly IAppConfig $config,
         private readonly LoggerInterface $logger,
-        private readonly RegisterService $registerService
+        private readonly RegisterService $registerService,
+        private readonly SchemaMapper $schemaMapper
     ) {
         $this->appName = 'docudesk';
 
     }//end __construct()
 
-
     /**
      * Fetch available registers from OpenRegister with schemas
      *
+     * Calls `RegisterService::findAll`, serializes each register via
+     * `jsonSerialize`, then expands schema IDs to full schema objects
+     * (with `properties` stripped). On orphan schema IDs, the bare ID is
+     * retained in place (heterogeneous array of objects + ints) —
+     * `filterSchemaProperties()` passes those through unchanged.
+     *
+     * Mirrors the expansion logic in OpenRegister's
+     * `RegistersController::index` for `_extend: ['schemas']`, but performed
+     * inline so docudesk doesn't depend on a non-existent serialized helper.
+     * Catches `Throwable` (the only common ancestor of `Exception` and
+     * `Error` in PHP 7+) so any failure — including a missing method on an
+     * older OR sidecar — falls back to an empty registers list rather than
+     * bubbling a 500 to the controller.
+     *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function fetchAvailableRegisters(): array
     {
         try {
-            $rawRegisters = $this->registerService->findAll(
+            $registers = $this->registerService->findAll(
                 limit: null,
                 offset: null,
                 filters: [],
                 searchConditions: [],
                 searchParams: [],
-                _extend: ['schemas']
+                _multitenancy: false
             );
 
-            return array_map([$this, 'serializeRegister'], $rawRegisters);
-        } catch (TypeError $e) {
-            $this->logger->warning(
-                'OpenRegister internal error - using empty registers list',
-                [
-                    'exception' => $e->getMessage(),
-                    'file'      => $e->getFile(),
-                    'line'      => $e->getLine(),
-                ]
+            $rawRegisters = array_map(
+                fn($register) => $register->jsonSerialize(),
+                $registers
             );
-            return [];
-        } catch (Exception $e) {
+
+            // Expand schema IDs to full schema objects.
+            foreach ($rawRegisters as &$registerArr) {
+                if (isset($registerArr['schemas']) === true && is_array($registerArr['schemas']) === true) {
+                    $expanded = [];
+                    foreach ($registerArr['schemas'] as $schemaId) {
+                        try {
+                            $schema     = $this->schemaMapper->find(id: $schemaId, _multitenancy: false);
+                            $expanded[] = $schema->jsonSerialize();
+                        } catch (Exception $schemaError) {
+                            // Orphan schema — retain bare ID for transparency.
+                            $expanded[] = $schemaId;
+                        }
+                    }
+
+                    $registerArr['schemas'] = $expanded;
+                }
+            }
+
+            unset($registerArr);
+
+            return array_map([$this, 'filterSchemas'], $rawRegisters);
+        } catch (Throwable $e) {
+            // Catches both Exception (runtime failures from OpenRegister) and
+            // Error (e.g. "Call to undefined method" when the deployed OR is
+            // older than #1428 — see openregister#1428). Either way the
+            // graceful fallback is an empty list; the controller still
+            // returns a 200 with whatever non-register settings it can
+            // assemble.
             $this->logger->warning(
-                'OpenRegister findAll() failed - using empty registers list',
+                'OpenRegister register list failed - using empty registers list',
                 [
                     'exception' => $e->getMessage(),
+                    'class'     => get_class($e),
                     'file'      => $e->getFile(),
                     'line'      => $e->getLine(),
                 ]
@@ -106,18 +146,23 @@ class RegisterDiscoveryService
 
     }//end fetchAvailableRegisters()
 
-
     /**
-     * Serialize a register entity and filter its schemas
+     * Strip the `properties` field from each schema in a serialized register
      *
-     * @param mixed $register The register entity
+     * Input is the already-serialized register array — each entry in `schemas`
+     * is either a full schema array (when expansion succeeded) or a bare ID
+     * (orphan schema). `filterSchemaProperties()` handles both transparently.
+     *
+     * @param array<string, mixed> $registerArray Serialized register
      *
      * @return array<string, mixed> Serialized register with filtered schemas
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
-    private function serializeRegister(mixed $register): array
+    private function filterSchemas(array $registerArray): array
     {
-        $registerArray = $register->jsonSerialize();
-
         if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
             $registerArray['schemas'] = array_map(
                 [$this, 'filterSchemaProperties'],
@@ -127,8 +172,7 @@ class RegisterDiscoveryService
 
         return $registerArray;
 
-    }//end serializeRegister()
-
+    }//end filterSchemas()
 
     /**
      * Filter out the properties field from a schema array
@@ -136,6 +180,10 @@ class RegisterDiscoveryService
      * @param mixed $schema The schema data
      *
      * @return mixed The filtered schema
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     private function filterSchemaProperties(mixed $schema): mixed
     {
@@ -149,13 +197,14 @@ class RegisterDiscoveryService
 
     }//end filterSchemaProperties()
 
-
     /**
      * Load object type configuration defaults from app config
      *
      * @param array<string> $objectTypes The object types to load config for
      *
      * @return array<string, string> Configuration key-value pairs
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
      */
     public function loadObjectTypeConfiguration(array $objectTypes): array
     {
@@ -185,6 +234,4 @@ class RegisterDiscoveryService
         return $configuration;
 
     }//end loadObjectTypeConfiguration()
-
-
 }//end class

@@ -35,8 +35,6 @@ use Psr\Log\LoggerInterface;
  */
 class TemplateRequestHandler
 {
-
-
     /**
      * Constructor for TemplateRequestHandler
      *
@@ -50,13 +48,14 @@ class TemplateRequestHandler
 
     }//end __construct()
 
-
     /**
      * Parse list request parameters from the request
      *
      * @param IRequest $request The request object
      *
      * @return array{filters: array, limit: int, offset: int} Parsed parameters
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
      */
     public function parseListParams(IRequest $request): array
     {
@@ -82,7 +81,6 @@ class TemplateRequestHandler
 
     }//end parseListParams()
 
-
     /**
      * Parse create/update request body and strip framework params
      *
@@ -90,6 +88,8 @@ class TemplateRequestHandler
      * @param array<string> $stripKeys Keys to strip from params
      *
      * @return array<string, mixed> Cleaned request data
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
      */
     public function parseBodyParams(IRequest $request, array $stripKeys=[]): array
     {
@@ -104,7 +104,6 @@ class TemplateRequestHandler
 
     }//end parseBodyParams()
 
-
     /**
      * Build a JSON error response from an exception
      *
@@ -114,6 +113,8 @@ class TemplateRequestHandler
      * @return JSONResponse The error response
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-5
      */
     public function buildErrorResponse(Exception $exception, string $logMessage): JSONResponse
     {
@@ -133,6 +134,4 @@ class TemplateRequestHandler
         );
 
     }//end buildErrorResponse()
-
-
 }//end class

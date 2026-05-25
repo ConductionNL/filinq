@@ -13,6 +13,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  */
 
 declare(strict_types=1);
@@ -38,8 +42,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentController extends Controller
 {
-
-
     /**
      * Constructor for ConsentController
      *
@@ -62,7 +64,6 @@ class ConsentController extends Controller
 
     }//end __construct()
 
-
     /**
      * Build an error JSON response with logging
      *
@@ -82,7 +83,6 @@ class ConsentController extends Controller
 
     }//end errorResponse()
 
-
     /**
      * Build a not-configured error response
      *
@@ -97,7 +97,6 @@ class ConsentController extends Controller
 
     }//end notConfiguredResponse()
 
-
     /**
      * List consent records
      *
@@ -105,6 +104,8 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function index(): JSONResponse
     {
@@ -123,7 +124,6 @@ class ConsentController extends Controller
 
     }//end index()
 
-
     /**
      * Create a new consent request for a detected entity
      *
@@ -131,6 +131,8 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
      */
     public function create(): JSONResponse
     {
@@ -164,7 +166,6 @@ class ConsentController extends Controller
 
     }//end create()
 
-
     /**
      * Get a specific consent record
      *
@@ -176,6 +177,8 @@ class ConsentController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function show(string $id): JSONResponse
     {
@@ -200,7 +203,6 @@ class ConsentController extends Controller
 
     }//end show()
 
-
     /**
      * Update a consent record
      *
@@ -212,6 +214,8 @@ class ConsentController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
      */
     public function update(string $id): JSONResponse
     {
@@ -235,7 +239,6 @@ class ConsentController extends Controller
 
     }//end update()
 
-
     /**
      * Get all consent records for a specific document
      *
@@ -245,6 +248,8 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function byDocument(string $documentId): JSONResponse
     {
@@ -266,6 +271,4 @@ class ConsentController extends Controller
         }//end try
 
     }//end byDocument()
-
-
 }//end class

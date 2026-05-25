@@ -36,7 +36,6 @@ class Application extends App implements IBootstrap
 {
     public const APP_ID = 'docudesk';
 
-
     /**
      * Constructor
      *
@@ -48,7 +47,6 @@ class Application extends App implements IBootstrap
         parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
     }//end __construct()
-
 
     /**
      * Register services and event listeners
@@ -72,7 +70,6 @@ class Application extends App implements IBootstrap
 
     }//end register()
 
-
     /**
      * Boot the application
      *
@@ -93,6 +90,4 @@ class Application extends App implements IBootstrap
         }
 
     }//end boot()
-
-
 }//end class

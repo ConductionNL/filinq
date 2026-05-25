@@ -18,6 +18,14 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
  */
 
 declare(strict_types=1);
@@ -56,8 +64,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for BatchAnonymizationController
      *
@@ -96,7 +102,6 @@ class BatchAnonymizationController extends Controller
 
     }//end __construct()
 
-
     /**
      * Accept a multipart upload and create a new anonymization batch.
      *
@@ -104,6 +109,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function batchUpload(): JSONResponse
     {
@@ -135,7 +142,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchUpload()
 
-
     /**
      * Create a folder-based batch from either folderId or folderPath.
      *
@@ -143,6 +149,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function folderBatch(): JSONResponse
     {
@@ -179,7 +187,6 @@ class BatchAnonymizationController extends Controller
 
     }//end folderBatch()
 
-
     /**
      * Extract entities from the next pending file in a batch.
      *
@@ -189,6 +196,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
     public function batchExtract(string $batchId): JSONResponse
     {
@@ -204,7 +213,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchExtract()
 
-
     /**
      * Return progress, per-file status, and total entity count for a batch.
      *
@@ -214,6 +222,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
      */
     public function batchStatus(string $batchId): JSONResponse
     {
@@ -236,10 +246,9 @@ class BatchAnonymizationController extends Controller
         }
 
         $total = count($batch['files']);
+        $prog  = 0;
         if ($total > 0) {
             $prog = round(($ext / $total) * 100, 1);
-        } else {
-            $prog = 0;
         }
 
         return new JSONResponse(
@@ -255,7 +264,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchStatus()
 
-
     /**
      * Return the consolidated entity list for a batch once extraction has started.
      *
@@ -269,6 +277,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     public function batchEntities(string $batchId): JSONResponse
     {
@@ -309,12 +319,15 @@ class BatchAnonymizationController extends Controller
 
     }//end batchEntities()
 
-
     /**
      * Apply the user-approved entity list to every extracted file in a batch.
      *
      * Each entity may carry an optional `bases[]` field (array of strings) that
      * is forwarded verbatim to OpenRegister per the anonymisation-bases-passthrough spec.
+     * Accepts an optional `appendBasisSummary` boolean flag (default false).
+     * When true, invokes the grondslagen summary service after each file's
+     * anonymization. Per-file summary failures surface as per-file warnings
+     * in the response; the overall batch still completes as HTTP 200.
      *
      * @param string $batchId Identifier of the batch to anonymize.
      *
@@ -324,6 +337,8 @@ class BatchAnonymizationController extends Controller
      * @NoCSRFRequired
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
@@ -332,9 +347,22 @@ class BatchAnonymizationController extends Controller
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
 
-            $entities = $this->request->getParams()['entities'] ?? [];
+            $params   = $this->request->getParams();
+            $entities = $params['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
-                return new JSONResponse(['error' => 'No entities provided'], 400);
+                return new JSONResponse(['error' => $this->l10n->t('No entities provided')], 400);
+            }
+
+            if (array_key_exists('appendBasisSummary', $params) === true) {
+                $appendBasisSummary = $params['appendBasisSummary'];
+                if (is_bool($appendBasisSummary) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
+                        400
+                    );
+                }
+            } else {
+                $appendBasisSummary = false;
             }
 
             $basesError = $this->validateEntityBases(entities: $entities);
@@ -342,13 +370,18 @@ class BatchAnonymizationController extends Controller
                 return $basesError;
             }
 
-            return new JSONResponse($this->anonService->anonymizeBatch($batchId, $entities));
+            return new JSONResponse(
+                $this->anonService->anonymizeBatch(
+                    batchId: $batchId,
+                    entities: $entities,
+                    appendBasisSummary: $appendBasisSummary
+                )
+            );
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
-        }
+        }//end try
 
     }//end batchAnonymize()
-
 
     /**
      * Produce the CSV anonymization report for a batch as a file download.
@@ -359,6 +392,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
      */
     public function batchReport(string $batchId): JSONResponse|DataDownloadResponse
     {
@@ -375,7 +410,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchReport()
 
-
     /**
      * Return the active WOO anonymization profile.
      *
@@ -383,6 +417,8 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function getProfiles(): JSONResponse
     {
@@ -394,13 +430,14 @@ class BatchAnonymizationController extends Controller
 
     }//end getProfiles()
 
-
     /**
      * Persist a new WOO anonymization profile from the request body.
      *
      * @return JSONResponse Success message, or an error payload when the body is malformed.
      *
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function updateProfiles(): JSONResponse
     {
@@ -421,7 +458,6 @@ class BatchAnonymizationController extends Controller
         }
 
     }//end updateProfiles()
-
 
     /**
      * Validate that each entity's optional `bases` field is an array of strings
@@ -489,7 +525,6 @@ class BatchAnonymizationController extends Controller
 
     }//end err()
 
-
     /**
      * Coerce the raw folderId request param to an int, or null when absent/empty.
      *
@@ -506,7 +541,6 @@ class BatchAnonymizationController extends Controller
         return (int) $raw;
 
     }//end coerceFolderId()
-
 
     /**
      * Coerce the raw folderPath request param to a string, or null when absent/empty.
@@ -525,7 +559,6 @@ class BatchAnonymizationController extends Controller
 
     }//end coerceFolderPath()
 
-
     /**
      * Validate XOR between folderId and folderPath at the controller boundary.
      *
@@ -533,6 +566,8 @@ class BatchAnonymizationController extends Controller
      * @param string|null $folderPath Coerced folder path.
      *
      * @return JSONResponse|null Error response when validation fails, null when OK.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     private function validateFolderParams(?int $folderId, ?string $folderPath): ?JSONResponse
     {
@@ -553,6 +588,4 @@ class BatchAnonymizationController extends Controller
         return null;
 
     }//end validateFolderParams()
-
-
 }//end class

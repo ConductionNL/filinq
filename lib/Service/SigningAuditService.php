@@ -19,8 +19,11 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for immutable signing audit trail
@@ -49,7 +52,6 @@ class SigningAuditService
         'VIEWED',
     ];
 
-
     /**
      * Constructor
      *
@@ -67,7 +69,6 @@ class SigningAuditService
 
     }//end __construct()
 
-
     /**
      * Log a signing audit event
      *
@@ -82,7 +83,7 @@ class SigningAuditService
      *
      * @return array<string, mixed> The created audit entry
      *
-     * @throws \RuntimeException If logging fails
+     * @throws RuntimeException If logging fails
      */
     public function logEvent(
         string $signingRequestId,
@@ -95,7 +96,7 @@ class SigningAuditService
         array $metadata=[]
     ): array {
         if (in_array($action, self::VALID_ACTIONS, true) === false) {
-            throw new \RuntimeException('Invalid audit action: '.$action);
+            throw new RuntimeException('Invalid audit action: '.$action);
         }
 
         $objectService = $this->settingsService->getObjectService();
@@ -107,7 +108,7 @@ class SigningAuditService
             'action'           => $action,
             'actorUserId'      => $actorUserId,
             'actorDisplayName' => $actorDisplayName,
-            'timestamp'        => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'timestamp'        => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             'ipAddress'        => $ipAddress,
             'signatureLevel'   => $signatureLevel,
             'provider'         => $provider,
@@ -117,7 +118,6 @@ class SigningAuditService
         return $objectService->saveObject($register, $schema, $entry);
 
     }//end logEvent()
-
 
     /**
      * Get all audit entries for a signing request
@@ -152,7 +152,6 @@ class SigningAuditService
 
     }//end getAuditTrail()
 
-
     /**
      * Reject update operations on audit entries
      *
@@ -160,16 +159,17 @@ class SigningAuditService
      *
      * @return void
      *
-     * @throws \RuntimeException Always throws
+     * @throws RuntimeException Always throws
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function rejectUpdate(string $entryId): void
     {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'Audit entries are immutable and cannot be modified (Archiefwet 1995)'
         );
 
     }//end rejectUpdate()
-
 
     /**
      * Reject delete operations on audit entries
@@ -178,15 +178,15 @@ class SigningAuditService
      *
      * @return void
      *
-     * @throws \RuntimeException Always throws
+     * @throws RuntimeException Always throws
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function rejectDelete(string $entryId): void
     {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'Audit entries are immutable and cannot be deleted (Archiefwet 1995)'
         );
 
     }//end rejectDelete()
-
-
 }//end class

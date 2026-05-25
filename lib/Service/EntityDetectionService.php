@@ -16,6 +16,9 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -33,8 +36,6 @@ namespace OCA\DocuDesk\Service;
  */
 class EntityDetectionService
 {
-
-
     /**
      * Constructor for EntityDetectionService
      *
@@ -48,13 +49,14 @@ class EntityDetectionService
 
     }//end __construct()
 
-
     /**
      * Normalize entity data to a consistent format
      *
      * @param array<mixed> $entities Raw entity objects or arrays
      *
      * @return array<int, array<string, mixed>> Normalized entity list
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function normalizeEntities(array $entities): array
     {
@@ -76,7 +78,6 @@ class EntityDetectionService
 
     }//end normalizeEntities()
 
-
     /**
      * Map entities to the format expected by OpenRegister's anonymizeDocument
      *
@@ -88,6 +89,7 @@ class EntityDetectionService
      * @return array<int, array<string, mixed>> Mapped entities
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-2
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function mapEntitiesForAnonymization(array $entities): array
     {
@@ -122,20 +124,20 @@ class EntityDetectionService
 
     }//end mapEntitiesForAnonymization()
 
-
     /**
      * Parse anonymization result into a structured array
      *
      * @param mixed $result The raw anonymization result
      *
      * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function parseAnonymizationResult(mixed $result): array
     {
         return $this->resultParser->parseResult($result);
 
     }//end parseAnonymizationResult()
-
 
     /**
      * Generate a UUID v4 string
@@ -151,6 +153,4 @@ class EntityDetectionService
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateUuid()
-
-
 }//end class

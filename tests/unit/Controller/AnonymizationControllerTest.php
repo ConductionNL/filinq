@@ -14,6 +14,9 @@
  *
  * @link https://www.DocuDesk.app
  *
+ * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+ * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+ *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
@@ -48,26 +51,50 @@ class AnonymizationControllerTest extends TestCase
 {
 
     /**
+     * Mocked IRequest
+     *
      * @var IRequest|MockObject
      */
     private IRequest|MockObject $mockRequest;
 
     /**
+     * Mocked LoggerInterface
+     *
+     * @var LoggerInterface|MockObject
+     */
+    private LoggerInterface|MockObject $mockLogger;
+
+    /**
+     * Mocked AnonymizationService
+     *
      * @var AnonymizationService|MockObject
      */
     private AnonymizationService|MockObject $mockAnonService;
 
     /**
+     * Mocked FileListingService
+     *
+     * @var FileListingService|MockObject
+     */
+    private FileListingService|MockObject $mockFileService;
+
+    /**
+     * Mocked IL10N
+     *
      * @var IL10N|MockObject
      */
     private IL10N|MockObject $mockL10n;
 
     /**
+     * Mocked IUserSession
+     *
      * @var IUserSession|MockObject
      */
     private IUserSession|MockObject $mockUserSession;
 
     /**
+     * Controller under test
+     *
      * @var AnonymizationController
      */
     private AnonymizationController $controller;
@@ -83,20 +110,27 @@ class AnonymizationControllerTest extends TestCase
         parent::setUp();
 
         $this->mockRequest     = $this->createMock(IRequest::class);
+        $this->mockLogger      = $this->createMock(LoggerInterface::class);
         $this->mockAnonService = $this->createMock(AnonymizationService::class);
+        $this->mockFileService = $this->createMock(FileListingService::class);
         $this->mockL10n        = $this->createMock(IL10N::class);
-        $this->mockL10n->method('t')->willReturnCallback(fn($s) => $s);
 
-        $mockUser                = $this->createMock(IUser::class);
-        $this->mockUserSession   = $this->createMock(IUserSession::class);
+        $this->mockL10n->method('t')->willReturnCallback(
+            static function (string $text): string {
+                return $text;
+            }
+        );
+
+        $mockUser              = $this->createMock(IUser::class);
+        $this->mockUserSession = $this->createMock(IUserSession::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new AnonymizationController(
             appName: 'docudesk',
             request: $this->mockRequest,
-            logger: $this->createMock(LoggerInterface::class),
+            logger: $this->mockLogger,
             anonymizationService: $this->mockAnonService,
-            fileListingService: $this->createMock(FileListingService::class),
+            fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession
         );
@@ -168,7 +202,6 @@ class AnonymizationControllerTest extends TestCase
         $this->assertStringContainsString('function anonymize(', $content);
 
     }//end testFileContainsAnonymizeMethod()
-
 
 
     /**
@@ -303,6 +336,194 @@ class AnonymizationControllerTest extends TestCase
         $this->assertSame(200, $response->getStatus());
 
     }//end testAnonymizeSucceedsWhenBasesAbsent()
+
+
+    /**
+     * Flag defaults to false: no summary work is triggered.
+     *
+     * When appendBasisSummary is not in the request, anonymizeDocument is called
+     * with appendBasisSummary=false and outputFormat='pdf'.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+     */
+    public function testAnonymizeFlagDefaultsToFalse(): void
+    {
+        $entities = [['type' => 'PERSON', 'text' => 'John']];
+
+        $this->mockRequest->method('getParams')->willReturn(['entities' => $entities]);
+
+        $this->mockAnonService->expects($this->once())
+            ->method('anonymizeDocument')
+            ->with(
+                fileId: 42,
+                entities: $entities,
+                appendBasisSummary: false,
+                outputFormat: 'pdf'
+            )
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'file-42']);
+
+        $response = $this->controller->anonymize(42);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(200, $response->getStatus());
+
+    }//end testAnonymizeFlagDefaultsToFalse()
+
+
+    /**
+     * Flag true with PDF output invokes the append path.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+     */
+    public function testAnonymizeFlagTrueWithPdfMode(): void
+    {
+        $entities = [['type' => 'PERSON', 'text' => 'Jane']];
+
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities'           => $entities,
+                'appendBasisSummary' => true,
+                'outputFormat'       => 'pdf',
+            ]
+        );
+
+        $this->mockAnonService->expects($this->once())
+            ->method('anonymizeDocument')
+            ->with(
+                fileId: 10,
+                entities: $entities,
+                appendBasisSummary: true,
+                outputFormat: 'pdf'
+            )
+            ->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 'file-10']);
+
+        $response = $this->controller->anonymize(10);
+
+        $this->assertSame(200, $response->getStatus());
+
+    }//end testAnonymizeFlagTrueWithPdfMode()
+
+
+    /**
+     * Flag true with preserve mode invokes the separate-PDF path.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+     */
+    public function testAnonymizeFlagTrueWithPreserveMode(): void
+    {
+        $entities = [['type' => 'LOCATION', 'text' => 'Amsterdam']];
+
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities'           => $entities,
+                'appendBasisSummary' => true,
+                'outputFormat'       => 'preserve',
+            ]
+        );
+
+        $this->mockAnonService->expects($this->once())
+            ->method('anonymizeDocument')
+            ->with(
+                fileId: 20,
+                entities: $entities,
+                appendBasisSummary: true,
+                outputFormat: 'preserve'
+            )
+            ->willReturn(
+                [
+                    'replacementCount' => 1,
+                    'anonymizedFileId' => 'file-20',
+                    'summaryFileId'    => 'summary-20',
+                    'summaryFilePath'  => '/DocuDesk/doc_grondslagen.pdf',
+                ]
+            );
+
+        $response = $this->controller->anonymize(20);
+        $data     = $response->getData();
+
+        $this->assertSame(200, $response->getStatus());
+        $this->assertArrayHasKey('summaryFileId', $data);
+
+    }//end testAnonymizeFlagTrueWithPreserveMode()
+
+
+    /**
+     * Summary rendering exception surfaces as warning field with HTTP 200.
+     *
+     * The service handles the exception internally; the controller receives
+     * a result with a 'warning' key and returns HTTP 200.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+     */
+    public function testAnonymizeRenderingExceptionSurfacesAsWarning(): void
+    {
+        $entities = [['type' => 'PERSON', 'text' => 'Test']];
+
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities'           => $entities,
+                'appendBasisSummary' => true,
+            ]
+        );
+
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(
+                [
+                    'replacementCount' => 1,
+                    'anonymizedFileId' => 'file-30',
+                    'warning'          => [
+                        'code'    => 'SUMMARY_APPEND_FAILED',
+                        'message' => 'Basis summary could not be appended.',
+                    ],
+                ]
+            );
+
+        $response = $this->controller->anonymize(30);
+        $data     = $response->getData();
+
+        $this->assertSame(200, $response->getStatus());
+        $this->assertArrayHasKey('warning', $data);
+        $this->assertSame('SUMMARY_APPEND_FAILED', $data['warning']['code']);
+
+    }//end testAnonymizeRenderingExceptionSurfacesAsWarning()
+
+
+    /**
+     * Payload validation rejects non-boolean appendBasisSummary.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
+     */
+    public function testAnonymizeRejectsNonBooleanFlag(): void
+    {
+        $entities = [['type' => 'PERSON', 'text' => 'Test']];
+
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities'           => $entities,
+                'appendBasisSummary' => 'yes',
+            ]
+        );
+
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
+
+        $response = $this->controller->anonymize(40);
+
+        $this->assertSame(400, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('error', $data);
+        $this->assertStringContainsString('appendBasisSummary', $data['error']);
+
+    }//end testAnonymizeRejectsNonBooleanFlag()
 
 
 }//end class

@@ -1,5 +1,7 @@
 ---
 status: implemented
+retrofit_extensions:
+  - REQ-META-11
 ---
 
 # Metadata Enrichment
@@ -10,7 +12,9 @@ Provides automatic metadata enrichment for documents stored in OpenRegister. Whe
 
 ## Requirements
 
-### REQ-META-01: Language Detection (Priority: Must)
+### Requirement: Language Detection (REQ-META-01)
+
+**Priority:** Must
 
 Detect document language from text content using word frequency analysis for Dutch and English.
 
@@ -53,7 +57,9 @@ Detect document language from text content using word frequency analysis for Dut
 | META-006 | Skip detection if object already has `language` populated | MUST | Implemented |
 | META-007 | Toggle via admin settings (`enable_language_detection`) | MUST | Implemented |
 
-### REQ-META-02: Keyword Extraction (Priority: Must)
+### Requirement: Keyword Extraction (REQ-META-02)
+
+**Priority:** Must
 
 Extract top keywords from document text using word frequency analysis with stop word filtering.
 
@@ -88,7 +94,9 @@ Extract top keywords from document text using word frequency analysis with stop 
 | META-014 | Skip if `keywords` already populated | MUST | Implemented |
 | META-015 | Toggle via admin settings (`enable_keyword_extraction`) | MUST | Implemented |
 
-### REQ-META-03: Topic Classification (Priority: Must)
+### Requirement: Topic Classification (REQ-META-03)
+
+**Priority:** Must
 
 Classify documents into topic categories using keyword matching against predefined vocabularies.
 
@@ -122,7 +130,9 @@ Classify documents into topic categories using keyword matching against predefin
 | META-025 | Skip if `topic` already populated | MUST | Implemented |
 | META-026 | Toggle via admin settings (`enable_topic_classification`) | MUST | Implemented |
 
-### REQ-META-04: Document Type Standardization (Priority: Must)
+### Requirement: Document Type Standardization (REQ-META-04)
+
+**Priority:** Must
 
 Standardize document type strings to canonical categories by mapping file extensions and names.
 
@@ -148,7 +158,9 @@ Standardize document type strings to canonical categories by mapping file extens
 | META-032 | Map extensions: doc/docx -> word, xls/xlsx -> spreadsheet, ppt/pptx -> presentation | MUST | Implemented |
 | META-033 | Unknown types passed through unchanged | MUST | Implemented |
 
-### REQ-META-05: Date Normalization (Priority: Must)
+### Requirement: Date Normalization (REQ-META-05)
+
+**Priority:** Must
 
 Normalize date fields to ISO 8601 format across standard field names.
 
@@ -174,7 +186,9 @@ Normalize date fields to ISO 8601 format across standard field names.
 | META-041 | Normalize: created, modified, date, creationDate, modificationDate | MUST | Implemented |
 | META-042 | Skip unparseable dates gracefully (log debug, no throw) | MUST | Implemented |
 
-### REQ-META-06: Event-Driven Enrichment (Priority: Must)
+### Requirement: Event-Driven Enrichment (REQ-META-06)
+
+**Priority:** Must
 
 Automatically enrich metadata when objects are created or updated in OpenRegister, with content change detection on updates.
 
@@ -221,7 +235,9 @@ Automatically enrich metadata when objects are created or updated in OpenRegiste
 | META-055 | Check admin settings before running enrichment | MUST | Implemented |
 | META-056 | Save enriched metadata back to OpenRegister | MUST | Implemented |
 
-### REQ-META-07: API On-Demand Enrichment (Priority: Must)
+### Requirement: API On-Demand Enrichment (REQ-META-07)
+
+**Priority:** Must
 
 On-demand metadata enrichment via REST API for specific objects.
 
@@ -251,7 +267,9 @@ On-demand metadata enrichment via REST API for specific objects.
 | META-063 | Returns enriched fields list and updated object data | MUST | Implemented |
 | META-064 | Returns success if no enrichment needed | MUST | Implemented |
 
-### REQ-META-08: Duplicated ObjectService Resolution (Priority: Must)
+### Requirement: Duplicated ObjectService Resolution (REQ-META-08)
+
+**Priority:** Must
 
 MetadataService has its own private getObjectService() duplicating the pattern found in other services.
 
@@ -272,7 +290,9 @@ MetadataService has its own private getObjectService() duplicating the pattern f
 | META-070 | MetadataService has private `getObjectService()` duplicating SettingsService | MUST | Implemented |
 | META-071 | Same `getInstalledApps()` + `container->get()` pattern used | MUST | Implemented |
 
-### REQ-META-09: Event Listener Service Resolution (Priority: Must)
+### Requirement: Event Listener Service Resolution (REQ-META-09)
+
+**Priority:** Must
 
 The event listener resolves services via `\OC::$server->get()` at handle time rather than constructor DI to avoid circular dependencies.
 
@@ -306,7 +326,9 @@ The event listener resolves services via `\OC::$server->get()` at handle time ra
 | META-078 | Enrichment failures are non-fatal | MUST | Implemented |
 | META-079 | Nested try/catch re-resolves logger for error scope safety | MUST | Implemented |
 
-### REQ-META-10: Text Content Extraction from Object Data (Priority: Must)
+### Requirement: Text Content Extraction from Object Data (REQ-META-10)
+
+**Priority:** Must
 
 MetadataService extracts text content from object data fields in a defined priority order for analysis.
 
@@ -389,3 +411,50 @@ MetadataService extracts text content from object data fields in a defined prior
 - **ISO 8601**: Date normalization format
 - **DCAT-AP**: EU metadata requirements
 - **OWMS**: Dutch government metadata standard
+
+---
+
+## Retrofit Requirements (REQ-META-11)
+
+Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
+`retrofit-2026-05-24-metadata-enrichment` (archived).
+
+### REQ-META-11: Language and Topic Classifier Class Boundary
+
+DocuDesk SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
+
+The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequency Dutch words), `ENGLISH_WORDS` (10 high-frequency English words), and `TOPIC_KEYWORDS` (4 topic categories with 6 keywords each: `legal`, `financial`, `medical`, `technical`). The detection helpers share a private `countWordOccurrences()` implementation that counts whitespace-padded `' word '` substrings (so word boundaries are required on both sides, matching what REQ-META-01 / REQ-META-03 already specify abstractly).
+
+#### Scenario: Classifier owns the word lists
+
+- **WHEN** REQ-META-01 / REQ-META-03 are implemented
+- **THEN** the word vocabularies live in `LanguageClassifier` constants and are NOT redefined in `TextAnalysisService` or `MetadataService`
+- **AND** `TextAnalysisService::detectLanguage()` / `::classifyTopic()` forward to the injected `LanguageClassifier`
+
+#### Scenario: Language detection threshold
+
+- **WHEN** `LanguageClassifier::detectLanguage(text)` is called
+- **THEN** it lowercases the text, computes Dutch and English match counts via `countWordOccurrences`, and returns `"nl"` when `dutchCount > englishCount AND dutchCount > 5`
+- **AND** otherwise returns `"en"` when `englishCount > 5`
+- **AND** otherwise returns `null`
+
+#### Scenario: Topic classification scoring
+
+- **WHEN** `LanguageClassifier::classifyTopic(text)` is called
+- **THEN** for each of the four topics it computes the keyword-match count via `countWordOccurrences`
+- **AND** returns the topic with the highest non-zero score (`array_search` on the max score)
+- **AND** returns `null` if the highest score is `0`
+
+#### Scenario: Word-occurrence helper requires word boundaries
+
+- **WHEN** `countWordOccurrences(text, words)` is called
+- **THEN** for each target word it sums `substr_count(text, " word ")` — i.e. the word must be padded by spaces on both sides
+- **AND** the running total across the list is returned
+- **AND** a substring match inside a longer word (e.g. `"the"` inside `"theater"`) is NOT counted
+
+#### Notes
+
+- The class is stateless and has no constructor dependencies; it can be resolved either via DI or instantiated directly (used as a unit-test seam).
+- `TextAnalysisService` still defines its own public `countWordOccurrences()` with byte-identical logic — that is a residual duplicate not yet consolidated. TODO: remove `TextAnalysisService::countWordOccurrences()` once no external caller relies on it (the coverage scan flagged `LanguageClassifier::countWordOccurrences` as the duplicate, but at HEAD the situation has inverted — the classifier owns the logic, the analyzer is the leftover).
+- The 5-match threshold and the 10-keyword vocabularies are constants, not config — by design (REQ-META-04 calibration). Changing them requires a code change + spec revision.
+- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world DocuDesk text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.

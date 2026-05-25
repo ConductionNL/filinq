@@ -12,6 +12,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
  */
 
 declare(strict_types=1);
@@ -40,8 +44,6 @@ use Psr\Log\LoggerInterface;
  */
 class CorrespondenceController extends Controller
 {
-
-
     /**
      * Constructor for CorrespondenceController
      *
@@ -66,7 +68,6 @@ class CorrespondenceController extends Controller
 
     }//end __construct()
 
-
     /**
      * Generate a single correspondence document
      *
@@ -80,6 +81,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
@@ -105,11 +108,12 @@ class CorrespondenceController extends Controller
 
     }//end generate()
 
-
     /**
      * Parse and validate generation request parameters
      *
      * @return array|JSONResponse Parsed params or error response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function parseGenerateParams(): array | JSONResponse
     {
@@ -147,7 +151,6 @@ class CorrespondenceController extends Controller
 
     }//end parseGenerateParams()
 
-
     /**
      * Format the generate response based on output format
      *
@@ -155,6 +158,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse|JSONResponse The formatted response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function formatGenerateResponse(
         array $result,
@@ -183,7 +188,6 @@ class CorrespondenceController extends Controller
 
     }//end formatGenerateResponse()
 
-
     /**
      * Build a download response for binary document formats
      *
@@ -192,6 +196,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse The download response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function buildDownloadResponse(
         array $result,
@@ -217,7 +223,6 @@ class CorrespondenceController extends Controller
 
     }//end buildDownloadResponse()
 
-
     /**
      * Generate correspondence for a batch of recipients
      *
@@ -230,6 +235,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function generateBatch(): JSONResponse
     {
@@ -279,7 +286,6 @@ class CorrespondenceController extends Controller
 
     }//end generateBatch()
 
-
     /**
      * Get the status of a batch correspondence job
      *
@@ -289,6 +295,8 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function jobStatus(string $jobId): JSONResponse
     {
@@ -311,7 +319,6 @@ class CorrespondenceController extends Controller
 
     }//end jobStatus()
 
-
     /**
      * Get the current user ID from the session
      *
@@ -327,7 +334,6 @@ class CorrespondenceController extends Controller
         return '';
 
     }//end getCurrentUserId()
-
 
     /**
      * Handle exceptions and return appropriate JSON error responses
@@ -357,6 +363,4 @@ class CorrespondenceController extends Controller
         );
 
     }//end handleException()
-
-
 }//end class

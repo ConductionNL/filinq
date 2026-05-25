@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -33,8 +35,6 @@ use OCP\IRequest;
  */
 class BatchUploadService
 {
-
-
     /**
      * Constructor for BatchUploadService
      *
@@ -50,7 +50,6 @@ class BatchUploadService
 
     }//end __construct()
 
-
     /**
      * Return the current user's identifier.
      *
@@ -62,7 +61,6 @@ class BatchUploadService
 
     }//end getUserId()
 
-
     /**
      * Collect uploaded files from the request.
      *
@@ -72,6 +70,8 @@ class BatchUploadService
      * @param IRequest $request Incoming HTTP request holding the multipart uploads.
      *
      * @return array<int, array{name: string, tmp_name: string, error: int}> List of raw uploaded file entries.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function collectFiles(IRequest $request): array
     {
@@ -108,7 +108,6 @@ class BatchUploadService
 
     }//end collectFiles()
 
-
     /**
      * Persist a set of uploaded files and create a new batch record.
      *
@@ -119,6 +118,8 @@ class BatchUploadService
      * @param array<int, array<string, mixed>> $files  Raw uploaded file entries as produced by collectFiles().
      *
      * @return array<string, mixed> The new batch record as returned by BatchStateService.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function processBatchUpload(string $userId, array $files): array
     {
@@ -159,6 +160,4 @@ class BatchUploadService
         return $this->stateService->createBatch($userId, $batchFiles);
 
     }//end processBatchUpload()
-
-
 }//end class

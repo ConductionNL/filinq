@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -46,7 +49,6 @@ class BatchStateService
      */
     private ICache $cache;
 
-
     /**
      * Constructor for BatchStateService
      *
@@ -65,7 +67,6 @@ class BatchStateService
 
     }//end __construct()
 
-
     /**
      * Return the maximum number of files allowed in a single batch.
      *
@@ -81,7 +82,6 @@ class BatchStateService
 
     }//end getMaxFiles()
 
-
     /**
      * Create and persist a new batch record for a user.
      *
@@ -89,6 +89,8 @@ class BatchStateService
      * @param array<int, array<string, mixed>> $files  Per-file entries to seed the batch with.
      *
      * @return array<string, mixed> The newly created batch record.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function createBatch(string $userId, array $files): array
     {
@@ -106,13 +108,14 @@ class BatchStateService
 
     }//end createBatch()
 
-
     /**
      * Load a batch record by ID and refresh its TTL.
      *
      * @param string $batchId Batch identifier.
      *
      * @return array<string, mixed>|null The decoded batch record, or null when missing or corrupt.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
      */
     public function getBatch(string $batchId): ?array
     {
@@ -132,7 +135,6 @@ class BatchStateService
 
     }//end getBatch()
 
-
     /**
      * Persist an updated batch record.
      *
@@ -147,7 +149,6 @@ class BatchStateService
 
     }//end updateBatch()
 
-
     /**
      * Remove a batch record from the store.
      *
@@ -160,7 +161,6 @@ class BatchStateService
         $this->cache->remove(self::CACHE_PREFIX.$batchId);
 
     }//end deleteBatch()
-
 
     /**
      * Generate an RFC 4122 version-4 UUID for use as a batch identifier.
@@ -175,6 +175,4 @@ class BatchStateService
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateUuid()
-
-
 }//end class

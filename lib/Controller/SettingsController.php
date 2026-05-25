@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
  */
 
 declare(strict_types=1);
@@ -49,7 +52,6 @@ class SettingsController extends Controller
      */
     private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
 
-
     /**
      * SettingsController constructor
      *
@@ -78,12 +80,13 @@ class SettingsController extends Controller
 
     }//end __construct()
 
-
     /**
      * Attempts to retrieve the OpenRegister service from the container.
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -96,12 +99,13 @@ class SettingsController extends Controller
 
     }//end getObjectService()
 
-
     /**
      * Attempts to retrieve the Configuration service from the container.
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -114,7 +118,6 @@ class SettingsController extends Controller
 
     }//end getConfigurationService()
 
-
     /**
      * Retrieve the current settings
      *
@@ -122,6 +125,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function index(): JSONResponse
     {
@@ -151,7 +156,6 @@ class SettingsController extends Controller
 
     }//end index()
 
-
     /**
      * Handle the post request to update settings
      *
@@ -159,6 +163,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function create(): JSONResponse
     {
@@ -179,6 +185,4 @@ class SettingsController extends Controller
         }
 
     }//end create()
-
-
 }//end class

@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -35,8 +37,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileUploadService
 {
-
-
     /**
      * Constructor for FileUploadService
      *
@@ -53,7 +53,6 @@ class FileUploadService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the current user ID
@@ -73,13 +72,14 @@ class FileUploadService
 
     }//end getCurrentUserId()
 
-
     /**
      * Get the DocuDesk folder for the current user, creating it if needed
      *
      * @return \OCP\Files\Folder The DocuDesk folder
      *
      * @throws Exception If folder creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function getDocuDeskFolder(): \OCP\Files\Folder
     {
@@ -99,7 +99,6 @@ class FileUploadService
 
     }//end getDocuDeskFolder()
 
-
     /**
      * Resolve a unique file name within a folder by appending a counter
      *
@@ -107,6 +106,8 @@ class FileUploadService
      * @param string            $fileName The desired file name
      *
      * @return string A unique file name
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function resolveUniqueFileName(\OCP\Files\Folder $folder, string $fileName): string
     {
@@ -128,7 +129,6 @@ class FileUploadService
 
     }//end resolveUniqueFileName()
 
-
     /**
      * Upload a file to the user's DocuDesk folder
      *
@@ -138,6 +138,8 @@ class FileUploadService
      * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
      *
      * @throws Exception If the upload fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {
@@ -163,6 +165,4 @@ class FileUploadService
         }//end try
 
     }//end uploadFile()
-
-
 }//end class

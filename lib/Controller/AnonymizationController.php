@@ -16,6 +16,11 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -44,8 +49,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for AnonymizationController
      *
@@ -72,7 +75,6 @@ class AnonymizationController extends Controller
 
     }//end __construct()
 
-
     /**
      * List all processed files with entity counts and status
      *
@@ -83,6 +85,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function files(): JSONResponse
     {
@@ -112,7 +116,6 @@ class AnonymizationController extends Controller
 
     }//end files()
 
-
     /**
      * Upload a file to the user's DocuDesk folder
      *
@@ -123,6 +126,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function upload(): JSONResponse
     {
@@ -178,7 +183,6 @@ class AnonymizationController extends Controller
 
     }//end upload()
 
-
     /**
      * Extract text and detect entities in a file
      *
@@ -190,6 +194,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function extract(int $fileId): JSONResponse
     {
@@ -214,14 +220,13 @@ class AnonymizationController extends Controller
 
     }//end extract()
 
-
     /**
      * Anonymize entities in a document
      *
      * Replaces detected entities in the document with anonymized placeholders.
-     * Supports optional excludeTypes and minConfidence filtering. Each entity
-     * may carry an optional `bases[]` array (array of strings) that is forwarded
-     * verbatim to OpenRegister.
+     * Supports optional excludeTypes, minConfidence, appendBasisSummary, and
+     * outputFormat parameters. Each entity may carry an optional `bases[]` array
+     * (array of strings) that is forwarded verbatim to OpenRegister.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -231,6 +236,8 @@ class AnonymizationController extends Controller
      * @NoCSRFRequired
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function anonymize(int $fileId): JSONResponse
     {
@@ -254,10 +261,26 @@ class AnonymizationController extends Controller
                 return $basesError;
             }
 
+            $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
+            if ($appendBasisSummary instanceof JSONResponse) {
+                return $appendBasisSummary;
+            }
+
+            if (isset($params['outputFormat']) === true) {
+                $outputFormat = (string) $params['outputFormat'];
+            } else {
+                $outputFormat = 'pdf';
+            }
+
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
-            $result = $this->anonymizationService->anonymizeDocument($fileId, $entities);
+            $result = $this->anonymizationService->anonymizeDocument(
+                fileId: $fileId,
+                entities: $entities,
+                appendBasisSummary: $appendBasisSummary,
+                outputFormat: $outputFormat
+            );
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -272,6 +295,35 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+    /**
+     * Extract and validate the appendBasisSummary flag from request params.
+     *
+     * Returns a JSONResponse (HTTP 400) when the field is present but not boolean.
+     *
+     * @param array<string, mixed> $params Request parameters
+     *
+     * @return bool|JSONResponse False when omitted, true when set, 400 response on type error.
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+     */
+    private function extractAppendBasisSummary(array $params): bool|JSONResponse
+    {
+        if (array_key_exists('appendBasisSummary', $params) === false) {
+            return false;
+        }
+
+        $value = $params['appendBasisSummary'];
+        if (is_bool($value) === false) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
+                400
+            );
+        }
+
+        return $value;
+
+    }//end extractAppendBasisSummary()
 
 
     /**
@@ -321,6 +373,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByExcludeTypes(array $entities, array $params): array
     {
@@ -341,7 +395,6 @@ class AnonymizationController extends Controller
 
     }//end filterByExcludeTypes()
 
-
     /**
      * Filter entities by minimum confidence threshold
      *
@@ -349,6 +402,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByConfidence(array $entities, array $params): array
     {
@@ -368,6 +423,4 @@ class AnonymizationController extends Controller
         );
 
     }//end filterByConfidence()
-
-
 }//end class
