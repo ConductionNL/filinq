@@ -55,6 +55,8 @@ class TextAnalysisService
      * @param array<string> $words The words to count
      *
      * @return int Total occurrence count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
      */
     public function countWordOccurrences(string $text, array $words): int
     {

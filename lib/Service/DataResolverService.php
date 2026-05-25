@@ -297,6 +297,8 @@ class DataResolverService
      * Clear the per-request resolved object cache
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
      */
     public function clearCache(): void
     {

@@ -79,6 +79,8 @@ class SigningController extends Controller
      * @return JSONResponse The created signing request
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function createRequest(): JSONResponse
     {
@@ -98,6 +100,8 @@ class SigningController extends Controller
      * @return JSONResponse List of signing requests
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function listRequests(): JSONResponse
     {
@@ -150,6 +154,8 @@ class SigningController extends Controller
      * @return JSONResponse The signing request details
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function showRequest(string $id): JSONResponse
     {
@@ -170,6 +176,8 @@ class SigningController extends Controller
      * @return JSONResponse The cancelled request
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function cancelRequest(string $id): JSONResponse
     {
@@ -190,6 +198,8 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function sign(string $id): JSONResponse
     {
@@ -211,6 +221,8 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function decline(string $id): JSONResponse
     {
@@ -231,6 +243,8 @@ class SigningController extends Controller
      * @return JSONResponse Results for each request
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function bulkSign(): JSONResponse
     {
@@ -256,6 +270,8 @@ class SigningController extends Controller
      * @return JSONResponse The verification results
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function verify(int $fileId): JSONResponse
     {
@@ -284,6 +300,8 @@ class SigningController extends Controller
      * @return JSONResponse The audit trail entries
      *
      * @NoAdminRequired
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
     public function getAudit(string $id): JSONResponse
     {

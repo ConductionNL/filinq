@@ -71,6 +71,8 @@ class BatchStateService
      * Return the maximum number of files allowed in a single batch.
      *
      * @return int Configured or default maximum.
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function getMaxFiles(): int
     {
@@ -142,6 +144,8 @@ class BatchStateService
      * @param array<string, mixed> $batch   Full batch record to store.
      *
      * @return void
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function updateBatch(string $batchId, array $batch): void
     {
@@ -155,6 +159,8 @@ class BatchStateService
      * @param string $batchId Batch identifier.
      *
      * @return void
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function deleteBatch(string $batchId): void
     {

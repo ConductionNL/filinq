@@ -42,6 +42,11 @@ export default {
 	name: 'SigningRequestDetail',
 	components: { NcLoadingIcon },
 	props: { requestId: { type: String, required: true } },
+	/**
+	 * Load the signing request and its audit trail on mount.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#8-3
+	 */
 	setup(props) {
 		const signingStore = useSigningStore()
 		signingStore.fetchSigningRequest(props.requestId)

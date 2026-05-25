@@ -43,6 +43,11 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Conditional operator options for the dialog dropdown.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		opOptions() {
 			return [
 				{ label: t('docudesk', 'equals'), value: 'equals' },
@@ -52,10 +57,20 @@ export default {
 				{ label: t('docudesk', 'is not empty'), value: 'is_not_empty' },
 			]
 		},
+		/**
+		 * Whether the selected operator requires a comparison value.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		needsValue() {
 			const op = this.condOp?.value || this.condOp
 			return op !== 'is_empty' && op !== 'is_not_empty'
 		},
+		/**
+		 * Live Twig-syntax preview of the conditional section.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		preview() {
 			const field = this.condField || 'field'
 			const op = this.condOp?.value || this.condOp || 'is_not_empty'
@@ -72,6 +87,11 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Emit the configured conditional section to the parent editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		confirm() {
 			const field = this.condField || 'field'
 			const op = this.condOp?.value || this.condOp || 'is_not_empty'

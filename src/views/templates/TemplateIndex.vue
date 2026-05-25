@@ -98,7 +98,17 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Pinia template store accessor for the index view.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		templateStore() { return useTemplateStore() },
+		/**
+		 * Build the category filter dropdown options from loaded templates.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		categoryOptions() {
 			const cats = new Set(
 				this.templateStore.templates
@@ -116,6 +126,11 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Apply category and search filters and reload the template list.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		applyFilters() {
 			const filters = {}
 			if (this.selectedCategory?.value) {
@@ -126,20 +141,40 @@ export default {
 			}
 			this.templateStore.fetchTemplates(filters)
 		},
+		/**
+		 * Open the selected template in the detail editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		openTemplate(tmpl) {
 			this.templateStore.templateItem = tmpl
 			navigationStore.setSelected('templateDetail')
 		},
+		/**
+		 * Open the detail editor for a brand-new template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		openNewTemplate() {
 			this.templateStore.templateItem = null
 			navigationStore.setSelected('templateDetail')
 		},
+		/**
+		 * Duplicate a template and refresh the list.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		async duplicateTemplate(tmpl) {
 			const result = await this.templateStore.duplicateTemplate(tmpl.id)
 			if (result) {
 				await this.templateStore.fetchTemplates()
 			}
 		},
+		/**
+		 * Confirm and delete a template, then refresh the list.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		async confirmDelete(tmpl) {
 			if (!window.confirm(t('docudesk', 'Delete template "{name}"?', { name: tmpl.name }))) {
 				return
