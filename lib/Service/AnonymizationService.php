@@ -30,6 +30,7 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -45,12 +46,28 @@ use Psr\Log\LoggerInterface;
 class AnonymizationService
 {
     /**
+     * Default prohibition high-confidence threshold (inclusive)
+     *
+     * @var float
+     */
+    private const DEFAULT_HIGH_CONFIDENCE_THRESHOLD = 0.85;
+
+    /**
+     * App config key for the high-confidence threshold
+     *
+     * @var string
+     */
+    private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
+
+
+    /**
      * Constructor for AnonymizationService
      *
      * @param LoggerInterface        $logger          Logger for error reporting
      * @param ContainerInterface     $container       Container for dependency injection
      * @param IAppManager            $appManager      App manager interface
      * @param EntityDetectionService $entityDetection Entity detection and mapping service
+     * @param IAppConfig             $appConfig       App configuration for threshold settings
      *
      * @return void
      */
@@ -58,7 +75,8 @@ class AnonymizationService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly EntityDetectionService $entityDetection
+        private readonly EntityDetectionService $entityDetection,
+        private readonly IAppConfig $appConfig
     ) {
 
     }//end __construct()
@@ -87,12 +105,17 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
+     * Each entity in the response includes a `prohibitionMatch` field: null when
+     * no publication-prohibition rule matches, or an object with ruleId, ruleName,
+     * and highConfidence (score >= configured threshold, inclusive).
+     *
      * @param int $fileId The Nextcloud file ID
      *
      * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
      *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function extractAndDetectEntities(int $fileId): array
@@ -108,10 +131,12 @@ class AnonymizationService
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
-            $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+            $entities   = $entityRelationMapper->findEntitiesForFile($fileId);
+            $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
+            $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
             return [
-                'entities'    => $this->entityDetection->normalizeEntities($entities),
+                'entities'    => $normalized,
                 'entityCount' => count($entities),
             ];
         } catch (Exception $e) {
@@ -127,6 +152,119 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
+
+    /**
+     * Attach a `prohibitionMatch` field to each normalized entity
+     *
+     * Calls PolicyMatchService when available; returns null for every entity when
+     * the service is not yet installed (before anonymisation-prohibition-gate lands).
+     *
+     * @param array<int, array<string, mixed>> $entities Normalized entity list
+     *
+     * @return array<int, array<string, mixed>> Entities with prohibitionMatch added
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
+     */
+    private function attachProhibitionMatches(array $entities): array
+    {
+        $policyService = $this->tryGetPolicyMatchService();
+        $threshold     = $this->getHighConfidenceThreshold();
+
+        foreach ($entities as &$entity) {
+            $entity['prohibitionMatch'] = $this->computeProhibitionMatch(
+                entity: $entity,
+                policyService: $policyService,
+                threshold: $threshold
+            );
+        }
+
+        return $entities;
+
+    }//end attachProhibitionMatches()
+
+
+    /**
+     * Compute the prohibitionMatch value for a single entity
+     *
+     * @param array<string, mixed> $entity        Normalized entity
+     * @param mixed                $policyService PolicyMatchService instance or null
+     * @param float                $threshold     High-confidence threshold (inclusive)
+     *
+     * @return array<string, mixed>|null Match object or null
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-6
+     */
+    private function computeProhibitionMatch(array $entity, mixed $policyService, float $threshold): ?array
+    {
+        if ($policyService === null) {
+            return null;
+        }
+
+        try {
+            $match = $policyService->matchProhibition(
+                entityType: (string) ($entity['type'] ?? ''),
+                entityValue: (string) ($entity['value'] ?? '')
+            );
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                'PolicyMatchService::matchProhibition threw; returning null',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        if ($match === null) {
+            return null;
+        }
+
+        $confidence = (float) ($entity['confidence'] ?? 0.0);
+
+        return [
+            'ruleId'         => $match['ruleId'] ?? null,
+            'ruleName'       => $match['ruleName'] ?? null,
+            'highConfidence' => $confidence >= $threshold,
+        ];
+
+    }//end computeProhibitionMatch()
+
+
+    /**
+     * Try to get PolicyMatchService from the container without throwing
+     *
+     * Returns null when the service is not registered (before anonymisation-prohibition-gate lands).
+     *
+     * @return mixed PolicyMatchService instance or null
+     */
+    private function tryGetPolicyMatchService(): mixed
+    {
+        try {
+            return $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (\Throwable) {
+            return null;
+        }
+
+    }//end tryGetPolicyMatchService()
+
+
+    /**
+     * Read the high-confidence threshold from app config
+     *
+     * Default 0.85; configurable via docudesk.prohibition.high_confidence_threshold.
+     *
+     * @return float Threshold value (inclusive boundary)
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-7
+     */
+    private function getHighConfidenceThreshold(): float
+    {
+        return $this->appConfig->getValueFloat(
+            app: 'docudesk',
+            key: self::HIGH_CONFIDENCE_THRESHOLD_KEY,
+            default: self::DEFAULT_HIGH_CONFIDENCE_THRESHOLD
+        );
+
+    }//end getHighConfidenceThreshold()
+
 
     /**
      * Anonymize entities in a document

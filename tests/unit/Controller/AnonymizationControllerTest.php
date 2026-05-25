@@ -14,6 +14,7 @@
  *
  * @link https://www.DocuDesk.app
  *
+ * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-7
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -28,6 +29,8 @@ use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -42,6 +45,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.nl
  *
  * @psalm-suppress PropertyNotSetInConstructor
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class AnonymizationControllerTest extends TestCase
 {
@@ -82,6 +86,13 @@ class AnonymizationControllerTest extends TestCase
     private IL10N|MockObject $mockL10n;
 
     /**
+     * Mocked IUserSession
+     *
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
+    /**
      * Controller under test
      *
      * @var AnonymizationController
@@ -110,13 +121,18 @@ class AnonymizationControllerTest extends TestCase
             }
         );
 
+        $mockUser              = $this->createMock(IUser::class);
+        $this->mockUserSession = $this->createMock(IUserSession::class);
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new AnonymizationController(
             appName: 'docudesk',
             request: $this->mockRequest,
             logger: $this->mockLogger,
             anonymizationService: $this->mockAnonService,
             fileListingService: $this->mockFileService,
-            l10n: $this->mockL10n
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession
         );
 
     }//end setUp()
@@ -186,6 +202,140 @@ class AnonymizationControllerTest extends TestCase
         $this->assertStringContainsString('function anonymize(', $content);
 
     }//end testFileContainsAnonymizeMethod()
+
+
+    /**
+     * Test anonymize returns 400 when bases is not an array
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeReturns400WhenBasesIsNotArray(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => 'not-an-array'],
+                ],
+            ]
+        );
+
+        $response = $this->controller->anonymize(fileId: 1);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(400, $response->getStatus());
+
+    }//end testAnonymizeReturns400WhenBasesIsNotArray()
+
+
+    /**
+     * Test anonymize returns 400 when bases contains a non-string entry
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeReturns400WhenBasesContainsNonString(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => [42, 'uuid-b']],
+                ],
+            ]
+        );
+
+        $response = $this->controller->anonymize(fileId: 1);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(400, $response->getStatus());
+
+    }//end testAnonymizeReturns400WhenBasesContainsNonString()
+
+
+    /**
+     * Test anonymize succeeds when bases is a valid array of strings
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeSucceedsWhenBasesIsValidStringArray(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => ['uuid-a', 'uuid-b']],
+                ],
+            ]
+        );
+
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+
+        $response = $this->controller->anonymize(fileId: 1);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(200, $response->getStatus());
+
+    }//end testAnonymizeSucceedsWhenBasesIsValidStringArray()
+
+
+    /**
+     * Test anonymize succeeds when bases is an empty array
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeSucceedsWhenBasesIsEmptyArray(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => []],
+                ],
+            ]
+        );
+
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+
+        $response = $this->controller->anonymize(fileId: 1);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(200, $response->getStatus());
+
+    }//end testAnonymizeSucceedsWhenBasesIsEmptyArray()
+
+
+    /**
+     * Test anonymize succeeds when entities have no bases field (backward-compat)
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeSucceedsWhenBasesAbsent(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Amsterdam', 'type' => 'LOCATION'],
+                ],
+            ]
+        );
+
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+
+        $response = $this->controller->anonymize(fileId: 1);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(200, $response->getStatus());
+
+    }//end testAnonymizeSucceedsWhenBasesAbsent()
 
 
     /**

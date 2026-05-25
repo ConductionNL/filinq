@@ -14,6 +14,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
@@ -78,10 +81,14 @@ class EntityDetectionService
     /**
      * Map entities to the format expected by OpenRegister's anonymizeDocument
      *
+     * Per-entity `bases[]` is forwarded verbatim when present so OpenRegister
+     * can persist the legal basis on the EntityRelation row.
+     *
      * @param array<array<string, mixed>> $entities The raw entities
      *
-     * @return array<int, array<string, string>> Mapped entities
+     * @return array<int, array<string, mixed>> Mapped entities
      *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function mapEntitiesForAnonymization(array $entities): array
@@ -99,13 +106,19 @@ class EntityDetectionService
                 continue;
             }
 
-            $seen[$text]      = true;
-            $mappedEntities[] = [
+            $seen[$text] = true;
+            $mapped      = [
                 'text'       => $text,
                 'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
                 'key'        => $this->generateUuid(),
             ];
-        }
+
+            if (isset($entity['bases']) === true) {
+                $mapped['bases'] = $entity['bases'];
+            }
+
+            $mappedEntities[] = $mapped;
+        }//end foreach
 
         return $mappedEntities;
 

@@ -31,9 +31,11 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -56,6 +58,7 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IUserSession         $userSession          User session for authentication
      *
      * @return void
      */
@@ -65,7 +68,8 @@ class AnonymizationController extends Controller
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -87,6 +91,10 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
@@ -104,7 +112,7 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
-        }
+        }//end try
 
     }//end files()
 
@@ -124,6 +132,10 @@ class AnonymizationController extends Controller
     public function upload(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $file = $this->request->getUploadedFile('file');
 
             if (empty($file) === true || isset($file['tmp_name']) === false) {
@@ -188,6 +200,10 @@ class AnonymizationController extends Controller
     public function extract(int $fileId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
 
             return new JSONResponse($result);
@@ -209,7 +225,8 @@ class AnonymizationController extends Controller
      *
      * Replaces detected entities in the document with anonymized placeholders.
      * Supports optional excludeTypes, minConfidence, appendBasisSummary, and
-     * outputFormat parameters.
+     * outputFormat parameters. Each entity may carry an optional `bases[]` array
+     * (array of strings) that is forwarded verbatim to OpenRegister.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -218,12 +235,17 @@ class AnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function anonymize(int $fileId): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
 
@@ -232,6 +254,11 @@ class AnonymizationController extends Controller
                     ['error' => $this->l10n->t('No entities provided for anonymization')],
                     400
                 );
+            }
+
+            $basesError = $this->validateEntityBases(entities: $entities);
+            if ($basesError !== null) {
+                return $basesError;
             }
 
             $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
@@ -297,6 +324,46 @@ class AnonymizationController extends Controller
         return $value;
 
     }//end extractAppendBasisSummary()
+
+
+    /**
+     * Validate that each entity's optional `bases` field is an array of strings
+     *
+     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
+     *
+     * @param array<int, array<string, mixed>> $entities The entities to validate
+     *
+     * @return JSONResponse|null Error response or null when all bases are valid
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+     */
+    private function validateEntityBases(array $entities): ?JSONResponse
+    {
+        foreach ($entities as $entity) {
+            if (isset($entity['bases']) === false) {
+                continue;
+            }
+
+            if (is_array($entity['bases']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
+                    400
+                );
+            }
+
+            foreach ($entity['bases'] as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
+                        400
+                    );
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateEntityBases()
 
 
     /**
