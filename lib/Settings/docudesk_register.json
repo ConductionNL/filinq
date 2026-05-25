@@ -72,6 +72,18 @@
         },
         "schemas": {
             "publicationConsent": {
+                "x-openregister-notifications": {
+                    "objectionDeadline": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "consentStatus": "pending" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [
+                            { "kind": "groups", "groups": ["docudesk-woo-officers"] },
+                            { "kind": "object-acl", "permission": "manage" }
+                        ],
+                        "subject": { "nl": "Bezwaartermijn verloopt binnenkort voor een publicatie", "en": "Objection deadline is approaching for a publication" }
+                    }
+                },
                 "uri": null,
                 "slug": "publicationConsent",
                 "title": "Publication Consent",
@@ -535,6 +547,18 @@
                 "searchable": false
             },
             "correspondence": {
+                "x-openregister-notifications": {
+                    "correspondenceFailed": {
+                        "trigger": { "type": "created" },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [
+                            { "kind": "field", "field": "generatedBy" },
+                            { "kind": "groups", "groups": ["docudesk-woo-officers"] }
+                        ],
+                        "subject": { "nl": "Documentgeneratie mislukt: {{templateName}}", "en": "Document generation failed: {{templateName}}" }
+                    }
+                },
                 "uri": null,
                 "slug": "correspondence",
                 "title": "Correspondence",
@@ -759,6 +783,15 @@
                 },
                 "searchable": false
             },            "signingRequest": {
+                "x-openregister-notifications": {
+                    "signingCompleted": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "COMPLETED" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "initiatorUserId" } ],
+                        "subject": { "nl": "Ondertekeningsverzoek '{{documentName}}' is voltooid", "en": "Signing request '{{documentName}}' is complete" }
+                    }
+                },
                 "uri": null,
                 "slug": "signingRequest",
                 "title": "Signing Request",
@@ -785,6 +818,22 @@
                 "searchable": true
             },
             "signerRecord": {
+                "x-openregister-notifications": {
+                    "signingRequested": {
+                        "trigger": { "type": "created" },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "userId" } ],
+                        "subject": { "nl": "Je moet een document ondertekenen", "en": "You have a document to sign" }
+                    },
+                    "signingDeadline": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "PENDING" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "userId" } ],
+                        "subject": { "nl": "Herinnering: een document wacht op je handtekening", "en": "Reminder: a document is awaiting your signature" }
+                    }
+                },
                 "uri": null,
                 "slug": "signerRecord",
                 "title": "Signer Record",

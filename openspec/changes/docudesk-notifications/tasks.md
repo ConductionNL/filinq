@@ -1,13 +1,13 @@
 # Tasks
 
-- [ ] Add `x-openregister-notifications` to `signerRecord` (signingRequested created → field:userId)
-- [ ] Add `x-openregister-notifications` to `signerRecord` (signingDeadline scheduled, filter status=PENDING)
-- [ ] Add `x-openregister-notifications` to `signingRequest` (signingCompleted scheduled, filter status=COMPLETED → field:initiatorUserId)
-- [ ] Add `x-openregister-notifications` to `publicationConsent` (objectionDeadline scheduled → groups + object-acl, STAFF only, never data subject)
-- [ ] Add `x-openregister-notifications` to `correspondence` (correspondenceFailed created → field:generatedBy + groups)
-- [ ] Verify `signerRecord.userId`, `signingRequest.initiatorUserId`, `correspondence.generatedBy` resolve as Nextcloud uids
-- [ ] Provide inline `subject{nl,en}` for every rule
-- [ ] Validate `lib/Settings/docudesk_register.json` parses as JSON and every block uses verified keys only
+- [x] Add `x-openregister-notifications` to `signerRecord` (signingRequested created → field:userId)
+- [x] Add `x-openregister-notifications` to `signerRecord` (signingDeadline scheduled, filter status=PENDING)
+- [x] Add `x-openregister-notifications` to `signingRequest` (signingCompleted scheduled, filter status=COMPLETED → field:initiatorUserId)
+- [x] Add `x-openregister-notifications` to `publicationConsent` (objectionDeadline scheduled → groups + object-acl, STAFF only, never data subject)
+- [x] Add `x-openregister-notifications` to `correspondence` (correspondenceFailed created → field:generatedBy + groups)
+- [x] Verify `signerRecord.userId`, `signingRequest.initiatorUserId`, `correspondence.generatedBy` resolve as Nextcloud uids
+- [x] Provide inline `subject{nl,en}` for every rule
+- [x] Validate `lib/Settings/docudesk_register.json` parses as JSON and every block uses verified keys only
 
 ## Acceptance criteria
 
