@@ -238,6 +238,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function versions(string $id): JSONResponse
     {
@@ -268,6 +270,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function restoreVersion(string $id, string $versionId): JSONResponse
     {
@@ -298,6 +302,8 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
      */
     public function diffVersions(string $id): JSONResponse
     {
@@ -386,6 +392,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-3
      */
     public function duplicate(string $id): JSONResponse
     {
@@ -409,6 +417,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function lock(string $id): JSONResponse
     {
@@ -442,6 +452,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function unlock(string $id): JSONResponse
     {

@@ -394,6 +394,8 @@ class TemplateService
      * @throws Exception If the template is not found or duplication fails
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-3
      */
     public function duplicateTemplate(string $id): array
     {
@@ -443,6 +445,8 @@ class TemplateService
      * @throws Exception If the template is locked by another user (code 409)
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function acquireLock(string $id, string $userId): array
     {
@@ -491,6 +495,8 @@ class TemplateService
      * @throws Exception If the template is not locked by this user
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function releaseLock(string $id, string $userId): array
     {
@@ -523,6 +529,8 @@ class TemplateService
      * @param array $template The template data with lockedAt field
      *
      * @return bool True if the lock has expired or no lock exists
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     private function isLockExpired(array $template): bool
     {
