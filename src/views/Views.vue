@@ -40,6 +40,12 @@ export default {
 		BatchAnonymizationView,
 		FolderAnonymizationView,
 	},
+	/**
+	 * Expose the navigation store so the shell can conditionally render the
+	 * selected DocuDesk view.
+	 *
+	 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+	 */
 	setup() {
 		return { navigationStore }
 	},

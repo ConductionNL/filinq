@@ -32,6 +32,11 @@ export default {
 		return { fieldName: '' }
 	},
 	computed: {
+		/**
+		 * Hint text showing the merge-field placeholder that will be inserted.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		hintText() {
 			const name = this.fieldName || 'field'
 			return t('docudesk', 'This inserts {placeholder} into the template.', { placeholder: '{{ ' + name + ' }}' })
@@ -39,6 +44,11 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Emit the chosen merge-field name to the parent editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		confirm() {
 			if (!this.fieldName) return
 			this.$emit('insert', this.fieldName)

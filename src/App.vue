@@ -89,6 +89,11 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Current user's Nextcloud permission set, passed to the app shell.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
@@ -102,6 +107,8 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
+		 *
+		 * @spec exclude Thin i18n wrapper around @nextcloud/l10n translate; no domain behavior.
 		 */
 		translateForApp(key) {
 			return ncT('docudesk', key)

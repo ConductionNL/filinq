@@ -66,6 +66,8 @@ class SigningProviderFactory
      * Get the currently configured signing provider
      *
      * @return SigningProviderInterface The active signing provider
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getActiveProvider(): SigningProviderInterface
     {
@@ -87,6 +89,8 @@ class SigningProviderFactory
      * @return SigningProviderInterface The requested provider
      *
      * @throws RuntimeException If the provider is not available
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getProvider(string $identifier): SigningProviderInterface
     {

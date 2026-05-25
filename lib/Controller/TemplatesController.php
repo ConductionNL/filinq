@@ -336,6 +336,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
      */
     public function preview(): JSONResponse
     {
@@ -367,6 +369,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
      */
     public function previewTemplate(string $id): JSONResponse
     {

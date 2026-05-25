@@ -91,6 +91,8 @@ class SigningService
      * @return array<string, mixed> The created signing request
      *
      * @throws RuntimeException If creation fails
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function createRequest(array $data): array
     {
@@ -168,6 +170,8 @@ class SigningService
      * @return array<string, mixed> The signing request
      *
      * @throws RuntimeException If not found
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
     public function getRequest(string $requestId): array
     {
@@ -188,6 +192,8 @@ class SigningService
      * List signing requests
      *
      * @return array<int, array<string, mixed>> List of signing requests
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
     public function listRequests(): array
     {
@@ -208,6 +214,8 @@ class SigningService
      * @return array<string, mixed> The updated signer record
      *
      * @throws RuntimeException If signing fails
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
      */
     public function sign(string $requestId, string $signerId): array
     {
@@ -266,6 +274,8 @@ class SigningService
      * @param string $reason    The decline reason
      *
      * @return array<string, mixed> The updated signer record
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function decline(string $requestId, string $signerId, string $reason): array
     {
@@ -318,6 +328,8 @@ class SigningService
      * @param string $requestId The signing request ID
      *
      * @return array<string, mixed> The cancelled request
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function cancelRequest(string $requestId): array
     {
@@ -356,6 +368,8 @@ class SigningService
      * @param array<string> $requestIds Array of request IDs to sign
      *
      * @return array<string, array<string, mixed>> Results keyed by request ID
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-4
      */
     public function bulkSign(array $requestIds): array
     {
@@ -401,6 +415,8 @@ class SigningService
      * @param string $newStatus     The proposed new status
      *
      * @return bool True if transition is valid
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function isValidTransition(string $currentStatus, string $newStatus): bool
     {

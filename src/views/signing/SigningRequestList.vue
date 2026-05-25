@@ -40,6 +40,11 @@ import { useSigningStore } from '../../store/modules/signing.js'
 export default {
 	name: 'SigningRequestList',
 	components: { NcLoadingIcon, NcEmptyContent },
+	/**
+	 * Load all signing requests for the list view on mount.
+	 *
+	 * @spec openspec/changes/digital-signing-integration/tasks.md#8-2
+	 */
 	setup() {
 		const signingStore = useSigningStore()
 		signingStore.fetchSigningRequests()

@@ -179,6 +179,11 @@ export default {
 	// bind into a sibling Options API `<script>` block — which
 	// previously left `anonymizationStore` undefined and broke every
 	// v-if in the template.
+	/**
+	 * Expose the anonymization pipeline store reactively to the Options API.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+	 */
 	setup() {
 		return { anonymizationStore }
 	},
@@ -194,6 +199,11 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Whether any completed/errored files exist that can be cleared.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		canClear() {
 			return this.anonymizationStore.files.some(
 				(f) => f.status === 'completed' || f.status === 'error',
@@ -202,6 +212,11 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Queue files dropped onto the pipeline drop zone.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		handleDrop(event) {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
@@ -209,6 +224,11 @@ export default {
 				this.anonymizationStore.addFiles(files)
 			}
 		},
+		/**
+		 * Queue files chosen via the file picker into the pipeline.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		handleFileSelect(event) {
 			const files = event.target?.files
 			if (files && files.length > 0) {
@@ -217,9 +237,19 @@ export default {
 			// Reset input so the same files can be re-selected.
 			event.target.value = ''
 		},
+		/**
+		 * Map a file's status to its pipeline step index.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		stepIndex(file) {
 			return STATUS_TO_STEP[file.status] ?? 0
 		},
+		/**
+		 * Compute the CSS state classes for a pipeline step.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		stepClass(file, index) {
 			const current = this.stepIndex(file)
 			if (file.status === 'completed') {
@@ -233,6 +263,11 @@ export default {
 				current: index === current,
 			}
 		},
+		/**
+		 * Human-readable label for a file processing status.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		statusLabel(status) {
 			const labels = {
 				queued: t('docudesk', 'Queued'),
@@ -244,6 +279,11 @@ export default {
 			}
 			return labels[status] || status
 		},
+		/**
+		 * Progress message describing the current processing stage of a file.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		processingText(file) {
 			if (file.status === 'uploading') {
 				return t('docudesk', 'Uploading {name}...', { name: file.name })
@@ -256,6 +296,11 @@ export default {
 			}
 			return ''
 		},
+		/**
+		 * Format a detection confidence score as a percentage.
+		 *
+		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
+		 */
 		formatConfidence(confidence) {
 			if (typeof confidence === 'number') {
 				return (confidence * 100).toFixed(1) + '%'

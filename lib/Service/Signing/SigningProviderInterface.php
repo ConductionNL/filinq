@@ -46,6 +46,8 @@ interface SigningProviderInterface
      * @param array<string, mixed> $options      Additional options
      *
      * @return array<string, mixed> Result with keys: success, externalId, message
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function initiateSigning(
         string $documentPath,
@@ -61,6 +63,8 @@ interface SigningProviderInterface
      * @param string $externalId The external signing flow identifier
      *
      * @return array<string, mixed> Status with keys: status, signers, completedAt
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function checkStatus(string $externalId): array;
 
@@ -70,6 +74,8 @@ interface SigningProviderInterface
      * @param string $externalId The external signing flow identifier
      *
      * @return string The signed document content
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function downloadSignedDocument(string $externalId): string;
 
@@ -79,6 +85,8 @@ interface SigningProviderInterface
      * @param string $externalId The external signing flow identifier
      *
      * @return bool True if cancellation succeeded
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function cancelSigning(string $externalId): bool;
 
@@ -88,6 +96,8 @@ interface SigningProviderInterface
      * @param string $level The signature level (SES, AdES, QES)
      *
      * @return bool True if the level is supported
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function supportsLevel(string $level): bool;
 }//end interface

@@ -268,15 +268,30 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Pinia template store accessor for the detail editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		templateStore() { return useTemplateStore() },
 		isNew() { return this.templateStore.templateItem === null },
 		isLockMine() {
 			return this.lockOwner === null || this.lockOwner === this.currentUserId
 		},
+		/**
+		 * Current Nextcloud user ID, used for lock ownership checks.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		currentUserId() {
 			return window.OC?.currentUser || ''
 		},
 	},
+	/**
+	 * Hydrate the editor form from the selected template and acquire its edit lock.
+	 *
+	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+	 */
 	async mounted() {
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
@@ -303,33 +318,68 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Release any held lock and navigate back to the template list.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async handleBack() {
 			await this.releaseLockIfMine()
 			navigationStore.setSelected('templates')
 		},
+		/**
+		 * Release the edit lock if the current user owns it.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async releaseLockIfMine() {
 			const tmpl = this.templateStore.templateItem
 			if (!this.isNew && tmpl && this.isLockMine) {
 				await this.templateStore.releaseLock(tmpl.id)
 			}
 		},
+		/**
+		 * Apply an inline formatting command in the WYSIWYG editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		execFormat(cmd) {
 			document.execCommand(cmd, false, null)
 			this.syncFromEditor()
 		},
+		/**
+		 * Apply a block-level format (heading) in the WYSIWYG editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		execBlock(tag) {
 			document.execCommand('formatBlock', false, tag)
 			this.syncFromEditor()
 		},
+		/**
+		 * Sync the form content from the WYSIWYG editor's HTML.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		syncFromEditor() {
 			if (this.$refs.editor) {
 				this.form.content = this.$refs.editor.innerHTML
 			}
 		},
+		/**
+		 * Sync the form content from the raw HTML textarea.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		syncFromRaw(event) {
 			this.form.content = event.target.value
 			this.editorHtml = event.target.value
 		},
+		/**
+		 * Render a live preview of the current template content with sample data.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async loadPreview() {
 			this.activeTab = 'preview'
 			this.previewLoading = true
@@ -351,6 +401,11 @@ export default {
 				this.previewLoading = false
 			}
 		},
+		/**
+		 * Load the version history for the current template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async loadVersions() {
 			this.activeTab = 'versions'
 			if (this.isNew) return
@@ -359,6 +414,11 @@ export default {
 			this.versions = result?.results || []
 			this.versionsLoading = false
 		},
+		/**
+		 * Restore the template to a selected prior version.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async restoreVersion(ver) {
 			if (!window.confirm(t('docudesk', 'Restore to version {n}?', { n: ver.version }))) return
 			const result = await this.templateStore.restoreVersion(
@@ -371,6 +431,11 @@ export default {
 				this.activeTab = 'edit'
 			}
 		},
+		/**
+		 * Persist the template (create or update), release the lock and return to the list.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async saveTemplate() {
 			this.saving = true
 			const tags = this.form.tagsInput
@@ -404,11 +469,21 @@ export default {
 				this.saving = false
 			}
 		},
+		/**
+		 * Insert a merge-field token at the cursor in the editor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		insertMergeField(fieldName) {
 			const token = `{{ ${fieldName} }}`
 			document.execCommand('insertText', false, token)
 			this.syncFromEditor()
 		},
+		/**
+		 * Insert a conditional section block (data-condition attributes) at the cursor.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		insertConditionalSection({ field, op, value }) {
 			const opAttr = `data-condition-field="${field}" data-condition-op="${op}"`
 			const valAttr = (op !== 'is_empty' && op !== 'is_not_empty') ? ` data-condition-value="${value}"` : ''

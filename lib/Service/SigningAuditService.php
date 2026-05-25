@@ -84,6 +84,8 @@ class SigningAuditService
      * @return array<string, mixed> The created audit entry
      *
      * @throws RuntimeException If logging fails
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#4-2
      */
     public function logEvent(
         string $signingRequestId,
@@ -125,6 +127,8 @@ class SigningAuditService
      * @param string $signingRequestId The signing request ID
      *
      * @return array<int, array<string, mixed>> The audit entries
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#4-1
      */
     public function getAuditTrail(string $signingRequestId): array
     {
@@ -162,6 +166,8 @@ class SigningAuditService
      * @throws RuntimeException Always throws
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#4-3
      */
     public function rejectUpdate(string $entryId): void
     {
@@ -181,6 +187,8 @@ class SigningAuditService
      * @throws RuntimeException Always throws
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#4-3
      */
     public function rejectDelete(string $entryId): void
     {

@@ -98,6 +98,8 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
      */
     public function catchAll(string $path=''): TemplateResponse
     {

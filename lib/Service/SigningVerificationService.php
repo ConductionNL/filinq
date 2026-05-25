@@ -60,6 +60,8 @@ class SigningVerificationService
      * @return array<string, mixed> Verification result
      *
      * @throws RuntimeException If file cannot be accessed
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#5-1
      */
     public function verifyDocument(int $fileId, string $userId): array
     {

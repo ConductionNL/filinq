@@ -60,6 +60,8 @@ class FileUploadService
      * @return string The current user ID
      *
      * @throws Exception If no user is logged in
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function getCurrentUserId(): string
     {

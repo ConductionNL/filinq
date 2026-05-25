@@ -38,6 +38,8 @@ export const useAnonymizationStore = defineStore(
                  * Add files to the queue and start processing.
                  *
                  * @param {File[]} fileList Array of File objects.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async addFiles(fileList) {
 				const newEntries = Array.from(fileList).map(
@@ -65,6 +67,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Process all queued files sequentially.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async processQueue() {
 				if (this.processing) {
@@ -88,6 +92,8 @@ export const useAnonymizationStore = defineStore(
                  * Run the full pipeline for a single file entry.
                  *
                  * @param {object} entry File entry from the queue.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async processFile(entry) {
 				try {
@@ -149,6 +155,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Clear all completed/errored files from the list.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			clearCompleted() {
 				this.files = this.files.filter((f) => f.status !== 'completed' && f.status !== 'error')
@@ -156,6 +164,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Reset everything.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			reset() {
 				this.files = []

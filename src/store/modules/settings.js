@@ -20,6 +20,11 @@ export const useSettingsStore = defineStore(
 			getIsAdmin: (state) => state.isAdmin,
 		},
 		actions: {
+			/**
+			 * Fetch DocuDesk settings, OpenRegister availability and admin status.
+			 *
+			 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+			 */
 			async fetchSettings() {
 				this.loading = true
 				this.error = null
@@ -67,6 +72,11 @@ export const useSettingsStore = defineStore(
 				}
 			},
 
+			/**
+			 * Persist DocuDesk settings via the settings REST API.
+			 *
+			 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+			 */
 			async saveSettings(settingsData) {
 				this.loading = true
 				this.error = null

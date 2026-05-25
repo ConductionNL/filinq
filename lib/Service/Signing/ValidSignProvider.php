@@ -71,6 +71,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @return array<string, mixed> Result with ValidSign package ID
      *
      * @throws RuntimeException If provider is not configured
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function initiateSigning(
         string $documentPath,
@@ -103,6 +105,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @param string $externalId The ValidSign package identifier
      *
      * @return array<string, mixed> The signing flow status
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function checkStatus(string $externalId): array
     {
@@ -122,6 +126,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @return string The signed document content
      *
      * @throws RuntimeException Always throws - not yet implemented
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function downloadSignedDocument(string $externalId): string
     {
@@ -137,6 +143,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @param string $externalId The ValidSign package identifier
      *
      * @return bool True if cancelled
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function cancelSigning(string $externalId): bool
     {
@@ -150,6 +158,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @param string $level The signature level to check
      *
      * @return bool True if supported
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function supportsLevel(string $level): bool
     {

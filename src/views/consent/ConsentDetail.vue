@@ -202,6 +202,11 @@ export default {
 	watch: {
 		'consentStore.consentItem': {
 			immediate: true,
+			/**
+			 * Sync the editable form fields when the selected consent record changes.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+			 */
 			handler(item) {
 				if (item) {
 					this.editData.consentStatus = this.consentStatusOptions.find(o => o.value === item.consentStatus) || null
@@ -212,10 +217,20 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Clear the selected consent and return to the consent list.
+		 *
+		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+		 */
 		goBack() {
 			consentStore.clearConsentItem()
 			navigationStore.setSelected('consent')
 		},
+		/**
+		 * Format a date string for display, falling back gracefully.
+		 *
+		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -224,6 +239,11 @@ export default {
 				return dateStr
 			}
 		},
+		/**
+		 * Persist edited consent status/decision fields for the record.
+		 *
+		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-status-lifecycle-req-cons-02
+		 */
 		async saveChanges() {
 			const id = consentStore.consentItem?.id || consentStore.consentItem?.uuid
 			if (!id) return

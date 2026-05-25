@@ -176,6 +176,8 @@ class TemplateRenderer
      * @param string $html HTML content with conditional data attributes
      *
      * @return string HTML with data attributes replaced by Twig if blocks
+     *
+     * @spec openspec/changes/advanced-template-management/tasks.md#task-7
      */
     public function convertConditionalSections(string $html): string
     {
