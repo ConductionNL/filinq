@@ -12,6 +12,9 @@
  * @version GIT: <git-id>
  *
  * @link https://DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -19,6 +22,9 @@ declare(strict_types=1);
 define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
+// Load Nextcloud OCP stubs (no NC server required).
+require_once __DIR__ . '/stubs/NextcloudStubs.php';
 
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';

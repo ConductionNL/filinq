@@ -16,6 +16,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
@@ -295,6 +298,11 @@ class BatchAnonymizationController extends Controller
     /**
      * Apply the user-approved entity list to every extracted file in a batch.
      *
+     * Accepts an optional `appendBasisSummary` boolean flag (default false).
+     * When true, invokes the grondslagen summary service after each file's
+     * anonymization. Per-file summary failures surface as per-file warnings
+     * in the response; the overall batch still completes as HTTP 200.
+     *
      * @param string $batchId Identifier of the batch to anonymize.
      *
      * @return JSONResponse Summary of the run, or an error payload when the request body is malformed.
@@ -302,20 +310,40 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
         try {
-            $entities = $this->request->getParams()['entities'] ?? [];
+            $params   = $this->request->getParams();
+            $entities = $params['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
-                return new JSONResponse(['error' => 'No entities provided'], 400);
+                return new JSONResponse(['error' => $this->l10n->t('No entities provided')], 400);
             }
 
-            return new JSONResponse($this->anonService->anonymizeBatch($batchId, $entities));
+            if (array_key_exists('appendBasisSummary', $params) === true) {
+                $appendBasisSummary = $params['appendBasisSummary'];
+                if (is_bool($appendBasisSummary) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
+                        400
+                    );
+                }
+            } else {
+                $appendBasisSummary = false;
+            }
+
+            return new JSONResponse(
+                $this->anonService->anonymizeBatch(
+                    batchId: $batchId,
+                    entities: $entities,
+                    appendBasisSummary: $appendBasisSummary
+                )
+            );
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
-        }
+        }//end try
 
     }//end batchAnonymize()
 
