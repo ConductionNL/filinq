@@ -104,6 +104,10 @@ return [
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+
         // SPA catch-all — serves the Vue app shell for any frontend deep
         // link (vue-router HTML5 history mode). Must come LAST so it
         // doesn't shadow specific routes above. The dedicated
