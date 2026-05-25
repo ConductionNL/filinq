@@ -18,11 +18,15 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use Exception;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for managing signing request lifecycle
@@ -54,7 +58,6 @@ class SigningService
         'CANCELLED'   => [],
     ];
 
-
     /**
      * Constructor
      *
@@ -80,7 +83,6 @@ class SigningService
 
     }//end __construct()
 
-
     /**
      * Create a new signing request
      *
@@ -88,18 +90,18 @@ class SigningService
      *
      * @return array<string, mixed> The created signing request
      *
-     * @throws \RuntimeException If creation fails
+     * @throws RuntimeException If creation fails
      */
     public function createRequest(array $data): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
         $expiryDays    = (int) $this->config->getValueString('docudesk', 'signing_request_expiry_days', '30');
-        $deadline      = (new \DateTimeImmutable())->modify('+'.$expiryDays.' days');
+        $deadline      = (new DateTimeImmutable())->modify('+'.$expiryDays.' days');
         $defaultLevel  = $this->config->getValueString('docudesk', 'signing_default_level', 'SES');
         $defaultProv   = $this->config->getValueString('docudesk', 'signing_provider', 'native');
 
@@ -111,7 +113,7 @@ class SigningService
             'signingMode'     => $data['signingMode'] ?? 'sequential',
             'status'          => 'PENDING',
             'provider'        => $data['provider'] ?? $defaultProv,
-            'deadline'        => $data['deadline'] ?? $deadline->format(\DateTimeInterface::ATOM),
+            'deadline'        => $data['deadline'] ?? $deadline->format(DateTimeInterface::ATOM),
             'signerIds'       => [],
         ];
 
@@ -158,7 +160,6 @@ class SigningService
 
     }//end createRequest()
 
-
     /**
      * Get a signing request by ID
      *
@@ -166,7 +167,7 @@ class SigningService
      *
      * @return array<string, mixed> The signing request
      *
-     * @throws \RuntimeException If not found
+     * @throws RuntimeException If not found
      */
     public function getRequest(string $requestId): array
     {
@@ -176,13 +177,12 @@ class SigningService
 
         $request = $objectService->getObject($register, $schema, $requestId);
         if (empty($request) === true) {
-            throw new \RuntimeException('Signing request not found: '.$requestId);
+            throw new RuntimeException('Signing request not found: '.$requestId);
         }
 
         return $request;
 
     }//end getRequest()
-
 
     /**
      * List signing requests
@@ -199,7 +199,6 @@ class SigningService
 
     }//end listRequests()
 
-
     /**
      * Sign a document within a signing request
      *
@@ -208,13 +207,13 @@ class SigningService
      *
      * @return array<string, mixed> The updated signer record
      *
-     * @throws \RuntimeException If signing fails
+     * @throws RuntimeException If signing fails
      */
     public function sign(string $requestId, string $signerId): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
@@ -222,7 +221,7 @@ class SigningService
         $status        = $request['status'] ?? '';
 
         if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
-            throw new \RuntimeException('Signing request is not in a signable state: '.$status);
+            throw new RuntimeException('Signing request is not in a signable state: '.$status);
         }
 
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
@@ -230,16 +229,16 @@ class SigningService
         $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
 
         if (empty($signer) === true) {
-            throw new \RuntimeException('Signer record not found: '.$signerId);
+            throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
         if (($signer['status'] ?? '') !== 'PENDING') {
-            throw new \RuntimeException('Signer has already responded to this request');
+            throw new RuntimeException('Signer has already responded to this request');
         }
 
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $signer['status']    = 'SIGNED';
-        $signer['signedAt']  = $now->format(\DateTimeInterface::ATOM);
+        $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
         $objectService->saveObject($signerRegister, $signerSchema, $signer);
 
@@ -259,7 +258,6 @@ class SigningService
 
     }//end sign()
 
-
     /**
      * Decline a signing request
      *
@@ -273,7 +271,7 @@ class SigningService
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService  = $this->settingsService->getObjectService();
@@ -282,7 +280,7 @@ class SigningService
         $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
 
         if (empty($signer) === true) {
-            throw new \RuntimeException('Signer record not found: '.$signerId);
+            throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
         $signer['status']        = 'DECLINED';
@@ -314,7 +312,6 @@ class SigningService
 
     }//end decline()
 
-
     /**
      * Cancel a signing request
      *
@@ -326,7 +323,7 @@ class SigningService
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
@@ -335,7 +332,7 @@ class SigningService
         $request       = $objectService->getObject($register, $schema, $requestId);
 
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
-            throw new \RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
+            throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
         }
 
         $request['status'] = 'CANCELLED';
@@ -353,7 +350,6 @@ class SigningService
 
     }//end cancelRequest()
 
-
     /**
      * Bulk sign multiple signing requests
      *
@@ -365,10 +361,9 @@ class SigningService
     {
         $results = [];
         $user    = $this->userSession->getUser();
+        $userId  = '';
         if ($user !== null) {
             $userId = $user->getUID();
-        } else {
-            $userId = '';
         }
 
         foreach ($requestIds as $requestId) {
@@ -377,18 +372,17 @@ class SigningService
                 $signerIds      = $request['signerIds'] ?? [];
                 $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
 
+                $results[$requestId] = [
+                    'success' => false,
+                    'error'   => 'No pending signer record found for current user',
+                ];
                 if ($targetSignerId !== null) {
                     $results[$requestId] = [
                         'success' => true,
                         'signer'  => $this->sign(requestId: $requestId, signerId: $targetSignerId),
                     ];
-                } else {
-                    $results[$requestId] = [
-                        'success' => false,
-                        'error'   => 'No pending signer record found for current user',
-                    ];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $results[$requestId] = [
                     'success' => false,
                     'error'   => $e->getMessage(),
@@ -399,7 +393,6 @@ class SigningService
         return $results;
 
     }//end bulkSign()
-
 
     /**
      * Validate a status transition
@@ -416,7 +409,6 @@ class SigningService
 
     }//end isValidTransition()
 
-
     /**
      * Validate signing request data
      *
@@ -424,28 +416,27 @@ class SigningService
      *
      * @return void
      *
-     * @throws \RuntimeException If validation fails
+     * @throws RuntimeException If validation fails
      */
     private function validateRequestData(array $data): void
     {
         if (empty($data['documentFileId']) === true) {
-            throw new \RuntimeException('Document file ID is required');
+            throw new RuntimeException('Document file ID is required');
         }
 
         if (empty($data['documentName']) === true) {
-            throw new \RuntimeException('Document name is required');
+            throw new RuntimeException('Document name is required');
         }
 
         if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new \RuntimeException('Invalid signature level');
+            throw new RuntimeException('Invalid signature level');
         }
 
         if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new \RuntimeException('Invalid signing mode');
+            throw new RuntimeException('Invalid signing mode');
         }
 
     }//end validateRequestData()
-
 
     /**
      * Update the signing request status based on signer progress
@@ -475,16 +466,14 @@ class SigningService
 
         $freshRequest = $objectService->getObject($register, $schema, $requestId);
 
+        $freshRequest['status'] = 'IN_PROGRESS';
         if ($allSigned === true) {
             $freshRequest['status'] = 'COMPLETED';
-        } else {
-            $freshRequest['status'] = 'IN_PROGRESS';
         }
 
         $objectService->saveObject($register, $schema, $freshRequest);
 
     }//end updateRequestStatus()
-
 
     /**
      * Find the signer record ID for a given user
@@ -511,7 +500,6 @@ class SigningService
 
     }//end findSignerForUser()
 
-
     /**
      * Get the client IP address
      *
@@ -522,6 +510,4 @@ class SigningService
         return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 
     }//end getClientIp()
-
-
 }//end class

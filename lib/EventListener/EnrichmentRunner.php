@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-33
  */
 
 declare(strict_types=1);
@@ -34,14 +37,14 @@ use Psr\Log\LoggerInterface;
  */
 class EnrichmentRunner
 {
-
-
     /**
      * Check if enrichment is enabled based on settings
      *
      * @param SettingsService $settingsService The settings service
      *
      * @return bool True if at least one enrichment feature is enabled
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-33
      */
     public function isEnrichmentEnabled(SettingsService $settingsService): bool
     {
@@ -54,7 +57,6 @@ class EnrichmentRunner
 
     }//end isEnrichmentEnabled()
 
-
     /**
      * Enrich an object with metadata if enrichment is enabled
      *
@@ -65,6 +67,8 @@ class EnrichmentRunner
      * @param string          $logContext      Context string for logging
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function enrichObject(
         mixed $object,
@@ -120,6 +124,4 @@ class EnrichmentRunner
         }//end try
 
     }//end enrichObject()
-
-
 }//end class

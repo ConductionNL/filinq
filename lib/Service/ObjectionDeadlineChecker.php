@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-47
  */
 
 declare(strict_types=1);
@@ -45,7 +48,6 @@ class ObjectionDeadlineChecker
      */
     private readonly string $appName;
 
-
     /**
      * Constructor for ObjectionDeadlineChecker
      *
@@ -66,7 +68,6 @@ class ObjectionDeadlineChecker
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -84,11 +85,12 @@ class ObjectionDeadlineChecker
 
     }//end getObjectService()
 
-
     /**
      * Get the objection period in days from settings
      *
      * @return int Number of days for the objection period
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-47
      */
     public function getObjectionPeriodDays(): int
     {
@@ -100,11 +102,12 @@ class ObjectionDeadlineChecker
 
     }//end getObjectionPeriodDays()
 
-
     /**
      * Calculate the objection deadline from now
      *
      * @return DateTime The deadline date
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
      */
     public function calculateDeadline(): DateTime
     {
@@ -116,7 +119,6 @@ class ObjectionDeadlineChecker
 
     }//end calculateDeadline()
 
-
     /**
      * Check if an objection deadline has expired
      *
@@ -127,6 +129,8 @@ class ObjectionDeadlineChecker
      * @return bool True if the deadline has passed
      *
      * @throws Exception If check fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
      */
     public function checkObjectionDeadline(string $consentId, string $register, string $schema): bool
     {
@@ -172,6 +176,4 @@ class ObjectionDeadlineChecker
         }//end try
 
     }//end checkObjectionDeadline()
-
-
 }//end class

@@ -17,6 +17,8 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -37,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizeService
 {
-
-
     /**
      * Constructor for BatchAnonymizeService
      *
@@ -55,7 +55,6 @@ class BatchAnonymizeService
     ) {
 
     }//end __construct()
-
 
     /**
      * Anonymize every extracted file in a batch using the approved entity list.
@@ -82,6 +81,7 @@ class BatchAnonymizeService
      * @throws Exception When the batch cannot be found.
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function anonymizeBatch(
         string $batchId,
@@ -144,6 +144,4 @@ class BatchAnonymizeService
         ];
 
     }//end anonymizeBatch()
-
-
 }//end class

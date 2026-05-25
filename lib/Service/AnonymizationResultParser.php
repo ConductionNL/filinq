@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -30,14 +32,14 @@ namespace OCA\DocuDesk\Service;
  */
 class AnonymizationResultParser
 {
-
-
     /**
      * Parse anonymization result into a structured array
      *
      * @param mixed $result The raw anonymization result
      *
      * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function parseResult(mixed $result): array
     {
@@ -56,7 +58,6 @@ class AnonymizationResultParser
         ];
 
     }//end parseResult()
-
 
     /**
      * Extract file info from anonymization result object
@@ -85,7 +86,6 @@ class AnonymizationResultParser
 
     }//end extractFromObject()
 
-
     /**
      * Extract file info from anonymization result array
      *
@@ -102,6 +102,4 @@ class AnonymizationResultParser
         ];
 
     }//end extractFromArray()
-
-
 }//end class

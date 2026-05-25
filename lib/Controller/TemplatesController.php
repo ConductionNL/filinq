@@ -12,6 +12,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
  */
 
 declare(strict_types=1);
@@ -19,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 use OCA\DocuDesk\Service\TemplatePreviewService;
 use OCA\DocuDesk\Service\TemplateService;
 use OCA\DocuDesk\Service\TemplateVersionService;
@@ -26,6 +29,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for template CRUD, versioning, preview, duplication and locking
@@ -40,8 +44,6 @@ use OCP\IUserSession;
  */
 class TemplatesController extends Controller
 {
-
-
     /**
      * Constructor for TemplatesController
      *
@@ -52,6 +54,7 @@ class TemplatesController extends Controller
      * @param TemplateVersionService $versionService  Service for version operations
      * @param TemplatePreviewService $previewService  Service for preview rendering
      * @param IUserSession           $userSession     User session for current user
+     * @param LoggerInterface        $logger          Logger for not-configured info messages
      *
      * @return void
      */
@@ -63,11 +66,11 @@ class TemplatesController extends Controller
         private readonly TemplateVersionService $versionService,
         private readonly TemplatePreviewService $previewService,
         private readonly IUserSession $userSession,
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Get the current user ID
@@ -85,7 +88,6 @@ class TemplatesController extends Controller
 
     }//end getCurrentUserId()
 
-
     /**
      * List templates with optional namespace filter and pagination
      *
@@ -93,6 +95,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function index(): JSONResponse
     {
@@ -104,12 +108,26 @@ class TemplatesController extends Controller
                 offset: $params['offset']
             );
             return new JSONResponse(data: $result);
+        } catch (RegisterNotConfiguredException $e) {
+            // Configuration missing is a setup state, not a failure — emit
+            // an empty list with a notConfigured flag so the UI can render
+            // a calm "register not configured yet" empty state instead of
+            // surfacing a 500.
+            $this->logger->info(
+                'Templates list requested but register/schema is not configured: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
         } catch (Exception $e) {
             return $this->requestHandler->buildErrorResponse($e, 'Failed to list templates: ');
         }//end try
 
     }//end index()
-
 
     /**
      * Get a single template by ID
@@ -122,6 +140,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function show(string $id): JSONResponse
     {
@@ -134,7 +154,6 @@ class TemplatesController extends Controller
 
     }//end show()
 
-
     /**
      * Create a new template
      *
@@ -142,6 +161,8 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function create(): JSONResponse
     {
@@ -155,7 +176,6 @@ class TemplatesController extends Controller
 
     }//end create()
 
-
     /**
      * Update an existing template
      *
@@ -167,6 +187,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function update(string $id): JSONResponse
     {
@@ -180,7 +202,6 @@ class TemplatesController extends Controller
 
     }//end update()
 
-
     /**
      * Delete a template
      *
@@ -192,6 +213,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function destroy(string $id): JSONResponse
     {
@@ -204,7 +227,6 @@ class TemplatesController extends Controller
 
     }//end destroy()
 
-
     /**
      * List version history for a template
      *
@@ -216,6 +238,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function versions(string $id): JSONResponse
     {
@@ -234,7 +258,6 @@ class TemplatesController extends Controller
 
     }//end versions()
 
-
     /**
      * Restore a template to a previous version
      *
@@ -247,6 +270,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function restoreVersion(string $id, string $versionId): JSONResponse
     {
@@ -265,7 +290,6 @@ class TemplatesController extends Controller
 
     }//end restoreVersion()
 
-
     /**
      * Get two versions for diff comparison
      *
@@ -277,6 +301,9 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
      */
     public function diffVersions(string $id): JSONResponse
     {
@@ -301,7 +328,6 @@ class TemplatesController extends Controller
         }
 
     }//end diffVersions()
-
 
     /**
      * Preview raw template content with sample data
@@ -330,7 +356,6 @@ class TemplatesController extends Controller
 
     }//end preview()
 
-
     /**
      * Preview an existing template with sample data
      *
@@ -356,7 +381,6 @@ class TemplatesController extends Controller
 
     }//end previewTemplate()
 
-
     /**
      * Duplicate a template
      *
@@ -368,6 +392,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-3
      */
     public function duplicate(string $id): JSONResponse
     {
@@ -380,7 +406,6 @@ class TemplatesController extends Controller
 
     }//end duplicate()
 
-
     /**
      * Acquire an edit lock on a template
      *
@@ -392,6 +417,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function lock(string $id): JSONResponse
     {
@@ -414,7 +441,6 @@ class TemplatesController extends Controller
 
     }//end lock()
 
-
     /**
      * Release an edit lock on a template
      *
@@ -426,6 +452,8 @@ class TemplatesController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function unlock(string $id): JSONResponse
     {
@@ -438,6 +466,4 @@ class TemplatesController extends Controller
         }
 
     }//end unlock()
-
-
 }//end class

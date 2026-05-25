@@ -16,6 +16,11 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -42,8 +47,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for AnonymizationController
      *
@@ -68,7 +71,6 @@ class AnonymizationController extends Controller
 
     }//end __construct()
 
-
     /**
      * List all processed files with entity counts and status
      *
@@ -79,6 +81,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function files(): JSONResponse
     {
@@ -104,7 +108,6 @@ class AnonymizationController extends Controller
 
     }//end files()
 
-
     /**
      * Upload a file to the user's DocuDesk folder
      *
@@ -115,6 +118,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function upload(): JSONResponse
     {
@@ -166,7 +171,6 @@ class AnonymizationController extends Controller
 
     }//end upload()
 
-
     /**
      * Extract text and detect entities in a file
      *
@@ -178,6 +182,8 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function extract(int $fileId): JSONResponse
     {
@@ -198,7 +204,6 @@ class AnonymizationController extends Controller
 
     }//end extract()
 
-
     /**
      * Anonymize entities in a document
      *
@@ -214,6 +219,7 @@ class AnonymizationController extends Controller
      * @NoCSRFRequired
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function anonymize(int $fileId): JSONResponse
     {
@@ -263,7 +269,6 @@ class AnonymizationController extends Controller
 
     }//end anonymize()
 
-
     /**
      * Extract and validate the appendBasisSummary flag from request params.
      *
@@ -301,6 +306,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByExcludeTypes(array $entities, array $params): array
     {
@@ -321,7 +328,6 @@ class AnonymizationController extends Controller
 
     }//end filterByExcludeTypes()
 
-
     /**
      * Filter entities by minimum confidence threshold
      *
@@ -329,6 +335,8 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByConfidence(array $entities, array $params): array
     {
@@ -348,6 +356,4 @@ class AnonymizationController extends Controller
         );
 
     }//end filterByConfidence()
-
-
 }//end class

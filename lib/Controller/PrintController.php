@@ -13,6 +13,10 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
  */
 
 declare(strict_types=1);
@@ -42,8 +46,6 @@ use Psr\Log\LoggerInterface;
  */
 class PrintController extends Controller
 {
-
-
     /**
      * Constructor for PrintController
      *
@@ -66,7 +68,6 @@ class PrintController extends Controller
 
     }//end __construct()
 
-
     /**
      * Get request options as an array, defaulting to empty array
      *
@@ -83,7 +84,6 @@ class PrintController extends Controller
 
     }//end getRequestOptions()
 
-
     /**
      * Resolve template content and options from request parameters
      *
@@ -94,6 +94,8 @@ class PrintController extends Controller
      * @return array{content: string, title: string, data: array, options: array} Resolved template data
      *
      * @throws Exception If neither templateId nor template content is provided
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
      */
     private function resolveTemplate(): array
     {
@@ -134,7 +136,6 @@ class PrintController extends Controller
 
     }//end resolveTemplate()
 
-
     /**
      * Generate a print preview with rendered HTML and print-optimized CSS
      *
@@ -152,6 +153,8 @@ class PrintController extends Controller
      * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
      */
     public function preview(): JSONResponse
     {
@@ -191,7 +194,6 @@ class PrintController extends Controller
 
     }//end preview()
 
-
     /**
      * Generate and download a PDF/A-3b compliant document
      *
@@ -209,6 +211,8 @@ class PrintController extends Controller
      * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
      */
     public function downloadPdfA(): DataDownloadResponse | JSONResponse
     {
@@ -250,6 +254,4 @@ class PrintController extends Controller
         }//end try
 
     }//end downloadPdfA()
-
-
 }//end class

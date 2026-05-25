@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-70
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-71
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-72
  */
 
 declare(strict_types=1);
@@ -30,8 +35,6 @@ namespace OCA\DocuDesk\Service;
  */
 class TextAnalysisService
 {
-
-
     /**
      * Constructor for TextAnalysisService
      *
@@ -44,7 +47,6 @@ class TextAnalysisService
     ) {
 
     }//end __construct()
-
 
     /**
      * Count word occurrences for a list of target words in text
@@ -65,13 +67,14 @@ class TextAnalysisService
 
     }//end countWordOccurrences()
 
-
     /**
      * Detect language from text content
      *
      * @param string $text Text content to analyze
      *
      * @return string|null Detected language code or null if detection fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
      */
     public function detectLanguage(string $text): ?string
     {
@@ -79,13 +82,14 @@ class TextAnalysisService
 
     }//end detectLanguage()
 
-
     /**
      * Extract keywords from text content
      *
      * @param string $text Text content to analyze
      *
      * @return array<string> Extracted keywords
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-70
      */
     public function extractKeywords(string $text): array
     {
@@ -134,13 +138,14 @@ class TextAnalysisService
 
     }//end extractKeywords()
 
-
     /**
      * Classify document topic based on text content
      *
      * @param string $text Text content to analyze
      *
      * @return string|null Classified topic or null if classification fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-71
      */
     public function classifyTopic(string $text): ?string
     {
@@ -148,13 +153,14 @@ class TextAnalysisService
 
     }//end classifyTopic()
 
-
     /**
      * Standardize document type classification
      *
      * @param string $documentType Document type to standardize
      *
      * @return string Standardized document type
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-72
      */
     public function standardizeDocumentType(string $documentType): string
     {
@@ -183,6 +189,4 @@ class TextAnalysisService
         return $typeMap[$documentType] ?? $documentType;
 
     }//end standardizeDocumentType()
-
-
 }//end class

@@ -10,6 +10,9 @@
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
  */
 
 declare(strict_types=1);
@@ -44,8 +47,6 @@ use Psr\Log\LoggerInterface;
  */
 class FolderBatchService
 {
-
-
     /**
      * Constructor for FolderBatchService
      *
@@ -69,7 +70,6 @@ class FolderBatchService
 
     }//end __construct()
 
-
     /**
      * Create a batch from an existing Nextcloud folder
      *
@@ -83,6 +83,8 @@ class FolderBatchService
      * @return array<string, mixed> Batch data with batchId, folderId, folderPath, fileCount, files
      *
      * @throws Exception If input is invalid, folder is not found, not a folder, empty, or too large
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function createFolderBatch(?int $folderId=null, ?string $folderPath=null): array
     {
@@ -160,7 +162,6 @@ class FolderBatchService
 
     }//end createFolderBatch()
 
-
     /**
      * Resolve the folder node from either a folder ID or folder path
      *
@@ -176,6 +177,8 @@ class FolderBatchService
      * @return Node The resolved node (type is validated by caller)
      *
      * @throws Exception If neither/both inputs provided (400), or folder not found (404)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     private function resolveFolderNode(?int $folderId, ?string $folderPath, Folder $userFolder): Node
     {
@@ -207,7 +210,6 @@ class FolderBatchService
 
     }//end resolveFolderNode()
 
-
     /**
      * Pick the preferred node when getById returns multiple mounts
      *
@@ -234,7 +236,6 @@ class FolderBatchService
 
     }//end pickPreferredNode()
 
-
     /**
      * Schedule extraction to run after the HTTP response is flushed
      *
@@ -246,6 +247,8 @@ class FolderBatchService
      * @param string $batchId The batch ID to extract
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
     private function scheduleExtraction(string $batchId): void
     {
@@ -300,13 +303,14 @@ class FolderBatchService
 
     }//end scheduleExtraction()
 
-
     /**
      * Enumerate direct file children of a folder (flat, no recursion)
      *
      * @param Folder $folder The folder to enumerate
      *
      * @return File[] Array of file nodes
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     private function enumerateFiles(Folder $folder): array
     {
@@ -320,7 +324,6 @@ class FolderBatchService
         return $files;
 
     }//end enumerateFiles()
-
 
     /**
      * Get the current user ID
@@ -339,6 +342,4 @@ class FolderBatchService
         return $user->getUID();
 
     }//end getCurrentUserId()
-
-
 }//end class

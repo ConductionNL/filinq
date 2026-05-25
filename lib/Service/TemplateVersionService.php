@@ -35,8 +35,6 @@ use Psr\Container\ContainerInterface;
  */
 class TemplateVersionService
 {
-
-
     /**
      * Constructor for TemplateVersionService
      *
@@ -53,7 +51,6 @@ class TemplateVersionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -77,7 +74,6 @@ class TemplateVersionService
 
     }//end getObjectService()
 
-
     /**
      * Create a version snapshot of a template's current state
      *
@@ -89,6 +85,8 @@ class TemplateVersionService
      * @return array The created version object
      *
      * @throws Exception If version creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function createVersion(
         string $templateId,
@@ -128,7 +126,6 @@ class TemplateVersionService
 
     }//end createVersion()
 
-
     /**
      * List versions for a template, ordered by version number descending
      *
@@ -139,6 +136,8 @@ class TemplateVersionService
      * @return array{results: array, total: int} Paginated version results
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getVersions(string $templateId, int $limit=20, int $offset=0): array
     {
@@ -162,7 +161,6 @@ class TemplateVersionService
 
     }//end getVersions()
 
-
     /**
      * Get a single version by UUID
      *
@@ -171,6 +169,8 @@ class TemplateVersionService
      * @return array The version object
      *
      * @throws Exception If the version is not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getVersion(string $versionId): array
     {
@@ -197,7 +197,6 @@ class TemplateVersionService
 
     }//end getVersion()
 
-
     /**
      * Get the next version number for a template
      *
@@ -206,6 +205,8 @@ class TemplateVersionService
      * @return int The next version number (existing count + 1)
      *
      * @throws Exception If counting fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getNextVersionNumber(string $templateId): int
     {
@@ -218,7 +219,6 @@ class TemplateVersionService
         return $result['total'] + 1;
 
     }//end getNextVersionNumber()
-
 
     /**
      * Restore a template to a previous version
@@ -234,6 +234,8 @@ class TemplateVersionService
      * @return array The restored template object
      *
      * @throws Exception If restore fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function restoreVersion(
         string $templateId,
@@ -268,7 +270,6 @@ class TemplateVersionService
 
     }//end restoreVersion()
 
-
     /**
      * Get two versions for client-side diff comparison
      *
@@ -278,6 +279,8 @@ class TemplateVersionService
      * @return array{from: array, to: array} Both version objects
      *
      * @throws Exception If either version is not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
      */
     public function getDiff(string $versionIdFrom, string $versionIdTo): array
     {
@@ -290,6 +293,4 @@ class TemplateVersionService
         ];
 
     }//end getDiff()
-
-
 }//end class

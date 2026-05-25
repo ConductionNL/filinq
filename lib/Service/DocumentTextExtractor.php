@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-43
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-44
  */
 
 declare(strict_types=1);
@@ -33,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocumentTextExtractor
 {
-
-
     /**
      * Constructor for DocumentTextExtractor
      *
@@ -48,13 +49,14 @@ class DocumentTextExtractor
 
     }//end __construct()
 
-
     /**
      * Extract text content from object data
      *
      * @param array<string, mixed> $objectData The document object data
      *
      * @return string The text content, empty string if not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-43
      */
     public function extractTextContent(array $objectData): string
     {
@@ -68,13 +70,14 @@ class DocumentTextExtractor
 
     }//end extractTextContent()
 
-
     /**
      * Normalize date fields in object data
      *
      * @param array<string, mixed> $objectData The document object data
      *
      * @return array<string, string> Normalized date fields
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-44
      */
     public function normalizeDateFields(array $objectData): array
     {
@@ -103,6 +106,4 @@ class DocumentTextExtractor
         return $metadata;
 
     }//end normalizeDateFields()
-
-
 }//end class

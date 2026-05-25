@@ -132,7 +132,7 @@ class RegisterDiscoveryServiceTest extends TestCase
      */
     public function testFetchAvailableRegistersReturnsEmptyOnException(): void
     {
-        $this->mockRegisterService->method('findAll')
+        $this->mockRegisterService->method('findAllSerialized')
             ->willThrowException(new \Exception('Service error'));
 
         $result = $this->service->fetchAvailableRegisters();
@@ -148,13 +148,119 @@ class RegisterDiscoveryServiceTest extends TestCase
      */
     public function testFetchAvailableRegistersReturnsEmptyOnTypeError(): void
     {
-        $this->mockRegisterService->method('findAll')
+        $this->mockRegisterService->method('findAllSerialized')
             ->willThrowException(new \TypeError('Type error'));
 
         $result = $this->service->fetchAvailableRegisters();
         $this->assertEmpty($result);
 
     }//end testFetchAvailableRegistersReturnsEmptyOnTypeError()
+
+
+    /**
+     * Test fetchAvailableRegisters strips `properties` from expanded schemas
+     *
+     * @return void
+     */
+    public function testFetchAvailableRegistersStripsPropertiesFromExpandedSchemas(): void
+    {
+        $this->mockRegisterService->method('findAllSerialized')
+            ->with(
+                $this->isNull(),
+                $this->isNull(),
+                $this->equalTo([]),
+                $this->equalTo([]),
+                $this->equalTo([]),
+                $this->equalTo(['schemas'])
+            )
+            ->willReturn(
+                [
+                    [
+                        'id'      => 1,
+                        'title'   => 'Register A',
+                        'schemas' => [
+                            [
+                                'id'         => 10,
+                                'title'      => 'Schema A',
+                                'properties' => ['foo' => ['type' => 'string']],
+                            ],
+                        ],
+                    ],
+                ]
+            );
+
+        $result = $this->service->fetchAvailableRegisters();
+
+        $this->assertCount(1, $result);
+        $this->assertSame(10, $result[0]['schemas'][0]['id']);
+        $this->assertArrayNotHasKey('properties', $result[0]['schemas'][0]);
+        $this->assertSame('Schema A', $result[0]['schemas'][0]['title']);
+
+    }//end testFetchAvailableRegistersStripsPropertiesFromExpandedSchemas()
+
+
+    /**
+     * Test fetchAvailableRegisters passes orphan schema IDs through unchanged
+     *
+     * Orphan IDs are bare ints/strings (not arrays), so `filterSchemaProperties`
+     * passes them through without trying to strip `properties`.
+     *
+     * @return void
+     */
+    public function testFetchAvailableRegistersPassesOrphanIdsThrough(): void
+    {
+        $this->mockRegisterService->method('findAllSerialized')
+            ->willReturn(
+                [
+                    [
+                        'id'      => 1,
+                        'schemas' => [
+                            [
+                                'id'         => 10,
+                                'title'      => 'Schema A',
+                                'properties' => [],
+                            ],
+                            999,
+                            'uuid-orphan-abc',
+                        ],
+                    ],
+                ]
+            );
+
+        $result = $this->service->fetchAvailableRegisters();
+
+        $this->assertCount(3, $result[0]['schemas']);
+        $this->assertIsArray($result[0]['schemas'][0]);
+        $this->assertSame(999, $result[0]['schemas'][1]);
+        $this->assertSame('uuid-orphan-abc', $result[0]['schemas'][2]);
+
+    }//end testFetchAvailableRegistersPassesOrphanIdsThrough()
+
+
+    /**
+     * Test fetchAvailableRegisters handles a register with an empty schemas array
+     *
+     * @return void
+     */
+    public function testFetchAvailableRegistersHandlesEmptySchemas(): void
+    {
+        $this->mockRegisterService->method('findAllSerialized')
+            ->willReturn(
+                [
+                    [
+                        'id'      => 1,
+                        'title'   => 'Register A',
+                        'schemas' => [],
+                    ],
+                ]
+            );
+
+        $result = $this->service->fetchAvailableRegisters();
+
+        $this->assertCount(1, $result);
+        $this->assertSame([], $result[0]['schemas']);
+
+    }//end testFetchAvailableRegistersHandlesEmptySchemas()
 
 
 }//end class

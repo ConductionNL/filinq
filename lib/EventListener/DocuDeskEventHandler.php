@@ -13,6 +13,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
  */
 
 declare(strict_types=1);
@@ -37,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventHandler
 {
-
-
     /**
      * Handles object creation events
      *
@@ -49,6 +49,8 @@ class DocuDeskEventHandler
      * @param EnrichmentRunner   $enrichmentRunner The enrichment runner
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function handleObjectCreated(
         ObjectCreatedEvent $event,
@@ -73,7 +75,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectCreated()
 
-
     /**
      * Handles object update events
      *
@@ -84,6 +85,8 @@ class DocuDeskEventHandler
      * @param EnrichmentRunner   $enrichmentRunner The enrichment runner
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -124,7 +127,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectUpdated()
 
-
     /**
      * Handles object deletion events
      *
@@ -132,6 +134,8 @@ class DocuDeskEventHandler
      * @param LoggerInterface    $logger The logger instance
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function handleObjectDeleted(ObjectDeletedEvent $event, LoggerInterface $logger): void
     {
@@ -152,7 +156,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectDeleted()
 
-
     /**
      * Check if content fields have changed between old and new object data
      *
@@ -160,6 +163,8 @@ class DocuDeskEventHandler
      * @param array<string, mixed> $oldObjectData The old object data
      *
      * @return bool True if content has changed
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     private function hasContentChanged(array $objectData, array $oldObjectData): bool
     {
@@ -173,6 +178,4 @@ class DocuDeskEventHandler
         return false;
 
     }//end hasContentChanged()
-
-
 }//end class

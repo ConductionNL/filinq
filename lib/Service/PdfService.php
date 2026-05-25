@@ -13,6 +13,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
  */
 
 declare(strict_types=1);
@@ -39,8 +45,6 @@ use Psr\Log\LoggerInterface;
  */
 class PdfService
 {
-
-
     /**
      * Constructor for PdfService
      *
@@ -55,7 +59,6 @@ class PdfService
     ) {
 
     }//end __construct()
-
 
     /**
      * Render a PDF from a Twig template string and data context
@@ -72,6 +75,8 @@ class PdfService
      * @return string PDF binary content
      *
      * @throws Exception If Twig rendering or PDF generation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
      */
     public function renderPdf(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -84,7 +89,6 @@ class PdfService
 
     }//end renderPdf()
 
-
     /**
      * Render HTML from a Twig template string and data context (for print preview)
      *
@@ -95,6 +99,8 @@ class PdfService
      *                                - orientation: P (portrait) or L (landscape). Default: P
      *
      * @return string Rendered HTML with print-optimized CSS injected
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
      */
     public function renderHtmlPreview(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -111,13 +117,14 @@ class PdfService
 
     }//end renderHtmlPreview()
 
-
     /**
      * Ensure the mPDF temp directory exists and is writable
      *
      * @param string $tempDir The temp directory path
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
      */
     private function ensureTempDirectory(string $tempDir): void
     {
@@ -129,7 +136,6 @@ class PdfService
 
     }//end ensureTempDirectory()
 
-
     /**
      * Build mPDF configuration array from options
      *
@@ -140,6 +146,8 @@ class PdfService
      * @param array  $options PDF configuration options
      *
      * @return array<string, mixed> mPDF configuration
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
      */
     private function buildMpdfConfig(string $tempDir, array $options): array
     {
@@ -181,7 +189,6 @@ class PdfService
 
     }//end buildMpdfConfig()
 
-
     /**
      * Get the path to the bundled font directory
      *
@@ -198,7 +205,6 @@ class PdfService
 
     }//end getFontDirectory()
 
-
     /**
      * Build print-optimized CSS for PDF/A and print preview output
      *
@@ -209,6 +215,8 @@ class PdfService
      * @param string $orientation Page orientation (P for portrait, L for landscape)
      *
      * @return string HTML style block with print-optimized CSS
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
@@ -243,7 +251,6 @@ class PdfService
 
     }//end buildPrintCss()
 
-
     /**
      * Generate a PDF from rendered HTML content
      *
@@ -257,6 +264,8 @@ class PdfService
      * @return string PDF binary content
      *
      * @throws Exception If mPDF fails to generate the PDF
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
      */
     private function generatePdf(string $html, array $options): string
     {
@@ -302,6 +311,4 @@ class PdfService
         }//end try
 
     }//end generatePdf()
-
-
 }//end class

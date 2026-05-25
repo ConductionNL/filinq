@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
  */
 
 declare(strict_types=1);
@@ -34,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchExtractionService
 {
-
-
     /**
      * Constructor for BatchExtractionService
      *
@@ -52,7 +52,6 @@ class BatchExtractionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Extract and detect entities for the next pending file in a batch.
@@ -76,6 +75,8 @@ class BatchExtractionService
      *   }
      *
      * @throws Exception When the batch cannot be found.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
     public function extractNext(string $batchId): array
     {
@@ -146,6 +147,4 @@ class BatchExtractionService
         ];
 
     }//end extractNext()
-
-
 }//end class

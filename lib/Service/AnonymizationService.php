@@ -17,6 +17,10 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
  */
 
 declare(strict_types=1);
@@ -40,8 +44,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationService
 {
-
-
     /**
      * Constructor for AnonymizationService
      *
@@ -61,7 +63,6 @@ class AnonymizationService
 
     }//end __construct()
 
-
     /**
      * Get an OpenRegister service or mapper by class name
      *
@@ -70,6 +71,8 @@ class AnonymizationService
      * @return mixed The service instance
      *
      * @throws \RuntimeException If OpenRegister is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
      */
     private function getOpenRegisterService(string $className): mixed
     {
@@ -81,7 +84,6 @@ class AnonymizationService
 
     }//end getOpenRegisterService()
 
-
     /**
      * Extract text from a file and detect entities
      *
@@ -90,6 +92,8 @@ class AnonymizationService
      * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
     public function extractAndDetectEntities(int $fileId): array
     {
@@ -124,7 +128,6 @@ class AnonymizationService
 
     }//end extractAndDetectEntities()
 
-
     /**
      * Anonymize entities in a document
      *
@@ -145,6 +148,7 @@ class AnonymizationService
      * @throws Exception If anonymization fails
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     public function anonymizeDocument(
         int $fileId,

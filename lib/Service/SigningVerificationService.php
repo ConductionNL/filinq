@@ -18,8 +18,12 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for verifying document signatures
@@ -32,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class SigningVerificationService
 {
-
-
     /**
      * Constructor
      *
@@ -49,7 +51,6 @@ class SigningVerificationService
 
     }//end __construct()
 
-
     /**
      * Verify all signatures in a document
      *
@@ -58,7 +59,7 @@ class SigningVerificationService
      *
      * @return array<string, mixed> Verification result
      *
-     * @throws \RuntimeException If file cannot be accessed
+     * @throws RuntimeException If file cannot be accessed
      */
     public function verifyDocument(int $fileId, string $userId): array
     {
@@ -66,12 +67,12 @@ class SigningVerificationService
         $nodes      = $userFolder->getById($fileId);
 
         if (empty($nodes) === true) {
-            throw new \RuntimeException('File not found: '.$fileId);
+            throw new RuntimeException('File not found: '.$fileId);
         }
 
         $file = $nodes[0];
-        if (($file instanceof \OCP\Files\File) === false) {
-            throw new \RuntimeException('Node is not a file: '.$fileId);
+        if (($file instanceof File) === false) {
+            throw new RuntimeException('Node is not a file: '.$fileId);
         }
 
         $content    = $file->getContent();
@@ -82,11 +83,10 @@ class SigningVerificationService
             'fileName'   => $file->getName(),
             'signatures' => $signatures,
             'isValid'    => $this->allSignaturesValid(signatures: $signatures),
-            'verifiedAt' => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'verifiedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         ];
 
     }//end verifyDocument()
-
 
     /**
      * Extract signature information from a PDF document
@@ -100,7 +100,7 @@ class SigningVerificationService
         $signatures = [];
 
         $pattern = '/\/Type\s*\/Sig/';
-        $matches = preg_match_all($pattern, $pdfContent, $found);
+        $matches = preg_match_all($pattern, $pdfContent);
 
         if ($matches === false || $matches === 0) {
             return $signatures;
@@ -142,7 +142,6 @@ class SigningVerificationService
 
     }//end extractSignatures()
 
-
     /**
      * Check if all signatures are valid
      *
@@ -161,6 +160,4 @@ class SigningVerificationService
         return true;
 
     }//end allSignaturesValid()
-
-
 }//end class

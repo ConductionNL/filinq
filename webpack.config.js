@@ -38,6 +38,10 @@ webpackConfig.resolve.alias = {
 	'pinia$': path.resolve(__dirname, 'node_modules/pinia'),
 	'@nextcloud/vue$': path.resolve(__dirname, 'node_modules/@nextcloud/vue'),
 	'@nextcloud/dialogs': path.resolve(__dirname, 'node_modules/@nextcloud/dialogs'),
+	// @nextcloud/axios 2.6.0+ ships ESM-only (no dist/index.cjs).
+	// Point at the ESM build; webpack 5 handles it natively. Replaces the
+	// older alias that targeted dist/index.cjs (no longer present in 2.6+).
+	'@nextcloud/axios$': path.resolve(__dirname, 'node_modules/@nextcloud/axios/dist/index.js'),
 }
 
 // Share Vue + @nextcloud/vue + pinia + icons + @conduction/nextcloud-vue

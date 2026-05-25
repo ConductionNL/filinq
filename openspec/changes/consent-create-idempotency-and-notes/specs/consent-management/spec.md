@@ -2,131 +2,194 @@
 status: draft
 ---
 
-# Consent Management — Delta for Idempotent createConsentRequest and Sentinel-Tagged Notes
+# Consent Management — Delta for Event-Driven Consent Creation and Idempotent createConsentRequest
 
-This delta extends the existing `consent-management` capability so `ConsentService::createConsentRequest()` is idempotent on `(documentId, entityKey)`. Re-submits update operator-controlled fields and preserve workflow state. Multiple publication bases supplied per entity are serialised into the existing `legalBasis` (first) and `notes` (rest, in a sentinel-tagged region) fields. Notification dispatch remains stubbed (existing CONS-049 reaffirmed).
+This delta closes the canonical `consent-management` REQ-CONS-07 (CONS-048 / CONS-050) gap by giving `ConsentService::createConsentRequest()` an automated caller. The caller is a Symfony event listener subscribed to `OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent` (added in PR #1503's amend). When the event reports `skipAnonymization: false → true` on an `EntityRelation`, the listener creates (or updates) a `publicationConsent` record for the entity on the document. `PolicyMatchService` (per `entity-publication-policies`) decides the consent state; prohibition matches result in a typed exception, which the listener handles by reversing the PATCH and emitting an operator notification.
+
+`createConsentRequest()` becomes idempotent on `(documentId, entityKey, scope: "document")` so multiple events for the same entity-on-document collapse to one record. Notification dispatch remains stubbed.
 
 ## ADDED Requirements
 
+### Requirement: A listener MUST subscribe to `EntityRelationDecisionUpdatedEvent`
+
+DocuDesk MUST register a Symfony event listener for `OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent`. The listener MUST inspect the event via the `isSkipAnonymizationActivated()` convenience helper and:
+
+- Take action ONLY when the helper returns `true` (i.e. `skipAnonymization` transitioned from `false` to `true` in this change).
+- Ignore events that report only a `bases` change.
+- Ignore reversal events (`skipAnonymization: true → false`) to prevent infinite loops triggered by the listener's own reversal write.
+
+When the helper returns `true`, the listener MUST resolve the relation's entity and document context and call `ConsentService::createConsentRequest()`.
+
+#### Scenario: Skip activation triggers consent creation
+
+- **GIVEN** an EntityRelation with `skipAnonymization: false`
+- **WHEN** an operator PATCHes the relation setting `skipAnonymization: true`
+- **THEN** OR persists the change AND dispatches `EntityRelationDecisionUpdatedEvent`
+- **AND** the DocuDesk listener calls `ConsentService::createConsentRequest()` for the relation's entity
+
+#### Scenario: Bases-only change does not trigger consent creation
+
+- **GIVEN** an EntityRelation with `skipAnonymization: false`
+- **WHEN** the operator PATCHes the relation setting `bases: ["persoonsgegevens"]` only
+- **THEN** the listener inspects `isSkipAnonymizationActivated()` (returns false)
+- **AND** `createConsentRequest()` is NOT called
+- **AND** no consent record is created
+
+#### Scenario: Reversal event does not trigger consent creation
+
+- **GIVEN** an EntityRelation with `skipAnonymization: true`
+- **WHEN** the listener (or any other actor) reverses the flag by PATCHing `skipAnonymization: false`
+- **THEN** the resulting event has `isSkipAnonymizationActivated()` false
+- **AND** the listener takes no further action
+- **AND** the original consent record (if any) remains untouched by the reversal
+
 ### Requirement: `createConsentRequest` MUST be idempotent on `(documentId, entityKey)`
 
-When `createConsentRequest` is called with a `documentId` and an `entityKey` (or, if `entityKey` is not supplied, an `entityText`) that matches an existing publicationConsent record, the method MUST update that record rather than create a duplicate. The match MUST honour scope: only `scope: "document"` records are considered for matching (the entity-scope flavour of `publicationConsent` records standing consents and is unrelated to per-document workflow).
+When `createConsentRequest` is called with a `documentId` and an `entityKey` (or, if `entityKey` is null, an `entityText`) that matches an existing `publicationConsent` record with `scope: "document"`, the method MUST update that record rather than create a duplicate. `scope: "entity"` (standing-consent) records MUST NEVER be matched as duplicates of a per-document call.
 
-The fields updated on match MUST be: `entityType`, `legalBasis`, `notes`, `contactEmail`, `contactAddress`. The fields PRESERVED on match (i.e. NOT overwritten) MUST be: `notificationStatus`, `notificationSentAt`, `objectionDeadline`, `objectionReceivedAt`, `objectionReason`, `consentStatus`, `policyMatch`, `publicationDecision`. The exception: `policyMatch` MAY be set if it was previously null and a match now exists; it MUST NOT be cleared if a match previously existed.
+The fields updated on match MUST be: `entityType`, `legalBasis`, `notes`, `contactEmail`, `contactAddress`. The fields PRESERVED on match (i.e. NOT overwritten) MUST be: `notificationStatus`, `notificationSentAt`, `objectionDeadline`, `objectionReceivedAt`, `objectionReason`, `consentStatus`, `publicationDecision`. The `policyMatch` field MAY be SET if it was previously null and `PolicyMatchService::match()` now returns a match; it MUST NOT be cleared on match if it previously had a value.
+
+The method's return shape MUST include a `wasUpdated` boolean — `true` if an existing record was matched-and-updated, `false` if a new record was created.
 
 #### Scenario: First call creates a new record
 
-- **GIVEN** no existing publicationConsent record matches `(documentId, entityKey)`
-- **WHEN** `createConsentRequest($documentId, "PERSON", "Burgemeester De Vries", $register, $schema, [entityKey: "X"])` is called
+- **GIVEN** no existing publicationConsent record matches `(documentId, entityKey, scope: "document")`
+- **WHEN** `createConsentRequest($documentId, "PERSON", "Anneke Jansen", $register, $schema, [entityKey: "X"])` is called
 - **THEN** a new record is created
-- **AND** the response contains the new record's UUID and `wasUpdated: false`
+- **AND** the result indicates `wasUpdated: false`
 
-#### Scenario: Re-submit with same key updates the existing record
+#### Scenario: Re-event for the same entity updates the existing record
 
-- **GIVEN** a publicationConsent record exists with `(documentId, entityKey) = ("doc-1", "X")`, `legalBasis: "Old basis"`, `notificationStatus: "sent"`, `notificationSentAt: "2026-04-01T10:00:00Z"`
-- **WHEN** `createConsentRequest("doc-1", "PERSON", "Burgemeester De Vries", $register, $schema, [entityKey: "X", legalBasis: "New basis"])` is called
-- **THEN** the existing record is updated: `legalBasis: "New basis"`
-- **AND** `notificationStatus: "sent"` and `notificationSentAt: "2026-04-01T10:00:00Z"` are PRESERVED
-- **AND** the response contains the existing record's UUID and `wasUpdated: true`
-- **AND** no second record is created
+- **GIVEN** a publicationConsent record exists with `(documentId: "doc-1", entityKey: "X", scope: "document")`, `legalBasis: "Old basis"`, `notificationStatus: "sent"`, `notificationSentAt: "2026-04-01T10:00:00Z"`
+- **WHEN** another EntityRelation for the same entity on the same document fires `EntityRelationDecisionUpdatedEvent` with `skipAnonymization: false → true`
+- **THEN** the listener calls `createConsentRequest` for the second time on the same `(documentId, entityKey)`
+- **AND** the existing record is matched-and-updated rather than duplicated
+- **AND** workflow state (`notificationStatus`, `notificationSentAt`) is preserved
+- **AND** the result indicates `wasUpdated: true`
 
-#### Scenario: Workflow state is preserved across re-submits
+#### Scenario: Workflow state preserved across re-events
 
 - **GIVEN** a publicationConsent record with `consentStatus: "objection_received"`, `objectionReceivedAt: "2026-04-15T..."`, `objectionReason: "..."`
-- **WHEN** `createConsentRequest` is called for the same `(documentId, entityKey)` with operator-updated `legalBasis` and `notes`
-- **THEN** the `consentStatus`, `objectionReceivedAt`, `objectionReason` fields are preserved
-- **AND** only `legalBasis`, `notes` are updated
-- **AND** the WOO workflow timer (`objectionDeadline`) is NOT reset
+- **WHEN** `createConsentRequest` is called for the same `(documentId, entityKey)` again
+- **THEN** `consentStatus`, `objectionReceivedAt`, and `objectionReason` are preserved unchanged
+- **AND** the WOO timer (`objectionDeadline`) is NOT reset
 
 #### Scenario: Match falls back to entityText when entityKey is null
 
-- **GIVEN** a legacy publicationConsent record with `entityKey: null` and `entityText: "Karin de Vries"`
-- **WHEN** `createConsentRequest` is called for the same `documentId` with `entityKey: null` and `entityText: "Karin de Vries"`
+- **GIVEN** a legacy publicationConsent record with `entityKey: null` and `entityText: "Karin de Vries"`, `scope: "document"`
+- **WHEN** `createConsentRequest` is called for the same documentId with `entityKey: null` and `entityText: "Karin de Vries"`
 - **THEN** the lookup matches by `entityText`
 - **AND** the record is updated rather than duplicated
 
 #### Scenario: scope=entity records are not matched
 
-- **GIVEN** a `scope: "entity"` `publicationConsent` record (a standing consent) for "Karin de Vries"
-- **WHEN** `createConsentRequest` is called for documentId X (per-doc, scope=document) for the same entity
-- **THEN** the standing consent record is NOT matched as a duplicate
+- **GIVEN** a `scope: "entity"` standing-consent record for "Karin de Vries"
+- **WHEN** `createConsentRequest` is called for documentId X (creating a `scope: "document"` record for the same entity)
+- **THEN** the standing-consent record is NOT matched
 - **AND** a new `scope: "document"` record is created
-- **AND** the standing consent record is consulted by `PolicyMatchService` and may produce a `policyMatch` reference on the new record (per `entity-publication-policies`)
+- **AND** the standing-consent record is still consulted by `PolicyMatchService` and MAY produce a `policyMatch` reference on the new record (per `entity-publication-policies`)
 
-### Requirement: Multiple publication bases MUST serialise into legalBasis + notes
+#### Scenario: policyMatch is set on update when newly applicable
 
-When `createConsentRequest` is called with an `extra.publicationBases` array (or equivalent), the bases MUST be serialised:
+- **GIVEN** a publicationConsent record with `policyMatch: null` and `consentStatus: "pending"`
+- **AND** a new standing-consent record now matches the same entity
+- **WHEN** `createConsentRequest` is called for the existing record's `(documentId, entityKey)`
+- **THEN** the record's `policyMatch` is SET to the standing-consent UUID
+- **AND** the record's `consentStatus` is unchanged (workflow state preserved)
 
-1. The first element MUST be set as `legalBasis` (verbatim, max 500 chars per existing schema constraint).
-2. If more than one element is supplied, the remaining elements MUST be serialised into `notes` as a markdown bullet list inside a sentinel-tagged region.
+#### Scenario: policyMatch is not cleared on update when no longer matching
 
-The sentinel-tagged region MUST use the markers `<!-- docudesk:additional-publication-bases:begin -->` and `<!-- docudesk:additional-publication-bases:end -->` (literal HTML comment syntax — preserved by the markdown renderer used by the consent UI).
+- **GIVEN** a publicationConsent record with `policyMatch: "<some uuid>"`, `consentStatus: "consent_given"`
+- **AND** the referenced rule has been deactivated since
+- **WHEN** `createConsentRequest` is called again for the same `(documentId, entityKey)`
+- **THEN** the record's `policyMatch` is NOT cleared
+- **AND** the record's `consentStatus` is preserved
 
-The body of the region MUST be:
+### Requirement: Prohibition match MUST throw `PolicyRejectedException`
 
-```
-<!-- docudesk:additional-publication-bases:begin -->
-**Aanvullende publicatiegrondslagen:**
-- <basis 2>
-- <basis 3>
-<!-- docudesk:additional-publication-bases:end -->
-```
+When `PolicyMatchService::match()` returns a prohibition match during `createConsentRequest`, the method MUST throw `OCA\DocuDesk\Exception\PolicyRejectedException` (a new typed exception). The exception MUST carry the rule UUID and rule name so the listener can use them in operator-facing notification text. No publicationConsent record MUST be created or updated.
 
-On a re-submit, the helper MUST locate the existing bracketed region (matching begin/end sentinels) and replace ONLY that region with the freshly-rendered content. Operator-authored content outside the brackets MUST be preserved. If the new submit has only one element in `publicationBases`, the bracketed region MUST be removed entirely (notes return to operator-authored content only).
+#### Scenario: Prohibition match throws typed exception
 
-#### Scenario: Single basis populates legalBasis only
+- **GIVEN** an active `publicationProhibition` rule matching "Beschermde Getuige A"
+- **WHEN** `createConsentRequest` is called for that entity
+- **THEN** `PolicyMatchService::match()` returns a prohibition outcome
+- **AND** `createConsentRequest` throws `PolicyRejectedException` with the rule UUID and rule name
+- **AND** no publicationConsent record is created or updated
 
-- **WHEN** `createConsentRequest` is called with `publicationBases: ["Woo art. 3.1"]`
-- **THEN** the record has `legalBasis: "Woo art. 3.1"`
-- **AND** `notes` does NOT contain any sentinel-tagged region
+### Requirement: Listener MUST handle PolicyRejectedException by reversing the PATCH and notifying
 
-#### Scenario: Multiple bases populate legalBasis + sentinel-tagged notes
+When the listener catches `PolicyRejectedException` from `createConsentRequest`, the listener MUST:
 
-- **WHEN** `createConsentRequest` is called with `publicationBases: ["Woo art. 3.1", "AVG art. 6 lid 1 sub a", "Prior consent dd. 2026-04-12"]`
-- **THEN** the record has `legalBasis: "Woo art. 3.1"`
-- **AND** `notes` contains the sentinel-tagged region with bullets for the other two bases
+1. Call `EntityRelationMapper::updateDecisionMetadata($relation, ['skipAnonymization' => false], $actingUser)` to revert the relation to `skipAnonymization: false`.
+2. Dispatch a Nextcloud notification (via `\OCP\Notification\IManager`) to the acting user. The notification MUST identify the entity text + the matching prohibition rule's name + a deep link / reference to the document review surface.
+3. Allow the reversal write's own event to fire — the listener's `isSkipAnonymizationActivated()` filter MUST cause the reversal event to be a no-op, preventing an infinite loop.
 
-#### Scenario: Re-submit replaces the bracketed region only
+#### Scenario: Prohibition rejection reverses the PATCH
 
-- **GIVEN** a record with operator-authored notes content "Reviewed by privacy officer 2026-04-12." followed by a sentinel-tagged region with two additional bases
-- **WHEN** the call is re-submitted with `publicationBases: ["Woo art. 3.1", "AVG art. 6 lid 1 sub e"]` (one additional basis instead of two)
-- **THEN** the operator's note about the privacy officer is PRESERVED
-- **AND** the bracketed region is replaced with the new single bullet
-- **AND** no duplicate sentinel pairs exist in the resulting notes
+- **GIVEN** an active prohibition rule matching the entity
+- **WHEN** the operator PATCHes `skipAnonymization: true` on a relation for that entity
+- **THEN** the original PATCH succeeds (post-commit event)
+- **AND** the listener fires, catches `PolicyRejectedException` from `createConsentRequest`
+- **AND** the listener calls `updateDecisionMetadata` reversing `skipAnonymization` to `false`
+- **AND** a follow-up GET on the relation shows `skipAnonymization: false`
+- **AND** a Nextcloud notification appears for the acting user with the rule name + entity reference
 
-#### Scenario: Shrinking to one basis removes the bracketed region
+#### Scenario: Reversal event does not re-trigger the prohibition handler
 
-- **GIVEN** a record with a sentinel-tagged region in notes
-- **WHEN** the call is re-submitted with `publicationBases: ["Woo art. 3.1"]` (single element)
-- **THEN** the bracketed region is removed entirely
-- **AND** any operator-authored content outside it is preserved
+- **GIVEN** the listener has just reversed a PATCH via `updateDecisionMetadata($relation, ['skipAnonymization' => false], ...)`
+- **WHEN** OR dispatches a new `EntityRelationDecisionUpdatedEvent` for the reversal
+- **THEN** the listener inspects `isSkipAnonymizationActivated()` (returns false)
+- **AND** the listener takes no action on the reversal event
+- **AND** no infinite loop occurs
 
-#### Scenario: Malformed sentinel region falls back to append
+### Requirement: Listener failure MUST NOT roll back the PATCH
 
-- **GIVEN** a record where the operator manually broke the sentinel pair (e.g. removed the closing tag)
-- **WHEN** a re-submit happens
-- **THEN** the helper logs a warning
-- **AND** treats the situation as "no managed region present"
-- **AND** appends a fresh region at the end of the existing notes
-- **AND** the resulting record has at most one valid bracketed pair
+When the listener catches an exception other than `PolicyRejectedException` from `createConsentRequest` (e.g. database error, third-party listener failure, OR transient outage), the listener MUST:
+
+1. Log the failure at error level with the relation UUID, entity context, and exception detail.
+2. Emit a Nextcloud notification to the acting user indicating that consent creation failed and they should retry (toggle skip off then on again).
+3. NOT reverse the PATCH. The operator's decision stands; the consent record is missing, but the decision flag persists.
+
+This contract differs from `PolicyRejectedException` because generic failures are operational issues, not policy decisions. Reversing the PATCH on every operational error would mask the operator's intent.
+
+#### Scenario: Generic exception preserves the PATCH
+
+- **GIVEN** an EntityRelation with `skipAnonymization: false`
+- **AND** `createConsentRequest` will fail with a `RuntimeException` (e.g. database connection lost)
+- **WHEN** the operator PATCHes the relation setting `skipAnonymization: true`
+- **THEN** the listener fires and catches the RuntimeException
+- **AND** the failure is logged at error level
+- **AND** a Nextcloud notification is emitted to the acting user
+- **AND** the relation's `skipAnonymization` remains `true` (NOT reversed)
+- **AND** no consent record exists for the entity (the operational failure left a gap that the operator can fix by retrying)
 
 ### Requirement: Notification dispatch MUST stay stubbed in v1
 
-This delta does NOT add automated notification dispatch. publicationConsent records created with `consentStatus: "pending"` MUST have `notificationStatus: "pending"` and a computed `objectionDeadline`, but NO email or postal notification is sent automatically. Operators advance `notificationStatus` manually via the existing `PUT /api/consents/{id}` endpoint.
+This delta does NOT add automated email or postal notification dispatch for the publicationConsent workflow. publicationConsent records created via the new flow with `consentStatus: "pending"` MUST have `notificationStatus: "pending"` and a computed `objectionDeadline`, but NO email or postal notification is sent automatically.
 
-This reaffirms existing requirement CONS-049 from the canonical `consent-management` spec.
+Operators advance `notificationStatus` manually via the existing `PUT /api/consents/{id}` endpoint once they have sent the notification through their out-of-band channels.
 
-#### Scenario: New pending record does not trigger SMTP
+This reaffirms existing requirement CONS-049 from the canonical `consent-management` spec. A separate change `publicationconsent-notification-dispatch` will add the real notification stack; this delta does not need replacing when that lands.
 
-- **GIVEN** a fresh DocuDesk install
-- **WHEN** `createConsentRequest` creates a new record with `consentStatus: "pending"`
-- **THEN** no SMTP activity is observed
-- **AND** no entry is added to any notification-dispatch log
-- **AND** `notificationStatus` is `pending` and `notificationSentAt` is null
+#### Scenario: Pending record does not trigger SMTP
+
+- **GIVEN** the event listener creates a new publicationConsent record with `consentStatus: "pending"`
+- **WHEN** the record is inspected
+- **THEN** `notificationStatus: "pending"` and `notificationSentAt: null`
+- **AND** no SMTP activity is observed (no log entry indicating a send attempt)
+- **AND** `objectionDeadline` is set to the configured period (28 days by default) from the moment the listener created the record
+
+#### Scenario: Operator advances notification status manually
+
+- **GIVEN** a pending publicationConsent record
+- **WHEN** the operator PUTs `{notificationStatus: "sent", notificationSentAt: "<ISO timestamp>"}` to `/api/consents/{id}`
+- **THEN** the record is updated per existing CONS-002 transitions
+- **AND** the WOO workflow proceeds normally from that point
 
 ### Requirement: The change MUST be additive and non-breaking
 
-Existing direct callers of `createConsentRequest()` (e.g. via `POST /api/consents`) MUST see identical behaviour for inputs that don't match any existing record. The idempotency upgrade is invisible for callers that always provide unique `(documentId, entityKey)` combinations. The serialisation logic only runs when `publicationBases[]` has more than one element; single-basis or no-basis callers are unaffected.
+Existing direct callers of `createConsentRequest()` (e.g. via `POST /api/consents`) MUST see behaviour unchanged for inputs that don't match any existing record. The idempotency upgrade is invisible for callers that always provide unique `(documentId, entityKey)` combinations. The listener subscribes to a new event; it does NOT alter any existing event handlers or existing call paths.
 
 #### Scenario: Direct API caller with unique key creates a record as before
 
@@ -134,3 +197,9 @@ Existing direct callers of `createConsentRequest()` (e.g. via `POST /api/consent
 - **WHEN** the call is made
 - **THEN** a new record is created
 - **AND** behaviour is identical to pre-change
+
+#### Scenario: Existing event handlers are unaffected
+
+- **WHEN** other Symfony events fire (e.g. `ObjectCreatedEvent`, `ObjectUpdatedEvent`, `ObjectDeletedEvent`)
+- **THEN** the new listener does NOT interfere
+- **AND** the existing handlers for those events continue to behave per their existing contracts

@@ -29,15 +29,12 @@ namespace OCA\DocuDesk\Service\Signing;
  */
 interface SigningProviderInterface
 {
-
-
     /**
      * Get the unique identifier for this provider
      *
      * @return string The provider identifier
      */
     public function getIdentifier(): string;
-
 
     /**
      * Initiate a signing flow for a document
@@ -58,7 +55,6 @@ interface SigningProviderInterface
         array $options=[]
     ): array;
 
-
     /**
      * Check the status of an ongoing signing flow
      *
@@ -67,7 +63,6 @@ interface SigningProviderInterface
      * @return array<string, mixed> Status with keys: status, signers, completedAt
      */
     public function checkStatus(string $externalId): array;
-
 
     /**
      * Download the signed document from the provider
@@ -78,7 +73,6 @@ interface SigningProviderInterface
      */
     public function downloadSignedDocument(string $externalId): string;
 
-
     /**
      * Cancel an ongoing signing flow
      *
@@ -88,7 +82,6 @@ interface SigningProviderInterface
      */
     public function cancelSigning(string $externalId): bool;
 
-
     /**
      * Check if this provider supports a given signature level
      *
@@ -97,6 +90,4 @@ interface SigningProviderInterface
      * @return bool True if the level is supported
      */
     public function supportsLevel(string $level): bool;
-
-
 }//end interface

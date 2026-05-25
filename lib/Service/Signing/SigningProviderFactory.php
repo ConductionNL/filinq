@@ -20,6 +20,7 @@ namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Factory for resolving signing providers
@@ -39,7 +40,6 @@ class SigningProviderFactory
      * @var array<string, SigningProviderInterface>
      */
     private array $providers = [];
-
 
     /**
      * Constructor
@@ -62,7 +62,6 @@ class SigningProviderFactory
 
     }//end __construct()
 
-
     /**
      * Get the currently configured signing provider
      *
@@ -80,7 +79,6 @@ class SigningProviderFactory
 
     }//end getActiveProvider()
 
-
     /**
      * Get a specific provider by identifier
      *
@@ -88,18 +86,17 @@ class SigningProviderFactory
      *
      * @return SigningProviderInterface The requested provider
      *
-     * @throws \RuntimeException If the provider is not available
+     * @throws RuntimeException If the provider is not available
      */
     public function getProvider(string $identifier): SigningProviderInterface
     {
         if (isset($this->providers[$identifier]) === false) {
-            throw new \RuntimeException('Signing provider not available: '.$identifier);
+            throw new RuntimeException('Signing provider not available: '.$identifier);
         }
 
         return $this->providers[$identifier];
 
     }//end getProvider()
-
 
     /**
      * Get all available provider identifiers
@@ -111,6 +108,4 @@ class SigningProviderFactory
         return array_keys($this->providers);
 
     }//end getAvailableProviders()
-
-
 }//end class
