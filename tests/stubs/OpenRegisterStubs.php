@@ -31,39 +31,93 @@ class ObjectService
 
 
     /**
-     * Find an object
+     * Find an object by id
+     *
+     * @param string $id       Object UUID
+     * @param string $register Register slug
+     * @param string $schema   Schema slug
      *
      * @return mixed
      */
-    public function find()
+    public function find(string $id='', string $register='', string $schema='')
     {
         return null;
-    }
+
+    }//end find()
 
 
     /**
      * Save an object
      *
+     * @param array  $object   Object data
+     * @param string $register Register slug
+     * @param string $schema   Schema slug
+     *
      * @return mixed
      */
-    public function saveObject()
+    public function saveObject(array $object=[], string $register='', string $schema='')
     {
         return null;
-    }
+
+    }//end saveObject()
 
 
     /**
-     * Search objects
+     * Delete an object
+     *
+     * @param string $uuid Object UUID
+     *
+     * @return void
+     */
+    public function deleteObject(string $uuid='')
+    {
+
+    }//end deleteObject()
+
+
+    /**
+     * Build a search query
+     *
+     * @param array  $requestParams Search params
+     * @param string $register      Register slug
+     * @param string $schema        Schema slug
+     *
+     * @return array
+     */
+    public function buildSearchQuery(array $requestParams=[], string $register='', string $schema='')
+    {
+        return [];
+
+    }//end buildSearchQuery()
+
+
+    /**
+     * Search objects (paginated)
+     *
+     * @param array $query Search query
+     *
+     * @return array{results: array, total: int}
+     */
+    public function searchObjectsPaginated(array $query=[])
+    {
+        return ['results' => [], 'total' => 0];
+
+    }//end searchObjectsPaginated()
+
+
+    /**
+     * Search objects (legacy)
      *
      * @return array
      */
     public function searchObjects()
     {
         return [];
-    }
+
+    }//end searchObjects()
 
 
-}
+}//end class
 
 /**
  * Stub for RegisterService
@@ -83,13 +137,14 @@ class RegisterService
      *
      * @return array
      */
-    public function findAll($limit = null, $offset = null, $filters = [], $searchConditions = [], $searchParams = [], $_extend = [])
+    public function findAll($limit=null, $offset=null, $filters=[], $searchConditions=[], $searchParams=[], $_extend=[])
     {
         return [];
-    }
+
+    }//end findAll()
 
 
-}
+}//end class
 
 /**
  * Stub for ConfigurationService
@@ -111,10 +166,11 @@ class ConfigurationService
      */
     public function importFromApp()
     {
-    }
+
+    }//end importFromApp()
 
 
-}
+}//end class
 
 /**
  * Stub for TextExtractionService
@@ -127,7 +183,7 @@ class ConfigurationService
  */
 class TextExtractionService
 {
-}
+}//end class
 
 /**
  * Stub for FileService
@@ -140,7 +196,7 @@ class TextExtractionService
  */
 class FileService
 {
-}
+}//end class
 
 /**
  * Stub for RiskLevelService
@@ -165,12 +221,40 @@ class RiskLevelService
     public function getRiskLevel(int $fileId)
     {
         return 'none';
-    }
+
+    }//end getRiskLevel()
 
 
-}
+}//end class
 
 namespace OCA\OpenRegister\Db;
+
+/**
+ * Stub for ObjectEntity
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ObjectEntity
+{
+
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [];
+
+    }//end jsonSerialize()
+
+
+}//end class
 
 /**
  * Stub for EntityRelationMapper
@@ -195,7 +279,8 @@ class EntityRelationMapper
     public function findByFileId(int $fileId)
     {
         return [];
-    }
+
+    }//end findByFileId()
 
 
     /**
@@ -208,10 +293,11 @@ class EntityRelationMapper
     public function findEntitiesForFile(int $fileId)
     {
         return [];
-    }
+
+    }//end findEntitiesForFile()
 
 
-}
+}//end class
 
 namespace OC\Hooks;
 
@@ -226,4 +312,4 @@ namespace OC\Hooks;
  */
 interface Emitter
 {
-}
+}//end interface
