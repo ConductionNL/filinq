@@ -52,6 +52,8 @@ class OpenRegisterResolver
      * @return array{register: string, schema: string} Register and schema IDs
      *
      * @throws RegisterNotConfiguredException If template register/schema is not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function getRegisterAndSchema(): array
     {
@@ -73,6 +75,8 @@ class OpenRegisterResolver
      * @return array{register: string, schema: string} Register and schema IDs
      *
      * @throws RegisterNotConfiguredException If template version register/schema is not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function getVersionRegisterAndSchema(): array
     {
@@ -98,6 +102,8 @@ class OpenRegisterResolver
      * @return bool True if valid
      *
      * @throws Exception If the namespace is invalid
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-openregister-bridge/tasks.md#task-1
      */
     public function validateNamespace(string $namespace): bool
     {
