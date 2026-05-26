@@ -48,6 +48,12 @@
     "docsUrl": "openspec/specs/ocr-document-scanning/spec.md"
   },
   {
+    "slug": "openregister-bridge",
+    "title": "OpenRegister Bridge",
+    "summary": "Provides a single resolver service that translates DocuDesk `IAppConfig` keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. Services that need to read or write OpenRegister objects depend on the resolver instead of reading config keys directly — this keeps the config-translation seam in one place, isolates the IAppConfig naming convention from consumer code, and gives controllers a typed exception to render setup-state UIs.",
+    "docsUrl": "openspec/specs/openregister-bridge/spec.md"
+  },
+  {
     "slug": "pdf-generation",
     "title": "PDF Generation",
     "summary": "Provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can call. Accepts a Twig template string and data context, renders HTML, converts to PDF via mPDF, and returns the binary content. The service is stateless -- callers provide template content directly. Includes a Twig sandbox with strict security policy and an HTTP API endpoint for PDF generation.",
