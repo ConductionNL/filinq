@@ -2,19 +2,7 @@ import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
-/**
- * The six canonical Woo Art. 5 grondslagen (seeded by Wave 1.1's
- * `add-dossier-schema` change). Used as the multi-select options on the
- * dossier-creation step.
- */
-const WOO_BASES = [
-	'persoonsgegevens',
-	'bijzondere-persoonsgegevens',
-	'strafrechtelijk',
-	'bedrijfs-fabricagegegevens',
-	'onevenredige-benadeling',
-	'nationale-veiligheid',
-]
+import { WOO_BASES } from '../../constants/grondslagen.js'
 
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({

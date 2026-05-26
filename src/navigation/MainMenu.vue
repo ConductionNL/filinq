@@ -25,6 +25,16 @@
 					<TuneVertical :size="24" />
 				</template>
 			</NcAppNavigationItem>
+            			<NcAppNavigationItem :active="navigationStore.selected === 'anonymizationPoc'" :name="t('docudesk', 'Anonymisation PoC')" @click="navigationStore.setSelected('anonymizationPoc')">
+				<template #icon>
+					<TestTube :size="20" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'folderAnonymization'" :name="t('docudesk', 'Folder Analysis')" @click="navigationStore.setSelected('folderAnonymization')">
+				<template #icon>
+					<FolderSearch :size="20" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:active="isActive('Dashboard')"
 				:name="t('docudesk', 'Dashboard')"
@@ -94,6 +104,10 @@ import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 // Icons
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
+import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
+import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
+import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
+import TestTube from 'vue-material-design-icons/TestTube.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
@@ -116,6 +130,10 @@ export default {
 		TuneVertical,
 		AccountStar,
 		AlertOctagon,
+		ShieldLock,
+		FileDocumentMultiple,
+		FolderSearch,
+		TestTube,
 	},
 	methods: {
 		/**
