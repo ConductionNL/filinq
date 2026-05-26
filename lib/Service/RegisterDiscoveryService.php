@@ -21,7 +21,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use Exception;
 use Throwable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -113,7 +112,7 @@ class RegisterDiscoveryService
                         try {
                             $schema     = $this->schemaMapper->find(id: $schemaId, _multitenancy: false);
                             $expanded[] = $schema->jsonSerialize();
-                        } catch (Exception $schemaError) {
+                        } catch (\Exception $schemaError) {
                             // Orphan schema — retain bare ID for transparency.
                             $expanded[] = $schemaId;
                         }
