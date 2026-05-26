@@ -20,4 +20,4 @@ Util::addStyle($appId, 'main');
 /** @var \OCP\IL10N $l */
 ?>
 
-<div id="admin-settings" class="section" data-version="<?php p($_['version'] ?? ''); ?>"></div>
+<div id="admin-settings" class="section"></div>
