@@ -1,14 +1,3 @@
-# PHPStan baseline for DocuDesk.
-#
-# Captures the tracked phpstan errors that remain after the canonical
-# root-config sync (Phase 2 fleet rollout). Each entry is source-level
-# debt scheduled for cleanup in follow-up PRs.
-#
-# Tracking issue: https://github.com/ConductionNL/docudesk/issues/227
-#
-# Do not add new entries to this baseline. New phpstan errors should be
-# fixed at the source. This file shrinks as #227 progresses; when empty,
-# delete it and drop the `includes:` entry from phpstan.neon.
 parameters:
 	ignoreErrors:
 		-
@@ -22,22 +11,12 @@ parameters:
 			path: lib/Service/ConsentCrudService.php
 
 		-
-			message: "#^Call to method dpi\\(\\) on an unknown class thiagoalessio\\\\TesseractOCR\\\\TesseractOCR\\.$#"
+			message: "#^Call to an undefined method thiagoalessio\\\\TesseractOCR\\\\TesseractOCR\\:\\:dpi\\(\\)\\.$#"
 			count: 1
 			path: lib/Service/OcrService.php
 
 		-
-			message: "#^Call to method lang\\(\\) on an unknown class thiagoalessio\\\\TesseractOCR\\\\TesseractOCR\\.$#"
-			count: 1
-			path: lib/Service/OcrService.php
-
-		-
-			message: "#^Call to method run\\(\\) on an unknown class thiagoalessio\\\\TesseractOCR\\\\TesseractOCR\\.$#"
-			count: 1
-			path: lib/Service/OcrService.php
-
-		-
-			message: "#^Instantiated class thiagoalessio\\\\TesseractOCR\\\\TesseractOCR not found\\.$#"
+			message: "#^Call to an undefined method thiagoalessio\\\\TesseractOCR\\\\TesseractOCR\\:\\:lang\\(\\)\\.$#"
 			count: 1
 			path: lib/Service/OcrService.php
 

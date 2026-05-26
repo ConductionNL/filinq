@@ -24,10 +24,12 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use OCA\DocuDesk\Service\PdfService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -44,11 +46,12 @@ class PdfController extends Controller
     /**
      * Constructor for PdfController
      *
-     * @param string          $appName    The application name
-     * @param IRequest        $request    The request object
-     * @param LoggerInterface $logger     Logger for error reporting
-     * @param PdfService      $pdfService Service for PDF generation
-     * @param IL10N           $l10n       The localization service
+     * @param string          $appName     The application name
+     * @param IRequest        $request     The request object
+     * @param LoggerInterface $logger      Logger for error reporting
+     * @param PdfService      $pdfService  Service for PDF generation
+     * @param IL10N           $l10n        The localization service
+     * @param IUserSession    $userSession User session for authentication
      *
      * @return void
      */
@@ -57,7 +60,8 @@ class PdfController extends Controller
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly PdfService $pdfService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -82,6 +86,13 @@ class PdfController extends Controller
     public function render(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $template = $this->request->getParam('template');
             $data     = $this->request->getParam('data', []);
             $options  = $this->request->getParam('options', []);
@@ -156,6 +167,13 @@ class PdfController extends Controller
     public function renderPdfA(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $template = $this->request->getParam('template');
             $data     = $this->request->getParam('data', []);
             $options  = $this->request->getParam('options', []);

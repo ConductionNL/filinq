@@ -85,6 +85,14 @@ class SigningController extends Controller
     public function createRequest(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data   = $this->request->getParams();
             $result = $this->signingService->createRequest(data: $data);
             return new JSONResponse($result, Http::STATUS_CREATED);
@@ -106,6 +114,14 @@ class SigningController extends Controller
     public function listRequests(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->signingService->listRequests();
             return new JSONResponse($result);
         } catch (RegisterNotConfiguredException $e) {
@@ -160,6 +176,14 @@ class SigningController extends Controller
     public function showRequest(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->signingService->getRequest(requestId: $id);
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -182,6 +206,14 @@ class SigningController extends Controller
     public function cancelRequest(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->signingService->cancelRequest(requestId: $id);
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -204,6 +236,14 @@ class SigningController extends Controller
     public function sign(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $signerId = $this->request->getParam('signerId', '');
             $result   = $this->signingService->sign(requestId: $id, signerId: $signerId);
             return new JSONResponse($result);
@@ -227,6 +267,14 @@ class SigningController extends Controller
     public function decline(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $signerId = $this->request->getParam('signerId', '');
             $reason   = $this->request->getParam('reason', '');
             $result   = $this->signingService->decline(requestId: $id, signerId: $signerId, reason: $reason);
@@ -249,6 +297,14 @@ class SigningController extends Controller
     public function bulkSign(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $requestIds = $this->request->getParam('requestIds', []);
             if (is_array($requestIds) === false) {
                 $requestIds = [];
@@ -306,6 +362,14 @@ class SigningController extends Controller
     public function getAudit(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->auditService->getAuditTrail(signingRequestId: $id);
             return new JSONResponse($result);
         } catch (Exception $e) {

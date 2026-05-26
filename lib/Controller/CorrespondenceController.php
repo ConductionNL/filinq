@@ -87,6 +87,14 @@ class CorrespondenceController extends Controller
     public function generate(): DataDownloadResponse | JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $params = $this->parseGenerateParams();
             if ($params instanceof JSONResponse) {
                 return $params;
@@ -241,6 +249,14 @@ class CorrespondenceController extends Controller
     public function generateBatch(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $templateId   = $this->request->getParam('templateId');
             $recipientIds = $this->request->getParam('recipientIds', []);
             $options      = $this->request->getParam('options', []);
@@ -301,6 +317,14 @@ class CorrespondenceController extends Controller
     public function jobStatus(string $jobId): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $status = $this->corrSvc->getJobStatus(jobId: $jobId);
 
             if ($status === null) {

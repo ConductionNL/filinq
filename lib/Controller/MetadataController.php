@@ -23,9 +23,11 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use OCA\DocuDesk\Service\MetadataService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -47,6 +49,7 @@ class MetadataController extends Controller
      * @param LoggerInterface $logger          Logger for error reporting
      * @param MetadataService $metadataService Service for metadata operations
      * @param IL10N           $l10n            The localization service
+     * @param IUserSession    $userSession     User session for authentication
      *
      * @return void
      */
@@ -55,7 +58,8 @@ class MetadataController extends Controller
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly MetadataService $metadataService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -77,6 +81,13 @@ class MetadataController extends Controller
     public function enrich(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data = $this->request->getParams();
 
             // Validate required fields.

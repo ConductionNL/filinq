@@ -26,6 +26,7 @@ use RuntimeException;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -169,6 +170,14 @@ class SettingsController extends Controller
     public function create(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data = $this->request->getParams();
 
             $updatedData = $this->settingsService->updateSettings($data);
