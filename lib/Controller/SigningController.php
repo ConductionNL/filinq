@@ -79,7 +79,6 @@ class SigningController extends Controller
      * @return JSONResponse The created signing request
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -101,7 +100,6 @@ class SigningController extends Controller
      * @return JSONResponse List of signing requests
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -156,7 +154,6 @@ class SigningController extends Controller
      * @return JSONResponse The signing request details
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -179,7 +176,6 @@ class SigningController extends Controller
      * @return JSONResponse The cancelled request
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -202,7 +198,6 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -226,7 +221,6 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -249,7 +243,6 @@ class SigningController extends Controller
      * @return JSONResponse Results for each request
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -277,7 +270,6 @@ class SigningController extends Controller
      * @return JSONResponse The verification results
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
@@ -308,7 +300,6 @@ class SigningController extends Controller
      * @return JSONResponse The audit trail entries
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
      */
