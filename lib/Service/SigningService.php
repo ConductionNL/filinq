@@ -23,6 +23,7 @@ use DateTimeInterface;
 use Exception;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\IAppConfig;
+use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
@@ -68,6 +69,7 @@ class SigningService
      * @param IUserSession           $userSession         User session
      * @param INotificationManager   $notificationManager Notification manager
      * @param LoggerInterface        $logger              Logger
+     * @param IRequest               $request             HTTP request
      *
      * @return void
      */
@@ -78,7 +80,8 @@ class SigningService
         private readonly IAppConfig $config,
         private readonly IUserSession $userSession,
         private readonly INotificationManager $notificationManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IRequest $request
     ) {
 
     }//end __construct()
@@ -523,7 +526,7 @@ class SigningService
      */
     private function getClientIp(): string
     {
-        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        return $this->request->getRemoteAddress();
 
     }//end getClientIp()
 }//end class
