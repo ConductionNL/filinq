@@ -23,6 +23,7 @@ namespace OCA\DocuDesk\Controller;
 use OCA\DocuDesk\AppInfo\Application;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\TextPlainResponse;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 
@@ -42,7 +43,8 @@ class MetricsController extends Controller
      *
      * @param string           $appName          The name of the app
      * @param IRequest         $request          The request object
-     * @param IConfig          $config           The config service
+     * @param IConfig          $config           The config service (retained for getSystemValueString)
+     * @param IAppConfig       $appConfig        The typed app config service
      * @param MetricsCollector $metricsCollector Collector for document/template counts
      *
      * @return void
@@ -51,6 +53,7 @@ class MetricsController extends Controller
         string $appName,
         IRequest $request,
         private readonly IConfig $config,
+        private readonly IAppConfig $appConfig,
         private readonly MetricsCollector $metricsCollector
     ) {
         parent::__construct(appName: $appName, request: $request);
@@ -70,7 +73,7 @@ class MetricsController extends Controller
     {
         $lines = [];
 
-        $appVersion = $this->config->getAppValue(Application::APP_ID, 'installed_version', '0.0.0');
+        $appVersion = $this->appConfig->getValueString(Application::APP_ID, 'installed_version', '0.0.0');
         $phpVersion = PHP_VERSION;
         $ncVersion  = $this->config->getSystemValueString('version', '0.0.0');
 
@@ -99,20 +102,20 @@ class MetricsController extends Controller
         $lines[]        = 'docudesk_templates_total '.$templatesTotal;
 
         // PDF generations counter.
-        $pdfTotal = (int) $this->config->getAppValue(
+        $pdfTotal = $this->appConfig->getValueInt(
             Application::APP_ID,
             'pdf_generations_total',
-            '0'
+            0
         );
         $lines[]  = '# HELP docudesk_pdf_generations_total Total PDF generation operations';
         $lines[]  = '# TYPE docudesk_pdf_generations_total counter';
         $lines[]  = 'docudesk_pdf_generations_total '.$pdfTotal;
 
         // Anonymizations counter.
-        $anonTotal = (int) $this->config->getAppValue(
+        $anonTotal = $this->appConfig->getValueInt(
             Application::APP_ID,
             'anonymizations_total',
-            '0'
+            0
         );
         $lines[]   = '# HELP docudesk_anonymizations_total Total anonymization operations';
         $lines[]   = '# TYPE docudesk_anonymizations_total counter';
