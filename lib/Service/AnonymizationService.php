@@ -59,7 +59,6 @@ class AnonymizationService
      */
     private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
 
-
     /**
      * Constructor for AnonymizationService
      *
@@ -182,7 +181,6 @@ class AnonymizationService
 
     }//end attachProhibitionMatches()
 
-
     /**
      * Compute the prohibitionMatch value for a single entity
      *
@@ -227,7 +225,6 @@ class AnonymizationService
 
     }//end computeProhibitionMatch()
 
-
     /**
      * Try to get PolicyMatchService from the container without throwing
      *
@@ -244,7 +241,6 @@ class AnonymizationService
         }
 
     }//end tryGetPolicyMatchService()
-
 
     /**
      * Read the high-confidence threshold from app config
@@ -264,7 +260,6 @@ class AnonymizationService
         );
 
     }//end getHighConfidenceThreshold()
-
 
     /**
      * Anonymize entities in a document
@@ -327,7 +322,6 @@ class AnonymizationService
 
     }//end anonymizeDocument()
 
-
     /**
      * Attempt to append a grondslagen basis summary to the anonymized document.
      *
@@ -381,6 +375,4 @@ class AnonymizationService
         return $resultInfo;
 
     }//end tryAppendBasisSummary()
-
-
 }//end class

@@ -498,7 +498,6 @@ class BatchAnonymizationController extends Controller
 
     }//end validateEntityBases()
 
-
     /**
      * Build a JSON error response, logging the underlying exception.
      *

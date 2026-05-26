@@ -325,7 +325,6 @@ class AnonymizationController extends Controller
 
     }//end extractAppendBasisSummary()
 
-
     /**
      * Validate that each entity's optional `bases` field is an array of strings
      *
@@ -364,7 +363,6 @@ class AnonymizationController extends Controller
         return null;
 
     }//end validateEntityBases()
-
 
     /**
      * Filter entities by excluded types
