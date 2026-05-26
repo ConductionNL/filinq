@@ -18,6 +18,7 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -58,6 +59,11 @@ class RegisterDiscoveryServiceTest extends TestCase
      */
     private RegisterService|MockObject $mockRegisterService;
 
+    /**
+     * @var SchemaMapper|MockObject
+     */
+    private SchemaMapper|MockObject $mockSchemaMapper;
+
 
     /**
      * Set up test environment
@@ -71,11 +77,13 @@ class RegisterDiscoveryServiceTest extends TestCase
         $this->mockConfig          = $this->createMock(IAppConfig::class);
         $this->mockLogger          = $this->createMock(LoggerInterface::class);
         $this->mockRegisterService = $this->createMock(RegisterService::class);
+        $this->mockSchemaMapper    = $this->createMock(SchemaMapper::class);
 
         $this->service = new RegisterDiscoveryService(
             $this->mockConfig,
             $this->mockLogger,
-            $this->mockRegisterService
+            $this->mockRegisterService,
+            $this->mockSchemaMapper
         );
 
     }//end setUp()

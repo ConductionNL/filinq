@@ -27,6 +27,7 @@ use OCP\IRequest;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Unit tests for TemplatesController
@@ -77,6 +78,11 @@ class TemplatesControllerTest extends TestCase
      */
     private IUserSession|MockObject $mockUserSession;
 
+    /**
+     * @var LoggerInterface|MockObject
+     */
+    private LoggerInterface|MockObject $mockLogger;
+
 
     /**
      * Set up test environment
@@ -93,6 +99,7 @@ class TemplatesControllerTest extends TestCase
         $this->mockVersionService  = $this->createMock(TemplateVersionService::class);
         $this->mockPreviewService  = $this->createMock(TemplatePreviewService::class);
         $this->mockUserSession     = $this->createMock(IUserSession::class);
+        $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
         $this->controller = new TemplatesController(
             'docudesk',
@@ -101,7 +108,8 @@ class TemplatesControllerTest extends TestCase
             $this->mockRequestHandler,
             $this->mockVersionService,
             $this->mockPreviewService,
-            $this->mockUserSession
+            $this->mockUserSession,
+            $this->mockLogger
         );
 
     }//end setUp()
