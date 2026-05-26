@@ -234,9 +234,11 @@ class RegisterDiscoveryServiceTest extends TestCase
 
         // Schema 10 resolves; the other two are orphans (find throws) and
         // must be retained as bare IDs.
+        // The service calls find(id: ..., _multitenancy: false) with named
+        // arguments, so the callback must accept the matching parameter names.
         $this->mockSchemaMapper->method('find')
             ->willReturnCallback(
-                function ($id) {
+                function ($id, $_extend=[], $published=null, $_rbac=true, $_multitenancy=true) {
                     if ($id === 10) {
                         return $this->makeSchema(
                             [
