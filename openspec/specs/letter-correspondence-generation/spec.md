@@ -10,7 +10,7 @@ Provides a dedicated correspondence generation workflow for government users to 
 
 ## Requirements
 
-### Correspondence generation API
+### Requirement: Correspondence generation API
 
 The system SHALL provide a dedicated `CorrespondenceService` at `OCA\DocuDesk\Service\CorrespondenceService` that orchestrates the end-to-end correspondence generation workflow: resolve recipient data from OpenRegister objects, merge into a template, apply huisstijl defaults (margins, header, footer, logo), and produce the output document. The service SHALL delegate template lookup to `TemplateService`, data resolution to `DataResolverService`, template rendering to `TemplateRenderer`, and PDF output to `PdfService`.
 
@@ -31,7 +31,7 @@ The system SHALL provide a dedicated `CorrespondenceService` at `OCA\DocuDesk\Se
 - **THEN** the response includes a `warnings` array with an entry describing the missing field
 - **AND** the document is still generated with the field rendered as empty
 
-### Correspondence REST endpoint
+### Requirement: Correspondence REST endpoint
 
 The system SHALL expose `POST /api/correspondence/generate` as an authenticated endpoint (`@NoAdminRequired @NoCSRFRequired`). The endpoint SHALL accept a JSON body with `templateId` (string, required), `dataRefs` (array of object references, required), `options` (object, optional), and `filename` (string, optional, default "correspondence.pdf"). The endpoint SHALL return a `DataDownloadResponse` with the generated document binary.
 
@@ -44,7 +44,7 @@ The system SHALL expose `POST /api/correspondence/generate` as an authenticated 
 - **WHEN** `POST /api/correspondence/generate` is called without a `templateId` field
 - **THEN** a 400 JSON response is returned with message "templateId is required"
 
-### Batch correspondence generation
+### Requirement: Batch correspondence generation
 
 The system SHALL provide `CorrespondenceService::generateBatch(string $templateId, array $recipientIds, array $options): array` that generates one letter per recipient. For batches of 10 or fewer, generation SHALL be synchronous and return an array of results. For batches larger than 10, generation SHALL be dispatched as a Nextcloud background job and return a job ID. Each recipient failure SHALL NOT abort the batch; partial results with per-recipient error details SHALL be returned.
 
@@ -64,7 +64,7 @@ The system SHALL provide `CorrespondenceService::generateBatch(string $templateI
 - **THEN** recipients 1, 2, 4-10 receive successfully generated letters
 - **AND** recipient 3 has `status: "error"` with a descriptive error message
 
-### Batch correspondence REST endpoints
+### Requirement: Batch correspondence REST endpoints
 
 The system SHALL expose `POST /api/correspondence/generate/batch` for batch generation and `GET /api/correspondence/jobs/{jobId}` for job status queries. Both endpoints SHALL require authentication (`@NoAdminRequired @NoCSRFRequired`).
 
@@ -76,7 +76,7 @@ The system SHALL expose `POST /api/correspondence/generate/batch` for batch gene
 - **WHEN** `GET /api/correspondence/jobs/{jobId}` is called for an in-progress job
 - **THEN** a 200 JSON response is returned with `{"jobId": "<uuid>", "status": "processing", "completed": 25, "total": 50, "errors": []}`
 
-### Output format selection
+### Requirement: Output format selection
 
 The system SHALL support multiple output formats for correspondence: PDF (default), DOCX (via LibreOffice server-side conversion), HTML (for preview), and email (clean HTML). The format SHALL be selectable per request via the `options.format` field accepting values `pdf`, `docx`, `html`, or `email`.
 
@@ -93,7 +93,7 @@ The system SHALL support multiple output formats for correspondence: PDF (defaul
 - **WHEN** `generate()` is called with `options.format = "html"`
 - **THEN** the rendered HTML string is returned directly without PDF conversion
 
-### Huisstijl default configuration
+### Requirement: Huisstijl default configuration
 
 The system SHALL support a huisstijl configuration object stored in OpenRegister (schema: `huisstijl`, register: `document`) containing `logo` (base64 or file reference), `primaryColor` (CSS color), `headerHtml` (Twig template for page header), `footerHtml` (Twig template for page footer), and `defaultMargins` (object with top/right/bottom/left in mm). When generating correspondence, if the template references a huisstijl ID or a default huisstijl is configured, these settings SHALL be applied automatically to the output.
 
@@ -108,7 +108,7 @@ The system SHALL support a huisstijl configuration object stored in OpenRegister
 - **THEN** the letter is generated with default PdfService margins (15mm all sides)
 - **AND** no header/footer is applied
 
-### Correspondence register logging
+### Requirement: Correspondence register logging
 
 The system SHALL log every generated correspondence as an object in the document register (schema: `correspondence`, register: `document`). Each entry SHALL contain: `templateId` (UUID of template used), `templateName` (human-readable), `recipientId` (UUID of recipient object), `recipientType` (e.g., PERSON, ORGANIZATION), `caseReference` (optional UUID linking to source zaak/case), `generatedAt` (ISO 8601 datetime), `format` (pdf/docx/html), `status` (generated/failed), and `generatedBy` (Nextcloud user ID). The schema SHALL be added to `docudesk_register.json`.
 
@@ -124,7 +124,7 @@ The system SHALL log every generated correspondence as an object in the document
 - **AND** `status` is set to "failed"
 - **AND** an `errorMessage` field contains the failure reason
 
-### Email body generation
+### Requirement: Email body generation
 
 The system SHALL support generating email body content from templates using the same merge logic as letter generation. When `options.format = "email"`, the system SHALL return rendered HTML suitable for email body inclusion (no PDF wrapper, no page-specific styling). Email templates SHALL use the namespace `email` in the template management system.
 

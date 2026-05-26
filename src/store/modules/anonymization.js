@@ -11,6 +11,7 @@ import { generateUrl } from '@nextcloud/router'
 // error: string|null,
 // fileId: number|null,         - Nextcloud file ID after upload.
 // filePath: string|null,       - path in Nextcloud files.
+// entities: array,             - per-entity rows returned by /extract (type, value, confidence, ...).
 // entityCount: number,         - entities detected.
 // replacementCount: number,    - entities replaced.
 // anonymizedFileId: number|null,
@@ -37,6 +38,8 @@ export const useAnonymizationStore = defineStore(
                  * Add files to the queue and start processing.
                  *
                  * @param {File[]} fileList Array of File objects.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async addFiles(fileList) {
 				const newEntries = Array.from(fileList).map(
@@ -47,6 +50,7 @@ export const useAnonymizationStore = defineStore(
 						error: null,
 						fileId: null,
 						filePath: null,
+						entities: [],
 						entityCount: 0,
 						replacementCount: 0,
 						anonymizedFileId: null,
@@ -63,6 +67,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Process all queued files sequentially.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async processQueue() {
 				if (this.processing) {
@@ -86,6 +92,8 @@ export const useAnonymizationStore = defineStore(
                  * Run the full pipeline for a single file entry.
                  *
                  * @param {object} entry File entry from the queue.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async processFile(entry) {
 				try {
@@ -111,6 +119,7 @@ export const useAnonymizationStore = defineStore(
 					)
 
 					const entities = extractResponse.data.entities || []
+					entry.entities = entities
 					entry.entityCount = entities.length
 
 					// No entities? Mark complete.
@@ -146,6 +155,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Clear all completed/errored files from the list.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			clearCompleted() {
 				this.files = this.files.filter((f) => f.status !== 'completed' && f.status !== 'error')
@@ -153,6 +164,8 @@ export const useAnonymizationStore = defineStore(
 
 			/*
                  * Reset everything.
+                 *
+                 * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			reset() {
 				this.files = []

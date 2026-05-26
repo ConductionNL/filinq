@@ -16,14 +16,29 @@ export const useNavigationStore = defineStore('ui', {
 		transferData: null,
 	} as NavigationStoreState),
 	actions: {
+		/**
+		 * Switch the active DocuDesk view in the SPA navigation shell.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+		 */
 		setSelected(selected: NavigationStoreState['selected']) {
 			this.selected = selected
 			console.log('Active menu item set to ' + selected)
 		},
+		/**
+		 * Set the currently active modal identifier.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+		 */
 		setModal(modal: NavigationStoreState['modal']) {
 			this.modal = modal
 			console.log('Active modal set to ' + modal)
 		},
+		/**
+		 * Set the currently active dialog identifier.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+		 */
 		setDialog(dialog: NavigationStoreState['dialog']) {
 			this.dialog = dialog
 			console.log('Active dialog set to ' + dialog)

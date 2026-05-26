@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -68,6 +71,8 @@ class BatchStateService
      * Return the maximum number of files allowed in a single batch.
      *
      * @return int Configured or default maximum.
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function getMaxFiles(): int
     {
@@ -86,6 +91,8 @@ class BatchStateService
      * @param array<int, array<string, mixed>> $files  Per-file entries to seed the batch with.
      *
      * @return array<string, mixed> The newly created batch record.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
     public function createBatch(string $userId, array $files): array
     {
@@ -109,6 +116,8 @@ class BatchStateService
      * @param string $batchId Batch identifier.
      *
      * @return array<string, mixed>|null The decoded batch record, or null when missing or corrupt.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
      */
     public function getBatch(string $batchId): ?array
     {
@@ -135,6 +144,8 @@ class BatchStateService
      * @param array<string, mixed> $batch   Full batch record to store.
      *
      * @return void
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function updateBatch(string $batchId, array $batch): void
     {
@@ -148,6 +159,8 @@ class BatchStateService
      * @param string $batchId Batch identifier.
      *
      * @return void
+     *
+     * @spec openspec/specs/batch-anonymization/spec.md
      */
     public function deleteBatch(string $batchId): void
     {

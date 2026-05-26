@@ -24,6 +24,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		extractedCount: (state) => state.files.filter((f) => f.status === 'extracted' || f.status === 'error').length,
 	},
 	actions: {
+		/**
+		 * Start a folder anonymization batch and begin polling for progress.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
+		 */
 		async startFolderBatch(folderPath) {
 			this.processing = true
 			this.error = null
@@ -46,11 +51,21 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Begin polling the batch status endpoint every 3 seconds.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-1
+		 */
 		startPolling() {
 			this.stopPolling()
 			this.pollTimer = setInterval(() => this.pollStatus(), 3000)
 		},
 
+		/**
+		 * Stop the active status polling timer.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-1
+		 */
 		stopPolling() {
 			if (this.pollTimer) {
 				clearInterval(this.pollTimer)
@@ -58,6 +73,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Poll the batch status, update progress, and load entities once ready for review.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-2
+		 */
 		async pollStatus() {
 			if (!this.batchId) return
 			try {
@@ -78,6 +98,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Fetch consolidated entities for the folder batch, applying the confidence filter.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		async fetchEntities() {
 			try {
 				let url = '/apps/docudesk/api/anonymization/batch/' + this.batchId + '/entities'
@@ -92,18 +117,33 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Toggle whether a reviewed entity is included in anonymization.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		toggleEntity(index) {
 			if (this.entities[index]) {
 				this.entities[index].included = !this.entities[index].included
 			}
 		},
 
+		/**
+		 * Set the inclusion flag for a set of currently visible entities.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		setVisibleEntities(indices, included) {
 			indices.forEach((i) => {
 				if (this.entities[i]) this.entities[i].included = included
 			})
 		},
 
+		/**
+		 * Anonymize the folder batch using the reviewed/included entities.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
+		 */
 		async anonymizeBatch() {
 			this.processing = true
 			this.error = null
@@ -129,6 +169,11 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
 		},
 
+		/**
+		 * Reset the folder batch state and stop any active polling.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
+		 */
 		reset() {
 			this.stopPolling()
 			Object.assign(this, {

@@ -65,12 +65,27 @@ import EntityReviewTable from './EntityReviewTable.vue'
 export default {
 	name: 'BatchAnonymizationView',
 	components: { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard, EntityReviewTable },
+	/**
+	 * Expose the batch anonymization wizard store to the Options API.
+	 *
+	 * @spec openspec/specs/batch-anonymization/spec.md
+	 */
 	setup() {
 		return { batchAnonymizationStore }
 	},
 	data() { return { isDragging: false } },
 	methods: {
+		/**
+		 * Upload files dropped onto the batch wizard drop zone.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		handleDrop(e) { const f = e.dataTransfer?.files; if (f?.length) batchAnonymizationStore.uploadBatch(f) },
+		/**
+		 * Upload files chosen via the batch wizard file picker.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		handleFileSelect(e) { const f = e.target?.files; if (f?.length) batchAnonymizationStore.uploadBatch(f) },
 	},
 }

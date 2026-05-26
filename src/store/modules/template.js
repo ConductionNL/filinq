@@ -13,6 +13,11 @@ export const useTemplateStore = defineStore('template', {
 		error: null,
 	}),
 	actions: {
+		/**
+		 * Fetch templates with optional category/tag/search filters.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		async fetchTemplates(filters = {}) {
 			this.loading = true
 			this.error = null
@@ -33,6 +38,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Fetch a single template by ID.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
 		async fetchTemplate(id) {
 			this.loading = true
 			this.error = null
@@ -48,6 +58,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Create a new template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async createTemplate(data) {
 			this.loading = true
 			this.error = null
@@ -63,6 +78,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Update an existing template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async updateTemplate(id, data) {
 			this.loading = true
 			this.error = null
@@ -78,6 +98,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Delete a template by ID.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async deleteTemplate(id) {
 			this.loading = true
 			this.error = null
@@ -93,6 +118,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Duplicate an existing template into a new draft.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async duplicateTemplate(id) {
 			this.loading = true
 			this.error = null
@@ -107,6 +137,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Fetch the version history for a template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
+		 */
 		async fetchVersions(id) {
 			this.loading = true
 			this.error = null
@@ -122,6 +157,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Restore a template to a prior version.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
+		 */
 		async restoreVersion(templateId, versionId) {
 			this.loading = true
 			this.error = null
@@ -137,6 +177,11 @@ export const useTemplateStore = defineStore('template', {
 				this.loading = false
 			}
 		},
+		/**
+		 * Render a live preview of template content with sample data.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
+		 */
 		async previewTemplate(content, data = {}) {
 			this.error = null
 			try {
@@ -148,6 +193,11 @@ export const useTemplateStore = defineStore('template', {
 				return null
 			}
 		},
+		/**
+		 * Acquire an edit lock on a template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async acquireLock(id) {
 			this.error = null
 			try {
@@ -159,6 +209,11 @@ export const useTemplateStore = defineStore('template', {
 				return null
 			}
 		},
+		/**
+		 * Release the edit lock on a template.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
 		async releaseLock(id) {
 			this.error = null
 			try {

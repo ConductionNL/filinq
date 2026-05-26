@@ -14,6 +14,7 @@
 		:manifest="manifest"
 		:custom-components="customComponents"
 		:page-types="pageTypes"
+		:registry="registry"
 		app-id="docudesk"
 		:translate="translateForApp"
 		:permissions="permissions">
@@ -76,9 +77,23 @@ export default {
 			type: Object,
 			default: null,
 		},
+		/**
+		 * 5-kind component registry for v2 manifests (hydra ADR-036).
+		 * Map of registry key → `{ kind, component, ...metadata }`.
+		 * See src/registry.js for the docudesk entries.
+		 */
+		registry: {
+			type: Object,
+			default: () => ({}),
+		},
 	},
 
 	computed: {
+		/**
+		 * Current user's Nextcloud permission set, passed to the app shell.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
 		},
@@ -92,6 +107,8 @@ export default {
 		 *
 		 * @param {string} key Translation key.
 		 * @return {string} Translated string (or the key on miss).
+		 *
+		 * @spec exclude Thin i18n wrapper around @nextcloud/l10n translate; no domain behavior.
 		 */
 		translateForApp(key) {
 			return ncT('docudesk', key)

@@ -42,10 +42,11 @@
             "templates": {
                 "slug": "templates",
                 "title": "Template Register",
-                "version": "1.0.0",
-                "description": "Register voor herbruikbare PDF/document templates",
+                "version": "2.0.0",
+                "description": "Register voor herbruikbare PDF/document templates met versiebeheer",
                 "schemas": [
-                    "template"
+                    "template",
+                    "templateVersion"
                 ]
             },
             "document": {
@@ -71,6 +72,18 @@
         },
         "schemas": {
             "publicationConsent": {
+                "x-openregister-notifications": {
+                    "objectionDeadline": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "consentStatus": "pending" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [
+                            { "kind": "groups", "groups": ["docudesk-woo-officers"] },
+                            { "kind": "object-acl", "permission": "manage" }
+                        ],
+                        "subject": { "nl": "Bezwaartermijn verloopt binnenkort voor een publicatie", "en": "Objection deadline is approaching for a publication" }
+                    }
+                },
                 "uri": null,
                 "slug": "publicationConsent",
                 "title": "Publication Consent",
@@ -353,13 +366,52 @@
                             "P",
                             "L"
                         ]
+                    },
+                    "category": {
+                        "description": "Categorie van het template (bijv. beschikkingen, brieven, notities)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Categorie",
+                        "maxLength": 128
+                    },
+                    "tags": {
+                        "description": "Vrije tags voor zoeken en filteren",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "maxLength": 64
+                        },
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Tags"
+                    },
+                    "lockedBy": {
+                        "description": "Nextcloud gebruikers-ID van de gebruiker die het template momenteel bewerkt",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vergrendeld door",
+                        "maxLength": 64
+                    },
+                    "lockedAt": {
+                        "description": "Tijdstip waarop de bewerkvergrendeling is verkregen (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Vergrendeld op"
                     }
                 },
                 "archive": [],
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2026-03-01T12:00:00+00:00",
+                "updated": "2026-05-18T12:00:00+00:00",
                 "created": "2026-03-01T12:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,
@@ -375,7 +427,138 @@
                 },
                 "searchable": true
             },
+            "templateVersion": {
+                "uri": null,
+                "slug": "templateVersion",
+                "title": "Template Version",
+                "description": "Historische versie van een template. Wordt aangemaakt bij elke bewerking als snapshot van de vorige staat.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "History",
+                "required": [
+                    "templateId",
+                    "version",
+                    "content",
+                    "editor"
+                ],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het bovenliggende template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Template ID"
+                    },
+                    "version": {
+                        "description": "Volgnummer van de versie (oplopend)",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Versienummer"
+                    },
+                    "content": {
+                        "description": "HTML/Twig templateinhoud op het moment van de snapshot",
+                        "type": "string",
+                        "required": true,
+                        "visible": false,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Inhoud",
+                        "format": "html"
+                    },
+                    "name": {
+                        "description": "Naam van het template op het moment van de snapshot",
+                        "type": "string",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "description": "Beschrijving van het template op het moment van de snapshot",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "maxLength": 2000
+                    },
+                    "format": {
+                        "description": "Paginaformaat op het moment van de snapshot",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Formaat",
+                        "default": "A4"
+                    },
+                    "orientation": {
+                        "description": "Pagina-oriëntatie op het moment van de snapshot",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Oriëntatie",
+                        "default": "P"
+                    },
+                    "editor": {
+                        "description": "Nextcloud gebruikers-ID van de gebruiker die de bewerking uitvoerde",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Bewerker",
+                        "maxLength": 64
+                    },
+                    "changelog": {
+                        "description": "Optionele notitie met beschrijving van de wijziging",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Wijzigingsnotitie",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": true,
+                "updated": "2026-05-18T12:00:00+00:00",
+                "created": "2026-05-18T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "changelog",
+                    "autoPublish": false
+                },
+                "searchable": false
+            },
             "correspondence": {
+                "x-openregister-notifications": {
+                    "correspondenceFailed": {
+                        "trigger": { "type": "created" },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [
+                            { "kind": "field", "field": "generatedBy" },
+                            { "kind": "groups", "groups": ["docudesk-woo-officers"] }
+                        ],
+                        "subject": { "nl": "Documentgeneratie mislukt: {{templateName}}", "en": "Document generation failed: {{templateName}}" }
+                    }
+                },
                 "uri": null,
                 "slug": "correspondence",
                 "title": "Correspondence",
@@ -600,6 +783,15 @@
                 },
                 "searchable": false
             },            "signingRequest": {
+                "x-openregister-notifications": {
+                    "signingCompleted": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "COMPLETED" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "initiatorUserId" } ],
+                        "subject": { "nl": "Ondertekeningsverzoek '{{documentName}}' is voltooid", "en": "Signing request '{{documentName}}' is complete" }
+                    }
+                },
                 "uri": null,
                 "slug": "signingRequest",
                 "title": "Signing Request",
@@ -626,6 +818,22 @@
                 "searchable": true
             },
             "signerRecord": {
+                "x-openregister-notifications": {
+                    "signingRequested": {
+                        "trigger": { "type": "created" },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "userId" } ],
+                        "subject": { "nl": "Je moet een document ondertekenen", "en": "You have a document to sign" }
+                    },
+                    "signingDeadline": {
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "PENDING" } },
+                        "enabled": true,
+                        "channels": ["nc-notification"],
+                        "recipients": [ { "kind": "field", "field": "userId" } ],
+                        "subject": { "nl": "Herinnering: een document wacht op je handtekening", "en": "Reminder: a document is awaiting your signature" }
+                    }
+                },
                 "uri": null,
                 "slug": "signerRecord",
                 "title": "Signer Record",

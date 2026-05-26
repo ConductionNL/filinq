@@ -12,6 +12,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
  */
 
 declare(strict_types=1);
@@ -55,6 +57,8 @@ class MetricsCollector
      * Count documents managed by DocuDesk via OpenRegister
      *
      * @return int The total document count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     public function countDocuments(): int
     {
@@ -66,6 +70,8 @@ class MetricsCollector
      * Count templates managed by DocuDesk via OpenRegister
      *
      * @return int The total template count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     public function countTemplates(): int
     {
@@ -79,6 +85,8 @@ class MetricsCollector
      * @param string $type The object type prefix (e.g. 'document', 'template')
      *
      * @return int The count of objects
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     private function countObjects(string $type): int
     {

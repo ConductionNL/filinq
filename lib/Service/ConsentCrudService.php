@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
  */
 
 declare(strict_types=1);
@@ -54,6 +59,8 @@ class ConsentCrudService
      * Get the consent register and schema IDs from settings
      *
      * @return array{register: string, schema: string}|null Config or null if not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
      */
     public function getConsentConfig(): ?array
     {
@@ -78,6 +85,8 @@ class ConsentCrudService
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function listConsents(string $register, string $schema): array
     {
@@ -112,6 +121,8 @@ class ConsentCrudService
      * @return array<string, mixed>|null The consent record or null if not found
      *
      * @throws Exception If retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsent(string $consentId, string $register, string $schema): ?array
     {
@@ -146,6 +157,8 @@ class ConsentCrudService
      * @return array<string, mixed> The created consent record
      *
      * @throws Exception If creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
      */
     public function createFromRequest(array $data, string $register, string $schema): array
     {
@@ -177,6 +190,8 @@ class ConsentCrudService
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If query fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsentsByDocument(
         string $documentId,
@@ -198,6 +213,8 @@ class ConsentCrudService
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
      */
     public function updateConsentStatus(
         string $consentId,

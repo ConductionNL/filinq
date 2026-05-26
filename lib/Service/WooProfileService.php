@@ -14,6 +14,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
  */
 
 declare(strict_types=1);
@@ -52,6 +54,8 @@ class WooProfileService
      * Return the active WOO anonymization profile.
      *
      * @return array{anonymize: array<string>, keep: array<string>} Active profile (configured or default).
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function getProfile(): array
     {
@@ -81,6 +85,8 @@ class WooProfileService
      * @param array{anonymize: array<string>, keep: array<string>} $profile Profile to store.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function saveProfile(array $profile): void
     {
@@ -94,6 +100,8 @@ class WooProfileService
      * @param string $entityType Entity type to check (e.g., "PERSON", "BSN").
      *
      * @return bool True when the type should be anonymized.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function shouldAnonymize(string $entityType): bool
     {

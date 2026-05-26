@@ -142,11 +142,21 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Deep link to the DocuDesk app from the dashboard widget footer.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		appUrl() {
 			return generateUrl('/apps/docudesk')
 		},
 	},
 	methods: {
+		/**
+		 * Queue files dropped onto the dashboard widget for anonymization.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		handleDrop(event) {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
@@ -154,6 +164,11 @@ export default {
 				anonymizationStore.addFiles(files)
 			}
 		},
+		/**
+		 * Queue files chosen via the dashboard widget picker for anonymization.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		handleFileSelect(event) {
 			const files = event.target?.files
 			if (files && files.length > 0) {
@@ -162,6 +177,11 @@ export default {
 			// Reset input so same files can be re-selected
 			event.target.value = ''
 		},
+		/**
+		 * Build a Files-app link to the original processed file.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		fileLink(filePath) {
 			// filePath is like /admin/files/DocuDesk/file.txt
 			// Nextcloud files app URL: /index.php/apps/files/?dir=/DocuDesk&file=file.txt
@@ -177,6 +197,11 @@ export default {
 			}
 			return generateUrl('/apps/files')
 		},
+		/**
+		 * Build a WebDAV download URL for the anonymized output file.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		downloadUrl(filePath) {
 			// filePath is like /admin/files/DocuDesk/file_anonymized.txt
 			// WebDAV download: /remote.php/webdav/DocuDesk/file_anonymized.txt
@@ -188,6 +213,11 @@ export default {
 			}
 			return generateRemoteUrl('webdav')
 		},
+		/**
+		 * Localized label for a file's processing status in the widget.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		statusLabel(status) {
 			const labels = {
 				queued: t('docudesk', 'Queued'),

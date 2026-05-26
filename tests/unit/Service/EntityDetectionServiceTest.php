@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -142,6 +145,97 @@ class EntityDetectionServiceTest extends TestCase
         $this->assertCount(1, $result);
 
     }//end testMapEntitiesForAnonymizationDeduplicates()
+
+
+    /**
+     * Test bases field is forwarded verbatim when present
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testMapEntitiesForAnonymizationForwardsBasesVerbatim(): void
+    {
+        $entities = [
+            ['value' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => ['uuid-base-a']],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization(entities: $entities);
+
+        $this->assertCount(1, $result);
+        $this->assertArrayHasKey('bases', $result[0]);
+        $this->assertSame(['uuid-base-a'], $result[0]['bases']);
+
+    }//end testMapEntitiesForAnonymizationForwardsBasesVerbatim()
+
+
+    /**
+     * Test empty bases array is forwarded as empty array, not omitted
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testMapEntitiesForAnonymizationForwardsEmptyBasesAsEmptyArray(): void
+    {
+        $entities = [
+            ['value' => 'Jane Smith', 'type' => 'PERSON', 'bases' => []],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization(entities: $entities);
+
+        $this->assertCount(1, $result);
+        $this->assertArrayHasKey('bases', $result[0]);
+        $this->assertSame([], $result[0]['bases']);
+
+    }//end testMapEntitiesForAnonymizationForwardsEmptyBasesAsEmptyArray()
+
+
+    /**
+     * Test entity without bases field results in no bases key in mapped output
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testMapEntitiesForAnonymizationOmitsBasesWhenAbsent(): void
+    {
+        $entities = [
+            ['value' => 'Amsterdam', 'type' => 'LOCATION'],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization(entities: $entities);
+
+        $this->assertCount(1, $result);
+        $this->assertArrayNotHasKey('bases', $result[0]);
+
+    }//end testMapEntitiesForAnonymizationOmitsBasesWhenAbsent()
+
+
+    /**
+     * Test mixed payload: bases only on entries that supplied it
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testMapEntitiesForAnonymizationMixedPayload(): void
+    {
+        $entities = [
+            ['value' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => ['uuid-base-a']],
+            ['value' => 'Amsterdam', 'type' => 'LOCATION'],
+            ['value' => 'Example Corp', 'type' => 'ORGANIZATION'],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization(entities: $entities);
+
+        $this->assertCount(3, $result);
+        $this->assertArrayHasKey('bases', $result[0]);
+        $this->assertSame(['uuid-base-a'], $result[0]['bases']);
+        $this->assertArrayNotHasKey('bases', $result[1]);
+        $this->assertArrayNotHasKey('bases', $result[2]);
+
+    }//end testMapEntitiesForAnonymizationMixedPayload()
 
 
     /**

@@ -85,6 +85,8 @@ class TemplateVersionService
      * @return array The created version object
      *
      * @throws Exception If version creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function createVersion(
         string $templateId,
@@ -134,6 +136,8 @@ class TemplateVersionService
      * @return array{results: array, total: int} Paginated version results
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getVersions(string $templateId, int $limit=20, int $offset=0): array
     {
@@ -165,6 +169,8 @@ class TemplateVersionService
      * @return array The version object
      *
      * @throws Exception If the version is not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getVersion(string $versionId): array
     {
@@ -199,6 +205,8 @@ class TemplateVersionService
      * @return int The next version number (existing count + 1)
      *
      * @throws Exception If counting fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function getNextVersionNumber(string $templateId): int
     {
@@ -226,6 +234,8 @@ class TemplateVersionService
      * @return array The restored template object
      *
      * @throws Exception If restore fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
      */
     public function restoreVersion(
         string $templateId,
@@ -269,6 +279,8 @@ class TemplateVersionService
      * @return array{from: array, to: array} Both version objects
      *
      * @throws Exception If either version is not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
      */
     public function getDiff(string $versionIdFrom, string $versionIdTo): array
     {

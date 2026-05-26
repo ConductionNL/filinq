@@ -1,3 +1,5 @@
+status: pr-created
+
 ## Context
 
 The summary-rendering subsystem (Twig templates, `GrondslagenSummaryService`, per-dossier endpoint, auto-regen listener) is specced + built in `anonymisation-grondslagen-summary-rendering`. This change is the small `anonymization` delta that exposes the per-document opt-in flag and orchestrates the call into the rendering service.

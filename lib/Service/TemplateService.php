@@ -14,6 +14,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-68
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-69
  */
 
 declare(strict_types=1);
@@ -119,6 +124,8 @@ class TemplateService
      * @return array{results: array, total: int} Paginated template results
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-68
      */
     public function getTemplates(array $filters=[], int $limit=20, int $offset=0): array
     {
@@ -149,6 +156,8 @@ class TemplateService
      * @throws Exception If the template is not found
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
      */
     public function getTemplate(string $id): array
     {
@@ -183,6 +192,8 @@ class TemplateService
      * @return array The created template object
      *
      * @throws Exception If creation fails or validation errors occur
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function createTemplate(array $data): array
     {
@@ -233,6 +244,8 @@ class TemplateService
      * @throws Exception If the template is not found or update fails
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function updateTemplate(string $id, array $data): array
     {
@@ -290,6 +303,8 @@ class TemplateService
      * @throws Exception If the template is not found or update fails
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function updateTemplateWithoutVersion(string $id, array $data): array
     {
@@ -330,6 +345,8 @@ class TemplateService
      * @throws Exception If the template is not found or deletion fails
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
     public function deleteTemplate(string $id): bool
     {
@@ -349,6 +366,8 @@ class TemplateService
      * @return array Array of template objects
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-69
      */
     public function getTemplatesByNamespace(string $namespace): array
     {
@@ -375,6 +394,8 @@ class TemplateService
      * @throws Exception If the template is not found or duplication fails
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-3
      */
     public function duplicateTemplate(string $id): array
     {
@@ -424,6 +445,8 @@ class TemplateService
      * @throws Exception If the template is locked by another user (code 409)
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function acquireLock(string $id, string $userId): array
     {
@@ -472,6 +495,8 @@ class TemplateService
      * @throws Exception If the template is not locked by this user
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     public function releaseLock(string $id, string $userId): array
     {
@@ -504,6 +529,8 @@ class TemplateService
      * @param array $template The template data with lockedAt field
      *
      * @return bool True if the lock has expired or no lock exists
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
      */
     private function isLockExpired(array $template): bool
     {

@@ -10,6 +10,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
  */
 
 namespace OCA\DocuDesk\Controller;
@@ -56,6 +58,8 @@ class DashboardController extends Controller
      * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
      */
     public function page(?string $getParameter): TemplateResponse
     {
@@ -77,4 +81,29 @@ class DashboardController extends Controller
         }
 
     }//end page()
+
+    /**
+     * Serve the SPA shell for any deep link under /apps/docudesk/* so
+     * vue-router (HTML5 history mode) can resolve sub-routes on a hard
+     * URL refresh — otherwise NC's PHP router 404s before the SPA ever
+     * mounts. Delegates to {@see page()}.
+     *
+     * @param string $path Deep-link path captured by the route's `{path}`
+     *                     placeholder. Defaulted to empty so the same
+     *                     controller method serves `/` cleanly.
+     *
+     * @return TemplateResponse The dashboard page template
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-18
+     */
+    public function catchAll(string $path=''): TemplateResponse
+    {
+        return $this->page(getParameter: null);
+
+    }//end catchAll()
 }//end class

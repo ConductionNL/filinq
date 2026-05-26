@@ -27,6 +27,11 @@ export const useConsentStore = defineStore(
 			},
 		},
 		actions: {
+			/**
+			 * Fetch all consent records.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
+			 */
 			async fetchConsents() {
 				this.loading = true
 				this.error = null
@@ -40,6 +45,11 @@ export const useConsentStore = defineStore(
 					this.loading = false
 				}
 			},
+			/**
+			 * Fetch a single consent record by ID.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
+			 */
 			async fetchConsent(id) {
 				this.loading = true
 				this.error = null
@@ -55,6 +65,11 @@ export const useConsentStore = defineStore(
 					this.loading = false
 				}
 			},
+			/**
+			 * Update a consent record and sync it in the local list.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-status-lifecycle-req-cons-02
+			 */
 			async updateConsent(id, data) {
 				this.loading = true
 				this.error = null
@@ -76,6 +91,11 @@ export const useConsentStore = defineStore(
 					this.loading = false
 				}
 			},
+			/**
+			 * Fetch all consent records linked to a specific document.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
+			 */
 			async fetchConsentsByDocument(documentId) {
 				this.loading = true
 				this.error = null
@@ -93,6 +113,11 @@ export const useConsentStore = defineStore(
 			setConsentItem(consent) {
 				this.consentItem = consent
 			},
+			/**
+			 * Clear the currently selected consent record.
+			 *
+			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
+			 */
 			clearConsentItem() {
 				this.consentItem = null
 			},

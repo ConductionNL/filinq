@@ -81,6 +81,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * @return array<string, mixed> Result with signing session identifier
      *
      * @throws RuntimeException If the signature level is not supported
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function initiateSigning(
         string $documentPath,
@@ -123,6 +125,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * @return array<string, mixed> The session status
      *
      * @throws RuntimeException If session not found
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function checkStatus(string $externalId): array
     {
@@ -149,6 +153,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * @return string The signed document path
      *
      * @throws RuntimeException If session not found or not completed
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function downloadSignedDocument(string $externalId): string
     {
@@ -173,6 +179,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * @return bool True if cancelled
      *
      * @throws RuntimeException If session not found
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function cancelSigning(string $externalId): bool
     {
@@ -192,6 +200,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * @param string $level The signature level to check
      *
      * @return bool True if SES level
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function supportsLevel(string $level): bool
     {

@@ -11,6 +11,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+ *
  * DocuDesk is free software: you can redistribute it and/or modify
  * it under the terms of the European Union Public License (EUPL),
  * version 1.2 only (the "Licence"), appearing in the file LICENSE
@@ -73,6 +75,8 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   TemplateResponse
      * @phpstan-return TemplateResponse
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getForm(): TemplateResponse
     {
@@ -96,6 +100,8 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getSection(): string
     {
@@ -110,6 +116,8 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   int
      * @phpstan-return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getPriority(): int
     {

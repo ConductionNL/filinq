@@ -7,9 +7,19 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 		isActive: (state) => state.batchId !== null,
 		selectedEntityCount: (state) => state.entities.filter((e) => e.included).length,
 		filesWithEntities: (state) => state.files.filter((f) => (f.entityCount || 0) > 0).length,
+		/**
+		 * Derive the wizard step index from the current batch status.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		stepNumber(state) { return { uploading: 0, extracting: 1, review: 2, anonymizing: 3, completed: 4, error: 0 }[state.batchStatus] || 0 },
 	},
 	actions: {
+		/**
+		 * Upload a multi-file batch and start sequential extraction.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		async uploadBatch(fileList) {
 			this.processing = true; this.error = null
 			try {
@@ -19,6 +29,11 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 				await this.extractAll()
 			} catch (e) { this.error = e.response?.data?.error || e.message; this.batchStatus = 'error' } finally { this.processing = false }
 		},
+		/**
+		 * Poll the sequential extraction endpoint until the batch is ready for review.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		async extractAll() {
 			while (this.batchStatus === 'extracting') {
 				try {
@@ -29,6 +44,11 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 				} catch (e) { this.error = e.response?.data?.error || e.message; this.batchStatus = 'error'; break }
 			}
 		},
+		/**
+		 * Fetch the consolidated entity list for review, applying the confidence filter.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		async fetchEntities() {
 			try {
 				let u = '/apps/docudesk/api/anonymization/batch/' + this.batchId + '/entities'
@@ -36,8 +56,18 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 				const r = await axios.get(generateUrl(u)); this.entities = r.data.entities || []; this.totalEntities = r.data.entityCount || 0
 			} catch (e) { this.error = e.response?.data?.error || e.message }
 		},
+		/**
+		 * Toggle whether a reviewed entity is included in anonymization.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		toggleEntity(i) { if (this.entities[i]) this.entities[i].included = !this.entities[i].included },
 		setVisibleEntities(indices, inc) { indices.forEach((i) => { if (this.entities[i]) this.entities[i].included = inc }) },
+		/**
+		 * Anonymize the batch using the reviewed/included entities.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		async anonymizeBatch() {
 			this.processing = true; this.error = null; this.batchStatus = 'anonymizing'
 			try {
@@ -46,11 +76,21 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 				this.batchStatus = 'completed'; await this.refreshStatus()
 			} catch (e) { this.error = e.response?.data?.error || e.message; this.batchStatus = 'error' } finally { this.processing = false }
 		},
+		/**
+		 * Refresh the batch status and file list from the status endpoint.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		async refreshStatus() {
 			if (!this.batchId) return
 			try { const r = await axios.get(generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/status')); this.batchStatus = r.data.batchStatus; this.files = r.data.files || this.files } catch (e) { /* silent */ }
 		},
 		getReportUrl() { return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report') },
+		/**
+		 * Reset the batch wizard state to its initial values.
+		 *
+		 * @spec openspec/specs/batch-anonymization/spec.md
+		 */
 		reset() { Object.assign(this, { batchId: null, batchStatus: null, files: [], entities: [], progress: 0, totalFiles: 0, totalEntities: 0, error: null, processing: false, minConfidence: 0.0 }) },
 	},
 })

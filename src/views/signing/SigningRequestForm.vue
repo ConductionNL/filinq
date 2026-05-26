@@ -56,6 +56,11 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Validate and submit the new signing request form.
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-4
+		 */
 		async submit() {
 			const signingStore = useSigningStore()
 			const result = await signingStore.createSigningRequest(this.form)
