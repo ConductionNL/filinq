@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use Exception;
 use Throwable;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
