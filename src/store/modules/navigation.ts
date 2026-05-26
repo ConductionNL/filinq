@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
-    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'anonymizationPoc' | 'batchAnonymization' | 'folderAnonymization' | 'templates' | 'templateDetail' | 'standingConsents' | 'prohibitions';
-    modal: string;
-    dialog: string;
-    transferData: string;
+    modal: string | null;
+    dialog: string | null;
+    transferData: string | null;
 }
 
 export const useNavigationStore = defineStore('ui', {
