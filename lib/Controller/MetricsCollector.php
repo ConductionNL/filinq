@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use OCA\DocuDesk\AppInfo\Application;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
@@ -39,14 +39,14 @@ class MetricsCollector
     /**
      * Constructor for MetricsCollector
      *
-     * @param IConfig         $config   The config service
+     * @param IAppConfig      $config   The typed app config service
      * @param IDBConnection   $database The database connection
      * @param LoggerInterface $logger   Logger for error reporting
      *
      * @return void
      */
     public function __construct(
-        private readonly IConfig $config,
+        private readonly IAppConfig $config,
         private readonly IDBConnection $database,
         private readonly LoggerInterface $logger
     ) {
@@ -91,8 +91,8 @@ class MetricsCollector
     private function countObjects(string $type): int
     {
         try {
-            $registerId = $this->config->getAppValue(Application::APP_ID, $type.'_register', '');
-            $schemaId   = $this->config->getAppValue(Application::APP_ID, $type.'_schema', '');
+            $registerId = $this->config->getValueString(Application::APP_ID, $type.'_register', '');
+            $schemaId   = $this->config->getValueString(Application::APP_ID, $type.'_schema', '');
 
             if ($registerId === '' || $schemaId === '') {
                 return 0;
