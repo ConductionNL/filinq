@@ -46,6 +46,22 @@
 			"icon": "icon-rename",
 			"route": "SigningRequests",
 			"order": 60
+		},
+		{
+			"id": "Documentation",
+			"label": "Documentation",
+			"icon": "icon-info",
+			"href": "https://docudesk.conduction.nl",
+			"section": "footer",
+			"order": 90
+		},
+		{
+			"id": "FeaturesRoadmapMenu",
+			"label": "Features & roadmap",
+			"icon": "icon-toggle",
+			"route": "FeaturesRoadmap",
+			"section": "footer",
+			"order": 91
 		}
 	],
 	"pages": [
@@ -137,6 +153,15 @@
 			"title": "Print Preview",
 			"component": "PrintPreview",
 			"_note": "Standalone print-preview page; no nav item; launched programmatically."
+		},
+		{
+			"id": "FeaturesRoadmap",
+			"route": "/features-roadmap",
+			"type": "roadmap",
+			"title": "Features & roadmap",
+			"config": {
+				"documentationUrl": "https://docudesk.conduction.nl"
+			}
 		}
 	]
 }
