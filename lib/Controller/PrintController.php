@@ -27,9 +27,11 @@ use Exception;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,6 +56,7 @@ class PrintController extends Controller
      * @param LoggerInterface $logger          Logger for error reporting
      * @param PdfService      $pdfService      Service for PDF generation
      * @param TemplateService $templateService Service for template retrieval
+     * @param IUserSession    $userSession     User session for authentication
      *
      * @return void
      */
@@ -63,6 +66,7 @@ class PrintController extends Controller
         private readonly LoggerInterface $logger,
         private readonly PdfService $pdfService,
         private readonly TemplateService $templateService,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -159,6 +163,13 @@ class PrintController extends Controller
     public function preview(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $resolved = $this->resolveTemplate();
 
             $options = $resolved['options'];
@@ -217,6 +228,13 @@ class PrintController extends Controller
     public function downloadPdfA(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $resolved = $this->resolveTemplate();
             $filename = $this->request->getParam('filename', 'document.pdf');
 

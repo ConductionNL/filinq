@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\TemplatePreviewService;
 use OCA\DocuDesk\Service\TemplateService;
 use OCA\DocuDesk\Service\TemplateVersionService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -101,6 +102,14 @@ class TemplatesController extends Controller
     public function index(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $params = $this->requestHandler->parseListParams(request: $this->request);
             $result = $this->templateService->getTemplates(
                 filters: $params['filters'],
@@ -146,6 +155,14 @@ class TemplatesController extends Controller
     public function show(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->templateService->getTemplate(id: $id);
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
@@ -167,6 +184,14 @@ class TemplatesController extends Controller
     public function create(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data   = $this->requestHandler->parseBodyParams(request: $this->request);
             $result = $this->templateService->createTemplate(data: $data);
             return new JSONResponse(data: $result);
@@ -193,6 +218,14 @@ class TemplatesController extends Controller
     public function update(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data   = $this->requestHandler->parseBodyParams(request: $this->request, stripKeys: ['id']);
             $result = $this->templateService->updateTemplate(id: $id, data: $data);
             return new JSONResponse(data: $result);
@@ -219,6 +252,14 @@ class TemplatesController extends Controller
     public function destroy(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $this->templateService->deleteTemplate(id: $id);
             return new JSONResponse(data: ['success' => true]);
         } catch (Exception $e) {
@@ -244,6 +285,14 @@ class TemplatesController extends Controller
     public function versions(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $limit  = (int) $this->request->getParam('_limit', '20');
             $offset = (int) $this->request->getParam('_offset', '0');
             $result = $this->versionService->getVersions(
@@ -276,6 +325,14 @@ class TemplatesController extends Controller
     public function restoreVersion(string $id, string $versionId): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $editor = $this->getCurrentUserId();
             $result = $this->versionService->restoreVersion(
                 templateId: $id,
@@ -308,6 +365,14 @@ class TemplatesController extends Controller
     public function diffVersions(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $from = $this->request->getParam('from', '');
             $to   = $this->request->getParam('to', '');
 
@@ -342,6 +407,14 @@ class TemplatesController extends Controller
     public function preview(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data    = $this->requestHandler->parseBodyParams(request: $this->request);
             $content = $data['content'] ?? '';
             $context = $data['data'] ?? [];
@@ -375,6 +448,14 @@ class TemplatesController extends Controller
     public function previewTemplate(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $data    = $this->requestHandler->parseBodyParams(request: $this->request);
             $context = $data['data'] ?? [];
             $html    = $this->previewService->previewTemplate(templateId: $id, data: $context);
@@ -402,6 +483,14 @@ class TemplatesController extends Controller
     public function duplicate(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $result = $this->templateService->duplicateTemplate(id: $id);
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
@@ -427,6 +516,14 @@ class TemplatesController extends Controller
     public function lock(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $userId = $this->getCurrentUserId();
             $result = $this->templateService->acquireLock(id: $id, userId: $userId);
             return new JSONResponse(data: $result);
@@ -462,6 +559,14 @@ class TemplatesController extends Controller
     public function unlock(string $id): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $userId = $this->getCurrentUserId();
             $result = $this->templateService->releaseLock(id: $id, userId: $userId);
             return new JSONResponse(data: $result);
