@@ -247,6 +247,7 @@ import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
+import { loadState } from '@nextcloud/initial-state'
 
 export default {
 	name: 'Settings',
@@ -263,7 +264,7 @@ export default {
 	},
 	data() {
 		return {
-			appVersion: document.getElementById('admin-settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('docudesk', 'version', 'Unknown'),
 			loading: false,
 			saving: false,
 			openRegisterInstalled: false,

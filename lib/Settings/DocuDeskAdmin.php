@@ -32,6 +32,7 @@ namespace OCA\DocuDesk\Settings;
 use OCA\DocuDesk\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Settings\ISettings;
 
 /**
@@ -56,15 +57,24 @@ class DocuDeskAdmin implements ISettings
     private IAppManager $appManager;
 
     /**
+     * Initial state service for passing data to the frontend
+     *
+     * @var IInitialState $initialState
+     */
+    private IInitialState $initialState;
+
+    /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IAppManager $appManager App manager for retrieving app version
+     * @param IAppManager   $appManager   App manager for retrieving app version
+     * @param IInitialState $initialState Initial state service for the frontend
      *
      * @return void
      */
-    public function __construct(IAppManager $appManager)
+    public function __construct(IAppManager $appManager, IInitialState $initialState)
     {
-        $this->appManager = $appManager;
+        $this->appManager   = $appManager;
+        $this->initialState = $initialState;
 
     }//end __construct()
 
@@ -82,12 +92,12 @@ class DocuDeskAdmin implements ISettings
     {
         $version = $this->appManager->getAppVersion(Application::APP_ID);
 
+        $this->initialState->provideInitialState('version', $version);
+
         return new TemplateResponse(
             'docudesk',
             'settings/admin',
-            [
-                'version' => $version,
-            ],
+            [],
             ''
         );
 
