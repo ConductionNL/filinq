@@ -87,12 +87,111 @@ function makeEntry(file, dossier) {
 	}
 }
 
+/**
+ * Build a synthetic queue entry for a file that wasn't uploaded this
+ * session (e.g. opened from FolderFilesNavigation). The entry mirrors
+ * makeEntry's shape minus the source `_file` blob, and starts in the
+ * `extracting` state so the sidebar can render a skeleton until the
+ * backend returns its cached entities.
+ *
+ * @param {object} fileMeta File descriptor from the viewer store.
+ * @param {number} fileMeta.fileId Nextcloud file id.
+ * @param {string} fileMeta.fileName File name with extension.
+ * @param {string} fileMeta.path Absolute path inside the user's storage.
+ * @return {object}
+ */
+function makeSyntheticEntry(fileMeta) {
+	const dossier = inferDossier(fileMeta.path)
+	return {
+		id: `file-${++fileCounter}`,
+		name: fileMeta.fileName,
+		status: 'extracting',
+		error: null,
+		fileId: fileMeta.fileId,
+		filePath: fileMeta.path,
+		entities: [],
+		entityCount: 0,
+		replacementCount: 0,
+		anonymizedFileId: null,
+		anonymizedFileName: null,
+		anonymizedFilePath: null,
+		dossier,
+	}
+}
+
+/**
+ * Infer the dossier folder name from a file path. Returns the segment
+ * after `/DocuDesk/` when the file sits inside a sub-folder, else null.
+ *
+ * @param {string} path Absolute path (e.g. /DocuDesk/Foo/bar.pdf).
+ * @return {string|null}
+ */
+function inferDossier(path) {
+	if (typeof path !== 'string') {
+		return null
+	}
+	const m = path.match(/\/DocuDesk\/([^/]+)\/[^/]+$/)
+	return m ? m[1] : null
+}
+
+/**
+ * Map a raw entity payload (as returned by the extract endpoint) to the
+ * shape `EntityReviewTable` expects. Centralised so both `addFiles` and
+ * `ensureExtracted` produce identical entry.entities.
+ *
+ * @param {Array<object>} entities Raw entities array.
+ * @return {Array<object>}
+ */
+function decorateEntities(entities) {
+	return (entities || []).map((e) => ({
+		...e,
+		included: true,
+		highestConfidence: e.confidence ?? 0,
+		fileCount: 1,
+		relationIds: e.relationId != null ? [e.relationId] : [],
+		_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
+		_decisionSkip: !!e.skipAnonymization,
+		_patchError: null,
+	}))
+}
+
+/**
+ * Extract a Nextcloud file id from a WebDAV PROPFIND response.
+ *
+ * @param {string} xmlText Response body.
+ * @return {number|null} Numeric file id or null when missing/malformed.
+ */
+function parseFileIdFromPropfind(xmlText) {
+	if (typeof xmlText !== 'string' || xmlText.length === 0) {
+		return null
+	}
+	try {
+		const doc = new DOMParser().parseFromString(xmlText, 'text/xml')
+		const node = doc.getElementsByTagNameNS('http://owncloud.org/ns', 'fileid')[0]
+		if (!node) {
+			return null
+		}
+		const id = Number(node.textContent)
+		return Number.isFinite(id) ? id : null
+	} catch {
+		return null
+	}
+}
+
 export const useAnonymizationStore = defineStore(
 	'anonymization',
 	{
 		state: () => ({
 			files: [],
 			processing: false,
+			/**
+			 * OR dossier records created during this session. Keyed by
+			 * folderName so multiple uploads-as-dossier in the same view
+			 * don't clash. Each entry: { folderName, folderId, uuid, name, bases }.
+			 *
+			 * @type {Array<{folderName: string, folderId: number, uuid: string, name: string, bases: string[]}>}
+			 */
+			dossiers: [],
 		}),
 		getters: {
 			hasFiles: (state) => state.files.length > 0,
@@ -101,6 +200,29 @@ export const useAnonymizationStore = defineStore(
 			allDone: (state) => state.files.length > 0
 				&& state.files.every((f) => f.status === 'completed' || f.status === 'error'),
 			isProcessing: (state) => state.processing,
+			/**
+			 * Find a queue entry by its Nextcloud file id. Used by the
+			 * file-viewer sidebar to look up the entities of whichever
+			 * file is currently open in the viewer.
+			 *
+			 * Matches either the original `fileId` or the post-anonymisation
+			 * `anonymizedFileId`, so the sidebar keeps rendering the same
+			 * entry (and its success card) after the viewer auto-swaps to
+			 * the anonymised file.
+			 *
+			 * @param {object} state Store state.
+			 * @return {(fileId: number) => object | undefined}
+			 */
+			findByFileId: (state) => (fileId) => {
+				if (fileId === null || fileId === undefined) {
+					return undefined
+				}
+				const target = Number(fileId)
+				return state.files.find(
+					(f) => Number(f.fileId) === target
+						|| Number(f.anonymizedFileId) === target,
+				)
+			},
 		},
 		actions: {
 			/**
@@ -258,21 +380,13 @@ export const useAnonymizationStore = defineStore(
 					entry.entityCount = entities.length
 
 					// Seed per-row review state on every detected entity.
-					// The extra fields (`included`, `highestConfidence`, `fileCount`,
-					// `relationIds`) are what `EntityReviewTable` expects — the
-					// folder/batch flows pre-aggregate into that shape too. Single
-					// file → fileCount 1 and a 1-element relationIds array (or
-					// empty when the entity has no relation, e.g. regex-only path).
-					entry.entities = entities.map((e) => ({
-						...e,
-						included: true,
-						highestConfidence: e.confidence ?? 0,
-						fileCount: 1,
-						relationIds: e.relationId != null ? [e.relationId] : [],
-						_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
-						_decisionSkip: !!e.skipAnonymization,
-						_patchError: null,
-					}))
+					// `decorateEntities` adds the extra fields (`included`,
+					// `highestConfidence`, `fileCount`, `relationIds`) that
+					// `EntityReviewTable` expects — see helpers at the top of
+					// this file. Same shape is used by `ensureExtracted` so the
+					// sidebar can read entities regardless of how the file
+					// entered the queue.
+					entry.entities = decorateEntities(entities)
 
 					if (entities.length === 0) {
 						// Nothing to anonymise; skip review and mark done.
@@ -379,6 +493,141 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
+			 * Ensure a queue entry exists for the given file id with its
+			 * entities populated. Backs the file-viewer sidebar — when the
+			 * user opens a file that was uploaded earlier (e.g. by clicking
+			 * one in `FolderFilesNavigation`), the store wouldn't otherwise
+			 * know about it.
+			 *
+			 * Look-up first; on a miss, create a synthetic entry and POST
+			 * `extract/{fileId}` to seed entities. The backend short-circuits
+			 * on `isSourceUpToDate`, so this is effectively a DB-cached
+			 * lookup for previously processed files.
+			 *
+			 * @param {object} fileMeta File descriptor.
+			 * @param {number} fileMeta.fileId Nextcloud file id.
+			 * @param {string} fileMeta.fileName File name with extension.
+			 * @param {string} fileMeta.path Absolute path.
+			 * @param {string} [fileMeta.mimeType] MIME type (optional, unused server-side).
+			 * @return {Promise<object>} The queue entry.
+			 */
+			async ensureExtracted(fileMeta) {
+				const existing = this.findByFileId(fileMeta.fileId)
+				if (existing) {
+					return existing
+				}
+
+				const entry = makeSyntheticEntry(fileMeta)
+				this.files.push(entry)
+
+				try {
+					const extractResponse = await axios.post(
+						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
+					)
+					const entities = extractResponse.data.entities || []
+					entry.entityCount = entities.length
+					entry.entities = decorateEntities(entities)
+					entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				} catch (err) {
+					console.error(`Failed to load entities for ${entry.name}:`, err)
+					entry.error = err.response?.data?.error || err.message
+					entry.status = 'error'
+				}
+
+				return entry
+			},
+
+			/**
+			 * Create an OpenRegister dossier object for a folder under
+			 * `/DocuDesk/`. Mirrors what `folderAnonymization.createDossier`
+			 * does, but scoped to this widget's single-file queue.
+			 *
+			 * 1. PROPFIND the new folder to read its Nextcloud node id.
+			 * 2. POST to `/apps/openregister/api/objects/dossier/dossier`
+			 *    with `{ name, description, bases, @self: { folder } }`.
+			 * 3. Record the result in `state.dossiers` so the sidebar /
+			 *    summary actions can look it up by folderName.
+			 *
+			 * Idempotent on the folderName: if a dossier was already created
+			 * in this session for the same folder, returns the cached record
+			 * without re-posting.
+			 *
+			 * @param {string} folderName Folder name under /DocuDesk/.
+			 * @param {object} [options] Dossier metadata.
+			 * @param {string} [options.description] Free-text description.
+			 * @param {string[]} [options.bases] Default grondslagen.
+			 * @return {Promise<object>} { folderName, folderId, uuid, name, bases }.
+			 * @throws {Error} If the PROPFIND or OR create call fails.
+			 */
+			async bindDossier(folderName, options = {}) {
+				const cleanName = (folderName || '').trim()
+				if (!cleanName) {
+					throw new Error('Folder name is required')
+				}
+
+				const cached = this.dossiers.find((d) => d.folderName === cleanName)
+				if (cached) {
+					return cached
+				}
+
+				// Step 1 — PROPFIND for the folder's NC node id.
+				const propfindUrl = `${davBaseUrl()}/DocuDesk/${encodePath(cleanName)}/`
+				const propfindResponse = await axios({
+					method: 'PROPFIND',
+					url: propfindUrl,
+					headers: { Depth: '0', 'Content-Type': 'application/xml' },
+					data: `<?xml version="1.0"?>
+						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+							<d:prop>
+								<oc:fileid />
+							</d:prop>
+						</d:propfind>`,
+				})
+				const folderId = parseFileIdFromPropfind(propfindResponse.data)
+				if (folderId === null) {
+					throw new Error(`Failed to read folder id for ${cleanName}`)
+				}
+
+				// Step 2 — create the OR dossier object.
+				const bases = Array.isArray(options.bases) && options.bases.length > 0
+					? options.bases
+					: ['persoonsgegevens']
+				const payload = {
+					name: cleanName,
+					description: options.description ?? '',
+					bases,
+					'@self': { folder: String(folderId) },
+				}
+
+				const createResponse = await axios.post(
+					generateUrl('/apps/openregister/api/objects/dossier/dossier'),
+					payload,
+				)
+				const uuid = createResponse.data?.['@self']?.id
+					?? createResponse.data?.id
+					?? null
+				if (uuid === null) {
+					throw new Error('Dossier created but no UUID returned')
+				}
+
+				const record = { folderName: cleanName, folderId, uuid, name: cleanName, bases }
+				this.dossiers.push(record)
+				return record
+			},
+
+			/**
+			 * Look up the OR dossier record (if any) created during this
+			 * session for a given folder name. Returns undefined when the
+			 * folder is not bound to an OR dossier yet.
+			 *
+			 * @param {string} folderName Folder name under /DocuDesk/.
+			 * @return {object|undefined}
+			 */
+			findDossier(folderName) {
+				return this.dossiers.find((d) => d.folderName === folderName)
+			},
+
+			/**
 			 * Flip the `included` flag on a single entity within a file entry.
 			 *
 			 * Backs the row checkbox in `EntityReviewTable`. Unchecking means
@@ -460,11 +709,12 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
-			 * Reset the queue and processing flag completely.
+			 * Reset the queue, processing flag and dossier records completely.
 			 */
 			reset() {
 				this.files = []
 				this.processing = false
+				this.dossiers = []
 			},
 		},
 	},

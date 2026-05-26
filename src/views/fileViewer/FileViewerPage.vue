@@ -11,12 +11,13 @@
 					</template>
 					{{ t('docudesk', 'Back') }}
 				</NcButton>
-				<!-- Stub: toggle between original and anonymised version. Wired up in a follow-up task. -->
+				<!-- Toggle between original and anonymised version — enabled once
+				     the sidebar attaches the anonymised variant via `setAnonymizedVariant`. -->
 				<NcButton
 					v-if="canToggleAnonymized"
 					type="secondary"
-					:disabled="true"
-					:title="t('docudesk', 'Toggle between original and anonymised (coming soon)')"
+					:disabled="!fileViewerStore.canToggleVariant"
+					:title="toggleTitle"
 					@click="fileViewerStore.toggleAnonymized()">
 					<template #icon>
 						<EyeOffOutline v-if="fileViewerStore.showAnonymized" :size="18" />
@@ -154,13 +155,28 @@ export default {
 			}
 		},
 		/**
-		 * The toggle is shown for any previewable type so the placement is
-		 * consistent, but it is disabled until anonymisation-swap is wired up.
+		 * The toggle is rendered for any previewable type so the placement
+		 * is consistent; the button is only enabled when both the original
+		 * and the anonymised variant are loaded in the store.
 		 *
 		 * @return {boolean}
 		 */
 		canToggleAnonymized() {
 			return this.viewerComponent !== null
+		},
+		/**
+		 * Tooltip for the toggle button — explains the disabled state when
+		 * the anonymised variant is not (yet) available.
+		 *
+		 * @return {string}
+		 */
+		toggleTitle() {
+			if (!fileViewerStore.canToggleVariant) {
+				return t('docudesk', 'Anonymised version not available yet')
+			}
+			return fileViewerStore.showAnonymized
+				? t('docudesk', 'Switch to the original file')
+				: t('docudesk', 'Switch to the anonymised file')
 		},
 	},
 	methods: {

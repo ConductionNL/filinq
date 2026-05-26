@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { anonymizationStore } from '../../store/store.js'
+import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -10,121 +10,11 @@ import { anonymizationStore } from '../../store/store.js'
 			{{ t('docudesk', 'what would you like to anonymize today?') }}
 		</h2>
 		<p class="page-description">
-			{{ t('docudesk', 'Upload documents. Each file is uploaded and scanned for entities. Review the detected entities, optionally assign Woo Art. 5 grondslagen or mark entities to skip, then run anonymisation. (Smoke-test surface — not a production publication-prep page.)') }}
+			{{ t('docudesk', 'Upload one or more documents. After uploading you continue in the file viewer, where the sidebar lists detected entities and lets you assign Woo Art. 5 grondslagen before running anonymisation.') }}
 		</p>
 
-		<!-- Results table -->
-		<div v-if="anonymizationStore.hasFiles" class="results-area">
-			<table class="results-table">
-				<thead>
-					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th>{{ t('docudesk', 'Dossier') }}</th>
-						<th class="col-number">
-							{{ t('docudesk', 'Entities') }}
-						</th>
-						<th class="col-number">
-							{{ t('docudesk', 'Removed') }}
-						</th>
-						<th class="col-action">
-							{{ t('docudesk', 'Result') }}
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="file in anonymizationStore.files" :key="file.id">
-						<td class="col-file" :title="file.name">
-							{{ file.name }}
-						</td>
-						<td class="col-dossier">
-							<span v-if="file.dossier" class="dossier-tag">
-								<FolderOutline :size="14" />
-								{{ file.dossier }}
-							</span>
-							<span v-else class="status-label">&mdash;</span>
-						</td>
-						<td class="col-number">
-							<template v-if="file.status === 'completed' || file.status === 'anonymizing' || file.status === 'extracted'">
-								{{ file.entityCount }}
-							</template>
-							<template v-else-if="file.status === 'error'">
-								&mdash;
-							</template>
-							<NcLoadingIcon v-else :size="16" />
-						</td>
-						<td class="col-number">
-							<template v-if="file.status === 'completed'">
-								{{ file.replacementCount }}
-							</template>
-							<template v-else-if="file.status === 'error'">
-								&mdash;
-							</template>
-							<NcLoadingIcon v-else-if="file.status === 'anonymizing'" :size="16" />
-							<template v-else>
-								&mdash;
-							</template>
-						</td>
-						<td class="col-action">
-							<a
-								v-if="file.status === 'completed' && file.anonymizedFilePath"
-								:href="downloadUrl(file.anonymizedFilePath)"
-								download
-								class="download-link">
-								{{ t('docudesk', 'Download') }}
-							</a>
-							<span v-else-if="file.status === 'completed'" class="status-clean">
-								{{ t('docudesk', 'Clean') }}
-							</span>
-							<span v-else-if="file.status === 'error'" class="status-error" :title="file.error">
-								{{ t('docudesk', 'Error') }}
-							</span>
-							<span v-else class="status-label">
-								{{ statusLabel(file.status) }}
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-
-			<div v-if="anonymizationStore.hasCompleted" class="table-actions">
-				<NcButton type="tertiary" @click="anonymizationStore.clearCompleted()">
-					{{ t('docudesk', 'Clear completed') }}
-				</NcButton>
-			</div>
-		</div>
-
-		<!-- Per-file entity review. Every file the store left in `extracted`
-		     gets its own review card so the operator can adjust grondslagen
-		     and skip flags before triggering anonymisation. The store's
-		     uploadAndExtract stops at `extracted` by design; without this
-		     section the file would be stuck with a spinner forever. -->
-		<div
-			v-for="file in extractedFiles"
-			:key="'review-' + file.id"
-			class="review-card">
-			<h3 class="review-title">
-				{{ t('docudesk', 'Review entities for {name}', { name: file.name }) }}
-			</h3>
-			<EntityReviewTable
-				:entities="file.entities"
-				:file-count="1"
-				@toggle="anonymizationStore.toggleEntity(file, $event)"
-				@bulk-select="anonymizationStore.setVisibleEntities(file, $event, true)"
-				@bulk-deselect="anonymizationStore.setVisibleEntities(file, $event, false)"
-				@bases-change="anonymizationStore.setEntityBases(file, $event.idx, $event.bases)"
-				@skip-change="anonymizationStore.setEntitySkip(file, $event.idx, $event.skip)" />
-			<div class="review-actions">
-				<NcButton
-					type="primary"
-					:disabled="includedCount(file) === 0"
-					@click="anonymizationStore.anonymiseEntry(file)">
-					{{ t('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount(file)) }}
-				</NcButton>
-			</div>
-		</div>
-
 		<!-- Drop zone -->
-		<div class="upload-area" :class="{ compact: anonymizationStore.hasFiles }">
+		<div class="upload-area">
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
@@ -190,16 +80,12 @@ import { anonymizationStore } from '../../store/store.js'
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
-import { generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
-import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
-import EntityReviewTable from './EntityReviewTable.vue'
 import uploadIcon from '../../assets/upload.png'
 
-// Woo Art. 5 grondslagen are owned by `EntityReviewTable` (it ships its own
-// BASES_OPTIONS for the per-row dropdown). The widget used to declare its
-// own copy too — removed since nothing on this surface consumed it, and
-// it left a no-unused-vars lint error behind.
+// Widget only handles upload + the dossier dialog. After upload the user is
+// routed to the file viewer (/my-documents host), where `FileViewerSidebar`
+// renders detected entities, grondslagen pickers and the anonymise button.
 
 export default {
 	name: 'AnonymizationWidget',
@@ -208,8 +94,6 @@ export default {
 		NcDialog,
 		NcLoadingIcon,
 		NcTextField,
-		FolderOutline,
-		EntityReviewTable,
 	},
 	data() {
 		return {
@@ -231,16 +115,6 @@ export default {
 		userName() {
 			const user = getCurrentUser()
 			return user?.displayName || user?.uid || ''
-		},
-		/**
-		 * Files that have finished extraction and are awaiting per-entity
-		 * review before anonymisation. Drives the review cards below the
-		 * results table.
-		 *
-		 * @return {object[]} Queue entries in the `extracted` state.
-		 */
-		extractedFiles() {
-			return anonymizationStore.files.filter((f) => f.status === 'extracted')
 		},
 	},
 	methods: {
@@ -275,17 +149,48 @@ export default {
 		/**
 		 * Route the incoming files to the right flow:
 		 *   - 2+ files → open the dossier dialog (user picks a folder name).
-		 *   - single file → straight into the queue under /DocuDesk/.
+		 *   - single file → straight into the queue under /DocuDesk/, then
+		 *     open the file in the in-app viewer and route to /my-documents
+		 *     so `FileViewerPage` mounts and the sidebar lists entities.
 		 *
 		 * @param {File[] | FileList} fileList Files from drop or input.
+		 * @return {Promise<void>}
 		 */
-		dispatchFiles(fileList) {
+		async dispatchFiles(fileList) {
 			const files = Array.from(fileList)
 			if (files.length >= 2) {
 				this.openDossierDialog(files)
-			} else {
-				anonymizationStore.addFiles(files)
+				return
 			}
+
+			// Capture MIME type before addFiles consumes the File blob,
+			// and the queue length so we can find the new entry afterwards.
+			const mimeType = files[0]?.type || ''
+			const before = anonymizationStore.files.length
+			await anonymizationStore.addFiles(files)
+			const entry = anonymizationStore.files[before]
+			if (entry && entry.fileId) {
+				fileViewerStore.open({
+					fileId: entry.fileId,
+					fileName: entry.name,
+					mimeType,
+					path: entry.filePath,
+				})
+				this.gotoViewer()
+			}
+		},
+		/**
+		 * Route to the file-viewer host page when not already there.
+		 * Hash-mode router throws NavigationDuplicated if we push the same
+		 * route — swallowed so the upload flow stays clean.
+		 *
+		 * @return {void}
+		 */
+		gotoViewer() {
+			if (this.$route?.name === 'MyDocuments') {
+				return
+			}
+			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
 		},
 		/**
 		 * Open the dossier-name dialog, pre-fill a timestamp-based name,
@@ -313,7 +218,44 @@ export default {
 			this.dossierSubmitting = true
 			this.dossierError = ''
 			try {
+				// Capture metadata before addFilesAsDossier consumes the
+				// File blobs — used to seed the file viewer afterwards.
+				const firstMime = this.pendingFiles[0]?.type || ''
+				const before = anonymizationStore.files.length
+
 				await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+
+				// Bind the WebDAV folder to an OpenRegister dossier object
+				// (PROPFIND + POST). Best-effort: files are uploaded fine
+				// regardless of OR binding, so we surface the error in
+				// the dialog but don't roll the upload back.
+				try {
+					await anonymizationStore.bindDossier(name)
+				} catch (err) {
+					console.error('Failed to bind dossier to OpenRegister:', err)
+				}
+
+				// Switch the left-hand navigation to the new dossier folder
+				// so `FolderFilesNavigation` lists every file we just put
+				// inside it.
+				try {
+					await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
+				} catch (err) {
+					console.error('Failed to open dossier folder:', err)
+				}
+
+				// Open the first uploaded file in the viewer.
+				const firstEntry = anonymizationStore.files[before]
+				if (firstEntry && firstEntry.fileId) {
+					fileViewerStore.open({
+						fileId: firstEntry.fileId,
+						fileName: firstEntry.name,
+						mimeType: firstMime,
+						path: firstEntry.filePath,
+					})
+					this.gotoViewer()
+				}
+
 				this.closeDossierDialog()
 			} catch (err) {
 				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to create dossier'
@@ -351,51 +293,6 @@ export default {
 			const mi = String(d.getMinutes()).padStart(2, '0')
 			return `Dossier-${yyyy}-${mm}-${dd}-${hh}${mi}`
 		},
-		/**
-		 * Turn a Nextcloud file path ("/admin/files/DocuDesk/...") into
-		 * a WebDAV download URL. Falls back to the WebDAV root when the
-		 * path cannot be parsed.
-		 *
-		 * @param {string} filePath Path as returned by the upload endpoint.
-		 * @return {string} Download URL.
-		 */
-		downloadUrl(filePath) {
-			const parts = filePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				const relativePath = parts.slice(filesIndex + 1).join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
-		},
-		/**
-		 * Human-readable label for in-progress queue statuses.
-		 *
-		 * @param {string} status Raw entry.status value.
-		 * @return {string} Translated label.
-		 */
-		statusLabel(status) {
-			const labels = {
-				queued: t('docudesk', 'Queued'),
-				uploading: t('docudesk', 'Uploading...'),
-				moving: t('docudesk', 'Moving...'),
-				extracting: t('docudesk', 'Detecting...'),
-				extracted: t('docudesk', 'Review needed'),
-				anonymizing: t('docudesk', 'Anonymizing...'),
-			}
-			return labels[status] || status
-		},
-		/**
-		 * Number of entities currently included for anonymisation on a
-		 * file. Drives the per-file "Anonymize N entities" button label
-		 * and disabled state in the review card.
-		 *
-		 * @param {object} file Queue entry.
-		 * @return {number} Count of entities with `included !== false`.
-		 */
-		includedCount(file) {
-			return (file?.entities || []).filter((e) => e.included !== false).length
-		},
 	},
 }
 </script>
@@ -412,95 +309,6 @@ export default {
 
 .page-title {
 	margin: 0 0 16px 0;
-}
-
-.results-area {
-	margin-bottom: 16px;
-}
-
-.results-table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 0.9rem;
-}
-
-.results-table th {
-	text-align: left;
-	font-weight: 600;
-	padding: 8px 10px;
-	border-bottom: 1px solid var(--color-border);
-	color: var(--color-text-maxcontrast);
-	font-size: 0.85rem;
-	white-space: nowrap;
-}
-
-.results-table td {
-	padding: 8px 10px;
-	border-bottom: 1px solid var(--color-border-dark, var(--color-border));
-	vertical-align: middle;
-}
-
-.col-file {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 280px;
-}
-
-.col-dossier {
-	white-space: nowrap;
-}
-
-.dossier-tag {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 8px;
-	border-radius: 12px;
-	background-color: var(--color-background-dark);
-	color: var(--color-text-maxcontrast);
-	font-size: 0.8rem;
-}
-
-.col-number {
-	text-align: center;
-	width: 80px;
-}
-
-.col-action {
-	text-align: right;
-	width: 120px;
-	white-space: nowrap;
-}
-
-.download-link {
-	color: var(--color-primary);
-	text-decoration: none;
-	font-weight: 500;
-}
-
-.download-link:hover {
-	text-decoration: underline;
-}
-
-.status-clean {
-	color: var(--color-text-maxcontrast);
-	font-style: italic;
-}
-
-.status-error {
-	color: var(--color-error);
-	cursor: help;
-}
-
-.status-label {
-	color: var(--color-text-maxcontrast);
-}
-
-.table-actions {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 8px;
 }
 
 .upload-area {
@@ -580,22 +388,4 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-.review-card {
-	margin: 24px 0;
-	padding: 16px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	background-color: var(--color-main-background);
-}
-
-.review-title {
-	margin: 0 0 12px 0;
-	font-size: 1rem;
-}
-
-.review-actions {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 12px;
-}
 </style>
