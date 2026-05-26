@@ -17,12 +17,14 @@ Provides a complete document anonymization pipeline: upload files to a user-scop
 Users upload files via multipart form data, and files are stored in a per-user DocuDesk folder within Nextcloud Files.
 
 #### Scenario: Successful file upload
+@e2e exclude multipart POST /api/anonymization/upload response shape — FileUploadService verified by PHPUnit; UI upload flow covered by complete-anonymization-workflow test
 - GIVEN a logged-in user
 - WHEN they upload a PDF file via `POST /api/anonymization/upload`
 - THEN the file is stored in their `DocuDesk/` subfolder in Nextcloud Files
 - AND the response includes fileId, filePath, fileName, and fileSize
 
 #### Scenario: Auto-create DocuDesk folder
+@e2e exclude IRootFolder folder-creation side-effect — FileUploadService verified by PHPUnit; folder auto-creation not separately observable in UI
 - GIVEN a logged-in user who has never used DocuDesk
 - AND no `DocuDesk/` folder exists in their Nextcloud files
 - WHEN they upload their first file
@@ -30,17 +32,20 @@ Users upload files via multipart form data, and files are stored in a per-user D
 - AND the file is stored in the new folder
 
 #### Scenario: Duplicate file name handling
+@e2e exclude filename deduplication algorithm — FileUploadService collision logic verified by PHPUnit; not directly observable in UI without pre-existing file collision setup
 - GIVEN a user's DocuDesk folder already contains `report.pdf`
 - WHEN they upload another file named `report.pdf`
 - THEN the file is saved as `report_1.pdf`
 - AND subsequent duplicates increment the counter (`report_2.pdf`, etc.)
 
 #### Scenario: No file uploaded
+@e2e exclude backend input validation — AnonymizationController 400 response verified by PHPUnit; UI upload widget prevents empty submissions
 - GIVEN a user submits the upload endpoint with no file attached
 - WHEN the controller checks for uploaded file data
 - THEN a 400 response is returned with "No file uploaded"
 
 #### Scenario: PHP upload error
+@e2e exclude PHP upload error code propagation — backend error handling verified by PHPUnit; not reproducible via normal UI interaction
 - GIVEN a user submits a file that triggers a PHP upload error (e.g., exceeds max size)
 - WHEN the controller checks `$file['error']`
 - THEN a 400 response is returned with "File upload failed with error code: {code}"
@@ -61,6 +66,7 @@ Users upload files via multipart form data, and files are stored in a per-user D
 Text is extracted from uploaded documents and entities (persons, organizations, emails, phone numbers) are detected using OpenRegister's NER capabilities.
 
 #### Scenario: Extract entities from a document with PII
+@e2e exclude TextExtractionService integration — entity detection requires real NER pipeline; API response verified by PHPUnit and integration tests; UI pipeline covered by complete-anonymization-workflow
 - GIVEN an uploaded PDF containing names, email addresses, and organization names
 - WHEN entity extraction is triggered via `POST /api/anonymization/extract/{fileId}`
 - THEN text is extracted using OpenRegister's `TextExtractionService::extractFile()`
@@ -69,17 +75,20 @@ Text is extracted from uploaded documents and entities (persons, organizations, 
 - AND the response includes the entities array and entityCount
 
 #### Scenario: Extract entities from a clean document
+@e2e exclude NER pipeline clean-document path — requires real file + OR TextExtractionService; verified by PHPUnit integration tests
 - GIVEN an uploaded document containing no personally identifiable information
 - WHEN entity extraction is triggered
 - THEN the response shows entityCount of 0
 - AND the entities array is empty
 
 #### Scenario: Entity normalization
+@e2e exclude EntityDetectionService field-name normalization — backend transformation verified by PHPUnit unit tests
 - GIVEN OpenRegister returns entities with varying field names (entity_type/entityType, entity_value/entityValue)
 - WHEN entities are normalized by EntityDetectionService
 - THEN all entities have consistent format: `type`, `value`, `confidence`
 
 #### Scenario: OpenRegister unavailable during extraction
+@e2e exclude RuntimeException path when OR not installed — not reproducible in env with OR installed; verified by PHPUnit
 - GIVEN OpenRegister is not installed
 - WHEN entity extraction is triggered
 - THEN a RuntimeException is thrown
@@ -101,6 +110,7 @@ Text is extracted from uploaded documents and entities (persons, organizations, 
 Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy.
 
 #### Scenario: Anonymize a document with detected entities
+@e2e exclude FileService::anonymizeDocument() integration — requires real file + entity pipeline; API response verified by PHPUnit; UI pipeline covered by complete-anonymization-workflow
 - GIVEN extracted entities for a file (3 PERSON entities, 1 ORGANIZATION entity)
 - WHEN anonymization is triggered via `POST /api/anonymization/anonymize/{fileId}` with entities array
 - THEN an anonymized copy of the document is created
@@ -108,24 +118,28 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 - AND the response includes anonymizedFileId, anonymizedFileName, anonymizedFilePath, and replacementCount
 
 #### Scenario: Short entity values are skipped
+@e2e exclude EntityDetectionService entity-filter logic — min-length guard verified by PHPUnit unit tests
 - GIVEN entity list includes a value "AB" (2 characters)
 - WHEN entities are mapped for anonymization
 - THEN the short value is skipped (minimum 3 characters required)
 - AND only entities with 3+ character values are processed
 
 #### Scenario: Numeric entity values are skipped
+@e2e exclude EntityDetectionService entity-filter logic — numeric-skip guard verified by PHPUnit unit tests
 - GIVEN entity list includes a purely numeric value "12345"
 - WHEN entities are mapped for anonymization
 - THEN the numeric value is skipped to prevent PHP array key type coercion issues
 - AND only string entity values are processed
 
 #### Scenario: Duplicate entities are deduplicated
+@e2e exclude EntityDetectionService deduplication — seen-set logic verified by PHPUnit unit tests
 - GIVEN the entity list contains "Ruben van der Linde" twice
 - WHEN entities are mapped for anonymization
 - THEN only one replacement mapping is created for that value
 - AND the deduplication uses a seen-set to track processed values
 
 #### Scenario: Empty entities validation
+@e2e exclude AnonymizationController input validation — 400 response verified by PHPUnit; UI widget prevents empty entity list submission
 - GIVEN a user calls the anonymize endpoint with an empty entities array
 - WHEN the controller validates the request
 - THEN a 400 response is returned with "No entities provided for anonymization"
@@ -147,18 +161,21 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 List all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
 
 #### Scenario: List files with entity counts and status
+@e2e exclude FileListingService API response content — requires pre-processed files in DocuDesk/ folder; GET /api/anonymization/files verified by PHPUnit
 - GIVEN a user has 5 files in their DocuDesk folder (2 extracted, 1 anonymized, 2 uploaded)
 - WHEN they request `GET /api/anonymization/files`
 - THEN all 5 files are returned sorted by modification time (newest first)
 - AND each file includes entityCount, anonymizedCount, and status
 
 #### Scenario: Risk level assessment per file
+@e2e exclude RiskLevelService integration — requires real OR RiskLevelService and processed files; verified by PHPUnit integration tests
 - GIVEN a file with 7 detected entities including 5 PERSON entities
 - WHEN the file listing is generated
 - THEN the file includes a riskLevel from OpenRegister's RiskLevelService
 - AND the risk level reflects the number and type of detected PII
 
 #### Scenario: File listing with unavailable OpenRegister services
+@e2e exclude graceful degradation catch-block — RuntimeException fallback verified by PHPUnit; not reproducible in env with OR installed
 - GIVEN OpenRegister's EntityRelationMapper or RiskLevelService is unavailable
 - WHEN the file listing is generated
 - THEN the listing continues with default values (entityCount: 0, riskLevel: "unknown")
@@ -180,18 +197,21 @@ List all files in the user's DocuDesk folder with entity counts, anonymization s
 AnonymizationService lazily resolves OpenRegister services at call time to gracefully handle the case where OpenRegister is not installed.
 
 #### Scenario: Service resolution when OpenRegister is installed
+@e2e exclude lazy DI resolution pattern — AnonymizationService container->get() pattern verified by PHPUnit; not directly observable in UI
 - GIVEN OpenRegister is installed and enabled
 - WHEN `extractAndDetectEntities()` is called
 - THEN TextExtractionService is lazily resolved via `container->get()`
 - AND EntityRelationMapper is lazily resolved via `container->get()`
 
 #### Scenario: Service resolution when OpenRegister is not installed
+@e2e exclude RuntimeException on missing OR — not reproducible in env with OR installed; verified by PHPUnit
 - GIVEN OpenRegister is not installed
 - WHEN any anonymization operation is attempted
 - THEN `getOpenRegisterService()` throws RuntimeException
 - AND the exception message identifies which service is unavailable
 
 #### Scenario: Graceful degradation in file listing
+@e2e exclude EntityRelationMapper failure catch-block — not reproducible in env with OR installed; verified by PHPUnit
 - GIVEN OpenRegister is installed but EntityRelationMapper fails
 - WHEN file listing is requested
 - THEN the RuntimeException is caught
@@ -212,6 +232,7 @@ AnonymizationService lazily resolves OpenRegister services at call time to grace
 Each anonymized entity is assigned a cryptographically secure UUID v4 key as its replacement identifier.
 
 #### Scenario: UUID key generation
+@e2e exclude cryptographic UUID generation — random_bytes(16) UUID generation verified by PHPUnit unit tests
 - GIVEN 5 entities are being mapped for anonymization
 - WHEN UUIDs are generated for each entity
 - THEN each entity receives a unique UUID v4 string
@@ -219,11 +240,13 @@ Each anonymized entity is assigned a cryptographically secure UUID v4 key as its
 - AND the UUIDs are generated using `random_bytes(16)` for cryptographic security
 
 #### Scenario: UUID uniqueness
+@e2e exclude UUID collision probability — statistical property verified by PHPUnit; not UI-observable
 - GIVEN multiple entities are processed in a single anonymization request
 - WHEN UUIDs are generated
 - THEN each UUID is unique (collision probability is negligible with 122 bits of entropy)
 
 #### Scenario: UUID format verification
+@e2e exclude UUID RFC 4122 format — regex verification in PHPUnit; not UI-observable
 - GIVEN a generated UUID
 - THEN it matches the pattern `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx` where y is 8, 9, a, or b
 
@@ -240,17 +263,20 @@ Each anonymized entity is assigned a cryptographically secure UUID v4 key as its
 File operations require an authenticated user session to scope files to the correct user's folder.
 
 #### Scenario: No user session on upload
+@e2e exclude Nextcloud session authentication gate — AnonymizationController 401 path verified by PHPUnit; NC itself handles unauthenticated requests
 - GIVEN a request hits the upload endpoint without an authenticated user
 - WHEN `getCurrentUserId()` is called
 - THEN an Exception is thrown with message "No user is currently logged in." and code 401
 - AND the controller returns a 401 status code
 
 #### Scenario: No user session on file listing
+@e2e exclude Nextcloud session authentication gate — 401 path verified by PHPUnit; NC itself handles unauthenticated requests
 - GIVEN a request hits the files endpoint without an authenticated user
 - WHEN `getCurrentUserId()` is called
 - THEN a 401 response is returned
 
 #### Scenario: Extract/anonymize endpoints do not check user session
+@e2e exclude absence of getCurrentUserId() call in extract/anonymize — code structure assertion verified by PHPUnit/code inspection
 - GIVEN the extract and anonymize endpoints accept a fileId parameter
 - WHEN these endpoints are called
 - THEN they do not call `getCurrentUserId()` directly
@@ -300,12 +326,14 @@ The frontend provides a step-by-step UI for the complete anonymization workflow 
 Two distinct EntityRelationMapper methods serve different purposes in the pipeline: entity detail retrieval vs. relation counting.
 
 #### Scenario: Entity details during extraction
+@e2e exclude EntityRelationMapper::findEntitiesForFile() method selection — internal OR mapper API usage verified by PHPUnit
 - GIVEN a file has been text-extracted with entity recognition
 - WHEN `extractAndDetectEntities()` retrieves entity details
 - THEN `findEntitiesForFile()` returns rich entity data (type, value, confidence)
 - AND these are the detected entities themselves
 
 #### Scenario: Entity counts during file listing
+@e2e exclude EntityRelationMapper::findByFileId() method selection — internal OR mapper API usage verified by PHPUnit
 - GIVEN a user requests the file listing
 - WHEN entity counts are computed for each file
 - THEN `findByFileId()` returns relation records linking files to entities
@@ -313,6 +341,7 @@ Two distinct EntityRelationMapper methods serve different purposes in the pipeli
 - AND entityCount and anonymizedCount are derived from these relations
 
 #### Scenario: Different return types for different contexts
+@e2e exclude dual-mapper-method architectural decision — internal service design verified by PHPUnit; not UI-observable
 - GIVEN both mapper methods are available
 - WHEN extraction pipeline needs entity details it uses `findEntitiesForFile()`
 - AND when file listing needs counts it uses `findByFileId()`
@@ -331,18 +360,21 @@ Two distinct EntityRelationMapper methods serve different purposes in the pipeli
 The Pinia store manages a sequential file processing queue with status tracking through the pipeline stages.
 
 #### Scenario: Sequential file processing
+@e2e exclude multi-file queue sequencing — requires multiple simultaneous uploads; single-file flow covered by complete-anonymization-workflow test; store queue logic unit-testable
 - GIVEN 3 files are queued for anonymization
 - WHEN processing begins
 - THEN files are processed sequentially (one at a time)
 - AND each file transitions through: queued -> uploading -> extracting -> anonymizing -> completed
 
 #### Scenario: Error state in queue
+@e2e exclude Pinia queue error-state transition — unit-testable store behavior; not reliably injectable via UI without backend failure injection
 - GIVEN a file fails during the extracting stage
 - WHEN the error is caught
 - THEN the file status is set to `error`
 - AND the next file in the queue begins processing
 
 #### Scenario: Queue state getters
+@e2e exclude Pinia store getter shape — unit-testable; UI observes rendered state (covered by complete-anonymization-workflow test)
 - GIVEN the anonymization store has files in various states
 - WHEN the UI queries the store
 - THEN `hasFiles`, `hasCompleted`, `allDone`, and `isProcessing` getters provide accurate state

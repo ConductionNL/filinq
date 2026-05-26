@@ -12,6 +12,8 @@ retrofit_extensions:
 
 ## Purpose
 
+@e2e exclude template management has no dedicated DocuDesk UI — templates are managed via REST API or TemplateService DI injection from consumer apps; API behavior covered by PHPUnit service and controller tests
+
 Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a `namespace` field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service. Consumer apps access templates via the `TemplateService` (DI container) or the REST API.
 
 ## Requirements

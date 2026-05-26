@@ -71,6 +71,7 @@ DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance d
 - THEN they are navigated to the DocuDesk main page via `docudesk.dashboard.page` route
 
 #### Scenario: Widget script loading
+@e2e exclude script bundle loading is a build artifact — verified by webpack output inspection; not directly observable as a UI assertion
 - GIVEN the Nextcloud Dashboard page loads
 - WHEN DocuDesk widgets are rendered
 - THEN both widgets load the `docudesk-dashboard` script bundle
@@ -105,12 +106,14 @@ The main navigation provides three items with Material Design icons for switchin
 - THEN three items are shown: Dashboard (Finance icon), Anonymization (ShieldLock icon), Consent Management (AccountCheck icon)
 
 #### Scenario: Consent detail navigation state
+@e2e exclude consent detail view requires a consent record to navigate to; no consent creation UI exists (CONS-048); covered by navigate-between-views test for nav highlighting
 - GIVEN the user navigates to a consent detail view
 - WHEN the navigation menu is displayed
 - THEN the Consent Management item remains active
 - AND the active state applies to both consent list and detail views
 
 #### Scenario: Conditional view rendering
+@e2e exclude internal Pinia store→Vue component wiring — covered by navigate-between-views test which observes the rendered views; unit-testable directly
 - GIVEN the navigation store tracks the selected view
 - WHEN `navigationStore.selected` changes
 - THEN the Views.vue component renders the corresponding view:
@@ -135,18 +138,21 @@ The main navigation provides three items with Material Design icons for switchin
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
 #### Scenario: Serve main app page
+@e2e exclude DashboardController::page() PHP implementation — HTTP 200 response verified by view-dashboard test navigating to /apps/docudesk
 - GIVEN an authenticated user
 - WHEN GET / is requested
 - THEN DashboardController::page() returns a TemplateResponse
 - AND the template renders the Vue app entry point
 
 #### Scenario: Error handling
+@e2e exclude backend controller error path — exception-to-template conversion verified by PHPUnit; not injectable via UI
 - GIVEN an error occurs during page rendering
 - WHEN the controller catches the exception
 - THEN an error template is returned
 - AND the user sees a meaningful error message
 
 #### Scenario: Unused parameter on page method
+@e2e exclude dead code documentation — no behavioral impact; verified by code inspection
 - GIVEN DashboardController::page() accepts `$getParameter`
 - WHEN the method is called with or without this parameter
 - THEN the parameter has no effect on the response
@@ -219,18 +225,21 @@ DocuDesk uses different icon files for navigation vs. dashboard widgets, followi
 Previously identified issues have been resolved through removal.
 
 #### Scenario: DashboardController::index() removed
+@e2e exclude dead code removal — verified by static code inspection; no UI behavior to assert
 - GIVEN DashboardController previously had an index() method with dead code
 - WHEN the codebase is inspected
 - THEN the method has been removed
 - AND only the page() method remains
 
 #### Scenario: Permissive CSP removed
+@e2e exclude CSP header is a browser security header — not inspectable via UI assertions without network interception
 - GIVEN DashboardController previously set `addAllowedConnectDomain('*')`
 - WHEN the codebase is inspected
 - THEN the CSP customization has been removed
 - AND default Nextcloud CSP applies
 
 #### Scenario: Unused parameter documented
+@e2e exclude dead code documentation — duplicate of unused-parameter-on-page-method scenario above
 - GIVEN page() accepts `?string $getParameter`
 - WHEN the parameter is inspected
 - THEN it is never used in the method body

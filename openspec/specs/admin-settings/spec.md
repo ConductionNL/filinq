@@ -36,6 +36,7 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 - AND all configuration sections are displayed in NcSettingsSection blocks
 
 #### Scenario: Settings section registration
+@e2e exclude pure PHP class registration — verified by Nextcloud admin panel presence (covered by admin-opens-docudesk-settings-section)
 - GIVEN DocuDesk is installed and enabled
 - WHEN Nextcloud loads admin sections
 - THEN `OCA\DocuDesk\Settings\DocuDeskAdmin` (ISettings) provides the form template
@@ -64,6 +65,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND consent endpoints use the newly configured register/schema
 
 #### Scenario: OpenRegister version check fails
+@e2e exclude pure backend version-gate logic; tested by PHPUnit; no reproducible UI state in this env (OR meets version)
 - GIVEN OpenRegister is installed but version is 0.2.9 (below minimum 0.2.10)
 - WHEN the settings service checks OpenRegister availability
 - THEN `isOpenRegisterInstalled()` returns false
@@ -77,6 +79,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND register/schema selectors are not displayed
 
 #### Scenario: Schema listing excludes properties
+@e2e exclude API response shape — backend serialization verified by PHPUnit; not observable in UI (properties column never rendered)
 - GIVEN OpenRegister is installed with multiple registers containing schemas
 - WHEN the settings page fetches available registers
 - THEN each schema in the response excludes the `properties` field for cleaner display
@@ -99,6 +102,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 On application boot, DocuDesk automatically imports its register/schema definitions from a versioned JSON file, ensuring the required data structures exist in OpenRegister.
 
 #### Scenario: First boot auto-initialization
+@e2e exclude pure backend initialization flow — Application::boot() logic verified by PHPUnit; not observable in UI
 - GIVEN DocuDesk is freshly installed
 - AND OpenRegister is installed and enabled (>= v0.2.10)
 - WHEN the app boots for the first time
@@ -107,6 +111,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND the `configuration_version` is updated to the version in the JSON file
 
 #### Scenario: Version-gated configuration import
+@e2e exclude pure backend version-gate on initialization — verified by PHPUnit; not UI-observable
 - GIVEN DocuDesk has been initialized with configuration_version "0.0.1"
 - AND the `docudesk_register.json` file has been updated to version "0.0.2"
 - WHEN the app boots
@@ -114,6 +119,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND `configuration_version` is updated to "0.0.2"
 
 #### Scenario: Same version skips re-import
+@e2e exclude pure backend idempotency guard — verified by PHPUnit; not UI-observable
 - GIVEN DocuDesk has been initialized with configuration_version "0.0.1"
 - AND the `docudesk_register.json` file has version "0.0.1"
 - WHEN the app boots
@@ -121,6 +127,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND no unnecessary writes to OpenRegister occur
 
 #### Scenario: Initialization failure does not crash app
+@e2e exclude backend silent-fail behavior — verified by PHPUnit; not observable in UI without forced failure injection
 - GIVEN DocuDesk is booting
 - AND OpenRegister's ConfigurationService throws an exception during import
 - WHEN Application::boot() calls initialize()
@@ -129,6 +136,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND the settings page still renders
 
 #### Scenario: JSON file validation
+@e2e exclude pure backend file-validation chain — verified by PHPUnit unit tests
 - GIVEN the `docudesk_register.json` file exists in `lib/Settings/`
 - WHEN SettingsService reads the file during initialization
 - THEN file existence, readability, JSON validity, and version presence are all validated
@@ -161,6 +169,7 @@ Administrators can configure the publication objection period per WOO requiremen
 - AND the administrator is informed this may violate WOO requirements
 
 #### Scenario: Default objection period
+@e2e exclude consent record creation is not UI-accessible (no POST /api/consents endpoint); backend default verified by PHPUnit
 - GIVEN DocuDesk is freshly installed with no custom settings
 - WHEN a consent record is created
 - THEN the default objection period of 28 days (4 weeks) is used
@@ -193,6 +202,7 @@ Administrators can independently toggle language detection, keyword extraction, 
 - AND each toggle uses an NcCheckboxRadioSwitch component with descriptive label
 
 #### Scenario: Disable all enrichment features
+@e2e exclude event-listener behavior is not observable in UI — backend side-effect verified by PHPUnit; UI part (saving toggles) covered by disable-keyword-extraction test
 - GIVEN an administrator toggles off all three enrichment features
 - AND clicks Save All Settings
 - WHEN an ObjectCreatedEvent fires in OpenRegister
@@ -213,12 +223,14 @@ Administrators can independently toggle language detection, keyword extraction, 
 Settings can be retrieved and updated programmatically via REST API endpoints.
 
 #### Scenario: Retrieve all settings
+@e2e exclude raw API response shape — SettingsController JSON structure verified by PHPUnit; UI displays parsed values (covered by other settings UI tests)
 - GIVEN DocuDesk is configured with consent register and enrichment toggles
 - WHEN GET /api/settings is called
 - THEN the response includes objectTypes, openRegisters flag, availableRegisters, configuration object, and feature toggle values
 - AND the response format matches the documented structure
 
 #### Scenario: Update settings via API
+@e2e exclude direct REST API call — backend IAppConfig update verified by PHPUnit; UI save flow covered by adjust-objection-period test
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with `{"publication_objection_period_days": "42"}`
 - THEN the setting is updated in IAppConfig
@@ -226,12 +238,14 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 - AND a log entry confirms the update
 
 #### Scenario: Array values are JSON-encoded
+@e2e exclude backend serialization detail — verified by PHPUnit; no UI surface for array settings
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with an array value `{"custom_list": ["a", "b"]}`
 - THEN the array is JSON-encoded before storage in IAppConfig
 - AND retrieving the setting returns the JSON string
 
 #### Scenario: Empty keys are skipped
+@e2e exclude backend input-sanitization — verified by PHPUnit; not observable via UI
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with `{"": "some_value"}`
 - THEN the empty key is skipped with a warning log
@@ -252,18 +266,21 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 SettingsService exposes reusable public methods for OpenRegister service resolution and availability checking, used by other DocuDesk services and controllers.
 
 #### Scenario: ConsentController uses getObjectService
+@e2e exclude internal DI wiring — SettingsService helper method verified by PHPUnit; no direct UI surface
 - GIVEN ConsentController needs to query consent records
 - WHEN it calls `$this->settingsService->getObjectService()`
 - THEN the ObjectService is lazily resolved from the container
 - AND the controller can query consent records directly
 
 #### Scenario: OpenRegister not available throws RuntimeException
+@e2e exclude backend exception propagation — verified by PHPUnit; no reproducible UI state in this env
 - GIVEN OpenRegister is not installed
 - WHEN any service calls `getObjectService()` or `getConfigurationService()`
 - THEN a `\RuntimeException` is thrown with descriptive message
 - AND the caller can handle the exception gracefully
 
 #### Scenario: Initialize checks both installed and enabled
+@e2e exclude backend initialization guards — verified by PHPUnit; not directly observable in UI
 - GIVEN DocuDesk is booting
 - WHEN `initialize()` is called
 - THEN it first checks `isOpenRegisterInstalled()` for version >= 0.2.10
@@ -285,17 +302,20 @@ SettingsService exposes reusable public methods for OpenRegister service resolut
 DocuDesk declares platform compatibility and app identity in its `appinfo/info.xml`.
 
 #### Scenario: Database compatibility verification
+@e2e exclude app metadata in info.xml — platform compatibility verified at install time by Nextcloud; not UI-observable
 - GIVEN DocuDesk is installed on a PostgreSQL 10+ server
 - WHEN the app is enabled
 - THEN the app functions correctly with PostgreSQL as the primary database
 - AND SQLite and MySQL 8.0+ are also supported
 
 #### Scenario: PHP version check
+@e2e exclude app metadata in info.xml — PHP version gate enforced by Nextcloud at install time; not UI-testable
 - GIVEN a server running PHP 7.4
 - WHEN attempting to install DocuDesk
 - THEN the installation fails because PHP 8.0+ with 64-bit integer support is required
 
 #### Scenario: Nextcloud version compatibility
+@e2e exclude app metadata in info.xml — NC version compatibility enforced by app marketplace; not UI-testable
 - GIVEN Nextcloud version 27 is running
 - WHEN attempting to enable DocuDesk
 - THEN the app cannot be enabled because the minimum required version is Nextcloud 28
@@ -320,6 +340,7 @@ DocuDesk references external documentation for users, administrators, and develo
 - AND comprehensive user, admin, and developer documentation is available
 
 #### Scenario: Roadmap access
+@e2e exclude info.xml metadata link — not surfaced in the Settings.vue UI; verified by static analysis
 - GIVEN a user wants to check the DocuDesk roadmap
 - WHEN they access the roadmap URL from info.xml
 - THEN they are directed to the GitHub Projects board
@@ -338,18 +359,21 @@ DocuDesk references external documentation for users, administrators, and develo
 SettingsService resolves and validates the configuration JSON file with a strict validation chain.
 
 #### Scenario: Successful configuration file loading
+@e2e exclude internal file resolution path — backend file-load logic verified by PHPUnit
 - GIVEN the `docudesk_register.json` file exists at `lib/Settings/docudesk_register.json`
 - WHEN SettingsService reads the file during initialization
 - THEN the file is resolved via relative path `__DIR__.'/../Settings/docudesk_register.json'`
 - AND the JSON content is parsed and version is extracted
 
 #### Scenario: Missing configuration file
+@e2e exclude backend exception path — RuntimeException on missing file verified by PHPUnit
 - GIVEN the `docudesk_register.json` file is missing from `lib/Settings/`
 - WHEN SettingsService attempts to load the file
 - THEN a RuntimeException is thrown with "Configuration file not found" message
 - AND the initialization fails gracefully without crashing the app
 
 #### Scenario: Invalid JSON in configuration file
+@e2e exclude backend exception path — RuntimeException on invalid JSON verified by PHPUnit
 - GIVEN the `docudesk_register.json` file contains invalid JSON
 - WHEN SettingsService attempts to parse the file
 - THEN a RuntimeException is thrown with "Invalid JSON" message
@@ -367,6 +391,7 @@ SettingsService resolves and validates the configuration JSON file with a strict
 Settings retrieval gracefully handles TypeErrors from OpenRegister internals to prevent crashes.
 
 #### Scenario: OpenRegister throws TypeError during register listing
+@e2e exclude backend catch-block behavior — TypeError recovery logic verified by PHPUnit; not reproducible in UI
 - GIVEN OpenRegister has inconsistent data (e.g., null schema properties)
 - WHEN `getAllSettings()` calls `RegisterService::findAll()`
 - AND a TypeError is thrown internally
@@ -375,6 +400,7 @@ Settings retrieval gracefully handles TypeErrors from OpenRegister internals to 
 - AND the settings page remains functional
 
 #### Scenario: OpenRegister throws generic Exception during register listing
+@e2e exclude backend catch-block behavior — generic Exception recovery verified by PHPUnit; not reproducible in UI
 - GIVEN OpenRegister's `findAll()` throws a generic Exception
 - WHEN `getAllSettings()` processes the call
 - THEN the error is caught and logged as a warning with different diagnostic message

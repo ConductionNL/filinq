@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude backend service not yet surfaced in the DocuDesk UI — correspondence generation is API/DI-only; covered by PHPUnit service tests
+
 Provides a dedicated correspondence generation workflow for government users to generate letters, beschikkingen, and other correspondence from templates with merge fields populated from case/citizen data. Supports batch generation for multiple recipients, multiple output formats (PDF, DOCX, HTML, email), huisstijl enforcement, and correspondence audit logging. Builds on the existing template-management and pdf-generation capabilities.
 
 ## Requirements
