@@ -18,6 +18,8 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
+use OCA\OpenRegister\Db\Register;
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 use OCP\IAppConfig;
@@ -177,7 +179,7 @@ class RegisterDiscoveryServiceTest extends TestCase
         $this->mockRegisterService->method('findAll')
             ->willReturn(
                 [
-                    $this->makeJsonSerializable(
+                    $this->makeRegister(
                         [
                             'id'      => 1,
                             'title'   => 'Register A',
@@ -189,7 +191,7 @@ class RegisterDiscoveryServiceTest extends TestCase
 
         $this->mockSchemaMapper->method('find')
             ->willReturn(
-                $this->makeJsonSerializable(
+                $this->makeSchema(
                     [
                         'id'         => 10,
                         'title'      => 'Schema A',
@@ -221,7 +223,7 @@ class RegisterDiscoveryServiceTest extends TestCase
         $this->mockRegisterService->method('findAll')
             ->willReturn(
                 [
-                    $this->makeJsonSerializable(
+                    $this->makeRegister(
                         [
                             'id'      => 1,
                             'schemas' => [10, 999, 'uuid-orphan-abc'],
@@ -236,7 +238,7 @@ class RegisterDiscoveryServiceTest extends TestCase
             ->willReturnCallback(
                 function ($id) {
                     if ($id === 10) {
-                        return $this->makeJsonSerializable(
+                        return $this->makeSchema(
                             [
                                 'id'         => 10,
                                 'title'      => 'Schema A',
@@ -269,7 +271,7 @@ class RegisterDiscoveryServiceTest extends TestCase
         $this->mockRegisterService->method('findAll')
             ->willReturn(
                 [
-                    $this->makeJsonSerializable(
+                    $this->makeRegister(
                         [
                             'id'      => 1,
                             'title'   => 'Register A',
@@ -288,50 +290,44 @@ class RegisterDiscoveryServiceTest extends TestCase
 
 
     /**
-     * Build a lightweight object exposing the given data via jsonSerialize.
+     * Build a Register mock whose jsonSerialize returns the given data.
      *
-     * RegisterService::findAll and SchemaMapper::find return entities; the
-     * service under test only ever calls `jsonSerialize()` on them, so a
-     * minimal JsonSerializable stand-in is sufficient and avoids depending on
-     * the OpenRegister entity constructors.
+     * RegisterService::findAll yields Register entities; the service only
+     * calls `jsonSerialize()` on them, so a configured mock is sufficient and
+     * avoids depending on the OpenRegister entity constructors.
      *
-     * @param array<string, mixed> $data The data the object should serialize to
+     * @param array<string, mixed> $data The serialized representation
      *
-     * @return \JsonSerializable
+     * @return Register|MockObject
      */
-    private function makeJsonSerializable(array $data): \JsonSerializable
+    private function makeRegister(array $data): Register|MockObject
     {
-        return new class($data) implements \JsonSerializable {
+        $register = $this->createMock(Register::class);
+        $register->method('jsonSerialize')->willReturn($data);
 
-            /**
-             * @var array<string, mixed>
-             */
-            private array $data;
+        return $register;
 
-
-            /**
-             * @param array<string, mixed> $data Serialized representation
-             */
-            public function __construct(array $data)
-            {
-                $this->data = $data;
-
-            }//end __construct()
+    }//end makeRegister()
 
 
-            /**
-             * @return array<string, mixed>
-             */
-            public function jsonSerialize(): array
-            {
-                return $this->data;
+    /**
+     * Build a Schema mock whose jsonSerialize returns the given data.
+     *
+     * SchemaMapper::find returns a Schema entity; the service only calls
+     * `jsonSerialize()` on it.
+     *
+     * @param array<string, mixed> $data The serialized representation
+     *
+     * @return Schema|MockObject
+     */
+    private function makeSchema(array $data): Schema|MockObject
+    {
+        $schema = $this->createMock(Schema::class);
+        $schema->method('jsonSerialize')->willReturn($data);
 
-            }//end jsonSerialize()
+        return $schema;
 
-
-        };
-
-    }//end makeJsonSerializable()
+    }//end makeSchema()
 
 
 }//end class
