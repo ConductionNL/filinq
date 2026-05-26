@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude pure backend PDF rendering service — no dedicated UI surface; behavior verified by PHPUnit and API contract tests
+
 Provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can call. Accepts a Twig template string and data context, renders HTML, converts to PDF via mPDF, and returns the binary content. The service is stateless -- callers provide template content directly. Includes a Twig sandbox with strict security policy and an HTTP API endpoint for PDF generation.
 
 ## Requirements

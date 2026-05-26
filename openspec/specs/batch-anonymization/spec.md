@@ -1,3 +1,7 @@
+## Purpose
+
+@e2e exclude batch anonymization API not yet exposed in the DocuDesk UI — batch upload/extraction/review flow is API-only (ICache-backed); covered by PHPUnit and API contract tests
+
 ## ADDED Requirements
 
 ### Requirement: Batch creation via multi-file upload

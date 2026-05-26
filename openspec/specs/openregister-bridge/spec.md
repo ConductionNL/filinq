@@ -7,6 +7,8 @@ retrofit: true
 
 ## Purpose
 
+@e2e exclude pure backend resolver service — no UI surface; all behavior covered by PHPUnit service tests
+
 Provides a single resolver service that translates DocuDesk `IAppConfig` keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. Services that need to read or write OpenRegister objects depend on the resolver instead of reading config keys directly — this keeps the config-translation seam in one place, isolates the IAppConfig naming convention from consumer code, and gives controllers a typed exception to render setup-state UIs.
 
 The resolver is consumed by `TemplateService` and `TemplateVersionService` today; future register-backed features (signing requests, document register, dossier register, consent log) are expected to consume the same translator pattern.

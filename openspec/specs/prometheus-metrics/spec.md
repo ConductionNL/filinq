@@ -6,6 +6,8 @@ status: implemented
 
 ## Purpose
 
+@e2e exclude pure backend monitoring endpoint — no UI surface; metrics format verified by API/PHPUnit tests
+
 Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provides a health check endpoint for infrastructure monitoring.
 
 ## Requirements

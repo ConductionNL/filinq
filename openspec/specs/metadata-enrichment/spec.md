@@ -8,6 +8,8 @@ retrofit_extensions:
 
 ## Purpose
 
+@e2e exclude pure backend event-driven processing service — no dedicated UI surface; enrichment logic covered by PHPUnit unit tests
+
 Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment runs both on-demand via the API and automatically via the OpenRegister event listener. All processing is performed locally using heuristic algorithms -- no external NLP services are required.
 
 ## Requirements
