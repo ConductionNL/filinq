@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "5.0.0"
+        "version": "5.1.0"
     },
     "x-openregister": {
         "type": "application",
@@ -31,12 +31,13 @@
             "signing": {
                 "slug": "signing",
                 "title": "Signing Register",
-                "version": "1.0.0",
-                "description": "Register voor digitale ondertekeningsverzoeken, ondertekeningsrecords en auditlogs",
+                "version": "1.1.0",
+                "description": "Register voor digitale ondertekeningsverzoeken, ondertekeningsrecords, auditlogs en native signing-sessies",
                 "schemas": [
                     "signingRequest",
                     "signerRecord",
-                    "signingAuditEntry"
+                    "signingAuditEntry",
+                    "signingSession"
                 ]
             },
             "templates": {
@@ -880,11 +881,39 @@
                     "provider": {"description": "Provider", "type": "string", "visible": true, "order": 8, "facetable": true, "title": "Provider"},
                     "metadata": {"description": "Metadata (JSON)", "type": "object", "visible": true, "order": 9, "facetable": false, "title": "Metadata"}
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": true,
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": true, "appendOnly": true,
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "action", "objectDescriptionField": "actorDisplayName", "autoPublish": false},
                 "searchable": true
+            },
+            "signingSession": {
+                "uri": null,
+                "slug": "signingSession",
+                "title": "Signing Session",
+                "description": "Persistente sessie voor de native SES signing-provider. Houdt de status van een ondertekeningssessie tussen HTTP-requests bij (issue #287). Wordt geschreven door NativeSigningProvider via OpenRegister zodat checkStatus/cancel/download na een fresh request de sessie kunnen terugvinden.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileSign",
+                "required": ["externalId", "documentPath", "documentName", "status"],
+                "properties": {
+                    "externalId": {"description": "Identifier van de signing-sessie (natuurlijke sleutel binnen de native provider)", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Sessie ID", "maxLength": 128},
+                    "documentPath": {"description": "Pad naar het bron-document binnen Nextcloud", "type": "string", "required": true, "visible": true, "order": 2, "facetable": false, "title": "Documentpad", "maxLength": 4000},
+                    "documentName": {"description": "Naam van het document", "type": "string", "required": true, "visible": true, "order": 3, "facetable": false, "title": "Documentnaam", "maxLength": 255},
+                    "signers": {"description": "Array van ondertekenaars die in deze sessie betrokken zijn", "type": "array", "visible": true, "order": 4, "facetable": false, "title": "Ondertekenaars"},
+                    "level": {"description": "Handtekeningsniveau (alleen SES voor de native provider)", "type": "string", "visible": true, "order": 5, "facetable": true, "title": "Niveau", "enum": ["SES"], "default": "SES"},
+                    "status": {"description": "Sessie-status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["pending", "in_progress", "completed", "cancelled", "expired"], "default": "pending"},
+                    "signatures": {"description": "Lijst van toegevoegde handtekeningen", "type": "array", "visible": true, "order": 7, "facetable": false, "title": "Handtekeningen"},
+                    "createdAt": {"description": "Aangemaakt (ISO 8601)", "type": "string", "format": "date-time", "visible": true, "order": 8, "facetable": false, "title": "Aangemaakt"},
+                    "completedAt": {"description": "Afgerond (ISO 8601), null tot completion", "type": "string", "format": "date-time", "visible": true, "order": 9, "facetable": false, "title": "Afgerond"},
+                    "signedDocumentPath": {"description": "Pad naar het ondertekende document (kan gelijk zijn aan documentPath totdat SES-marker geschreven is)", "type": "string", "visible": true, "order": 10, "facetable": false, "title": "Ondertekend pad", "maxLength": 4000},
+                    "markerEmbedded": {"description": "Of de SES-marker (HMAC-blob) in het document is geschreven", "type": "boolean", "visible": true, "order": 11, "facetable": true, "title": "Marker ingebed", "default": false}
+                },
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
+                "updated": "2026-05-27T12:00:00+00:00", "created": "2026-05-27T12:00:00+00:00",
+                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
+                "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
+                "searchable": false
             },
             "base": {
                 "uri": null,

@@ -156,45 +156,13 @@ class SigningAuditService
 
     }//end getAuditTrail()
 
-    /**
-     * Reject update operations on audit entries
-     *
-     * @param string $entryId The audit entry ID
-     *
-     * @return void
-     *
-     * @throws RuntimeException Always throws
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#4-3
-     */
-    public function rejectUpdate(string $entryId): void
-    {
-        throw new RuntimeException(
-            'Audit entries are immutable and cannot be modified (Archiefwet 1995)'
-        );
-
-    }//end rejectUpdate()
-
-    /**
-     * Reject delete operations on audit entries
-     *
-     * @param string $entryId The audit entry ID
-     *
-     * @return void
-     *
-     * @throws RuntimeException Always throws
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#4-3
-     */
-    public function rejectDelete(string $entryId): void
-    {
-        throw new RuntimeException(
-            'Audit entries are immutable and cannot be deleted (Archiefwet 1995)'
-        );
-
-    }//end rejectDelete()
+    // Archiefwet 1995 immutability of audit entries is enforced by the
+    // OpenRegister storage layer: the `signingAuditEntry` schema is declared
+    // `immutable: true, appendOnly: true` in
+    // `lib/Settings/docudesk_register.json`, so any update or delete request
+    // against an existing audit entry is rejected at the OR mapper level
+    // regardless of which code path tries it. The previously-shipped
+    // `rejectUpdate()` / `rejectDelete()` methods on this service were never
+    // wired into any mutation path and were misleading dead code (finding
+    // #289); they have been removed in favour of the storage-layer guard.
 }//end class

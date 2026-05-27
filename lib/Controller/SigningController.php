@@ -30,7 +30,6 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Controller for signing-specific endpoints
@@ -138,18 +137,22 @@ class SigningController extends Controller
                     'notConfigured' => true,
                 ]
             );
-        } catch (Throwable $e) {
-            // Cascade fallback for the OR-sidecar-lag scenario: when
-            // the deployed OpenRegister build lacks a method that
-            // SigningService calls (e.g. `getObjects`), PHP raises an
-            // `Error` which `catch (Exception)` would miss. Returning
-            // an empty list keeps the page rendering instead of 500ing
-            // while the sidecar catches up. The error is logged at
-            // warning level so ops still see drift.
-            $this->logger->warning(
+        } catch (\Error $e) {
+            // Narrow OR-sidecar-lag fallback (finding #288). PHP raises an
+            // `\Error` (typically `\Error` from a method-not-found dispatch)
+            // when the deployed OpenRegister build lacks a method that
+            // SigningService calls (e.g. `getObjects`). That genuine
+            // deployment-drift case keeps the page rendering and the error
+            // is logged at ERROR level so monitoring sees the drift. Any
+            // real `\Exception` / `\Throwable` from a runtime infra failure
+            // (DB outage, mapper bug) is intentionally NOT caught here so
+            // it propagates to the framework's 500 handler and surfaces in
+            // alerting instead of being masked as "no requests".
+            $this->logger->error(
                 'Signing requests list failed — returning empty list. '
                 .'Likely a missing OpenRegister method on the deployed sidecar. '
-                .'Underlying: '.$e->getMessage()
+                .'Underlying: '.$e->getMessage(),
+                ['exception' => $e]
             );
             return new JSONResponse(
                 data: [

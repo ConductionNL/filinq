@@ -2,6 +2,42 @@
 
 ## Unreleased
 
+### Security / Fixed
+- **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
+  The previous implementation held sessions in a per-request `$sessions` PHP
+  array, so `initiateSigning()` wrote one entry that `checkStatus()`,
+  `downloadSignedDocument()` and `cancelSigning()` (running in fresh requests)
+  could never find — every native signing flow failed with "session not found".
+  A new `signingSession` schema is added to the `signing` register (keyed by
+  `externalId`); the provider reads/writes via the OR `ObjectService`. The SES
+  marker / HMAC embedding in `downloadSignedDocument()` is acknowledged as a
+  separate follow-up: until the PDF marker writer ships, the provider returns
+  the persisted `signedDocumentPath` (or the original `documentPath`) and logs
+  an info-level note flagging that the marker hasn't been embedded yet.
+- **`SigningController::listRequests()` no longer masks real failures as empty
+  success** (fixes #288). The broad `catch (\Throwable)` previously returned
+  an empty list with `notConfigured: true` and logged at WARNING for any
+  failure — an OR/DB outage was indistinguishable from "not configured". The
+  catch is now narrowed to `\Error` (the genuine missing-method/OR-sidecar-lag
+  case) and logs at ERROR; real `\Exception` / runtime infra failures now
+  propagate to the framework's 500 handler so they surface in monitoring.
+- **Signing audit immutability is now enforced at the OpenRegister storage
+  layer** (fixes #289). The `signingAuditEntry` schema in
+  `lib/Settings/docudesk_register.json` carries `immutable: true` *and*
+  `appendOnly: true`, so OR rejects update/delete against existing audit
+  entries regardless of which code path tries it. The misleading dead-code
+  `rejectUpdate()` / `rejectDelete()` methods on `SigningAuditService` —
+  which were never wired into any mutation path and could give the false
+  impression that immutability was enforced in-app — have been removed.
+
+### Changed
+- **DocuDesk register configuration version bumped 5.0.0 → 5.1.0** to trigger
+  OpenRegister's `imported_config_docudesk_version` gate so the new
+  `signingSession` schema and the `appendOnly` flag on `signingAuditEntry`
+  are imported on app upgrade. Consumers reading
+  `occ config:app:get openregister imported_config_docudesk_version` MUST
+  expect `5.1.0` post-upgrade. (#287, #289)
+
 ### Added
 - `appendBasisSummary` (optional boolean, default `false`) flag on the per-document
   anonymise endpoint and the batch anonymise endpoint. When `true`, invokes the
