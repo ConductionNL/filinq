@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,12 +23,22 @@ namespace OCA\DocuDesk\Service\Signing;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\DocuDesk\Service\SettingsService;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Native signing provider for SES-level signatures
+ *
+ * Sessions are persisted as OpenRegister objects (register/schema configured
+ * via `signingSession_register` / `signingSession_schema` in IAppConfig).
+ * Previously they lived only in a per-request `$sessions` array, so the
+ * `initiateSigning()` HTTP request created a record that `checkStatus()`,
+ * `downloadSignedDocument()` and `cancelSigning()` in subsequent requests
+ * could never see (issue #287).
  *
  * @category Service
  * @package  OCA\DocuDesk\Service\Signing
@@ -35,25 +48,21 @@ use RuntimeException;
  */
 class NativeSigningProvider implements SigningProviderInterface
 {
-
-    /**
-     * In-memory store for signing sessions
-     *
-     * @var array<string, array<string, mixed>>
-     */
-    private array $sessions = [];
-
     /**
      * Constructor
      *
-     * @param IUserSession    $userSession The user session
-     * @param LoggerInterface $logger      Logger interface
+     * @param IUserSession    $userSession     The user session
+     * @param LoggerInterface $logger          Logger interface
+     * @param SettingsService $settingsService Settings service (provides OR ObjectService)
+     * @param IAppConfig      $config          App config (resolves session register/schema)
      *
      * @return void
      */
     public function __construct(
         private readonly IUserSession $userSession,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly SettingsService $settingsService,
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
@@ -99,15 +108,21 @@ class NativeSigningProvider implements SigningProviderInterface
 
         $externalId = 'native-'.bin2hex(random_bytes(16));
 
-        $this->sessions[$externalId] = [
-            'documentPath' => $documentPath,
-            'documentName' => $documentName,
-            'signers'      => $signers,
-            'level'        => $level,
-            'status'       => 'pending',
-            'signatures'   => [],
-            'createdAt'    => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+        $session = [
+            'externalId'         => $externalId,
+            'documentPath'       => $documentPath,
+            'documentName'       => $documentName,
+            'signers'            => $signers,
+            'level'              => $level,
+            'status'             => 'pending',
+            'signatures'         => [],
+            'createdAt'          => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+            'completedAt'        => null,
+            'signedDocumentPath' => null,
+            'markerEmbedded'     => false,
         ];
+
+        $this->persistSession(session: $session);
 
         return [
             'success'    => true,
@@ -130,16 +145,12 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     public function checkStatus(string $externalId): array
     {
-        if (isset($this->sessions[$externalId]) === false) {
-            throw new RuntimeException('Native signing session not found: '.$externalId);
-        }
-
-        $session = $this->sessions[$externalId];
+        $session = $this->loadSessionByExternalId(externalId: $externalId);
 
         return [
-            'status'      => $session['status'],
-            'signers'     => $session['signers'],
-            'signatures'  => $session['signatures'],
+            'status'      => $session['status'] ?? 'pending',
+            'signers'     => $session['signers'] ?? [],
+            'signatures'  => $session['signatures'] ?? [],
             'completedAt' => $session['completedAt'] ?? null,
         ];
 
@@ -147,6 +158,20 @@ class NativeSigningProvider implements SigningProviderInterface
 
     /**
      * Download the signed document
+     *
+     * Returns the path to the document for the persisted signing session.
+     * When the session reaches a `completed` state, the SES marker block
+     * (the same `/DocuDesk-Signature(base64-json)` PDF pattern that
+     * SigningVerificationService::extractSignatures looks for, optionally
+     * carrying the HMAC `mac` field over the document content-hash that
+     * SigningVerificationService::verifyAssertion validates with the
+     * `signing_verification_secret` app-config secret) must be embedded
+     * into the produced file bytes. Embedding requires a writeable PDF
+     * pipeline (mPDF re-render or a PDF cross-ref appending step) which
+     * is not yet wired here; tracked as a follow-up to #287 — this method
+     * therefore returns the persisted `signedDocumentPath` (falling back
+     * to the original `documentPath`) and flags the session with
+     * `markerEmbedded => false` until the marker writer ships.
      *
      * @param string $externalId The signing session identifier
      *
@@ -158,16 +183,26 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     public function downloadSignedDocument(string $externalId): string
     {
-        if (isset($this->sessions[$externalId]) === false) {
-            throw new RuntimeException('Native signing session not found: '.$externalId);
-        }
+        $session = $this->loadSessionByExternalId(externalId: $externalId);
 
-        $session = $this->sessions[$externalId];
-        if ($session['status'] !== 'completed') {
+        if (($session['status'] ?? '') !== 'completed') {
             throw new RuntimeException('Signing session is not completed');
         }
 
-        return $session['documentPath'];
+        $signedPath = $session['signedDocumentPath'] ?? null;
+        if (is_string($signedPath) === true && $signedPath !== '') {
+            return $signedPath;
+        }
+
+        // Marker not yet embedded — record that the caller hit the
+        // download path before the marker writer is available so ops
+        // can see how often the follow-up matters.
+        $this->logger->info(
+            'Native signing session '.$externalId.' downloaded without an embedded SES marker; '
+            .'falling back to original document path (follow-up to #287).'
+        );
+
+        return (string) ($session['documentPath'] ?? '');
 
     }//end downloadSignedDocument()
 
@@ -184,11 +219,10 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     public function cancelSigning(string $externalId): bool
     {
-        if (isset($this->sessions[$externalId]) === false) {
-            throw new RuntimeException('Native signing session not found: '.$externalId);
-        }
+        $session = $this->loadSessionByExternalId(externalId: $externalId);
 
-        $this->sessions[$externalId]['status'] = 'cancelled';
+        $session['status'] = 'cancelled';
+        $this->persistSession(session: $session);
 
         return true;
 
@@ -208,4 +242,176 @@ class NativeSigningProvider implements SigningProviderInterface
         return $level === 'SES';
 
     }//end supportsLevel()
+
+    /**
+     * Persist a signing session as an OpenRegister object
+     *
+     * Honours `externalId` as the natural key — when a session with the
+     * same externalId already exists its `id`/`uuid` is preserved so OR
+     * updates the existing row instead of creating a duplicate. Uses the
+     * canonical OR ObjectService surface (`saveObject(object, extend,
+     * register, schema, uuid)`).
+     *
+     * @param array<string, mixed> $session The session data
+     *
+     * @return void
+     *
+     * @throws RuntimeException If OR is unavailable
+     */
+    private function persistSession(array $session): void
+    {
+        $objectService = $this->settingsService->getObjectService();
+        if ($objectService === null) {
+            throw new RuntimeException('OpenRegister is not available; cannot persist signing session');
+        }
+
+        [$register, $schema] = $this->resolveSessionRegisterSchema();
+
+        $uuid = null;
+        // Preserve OR uuid when updating an existing session row.
+        if (isset($session['externalId']) === true) {
+            $existing = $this->loadRawSessionByExternalId(externalId: (string) $session['externalId']);
+            if ($existing !== null) {
+                if (isset($existing['uuid']) === true) {
+                    $uuid = (string) $existing['uuid'];
+                } else if (isset($existing['id']) === true) {
+                    $uuid = (string) $existing['id'];
+                }
+            }
+        }
+
+        // Call with full positional arity so it matches the canonical OR
+        // ObjectService::saveObject($object, $extend, $register, $schema, $uuid)
+        // signature.
+        $objectService->saveObject(
+            $session,
+            [],
+            $register,
+            $schema,
+            $uuid
+        );
+
+    }//end persistSession()
+
+    /**
+     * Load a session by externalId, throwing if missing
+     *
+     * @param string $externalId The externalId to look up
+     *
+     * @return array<string, mixed> The session row
+     *
+     * @throws RuntimeException If the session is not found
+     */
+    private function loadSessionByExternalId(string $externalId): array
+    {
+        $session = $this->loadRawSessionByExternalId(externalId: $externalId);
+        if ($session === null) {
+            throw new RuntimeException('Native signing session not found: '.$externalId);
+        }
+
+        return $session;
+
+    }//end loadSessionByExternalId()
+
+    /**
+     * Load a session by externalId, returning null if missing
+     *
+     * Uses OR's findAll(config) facade with a filter on externalId so the
+     * call goes through the canonical zoeken-filteren pipeline rather than
+     * a non-existent `getObjects($register, $schema)` shortcut.
+     *
+     * @param string $externalId The externalId to look up
+     *
+     * @return array<string, mixed>|null The session row or null
+     */
+    private function loadRawSessionByExternalId(string $externalId): ?array
+    {
+        try {
+            $objectService = $this->settingsService->getObjectService();
+            if ($objectService === null) {
+                return null;
+            }
+
+            [$register, $schema] = $this->resolveSessionRegisterSchema();
+
+            $results = $objectService->findAll(
+                [
+                    'filters' => [
+                        'register'   => $register,
+                        'schema'     => $schema,
+                        'externalId' => $externalId,
+                    ],
+                ]
+            );
+
+            if (is_iterable($results) === false) {
+                return null;
+            }
+
+            foreach ($results as $entry) {
+                $row = $this->normaliseEntry(entry: $entry);
+                if ($row === null) {
+                    continue;
+                }
+
+                if (($row['externalId'] ?? null) === $externalId) {
+                    return $row;
+                }
+            }
+
+            return null;
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'Failed to load signing session '.$externalId.': '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return null;
+        }//end try
+
+    }//end loadRawSessionByExternalId()
+
+    /**
+     * Normalise an OR entry (ObjectEntity or array) into a plain array
+     *
+     * @param mixed $entry The raw entry from findAll()
+     *
+     * @return array<string, mixed>|null The normalised row, or null on failure
+     */
+    private function normaliseEntry(mixed $entry): ?array
+    {
+        if (is_array($entry) === true) {
+            return $entry;
+        }
+
+        if (is_object($entry) === true && method_exists($entry, 'jsonSerialize') === true) {
+            $serialised = $entry->jsonSerialize();
+            if (is_array($serialised) === true) {
+                return $serialised;
+            }
+        }
+
+        if (is_object($entry) === true && method_exists($entry, 'getObject') === true) {
+            $inner = $entry->getObject();
+            if (is_array($inner) === true) {
+                return $inner;
+            }
+        }
+
+        return null;
+
+    }//end normaliseEntry()
+
+    /**
+     * Resolve the OR register/schema pair used to persist sessions
+     *
+     * @return array{0:string,1:string} [register, schema]
+     */
+    private function resolveSessionRegisterSchema(): array
+    {
+        $register = $this->config->getValueString('docudesk', 'signingSession_register', 'signing');
+        $schema   = $this->config->getValueString('docudesk', 'signingSession_schema', 'signingSession');
+
+        return [$register, $schema];
+
+    }//end resolveSessionRegisterSchema()
 }//end class
