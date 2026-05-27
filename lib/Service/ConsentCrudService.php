@@ -126,13 +126,14 @@ class ConsentCrudService
      */
     public function getConsent(string $consentId, string $register, string $schema): ?array
     {
+        // Let OpenRegister enforce per-object RBAC and multitenancy access.
+        // Bypassing these (security finding #283) allowed any authenticated
+        // user to read consent records owned by other users.
         $objectService = $this->settingsService->getObjectService();
         $object        = $objectService->find(
             id: $consentId,
             register: $register,
-            schema: $schema,
-            _rbac: false,
-            _multitenancy: false
+            schema: $schema
         );
 
         if ($object === null) {

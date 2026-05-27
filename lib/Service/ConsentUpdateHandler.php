@@ -95,33 +95,45 @@ class ConsentUpdateHandler
         try {
             $objectService = $this->getObjectService();
 
+            // Let OpenRegister enforce per-object RBAC and multitenancy
+            // access. Bypassing these (security finding #283) allowed any
+            // authenticated user to overwrite consent records owned by
+            // other users.
             $object = $objectService->find(
                 id: $consentId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {
                 throw new Exception('Consent record not found: '.$consentId);
             }
 
-            $consentData = array_merge($object->getObject(), $data);
+            // Whitelist the fields a consent update may mutate so callers
+            // cannot rewrite arbitrary consent attributes (e.g. documentId,
+            // entityText) or inject extra keys (security finding #283).
+            $mutableFields = [
+                'notificationStatus',
+                'consentStatus',
+                'publicationDecision',
+                'objectionReason',
+                'objectionDeadline',
+            ];
+            $allowedData   = array_intersect_key($data, array_flip($mutableFields));
+
+            $consentData = array_merge($object->getObject(), $allowedData);
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info(
                 'Consent status updated',
                 [
                     'consentId'   => $consentId,
-                    'updatedKeys' => array_keys($data),
+                    'updatedKeys' => array_keys($allowedData),
                 ]
             );
 
