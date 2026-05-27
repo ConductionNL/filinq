@@ -33,6 +33,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#4-1
  */
 class SigningAuditService
 {
@@ -124,6 +126,12 @@ class SigningAuditService
     /**
      * Get all audit entries for a signing request
      *
+     * Uses a server-side filter on `signingRequestId` via OR's `searchObjects`
+     * so that only matching records are fetched from the database.  The
+     * previous implementation loaded the entire audit register into PHP memory
+     * and filtered in-application, causing excessive memory usage and slow
+     * response times as the audit log grows (finding #290a).
+     *
      * @param string $signingRequestId The signing request ID
      *
      * @return array<int, array<string, mixed>> The audit entries
@@ -136,14 +144,22 @@ class SigningAuditService
         $register      = $this->config->getValueString('docudesk', 'signingAuditEntry_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingAuditEntry_schema', '');
 
-        $allEntries = $objectService->getObjects($register, $schema);
-
-        $entries = array_filter(
-            $allEntries,
-            function (array $entry) use ($signingRequestId): bool {
-                return ($entry['signingRequestId'] ?? '') === $signingRequestId;
-            }
+        $results = $objectService->searchObjects(
+            [
+                '@self'            => ['register' => $register, 'schema' => $schema],
+                'signingRequestId' => $signingRequestId,
+            ]
         );
+
+        $entries = [];
+        foreach ($results as $result) {
+            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                $entries[] = $result->jsonSerialize();
+                continue;
+            }
+
+            $entries[] = (array) $result;
+        }
 
         usort(
             $entries,

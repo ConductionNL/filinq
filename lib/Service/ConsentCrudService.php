@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  */
 class ConsentCrudService
 {
@@ -149,7 +151,28 @@ class ConsentCrudService
     }//end getConsent()
 
     /**
+     * Fields accepted at consent creation time.
+     *
+     * Any request parameter NOT in this list is silently dropped before the
+     * record is written to OpenRegister (finding #290b).  Callers must not be
+     * able to force internal state fields such as `consentStatus`,
+     * `publicationDecision`, or `userId` at creation time.
+     *
+     * @var array<string>
+     */
+    private const ALLOWED_CREATE_FIELDS = [
+        'documentId',
+        'entityType',
+        'entityText',
+    ];
+
+    /**
      * Create a consent request from controller data
+     *
+     * Only the fields listed in {@see ALLOWED_CREATE_FIELDS} are accepted.
+     * All other request parameters are silently dropped so that callers cannot
+     * set internal status fields (e.g. `consentStatus`, `publicationDecision`,
+     * `userId`) at creation time, bypassing status-machine logic (finding #290b).
      *
      * @param array<string, mixed> $data     The request data
      * @param string               $register The register ID
@@ -163,20 +186,13 @@ class ConsentCrudService
      */
     public function createFromRequest(array $data, string $register, string $schema): array
     {
-        // Extract known fields and pass any remaining as extra.
-        $knownFields = ['documentId', 'entityType', 'entityText'];
-        $extra       = array_diff_key($data, array_flip($knownFields));
-
-        // Remove framework-injected params that are not consent data.
-        unset($extra['_route'], $extra['_method']);
-
+        // Only forward the explicitly allowed fields; drop everything else.
         return $this->consentService->createConsentRequest(
             $data['documentId'],
             $data['entityType'],
             $data['entityText'],
             $register,
-            $schema,
-            $extra
+            $schema
         );
 
     }//end createFromRequest()
