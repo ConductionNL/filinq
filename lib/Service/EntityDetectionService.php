@@ -33,9 +33,58 @@ namespace OCA\DocuDesk\Service;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  */
 class EntityDetectionService
 {
+    /**
+     * Entity types that represent sensitive identifiers which may be short
+     * and/or fully numeric (BSN, IBAN, phone numbers, postcodes, bank/account
+     * numbers, case reference numbers, KvK / BTW identifiers). These MUST be
+     * forwarded to the redaction step regardless of length or numeric-ness
+     * (closes #285).
+     *
+     * @var array<int, string>
+     */
+    private const TYPED_PII_TYPES = [
+        'BSN',
+        'IBAN',
+        'PHONE',
+        'PHONE_NUMBER',
+        'POSTCODE',
+        'POSTAL_CODE',
+        'ZIP',
+        'ACCOUNT',
+        'ACCOUNT_NUMBER',
+        'BANK_ACCOUNT',
+        'CASE_NUMBER',
+        'CASE_REFERENCE',
+        'KVK',
+        'BTW',
+        'VAT',
+        'EMAIL',
+        'PERSON',
+        'ADDRESS',
+        'LOCATION',
+        'ORGANIZATION',
+        'DATE',
+        'DATE_TIME',
+        'CREDIT_CARD',
+        'SSN',
+    ];
+
+    /**
+     * Minimum length (in characters, not bytes) for an entity value of an
+     * UNKNOWN / unclassified type to be considered worth redacting. Single-
+     * character tokens are almost always NER noise; values of length 2 are
+     * already eligible. This floor is NEVER applied to a typed PII entity
+     * (see TYPED_PII_TYPES) — those are always redacted (closes #285).
+     *
+     * @var int
+     */
+    private const UNTYPED_MIN_LENGTH = 2;
+
     /**
      * Constructor for EntityDetectionService
      *
@@ -84,6 +133,22 @@ class EntityDetectionService
      * Per-entity `bases[]` is forwarded verbatim when present so OpenRegister
      * can persist the legal basis on the EntityRelation row.
      *
+     * Filtering rules (closes #285):
+     *   - An empty value is always skipped (nothing to redact).
+     *   - A typed PII value (see TYPED_PII_TYPES — BSN, IBAN, PHONE,
+     *     POSTCODE, ACCOUNT, CASE_NUMBER, KVK, BTW, EMAIL, PERSON, …) is
+     *     ALWAYS forwarded for redaction, regardless of length or
+     *     numeric-ness. The previous heuristic silently dropped these,
+     *     letting the most sensitive identifiers survive verbatim in the
+     *     "anonymized" output.
+     *   - Only for UNKNOWN / unclassified entity types do we still apply a
+     *     length floor of UNTYPED_MIN_LENGTH characters, measured with
+     *     mb_strlen() so multibyte text is counted by characters, not
+     *     bytes.
+     *   - The previous is_numeric() exclusion is removed entirely: numeric
+     *     values (BSN, postcode, phone, case reference) are among the
+     *     most sensitive PII and must be redacted.
+     *
      * @param array<array<string, mixed>> $entities The raw entities
      *
      * @return array<int, array<string, mixed>> Mapped entities
@@ -97,8 +162,18 @@ class EntityDetectionService
         $seen           = [];
         foreach ($entities as $entity) {
             $text = (string) ($entity['value'] ?? $entity['text'] ?? '');
+            $type = strtoupper((string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'));
 
-            if ($text === '' || strlen($text) < 3 || is_numeric($text) === true) {
+            if ($text === '') {
+                continue;
+            }
+
+            // Typed PII (BSN/IBAN/PHONE/…): always redact. Otherwise
+            // apply a character-based (NOT byte-based) length floor to
+            // avoid forwarding single-character noise tokens.
+            if (in_array($type, self::TYPED_PII_TYPES, true) === false
+                && mb_strlen($text) < self::UNTYPED_MIN_LENGTH
+            ) {
                 continue;
             }
 
