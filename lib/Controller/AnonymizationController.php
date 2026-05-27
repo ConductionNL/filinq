@@ -266,10 +266,9 @@ class AnonymizationController extends Controller
                 return $appendBasisSummary;
             }
 
+            $outputFormat = 'pdf';
             if (isset($params['outputFormat']) === true) {
                 $outputFormat = (string) $params['outputFormat'];
-            } else {
-                $outputFormat = 'pdf';
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);

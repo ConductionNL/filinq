@@ -390,7 +390,7 @@ class TemplatesController extends Controller
             return new JSONResponse(data: $result);
         } catch (Exception $e) {
             return $this->requestHandler->buildErrorResponse($e, 'Failed to get version diff: ');
-        }
+        }//end try
 
     }//end diffVersions()
 
@@ -427,7 +427,7 @@ class TemplatesController extends Controller
             return new JSONResponse(data: ['html' => $html]);
         } catch (Exception $e) {
             return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
-        }
+        }//end try
 
     }//end preview()
 
@@ -538,7 +538,7 @@ class TemplatesController extends Controller
             }
 
             return $this->requestHandler->buildErrorResponse($e, 'Failed to lock template: ');
-        }
+        }//end try
 
     }//end lock()
 

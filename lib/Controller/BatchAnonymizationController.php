@@ -296,8 +296,8 @@ class BatchAnonymizationController extends Controller
                 return new JSONResponse(['error' => $this->l10n->t('Extraction has not started')], 409);
             }
 
-            $mc       = (float) ($this->request->getParam('minConfidence', '0.0'));
-            $entities = $this->entityService->consolidateEntities($batch, $mc);
+            $minConfidence  = (float) ($this->request->getParam('minConfidence', '0.0'));
+            $entities       = $this->entityService->consolidateEntities($batch, $minConfidence);
             $filesProcessed = 0;
             foreach ($batch['files'] as $f) {
                 if (in_array($f['status'], ['extracted', 'error'], true) === true) {
@@ -353,6 +353,7 @@ class BatchAnonymizationController extends Controller
                 return new JSONResponse(['error' => $this->l10n->t('No entities provided')], 400);
             }
 
+            $appendBasisSummary = false;
             if (array_key_exists('appendBasisSummary', $params) === true) {
                 $appendBasisSummary = $params['appendBasisSummary'];
                 if (is_bool($appendBasisSummary) === false) {
@@ -361,8 +362,6 @@ class BatchAnonymizationController extends Controller
                         400
                     );
                 }
-            } else {
-                $appendBasisSummary = false;
             }
 
             $basesError = $this->validateEntityBases(entities: $entities);
@@ -446,12 +445,12 @@ class BatchAnonymizationController extends Controller
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
 
-            $p = $this->request->getParams();
-            if (is_array($p['anonymize'] ?? null) === false || is_array($p['keep'] ?? null) === false) {
+            $params = $this->request->getParams();
+            if (is_array($params['anonymize'] ?? null) === false || is_array($params['keep'] ?? null) === false) {
                 return new JSONResponse(['error' => 'Invalid format'], 400);
             }
 
-            $this->profileService->saveProfile(['anonymize' => $p['anonymize'], 'keep' => $p['keep']]);
+            $this->profileService->saveProfile(['anonymize' => $params['anonymize'], 'keep' => $params['keep']]);
             return new JSONResponse(['message' => 'Profile updated']);
         } catch (Exception $e) {
             return $this->err(msg: 'Failed to update profile', e: $e);

@@ -125,15 +125,16 @@ class PreferencesController extends Controller
                 appName: Application::APP_ID,
                 key: 'pref_'.$safeKey
             );
-        } else {
-            $this->config->setUserValue(
-                userId: $user->getUID(),
-                appName: Application::APP_ID,
-                key: 'pref_'.$safeKey,
-                value: $value
-            );
-            $stored = $value;
+            return new JSONResponse(data: ['value' => $stored]);
         }
+
+        $this->config->setUserValue(
+            userId: $user->getUID(),
+            appName: Application::APP_ID,
+            key: 'pref_'.$safeKey,
+            value: $value
+        );
+        $stored = $value;
 
         return new JSONResponse(data: ['value' => $stored]);
 

@@ -555,7 +555,9 @@ class AnonymizationService
                 $summaryResult = $summaryService->appendSummaryAsSeparatePdf(node: $node);
                 $resultInfo['summaryFileId']   = $summaryResult['fileId'] ?? null;
                 $resultInfo['summaryFilePath'] = $summaryResult['filePath'] ?? null;
-            } else {
+            }
+
+            if ($outputFormat !== 'preserve') {
                 $summaryService->appendSummaryToPdf(node: $node);
             }
 
