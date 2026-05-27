@@ -42,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 class AnonymizationService
 {
@@ -293,15 +295,79 @@ class AnonymizationService
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
-            $result         = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Capture a textual projection of the ORIGINAL document BEFORE
+            // anonymization so we can compute which mapped entity values
+            // were actually present (and therefore eligible to be
+            // replaced by str_ireplace inside OpenRegister's
+            // DocumentProcessingHandler). Closes #286.
+            $originalText = $this->readNodeTextSafely(node: $node);
+
+            $result = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Derive the REAL replacement-stats from the original text:
+            // an entity counts as "applied" iff its literal value
+            // (case-insensitive, matching str_ireplace semantics in
+            // OR's DocumentProcessingHandler) was present in the
+            // source. Entities that weren't present cannot have been
+            // replaced and are surfaced as `unmatchedEntities` so a
+            // reviewer sees the truth instead of a fabricated count.
+            $verification = $this->verifyReplacements(
+                mappedEntities: $mappedEntities,
+                originalText: $originalText
+            );
 
             $this->logger->info(
                 'Document anonymized',
-                ['fileId' => $fileId, 'entityCount' => count($mappedEntities)]
+                [
+                    'fileId'                => $fileId,
+                    'replacementsAttempted' => $verification['replacementsAttempted'],
+                    'replacementsApplied'   => $verification['replacementsApplied'],
+                    'replacementsVerified'  => $verification['replacementsVerified'],
+                    'unmatchedCount'        => count($verification['unmatchedEntities']),
+                ]
             );
 
+            if ($verification['replacementsVerified'] === true
+                && $verification['replacementsAttempted'] !== $verification['replacementsApplied']
+            ) {
+                $this->logger->warning(
+                    'Anonymization replacement-count discrepancy: not all sent entities were '
+                    .'found literally in the source text',
+                    [
+                        'fileId'                => $fileId,
+                        'replacementsAttempted' => $verification['replacementsAttempted'],
+                        'replacementsApplied'   => $verification['replacementsApplied'],
+                        'unmatchedEntities'     => $verification['unmatchedEntities'],
+                    ]
+                );
+            }
+
             $resultInfo = $this->entityDetection->parseAnonymizationResult($result);
-            $resultInfo['replacementCount'] = count($mappedEntities);
+
+            // Surface the truth: `replacementsAttempted` is how many
+            // entities we forwarded to OR; `replacementsApplied` is
+            // how many of those actually appeared (and were therefore
+            // replaced) in the source text. `replacementsVerified`
+            // signals whether we could read the source as text at all
+            // (binary formats like PDF/DOCX cannot be verified at
+            // this layer — see readNodeTextSafely()). When verified
+            // is false, `replacementsApplied` is null and callers
+            // MUST NOT treat the older `replacementCount` field as
+            // ground truth.
+            $resultInfo['replacementsAttempted'] = $verification['replacementsAttempted'];
+            $resultInfo['replacementsApplied']   = $verification['replacementsApplied'];
+            $resultInfo['replacementsVerified']  = $verification['replacementsVerified'];
+            $resultInfo['unmatchedEntities']     = $verification['unmatchedEntities'];
+
+            // Legacy field for backwards compatibility. When we
+            // could verify, this now reflects what was ACTUALLY
+            // replaced (no longer the fabricated `count($mappedEntities)`
+            // that #286 flagged). When we couldn't verify (binary
+            // format), we fall back to the attempted count and the
+            // `replacementsVerified=false` flag tells callers it's
+            // unconfirmed.
+            $resultInfo['replacementCount'] = $verification['replacementsApplied'] ?? $verification['replacementsAttempted'];
 
             if ($appendBasisSummary === true) {
                 $resultInfo = $this->tryAppendBasisSummary(
@@ -321,6 +387,142 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Read a Nextcloud file node's content as text, safely.
+     *
+     * Returns the raw content for text-like MIME types (text/*,
+     * application/json, application/xml, text/csv, …). Returns null for
+     * binary formats (PDF, DOCX, XLSX, …) where the file content is a
+     * compressed/encoded container and entity values are NOT findable
+     * literally with str_ipos. Callers MUST treat a null return as
+     * "verification not possible" and surface a `replacementsVerified=false`
+     * flag rather than silently reporting zero or all replacements.
+     *
+     * @param mixed $node Nextcloud file node (OCP\Files\File or compatible)
+     *
+     * @return string|null Text content, or null when the node is binary /
+     *                     unreadable / not a file.
+     *
+     * @spec issue #286 — derive replacementCount from real result
+     */
+    private function readNodeTextSafely(mixed $node): ?string
+    {
+        if (is_object($node) === false) {
+            return null;
+        }
+
+        try {
+            // We need both a content reader AND a MIME-type oracle to
+            // know whether the bytes will be findable as literal text.
+            if (method_exists($node, 'getMimeType') === false
+                || method_exists($node, 'getContent') === false
+            ) {
+                return null;
+            }
+
+            $mimeType = (string) $node->getMimeType();
+
+            $textLike = (str_starts_with($mimeType, 'text/') === true
+                || $mimeType === 'application/json'
+                || $mimeType === 'application/xml'
+                || $mimeType === 'application/x-yaml'
+                || $mimeType === 'application/x-ndjson'
+            );
+
+            if ($textLike === false) {
+                return null;
+            }
+
+            $content = $node->getContent();
+            if (is_string($content) === false || $content === '') {
+                return null;
+            }
+
+            return $content;
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                'Could not read node content for replacement verification; falling back to '
+                .'unverified count: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return null;
+        }//end try
+
+    }//end readNodeTextSafely()
+
+    /**
+     * Compute real replacement statistics for an anonymization run.
+     *
+     * For each mapped entity, check whether its literal text is present
+     * (case-insensitive, mirroring OR's str_ireplace semantics) in the
+     * original source text. Entities that are not present cannot have
+     * been replaced — they are surfaced as `unmatchedEntities`. When the
+     * source text could not be read at all (binary format such as PDF /
+     * DOCX — see readNodeTextSafely()), verification is reported as
+     * impossible (`replacementsVerified=false`, `replacementsApplied=null`).
+     *
+     * @param array<int, array<string, mixed>> $mappedEntities Entities sent to OR
+     * @param string|null                      $originalText   Textual projection of the
+     *                                                         original source, or null
+     *                                                         when the file is binary.
+     *
+     * @return array{
+     *     replacementsAttempted: int,
+     *     replacementsApplied: int|null,
+     *     replacementsVerified: bool,
+     *     unmatchedEntities: array<int, array{text: string, entityType: string}>
+     * }
+     *
+     * @spec issue #286 — surface attempted vs applied + unmatched list
+     */
+    private function verifyReplacements(array $mappedEntities, ?string $originalText): array
+    {
+        $attempted = count($mappedEntities);
+
+        if ($originalText === null) {
+            return [
+                'replacementsAttempted' => $attempted,
+                'replacementsApplied'   => null,
+                'replacementsVerified'  => false,
+                'unmatchedEntities'     => [],
+            ];
+        }
+
+        $applied   = 0;
+        $unmatched = [];
+
+        foreach ($mappedEntities as $entity) {
+            $text = (string) ($entity['text'] ?? '');
+            if ($text === '') {
+                continue;
+            }
+
+            // Case-insensitive search via mb_stripos with explicit UTF-8
+            // encoding mirrors the str_ireplace semantics used in OR's
+            // DocumentProcessingHandler::replaceWordsInTextDocument while
+            // being safe for multibyte content.
+            $found = mb_stripos($originalText, $text, 0, 'UTF-8');
+
+            if ($found !== false) {
+                $applied++;
+                continue;
+            }
+
+            $unmatched[] = [
+                'text'       => $text,
+                'entityType' => (string) ($entity['entityType'] ?? 'UNKNOWN'),
+            ];
+        }//end foreach
+
+        return [
+            'replacementsAttempted' => $attempted,
+            'replacementsApplied'   => $applied,
+            'replacementsVerified'  => true,
+            'unmatchedEntities'     => $unmatched,
+        ];
+
+    }//end verifyReplacements()
 
     /**
      * Attempt to append a grondslagen basis summary to the anonymized document.
