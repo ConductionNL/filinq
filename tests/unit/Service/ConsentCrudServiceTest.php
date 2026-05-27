@@ -121,7 +121,8 @@ class ConsentCrudServiceTest extends TestCase
 
 
     /**
-     * Test createFromRequest delegates to ConsentService
+     * Test createFromRequest delegates to ConsentService with only the three
+     * documented fields (documentId, entityType, entityText) — no $extra.
      *
      * @return void
      */
@@ -130,7 +131,7 @@ class ConsentCrudServiceTest extends TestCase
         $expected = ['id' => 'uuid-1', 'consentStatus' => 'pending'];
         $this->mockConsentService->expects($this->once())
             ->method('createConsentRequest')
-            ->with('doc-1', 'PERSON', 'Jan de Vries', 'reg-1', 'schema-1', [])
+            ->with('doc-1', 'PERSON', 'Jan de Vries', 'reg-1', 'schema-1')
             ->willReturn($expected);
 
         $result = $this->service->createFromRequest(
@@ -142,6 +143,48 @@ class ConsentCrudServiceTest extends TestCase
         $this->assertEquals($expected, $result);
 
     }//end testCreateFromRequestDelegatesToConsentService()
+
+
+    /**
+     * Extra request fields (e.g. consentStatus, publicationDecision, userId)
+     * must be dropped before the record is written — callers must not be able
+     * to force internal state at creation time (finding #290b).
+     *
+     * The mock asserts that createConsentRequest is called WITHOUT any extra
+     * fields, regardless of what the caller sends.
+     *
+     * @return void
+     */
+    public function testCreateFromRequestDropsExtraFields(): void
+    {
+        $expected = ['id' => 'uuid-2', 'consentStatus' => 'pending'];
+
+        // The mock must be called with only the three positional args + register + schema.
+        // No extra $extra array should be forwarded.
+        $this->mockConsentService->expects($this->once())
+            ->method('createConsentRequest')
+            ->with('doc-2', 'ORGANISATION', 'Gemeente Amsterdam', 'reg-1', 'schema-1')
+            ->willReturn($expected);
+
+        $result = $this->service->createFromRequest(
+            [
+                'documentId'          => 'doc-2',
+                'entityType'          => 'ORGANISATION',
+                'entityText'          => 'Gemeente Amsterdam',
+                // These extra fields must be silently dropped (finding #290b).
+                'consentStatus'       => 'granted',
+                'publicationDecision' => 'approved',
+                'userId'              => 'attacker',
+                '_route'              => 'some.route',
+                '_method'             => 'POST',
+            ],
+            'reg-1',
+            'schema-1'
+        );
+
+        $this->assertEquals($expected, $result);
+
+    }//end testCreateFromRequestDropsExtraFields()
 
 
     /**

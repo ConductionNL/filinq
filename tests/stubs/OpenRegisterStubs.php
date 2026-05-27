@@ -109,11 +109,13 @@ class ObjectService
 
 
     /**
-     * Search objects (legacy)
+     * Search objects
+     *
+     * @param array<string, mixed> $query Search query with optional @self scope and filters
      *
      * @return array
      */
-    public function searchObjects()
+    public function searchObjects(array $query=[])
     {
         return [];
 
