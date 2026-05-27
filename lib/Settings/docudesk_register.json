@@ -623,7 +623,28 @@
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
-                "searchable": true
+                "searchable": true,
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initialState": "DRAFT",
+                    "states": {
+                        "DRAFT":       {"label": "Draft",       "description": "Signing request is being assembled by the initiator; not yet sent to signers."},
+                        "PENDING":     {"label": "Pending",     "description": "Request has been sent and is awaiting signer action."},
+                        "IN_PROGRESS": {"label": "In progress", "description": "At least one signer has started; the request is being signed."},
+                        "COMPLETED":   {"label": "Completed",   "description": "All signers have signed. Terminal state."},
+                        "DECLINED":    {"label": "Declined",    "description": "A signer declined; the request is terminated. Terminal."},
+                        "EXPIRED":     {"label": "Expired",     "description": "The deadline passed before completion. Terminal."},
+                        "CANCELLED":   {"label": "Cancelled",   "description": "The initiator cancelled the request. Terminal."}
+                    },
+                    "transitions": {
+                        "send":     {"from": "DRAFT",       "to": "PENDING",     "label": "Send for signing", "description": "Notify the configured signers and start collecting signatures."},
+                        "start":    {"from": "PENDING",     "to": "IN_PROGRESS", "label": "Start signing",    "description": "A signer has opened the request; mark the request as in progress."},
+                        "complete": {"from": "IN_PROGRESS", "to": "COMPLETED",   "label": "Complete signing", "description": "All signers have signed; finalise the request. Terminal."},
+                        "decline":  {"from": "IN_PROGRESS", "to": "DECLINED",    "label": "Decline",          "description": "A signer declined; terminate the request. Terminal."},
+                        "expire":   {"from": "PENDING",     "to": "EXPIRED",     "label": "Expire",           "description": "Deadline passed before completion. Terminal."},
+                        "cancel":   {"from": "PENDING",     "to": "CANCELLED",   "label": "Cancel",           "description": "Initiator cancels the request before completion. Terminal."}
+                    }
+                }
             },
             "signerRecord": {
                 "uri": null,
