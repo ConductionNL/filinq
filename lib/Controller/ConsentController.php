@@ -28,6 +28,7 @@ use OCA\DocuDesk\Service\ConsentCrudService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -47,12 +48,13 @@ class ConsentController extends Controller
     /**
      * Constructor for ConsentController
      *
-     * @param string             $appName     The application name
-     * @param IRequest           $request     The request object
-     * @param LoggerInterface    $logger      Logger for error reporting
-     * @param ConsentCrudService $crudService CRUD service for consent records
-     * @param IL10N              $l10n        The localization service
-     * @param IUserSession       $userSession User session for authentication
+     * @param string             $appName      The application name
+     * @param IRequest           $request      The request object
+     * @param LoggerInterface    $logger       Logger for error reporting
+     * @param ConsentCrudService $crudService  CRUD service for consent records
+     * @param IL10N              $l10n         The localization service
+     * @param IUserSession       $userSession  User session for authentication
+     * @param IGroupManager      $groupManager Group manager for admin checks
      *
      * @return void
      */
@@ -62,11 +64,44 @@ class ConsentController extends Controller
         private readonly LoggerInterface $logger,
         private readonly ConsentCrudService $crudService,
         private readonly IL10N $l10n,
-        private readonly IUserSession $userSession
+        private readonly IUserSession $userSession,
+        private readonly IGroupManager $groupManager
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
+    /**
+     * Check whether the current user may access a consent record
+     *
+     * Enforces per-object ownership for non-admin users (security finding
+     * #283). OpenRegister reads are default-open, so a controller-level
+     * ownership guard is required to keep consent records isolated between
+     * users. Administrators retain full access.
+     *
+     * @param array<string, mixed> $consent The consent record to check
+     *
+     * @return bool True if the current user may access the record
+     */
+    private function canAccessConsent(array $consent): bool
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return false;
+        }
+
+        if ($this->groupManager->isAdmin($user->getUID()) === true) {
+            return true;
+        }
+
+        $owner = $consent['@self']['owner'] ?? ($consent['owner'] ?? null);
+        if (is_array($owner) === true) {
+            $owner = $owner['id'] ?? ($owner['uid'] ?? null);
+        }
+
+        return $owner !== null && (string) $owner === $user->getUID();
+
+    }//end canAccessConsent()
 
     /**
      * Build an error JSON response with logging
@@ -141,7 +176,6 @@ class ConsentController extends Controller
      * @return JSONResponse JSON response with the created consent record
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
      */
@@ -221,6 +255,15 @@ class ConsentController extends Controller
                 );
             }
 
+            // Per-object ownership guard (security finding #283): return 404
+            // (not 403) so non-owners cannot probe for record existence.
+            if ($this->canAccessConsent(consent: $consent) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Consent record not found')],
+                    404
+                );
+            }
+
             return new JSONResponse($consent);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to get consent: ', exception: $e);
@@ -236,7 +279,6 @@ class ConsentController extends Controller
      * @return JSONResponse JSON response with updated consent record
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -255,6 +297,16 @@ class ConsentController extends Controller
             $config = $this->crudService->getConsentConfig();
             if ($config === null) {
                 return $this->notConfiguredResponse();
+            }
+
+            // Per-object ownership guard (security finding #283): a non-owner
+            // must not be able to overwrite another user's consent record.
+            $existing = $this->crudService->getConsent($id, $config['register'], $config['schema']);
+            if ($existing === null || $this->canAccessConsent(consent: $existing) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Consent record not found')],
+                    404
+                );
             }
 
             $result = $this->crudService->updateConsentStatus(

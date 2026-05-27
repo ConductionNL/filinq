@@ -243,6 +243,13 @@ class SigningService
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
+        // Security finding #282: ensure the authenticated user is the signer
+        // they claim to be. Without this check any authenticated user could
+        // sign on behalf of another signer by supplying their signer ID.
+        if (($signer['userId'] ?? '') !== $user->getUID()) {
+            throw new RuntimeException('Not authorized to sign as this signer');
+        }
+
         if (($signer['status'] ?? '') !== 'PENDING') {
             throw new RuntimeException('Signer has already responded to this request');
         }
@@ -294,6 +301,12 @@ class SigningService
 
         if (empty($signer) === true) {
             throw new RuntimeException('Signer record not found: '.$signerId);
+        }
+
+        // Security finding #282: ensure the authenticated user is the signer
+        // they claim to be before allowing them to decline on its behalf.
+        if (($signer['userId'] ?? '') !== $user->getUID()) {
+            throw new RuntimeException('Not authorized to decline as this signer');
         }
 
         $signer['status']        = 'DECLINED';

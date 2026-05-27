@@ -22,6 +22,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -41,12 +42,14 @@ class SigningVerificationService
      *
      * @param IRootFolder     $rootFolder Root folder
      * @param LoggerInterface $logger     Logger
+     * @param IAppConfig      $config     App config
      *
      * @return void
      */
     public function __construct(
         private readonly IRootFolder $rootFolder,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
@@ -93,6 +96,16 @@ class SigningVerificationService
     /**
      * Extract signature information from a PDF document
      *
+     * Security note (finding #284): the embedded `/DocuDesk-Signature(...)`
+     * blob is entirely attacker-controlled (anyone can append it to a PDF),
+     * so its mere presence proves nothing. This verifier is therefore
+     * FAIL-CLOSED: a self-asserted blob is reported with `valid => false`
+     * unless its content can be cryptographically verified against the
+     * document (HMAC over the document content-hash using a server-held
+     * secret, see verifyAssertion()). Real PAdES/CMS signature validation is
+     * not yet implemented; embedded `/Type /Sig` entries we cannot verify are
+     * reported as `valid => false` rather than trusted.
+     *
      * @param string $pdfContent The PDF file content
      *
      * @return array<int, array<string, mixed>> List of signature records
@@ -115,13 +128,19 @@ class SigningVerificationService
             foreach ($dataMatches[1] as $encoded) {
                 $decoded = json_decode(base64_decode($encoded), true);
                 if (is_array($decoded) === true) {
+                    // Fail-closed: only trust the blob if it carries a valid
+                    // server-verifiable HMAC over the document content. A
+                    // self-asserted (unsigned) blob reports valid => false.
                     $signatures[] = [
                         'signer'    => $decoded['signer'] ?? 'Unknown',
                         'timestamp' => $decoded['timestamp'] ?? '',
                         'level'     => $decoded['level'] ?? 'SES',
                         'method'    => $decoded['method'] ?? 'unknown',
                         'ip'        => $decoded['ip'] ?? '',
-                        'valid'     => true,
+                        'valid'     => $this->verifyAssertion(
+                            assertion: $decoded,
+                            pdfContent: $pdfContent
+                        ),
                     ];
                 }
             }//end foreach
@@ -135,7 +154,7 @@ class SigningVerificationService
                     'level'     => 'unknown',
                     'method'    => 'external',
                     'ip'        => '',
-                    'valid'     => null,
+                    'valid'     => false,
                 ];
             }
         }
@@ -143,6 +162,68 @@ class SigningVerificationService
         return $signatures;
 
     }//end extractSignatures()
+
+    /**
+     * Cryptographically verify a self-asserted DocuDesk signature blob
+     *
+     * Verifies an HMAC-SHA256 over the document content-hash (the PDF with
+     * the signature blob's own `mac` field stripped) using a server-held
+     * secret. Without a configured secret or a matching MAC the assertion is
+     * rejected (fail-closed, security finding #284).
+     *
+     * @param array<string, mixed> $assertion  The decoded signature blob
+     * @param string               $pdfContent The full PDF content
+     *
+     * @return bool True only if the assertion is cryptographically verified
+     */
+    private function verifyAssertion(array $assertion, string $pdfContent): bool
+    {
+        $mac = $assertion['mac'] ?? '';
+        if (is_string($mac) === false || $mac === '') {
+            // No server-issued MAC present: cannot be trusted.
+            return false;
+        }
+
+        $secret = $this->getSigningSecret();
+        if ($secret === '') {
+            // No server secret configured: nothing can be verified.
+            return false;
+        }
+
+        // Recompute the MAC over the document with the asserted `mac` field
+        // removed, so the MAC cannot cover itself. Strip the literal blob's
+        // mac value out of the byte stream before hashing.
+        $contentHash = hash('sha256', $this->stripAssertionMac(pdfContent: $pdfContent, mac: $mac));
+        $expected    = hash_hmac('sha256', $contentHash, $secret);
+
+        return hash_equals($expected, $mac);
+
+    }//end verifyAssertion()
+
+    /**
+     * Remove the asserted MAC value from the PDF byte stream before hashing
+     *
+     * @param string $pdfContent The full PDF content
+     * @param string $mac        The asserted MAC value to strip
+     *
+     * @return string The PDF content with the MAC value removed
+     */
+    private function stripAssertionMac(string $pdfContent, string $mac): string
+    {
+        return str_replace($mac, '', $pdfContent);
+
+    }//end stripAssertionMac()
+
+    /**
+     * Get the server-held signing secret used to verify assertions
+     *
+     * @return string The configured secret, or an empty string if unset
+     */
+    private function getSigningSecret(): string
+    {
+        return (string) ($this->config->getValueString('docudesk', 'signing_verification_secret', '') ?? '');
+
+    }//end getSigningSecret()
 
     /**
      * Check if all signatures are valid

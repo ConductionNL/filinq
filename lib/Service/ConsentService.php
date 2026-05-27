@@ -118,12 +118,12 @@ class ConsentService
                 $extra
             );
 
+            // Let OpenRegister enforce RBAC and multitenancy so the consent
+            // record is owned by the creating user (security finding #283).
             $savedObject = $objectService->saveObject(
                 object: $consentData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info('Consent request created', ['documentId' => $documentId]);
