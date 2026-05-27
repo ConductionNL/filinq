@@ -144,7 +144,7 @@ class SigningVerificationService
                     ];
                 }
             }//end foreach
-        }
+        }//end if
 
         if (empty($signatures) === true) {
             for ($i = 0; $i < $matches; $i++) {
@@ -221,7 +221,7 @@ class SigningVerificationService
      */
     private function getSigningSecret(): string
     {
-        return (string) ($this->config->getValueString('docudesk', 'signing_verification_secret', '') ?? '');
+        return $this->config->getValueString('docudesk', 'signing_verification_secret', '');
 
     }//end getSigningSecret()
 

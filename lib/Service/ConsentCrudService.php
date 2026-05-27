@@ -187,10 +187,12 @@ class ConsentCrudService
     public function createFromRequest(array $data, string $register, string $schema): array
     {
         // Only forward the explicitly allowed fields; drop everything else.
+        $filtered = array_intersect_key($data, array_flip(self::ALLOWED_CREATE_FIELDS));
+
         return $this->consentService->createConsentRequest(
-            $data['documentId'],
-            $data['entityType'],
-            $data['entityText'],
+            (string) ($filtered['documentId'] ?? ''),
+            (string) ($filtered['entityType'] ?? ''),
+            (string) ($filtered['entityText'] ?? ''),
             $register,
             $schema
         );

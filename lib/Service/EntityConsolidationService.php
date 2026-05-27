@@ -111,14 +111,14 @@ class EntityConsolidationService
      */
     private function mergeEntity(array $map, mixed $entity): array
     {
-        $d = (array) $entity;
+        $data = (array) $entity;
         if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
-            $d = $entity->jsonSerialize();
+            $data = $entity->jsonSerialize();
         }
 
-        $type  = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
-        $value = $d['entity_value'] ?? $d['entityValue'] ?? '';
-        $conf  = (float) ($d['confidence'] ?? 0.0);
+        $type  = $data['entity_type'] ?? $data['entityType'] ?? 'UNKNOWN';
+        $value = $data['entity_value'] ?? $data['entityValue'] ?? '';
+        $conf  = (float) ($data['confidence'] ?? 0.0);
         $key   = mb_strtolower((string) $value);
         if ($key === '') {
             return $map;

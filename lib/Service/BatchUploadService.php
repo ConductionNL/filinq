@@ -83,7 +83,8 @@ class BatchUploadService
                 if ($index === 0) {
                     $arr = $request->getUploadedFile('files');
                     if (empty($arr) === false && is_array($arr['tmp_name']) === true) {
-                        for ($i = 0; $i < count($arr['tmp_name']); $i++) {
+                        $fileCount = count($arr['tmp_name']);
+                        for ($i = 0; $i < $fileCount; $i++) {
                             $files[] = [
                                 'name'     => (string) $arr['name'][$i],
                                 'tmp_name' => (string) $arr['tmp_name'][$i],

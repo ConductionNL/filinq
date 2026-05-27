@@ -191,7 +191,7 @@ class SettingsController extends Controller
                 ]
             );
             return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
+        }//end try
 
     }//end create()
 }//end class
