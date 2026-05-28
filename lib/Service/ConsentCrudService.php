@@ -85,9 +85,9 @@ class ConsentCrudService
      * server-side so only records whose @self.owner matches the caller are
      * returned. Passing null returns all records (admin callers only).
      *
-     * @param string      $register  The register ID
-     * @param string      $schema    The schema ID
-     * @param string|null $ownerUid  UID to scope results to, or null for all
+     * @param string      $register The register ID
+     * @param string      $schema   The schema ID
+     * @param string|null $ownerUid UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
