@@ -6,13 +6,9 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 <template>
 	<div class="anonymization-widget">
 		<h2 class="page-title">
-			{{ t('docudesk', 'Good afternoon {name},', { name: userName }) }}<br>
+			{{ greeting }}<br>
 			{{ t('docudesk', 'what would you like to anonymize today?') }}
 		</h2>
-		<p class="page-description">
-			{{ t('docudesk', 'Upload one or more documents. After uploading you continue in the file viewer, where the sidebar lists detected entities and lets you assign Woo Art. 5 grondslagen before running anonymisation.') }}
-		</p>
-
 		<!-- Drop zone -->
 		<div class="upload-area">
 			<div
@@ -153,6 +149,23 @@ export default {
 		userName() {
 			const user = getCurrentUser()
 			return user?.displayName || user?.uid || ''
+		},
+		/**
+		 * Time-of-day greeting interpolated with the user's display name.
+		 *
+		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
+		 *
+		 * @return {string} Localised greeting like 'Good morning Marco,'.
+		 */
+		greeting() {
+			const hour = new Date().getHours()
+			if (hour >= 5 && hour < 12) {
+				return t('docudesk', 'Good morning {name},', { name: this.userName })
+			}
+			if (hour >= 12 && hour < 18) {
+				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
+			}
+			return t('docudesk', 'Good evening {name},', { name: this.userName })
 		},
 	},
 	methods: {

@@ -138,7 +138,7 @@
 			<div v-if="store.hasDossier" class="dossier-report-block">
 				<h4>{{ t('docudesk', 'Dossier grondslagen report') }}</h4>
 				<p class="muted">
-					{{ t('docudesk', 'Regenerates `<dossier-folder>/grondslagen.pdf` aggregating every anonymised file under this dossier.') }}
+					{{ t('docudesk', 'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.') }}
 				</p>
 				<div class="action-bar">
 					<NcButton type="secondary"
