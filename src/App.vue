@@ -27,7 +27,10 @@
 			<FolderFilesNavigation v-if="inDossier" />
 			<MainMenu v-else />
 			<Views />
-			<SideBars />
+			<!-- Sidebar lives at App level (NcContent demands a direct child)
+			     but is mounted strictly with the FileViewerPage host route, so
+			     viewer + sidebar always appear/disappear as one unit. -->
+			<FileViewerSidebar v-if="showFileViewerSidebar" />
 			<Modals />
 			<Dialogs />
 		</template>
@@ -49,8 +52,8 @@ import FolderFilesNavigation from './navigation/FolderFilesNavigation.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
-import SideBars from './sidebars/SideBars.vue'
-import { initializeStores, useSettingsStore, myDocumentsStore } from './store/store.js'
+import FileViewerSidebar from './sidebars/FileViewerSidebar.vue'
+import { initializeStores, useSettingsStore, myDocumentsStore, fileViewerStore } from './store/store.js'
 
 export default {
 	name: 'App',
@@ -65,7 +68,7 @@ export default {
 		Modals,
 		Dialogs,
 		Views,
-		SideBars,
+		FileViewerSidebar,
 	},
 
 	data() {
@@ -97,6 +100,34 @@ export default {
 		},
 		appStoreUrl() {
 			return generateUrl('/settings/apps/integration/openregister')
+		},
+		/**
+		 * Sidebar lives at App level because NcContent demands a direct
+		 * child, but it must only render while the file-viewer host route
+		 * is active AND a file is open. This keeps the sidebar and the
+		 * viewer mounted/unmounted as a single unit.
+		 *
+		 * @return {boolean}
+		 */
+		showFileViewerSidebar() {
+			return this.$route?.name === 'MyDocuments' && !!fileViewerStore.currentFile
+		},
+	},
+
+	watch: {
+		/**
+		 * Close the file viewer whenever the user navigates away from the
+		 * MyDocuments host route. Without this guard the store's
+		 * `currentFile` would survive a route change and the sidebar
+		 * computed flag would silently flicker on the next return.
+		 *
+		 * @param {object} to   The route being navigated to.
+		 * @param {object} from The route being left.
+		 */
+		$route(to, from) {
+			if (from?.name === 'MyDocuments' && to?.name !== 'MyDocuments' && fileViewerStore.currentFile) {
+				fileViewerStore.close()
+			}
 		},
 	},
 

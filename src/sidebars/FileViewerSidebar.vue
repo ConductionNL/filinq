@@ -4,11 +4,15 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </script>
 
 <template>
+	<!-- The native NcAppSidebar X-button is hidden via :deep() CSS below.
+	     Closing the entity review while the user is still picking which
+	     entities to anonymise would lose unsaved selections — the only
+	     exit is the FileViewerPage "Back" button, which closes the viewer
+	     and the sidebar together via fileViewerStore.close(). -->
 	<NcAppSidebar
 		v-if="fileViewerStore.currentFile"
 		:name="sidebarTitle"
-		:subtitle="sidebarSubtitle"
-		@close="onClose">
+		:subtitle="sidebarSubtitle">
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
 			<div v-if="isLoading" class="entities-list">
@@ -263,15 +267,6 @@ export default {
 	},
 	methods: {
 		/**
-		 * Close handler — closes the file viewer, which hides this sidebar
-		 * because it is bound to fileViewerStore.currentFile.
-		 *
-		 * @return {void}
-		 */
-		onClose() {
-			fileViewerStore.close()
-		},
-		/**
 		 * Whether an entity has any relation id — bases / skip controls
 		 * only persist when the entity is backed by an OR relation.
 		 *
@@ -345,6 +340,14 @@ export default {
 	border-radius: 20px;
 	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
 	margin-left: 8px;
+}
+
+/* Hide the built-in X close button — the user must finish the entity
+ * review (or use the viewer's Back button) before the sidebar unmounts.
+ * NcAppSidebar v8 exposes no prop for this, so we override the lib's
+ * scoped class directly. */
+:deep(.app-sidebar__close) {
+	display: none !important;
 }
 
 .file-viewer-sidebar {
