@@ -210,7 +210,9 @@ class SigningVerificationService
      */
     private function stripAssertionMac(string $pdfContent, string $mac): string
     {
-        return str_replace($mac, '', $pdfContent);
+        // Use preg_replace with a literal match (preg_quote) so that any
+        // special regex characters in the MAC value are treated as plain text.
+        return preg_replace('/' . preg_quote($mac, '/') . '/', '', $pdfContent) ?? $pdfContent;
 
     }//end stripAssertionMac()
 
@@ -234,6 +236,11 @@ class SigningVerificationService
      */
     private function allSignaturesValid(array $signatures): bool
     {
+        // An empty signatures array means nothing was verified — treat as invalid.
+        if (count($signatures) === 0) {
+            return false;
+        }
+
         foreach ($signatures as $signature) {
             if ($signature['valid'] === false) {
                 return false;

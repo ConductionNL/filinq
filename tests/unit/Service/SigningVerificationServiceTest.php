@@ -1,0 +1,197 @@
+<?php
+
+/**
+ * Unit tests for SigningVerificationService — findings M1 and L1.
+ *
+ * M1: allSignaturesValid() must return false for an empty signature list so
+ *     that a document with zero verifiable signatures is never reported as
+ *     valid (previously returned true).
+ *
+ * L1: stripAssertionMac() must use preg_replace with preg_quote so that a MAC
+ *     value that contains regex metacharacters is treated as a literal string
+ *     (previously used str_replace which cannot handle regex patterns, but
+ *     the intent was to strip literal occurrences — using preg_replace with
+ *     preg_quote is the correct approach for safety and explicitness).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Tests\Unit\Service;
+
+use OCA\DocuDesk\Service\SigningVerificationService;
+use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use ReflectionClass;
+
+/**
+ * Tests for SigningVerificationService correctness
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
+ */
+class SigningVerificationServiceTest extends TestCase
+{
+
+    /**
+     * @var SigningVerificationService
+     */
+    private SigningVerificationService $service;
+
+    /**
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockConfig;
+
+
+    /**
+     * Set up test environment
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockConfig = $this->createMock(IAppConfig::class);
+
+        $this->service = new SigningVerificationService(
+            rootFolder: $this->createMock(IRootFolder::class),
+            logger: $this->createMock(LoggerInterface::class),
+            config: $this->mockConfig
+        );
+
+    }//end setUp()
+
+
+    /**
+     * allSignaturesValid() must return false for an empty array (finding M1).
+     *
+     * Before the fix, the foreach simply never ran and the method returned true
+     * — a document with zero signatures was incorrectly considered "all valid".
+     *
+     * @return void
+     */
+    public function testAllSignaturesValidReturnsFalseForEmptyArray(): void
+    {
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('allSignaturesValid');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($this->service, []);
+
+        $this->assertFalse(
+            $result,
+            'allSignaturesValid() must return false for an empty signatures array (finding M1).'
+        );
+
+    }//end testAllSignaturesValidReturnsFalseForEmptyArray()
+
+
+    /**
+     * allSignaturesValid() returns true only when all entries have valid=true.
+     *
+     * @return void
+     */
+    public function testAllSignaturesValidReturnsTrueWhenAllValid(): void
+    {
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('allSignaturesValid');
+        $method->setAccessible(true);
+
+        $signatures = [
+            ['valid' => true, 'signer' => 'Alice'],
+            ['valid' => true, 'signer' => 'Bob'],
+        ];
+
+        $this->assertTrue($method->invoke($this->service, $signatures));
+
+    }//end testAllSignaturesValidReturnsTrueWhenAllValid()
+
+
+    /**
+     * allSignaturesValid() returns false when any entry has valid=false.
+     *
+     * @return void
+     */
+    public function testAllSignaturesValidReturnsFalseWhenOneInvalid(): void
+    {
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('allSignaturesValid');
+        $method->setAccessible(true);
+
+        $signatures = [
+            ['valid' => true,  'signer' => 'Alice'],
+            ['valid' => false, 'signer' => 'Bob'],
+        ];
+
+        $this->assertFalse($method->invoke($this->service, $signatures));
+
+    }//end testAllSignaturesValidReturnsFalseWhenOneInvalid()
+
+
+    /**
+     * stripAssertionMac() removes a plain MAC value from the content (finding L1).
+     *
+     * @return void
+     */
+    public function testStripAssertionMacRemovesLiteralMac(): void
+    {
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('stripAssertionMac');
+        $method->setAccessible(true);
+
+        $mac     = 'abc123def456';
+        $content = 'prefix ' . $mac . ' suffix';
+
+        $result = $method->invoke($this->service, $content, $mac);
+
+        $this->assertStringNotContainsString($mac, $result);
+        $this->assertStringContainsString('prefix', $result);
+        $this->assertStringContainsString('suffix', $result);
+
+    }//end testStripAssertionMacRemovesLiteralMac()
+
+
+    /**
+     * stripAssertionMac() handles MAC values that contain regex metacharacters
+     * (finding L1 — preg_quote ensures literal matching).
+     *
+     * @return void
+     */
+    public function testStripAssertionMacHandlesRegexMetacharacters(): void
+    {
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('stripAssertionMac');
+        $method->setAccessible(true);
+
+        // A MAC that happens to contain characters special to regex.
+        $mac     = 'a.b+c(d)e$f';
+        $content = 'before' . $mac . 'after';
+
+        // Must not throw a regex error and must strip the literal text.
+        $result = $method->invoke($this->service, $content, $mac);
+
+        $this->assertStringNotContainsString($mac, $result);
+        $this->assertSame('beforeafter', $result);
+
+    }//end testStripAssertionMacHandlesRegexMetacharacters()
+
+
+}//end class
