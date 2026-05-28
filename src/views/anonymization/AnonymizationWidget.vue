@@ -65,27 +65,28 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			size="normal"
 			@closing="cancelDossier">
 			<div class="dossier-dialog">
-				<p class="dossier-dialog__intro">
-					{{ t('docudesk', 'You selected {count} files. Give this dossier a name to group them in one folder.', { count: pendingFiles.length }) }}
-				</p>
 				<NcTextField
 					ref="dossierInput"
 					:value.sync="dossierName"
-					:label="t('docudesk', 'Folder name')"
+					:label="t('docudesk', 'Dossier name')"
+					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
 					:disabled="dossierSubmitting"
 					:error="!!dossierError"
 					:helper-text="dossierError"
 					@keyup.enter="confirmDossier" />
+				<NcNoteCard type="info">
+					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+				</NcNoteCard>
 			</div>
 			<template #actions>
 				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
 					{{ t('docudesk', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="dossierSubmitting || !dossierName.trim()" @click="confirmDossier">
+				<NcButton type="primary" :disabled="dossierSubmitting" @click="confirmDossier">
 					<template v-if="dossierSubmitting" #icon>
 						<NcLoadingIcon :size="18" />
 					</template>
-					{{ t('docudesk', 'Create and upload') }}
+					{{ t('docudesk', 'Continue to anonymization') }}
 				</NcButton>
 			</template>
 		</NcDialog>
@@ -93,7 +94,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
@@ -145,6 +146,7 @@ export default {
 		NcButton,
 		NcDialog,
 		NcLoadingIcon,
+		NcNoteCard,
 		NcTextField,
 		DdDocumentCard,
 	},
@@ -331,14 +333,14 @@ export default {
 			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
 		},
 		/**
-		 * Open the dossier-name dialog, pre-fill a timestamp-based name,
-		 * and focus the input on next tick.
+		 * Open the dossier-name dialog with an empty input so the
+		 * placeholder is visible and focus on next tick.
 		 *
 		 * @param {File[]} files Files that will be placed into the dossier.
 		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
-			this.dossierName = this.defaultDossierName()
+			this.dossierName = ''
 			this.dossierError = ''
 			this.showDossierDialog = true
 			this.$nextTick(() => {
@@ -346,40 +348,45 @@ export default {
 			})
 		},
 		/**
-		 * Confirm handler for the dossier dialog: creates the folder,
-		 * moves the files in, and starts the pipeline. Keeps the dialog
-		 * open on failure so the user sees the error inline.
+		 * Confirm handler for the dossier dialog. With a title the files are
+		 * grouped into a new dossier folder and bound to OpenRegister; with
+		 * no title each file is uploaded loose under /DocuDesk/, matching
+		 * the single-file flow. Keeps the dialog open on failure so the
+		 * user sees the error inline.
 		 */
 		async confirmDossier() {
 			const name = this.dossierName.trim()
-			if (!name) return
 			this.dossierSubmitting = true
 			this.dossierError = ''
 			try {
-				// Capture metadata before addFilesAsDossier consumes the
-				// File blobs — used to seed the file viewer afterwards.
+				// Capture metadata before the store consumes the File blobs —
+				// used to seed the file viewer afterwards.
 				const firstMime = this.pendingFiles[0]?.type || ''
 				const before = anonymizationStore.files.length
 
-				await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+				if (name) {
+					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
 
-				// Bind the WebDAV folder to an OpenRegister dossier object
-				// (PROPFIND + POST). Best-effort: files are uploaded fine
-				// regardless of OR binding, so we surface the error in
-				// the dialog but don't roll the upload back.
-				try {
-					await anonymizationStore.bindDossier(name)
-				} catch (err) {
-					console.error('Failed to bind dossier to OpenRegister:', err)
-				}
+					// Bind the WebDAV folder to an OpenRegister dossier
+					// object (PROPFIND + POST). Best-effort: files are
+					// uploaded fine regardless of OR binding, so we surface
+					// the error in the dialog but don't roll the upload back.
+					try {
+						await anonymizationStore.bindDossier(name)
+					} catch (err) {
+						console.error('Failed to bind dossier to OpenRegister:', err)
+					}
 
-				// Switch the left-hand navigation to the new dossier folder
-				// so `FolderFilesNavigation` lists every file we just put
-				// inside it.
-				try {
-					await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
-				} catch (err) {
-					console.error('Failed to open dossier folder:', err)
+					// Switch the left-hand navigation to the new dossier
+					// folder so `FolderFilesNavigation` lists every file we
+					// just put inside it.
+					try {
+						await myDocumentsStore.fetchDocuments(`/DocuDesk/${name}`)
+					} catch (err) {
+						console.error('Failed to open dossier folder:', err)
+					}
+				} else {
+					await anonymizationStore.addFiles(this.pendingFiles)
 				}
 
 				// Open the first uploaded file in the viewer.
@@ -396,7 +403,7 @@ export default {
 
 				this.closeDossierDialog()
 			} catch (err) {
-				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to create dossier'
+				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
 			} finally {
 				this.dossierSubmitting = false
 			}
@@ -415,21 +422,6 @@ export default {
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
-		},
-		/**
-		 * Suggest a default dossier name based on the current date+time,
-		 * so the user can immediately confirm without typing.
-		 *
-		 * @return {string} e.g. "Dossier-2026-04-23-1045"
-		 */
-		defaultDossierName() {
-			const d = new Date()
-			const yyyy = d.getFullYear()
-			const mm = String(d.getMonth() + 1).padStart(2, '0')
-			const dd = String(d.getDate()).padStart(2, '0')
-			const hh = String(d.getHours()).padStart(2, '0')
-			const mi = String(d.getMinutes()).padStart(2, '0')
-			return `Dossier-${yyyy}-${mm}-${dd}-${hh}${mi}`
 		},
 	},
 }
@@ -518,12 +510,14 @@ export default {
 }
 
 .dossier-dialog {
-	padding: 8px 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 20px;
 }
 
-.dossier-dialog__intro {
-	margin: 0 0 16px 0;
-	color: var(--color-text-maxcontrast);
+.dossier-dialog :deep(.notecard) {
+	margin: 0;
 }
 
 .recent-section {
