@@ -28,7 +28,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only PDF, Word, TXT or EML files are supported. Maximum file size 500 MB.') }}
+						{{ t('docudesk', 'Only Word (.docx) or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
 					<span class="fake-button">
 						{{ t('docudesk', '+ Select files') }}
@@ -38,6 +38,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
+					accept=".docx,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
@@ -81,7 +82,44 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
+import { showError } from '@nextcloud/dialogs'
 import uploadIcon from '../../assets/upload.png'
+
+// Anonymisation only produces real redactions for formats the backend can
+// edit in place: Word via PHPWord, plain text via byte-level replace. PDF
+// (and other binary formats) fall through to the str_ireplace path that
+// returns a byte-identical copy — see project-anonymization-pipeline for
+// the upstream OR limitation. Restrict the upload widget so users can't
+// accidentally pick a format that won't actually redact.
+const ALLOWED_EXTENSIONS = ['docx', 'txt']
+const ALLOWED_MIMES = new Set([
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'text/plain',
+])
+
+/**
+ * Split a FileList into accepted (docx/txt) and rejected files.
+ *
+ * Matches on both MIME and filename extension because drag-and-drop sometimes
+ * omits MIME (e.g. for .docx on certain browsers) and the input's `accept`
+ * attribute is advisory only.
+ *
+ * @param {FileList | File[]} files Incoming files.
+ * @return {{ accepted: File[], rejected: File[] }}
+ */
+function partitionFiles(files) {
+	const accepted = []
+	const rejected = []
+	for (const file of Array.from(files)) {
+		const ext = (file.name.split('.').pop() || '').toLowerCase()
+		if (ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.includes(ext)) {
+			accepted.push(file)
+		} else {
+			rejected.push(file)
+		}
+	}
+	return { accepted, rejected }
+}
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -129,7 +167,10 @@ export default {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
 			if (files && files.length > 0) {
-				this.dispatchFiles(files)
+				const filtered = this.filterAllowed(files)
+				if (filtered.length > 0) {
+					this.dispatchFiles(filtered)
+				}
 			}
 		},
 		/**
@@ -142,9 +183,28 @@ export default {
 		handleFileSelect(event) {
 			const files = event.target?.files
 			if (files && files.length > 0) {
-				this.dispatchFiles(files)
+				const filtered = this.filterAllowed(files)
+				if (filtered.length > 0) {
+					this.dispatchFiles(filtered)
+				}
 			}
 			event.target.value = ''
+		},
+		/**
+		 * Drop files whose extension/MIME isn't in the supported set.
+		 * Surfaces a toast naming each rejected file so the user knows why
+		 * nothing happened for that file.
+		 *
+		 * @param {FileList | File[]} files Incoming files from drop or input.
+		 * @return {File[]} Accepted subset.
+		 */
+		filterAllowed(files) {
+			const { accepted, rejected } = partitionFiles(files)
+			if (rejected.length > 0) {
+				const names = rejected.map((f) => f.name).join(', ')
+				showError(t('docudesk', 'Only Word (.docx) and TXT files are supported. Skipped: {names}', { names }))
+			}
+			return accepted
 		},
 		/**
 		 * Route the incoming files to the right flow:
