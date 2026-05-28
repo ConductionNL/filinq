@@ -129,6 +129,27 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 
+const VIEW_MODE_STORAGE_KEY = 'docudesk:myDocuments:viewMode'
+const VALID_VIEW_MODES = ['table', 'cards']
+
+/**
+ * Read the persisted view-mode preference from localStorage.
+ * Falls back to 'table' when storage is unavailable or the value is invalid.
+ *
+ * @return {string} Stored view mode or default 'table'.
+ */
+function loadPersistedViewMode() {
+	try {
+		const stored = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY)
+		if (stored && VALID_VIEW_MODES.includes(stored)) {
+			return stored
+		}
+	} catch (e) {
+		// localStorage can throw in private mode / sandboxed iframes
+	}
+	return 'table'
+}
+
 export default {
 	name: 'MyDocumentsIndex',
 	components: {
@@ -156,7 +177,7 @@ export default {
 			currentPage: 1,
 			pageSize: 20,
 			searchQuery: '',
-			viewMode: 'table',
+			viewMode: loadPersistedViewMode(),
 			kindColorMap: {
 				[t('docudesk', 'Dossier')]: 'info',
 				[t('docudesk', 'Concept')]: 'warning',
@@ -247,12 +268,18 @@ export default {
 			this.currentPage = 1
 		},
 		/**
-		 * Toggle between 'table' and 'cards' (Tegels/Lijst in the design).
+		 * Toggle between 'table' and 'cards' (Tegels/Lijst in the design)
+		 * and persist the choice so it survives reloads / navigation.
 		 *
 		 * @param {string} mode New view mode ('table' or 'cards').
 		 */
 		onViewModeChange(mode) {
 			this.viewMode = mode
+			try {
+				window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode)
+			} catch (e) {
+				// localStorage can throw in private mode / sandboxed iframes
+			}
 		},
 		/**
 		 * Open the file in the Nextcloud Files app in a new tab.
