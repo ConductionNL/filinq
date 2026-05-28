@@ -22,6 +22,8 @@ use OCA\DocuDesk\Service\MetadataService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -65,6 +67,11 @@ class MetadataControllerTest extends TestCase
      */
     private IL10N|MockObject $mockL10n;
 
+    /**
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
 
     /**
      * Set up test environment
@@ -83,12 +90,18 @@ class MetadataControllerTest extends TestCase
             return vsprintf($text, $params);
         });
 
+        $mockUser                = $this->createMock(IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $this->mockUserSession   = $this->createMock(IUserSession::class);
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new MetadataController(
             'docudesk',
             $this->mockRequest,
             $this->mockLogger,
             $this->mockMetadataService,
-            $this->mockL10n
+            $this->mockL10n,
+            $this->mockUserSession
         );
 
     }//end setUp()

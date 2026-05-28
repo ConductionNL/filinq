@@ -171,14 +171,24 @@ class ConsentUpdateHandler
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
         try {
             $objectService = $this->getObjectService();
 
+            $selfScope = ['register' => $register, 'schema' => $schema];
+
+            // Security (H1): scope the query to the caller's own records when
+            // a non-admin UID is provided, so users cannot enumerate consent
+            // records that belong to other users via the byDocument endpoint.
+            if ($ownerUid !== null) {
+                $selfScope['owner'] = $ownerUid;
+            }
+
             $results = $objectService->searchObjects(
                 [
-                    '@self'      => ['register' => $register, 'schema' => $schema],
+                    '@self'      => $selfScope,
                     'documentId' => $documentId,
                 ]
             );

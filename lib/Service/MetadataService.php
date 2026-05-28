@@ -182,12 +182,13 @@ class MetadataService
         try {
             $objectService = $this->getObjectService();
 
+            // Security (C2): _rbac:false / _multitenancy:false removed — OR's
+            // per-object RBAC and multitenancy guards must apply so callers
+            // cannot read or overwrite objects in other tenants/users.
             $object = $objectService->find(
                 id: $objectId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {
@@ -198,9 +199,7 @@ class MetadataService
             $savedObject = $objectService->saveObject(
                 object: $objectData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info(

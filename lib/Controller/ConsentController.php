@@ -161,8 +161,17 @@ class ConsentController extends Controller
                 return $this->notConfiguredResponse();
             }
 
+            $user = $this->userSession->getUser();
+            // $user cannot be null here (checked above), but appease Psalm.
+            $uid     = $user !== null ? $user->getUID() : '';
+            $isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
+
             return new JSONResponse(
-                $this->crudService->listConsents($config['register'], $config['schema'])
+                $this->crudService->listConsents(
+                    $config['register'],
+                    $config['schema'],
+                    $isAdmin ? null : $uid
+                )
             );
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to list consents: ', exception: $e);
@@ -350,10 +359,15 @@ class ConsentController extends Controller
                 return $this->notConfiguredResponse();
             }
 
+            $user    = $this->userSession->getUser();
+            $uid     = $user !== null ? $user->getUID() : '';
+            $isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
+
             $consents = $this->crudService->getConsentsByDocument(
                 $documentId,
                 $config['register'],
-                $config['schema']
+                $config['schema'],
+                $isAdmin ? null : $uid
             );
 
             return new JSONResponse($consents);

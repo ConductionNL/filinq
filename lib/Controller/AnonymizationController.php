@@ -33,6 +33,8 @@ use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
+use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -59,6 +61,7 @@ class AnonymizationController extends Controller
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
      * @param IUserSession         $userSession          User session for authentication
+     * @param IRootFolder          $rootFolder           Root folder for file access checks
      *
      * @return void
      */
@@ -70,6 +73,7 @@ class AnonymizationController extends Controller
         private readonly FileListingService $fileListingService,
         private readonly IL10N $l10n,
         private readonly IUserSession $userSession,
+        private readonly IRootFolder $rootFolder,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -184,6 +188,47 @@ class AnonymizationController extends Controller
     }//end upload()
 
     /**
+     * Verify the current user has access to the given file ID
+     *
+     * Resolves the file via the user's own file tree so that an authenticated
+     * user cannot operate on files they do not own (security finding C3 —
+     * file IDOR). Returns 404 on failure so callers cannot probe for existence.
+     *
+     * @param int $fileId The Nextcloud file ID to check
+     *
+     * @return JSONResponse|null Null when access is granted, 404 response otherwise
+     */
+    private function verifyFileAccess(int $fileId): ?JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Not authenticated')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        $nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
+        if (empty($nodes) === true) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('File not found')],
+                Http::STATUS_NOT_FOUND
+            );
+        }
+
+        if (($nodes[0] instanceof File) === false) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('File not found')],
+                Http::STATUS_NOT_FOUND
+            );
+        }
+
+        return null;
+
+    }//end verifyFileAccess()
+
+
+    /**
      * Extract text and detect entities in a file
      *
      * Runs text extraction and entity recognition on the specified file.
@@ -202,6 +247,11 @@ class AnonymizationController extends Controller
         try {
             if ($this->userSession->getUser() === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
+            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
             }
 
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
@@ -244,6 +294,11 @@ class AnonymizationController extends Controller
         try {
             if ($this->userSession->getUser() === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            }
+
+            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
             }
 
             $params   = $this->request->getParams();

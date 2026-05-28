@@ -231,9 +231,10 @@ class ConsentService
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
-        return $this->updateHandler->getConsentsByDocument($documentId, $register, $schema);
+        return $this->updateHandler->getConsentsByDocument($documentId, $register, $schema, $ownerUid);
 
     }//end getConsentsByDocument()
 }//end class

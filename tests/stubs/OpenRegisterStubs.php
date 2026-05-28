@@ -643,3 +643,109 @@ interface IUser
     public function isEnabled(): bool;
 
 }
+
+
+/**
+ * Stub for OCP\IGroupManager
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IGroupManager
+{
+
+    public function isAdmin(string $userId): bool;
+
+
+}//end interface
+
+
+namespace OCP\Files;
+
+/**
+ * Stub for OCP\Files\Folder
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface Folder
+{
+
+    /**
+     * Get nodes by file ID
+     *
+     * @param int $id The file ID
+     *
+     * @return array<\OCP\Files\Node>
+     */
+    public function getById(int $id): array;
+
+
+}//end interface
+
+
+/**
+ * Stub for OCP\Files\Node
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface Node
+{
+
+    public function getName(): string;
+    public function getPath(): string;
+
+}//end interface
+
+
+/**
+ * Stub for OCP\Files\File
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface File extends Node
+{
+
+    public function getContent(): string;
+    public function getMimeType(): string;
+
+}//end interface
+
+
+/**
+ * Stub for OCP\Files\IRootFolder
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IRootFolder
+{
+
+    /**
+     * Get a user's home folder
+     *
+     * @param string $userId The user ID
+     *
+     * @return \OCP\Files\Folder
+     */
+    public function getUserFolder(string $userId): \OCP\Files\Folder;
+
+
+}//end interface
