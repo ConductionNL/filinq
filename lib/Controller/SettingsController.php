@@ -160,10 +160,13 @@ class SettingsController extends Controller
     /**
      * Handle the post request to update settings
      *
-     * @return JSONResponse JSON response containing the updated settings
+     * Admin-only: writing settings (including signing_verification_secret,
+     * register/schema pointers, signing provider) must be restricted to
+     * administrators to prevent authenticated non-admin users from forging
+     * the HMAC verification secret or redirecting data to attacker-controlled
+     * registers (wave-3 C1).
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
+     * @return JSONResponse JSON response containing the updated settings
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
@@ -175,6 +178,13 @@ class SettingsController extends Controller
                 return new JSONResponse(
                     data: ['error' => 'Not authenticated'],
                     statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
+            if ($this->groupManager->isAdmin($user->getUID()) === false) {
+                return new JSONResponse(
+                    data: ['error' => 'Admin privileges required'],
+                    statusCode: Http::STATUS_FORBIDDEN
                 );
             }
 

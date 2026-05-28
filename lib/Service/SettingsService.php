@@ -258,7 +258,38 @@ class SettingsService
     }//end convertValueToString()
 
     /**
+     * Keys that are permitted to be written via the settings endpoint.
+     *
+     * This allowlist prevents any authenticated user (wave-3 C1) from
+     * overwriting security-sensitive keys such as signing_verification_secret
+     * through the open settings POST endpoint.  Secret keys (signing_* tokens
+     * etc.) must be managed through dedicated, separately-secured endpoints.
+     *
+     * @var array<int, string>
+     */
+    private const WRITABLE_KEYS = [
+        'publicationConsent_register',
+        'publicationConsent_schema',
+        'publicationConsent_source',
+        'template_register',
+        'template_schema',
+        'template_source',
+        'publication_objection_period_days',
+        'enable_language_detection',
+        'enable_keyword_extraction',
+        'enable_topic_classification',
+        'signing_enabled',
+        'signing_provider',
+        'signing_default_level',
+        'signing_request_expiry_days',
+    ];
+
+    /**
      * Update the settings configuration
+     *
+     * Only keys present in WRITABLE_KEYS may be written; all other keys are
+     * silently skipped.  This prevents escalation via security-sensitive keys
+     * such as signing_verification_secret (wave-3 C1).
      *
      * @param array<string, mixed> $data The settings data to update
      *
@@ -277,6 +308,15 @@ class SettingsService
                         'Skipping empty key in updateSettings',
                         ['value' => $value]
                     );
+                    continue;
+                }
+
+                if (in_array($key, self::WRITABLE_KEYS, true) === false) {
+                    $this->logger->warning(
+                        'Skipping non-allowlisted key in updateSettings',
+                        ['key' => $key]
+                    );
+                    unset($data[$key]);
                     continue;
                 }
 

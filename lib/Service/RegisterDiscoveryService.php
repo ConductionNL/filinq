@@ -95,8 +95,7 @@ class RegisterDiscoveryService
                 offset: null,
                 filters: [],
                 searchConditions: [],
-                searchParams: [],
-                _multitenancy: false
+                searchParams: []
             );
 
             $rawRegisters = array_map(
@@ -110,7 +109,7 @@ class RegisterDiscoveryService
                     $expanded = [];
                     foreach ($registerArr['schemas'] as $schemaId) {
                         try {
-                            $schema     = $this->schemaMapper->find(id: $schemaId, _multitenancy: false);
+                            $schema     = $this->schemaMapper->find(id: $schemaId);
                             $expanded[] = $schema->jsonSerialize();
                         } catch (\Exception $schemaError) {
                             // Orphan schema — retain bare ID for transparency.

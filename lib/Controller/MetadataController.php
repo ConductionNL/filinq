@@ -74,7 +74,6 @@ class MetadataController extends Controller
      * @return JSONResponse JSON response with enrichment results
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
      */

@@ -104,7 +104,6 @@ class PreferencesController extends Controller
      * @spec openspec/changes/retrofit-2026-05-26-preferences-api/tasks.md#task-2
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      */
     public function setPreference(string $key, string $value=''): JSONResponse
     {

@@ -140,9 +140,7 @@ class ObjectionDeadlineChecker
             $object = $objectService->find(
                 id: $consentId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {

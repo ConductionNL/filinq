@@ -163,14 +163,23 @@ class ConsentController extends Controller
 
             $user = $this->userSession->getUser();
             // $user cannot be null here (checked above), but appease Psalm.
-            $uid     = $user !== null ? $user->getUID() : '';
-            $isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
+            $uid = '';
+            if ($user !== null) {
+                $uid = $user->getUID();
+            }
+
+            $isAdmin = ($user !== null && $this->groupManager->isAdmin($uid) === true);
+
+            $filterUid = $uid;
+            if ($isAdmin === true) {
+                $filterUid = null;
+            }
 
             return new JSONResponse(
                 $this->crudService->listConsents(
                     $config['register'],
                     $config['schema'],
-                    $isAdmin ? null : $uid
+                    $filterUid
                 )
             );
         } catch (Exception $e) {
@@ -359,15 +368,24 @@ class ConsentController extends Controller
                 return $this->notConfiguredResponse();
             }
 
-            $user    = $this->userSession->getUser();
-            $uid     = $user !== null ? $user->getUID() : '';
-            $isAdmin = $user !== null && $this->groupManager->isAdmin($uid);
+            $user = $this->userSession->getUser();
+            $uid  = '';
+            if ($user !== null) {
+                $uid = $user->getUID();
+            }
+
+            $isAdmin = ($user !== null && $this->groupManager->isAdmin($uid) === true);
+
+            $filterUid = $uid;
+            if ($isAdmin === true) {
+                $filterUid = null;
+            }
 
             $consents = $this->crudService->getConsentsByDocument(
                 $documentId,
                 $config['register'],
                 $config['schema'],
-                $isAdmin ? null : $uid
+                $filterUid
             );
 
             return new JSONResponse($consents);

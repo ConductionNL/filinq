@@ -80,7 +80,6 @@ class CorrespondenceController extends Controller
      * @return DataDownloadResponse|JSONResponse Generated document or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
@@ -242,7 +241,6 @@ class CorrespondenceController extends Controller
      * @return JSONResponse Batch results or job info
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */

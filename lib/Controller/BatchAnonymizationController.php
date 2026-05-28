@@ -108,7 +108,6 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Batch metadata (id, file count, per-file entries) or an error payload.
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
@@ -148,7 +147,6 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Batch metadata or an error payload.
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
      */
@@ -195,7 +193,6 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Per-file extraction result, or an error payload.
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
@@ -334,7 +331,6 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Summary of the run, or an error payload when the request body is malformed.
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
@@ -433,8 +429,6 @@ class BatchAnonymizationController extends Controller
      * Persist a new WOO anonymization profile from the request body.
      *
      * @return JSONResponse Success message, or an error payload when the body is malformed.
-     *
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */

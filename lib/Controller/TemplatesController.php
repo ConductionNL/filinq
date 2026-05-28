@@ -177,7 +177,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the created template object
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
      */
@@ -209,7 +208,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the updated template object
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -243,7 +241,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with success status
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -316,7 +313,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the restored template object
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -400,7 +396,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with rendered HTML
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/advanced-template-management/tasks.md#task-5
      */
@@ -439,7 +434,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with rendered HTML
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -474,7 +468,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the duplicated template object
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -507,7 +500,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the locked template
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
@@ -550,7 +542,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the unlocked template
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *

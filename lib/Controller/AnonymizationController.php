@@ -129,7 +129,6 @@ class AnonymizationController extends Controller
      * @return JSONResponse JSON response with upload result
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
@@ -227,7 +226,6 @@ class AnonymizationController extends Controller
 
     }//end verifyFileAccess()
 
-
     /**
      * Extract text and detect entities in a file
      *
@@ -238,7 +236,6 @@ class AnonymizationController extends Controller
      * @return JSONResponse JSON response with extraction and detection results
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
      */
@@ -266,7 +263,7 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to extract and detect entities: %s', [$e->getMessage()])],
                 500
             );
-        }
+        }//end try
 
     }//end extract()
 
@@ -283,7 +280,6 @@ class AnonymizationController extends Controller
      * @return JSONResponse JSON response with anonymization result
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1

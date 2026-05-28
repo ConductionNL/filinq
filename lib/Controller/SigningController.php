@@ -360,7 +360,7 @@ class SigningController extends Controller
                 $request = $this->signingService->getRequest(requestId: $id);
                 $uid     = $user->getUID();
 
-                $isInitiator = ($request['initiatorUserId'] ?? '') === $uid;
+                $isInitiator    = ($request['initiatorUserId'] ?? '') === $uid;
                 $isSignerInList = in_array($uid, (array) ($request['signerIds'] ?? []), true);
 
                 if ($isInitiator === false && $isSignerInList === false) {
@@ -375,7 +375,7 @@ class SigningController extends Controller
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to get audit trail: ', exception: $e);
-        }
+        }//end try
 
     }//end getAudit()
 

@@ -154,7 +154,6 @@ class PrintController extends Controller
      * @return JSONResponse JSON with rendered HTML and title, or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *
@@ -219,7 +218,6 @@ class PrintController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF/A download or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *

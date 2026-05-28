@@ -79,7 +79,6 @@ class PdfController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF download or error response
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
      */
@@ -158,7 +157,6 @@ class PdfController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF/A download or error response
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *
