@@ -194,6 +194,7 @@ OC.L10N.register(
     "Detecting entities…" : "Entiteiten detecteren…",
     "Failed to load entities" : "Entiteiten laden mislukt",
     "Failed to load" : "Laden mislukt",
+    "Automatic detection. Always verify yourself." : "Automatische herkenning. Blijf zelf controleren.",
     "Anonymisation complete" : "Anonimisering voltooid",
     "Download anonymised file" : "Geanonimiseerd bestand downloaden",
     "No entities detected in this file." : "Geen entiteiten in dit bestand.",

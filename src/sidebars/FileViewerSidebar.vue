@@ -12,7 +12,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 	<NcAppSidebar
 		v-if="fileViewerStore.currentFile"
 		:name="sidebarTitle"
-		:subtitle="sidebarSubtitle">
+		:subname="sidebarSubtitle">
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
 			<div v-if="isLoading" class="entities-list">
@@ -48,9 +48,6 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 
 			<!-- Entity list — one card per detected entity. -->
 			<div v-else-if="entry" class="entities-list">
-				<div class="entities-summary">
-					{{ n('docudesk', '%n entity detected', '%n entities detected', entry.entities.length) }}
-				</div>
 				<div
 					v-for="(item, idx) in entry.entities"
 					:key="'entity-' + idx"
@@ -200,15 +197,26 @@ export default {
 			return (this.entry?.entities || []).filter((e) => e.included !== false).length
 		},
 		/**
-		 * Sidebar header title — file name or generic fallback.
+		 * Sidebar header title — detected-entity count once extraction has
+		 * produced a result, otherwise fall back to the file name.
 		 *
 		 * @return {string}
 		 */
 		sidebarTitle() {
+			if (this.entry && Array.isArray(this.entry.entities)) {
+				return n(
+					'docudesk',
+					'%n entity detected',
+					'%n entities detected',
+					this.entry.entities.length,
+				)
+			}
 			return fileViewerStore.currentFile?.fileName || t('docudesk', 'Entities')
 		},
 		/**
-		 * Sidebar subtitle — short status line under the file name.
+		 * Sidebar subtitle — loading/error status while extraction is still
+		 * resolving, otherwise the "verify the auto-detected entities"
+		 * disclaimer shown during the review step.
 		 *
 		 * @return {string}
 		 */
@@ -216,18 +224,13 @@ export default {
 			if (this.isLoading) {
 				return t('docudesk', 'Detecting entities…')
 			}
-			if (!this.entry) {
-				return ''
-			}
-			if (this.entry.status === 'error') {
+			if (this.entry?.status === 'error') {
 				return t('docudesk', 'Failed to load')
 			}
-			return n(
-				'docudesk',
-				'%n entity detected',
-				'%n entities detected',
-				this.entry.entities.length,
-			)
+			if (this.entry && Array.isArray(this.entry.entities) && this.entry.entities.length > 0) {
+				return t('docudesk', 'Automatic detection. Always verify yourself.')
+			}
+			return ''
 		},
 		/**
 		 * WebDAV download URL for the anonymised result, when available.
