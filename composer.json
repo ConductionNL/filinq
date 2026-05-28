@@ -73,7 +73,7 @@
 		"symfony/uid": "^6.4",
 		"symfony/yaml": "^6.4",
 		"thiagoalessio/tesseract_ocr": "^2.13",
-		"twig/twig": "^3.18"
+		"twig/twig": "^3.27.0"
 	},
 	"require-dev": {
 		"edgedesign/phpqa": "^1.27",
