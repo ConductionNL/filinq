@@ -159,38 +159,22 @@ class SigningControllerTest extends TestCase
 
 
     /**
-     * The narrow OR-sidecar-lag fallback still triggers for `\Error`
-     * (e.g. calling a method that doesn't exist on the deployed OR build).
-     * Logged at ERROR level (not warning), still returns an empty list so
-     * the page renders while the sidecar catches up.
+     * A PHP `\Error` (e.g. call to undefined method on a mock) now propagates
+     * as-is since the `\Error` fallback was removed when SigningService was
+     * migrated to the canonical OR API (findAll / find / saveObject).
      *
      * @return void
      */
-    public function testListRequestsCatchesErrorAsNotConfigured(): void
+    public function testListRequestsLetsErrorPropagate(): void
     {
         $this->signingService->method('listRequests')
-            ->willThrowException(new \Error('Call to undefined method ObjectService::getObjects()'));
+            ->willThrowException(new \Error('Call to undefined method'));
 
-        $this->logger->expects($this->once())
-            ->method('error')
-            ->with(
-                $this->stringContains('Likely a missing OpenRegister method'),
-                $this->callback(
-                    function ($context): bool {
-                        return is_array($context) === true && isset($context['exception']);
-                    }
-                )
-            );
+        $this->expectException(\Error::class);
 
-        $response = $this->controller->listRequests();
+        $this->controller->listRequests();
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $data = $response->getData();
-        $this->assertSame([], $data['results']);
-        $this->assertTrue($data['notConfigured']);
-
-    }//end testListRequestsCatchesErrorAsNotConfigured()
+    }//end testListRequestsLetsErrorPropagate()
 
 
     /**

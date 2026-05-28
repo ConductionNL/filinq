@@ -126,7 +126,7 @@ class SigningService
 
         $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $createdRequest = $objectService->saveObject($register, $schema, $request);
+        $createdRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $signers        = $data['signers'] ?? [];
         $signerIds      = [];
@@ -143,13 +143,13 @@ class SigningService
                 'status'           => 'PENDING',
             ];
 
-            $created     = $objectService->saveObject($signerRegister, $signerSchema, $signerRecord);
+            $created     = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
             $signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
         }//end foreach
 
         $requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
         $createdRequest['signerIds'] = $signerIds;
-        $objectService->saveObject($register, $schema, $createdRequest);
+        $objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -182,12 +182,16 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        $request = $objectService->getObject($register, $schema, $requestId);
-        if (empty($request) === true) {
+        $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($object === null) {
             throw new RuntimeException('Signing request not found: '.$requestId);
         }
 
-        return $request;
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            return $object->jsonSerialize();
+        }
+
+        return (array) $object;
 
     }//end getRequest()
 
@@ -204,7 +208,26 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        return $objectService->getObjects($register, $schema);
+        $results = $objectService->findAll(
+            [
+                'filters' => [
+                    'register' => $register,
+                    'schema'   => $schema,
+                ],
+            ]
+        );
+
+        $requests = [];
+        foreach ($results as $result) {
+            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                $requests[] = $result->jsonSerialize();
+                continue;
+            }
+
+            $requests[] = (array) $result;
+        }
+
+        return $requests;
 
     }//end listRequests()
 
@@ -237,11 +260,15 @@ class SigningService
 
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if (empty($signer) === true) {
+        if ($signerObject === null) {
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
+
+        $signer = is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true
+            ? $signerObject->jsonSerialize()
+            : (array) $signerObject;
 
         // Security finding #282: ensure the authenticated user is the signer
         // they claim to be. Without this check any authenticated user could
@@ -258,7 +285,7 @@ class SigningService
         $signer['status']    = 'SIGNED';
         $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
-        $objectService->saveObject($signerRegister, $signerSchema, $signer);
+        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -297,11 +324,15 @@ class SigningService
         $objectService  = $this->settingsService->getObjectService();
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if (empty($signer) === true) {
+        if ($signerObject === null) {
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
+
+        $signer = is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true
+            ? $signerObject->jsonSerialize()
+            : (array) $signerObject;
 
         // Security finding #282: ensure the authenticated user is the signer
         // they claim to be before allowing them to decline on its behalf.
@@ -311,17 +342,20 @@ class SigningService
 
         $signer['status']        = 'DECLINED';
         $signer['declineReason'] = $reason;
-        $objectService->saveObject($signerRegister, $signerSchema, $signer);
+        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
-        $register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema   = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $request  = $objectService->getObject($register, $schema, $requestId);
+        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $request       = $requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true
+            ? $requestObject->jsonSerialize()
+            : (array) $requestObject;
 
         $signatureLevel = $request['signatureLevel'] ?? 'SES';
         $provider       = $request['provider'] ?? 'native';
 
         $request['status'] = 'DECLINED';
-        $objectService->saveObject($register, $schema, $request);
+        $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -357,14 +391,17 @@ class SigningService
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $request       = $objectService->getObject($register, $schema, $requestId);
+        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $request       = $requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true
+            ? $requestObject->jsonSerialize()
+            : (array) $requestObject;
 
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
             throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
         }
 
         $request['status'] = 'CANCELLED';
-        $objectService->saveObject($register, $schema, $request);
+        $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -489,21 +526,27 @@ class SigningService
         $allSigned      = true;
 
         foreach ($signerIds as $signerId) {
-            $signer = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+            $signer    = $signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true
+                ? $signerObj->jsonSerialize()
+                : (array) $signerObj;
             if (($signer['status'] ?? '') !== 'SIGNED') {
                 $allSigned = false;
                 break;
             }
         }//end foreach
 
-        $freshRequest = $objectService->getObject($register, $schema, $requestId);
+        $freshObj     = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $freshRequest = $freshObj !== null && is_object($freshObj) === true && method_exists($freshObj, 'jsonSerialize') === true
+            ? $freshObj->jsonSerialize()
+            : (array) $freshObj;
 
         $freshRequest['status'] = 'IN_PROGRESS';
         if ($allSigned === true) {
             $freshRequest['status'] = 'COMPLETED';
         }
 
-        $objectService->saveObject($register, $schema, $freshRequest);
+        $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
 
     }//end updateRequestStatus()
 
@@ -522,7 +565,10 @@ class SigningService
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
 
         foreach ($signerIds as $signerId) {
-            $signer = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+            $signer    = $signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true
+                ? $signerObj->jsonSerialize()
+                : (array) $signerObj;
             if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
                 return $signerId;
             }

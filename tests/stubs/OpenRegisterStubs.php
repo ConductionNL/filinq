@@ -66,6 +66,20 @@ class ObjectService
 
 
     /**
+     * Find all objects matching a set of filters
+     *
+     * @param array<string, mixed> $config Config with 'filters' key
+     *
+     * @return array<mixed>
+     */
+    public function findAll(array $config=[]): array
+    {
+        return [];
+
+    }//end findAll()
+
+
+    /**
      * Delete an object
      *
      * @param string $uuid Object UUID
@@ -327,6 +341,29 @@ interface Emitter
 namespace OCP;
 
 /**
+ * Stub for OCP\IUserSession
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IUserSession
+{
+
+    /**
+     * Get the currently logged in user
+     *
+     * @return \OCP\IUser|null
+     */
+    public function getUser(): ?\OCP\IUser;
+
+
+}//end interface
+
+
+/**
  * Stub for OCP\IAppConfig
  *
  * @category Tests
@@ -432,6 +469,29 @@ interface IAppManager
     public function getAppVersion(string $appId, bool $useCache = true): string;
 
 }
+
+namespace OCP\AppFramework;
+
+/**
+ * Stub for OCP\AppFramework\Http constants
+ *
+ * @category Tests
+ * @package  OCP\AppFramework
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Http
+{
+    public const STATUS_OK = 200;
+    public const STATUS_CREATED = 201;
+    public const STATUS_NO_CONTENT = 204;
+    public const STATUS_UNAUTHORIZED = 401;
+    public const STATUS_FORBIDDEN = 403;
+    public const STATUS_NOT_FOUND = 404;
+    public const STATUS_INTERNAL_SERVER_ERROR = 500;
+}//end class
+
 
 namespace OCP\AppFramework\Http;
 

@@ -119,7 +119,13 @@ class SigningAuditService
             'metadata'         => $metadata,
         ];
 
-        return $objectService->saveObject($register, $schema, $entry);
+        $saved = $objectService->saveObject(object: $entry, register: $register, schema: $schema);
+
+        if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
+            return $saved->jsonSerialize();
+        }
+
+        return (array) $saved;
 
     }//end logEvent()
 
