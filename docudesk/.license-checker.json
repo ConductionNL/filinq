@@ -1,0 +1,12 @@
+{
+  "production": true,
+  "failOn": "GPL",
+  "onlyAllow": "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC",
+  "excludePackages": [
+    "dev-dependencies"
+  ],
+  "excludePrivatePackages": true,
+  "customPath": {
+    "licenseText": "none"
+  }
+} 

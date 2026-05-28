@@ -47,7 +47,8 @@ return [
 		['name' => 'batch_anonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
 		['name' => 'batch_anonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
 
-		// PDF generation routes		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
+		// PDF generation routes
+		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
 		['name' => 'pdf#renderPdfA', 'url' => 'api/pdf/render-pdfa', 'verb' => 'POST'],
 
 		// Print preview and PDF/A download routes

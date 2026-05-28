@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>openconnector</id>
+	<name>Open Connector</name>
+	<summary>Gateway and Service bus functionality</summary>
+	<description><![CDATA[📰 Bringing Gateway and Service bus functionality to nextcloud
+
+The OpenConnector Nextcloud app provides a ESB-framework to work together in an (open) data ecosystem
+
+- 📲 Synchronize your data sources
+- 📰 Send cloud events
+- 🆓 Map and translate API calls
+
+    ]]></description>
+	<version>0.1.42</version>
+	<licence>agpl</licence>
+	<category>integration</category>
+	<author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
+	<namespace>OpenConnector</namespace>
+    <website>https://github.com/ConductionNL/OpenConnector</website>
+	<bugs>https://github.com/ConductionNL/OpenConnector/issues</bugs>
+    <repository>https://github.com/ConductionNL/OpenConnector</repository>
+	<dependencies>
+        <nextcloud min-version="28" max-version="30"/>
+        <php min-version="8.0" min-int-size="64"/>
+        <database min-version="10">pgsql</database>
+        <database>sqlite</database>
+        <database min-version="8.0">mysql</database>
+
+        <lib>curl</lib>
+
+        <owncloud max-version="0" min-version="0"/>
+	</dependencies>
+
+	<background-jobs>
+		<job>OCA\OpenConnector\Cron\LogCleanUpTask</job>
+	</background-jobs>
+
+	<navigations>
+		<navigation>
+			<id>openconnector</id>
+			<name>Connector</name>
+			<route>openconnector.dashboard.page</route>
+			<icon>app.svg</icon>
+		</navigation>
+	</navigations>
+
+	<settings>
+		<admin>OCA\OpenConnector\Settings\OpenConnectorAdmin</admin>
+		<admin-section>OCA\OpenConnector\Sections\OpenConnectorAdmin</admin-section>
+	</settings>
+</info>

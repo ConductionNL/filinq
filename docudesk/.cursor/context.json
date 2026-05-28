@@ -1,0 +1,41 @@
+{
+  "projectName": "DocuDesk",
+  "description": "A document management application for Nextcloud",
+  "codebase": {
+    "backend": {
+      "path": "/lib",
+      "language": "PHP",
+      "standards": ["PSR-4", "PHPStan", "PHPCS"]
+    },
+    "frontend": {
+      "path": "/src",
+      "language": "JavaScript/TypeScript",
+      "standards": ["ESLint", "Prettier"]
+    },
+    "documentation": {
+      "path": "/website",
+      "framework": "Docusaurus",
+      "api": {
+        "path": "/website/static/oas",
+        "format": "OpenAPI Specification"
+      }
+    }
+  },
+  "conventions": {
+    "php": {
+      "docblocks": true,
+      "typeHints": true,
+      "returnTypes": true,
+      "readonlyProperties": true,
+      "inlineComments": true
+    },
+    "documentation": {
+      "avoidBackticks": true,
+      "useSingleQuotes": true
+    },
+    "api": {
+      "documentInOpenAPI": true,
+      "updateSpecWithCodeChanges": true
+    }
+  }
+} 

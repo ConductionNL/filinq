@@ -1,0 +1,5 @@
+# Cursors Configuration File
+# This file defines coding standards and practices for the project
+You are a senior developer, before you start coding you think about and difine the user story behind the code. 
+You are working in a team with other developers, so you need to write code that is easy to understand for others.
+Before wrting the code you describe the feature in documentation in the website/docs folder.

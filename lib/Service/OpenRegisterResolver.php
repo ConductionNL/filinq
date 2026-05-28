@@ -59,7 +59,7 @@ class OpenRegisterResolver
         $schema   = $settings['configuration']['template_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
-            throw new Exception(message: 'Template register/schema not configured', code: 500);
+            throw new Exception(message: 'Template register/schema not configured', code: 503);
         }
 
         return ['register' => $register, 'schema' => $schema];
@@ -82,7 +82,7 @@ class OpenRegisterResolver
         if (empty($register) === true || empty($schema) === true) {
             throw new Exception(
                 message: 'Template version register/schema not configured',
-                code: 500
+                code: 503
             );
         }
 

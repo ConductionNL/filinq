@@ -1,0 +1,311 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectCreatedEvent not found\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectDeletedEvent not found\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent not found\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between array and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Controller/AnonymizationController.php
+
+		-
+			message: "#^Call to method find\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Controller/ConsentController.php
+
+		-
+			message: "#^Call to method searchObjects\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Controller/ConsentController.php
+
+		-
+			message: "#^Missing parameter \\$templateId \\(string\\) in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:deleteTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Missing parameter \\$templateId \\(string\\) in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:getTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Missing parameter \\$templateId \\(string\\) in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:updateTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Unknown parameter \\$id in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:deleteTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Unknown parameter \\$id in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:getTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Unknown parameter \\$id in call to method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:updateTemplate\\(\\)\\.$#"
+			count: 1
+			path: lib/Controller/TemplatesController.php
+
+		-
+			message: "#^Call to method getNewObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Call to method getObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Event\\\\ObjectCreatedEvent\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Call to method getObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Event\\\\ObjectDeletedEvent\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Call to method getOldObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectCreatedEvent not found\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectDeletedEvent not found\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Class OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent not found\\.$#"
+			count: 1
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Parameter \\$event of method OCA\\\\DocuDesk\\\\EventListener\\\\DocuDeskEventListener\\:\\:handleObjectCreated\\(\\) has invalid type OCA\\\\OpenRegister\\\\Event\\\\ObjectCreatedEvent\\.$#"
+			count: 2
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Parameter \\$event of method OCA\\\\DocuDesk\\\\EventListener\\\\DocuDeskEventListener\\:\\:handleObjectDeleted\\(\\) has invalid type OCA\\\\OpenRegister\\\\Event\\\\ObjectDeletedEvent\\.$#"
+			count: 2
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Parameter \\$event of method OCA\\\\DocuDesk\\\\EventListener\\\\DocuDeskEventListener\\:\\:handleObjectUpdated\\(\\) has invalid type OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent\\.$#"
+			count: 2
+			path: lib/EventListener/DocuDeskEventListener.php
+
+		-
+			message: "#^Call to an undefined method OCP\\\\Files\\\\Node\\:\\:getDirectoryListing\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to an undefined method OCP\\\\Files\\\\Node\\:\\:newFile\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to an undefined method OCP\\\\Files\\\\Node\\:\\:nodeExists\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to an undefined method object\\:\\:getName\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to an undefined method object\\:\\:getPath\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method anonymizeDocument\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\FileService\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method extractFile\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\TextExtractionService\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method findByFileId\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Db\\\\EntityRelationMapper\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method findEntitiesForFile\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Db\\\\EntityRelationMapper\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method getFileById\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\FileService\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method getRiskLevel\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\RiskLevelService\\.$#"
+			count: 1
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\AnonymizationService\\:\\:getEntityRelationMapper\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Db\\\\EntityRelationMapper\\.$#"
+			count: 2
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\AnonymizationService\\:\\:getFileService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\FileService\\.$#"
+			count: 2
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\AnonymizationService\\:\\:getRiskLevelService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\RiskLevelService\\.$#"
+			count: 2
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\AnonymizationService\\:\\:getTextExtractionService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\TextExtractionService\\.$#"
+			count: 2
+			path: lib/Service/AnonymizationService.php
+
+		-
+			message: "#^Call to method find\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Call to method saveObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Call to method searchObjects\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\ConsentService\\:\\:getObjectService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Call to method find\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/MetadataService.php
+
+		-
+			message: "#^Call to method saveObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/MetadataService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\MetadataService\\:\\:getObjectService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/MetadataService.php
+
+		-
+			message: "#^Missing parameter \\$title \\(mixed\\) in call to method Mpdf\\\\Mpdf\\:\\:SetTitle\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/PdfService.php
+
+		-
+			message: "#^Unknown parameter \\$text in call to method Mpdf\\\\Mpdf\\:\\:SetTitle\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/PdfService.php
+
+		-
+			message: "#^Call to method findAll\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\RegisterService\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Call to method importFromApp\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ConfigurationService\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\SettingsService\\:\\:getConfigurationService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\ConfigurationService\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\SettingsService\\:\\:getObjectService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Parameter \\$registerService of method OCA\\\\DocuDesk\\\\Service\\\\SettingsService\\:\\:__construct\\(\\) has invalid type OCA\\\\OpenRegister\\\\Service\\\\RegisterService\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Property OCA\\\\DocuDesk\\\\Service\\\\SettingsService\\:\\:\\$registerService has unknown class OCA\\\\OpenRegister\\\\Service\\\\RegisterService as its type\\.$#"
+			count: 2
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Property OCA\\\\DocuDesk\\\\Service\\\\SettingsService\\:\\:\\$request is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/SettingsService.php
+
+		-
+			message: "#^Call to method buildSearchQuery\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Call to method deleteObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Call to method find\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Call to method saveObject\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Call to method searchObjectsPaginated\\(\\) on an unknown class OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:getObjectService\\(\\) has invalid return type OCA\\\\OpenRegister\\\\Service\\\\ObjectService\\.$#"
+			count: 2
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Offset 'results' on array\\{results\\: array, total\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Property OCA\\\\DocuDesk\\\\Service\\\\TemplateService\\:\\:\\$logger is never read, only written\\.$#"
+			count: 1
+			path: lib/Service/TemplateService.php
+
+		-
+			message: "#^Property OCA\\\\DocuDesk\\\\Settings\\\\DocuDeskAdmin\\:\\:\\$localization is never read, only written\\.$#"
+			count: 1
+			path: lib/Settings/DocuDeskAdmin.php

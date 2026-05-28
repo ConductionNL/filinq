@@ -1,0 +1,146 @@
+<?php
+/**
+ * Metadata Controller
+ *
+ * Controller for document metadata operations.
+ * Provides an endpoint for triggering metadata enrichment on document objects.
+ *
+ * @category  Controller
+ * @package   OCA\DocuDesk\Controller
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Controller;
+
+use Exception;
+use OCA\DocuDesk\Service\MetadataService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IRequest;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Controller for metadata enrichment operations
+ *
+ * @category Controller
+ * @package  OCA\DocuDesk\Controller
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class MetadataController extends Controller
+{
+
+
+    /**
+     * Constructor for MetadataController
+     *
+     * @param string          $appName         The application name
+     * @param IRequest        $request         The request object
+     * @param LoggerInterface $logger          Logger for error reporting
+     * @param MetadataService $metadataService Service for metadata operations
+     *
+     * @return void
+     */
+    public function __construct(
+        string $appName,
+        IRequest $request,
+        private readonly LoggerInterface $logger,
+        private readonly MetadataService $metadataService
+    ) {
+        parent::__construct(appName: $appName, request: $request);
+
+    }//end __construct()
+
+
+    /**
+     * Trigger metadata enrichment for a document object
+     *
+     * Accepts object data (or objectId + register + schema to look it up),
+     * runs metadata enrichment, and saves the results back to OpenRegister.
+     *
+     * @return JSONResponse JSON response with enrichment results
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function enrich(): JSONResponse
+    {
+        try {
+            $data = $this->request->getParams();
+
+            // Validate required fields.
+            if (isset($data['objectId']) === false || empty($data['objectId']) === true) {
+                return new JSONResponse(
+                    ['error' => 'objectId is required'],
+                    400
+                );
+            }
+
+            if (isset($data['register']) === false || empty($data['register']) === true) {
+                return new JSONResponse(
+                    ['error' => 'register is required'],
+                    400
+                );
+            }
+
+            if (isset($data['schema']) === false || empty($data['schema']) === true) {
+                return new JSONResponse(
+                    ['error' => 'schema is required'],
+                    400
+                );
+            }
+
+            // Get object data for enrichment.
+            $objectData = $data['objectData'] ?? [];
+
+            // Run metadata enhancement.
+            $metadata = $this->metadataService->enhanceMetadata($objectData);
+
+            if (empty($metadata) === false) {
+                // Save enriched metadata back to OpenRegister.
+                $result = $this->metadataService->saveEnrichedMetadata(
+                    $data['objectId'],
+                    $data['register'],
+                    $data['schema'],
+                    $metadata
+                );
+
+                return new JSONResponse(
+                        [
+                            'success'        => true,
+                            'enrichedFields' => array_keys($metadata),
+                            'object'         => $result,
+                        ]
+                        );
+            }
+
+            return new JSONResponse(
+                    [
+                        'success' => true,
+                        'message' => 'No metadata enrichment needed',
+                    ]
+                    );
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to enrich metadata: '.$e->getMessage(),
+                [
+                    'exception' => $e,
+                ]
+            );
+            return new JSONResponse(
+                ['error' => 'Failed to enrich metadata: '.$e->getMessage()],
+                500
+            );
+        }//end try
+
+    }//end enrich()
+
+
+}//end class

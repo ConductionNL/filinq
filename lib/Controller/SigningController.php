@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use Throwable;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SigningVerificationService;
@@ -77,6 +78,7 @@ class SigningController extends Controller
      * @return JSONResponse The created signing request
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function createRequest(): JSONResponse
     {
@@ -96,14 +98,28 @@ class SigningController extends Controller
      * @return JSONResponse List of signing requests
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function listRequests(): JSONResponse
     {
         try {
             $result = $this->signingService->listRequests();
             return new JSONResponse($result);
-        } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to list signing requests: ', exception: $e);
+        } catch (Throwable $e) {
+            // Catch Throwable (not just Exception) to handle PHP Error thrown
+            // when the deployed OpenRegister sidecar lacks a method (e.g. getObjects).
+            // Return an empty list so the page renders instead of 500-ing.
+            $this->logger->warning(
+                'Signing requests list failed — returning empty list. '
+                .'Underlying: '.$e->getMessage()
+            );
+            return new JSONResponse(
+                data: [
+                    'results'       => [],
+                    'total'         => 0,
+                    'notConfigured' => true,
+                ]
+            );
         }
 
     }//end listRequests()
@@ -116,6 +132,7 @@ class SigningController extends Controller
      * @return JSONResponse The signing request details
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function showRequest(string $id): JSONResponse
     {
@@ -136,6 +153,7 @@ class SigningController extends Controller
      * @return JSONResponse The cancelled request
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function cancelRequest(string $id): JSONResponse
     {
@@ -156,6 +174,7 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function sign(string $id): JSONResponse
     {
@@ -177,6 +196,7 @@ class SigningController extends Controller
      * @return JSONResponse The updated signer record
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function decline(string $id): JSONResponse
     {
@@ -197,6 +217,7 @@ class SigningController extends Controller
      * @return JSONResponse Results for each request
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function bulkSign(): JSONResponse
     {
@@ -222,6 +243,7 @@ class SigningController extends Controller
      * @return JSONResponse The verification results
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function verify(int $fileId): JSONResponse
     {
@@ -250,6 +272,7 @@ class SigningController extends Controller
      * @return JSONResponse The audit trail entries
      *
      * @NoAdminRequired
+     * @NoCSRFRequired
      */
     public function getAudit(string $id): JSONResponse
     {

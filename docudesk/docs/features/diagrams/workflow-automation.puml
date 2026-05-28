@@ -1,0 +1,77 @@
+@startuml Workflow Automation
+
+' Styling
+skinparam backgroundColor transparent
+skinparam DefaultFontName Arial
+skinparam ArrowColor #666666
+skinparam ActivityBorderColor #666666
+skinparam ActivityBackgroundColor #f5f5f5
+
+' Title
+title Document Workflow Automation
+
+' Swimlanes
+|Document Sources|
+|Monitoring Service|
+|Workflow Engine|
+|Notification Service|
+|Storage|
+
+' Flow
+|Document Sources|
+start
+:Document Created/Updated/Deleted;
+:Document Tagged;
+
+|Monitoring Service|
+if (Monitor Triggered?) then (yes)
+  :Check Trigger Type;
+  fork
+    :Check Document Tags;
+  fork again
+    :Validate File Type;
+  fork again
+    :Check Source Location;
+  end fork
+  
+  |Workflow Engine|
+  if (Requires Processing?) then (yes)
+    fork
+      :GDPR Scan;
+      if (Contains Personal Data?) then (yes)
+        :Anonymization Process;
+        :Generate New Document;
+      endif
+    fork again
+      :WCAG Compliance Check;
+      if (Non-Compliant?) then (yes)
+        :Tag with Warning;
+      endif
+    fork again
+      :Language Level Check;
+      if (Below Required Level?) then (yes)
+        :Tag with Warning;
+      endif
+    end fork
+
+    |Notification Service|
+    if (Warnings Generated?) then (yes)
+      :Send Email Notification;
+      :Update Dashboard;
+    endif
+
+    |Storage|
+    :Store Processing Results;
+    :Update Document Metadata;
+  else (no)
+    :Log Skip Reason;
+  endif
+else (no)
+  :Continue Monitoring;
+endif
+
+|Document Sources|
+:Document Ready;
+stop
+
+@enduml 
