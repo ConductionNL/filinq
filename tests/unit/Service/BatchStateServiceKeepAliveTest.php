@@ -21,6 +21,8 @@ use OCA\DocuDesk\Service\BatchStateService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IGroupManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -34,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
 class BatchStateServiceKeepAliveTest extends TestCase
@@ -54,7 +56,6 @@ class BatchStateServiceKeepAliveTest extends TestCase
      */
     private BatchStateService $service;
 
-
     /**
      * Set up test environment
      *
@@ -64,18 +65,28 @@ class BatchStateServiceKeepAliveTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockCache = $this->createMock(ICache::class);
+        $this->mockCache = $this->createMock(className: ICache::class);
 
-        $mockCacheFactory = $this->createMock(ICacheFactory::class);
+        $mockCacheFactory = $this->createMock(className: ICacheFactory::class);
         $mockCacheFactory->method('createDistributed')->willReturn($this->mockCache);
 
-        $mockAppConfig = $this->createMock(IAppConfig::class);
-        $mockLogger    = $this->createMock(LoggerInterface::class);
+        $mockAppConfig    = $this->createMock(className: IAppConfig::class);
+        $mockLogger       = $this->createMock(className: LoggerInterface::class);
+        $mockUserSession  = $this->createMock(className: IUserSession::class);
+        $mockGroupManager = $this->createMock(className: IGroupManager::class);
 
-        $this->service = new BatchStateService($mockCacheFactory, $mockAppConfig, $mockLogger);
+        // No user session in keep-alive tests — ownership check is skipped.
+        $mockUserSession->method('getUser')->willReturn(null);
+
+        $this->service = new BatchStateService(
+            cacheFactory: $mockCacheFactory,
+            appConfig: $mockAppConfig,
+            logger: $mockLogger,
+            userSession: $mockUserSession,
+            groupManager: $mockGroupManager
+        );
 
     }//end setUp()
-
 
     /**
      * Test that getBatch resets TTL by calling cache set on read
@@ -92,18 +103,17 @@ class BatchStateServiceKeepAliveTest extends TestCase
         $this->mockCache->expects($this->once())
             ->method('set')
             ->with(
-                $this->stringContains('test-123'),
+                $this->stringContains(string: 'test-123'),
                 $batchData,
                 7200
             );
 
         $result = $this->service->getBatch('test-123');
 
-        $this->assertNotNull($result);
-        $this->assertEquals('test-123', $result['batchId']);
+        $this->assertNotNull(actual: $result);
+        $this->assertEquals(expected: 'test-123', actual: $result['batchId']);
 
     }//end testGetBatchResetsTtlOnRead()
-
 
     /**
      * Test that getBatch returns null for missing batch without calling set
@@ -117,10 +127,9 @@ class BatchStateServiceKeepAliveTest extends TestCase
 
         $result = $this->service->getBatch('nonexistent');
 
-        $this->assertNull($result);
+        $this->assertNull(actual: $result);
 
     }//end testGetBatchReturnsNullForMissing()
-
 
     /**
      * Test that getBatch returns null for invalid JSON without calling set
@@ -134,9 +143,7 @@ class BatchStateServiceKeepAliveTest extends TestCase
 
         $result = $this->service->getBatch('bad-data');
 
-        $this->assertNull($result);
+        $this->assertNull(actual: $result);
 
     }//end testGetBatchReturnsNullForInvalidJson()
-
-
 }//end class

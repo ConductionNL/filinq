@@ -332,6 +332,16 @@ class CorrespondenceController extends Controller
                 );
             }
 
+            // C3 security fix: enforce job ownership so an authenticated user
+            // cannot poll another user's job by guessing or brute-forcing the jobId.
+            $jobUserId = (string) ($status['options']['userId'] ?? '');
+            if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Access denied')],
+                    statusCode: Http::STATUS_FORBIDDEN
+                );
+            }
+
             $status['jobId'] = $jobId;
 
             return new JSONResponse(data: $status, statusCode: Http::STATUS_OK);

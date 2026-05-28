@@ -796,23 +796,20 @@ class CorrespondenceService
     }//end logCorrespondence()
 
     /**
-     * Generate a unique job ID
+     * Generate a unique job ID using a cryptographically secure source
      *
-     * @return string A UUID-like job identifier
+     * Uses random_bytes() (CSPRNG) rather than mt_rand() so job IDs cannot
+     * be predicted by an attacker who knows the approximate creation time
+     * (C3 security fix).
+     *
+     * @return string A RFC-4122 v4 UUID job identifier
      */
     private function generateJobId(): string
     {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            (mt_rand(0, 0x0fff) | 0x4000),
-            (mt_rand(0, 0x3fff) | 0x8000),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
+        $data    = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateJobId()
 }//end class

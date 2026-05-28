@@ -272,6 +272,13 @@ class SigningService
             $signer = (array) $signerObject;
         }
 
+        // C4 security fix: verify the signer record belongs to this signing
+        // request. Without this check, an attacker who knows any valid
+        // signerId can sign under an arbitrary requestId they do not own.
+        if (($signer['signingRequestId'] ?? '') !== $requestId) {
+            throw new RuntimeException('Signer record does not belong to this signing request');
+        }
+
         // Security finding #282: ensure the authenticated user is the signer
         // they claim to be. Without this check any authenticated user could
         // sign on behalf of another signer by supplying their signer ID.
@@ -336,6 +343,13 @@ class SigningService
             $signer = $signerObject->jsonSerialize();
         } else {
             $signer = (array) $signerObject;
+        }
+
+        // C4 security fix: verify the signer record belongs to this signing
+        // request. Without this check, an attacker who knows any valid
+        // signerId can decline under an arbitrary requestId they do not own.
+        if (($signer['signingRequestId'] ?? '') !== $requestId) {
+            throw new RuntimeException('Signer record does not belong to this signing request');
         }
 
         // Security finding #282: ensure the authenticated user is the signer
