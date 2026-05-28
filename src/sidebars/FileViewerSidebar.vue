@@ -78,14 +78,6 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 							:placeholder="t('docudesk', 'Pick grondslagen…')"
 							:disabled="!hasRelation(item)"
 							@input="anonymizationStore.setEntityBases(entry, idx, $event)" />
-						<label class="entity-card__skip">
-							<NcCheckboxRadioSwitch
-								:checked="!!item._decisionSkip"
-								:disabled="!hasRelation(item)"
-								@update:checked="anonymizationStore.setEntitySkip(entry, idx, $event)">
-								{{ t('docudesk', 'Skip') }}
-							</NcCheckboxRadioSwitch>
-						</label>
 					</div>
 					<div v-if="item._patchError" class="entity-card__error" :title="item._patchError">
 						{{ item._patchError }}
@@ -112,7 +104,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import DdSkeleton from '../components/DdSkeleton.vue'
 
@@ -134,7 +126,6 @@ export default {
 	components: {
 		NcAppSidebar,
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -270,8 +261,8 @@ export default {
 	},
 	methods: {
 		/**
-		 * Whether an entity has any relation id — bases / skip controls
-		 * only persist when the entity is backed by an OR relation.
+		 * Whether an entity has any relation id — bases control only
+		 * persists when the entity is backed by an OR relation.
 		 *
 		 * @param {object} item Entity row.
 		 * @return {boolean}
@@ -428,11 +419,6 @@ export default {
 
 .entity-card__bases {
 	width: 100%;
-}
-
-.entity-card__skip {
-	display: inline-flex;
-	font-size: 0.85rem;
 }
 
 .entity-card__error {
