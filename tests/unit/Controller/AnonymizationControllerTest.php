@@ -344,6 +344,100 @@ class AnonymizationControllerTest extends TestCase
 
 
     /**
+     * Input validation (non-array bases) must return 400 even when the file
+     * does not exist — validation runs before the file-access check.
+     *
+     * This test documents the ordering fix: previously verifyFileAccess ran
+     * first and returned 404 before validation, causing malformed input to
+     * receive 404 instead of 400 (or 500 when the file existed but the
+     * downstream service crashed on the invalid bases value).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeReturns400ForInvalidBasesBeforeFileAccessCheck(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => 'not-an-array'],
+                ],
+            ]
+        );
+
+        // Controller whose root-folder reports no matching files (would return 404).
+        $emptyFolder = $this->createMock(Folder::class);
+        $emptyFolder->method('getById')->willReturn([]);
+        $emptyRootFolder = $this->createMock(IRootFolder::class);
+        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
+
+        $controller = new AnonymizationController(
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            logger: $this->mockLogger,
+            anonymizationService: $this->mockAnonService,
+            fileListingService: $this->mockFileService,
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession,
+            rootFolder: $emptyRootFolder
+        );
+
+        $response = $controller->anonymize(fileId: 999999);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(400, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('error', $data);
+
+    }//end testAnonymizeReturns400ForInvalidBasesBeforeFileAccessCheck()
+
+
+    /**
+     * Input validation (non-string bases item) must return 400 even when the
+     * file does not exist.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
+     */
+    public function testAnonymizeReturns400ForNonStringBasesItemBeforeFileAccessCheck(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'entities' => [
+                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => [42]],
+                ],
+            ]
+        );
+
+        $emptyFolder = $this->createMock(Folder::class);
+        $emptyFolder->method('getById')->willReturn([]);
+        $emptyRootFolder = $this->createMock(IRootFolder::class);
+        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
+
+        $controller = new AnonymizationController(
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            logger: $this->mockLogger,
+            anonymizationService: $this->mockAnonService,
+            fileListingService: $this->mockFileService,
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession,
+            rootFolder: $emptyRootFolder
+        );
+
+        $response = $controller->anonymize(fileId: 999999);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(400, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('error', $data);
+
+    }//end testAnonymizeReturns400ForNonStringBasesItemBeforeFileAccessCheck()
+
+
+    /**
      * Test anonymize succeeds when bases is a valid array of strings
      *
      * @return void
