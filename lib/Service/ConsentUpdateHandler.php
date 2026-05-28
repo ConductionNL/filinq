@@ -158,9 +158,10 @@ class ConsentUpdateHandler
     /**
      * Get all consent records for a specific document
      *
-     * @param string $documentId The document UUID
-     * @param string $register   The register ID
-     * @param string $schema     The schema ID
+     * @param string      $documentId The document UUID
+     * @param string      $register   The register ID
+     * @param string      $schema     The schema ID
+     * @param string|null $ownerUid   UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *

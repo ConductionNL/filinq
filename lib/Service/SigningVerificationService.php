@@ -212,7 +212,7 @@ class SigningVerificationService
     {
         // Use preg_replace with a literal match (preg_quote) so that any
         // special regex characters in the MAC value are treated as plain text.
-        return preg_replace('/' . preg_quote($mac, '/') . '/', '', $pdfContent) ?? $pdfContent;
+        return preg_replace('/'.preg_quote($mac, '/').'/', '', $pdfContent) ?? $pdfContent;
 
     }//end stripAssertionMac()
 
