@@ -221,6 +221,26 @@ class SigningAuditServiceTest extends TestCase
 
 
     /**
+     * VALID_ACTIONS must include 'START' so signing-session initiation can be
+     * recorded without the logEvent() guard rejecting it (finding L2).
+     *
+     * @return void
+     */
+    public function testValidActionsIncludesStart(): void
+    {
+        $ref      = new ReflectionClass(SigningAuditService::class);
+        $constant = $ref->getReflectionConstant('VALID_ACTIONS');
+        $this->assertNotFalse($constant, 'VALID_ACTIONS constant must exist');
+        $this->assertContains(
+            'START',
+            $constant->getValue(),
+            'VALID_ACTIONS must include START (finding L2 — session-start audit events were silently dropped).'
+        );
+
+    }//end testValidActionsIncludesStart()
+
+
+    /**
      * getAuditTrail() must NOT call getObjects (the old full-scan path).
      *
      * The ObjectService stub does not declare getObjects(), so the mock

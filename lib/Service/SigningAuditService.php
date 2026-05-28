@@ -46,6 +46,7 @@ class SigningAuditService
      */
     private const VALID_ACTIONS = [
         'CREATED',
+        'START',
         'SIGNED',
         'DECLINED',
         'CANCELLED',
