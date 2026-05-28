@@ -292,11 +292,8 @@ class AnonymizationController extends Controller
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
 
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
-            if ($accessError !== null) {
-                return $accessError;
-            }
-
+            // Validate request body BEFORE file-access checks so that malformed
+            // input always yields HTTP 400 regardless of whether the file exists.
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
 
@@ -315,6 +312,11 @@ class AnonymizationController extends Controller
             $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
             if ($appendBasisSummary instanceof JSONResponse) {
                 return $appendBasisSummary;
+            }
+
+            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
             }
 
             $outputFormat = 'pdf';
