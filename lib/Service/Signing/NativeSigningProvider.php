@@ -280,16 +280,15 @@ class NativeSigningProvider implements SigningProviderInterface
             }
         }
 
-        // Call with full positional arity so it matches the canonical OR
-        // ObjectService::saveObject($object, $extend, $register, $schema, $uuid)
-        // signature.
-        $objectService->saveObject(
-            $session,
-            [],
-            $register,
-            $schema,
-            $uuid
-        );
+        // When updating an existing session row, embed the OR uuid in the
+        // object data so the canonical ObjectService::saveObject(object:,
+        // register:, schema:) can detect and update the existing record
+        // rather than creating a duplicate.
+        if ($uuid !== null) {
+            $session['id'] = $uuid;
+        }
+
+        $objectService->saveObject(object: $session, register: $register, schema: $schema);
 
     }//end persistSession()
 
