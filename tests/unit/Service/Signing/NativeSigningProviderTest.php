@@ -1,13 +1,12 @@
 <?php
 
 /**
- * Unit tests for NativeSigningProvider — finding #287 regression coverage.
+ * Unit tests for NativeSigningProvider — wave-9 C1 mitigation coverage.
  *
- * Asserts that signing sessions are persisted via the OpenRegister
- * ObjectService instead of in a per-request `$sessions` array, so that
- * `checkStatus`, `downloadSignedDocument` and `cancelSigning` running in
- * separate HTTP requests can resolve a session that `initiateSigning`
- * created.
+ * Verifies that `initiateSigning` and `downloadSignedDocument` throw
+ * a descriptive RuntimeException referencing issue #304 until the full
+ * request↔provider wiring ships.  Also guards the `checkStatus` not-found
+ * path retained from finding #287 regression coverage.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
@@ -25,7 +24,6 @@ namespace OCA\DocuDesk\Tests\Unit\Service\Signing;
 
 use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
 use OCA\DocuDesk\Service\SettingsService;
-use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -34,7 +32,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Tests for NativeSigningProvider session persistence
+ * Tests for NativeSigningProvider C1 mitigation (issue #304)
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service\Signing
@@ -46,38 +44,24 @@ use RuntimeException;
  */
 class NativeSigningProviderTest extends TestCase
 {
-
     /**
-     * In-memory session store shared between the provider instances under test
-     *
-     * @var array<string, array<string, mixed>>
-     */
-    private array $store = [];
-
-
-    /**
-     * Build a NativeSigningProvider wired to an OR ObjectService fake that
-     * persists rows in `$this->store` keyed by externalId.
+     * Build a minimal NativeSigningProvider for testing the guard paths.
      *
      * @return NativeSigningProvider
      */
     private function buildProvider(): NativeSigningProvider
     {
-        $userSession = $this->createMock(IUserSession::class);
-        $logger      = $this->createMock(LoggerInterface::class);
+        $userSession = $this->createMock(className: IUserSession::class);
+        $logger      = $this->createMock(className: LoggerInterface::class);
 
-        $config = $this->createMock(IAppConfig::class);
+        $config = $this->createMock(className: IAppConfig::class);
         $config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default = ''): string {
+            function (string $app, string $key, string $default=''): string {
                 return $default;
             }
         );
 
-        // Mock the real OR ObjectService — `findAll` and `saveObject` are
-        // real public methods on the deployed class so `createMock` lets us
-        // stub them. `findAll(array $config)` returns the matching rows;
-        // `saveObject(array $object, ...)` writes to the in-memory store.
-        $objectService = $this->getMockBuilder(ObjectService::class)
+        $objectService = $this->getMockBuilder(className: ObjectService::class)
             ->disableOriginalConstructor()
             ->disableOriginalClone()
             ->disableArgumentCloning()
@@ -85,123 +69,74 @@ class NativeSigningProviderTest extends TestCase
             ->onlyMethods(['findAll', 'saveObject'])
             ->getMock();
 
-        $objectService->method('findAll')->willReturnCallback(
-            function (array $config = []): array {
-                $filters    = $config['filters'] ?? [];
-                $externalId = $filters['externalId'] ?? null;
-                if ($externalId === null) {
-                    return array_values($this->store);
-                }
+        $objectService->method('findAll')->willReturn([]);
 
-                if (isset($this->store[(string) $externalId]) === true) {
-                    return [$this->store[(string) $externalId]];
-                }
-
-                return [];
-            }
-        );
-        $objectService->method('saveObject')->willReturnCallback(
-            function (array | object $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
-                $row = is_array($object) === true ? $object : (array) $object;
-                $key = (string) ($row['externalId'] ?? $uuid ?? '');
-                if ($uuid !== null && $uuid !== '') {
-                    $row['uuid'] = $uuid;
-                }
-
-                $this->store[$key] = $row;
-
-                // Real OR returns an ObjectEntity. The provider only relies
-                // on saveObject side-effects (the store row), not the
-                // return value, so a bare entity wrapping the row keeps
-                // the contract intact.
-                $entity = new ObjectEntity();
-                $entity->setUuid((string) ($row['uuid'] ?? $key));
-                $entity->setObject($row);
-                return $entity;
-            }
-        );
-
-        $settingsService = $this->createMock(SettingsService::class);
+        $settingsService = $this->createMock(className: SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($objectService);
 
         return new NativeSigningProvider(
-            $userSession,
-            $logger,
-            $settingsService,
-            $config
+            userSession: $userSession,
+            logger: $logger,
+            settingsService: $settingsService,
+            config: $config
         );
 
     }//end buildProvider()
 
-
     /**
-     * Reset the shared store before each test
+     * Reset test state before each test
      *
      * @return void
      */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->store = [];
 
     }//end setUp()
 
-
     /**
-     * Initiate persists the session in OR and a subsequent checkStatus
-     * (potentially on a different provider instance) finds it.
+     * C1 mitigation (issue #304): initiateSigning throws immediately with a
+     * descriptive error because the signing pipeline is not yet wired.
+     * Admins who enable signing_enabled=1 see the gap at once.
      *
      * @return void
      */
-    public function testInitiateThenCheckStatusReturnsPersistedState(): void
+    public function testInitiateThrowsBecausePipelineNotIntegrated(): void
     {
         $provider = $this->buildProvider();
 
-        $result = $provider->initiateSigning(
+        $this->expectException(exception: RuntimeException::class);
+        $this->expectExceptionMessage(message: 'ConductionNL/docudesk#304');
+
+        $provider->initiateSigning(
             documentPath: '/foo.pdf',
             documentName: 'foo.pdf',
             signers: [['userId' => 'alice']],
             level: 'SES'
         );
 
-        $this->assertTrue($result['success']);
-        $externalId = $result['externalId'];
-        $this->assertArrayHasKey($externalId, $this->store);
-
-        $status = $provider->checkStatus(externalId: $externalId);
-
-        $this->assertSame('pending', $status['status']);
-        $this->assertSame([['userId' => 'alice']], $status['signers']);
-
-    }//end testInitiateThenCheckStatusReturnsPersistedState()
-
+    }//end testInitiateThrowsBecausePipelineNotIntegrated()
 
     /**
-     * Sessions written by one provider instance are visible to another —
-     * the precise bug from #287 was that a fresh class instance had an
-     * empty array.
+     * C1 mitigation (issue #304): downloadSignedDocument throws immediately
+     * with a descriptive error because no session can ever reach 'completed'
+     * while the pipeline is not yet wired.
      *
      * @return void
      */
-    public function testSessionsSurviveAcrossProviderInstances(): void
+    public function testDownloadThrowsBecausePipelineNotIntegrated(): void
     {
-        $first = $this->buildProvider();
+        $provider = $this->buildProvider();
 
-        $result     = $first->initiateSigning('/foo.pdf', 'foo.pdf', [], 'SES');
-        $externalId = $result['externalId'];
+        $this->expectException(exception: RuntimeException::class);
+        $this->expectExceptionMessage(message: 'ConductionNL/docudesk#304');
 
-        $second = $this->buildProvider();
-        $status = $second->checkStatus(externalId: $externalId);
-        $this->assertSame('pending', $status['status']);
+        $provider->downloadSignedDocument(externalId: 'native-any-id');
 
-        $this->assertTrue($second->cancelSigning(externalId: $externalId));
-        $this->assertSame('cancelled', $this->store[$externalId]['status']);
-
-    }//end testSessionsSurviveAcrossProviderInstances()
-
+    }//end testDownloadThrowsBecausePipelineNotIntegrated()
 
     /**
-     * checkStatus on an unknown externalId throws (not silently returns).
+     * CheckStatus on an unknown externalId throws (not silently returns).
      *
      * @return void
      */
@@ -209,70 +144,8 @@ class NativeSigningProviderTest extends TestCase
     {
         $provider = $this->buildProvider();
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(exception: RuntimeException::class);
         $provider->checkStatus(externalId: 'native-does-not-exist');
 
     }//end testCheckStatusOnMissingSessionThrows()
-
-
-    /**
-     * downloadSignedDocument refuses to return a path while the session
-     * status is still `pending`.
-     *
-     * @return void
-     */
-    public function testDownloadRefusesWhenNotCompleted(): void
-    {
-        $provider = $this->buildProvider();
-
-        $result     = $provider->initiateSigning('/foo.pdf', 'foo.pdf', [], 'SES');
-        $externalId = $result['externalId'];
-
-        $this->expectException(RuntimeException::class);
-        $provider->downloadSignedDocument(externalId: $externalId);
-
-    }//end testDownloadRefusesWhenNotCompleted()
-
-
-    /**
-     * downloadSignedDocument returns the persisted signedDocumentPath when
-     * the session has completed (or falls back to documentPath until the
-     * SES marker writer follow-up to #287 ships).
-     *
-     * @return void
-     */
-    public function testDownloadReturnsPathOnCompletion(): void
-    {
-        $provider = $this->buildProvider();
-
-        $result     = $provider->initiateSigning('/foo.pdf', 'foo.pdf', [], 'SES');
-        $externalId = $result['externalId'];
-
-        // Mark the session completed in the OR-backed fake store.
-        $this->store[$externalId]['status']             = 'completed';
-        $this->store[$externalId]['signedDocumentPath'] = '/foo.signed.pdf';
-
-        $this->assertSame(
-            '/foo.signed.pdf',
-            $provider->downloadSignedDocument(externalId: $externalId)
-        );
-
-    }//end testDownloadReturnsPathOnCompletion()
-
-
-    /**
-     * Non-SES levels are still rejected on initiate.
-     *
-     * @return void
-     */
-    public function testNonSesLevelRejected(): void
-    {
-        $provider = $this->buildProvider();
-
-        $this->expectException(RuntimeException::class);
-        $provider->initiateSigning('/x.pdf', 'x.pdf', [], 'QES');
-
-    }//end testNonSesLevelRejected()
-
-
 }//end class

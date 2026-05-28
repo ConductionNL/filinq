@@ -100,6 +100,17 @@ class NativeSigningProvider implements SigningProviderInterface
         string $level,
         array $options=[]
     ): array {
+        // C1 mitigation (issue #304): the signing pipeline is not yet wired —
+        // SigningService::sign() never invokes the provider, so no document is
+        // ever signed or marked completed. Throw immediately so administrators
+        // who enable signing see the gap at once rather than silently getting a
+        // no-op. Remove this guard when the provider↔request wiring ships.
+        throw new RuntimeException(
+            'Native signing pipeline is not yet integrated — see ConductionNL/docudesk#304. '
+            .'Disable signing_enabled until the request↔provider wiring is complete.'
+        );
+
+        // @phpstan-ignore-next-line (dead code until #304 is resolved)
         if ($this->supportsLevel(level: $level) === false) {
             throw new RuntimeException(
                 'Native provider only supports SES signature level, got: '.$level
@@ -183,10 +194,19 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     public function downloadSignedDocument(string $externalId): string
     {
+        // C1 mitigation (issue #304): the signing pipeline is not yet wired —
+        // no code sets session status to 'completed'. Throw a descriptive error
+        // so the failure mode is loud rather than silently returning an unsigned file.
+        throw new RuntimeException(
+            'Native signing pipeline is not yet integrated — see ConductionNL/docudesk#304. '
+            .'No signed document is available until the request↔provider wiring ships.'
+        );
+
+        // @phpstan-ignore-next-line (dead code until #304 is resolved)
         $session = $this->loadSessionByExternalId(externalId: $externalId);
 
         if (($session['status'] ?? '') !== 'completed') {
-            throw new RuntimeException('Signing session is not completed');
+            throw new RuntimeException('Signing session is not completed (pipeline not yet integrated — see issue #304)');
         }
 
         $signedPath = $session['signedDocumentPath'] ?? null;

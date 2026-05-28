@@ -25,7 +25,10 @@ namespace OCA\DocuDesk\Service;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use OCP\ICache;
+use OCP\IGroupManager;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Read/write store for anonymization batch state backed by the distributed cache.
@@ -55,6 +58,8 @@ class BatchStateService
      * @param ICacheFactory   $cacheFactory Factory used to obtain the distributed cache.
      * @param IAppConfig      $appConfig    App-config lookup for runtime limits.
      * @param LoggerInterface $logger       Logger for lifecycle events.
+     * @param IUserSession    $userSession  User session for ownership checks.
+     * @param IGroupManager   $groupManager Group manager for admin bypass.
      *
      * @return void
      */
@@ -62,6 +67,8 @@ class BatchStateService
         ICacheFactory $cacheFactory,
         private readonly IAppConfig $appConfig,
         private readonly LoggerInterface $logger,
+        private readonly IUserSession $userSession,
+        private readonly IGroupManager $groupManager,
     ) {
         $this->cache = $cacheFactory->createDistributed('docudesk');
 
@@ -129,6 +136,20 @@ class BatchStateService
         $batch = json_decode($data, true);
         if (is_array($batch) === false) {
             return null;
+        }
+
+        // C2 security fix: enforce batch ownership so an authenticated user
+        // cannot read or drive another user's batch by guessing its ID.
+        // Admins may access any batch for support/audit purposes.
+        $currentUser = $this->userSession->getUser();
+        if ($currentUser !== null) {
+            $currentUid  = $currentUser->getUID();
+            $batchUserId = (string) ($batch['userId'] ?? '');
+            $isAdmin     = $this->groupManager->isAdmin($currentUid);
+
+            if ($isAdmin === false && $batchUserId !== $currentUid) {
+                throw new RuntimeException('Access denied: batch belongs to another user');
+            }
         }
 
         // Reset TTL on read (keep-alive pattern) so active batches don't expire during human review.
