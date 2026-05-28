@@ -108,6 +108,7 @@ OC.L10N.register(
     "Loading consents" : "Toestemmingen laden",
     "Total Consents" : "Totaal toestemmingen",
     "Recent Consent Activity" : "Recente toestemmingsactiviteit",
+    "Recent documents" : "Recente documenten",
     "Quick Anonymization" : "Snelle anonimisering",
     "No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register." : "Nog geen toestemmingsrecords. Toestemmingsrecords verschijnen wanneer entiteiten worden gedetecteerd in documenten beheerd door Open Register.",
     "GDPR publication consent management and document metadata enrichment for Nextcloud" : "AVG-publicatietoestemmingsbeheer en documentmetadataverrijking voor Nextcloud",

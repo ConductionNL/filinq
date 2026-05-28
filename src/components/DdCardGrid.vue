@@ -62,12 +62,18 @@ export default {
 <style scoped>
 .dd-card-grid__grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	grid-auto-rows: 1fr;
 	gap: 16px;
 }
 
 .dd-card-grid__cell {
 	cursor: pointer;
+	display: flex;
+}
+
+.dd-card-grid__cell > * {
+	flex: 1;
 }
 
 .dd-card-grid__loading {

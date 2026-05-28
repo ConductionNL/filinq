@@ -167,6 +167,102 @@ export const useMyDocumentsStore = defineStore(
 				const newPath = `${this.currentPath}/${folderName}`
 				await this.fetchDocuments(newPath)
 			},
+
+			/**
+			 * Fetch the most-recent anonymized files and dossier folders under
+			 * /DocuDesk/, sorted newest first. Does NOT mutate store state —
+			 * intended for read-only widgets (e.g. the dashboard "Recent
+			 * documents" cards) that must not clobber the currentPath /
+			 * breadcrumbs of the My Documents page.
+			 *
+			 * Uses PROPFIND Depth: infinity so anonymized files inside dossier
+			 * folders are included too.
+			 *
+			 * @param {number} [limit] Maximum number of items to return (default 4).
+			 * @return {Promise<object[]>} Items shaped like the documents array.
+			 */
+			async fetchRecentAnonymized(limit = 4) {
+				const user = getCurrentUser()
+				if (!user) {
+					throw new Error('User not authenticated')
+				}
+
+				const davPrefix = `/remote.php/dav/files/${user.uid}`
+				const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}/DocuDesk`)
+
+				let response
+				try {
+					response = await axios({
+						method: 'PROPFIND',
+						url: webdavUrl,
+						headers: {
+							Depth: 'infinity',
+							'Content-Type': 'application/xml',
+						},
+						data: `<?xml version="1.0"?>
+							<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+								<d:prop>
+									<d:resourcetype />
+									<d:getcontenttype />
+									<d:getcontentlength />
+									<d:getlastmodified />
+									<oc:fileid />
+								</d:prop>
+							</d:propfind>`,
+					})
+				} catch (err) {
+					// /DocuDesk/ may not exist yet for fresh users — return empty list.
+					if (err.response && err.response.status === 404) {
+						return []
+					}
+					throw err
+				}
+
+				const parser = new DOMParser()
+				const xmlDoc = parser.parseFromString(response.data, 'text/xml')
+				const responses = xmlDoc.querySelectorAll('response')
+
+				const items = []
+				responses.forEach((resp, index) => {
+					// First response is /DocuDesk/ itself — skip.
+					if (index === 0) return
+
+					const href = resp.querySelector('href')?.textContent || ''
+					const hrefWithoutTrailingSlash = href.endsWith('/') ? href.slice(0, -1) : href
+					const decoded = decodeURIComponent(hrefWithoutTrailingSlash)
+					const path = decoded.startsWith(davPrefix) ? decoded.slice(davPrefix.length) : decoded
+					const fileName = path.split('/').pop() || ''
+
+					const resourceType = resp.querySelector('resourcetype')
+					const isFolder = resourceType?.querySelector('collection') !== null
+					const isAnonymized = fileName.includes('_anonymized')
+
+					// Filter to dossier folders + anonymized files only.
+					// Skip the dossier folder itself (depth-1) when it has no
+					// modified value yet (extremely rare) — Date parse handles it.
+					if (!isFolder && !isAnonymized) return
+
+					const mimeType = resp.querySelector('getcontenttype')?.textContent
+						|| (isFolder ? 'httpd/unix-directory' : 'application/octet-stream')
+					const fileSize = parseInt(resp.querySelector('getcontentlength')?.textContent || '0', 10)
+					const modified = resp.querySelector('getlastmodified')?.textContent || ''
+					const fileId = parseInt(resp.querySelector('fileid')?.textContent || '0', 10)
+
+					items.push({
+						fileId,
+						fileName,
+						path,
+						mimeType,
+						fileSize,
+						modified: new Date(modified).getTime() / 1000,
+						isFolder,
+						isAnonymized,
+					})
+				})
+
+				items.sort((a, b) => b.modified - a.modified)
+				return items.slice(0, limit)
+			},
 		},
 	},
 )

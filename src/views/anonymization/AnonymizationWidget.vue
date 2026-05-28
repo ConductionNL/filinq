@@ -40,6 +40,23 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			</div>
 		</div>
 
+		<!-- Recent documents -->
+		<section v-if="recentLoading || recentItems.length > 0" class="recent-section">
+			<h3 class="recent-section__title">
+				{{ t('docudesk', 'Recent documents') }}
+			</h3>
+			<div v-if="recentLoading" class="recent-section__loading">
+				<NcLoadingIcon :size="24" />
+			</div>
+			<div v-else class="recent-section__grid">
+				<DdDocumentCard
+					v-for="item in recentItems"
+					:key="item.fileId || item.path"
+					:item="item"
+					@click="openRecent" />
+			</div>
+		</section>
+
 		<!-- Dossier name dialog -->
 		<NcDialog
 			v-if="showDossierDialog"
@@ -79,6 +96,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 import { NcButton, NcDialog, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
+import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import uploadIcon from '../../assets/upload.png'
 
 // Anonymisation only produces real redactions for formats the backend can
@@ -128,6 +146,7 @@ export default {
 		NcDialog,
 		NcLoadingIcon,
 		NcTextField,
+		DdDocumentCard,
 	},
 	data() {
 		return {
@@ -138,6 +157,8 @@ export default {
 			dossierSubmitting: false,
 			dossierError: '',
 			uploadIcon,
+			recentItems: [],
+			recentLoading: false,
 		}
 	},
 	computed: {
@@ -168,7 +189,51 @@ export default {
 			return t('docudesk', 'Good evening {name},', { name: this.userName })
 		},
 	},
+	mounted() {
+		this.loadRecent()
+	},
 	methods: {
+		/**
+		 * Fetch the most-recent anonymized files and dossier folders under
+		 * /DocuDesk/ for the "Recent documents" cards. Read-only — does not
+		 * touch the My Documents store's navigation state.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async loadRecent() {
+			this.recentLoading = true
+			try {
+				this.recentItems = await myDocumentsStore.fetchRecentAnonymized(4)
+			} catch (err) {
+				console.error('Failed to load recent documents:', err)
+				this.recentItems = []
+			} finally {
+				this.recentLoading = false
+			}
+		},
+		/**
+		 * Open a recent item: dossier folder → navigate to that folder in
+		 * My Documents; anonymized file → open in the file viewer + route
+		 * to My Documents host.
+		 *
+		 * @param {object} item Recent item from `loadRecent`.
+		 * @return {void}
+		 */
+		openRecent(item) {
+			if (!item) return
+			if (item.isFolder) {
+				myDocumentsStore.fetchDocuments(item.path)
+				this.gotoViewer()
+				return
+			}
+			fileViewerStore.open({
+				fileId: item.fileId,
+				fileName: item.fileName,
+				mimeType: item.mimeType,
+				path: item.path,
+			})
+			this.gotoViewer()
+		},
 		/**
 		 * Drop handler for the drag-and-drop zone.
 		 * Delegates to dispatchFiles so the dossier-dialog logic applies.
@@ -459,6 +524,30 @@ export default {
 .dossier-dialog__intro {
 	margin: 0 0 16px 0;
 	color: var(--color-text-maxcontrast);
+}
+
+.recent-section {
+	margin-top: 24px;
+}
+
+.recent-section__title {
+	margin: 0 0 12px 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.recent-section__loading {
+	display: flex;
+	justify-content: center;
+	padding: 12px;
+}
+
+.recent-section__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	grid-auto-rows: 1fr;
+	gap: 16px;
 }
 
 </style>

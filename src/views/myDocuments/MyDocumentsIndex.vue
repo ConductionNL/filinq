@@ -68,21 +68,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</template>
 
 				<template #card="{ object }">
-					<div class="my-documents-card">
-						<div class="my-documents-card__icon">
-							<component :is="iconFor(object)" :size="36" />
-						</div>
-						<div class="my-documents-card__title">
-							{{ displayName(object) }}
-						</div>
-						<CnStatusBadge
-							:label="kindLabel(object)"
-							:color-map="kindColorMap" />
-						<div class="my-documents-card__meta">
-							<span>{{ formatDate(object.modified) }}</span>
-							<span>{{ formatSize(object.fileSize) }}</span>
-						</div>
-					</div>
+					<DdDocumentCard :item="object" @click="onRowClick" />
 				</template>
 
 				<template #actions-header>
@@ -130,6 +116,7 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
+import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -151,6 +138,7 @@ export default {
 		NcActionButton,
 		DdSearchBar,
 		DdPageHeader,
+		DdDocumentCard,
 		FileViewerPage,
 		DotsHorizontal,
 		Eye,
@@ -422,35 +410,4 @@ export default {
 	--default-clickable-area: 32px;
 }
 
-.my-documents-card {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	padding: 16px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	background: var(--color-main-background);
-	transition: box-shadow 0.15s ease;
-}
-
-.my-documents-card:hover {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.my-documents-card__icon {
-	color: var(--color-text-maxcontrast);
-}
-
-.my-documents-card__title {
-	font-weight: 600;
-	word-break: break-word;
-}
-
-.my-documents-card__meta {
-	display: flex;
-	justify-content: space-between;
-	color: var(--color-text-maxcontrast);
-	font-size: 0.85rem;
-	margin-top: auto;
-}
 </style>
