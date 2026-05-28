@@ -42,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)   — one public method per
+ *   REST route (CRUD + preview + export + version); each is a thin HTTP adapter.
  */
 class TemplatesController extends Controller
 {

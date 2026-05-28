@@ -45,6 +45,10 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) — the service is the
+ *   orchestration layer for folder-level batch jobs and must integrate with
+ *   the filesystem, scheduler, user session, and batch state store.
  */
 class FolderBatchService
 {

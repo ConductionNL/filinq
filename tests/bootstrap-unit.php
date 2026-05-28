@@ -23,8 +23,7 @@ define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load Nextcloud OCP stubs (no NC server required).
-require_once __DIR__ . '/stubs/NextcloudStubs.php';
-
-// Load OpenRegister stubs for mocking.
+// Load OpenRegister stubs first — they are a superset of NextcloudStubs.
+// NextcloudStubs is NOT loaded here to avoid duplicate interface/class
+// declarations in the OCP namespace (both files define IRequest, IL10N, etc.).
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';

@@ -61,6 +61,9 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) — the controller orchestrates
+ *   the full batch lifecycle (upload→extract→anonymize→download); decomposing into
+ *   multiple controllers would spread the API surface without reducing real complexity.
  */
 class BatchAnonymizationController extends Controller
 {

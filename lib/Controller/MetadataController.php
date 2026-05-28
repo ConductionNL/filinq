@@ -87,28 +87,10 @@ class MetadataController extends Controller
                 );
             }
 
-            $data = $this->request->getParams();
-
-            // Validate required fields.
-            if (isset($data['objectId']) === false || empty($data['objectId']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('objectId is required')],
-                    400
-                );
-            }
-
-            if (isset($data['register']) === false || empty($data['register']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('register is required')],
-                    400
-                );
-            }
-
-            if (isset($data['schema']) === false || empty($data['schema']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('schema is required')],
-                    400
-                );
+            $data            = $this->request->getParams();
+            $validationError = $this->validateEnrichParams(data: $data);
+            if ($validationError !== null) {
+                return $validationError;
             }
 
             // Get object data for enrichment.
@@ -155,4 +137,27 @@ class MetadataController extends Controller
         }//end try
 
     }//end enrich()
+
+    /**
+     * Validate that objectId, register, and schema are present in the request params.
+     *
+     * @param array<string, mixed> $data Request parameters
+     *
+     * @return JSONResponse|null A 400 error response when a required field is missing, null otherwise
+     */
+    private function validateEnrichParams(array $data): ?JSONResponse
+    {
+        $required = ['objectId', 'register', 'schema'];
+        foreach ($required as $field) {
+            if (isset($data[$field]) === false || empty($data[$field]) === true) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('%s is required', [$field])],
+                    400
+                );
+            }
+        }
+
+        return null;
+
+    }//end validateEnrichParams()
 }//end class

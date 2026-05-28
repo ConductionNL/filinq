@@ -323,6 +323,83 @@ class EntityRelationMapper
 
 }//end class
 
+/**
+ * Stub for OCA\OpenRegister\Db\Register
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Register
+{
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+
+}//end class
+
+/**
+ * Stub for OCA\OpenRegister\Db\Schema
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Schema
+{
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+
+}//end class
+
+/**
+ * Stub for OCA\OpenRegister\Db\SchemaMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class SchemaMapper
+{
+
+    /**
+     * Find a schema by ID
+     *
+     * @param mixed $id The schema ID or UUID
+     *
+     * @return Schema
+     */
+    public function find(mixed $id): Schema
+    {
+        return new Schema();
+
+    }//end find()
+
+}//end class
+
 namespace OC\Hooks;
 
 /**
@@ -471,6 +548,32 @@ interface IAppManager
 }
 
 namespace OCP\AppFramework;
+
+/**
+ * Stub for OCP\AppFramework\App
+ *
+ * @category Tests
+ * @package  OCP\AppFramework
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class App
+{
+
+    public function __construct(string $appName, array $urlParams = [])
+    {
+    }
+
+    public function getContainer(): \Psr\Container\ContainerInterface
+    {
+        return new class implements \Psr\Container\ContainerInterface {
+            public function get(string $id): mixed { return null; }
+            public function has(string $id): bool { return false; }
+        };
+    }
+
+}//end class
 
 /**
  * Stub for OCP\AppFramework\Http constants
@@ -674,7 +777,7 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface Folder
+interface Folder extends Node
 {
 
     /**
@@ -685,6 +788,31 @@ interface Folder
      * @return array<\OCP\Files\Node>
      */
     public function getById(int $id): array;
+
+    /**
+     * Get all nodes in this folder
+     *
+     * @return array<\OCP\Files\Node>
+     */
+    public function getDirectoryListing(): array;
+
+    /**
+     * Check if a node with the given name exists
+     *
+     * @param string $path The relative path
+     *
+     * @return bool
+     */
+    public function nodeExists(string $path): bool;
+
+    /**
+     * Get a node by path
+     *
+     * @param string $path The relative path
+     *
+     * @return \OCP\Files\Node
+     */
+    public function get(string $path): \OCP\Files\Node;
 
 
 }//end interface
@@ -704,6 +832,11 @@ interface Node
 
     public function getName(): string;
     public function getPath(): string;
+    public function getId(): int;
+    public function getRelativePath(string $path): ?string;
+    public function getType(): string;
+    public function getMimetype(): string;
+    public function getPermissions(): int;
 
 }//end interface
 
@@ -746,6 +879,300 @@ interface IRootFolder
      * @return \OCP\Files\Folder
      */
     public function getUserFolder(string $userId): \OCP\Files\Folder;
+
+
+}//end interface
+
+namespace OCP\BackgroundJob;
+
+/**
+ * Stub for OCP\BackgroundJob\IJobList
+ *
+ * @category Tests
+ * @package  OCP\BackgroundJob
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IJobList
+{
+
+    public function add(string $job, mixed $argument = null): void;
+    public function remove(string $job, mixed $argument = null): void;
+    public function has(string $job, mixed $argument): bool;
+
+}//end interface
+
+namespace OCP\AppFramework\Utility;
+
+/**
+ * Stub for OCP\AppFramework\Utility\ITimeFactory
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Utility
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ITimeFactory
+{
+
+    public function getTime(): int;
+    public function getDateTime(string $time = 'now', ?\DateTimeZone $timezone = null): \DateTime;
+
+}//end interface
+
+namespace OCP;
+
+/**
+ * Stub for OCP\ICache
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICache
+{
+
+    public function get(string $key): mixed;
+    public function set(string $key, mixed $value, int $ttl = 0): bool;
+    public function hasKey(string $key): bool;
+    public function remove(string $key): bool;
+    public function clear(string $prefix = ''): bool;
+
+}//end interface
+
+/**
+ * Stub for OCP\IConfig
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IConfig
+{
+
+    public function getUserValue(string $userId, string $appName, string $key, mixed $default = ''): mixed;
+    public function setUserValue(string $userId, string $appName, string $key, mixed $value): void;
+    public function deleteUserValue(string $userId, string $appName, string $key): void;
+    public function getAppValue(string $appName, string $key, string $default = ''): string;
+    public function setAppValue(string $appName, string $key, string $value): void;
+    public function getSystemValue(string $key, mixed $default = ''): mixed;
+    public function getSystemValueString(string $key, string $default = ''): string;
+    public function getSystemValueBool(string $key, bool $default = false): bool;
+    public function getSystemValueInt(string $key, int $default = 0): int;
+
+}//end interface
+
+namespace OCP\AppFramework\Http;
+
+/**
+ * Stub for OCP\AppFramework\Http\TextPlainResponse
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Http
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class TextPlainResponse extends JSONResponse
+{
+
+    public function __construct(string $text = '', int $statusCode = 200)
+    {
+        parent::__construct(['text' => $text], $statusCode);
+    }
+
+}//end class
+
+/**
+ * Stub for OCP\AppFramework\Http\TemplateResponse
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Http
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class TemplateResponse extends JSONResponse
+{
+
+    private string $templateName;
+
+    public function __construct(
+        mixed $appName,
+        string $templateName = '',
+        array $params = [],
+        string $renderAs = 'user'
+    ) {
+        parent::__construct($params);
+        $this->templateName = $templateName;
+    }
+
+    public function getTemplateName(): string
+    {
+        return $this->templateName;
+    }
+
+}//end class
+
+namespace OCP\BackgroundJob;
+
+/**
+ * Stub for OCP\BackgroundJob\QueuedJob
+ *
+ * @category Tests
+ * @package  OCP\BackgroundJob
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+abstract class QueuedJob
+{
+
+    /**
+     * Constructor
+     *
+     * @param \OCP\AppFramework\Utility\ITimeFactory|null $time Time factory
+     *
+     * @return void
+     */
+    public function __construct(?\OCP\AppFramework\Utility\ITimeFactory $time = null)
+    {
+    }
+
+    /**
+     * Run the job
+     *
+     * @param mixed $argument The job argument
+     *
+     * @return void
+     */
+    abstract protected function run(mixed $argument): void;
+
+}//end class
+
+namespace OCP;
+
+/**
+ * Stub for OCP\Constants
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Constants
+{
+
+    public const PERMISSION_READ   = 1;
+    public const PERMISSION_UPDATE = 2;
+    public const PERMISSION_CREATE = 4;
+    public const PERMISSION_DELETE = 8;
+    public const PERMISSION_SHARE  = 16;
+    public const PERMISSION_ALL    = 31;
+
+}//end class
+
+/**
+ * Stub for OCP\ICacheFactory
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICacheFactory
+{
+
+    public function createLocal(string $prefix = ''): ICache;
+    public function createDistributed(string $prefix = ''): ICache;
+    public function createLocking(string $prefix = ''): ICache;
+    public function createInMemory(int $capacity = 512): ICache;
+    public function isLocalCacheAvailable(): bool;
+
+}//end interface
+
+namespace OCP\Files;
+
+/**
+ * Stub for OCP\Files\NotFoundException
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class NotFoundException extends \Exception
+{
+}//end class
+
+namespace OCP\AppFramework\Bootstrap;
+
+/**
+ * Stub IBootContext
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Bootstrap
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IBootContext
+{
+}//end interface
+
+/**
+ * Stub IRegistrationContext
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Bootstrap
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IRegistrationContext
+{
+}//end interface
+
+/**
+ * Stub IBootstrap
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\Bootstrap
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IBootstrap
+{
+
+
+    /**
+     * Register services and event listeners
+     *
+     * @param IRegistrationContext $context Registration context
+     *
+     * @return void
+     */
+    public function register(IRegistrationContext $context): void;
+
+
+    /**
+     * Boot the application
+     *
+     * @param IBootContext $context Boot context
+     *
+     * @return void
+     */
+    public function boot(IBootContext $context): void;
 
 
 }//end interface

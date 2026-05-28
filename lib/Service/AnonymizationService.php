@@ -284,6 +284,13 @@ class AnonymizationService
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag)   — appendBasisSummary is a
+     *   caller-driven opt-in for grondslagen summary append; splitting into two
+     *   methods would duplicate the core anonymisation pipeline.
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength) — method length is driven
+     *   by a single try/catch block wrapping the full anonymisation pipeline;
+     *   extracting sub-steps would split the error boundary.
      */
     public function anonymizeDocument(
         int $fileId,
@@ -423,14 +430,7 @@ class AnonymizationService
 
             $mimeType = (string) $node->getMimeType();
 
-            $textLike = (str_starts_with($mimeType, 'text/') === true
-                || $mimeType === 'application/json'
-                || $mimeType === 'application/xml'
-                || $mimeType === 'application/x-yaml'
-                || $mimeType === 'application/x-ndjson'
-            );
-
-            if ($textLike === false) {
+            if ($this->isTextLikeMime(mimeType: $mimeType) === false) {
                 return null;
             }
 
@@ -450,6 +450,31 @@ class AnonymizationService
         }//end try
 
     }//end readNodeTextSafely()
+
+    /**
+     * Return true when the given MIME type carries plain-text content that can
+     * be scanned for literal entity values (str_ireplace semantics in OR).
+     *
+     * @param string $mimeType The MIME type string
+     *
+     * @return bool True when the type is text-like
+     */
+    private function isTextLikeMime(string $mimeType): bool
+    {
+        if (str_starts_with($mimeType, 'text/') === true) {
+            return true;
+        }
+
+        $textApplicationTypes = [
+            'application/json',
+            'application/xml',
+            'application/x-yaml',
+            'application/x-ndjson',
+        ];
+
+        return in_array($mimeType, $textApplicationTypes, strict: true);
+
+    }//end isTextLikeMime()
 
     /**
      * Compute real replacement statistics for an anonymization run.

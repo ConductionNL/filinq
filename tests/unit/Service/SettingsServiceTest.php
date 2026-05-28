@@ -174,15 +174,16 @@ class SettingsServiceTest extends TestCase
      */
     public function testUpdateSettingsPersistsValues(): void
     {
+        // Use a key that is in the WRITABLE_KEYS allowlist.
         $this->mockConfig->expects($this->once())
             ->method('setValueString')
-            ->with('docudesk', 'test_key', 'test_value');
+            ->with('docudesk', 'signing_provider', 'native');
 
         $this->mockConfig->method('getValueString')
-            ->willReturn('test_value');
+            ->willReturn('native');
 
-        $result = $this->settingsService->updateSettings(['test_key' => 'test_value']);
-        $this->assertEquals('test_value', $result['test_key']);
+        $result = $this->settingsService->updateSettings(['signing_provider' => 'native']);
+        $this->assertEquals('native', $result['signing_provider']);
 
     }//end testUpdateSettingsPersistsValues()
 

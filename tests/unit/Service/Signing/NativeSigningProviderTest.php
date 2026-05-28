@@ -101,23 +101,15 @@ class NativeSigningProviderTest extends TestCase
             }
         );
         $objectService->method('saveObject')->willReturnCallback(
-            function (array | object $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null): ObjectEntity {
+            function (array|object $object, string $register='', string $schema=''): array {
                 $row = is_array($object) === true ? $object : (array) $object;
-                $key = (string) ($row['externalId'] ?? $uuid ?? '');
-                if ($uuid !== null && $uuid !== '') {
-                    $row['uuid'] = $uuid;
-                }
+                $key = (string) ($row['externalId'] ?? $row['uuid'] ?? '');
 
                 $this->store[$key] = $row;
 
-                // Real OR returns an ObjectEntity. The provider only relies
-                // on saveObject side-effects (the store row), not the
-                // return value, so a bare entity wrapping the row keeps
-                // the contract intact.
-                $entity = new ObjectEntity();
-                $entity->setUuid((string) ($row['uuid'] ?? $key));
-                $entity->setObject($row);
-                return $entity;
+                // Return the row array — the provider uses saveObject return
+                // value to read the persisted id/uuid fields.
+                return $row;
             }
         );
 

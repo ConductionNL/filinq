@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\MetricsCollector;
 use OCA\DocuDesk\Controller\MetricsController;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -49,6 +50,11 @@ class MetricsControllerTest extends TestCase
     private IConfig|MockObject $mockConfig;
 
     /**
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockAppConfig;
+
+    /**
      * @var MetricsCollector|MockObject
      */
     private MetricsCollector|MockObject $mockCollector;
@@ -63,14 +69,16 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest         = $this->createMock(IRequest::class);
-        $this->mockConfig    = $this->createMock(IConfig::class);
-        $this->mockCollector = $this->createMock(MetricsCollector::class);
+        $mockRequest          = $this->createMock(IRequest::class);
+        $this->mockConfig     = $this->createMock(IConfig::class);
+        $this->mockAppConfig  = $this->createMock(IAppConfig::class);
+        $this->mockCollector  = $this->createMock(MetricsCollector::class);
 
         $this->controller = new MetricsController(
             'docudesk',
             $mockRequest,
             $this->mockConfig,
+            $this->mockAppConfig,
             $this->mockCollector
         );
 
@@ -84,11 +92,15 @@ class MetricsControllerTest extends TestCase
      */
     public function testIndexReturnsPrometheusFormat(): void
     {
-        $this->mockConfig->method('getAppValue')
+        $this->mockAppConfig->method('getValueString')
             ->willReturnMap([
-                ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
-                ['docudesk', 'pdf_generations_total', '0', '5'],
-                ['docudesk', 'anonymizations_total', '0', '3'],
+                ['docudesk', 'installed_version', '0.0.0', false, '0.0.32'],
+            ]);
+
+        $this->mockAppConfig->method('getValueInt')
+            ->willReturnMap([
+                ['docudesk', 'pdf_generations_total', 0, false, 5],
+                ['docudesk', 'anonymizations_total', 0, false, 3],
             ]);
 
         $this->mockConfig->method('getSystemValueString')

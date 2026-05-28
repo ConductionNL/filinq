@@ -82,6 +82,10 @@ class BatchAnonymizeService
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — appendBasisSummary is a
+     *   caller-driven opt-in forwarded to AnonymizationService::anonymizeDocument();
+     *   splitting into two methods would duplicate the full batch-iteration logic.
      */
     public function anonymizeBatch(
         string $batchId,

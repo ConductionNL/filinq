@@ -23,6 +23,7 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -66,6 +67,11 @@ class PdfControllerTest extends TestCase
      */
     private IL10N|MockObject $mockL10n;
 
+    /**
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
 
     /**
      * Set up test environment
@@ -76,20 +82,27 @@ class PdfControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockRequest    = $this->createMock(IRequest::class);
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
-        $this->mockPdfService = $this->createMock(PdfService::class);
-        $this->mockL10n       = $this->createMock(IL10N::class);
+        $this->mockRequest     = $this->createMock(IRequest::class);
+        $this->mockLogger      = $this->createMock(LoggerInterface::class);
+        $this->mockPdfService  = $this->createMock(PdfService::class);
+        $this->mockL10n        = $this->createMock(IL10N::class);
+        $this->mockUserSession = $this->createMock(IUserSession::class);
         $this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
             return vsprintf($text, $params);
         });
+
+        // Provide a valid user so the controller does not return 401.
+        $mockUser = $this->createMock(\OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new PdfController(
             'docudesk',
             $this->mockRequest,
             $this->mockLogger,
             $this->mockPdfService,
-            $this->mockL10n
+            $this->mockL10n,
+            $this->mockUserSession
         );
 
     }//end setUp()

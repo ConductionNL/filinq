@@ -147,8 +147,9 @@ class BatchStateServiceTest extends TestCase
         $this->mockCache->expects($this->once())
             ->method('set')
             ->willReturnCallback(
-                function (string $key, string $value, int $ttl) use (&$storedJson): void {
+                function (string $key, string $value, int $ttl) use (&$storedJson): bool {
                     $storedJson = $value;
+                    return true;
                 }
             );
 

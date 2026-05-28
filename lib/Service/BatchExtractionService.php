@@ -85,13 +85,7 @@ class BatchExtractionService
             throw new Exception('Batch not found or expired', 404);
         }
 
-        $idx = null;
-        foreach ($batch['files'] as $i => $f) {
-            if ($f['status'] === 'uploaded') {
-                $idx = $i;
-                break;
-            }
-        }
+        $idx = $this->findNextUploadedIndex(files: $batch['files']);
 
         if ($idx === null) {
             $batch['status'] = 'review';
@@ -116,25 +110,12 @@ class BatchExtractionService
             $batch['files'][$idx]['error']  = $e->getMessage();
         }
 
-        $allDone = true;
-        foreach ($batch['files'] as $f) {
-            if ($f['status'] === 'uploaded') {
-                $allDone = false;
-                break;
-            }
-        }
-
-        if ($allDone === true) {
+        $stillPending = $this->findNextUploadedIndex(files: $batch['files']);
+        if ($stillPending === null) {
             $batch['status'] = 'review';
         }
 
         $this->stateService->updateBatch($batchId, $batch);
-        $ext = 0;
-        foreach ($batch['files'] as $f) {
-            if (in_array($f['status'], ['extracted', 'error'], true) === true) {
-                $ext++;
-            }
-        }
 
         return [
             'batchStatus'    => $batch['status'],
@@ -142,9 +123,48 @@ class BatchExtractionService
             'fileName'       => $file['fileName'],
             'entityCount'    => $batch['files'][$idx]['entityCount'] ?? 0,
             'error'          => $batch['files'][$idx]['error'] ?? null,
-            'filesExtracted' => $ext,
+            'filesExtracted' => $this->countProcessedFiles(files: $batch['files']),
             'totalFiles'     => count($batch['files']),
         ];
 
     }//end extractNext()
+
+    /**
+     * Return the index of the first file with status 'uploaded', or null if none.
+     *
+     * @param array<int, array<string, mixed>> $files The files array from the batch state
+     *
+     * @return int|null Index of the first pending file, or null when all have been processed
+     */
+    private function findNextUploadedIndex(array $files): ?int
+    {
+        foreach ($files as $index => $file) {
+            if ($file['status'] === 'uploaded') {
+                return $index;
+            }
+        }
+
+        return null;
+
+    }//end findNextUploadedIndex()
+
+    /**
+     * Count files that have been processed (status 'extracted' or 'error').
+     *
+     * @param array<int, array<string, mixed>> $files The files array from the batch state
+     *
+     * @return int Number of processed files
+     */
+    private function countProcessedFiles(array $files): int
+    {
+        $count = 0;
+        foreach ($files as $file) {
+            if (in_array($file['status'], ['extracted', 'error'], true) === true) {
+                $count++;
+            }
+        }
+
+        return $count;
+
+    }//end countProcessedFiles()
 }//end class

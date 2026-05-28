@@ -42,6 +42,10 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) — settings controller must
+ *   interact with every sub-system (config, registers, schemas, …) to provide
+ *   a unified administration surface; coupling is unavoidable here.
  */
 class SettingsController extends Controller
 {
