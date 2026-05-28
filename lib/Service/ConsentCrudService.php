@@ -79,10 +79,15 @@ class ConsentCrudService
     }//end getConsentConfig()
 
     /**
-     * List all consent records
+     * List consent records, optionally scoped to a single owner
      *
-     * @param string $register The register ID
-     * @param string $schema   The schema ID
+     * When $ownerUid is provided (non-admin callers) the search is filtered
+     * server-side so only records whose @self.owner matches the caller are
+     * returned. Passing null returns all records (admin callers only).
+     *
+     * @param string      $register  The register ID
+     * @param string      $schema    The schema ID
+     * @param string|null $ownerUid  UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
@@ -90,14 +95,20 @@ class ConsentCrudService
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
-    public function listConsents(string $register, string $schema): array
+    public function listConsents(string $register, string $schema, ?string $ownerUid=null): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $results       = $objectService->searchObjects(
-            [
-                '@self' => ['register' => $register, 'schema' => $schema],
-            ]
-        );
+
+        $query = ['@self' => ['register' => $register, 'schema' => $schema]];
+
+        // Security (H1): scope listing to the caller's own records so that
+        // non-admin users cannot enumerate consent records belonging to
+        // other users through the listing endpoint.
+        if ($ownerUid !== null) {
+            $query['@self']['owner'] = $ownerUid;
+        }
+
+        $results = $objectService->searchObjects($query);
 
         $consents = [];
         foreach ($results as $result) {
@@ -200,11 +211,12 @@ class ConsentCrudService
     }//end createFromRequest()
 
     /**
-     * Get all consent records for a specific document
+     * Get consent records for a specific document, optionally scoped to one owner
      *
-     * @param string $documentId The document UUID
-     * @param string $register   The register ID
-     * @param string $schema     The schema ID
+     * @param string      $documentId The document UUID
+     * @param string      $register   The register ID
+     * @param string      $schema     The schema ID
+     * @param string|null $ownerUid   UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
@@ -215,9 +227,10 @@ class ConsentCrudService
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
-        return $this->consentService->getConsentsByDocument($documentId, $register, $schema);
+        return $this->consentService->getConsentsByDocument($documentId, $register, $schema, $ownerUid);
 
     }//end getConsentsByDocument()
 

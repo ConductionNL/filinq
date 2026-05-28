@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\SigningVerificationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -55,6 +56,7 @@ class SigningController extends Controller
      * @param IUserSession               $userSession         User session
      * @param LoggerInterface            $logger              Logger
      * @param IL10N                      $l10n                Localization
+     * @param IGroupManager              $groupManager        Group manager for admin checks
      *
      * @return void
      */
@@ -66,7 +68,8 @@ class SigningController extends Controller
         private readonly SigningVerificationService $verificationService,
         private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IGroupManager $groupManager
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -347,6 +350,25 @@ class SigningController extends Controller
                     data: ['error' => $this->l10n->t('Not authenticated')],
                     statusCode: Http::STATUS_UNAUTHORIZED
                 );
+            }
+
+            // Security (M2): only the initiator, a listed signer, or an admin
+            // may read the audit trail for a signing request — it contains IP
+            // addresses and user identifiers that must not be exposed to
+            // unrelated parties.
+            if ($this->groupManager->isAdmin($user->getUID()) === false) {
+                $request = $this->signingService->getRequest(requestId: $id);
+                $uid     = $user->getUID();
+
+                $isInitiator = ($request['initiatorUserId'] ?? '') === $uid;
+                $isSignerInList = in_array($uid, (array) ($request['signerIds'] ?? []), true);
+
+                if ($isInitiator === false && $isSignerInList === false) {
+                    return new JSONResponse(
+                        data: ['error' => $this->l10n->t('Access denied')],
+                        statusCode: Http::STATUS_FORBIDDEN
+                    );
+                }
             }
 
             $result = $this->auditService->getAuditTrail(signingRequestId: $id);

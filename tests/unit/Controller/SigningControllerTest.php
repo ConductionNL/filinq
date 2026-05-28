@@ -31,6 +31,7 @@ use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SigningVerificationService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -96,6 +97,8 @@ class SigningControllerTest extends TestCase
                 return is_array($params) === true ? vsprintf($text, $params) : $text;
             }
         );
+        $groupManager = $this->createMock(IGroupManager::class);
+        $groupManager->method('isAdmin')->willReturn(false);
 
         $user = $this->createMock(IUser::class);
         $user->method('getUID')->willReturn('alice');
@@ -109,7 +112,8 @@ class SigningControllerTest extends TestCase
             $verificationService,
             $this->userSession,
             $this->logger,
-            $l10n
+            $l10n,
+            $groupManager
         );
 
     }//end setUp()

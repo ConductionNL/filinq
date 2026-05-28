@@ -27,6 +27,9 @@ use OCA\DocuDesk\Controller\AnonymizationController;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -93,6 +96,13 @@ class AnonymizationControllerTest extends TestCase
     private IUserSession|MockObject $mockUserSession;
 
     /**
+     * Mocked IRootFolder
+     *
+     * @var IRootFolder|MockObject
+     */
+    private IRootFolder|MockObject $mockRootFolder;
+
+    /**
      * Controller under test
      *
      * @var AnonymizationController
@@ -122,8 +132,16 @@ class AnonymizationControllerTest extends TestCase
         );
 
         $mockUser              = $this->createMock(IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
         $this->mockUserSession = $this->createMock(IUserSession::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
+
+        // Default root-folder stub: file access always succeeds.
+        $mockFile           = $this->createMock(File::class);
+        $mockFolder         = $this->createMock(Folder::class);
+        $mockFolder->method('getById')->willReturn([$mockFile]);
+        $this->mockRootFolder = $this->createMock(IRootFolder::class);
+        $this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
         $this->controller = new AnonymizationController(
             appName: 'docudesk',
@@ -132,7 +150,8 @@ class AnonymizationControllerTest extends TestCase
             anonymizationService: $this->mockAnonService,
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
-            userSession: $this->mockUserSession
+            userSession: $this->mockUserSession,
+            rootFolder: $this->mockRootFolder
         );
 
     }//end setUp()
@@ -202,6 +221,76 @@ class AnonymizationControllerTest extends TestCase
         $this->assertStringContainsString('function anonymize(', $content);
 
     }//end testFileContainsAnonymizeMethod()
+
+
+    /**
+     * extract returns 404 when the file does not belong to the calling user
+     * (security finding C3 — file IDOR).
+     *
+     * @return void
+     */
+    public function testExtractReturns404WhenFileNotOwnedByUser(): void
+    {
+        // Build a fresh controller whose root-folder reports no matching files.
+        $emptyFolder = $this->createMock(Folder::class);
+        $emptyFolder->method('getById')->willReturn([]);
+        $emptyRootFolder = $this->createMock(IRootFolder::class);
+        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
+
+        $controller = new AnonymizationController(
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            logger: $this->mockLogger,
+            anonymizationService: $this->mockAnonService,
+            fileListingService: $this->mockFileService,
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession,
+            rootFolder: $emptyRootFolder
+        );
+
+        $response = $controller->extract(fileId: 999);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(404, $response->getStatus());
+
+    }//end testExtractReturns404WhenFileNotOwnedByUser()
+
+
+    /**
+     * anonymize returns 404 when the file does not belong to the calling user
+     * (security finding C3 — file IDOR).
+     *
+     * @return void
+     */
+    public function testAnonymizeReturns404WhenFileNotOwnedByUser(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            ['entities' => [['text' => 'Test', 'type' => 'PERSON']]]
+        );
+
+        // Build a fresh controller whose root-folder reports no matching files.
+        $emptyFolder = $this->createMock(Folder::class);
+        $emptyFolder->method('getById')->willReturn([]);
+        $emptyRootFolder = $this->createMock(IRootFolder::class);
+        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
+
+        $controller = new AnonymizationController(
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            logger: $this->mockLogger,
+            anonymizationService: $this->mockAnonService,
+            fileListingService: $this->mockFileService,
+            l10n: $this->mockL10n,
+            userSession: $this->mockUserSession,
+            rootFolder: $emptyRootFolder
+        );
+
+        $response = $controller->anonymize(fileId: 999);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(404, $response->getStatus());
+
+    }//end testAnonymizeReturns404WhenFileNotOwnedByUser()
 
 
     /**
