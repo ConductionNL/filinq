@@ -344,14 +344,18 @@ class CorrespondenceService
         );
 
         // Store initial job status in app config via container.
+        // SB1 fix: persist ownerUserId at the top level so the controller's
+        // ownership check can actually read it (options.userId is never stored
+        // in mid-job progress updates, so the old check always read null).
         $this->storeJobStatus(
             jobId: $jobId,
             data: [
-                'status'    => 'queued',
-                'total'     => count($recipientIds),
-                'completed' => 0,
-                'errors'    => 0,
-                'results'   => [],
+                'status'      => 'queued',
+                'total'       => count($recipientIds),
+                'completed'   => 0,
+                'errors'      => 0,
+                'results'     => [],
+                'ownerUserId' => (string) ($options['userId'] ?? ''),
             ]
         );
 

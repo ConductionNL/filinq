@@ -138,9 +138,12 @@ class BatchStateService
             return null;
         }
 
-        // C2 security fix: enforce batch ownership so an authenticated user
+        // C2 / WF3 security fix: enforce batch ownership so an authenticated user
         // cannot read or drive another user's batch by guessing its ID.
         // Admins may access any batch for support/audit purposes.
+        // WF3 fix: return null (not throw RuntimeException) on access-denied so
+        // callers return 404 for both "not found" and "found-but-denied" — the
+        // previous throw produced a distinct 500 body that confirmed existence.
         $currentUser = $this->userSession->getUser();
         if ($currentUser !== null) {
             $currentUid  = $currentUser->getUID();
@@ -148,7 +151,11 @@ class BatchStateService
             $isAdmin     = $this->groupManager->isAdmin($currentUid);
 
             if ($isAdmin === false && $batchUserId !== $currentUid) {
-                throw new RuntimeException('Access denied: batch belongs to another user');
+                $this->logger->info(
+                    'Batch access denied: batchId belongs to another user',
+                    ['batchId' => $batchId, 'requestingUid' => $currentUid]
+                );
+                return null;
             }
         }
 

@@ -124,7 +124,11 @@ class SigningController extends Controller
                 );
             }
 
-            $result = $this->signingService->listRequests();
+            // WF2 security fix: pass caller identity and admin flag so the service
+            // can scope results to requests the caller initiated or is a signer on.
+            $uid     = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($uid);
+            $result  = $this->signingService->listRequests(callerUserId: $uid, isAdmin: $isAdmin);
             return new JSONResponse($result);
         } catch (RegisterNotConfiguredException $e) {
             // Configuration missing is a setup state, not a failure —
@@ -166,7 +170,11 @@ class SigningController extends Controller
                 );
             }
 
-            $result = $this->signingService->getRequest(requestId: $id);
+            // WF2 security fix: pass caller identity and admin flag so the service
+            // enforces that only the initiator, a signer, or an admin can read a request.
+            $uid     = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($uid);
+            $result  = $this->signingService->getRequest(requestId: $id, callerUserId: $uid, isAdmin: $isAdmin);
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to get signing request: ', exception: $e);
@@ -194,6 +202,23 @@ class SigningController extends Controller
                     data: ['error' => $this->l10n->t('Not authenticated')],
                     statusCode: Http::STATUS_UNAUTHORIZED
                 );
+            }
+
+            // WF1 security fix: only the initiator or an admin may cancel a
+            // signing request — mirrors the same gate used by getAudit().
+            // Any other authenticated user gets 403; UUID opacity alone is
+            // not an access-control mechanism for a destructive state transition.
+            if ($this->groupManager->isAdmin($user->getUID()) === false) {
+                $request     = $this->signingService->getRequest(requestId: $id);
+                $uid         = $user->getUID();
+                $isInitiator = ($request['initiatorUserId'] ?? '') === $uid;
+
+                if ($isInitiator === false) {
+                    return new JSONResponse(
+                        data: ['error' => $this->l10n->t('Access denied')],
+                        statusCode: Http::STATUS_FORBIDDEN
+                    );
+                }
             }
 
             $result = $this->signingService->cancelRequest(requestId: $id);
