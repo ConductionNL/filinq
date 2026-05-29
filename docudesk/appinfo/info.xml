@@ -31,9 +31,9 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
     <category>organization</category>
-    <website>https://github.com/ConductionNL/DocuDesk</website>
-    <bugs>https://github.com/ConductionNL/DocuDesk/issues</bugs>
-    <repository>https://github.com/ConductionNL/docudesk</repository>
+    <website>https://codeberg.org/Conduction/DocuDesk</website>
+    <bugs>https://codeberg.org/Conduction/DocuDesk/issues</bugs>
+    <repository>https://codeberg.org/Conduction/docudesk</repository>
     <documentation>
         <user>https://conduction.gitbook.io/docudesk-nextcloud/</user>
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
