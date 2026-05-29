@@ -33,7 +33,7 @@ use OCA\DocuDesk\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
-use OCP\Settings\ISettings;
+use OCP\Settings\IDelegatedSettings;
 
 /**
  * Admin settings for DocuDesk
@@ -46,7 +46,7 @@ use OCP\Settings\ISettings;
  * @license  EUPL-1.2
  * @link     https://github.com/conductionnl/docudesk
  */
-class DocuDeskAdmin implements ISettings
+class DocuDeskAdmin implements IDelegatedSettings
 {
 
     /**
@@ -134,4 +134,37 @@ class DocuDeskAdmin implements ISettings
         return 10;
 
     }//end getPriority()
+
+    /**
+     * Get the name of this delegated settings section.
+     *
+     * Returns null so only the section name is displayed in the UI.
+     *
+     * @return string|null The display name, or null to use the section name only.
+     *
+     * @psalm-return   string|null
+     * @phpstan-return string|null
+     */
+    public function getName(): ?string
+    {
+        return null;
+
+    }//end getName()
+
+    /**
+     * Get the list of authorized app config keys for this settings section.
+     *
+     * DocuDesk admin settings are full-admin-only; no delegated config keys
+     * are granted.
+     *
+     * @return array<string,mixed> Empty array — no delegated config keys.
+     *
+     * @psalm-return   array<string,mixed>
+     * @phpstan-return array<string,mixed>
+     */
+    public function getAuthorizedAppConfig(): array
+    {
+        return [];
+
+    }//end getAuthorizedAppConfig()
 }//end class
