@@ -24,9 +24,11 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use RuntimeException;
 use OCA\DocuDesk\Service\SettingsService;
+use OCA\DocuDesk\Settings\DocuDeskAdmin;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -170,6 +172,7 @@ class SettingsController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
     public function create(): JSONResponse
     {
         try {
