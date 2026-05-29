@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://codeberg.org/Conduction/docudesk/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/docudesk" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/docudesk?gitea_url=https%3A%2F%2Fcodeberg.org" alt="Latest release"></a>
   <a href="https://codeberg.org/Conduction/docudesk/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://codeberg.org/Conduction/docudesk/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/docudesk/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://ci.codeberg.org/repos/Conduction/docudesk"><img src="https://ci.codeberg.org/api/badges/Conduction/docudesk/status.svg" alt="Code quality"></a>
   <a href="https://docudesk.app"><img src="https://img.shields.io/badge/docs-docudesk.app-green" alt="Documentation"></a>
 </p>
 
