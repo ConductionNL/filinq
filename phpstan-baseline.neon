@@ -4,7 +4,7 @@
 # root-config sync (Phase 2 fleet rollout). Each entry is source-level
 # debt scheduled for cleanup in follow-up PRs.
 #
-# Tracking issue: https://github.com/ConductionNL/docudesk/issues/227
+# Tracking issue: https://codeberg.org/Conduction/docudesk/issues/227
 #
 # Do not add new entries to this baseline. New phpstan errors should be
 # fixed at the source. This file shrinks as #227 progresses; when empty,

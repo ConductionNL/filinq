@@ -47,7 +47,7 @@ Nextcloud's architecture allows DocuDesk to handle everything from individual do
 
 ## Contributing
 
-We welcome contributions to improve the documentation! If you'd like to contribute, please visit our [GitHub repository](https://github.com/conductionnl/docudesk). There you can:
+We welcome contributions to improve the documentation! If you'd like to contribute, please visit our [GitHub repository](https://codeberg.org/Conduction/docudesk). There you can:
 
 - Report issues or suggest improvements by opening an issue
 - Submit pull requests with documentation changes

@@ -199,7 +199,7 @@ export default function Home() {
           secondaryCta={{ label: 'Read the docs', href: '/docs/intro' }}
           tertiaryCta={{
             label: 'View on GitHub',
-            href: 'https://github.com/ConductionNL/docudesk',
+            href: 'https://codeberg.org/Conduction/docudesk',
           }}
           iconColor="var(--c-orange-knvb)"
           icon={DOCUDESK_ICON}

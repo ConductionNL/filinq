@@ -28,7 +28,7 @@ use OCP\Settings\IIconSection;
  * @package  OCA\DocuDesk\Sections
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://github.com/conductionnl/docudesk
+ * @link     https://codeberg.org/Conduction/docudesk
  */
 class DocuDeskAdmin implements IIconSection
 {

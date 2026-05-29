@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ConductionNL/docudesk/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/docudesk" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/docudesk/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://github.com/ConductionNL/docudesk/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/docudesk/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/docudesk" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/docudesk/code-quality.yml?label=quality" alt="Code quality"></a>
   <a href="https://docudesk.app"><img src="https://img.shields.io/badge/docs-docudesk.app-green" alt="Documentation"></a>
 </p>
 
@@ -19,7 +19,7 @@
 
 DocuDesk adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive documents using AI-powered PII detection, tracks publication consent periods under the Dutch Wet Open Overheid (WOO), generates PDF documents from Twig templates, and automatically enriches document metadata — all without sending data to external cloud services.
 
-> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — all data is stored as OpenRegister objects (no own database tables).
+> **Requires:** [OpenRegister](https://codeberg.org/Conduction/openregister) — all data is stored as OpenRegister objects (no own database tables).
 
 ## Screenshots
 
@@ -110,7 +110,7 @@ docudesk/
 |-----------|---------|
 | Nextcloud | 28 – 33 |
 | PHP | 8.1+ |
-| [OpenRegister](https://github.com/ConductionNL/openregister) | latest |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | latest |
 | Presidio / OpenAnonymiser | optional — for AI-powered entity recognition |
 
 ## Installation
@@ -127,7 +127,7 @@ docudesk/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://github.com/ConductionNL/docudesk.git
+git clone https://codeberg.org/Conduction/docudesk.git
 cd docudesk
 npm install
 npm run build
@@ -204,9 +204,9 @@ Full documentation is available at **[docudesk.app](https://docudesk.app)**
 
 ## Related Apps
 
-- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
-- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publish anonymized documents in open catalogs
-- **[Procest](https://github.com/ConductionNL/procest)** — Case management for document-related processes
+- **[OpenRegister](https://codeberg.org/Conduction/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://codeberg.org/Conduction/opencatalogi)** — Publish anonymized documents in open catalogs
+- **[Procest](https://codeberg.org/Conduction/procest)** — Case management for document-related processes
 
 ## License
 

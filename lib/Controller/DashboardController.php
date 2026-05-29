@@ -27,7 +27,7 @@ use OCP\IRequest;
  * @package  OCA\DocuDesk\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
- * @link     https://github.com/conductionnl/docudesk
+ * @link     https://codeberg.org/Conduction/docudesk
  */
 class DashboardController extends Controller
 {
