@@ -9,16 +9,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/ConductionNL/docudesk/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/docudesk" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/docudesk/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
-  <a href="https://github.com/ConductionNL/docudesk/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/docudesk/code-quality.yml?label=quality" alt="Code quality"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/releases"><img src="https://img.shields.io/gitea/v/release/Conduction/docudesk?gitea_url=https%3A%2F%2Fcodeberg.org" alt="Latest release"></a>
+  <a href="https://codeberg.org/Conduction/docudesk/src/branch/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
+  <a href="https://ci.codeberg.org/repos/Conduction/docudesk"><img src="https://ci.codeberg.org/api/badges/Conduction/docudesk/status.svg" alt="Code quality"></a>
 </p>
 
 ---
 
 DocuDesk adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive documents, tracks publication consent periods under the Dutch Wet Open Overheid (WOO), and automatically enriches document metadata — all without sending data to external cloud services.
 
-> **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — consent records and processing results are stored as OpenRegister objects.
+> **Requires:** [OpenRegister](https://codeberg.org/Conduction/openregister) — consent records and processing results are stored as OpenRegister objects.
 
 ## Features
 
@@ -96,7 +96,7 @@ docudesk/
 |-----------|---------|
 | Nextcloud | 28 – 32 |
 | PHP | 8.1+ |
-| [OpenRegister](https://github.com/ConductionNL/openregister) | v0.2.10+ |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | v0.2.10+ |
 | Presidio / OpenAnonymiser | optional — for entity recognition |
 
 ## Installation
@@ -113,7 +113,7 @@ docudesk/
 
 ```bash
 cd /var/www/html/custom_apps
-git clone https://github.com/ConductionNL/docudesk.git
+git clone https://codeberg.org/Conduction/docudesk.git
 cd docudesk
 npm install
 npm run build
@@ -188,9 +188,9 @@ npm run build
 
 ## Related Apps
 
-- **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
-- **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Publish anonymized documents in open catalogs
-- **[Procest](https://github.com/ConductionNL/procest)** — Case management for document-related processes
+- **[OpenRegister](https://codeberg.org/Conduction/openregister)** — Object storage layer (required dependency)
+- **[OpenCatalogi](https://codeberg.org/Conduction/opencatalogi)** — Publish anonymized documents in open catalogs
+- **[Procest](https://codeberg.org/Conduction/procest)** — Case management for document-related processes
 
 ## Support
 
