@@ -32,7 +32,7 @@ const config = {
           path: './',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/conductionnl/docudesk/tree/main/docs/',
+            'https://codeberg.org/Conduction/docudesk/src/branch/main/docs/',
         },
         blog: false,
         theme: {
@@ -83,8 +83,8 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/conductionnl/docudesk',
-            label: 'GitHub',
+            href: 'https://codeberg.org/Conduction/docudesk',
+            label: 'Codeberg',
             position: 'right',
           },
         ],
@@ -105,8 +105,8 @@ const config = {
             title: 'Community',
             items: [
               {
-                label: 'GitHub',
-                href: 'https://github.com/conductionnl/docudesk',
+                label: 'Codeberg',
+                href: 'https://codeberg.org/Conduction/docudesk',
               },
             ],
           },
