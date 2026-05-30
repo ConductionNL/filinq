@@ -1,91 +1,23 @@
 {
-  "spec": "openspec/changes/anonymisation-append-basis-summary-flag",
+  "spec": "openspec/changes/add-dossier-schema",
   "verified": [
-    {
-      "task": "1",
-      "file": "lib/Controller/AnonymizationController.php",
-      "ok": true,
-      "note": "extractAppendBasisSummary() validates boolean, rejects non-bool with HTTP 400; outputFormat defaulting to 'pdf'"
-    },
-    {
-      "task": "1",
-      "file": "lib/Controller/BatchAnonymizationController.php",
-      "ok": true,
-      "note": "batchAnonymize() reads appendBasisSummary, validates type, passes to anonService"
-    },
-    {
-      "task": "2",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "anonymizeDocument() accepts appendBasisSummary/outputFormat; calls tryAppendBasisSummary() when flag is true"
-    },
-    {
-      "task": "3",
-      "file": "lib/Service/BatchAnonymizeService.php",
-      "ok": true,
-      "note": "anonymizeBatch() accepts appendBasisSummary; forwards per-file; collects warnings and summaryFileId"
-    },
-    {
-      "task": "4",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "tryAppendBasisSummary() catches Throwable, logs warning, sets warning field; anonymised file always preserved"
-    },
-    {
-      "task": "5",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "preserve mode path calls appendSummaryAsSeparatePdf(), sets summaryFileId and summaryFilePath on result"
-    },
-    {
-      "task": "6",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "GrondslagenSummaryService.appendSummaryToPdf/appendSummaryAsSeparatePdf called unconditionally — service handles missing-grondslag case"
-    },
-    {
-      "task": "7",
-      "file": "tests/unit/Controller/AnonymizationControllerTest.php",
-      "ok": true,
-      "note": "5 behavioral tests: flag defaults to false, flag true+PDF, flag true+preserve, warning field, non-boolean rejection"
-    },
-    {
-      "task": "8",
-      "file": "tests/unit/Service/AnonymizationServiceTest.php",
-      "ok": true,
-      "note": "Structural tests: signature, tryAppendBasisSummary, warning field, preserve mode fields"
-    },
-    {
-      "task": "8",
-      "file": "tests/unit/Service/BatchAnonymizeServiceTest.php",
-      "ok": true,
-      "note": "Behavioral tests: flag forwarded per file, defaults to false, warnings propagated, preserve-mode fields stored"
-    },
-    {
-      "task": "10",
-      "file": "docs/features/anonymization.md",
-      "ok": true,
-      "note": "appendBasisSummary flag, opt-in mechanics, warning shape, preserve-mode separate-PDF documented"
-    },
-    {
-      "task": "10",
-      "file": "CHANGELOG.md",
-      "ok": true,
-      "note": "Unreleased section added with appendBasisSummary description"
-    }
+    {"task": "1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier register entry present under components.registers"},
+    {"task": "2", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "base schema present under components.schemas.base with required name+description"},
+    {"task": "3", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier schema present under components.schemas.dossier with required name, optional bases+checkedOn"},
+    {"task": "4", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "jq valid + composer check:strict ALL CHECKS PASSED"},
+    {"task": "5", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "6 canonical base seed objects present: persoonsgegevens, bijzondere-persoonsgegevens, strafrechtelijk, bedrijfs-fabricagegegevens, onevenredige-benadeling, nationale-veiligheid"},
+    {"task": "6", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "5 dossier seed objects present; zonnestraal-incident-2026-03 has bases=[] and checkedOn=null"},
+    {"task": "10", "file": "tests/unit/Settings/DossierRegisterConfigTest.php", "ok": true, "note": "6/6 tests pass via phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest"},
+    {"task": "11", "file": "l10n/en.json + l10n/nl.json + l10n/en.js + l10n/nl.js", "ok": true, "note": "Dutch and English translations added for schema titles, property titles, and 6 grondslag names"},
+    {"task": "12", "file": "docs/features/dossier-register.md", "ok": true, "note": "Feature doc present; dossier-register added to docs/features.json"},
+    {"task": "14", "file": "docs/features/dossier-register.md", "ok": true, "note": "@self.folder trust model documented + validate-self-folder-access follow-up referenced"}
   ],
   "stubs": [],
   "missing_routes": [],
-  "gate_notes": {
-    "gate_7_no_admin_idor": {
-      "status": "FAIL",
-      "pre_existing": true,
-      "note": "13 methods flagged, all pre-existing on development branch before this change. My changes (anonymize + batchAnonymize) did not add new @NoAdminRequired annotations or remove existing guards. Tracked for cleanup in a dedicated security PR."
-    },
-    "gate_14_route_reachability": {
-      "status": "FAIL",
-      "pre_existing": true,
-      "note": "Gate expects camelCase batchAnonymization# but routes.php uses snake_case batch_anonymization# (NC convention). All routes exist. False positive in gate naming pattern. Pre-existing before this branch."
-    }
-  }
+  "deferred": [
+    {"task": "7", "reason": "Runtime verification requires occ access (permission denied in container); register JSON is correct per static analysis and PHPUnit"},
+    {"task": "8", "reason": "Referential integrity requires a live Nextcloud + OpenRegister instance; design confirms OR handles via existing @self.folder pipeline"},
+    {"task": "9", "reason": "Audit trail verification requires two live user sessions; design confirms OR's AuditTrailMapper handles this natively"},
+    {"task": "13", "reason": "Playwright screenshots require browser-1 MCP which is not available in this headless container"}
+  ]
 }
