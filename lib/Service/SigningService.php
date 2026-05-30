@@ -175,12 +175,16 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        $request = $objectService->getObject($register, $schema, $requestId);
-        if (empty($request) === true) {
+        $request = $objectService->find(
+            id: $requestId,
+            register: $register,
+            schema: $schema
+        );
+        if ($request === null) {
             throw new RuntimeException('Signing request not found: '.$requestId);
         }
 
-        return $request;
+        return $request->jsonSerialize();
 
     }//end getRequest()
 
@@ -195,7 +199,26 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        return $objectService->getObjects($register, $schema);
+        $results = $objectService->searchObjects(
+            [
+                '@self' => [
+                    'register' => $register,
+                    'schema'   => $schema,
+                ],
+            ]
+        );
+
+        $requests = [];
+        foreach ($results as $result) {
+            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                $requests[] = $result->jsonSerialize();
+                continue;
+            }
+
+            $requests[] = (array) $result;
+        }
+
+        return $requests;
 
     }//end listRequests()
 
