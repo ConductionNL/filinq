@@ -7,9 +7,7 @@ status: implemented
 ## Purpose
 
 Provides a complete document anonymization pipeline: upload files to a user-scoped DocuDesk folder, extract text and detect personally identifiable entities (PII) using OpenRegister's TextExtractionService, and anonymize the document by replacing detected entities with placeholders via OpenRegister's FileService. The pipeline runs 100% locally with no external cloud dependencies, ensuring GDPR/AVG compliance through privacy-by-design processing.
-
 ## Requirements
-
 ### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
 
 **Priority:** Must
@@ -61,98 +59,24 @@ Users upload files via multipart form data, and files are stored in a per-user D
 
 ### Requirement: Text Extraction and Entity Detection (REQ-ANON-02)
 
-**Priority:** Must
+Text is extracted from uploaded documents and entities are detected via the OpenRegister NER pipeline. The extraction response SHALL include a `riskLevel` field summarising the privacy risk of the detected entities.
 
-Text is extracted from uploaded documents and entities (persons, organizations, emails, phone numbers) are detected using OpenRegister's NER capabilities.
-
-#### Scenario: Extract entities from a document with PII
-@e2e exclude TextExtractionService integration — entity detection requires real NER pipeline; API response verified by PHPUnit and integration tests; UI pipeline covered by complete-anonymization-workflow
-- GIVEN an uploaded PDF containing names, email addresses, and organization names
-- WHEN entity extraction is triggered via `POST /api/anonymization/extract/{fileId}`
-- THEN text is extracted using OpenRegister's `TextExtractionService::extractFile()`
-- AND entities are detected with type (PERSON, ORGANIZATION, EMAIL, etc.)
-- AND each entity includes a confidence score (0.0 - 1.0)
-- AND the response includes the entities array and entityCount
-
-#### Scenario: Extract entities from a clean document
-@e2e exclude NER pipeline clean-document path — requires real file + OR TextExtractionService; verified by PHPUnit integration tests
-- GIVEN an uploaded document containing no personally identifiable information
-- WHEN entity extraction is triggered
-- THEN the response shows entityCount of 0
-- AND the entities array is empty
-
-#### Scenario: Entity normalization
-@e2e exclude EntityDetectionService field-name normalization — backend transformation verified by PHPUnit unit tests
-- GIVEN OpenRegister returns entities with varying field names (entity_type/entityType, entity_value/entityValue)
-- WHEN entities are normalized by EntityDetectionService
-- THEN all entities have consistent format: `type`, `value`, `confidence`
-
-#### Scenario: OpenRegister unavailable during extraction
-@e2e exclude RuntimeException path when OR not installed — not reproducible in env with OR installed; verified by PHPUnit
-- GIVEN OpenRegister is not installed
-- WHEN entity extraction is triggered
-- THEN a RuntimeException is thrown
-- AND the controller returns a 500 error with descriptive message
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| ANON-010 | Text extraction is performed via OpenRegister's `TextExtractionService::extractFile()` | MUST | Implemented |
-| ANON-011 | Entity recognition runs during text extraction using the method configured in OpenRegister | MUST | Implemented |
-| ANON-012 | Full entity details are retrieved via `EntityRelationMapper::findEntitiesForFile()` | MUST | Implemented |
-| ANON-013 | Entities are normalized to a consistent format: `type`, `value`, `confidence` | MUST | Implemented |
-| ANON-014 | Extraction endpoint is `POST /api/anonymization/extract/{fileId}` | MUST | Implemented |
-| ANON-015 | Response includes `entities` array and `entityCount` | MUST | Implemented |
+#### Scenario: Extract with risk level
+- **WHEN** extraction is performed via `POST /api/anonymization/extract/{fileId}`
+- **THEN** the response includes a `riskLevel` field derived from the detected entities
 
 ### Requirement: Document Anonymization with Entity Replacement (REQ-ANON-03)
 
-**Priority:** Must
+Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy. The anonymization endpoint SHALL additionally accept optional `excludeTypes` and `minConfidence` parameters so callers can narrow which detected entities are replaced.
 
-Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy.
+#### Scenario: Anonymize with entity type exclusion
+- **WHEN** `excludeTypes=["ORGANIZATION"]` is provided to `POST /api/anonymization/anonymize/{fileId}`
+- **THEN** ORGANIZATION entities are excluded from replacement
+- **AND** all other detected entity types are still anonymized
 
-#### Scenario: Anonymize a document with detected entities
-@e2e exclude FileService::anonymizeDocument() integration — requires real file + entity pipeline; API response verified by PHPUnit; UI pipeline covered by complete-anonymization-workflow
-- GIVEN extracted entities for a file (3 PERSON entities, 1 ORGANIZATION entity)
-- WHEN anonymization is triggered via `POST /api/anonymization/anonymize/{fileId}` with entities array
-- THEN an anonymized copy of the document is created
-- AND each entity mention is replaced with a placeholder (e.g., [PERSON: a1b2c3d4])
-- AND the response includes anonymizedFileId, anonymizedFileName, anonymizedFilePath, and replacementCount
-
-#### Scenario: Short entity values are skipped
-@e2e exclude EntityDetectionService entity-filter logic — min-length guard verified by PHPUnit unit tests
-- GIVEN entity list includes a value "AB" (2 characters)
-- WHEN entities are mapped for anonymization
-- THEN the short value is skipped (minimum 3 characters required)
-- AND only entities with 3+ character values are processed
-
-#### Scenario: Numeric entity values are skipped
-@e2e exclude EntityDetectionService entity-filter logic — numeric-skip guard verified by PHPUnit unit tests
-- GIVEN entity list includes a purely numeric value "12345"
-- WHEN entities are mapped for anonymization
-- THEN the numeric value is skipped to prevent PHP array key type coercion issues
-- AND only string entity values are processed
-
-#### Scenario: Duplicate entities are deduplicated
-@e2e exclude EntityDetectionService deduplication — seen-set logic verified by PHPUnit unit tests
-- GIVEN the entity list contains "Ruben van der Linde" twice
-- WHEN entities are mapped for anonymization
-- THEN only one replacement mapping is created for that value
-- AND the deduplication uses a seen-set to track processed values
-
-#### Scenario: Empty entities validation
-@e2e exclude AnonymizationController input validation — 400 response verified by PHPUnit; UI widget prevents empty entity list submission
-- GIVEN a user calls the anonymize endpoint with an empty entities array
-- WHEN the controller validates the request
-- THEN a 400 response is returned with "No entities provided for anonymization"
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| ANON-020 | Anonymization replaces detected entities with placeholders via `FileService::anonymizeDocument()` | MUST | Implemented |
-| ANON-021 | Entity values shorter than 3 characters are skipped | MUST | Implemented |
-| ANON-022 | Purely numeric entity values are skipped | MUST | Implemented |
-| ANON-023 | Duplicate entity values are deduplicated before anonymization | MUST | Implemented |
-| ANON-024 | Each entity is assigned a unique UUID v4 key for the anonymization mapping | MUST | Implemented |
-| ANON-025 | Anonymization endpoint is `POST /api/anonymization/anonymize/{fileId}` with entities array in request body | MUST | Implemented |
-| ANON-026 | Response includes anonymizedFileId, anonymizedFileName, anonymizedFilePath, and replacementCount | MUST | Implemented |
+#### Scenario: Anonymize with a minimum confidence threshold
+- **WHEN** `minConfidence=0.7` is provided
+- **THEN** entities whose detection confidence is below 0.7 are excluded from replacement
 
 ### Requirement: Processed File Listing with Risk Assessment (REQ-ANON-04)
 

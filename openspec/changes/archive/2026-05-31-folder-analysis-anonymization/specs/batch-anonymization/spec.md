@@ -16,6 +16,8 @@ The system SHALL provide `GET /api/anonymization/batch/{batchId}/status` returni
 - **THEN** the cache TTL is reset to 2 hours from time T
 - **AND** the batch remains accessible for another 2 hours of inactivity
 
+## ADDED Requirements
+
 ### Requirement: Batch entity consolidation with partial results
 The system SHALL provide `GET /api/anonymization/batch/{batchId}/entities` returning consolidated entities. The endpoint SHALL be accessible when batch status is "extracting" OR "review" (previously only "review"). The response SHALL include a `complete` boolean (true only when batch status is "review") and `filesProcessed` count alongside the existing `entities` array and `entityCount`. The `minConfidence` query parameter SHALL continue to work as before.
 

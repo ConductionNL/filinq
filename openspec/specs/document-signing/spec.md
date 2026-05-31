@@ -1,5 +1,8 @@
-## ADDED Requirements
+# document-signing Specification
 
+## Purpose
+TBD - created by archiving change digital-signing-integration. Update Purpose after archive.
+## Requirements
 ### Requirement: Signing request creation
 The system SHALL allow authenticated users to create a signing request for a document. A signing request specifies the document (Nextcloud file ID), the signature level (SES, AdES, or QES), the signing mode (sequential or parallel), and an ordered list of signers. The signing request SHALL be stored as an OpenRegister object via ObjectService using the SigningRequest schema.
 
@@ -167,3 +170,4 @@ The system SHALL expose signing functionality via REST API endpoints registered 
   - POST `/api/signing/bulk` (bulk sign)
   - GET `/api/signing/verify/{fileId}` (verify signatures)
   - GET `/api/signing/requests/{id}/audit` (get audit trail)
+
