@@ -133,6 +133,7 @@ class Application extends App implements IBootstrap
                         new PhpWordBackend(
                             appConfig: $c->get(\OCP\IAppConfig::class),
                             tempManager: $c->get(\OCP\ITempManager::class),
+                            pdfService: $c->get(\OCA\DocuDesk\Service\PdfService::class),
                             logger: $c->get(LoggerInterface::class),
                         ),
                         new MpdfBackend(
