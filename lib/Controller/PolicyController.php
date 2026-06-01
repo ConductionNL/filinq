@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,9 +26,11 @@ use Exception;
 use InvalidArgumentException;
 use OCA\DocuDesk\Service\PolicyCrudService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -50,13 +55,15 @@ class PolicyController extends Controller
      * @param LoggerInterface   $logger      Logger.
      * @param PolicyCrudService $crudService CRUD wrapper.
      * @param IL10N             $l10n        Localisation.
+     * @param IUserSession      $userSession User session for authentication.
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly PolicyCrudService $crudService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -73,6 +80,10 @@ class PolicyController extends Controller
      */
     public function indexProhibitions(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             return new JSONResponse($this->crudService->listProhibitions());
         } catch (Exception $e) {
@@ -96,6 +107,10 @@ class PolicyController extends Controller
      */
     public function showProhibition(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $record = $this->crudService->getProhibition(uuid: $id);
             if ($record === null) {
@@ -120,6 +135,10 @@ class PolicyController extends Controller
      */
     public function createProhibition(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createProhibition(data: $data), 201);
@@ -146,6 +165,10 @@ class PolicyController extends Controller
      */
     public function updateProhibition(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->updateProhibition(uuid: $id, data: $data));
@@ -172,6 +195,10 @@ class PolicyController extends Controller
      */
     public function deleteProhibition(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->crudService->deleteProhibition(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
@@ -192,6 +219,10 @@ class PolicyController extends Controller
      */
     public function indexStandingConsents(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             return new JSONResponse($this->crudService->listStandingConsents());
         } catch (Exception $e) {
@@ -215,6 +246,10 @@ class PolicyController extends Controller
      */
     public function showStandingConsent(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $record = $this->crudService->getStandingConsent(uuid: $id);
             if ($record === null) {
@@ -239,6 +274,10 @@ class PolicyController extends Controller
      */
     public function createStandingConsent(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createStandingConsent(data: $data), 201);
@@ -267,6 +306,10 @@ class PolicyController extends Controller
      */
     public function updateStandingConsent(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $data = $this->request->getParams();
             return new JSONResponse(
@@ -297,6 +340,10 @@ class PolicyController extends Controller
      */
     public function deleteStandingConsent(string $id): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+        }
+
         try {
             $this->crudService->deleteStandingConsent(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
