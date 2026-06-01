@@ -24,7 +24,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx) or TXT files are supported. Maximum file size 500 MB.') }}
+						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
 					<span class="fake-button">
 						{{ t('docudesk', '+ Select files') }}
@@ -34,7 +34,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
-					accept=".docx,.txt,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
@@ -101,19 +101,21 @@ import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import uploadIcon from '../../assets/upload.png'
 
 // Anonymisation only produces real redactions for formats the backend can
-// edit in place: Word via PHPWord, plain text via byte-level replace. PDF
-// (and other binary formats) fall through to the str_ireplace path that
-// returns a byte-identical copy — see project-anonymization-pipeline for
-// the upstream OR limitation. Restrict the upload widget so users can't
-// accidentally pick a format that won't actually redact.
-const ALLOWED_EXTENSIONS = ['docx', 'txt']
+// edit in place: Word via PHPWord, plain text via byte-level replace, PDF
+// via the SAPP byte-replace pipeline. Other binary formats fall through to
+// the str_ireplace path that returns a byte-identical copy — see
+// project-anonymization-pipeline for the upstream OR limitation. Restrict
+// the upload widget so users can't accidentally pick a format that won't
+// actually redact.
+const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
 const ALLOWED_MIMES = new Set([
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 	'text/plain',
+	'application/pdf',
 ])
 
 /**
- * Split a FileList into accepted (docx/txt) and rejected files.
+ * Split a FileList into accepted (docx/txt/pdf) and rejected files.
  *
  * Matches on both MIME and filename extension because drag-and-drop sometimes
  * omits MIME (e.g. for .docx on certain browsers) and the input's `accept`
@@ -282,7 +284,7 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx) and TXT files are supported. Skipped: {names}', { names }))
+				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
 			}
 			return accepted
 		},

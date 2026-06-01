@@ -6,7 +6,7 @@ import { generateFilePath } from '@nextcloud/router'
 import pinia from './pinia.js'
 import router from './router/index.js'
 import App from './App.vue'
-import '@conduction/nextcloud-vue/src/css/index.css'
+import '@conduction/nextcloud-vue/css/index.css'
 import './assets/app.css'
 
 // Set the CSP nonce on dynamically injected webpack chunks (e.g. lazy-loaded
