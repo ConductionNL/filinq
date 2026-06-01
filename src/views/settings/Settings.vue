@@ -229,6 +229,82 @@
 				:name="t('docudesk', 'Loading settings')" />
 		</NcSettingsSection>
 
+		<NcSettingsSection
+			:name="t('docudesk', 'Digital Signing')"
+			:description="t('docudesk', 'Configure digital document signing capabilities (eIDAS SES, AdES, QES)')">
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'Enable Digital Signing') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:checked="settings.signing_enabled"
+					type="switch"
+					@update:checked="settings.signing_enabled = $event" />
+				<div class="setting-description">
+					{{ t('docudesk', 'Allow users to create and manage digital signing requests') }}
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-provider">{{ t('docudesk', 'Signing Provider') }}</label>
+					<select
+						id="signing-provider"
+						v-model="settings.signing_provider"
+						style="padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);">
+						<option value="native">
+							{{ t('docudesk', 'Native (built-in SES)') }}
+						</option>
+						<option value="validsign">
+							{{ t('docudesk', 'ValidSign') }}
+						</option>
+					</select>
+				</div>
+				<div class="setting-description">
+					{{ t('docudesk', 'The signing provider to use for new signing requests') }}
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-default-level">{{ t('docudesk', 'Default Signature Level') }}</label>
+					<select
+						id="signing-default-level"
+						v-model="settings.signing_default_level"
+						style="padding: 8px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-main-background); color: var(--color-main-text);">
+						<option value="SES">
+							{{ t('docudesk', 'SES — Simple Electronic Signature') }}
+						</option>
+						<option value="AdES">
+							{{ t('docudesk', 'AdES — Advanced Electronic Signature') }}
+						</option>
+						<option value="QES">
+							{{ t('docudesk', 'QES — Qualified Electronic Signature (PKIoverheid)') }}
+						</option>
+					</select>
+				</div>
+				<div class="setting-description">
+					{{ t('docudesk', 'The eIDAS signature level applied to new signing requests unless overridden') }}
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="signing-expiry-days">{{ t('docudesk', 'Default Request Expiry (days)') }}</label>
+					<input
+						id="signing-expiry-days"
+						v-model.number="settings.signing_request_expiry_days"
+						type="number"
+						min="1"
+						max="365"
+						placeholder="30">
+				</div>
+				<div class="setting-description">
+					{{ t('docudesk', 'Number of days before an unsigned signing request expires (1–365). Archiefwet requires minimum 10-year audit trail retention.') }}
+				</div>
+			</div>
+		</NcSettingsSection>
+
 		<div class="button-container">
 			<NcButton type="primary" :disabled="saving" @click="saveAll">
 				<template #icon>
@@ -281,6 +357,10 @@ export default {
 				enable_topic_classification: true,
 				ocr_enabled: true,
 				ocr_dpi: 300,
+				signing_enabled: false,
+				signing_provider: 'native',
+				signing_default_level: 'SES',
+				signing_request_expiry_days: 30,
 			},
 			ocrLanguages: {
 				nld: true,
@@ -333,6 +413,11 @@ export default {
 					this.settings.enable_topic_classification = data.enable_topic_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
+					// Signing settings
+					this.settings.signing_enabled = data.signing_enabled === '1' || data.signing_enabled === true
+					this.settings.signing_provider = data.signing_provider || 'native'
+					this.settings.signing_default_level = data.signing_default_level || 'SES'
+					this.settings.signing_request_expiry_days = parseInt(data.signing_request_expiry_days, 10) || 30
 
 					// Parse OCR languages
 					const ocrLangStr = data.ocr_languages || 'nld+eng'
@@ -456,6 +541,10 @@ export default {
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
+				signing_enabled: this.settings.signing_enabled ? '1' : '0',
+				signing_provider: this.settings.signing_provider || 'native',
+				signing_default_level: this.settings.signing_default_level || 'SES',
+				signing_request_expiry_days: String(this.settings.signing_request_expiry_days || 30),
 			}
 
 			// Add register/schema configs

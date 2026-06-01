@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
-    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'batchAnonymization' | 'folderAnonymization' | 'templates' | 'templateDetail';
+    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization' | 'batchAnonymization' | 'folderAnonymization' | 'templates' | 'templateDetail' | 'signing' | 'signingDetail' | 'signingNew';
     modal: string;
     dialog: string;
     transferData: string;

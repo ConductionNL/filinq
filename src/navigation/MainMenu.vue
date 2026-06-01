@@ -31,6 +31,11 @@ import { navigationStore } from '../store/store.js'
 					<FileDocumentMultiple :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'signing' || navigationStore.selected === 'signingDetail' || navigationStore.selected === 'signingNew'" :name="t('docudesk', 'Digital Signing')" @click="navigationStore.setSelected('signing')">
+				<template #icon>
+					<PenLock :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
@@ -48,6 +53,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
 import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
+import PenLock from 'vue-material-design-icons/PenLock.vue'
 
 export default {
 	name: 'MainMenu',
@@ -60,6 +66,7 @@ export default {
 		ShieldLock,
 		FileDocumentMultiple,
 		FolderSearch,
+		PenLock,
 	},
 }
 </script>
