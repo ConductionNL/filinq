@@ -26,6 +26,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -41,8 +42,10 @@ use OCA\DocuDesk\Service\BatchUploadService;
 use OCA\DocuDesk\Service\EntityConsolidationService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
+use OCA\DocuDesk\Settings\DocuDeskAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -61,6 +64,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ *
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
  */
 class BatchAnonymizationController extends Controller
 {
@@ -149,6 +154,7 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
      */
     public function folderBatch(): JSONResponse
     {
@@ -432,6 +438,7 @@ class BatchAnonymizationController extends Controller
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
     public function updateProfiles(): JSONResponse
     {
         try {
@@ -523,6 +530,8 @@ class BatchAnonymizationController extends Controller
      * @param mixed $raw Raw param value from the request.
      *
      * @return int|null Integer folder ID, or null when the caller did not supply one.
+     *
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
      */
     private static function coerceFolderId(mixed $raw): ?int
     {
@@ -540,6 +549,8 @@ class BatchAnonymizationController extends Controller
      * @param mixed $raw Raw param value from the request.
      *
      * @return string|null Path string, or null when the caller did not supply one.
+     *
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
      */
     private static function coerceFolderPath(mixed $raw): ?string
     {
@@ -560,6 +571,7 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse|null Error response when validation fails, null when OK.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
      */
     private function validateFolderParams(?int $folderId, ?string $folderPath): ?JSONResponse
     {

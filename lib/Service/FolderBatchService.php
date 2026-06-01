@@ -14,6 +14,8 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -45,6 +47,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  */
 class FolderBatchService
 {
@@ -86,6 +90,7 @@ class FolderBatchService
      * @throws Exception If input is invalid, folder is not found, not a folder, empty, or too large
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
      */
     public function createFolderBatch(?int $folderId=null, ?string $folderPath=null): array
     {
@@ -180,6 +185,7 @@ class FolderBatchService
      * @throws Exception If neither/both inputs provided (400), or folder not found (404)
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
      */
     private function resolveFolderNode(?int $folderId, ?string $folderPath, Folder $userFolder): Node
     {
@@ -250,6 +256,7 @@ class FolderBatchService
      * @return void
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
      */
     private function scheduleExtraction(string $batchId): void
     {
