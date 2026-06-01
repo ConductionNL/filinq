@@ -19,6 +19,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\MetricsCollector;
 use OCA\DocuDesk\Controller\MetricsController;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -49,6 +50,11 @@ class MetricsControllerTest extends TestCase
     private IConfig|MockObject $mockConfig;
 
     /**
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockAppConfig;
+
+    /**
      * @var MetricsCollector|MockObject
      */
     private MetricsCollector|MockObject $mockCollector;
@@ -63,14 +69,16 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest         = $this->createMock(IRequest::class);
-        $this->mockConfig    = $this->createMock(IConfig::class);
-        $this->mockCollector = $this->createMock(MetricsCollector::class);
+        $mockRequest           = $this->createMock(IRequest::class);
+        $this->mockConfig      = $this->createMock(IConfig::class);
+        $this->mockAppConfig   = $this->createMock(IAppConfig::class);
+        $this->mockCollector   = $this->createMock(MetricsCollector::class);
 
         $this->controller = new MetricsController(
             'docudesk',
             $mockRequest,
             $this->mockConfig,
+            $this->mockAppConfig,
             $this->mockCollector
         );
 

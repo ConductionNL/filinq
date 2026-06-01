@@ -65,15 +65,15 @@ class BatchStateServiceKeepAliveTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockCache = $this->createMock(className: ICache::class);
+        $this->mockCache = $this->createMock(ICache::class);
 
-        $mockCacheFactory = $this->createMock(className: ICacheFactory::class);
+        $mockCacheFactory = $this->createMock(ICacheFactory::class);
         $mockCacheFactory->method('createDistributed')->willReturn($this->mockCache);
 
-        $mockAppConfig    = $this->createMock(className: IAppConfig::class);
-        $mockLogger       = $this->createMock(className: LoggerInterface::class);
-        $mockUserSession  = $this->createMock(className: IUserSession::class);
-        $mockGroupManager = $this->createMock(className: IGroupManager::class);
+        $mockAppConfig    = $this->createMock(IAppConfig::class);
+        $mockLogger       = $this->createMock(LoggerInterface::class);
+        $mockUserSession  = $this->createMock(IUserSession::class);
+        $mockGroupManager = $this->createMock(IGroupManager::class);
 
         // No user session in keep-alive tests — ownership check is skipped.
         $mockUserSession->method('getUser')->willReturn(null);

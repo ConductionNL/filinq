@@ -51,17 +51,17 @@ class NativeSigningProviderTest extends TestCase
      */
     private function buildProvider(): NativeSigningProvider
     {
-        $userSession = $this->createMock(className: IUserSession::class);
-        $logger      = $this->createMock(className: LoggerInterface::class);
+        $userSession = $this->createMock(IUserSession::class);
+        $logger      = $this->createMock(LoggerInterface::class);
 
-        $config = $this->createMock(className: IAppConfig::class);
+        $config = $this->createMock(IAppConfig::class);
         $config->method('getValueString')->willReturnCallback(
             function (string $app, string $key, string $default=''): string {
                 return $default;
             }
         );
 
-        $objectService = $this->getMockBuilder(className: ObjectService::class)
+        $objectService = $this->getMockBuilder(ObjectService::class)
             ->disableOriginalConstructor()
             ->disableOriginalClone()
             ->disableArgumentCloning()
@@ -71,7 +71,7 @@ class NativeSigningProviderTest extends TestCase
 
         $objectService->method('findAll')->willReturn([]);
 
-        $settingsService = $this->createMock(className: SettingsService::class);
+        $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($objectService);
 
         return new NativeSigningProvider(

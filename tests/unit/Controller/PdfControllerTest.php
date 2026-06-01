@@ -84,12 +84,18 @@ class PdfControllerTest extends TestCase
             return vsprintf($text, $params);
         });
 
+        $mockUser = $this->createMock(\OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $mockUserSession = $this->createMock(\OCP\IUserSession::class);
+        $mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new PdfController(
             'docudesk',
             $this->mockRequest,
             $this->mockLogger,
             $this->mockPdfService,
-            $this->mockL10n
+            $this->mockL10n,
+            $mockUserSession
         );
 
     }//end setUp()
