@@ -21,6 +21,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.2
  */
 
 declare(strict_types=1);
@@ -30,6 +31,7 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
+use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -69,15 +71,19 @@ class AnonymizationService
      * @param IAppManager            $appManager      App manager interface
      * @param EntityDetectionService $entityDetection Entity detection and mapping service
      * @param IAppConfig             $appConfig       App configuration for threshold settings
+     * @param OcrService             $ocrService      OCR service for scanned document processing
      *
      * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.2
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
-        private readonly IAppConfig $appConfig
+        private readonly IAppConfig $appConfig,
+        private readonly OcrService $ocrService
     ) {
 
     }//end __construct()
@@ -106,22 +112,41 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
+     * When the file is image-based or a scanned PDF (no embedded text), OCR is
+     * attempted first via OcrService before falling through to OpenRegister's
+     * TextExtractionService. The response includes `ocrProcessed` (bool) and
+     * `ocrConfidence` (float 0–100) so callers can assess result quality.
+     *
      * Each entity in the response includes a `prohibitionMatch` field: null when
      * no publication-prohibition rule matches, or an object with ruleId, ruleName,
      * and highConfidence (score >= configured threshold, inclusive).
      *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount
+     * @return array<string, mixed> Extraction result with entities, entityCount, ocrProcessed, ocrConfidence
      *
      * @throws Exception If extraction or detection fails
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.3
      */
     public function extractAndDetectEntities(int $fileId): array
     {
         try {
+            // Run OCR before TextExtractionService for image-based and scanned PDF files.
+            // OcrService returns immediately when OCR is disabled or Tesseract is unavailable.
+            $ocrResult = $this->ocrService->processFile(fileId: $fileId);
+
+            $this->logger->debug(
+                'OCR pre-processing complete',
+                [
+                    'fileId'        => $fileId,
+                    'ocrProcessed'  => $ocrResult['ocrProcessed'],
+                    'ocrConfidence' => $ocrResult['confidence'],
+                ]
+            );
+
             $textExtractor = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
@@ -137,8 +162,10 @@ class AnonymizationService
             $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
             return [
-                'entities'    => $normalized,
-                'entityCount' => count($entities),
+                'entities'      => $normalized,
+                'entityCount'   => count($entities),
+                'ocrProcessed'  => $ocrResult['ocrProcessed'],
+                'ocrConfidence' => $ocrResult['confidence'],
             ];
         } catch (Exception $e) {
             $this->logger->error(

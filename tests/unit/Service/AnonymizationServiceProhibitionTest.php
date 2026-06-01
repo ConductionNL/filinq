@@ -23,6 +23,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\OcrService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -73,6 +74,11 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private EntityDetectionService $entityDetection;
 
+    /**
+     * @var OcrService|MockObject
+     */
+    private OcrService|MockObject $mockOcrService;
+
 
     /**
      * Set up test environment
@@ -87,6 +93,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
         $this->mockContainer  = $this->createMock(ContainerInterface::class);
         $this->mockAppManager = $this->createMock(IAppManager::class);
         $this->mockAppConfig  = $this->createMock(IAppConfig::class);
+        $this->mockOcrService = $this->createMock(OcrService::class);
 
         $this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -104,12 +111,20 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private function makeService(): AnonymizationService
     {
+        $this->mockOcrService->method('processFile')
+            ->willReturn([
+                'text'         => '',
+                'confidence'   => 0.0,
+                'ocrProcessed' => false,
+            ]);
+
         return new AnonymizationService(
             logger: $this->mockLogger,
             container: $this->mockContainer,
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
-            appConfig: $this->mockAppConfig
+            appConfig: $this->mockAppConfig,
+            ocrService: $this->mockOcrService
         );
 
     }//end makeService()

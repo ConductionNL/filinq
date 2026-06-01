@@ -15,6 +15,7 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-6.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -384,6 +385,52 @@ class AnonymizationServiceTest extends TestCase
 
 
     /**
+     * Test that extractAndDetectEntities includes ocrProcessed field in response.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.3
+     */
+    public function testExtractAndDetectEntitiesIncludesOcrProcessedField(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString("'ocrProcessed'", $content);
+
+    }//end testExtractAndDetectEntitiesIncludesOcrProcessedField()
+
+
+    /**
+     * Test that extractAndDetectEntities includes ocrConfidence field in response.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.4
+     */
+    public function testExtractAndDetectEntitiesIncludesOcrConfidenceField(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString("'ocrConfidence'", $content);
+
+    }//end testExtractAndDetectEntitiesIncludesOcrConfidenceField()
+
+
+    /**
+     * Test that OcrService is injected into AnonymizationService constructor.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.2
+     */
+    public function testOcrServiceIsInjectedIntoConstructor(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('OcrService', $content);
+        $this->assertStringContainsString('ocrService', $content);
+
+    }//end testOcrServiceIsInjectedIntoConstructor()
+
+
+    /**
      * Build an AnonymizationService with all constructor deps stubbed so
      * its private helpers can be called via reflection without standing
      * up the full Nextcloud / OpenRegister DI graph.
@@ -400,13 +447,15 @@ class AnonymizationServiceTest extends TestCase
         $appManager      = $this->createMock(\OCP\App\IAppManager::class);
         $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
         $appConfig       = $this->createMock(\OCP\IAppConfig::class);
+        $ocrService      = $this->createMock(\OCA\DocuDesk\Service\OcrService::class);
 
         return new \OCA\DocuDesk\Service\AnonymizationService(
             $logger,
             $container,
             $appManager,
             $entityDetection,
-            $appConfig
+            $appConfig,
+            $ocrService
         );
 
     }//end buildServiceWithoutDependencies()

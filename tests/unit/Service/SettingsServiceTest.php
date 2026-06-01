@@ -17,6 +17,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\OcrService;
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
 use OCA\DocuDesk\Service\SettingsInitializer;
 use OCA\DocuDesk\Service\SettingsService;
@@ -77,6 +78,11 @@ class SettingsServiceTest extends TestCase
      */
     private SettingsInitializer|MockObject $mockInitializer;
 
+    /**
+     * @var OcrService|MockObject
+     */
+    private OcrService|MockObject $mockOcrService;
+
 
     /**
      * Set up test environment
@@ -93,6 +99,7 @@ class SettingsServiceTest extends TestCase
         $this->mockLogger           = $this->createMock(LoggerInterface::class);
         $this->mockDiscoveryService = $this->createMock(RegisterDiscoveryService::class);
         $this->mockInitializer      = $this->createMock(SettingsInitializer::class);
+        $this->mockOcrService       = $this->createMock(OcrService::class);
 
         $this->settingsService = new SettingsService(
             $this->mockConfig,
@@ -100,7 +107,8 @@ class SettingsServiceTest extends TestCase
             $this->mockAppManager,
             $this->mockLogger,
             $this->mockDiscoveryService,
-            $this->mockInitializer
+            $this->mockInitializer,
+            $this->mockOcrService
         );
 
     }//end setUp()
@@ -142,9 +150,11 @@ class SettingsServiceTest extends TestCase
 
 
     /**
-     * Test getAllSettings returns expected structure
+     * Test getAllSettings returns expected structure including ocrStatus
      *
      * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
      */
     public function testGetAllSettingsReturnsExpectedStructure(): void
     {
@@ -157,14 +167,67 @@ class SettingsServiceTest extends TestCase
         $this->mockConfig->method('getValueString')
             ->willReturn('1');
 
+        $this->mockOcrService->method('isTesseractAvailable')
+            ->willReturn(false);
+
+        $this->mockOcrService->method('getTesseractVersion')
+            ->willReturn(null);
+
         $result = $this->settingsService->getAllSettings();
 
         $this->assertArrayHasKey('objectTypes', $result);
         $this->assertArrayHasKey('openRegisters', $result);
         $this->assertArrayHasKey('configuration', $result);
+        $this->assertArrayHasKey('ocrStatus', $result);
         $this->assertFalse($result['openRegisters']);
+        $this->assertArrayHasKey('tesseractAvailable', $result['ocrStatus']);
 
     }//end testGetAllSettingsReturnsExpectedStructure()
+
+
+    /**
+     * Test getOcrStatus returns Tesseract availability from OcrService
+     *
+     * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.2
+     */
+    public function testGetOcrStatusReturnsAvailabilityInfo(): void
+    {
+        $this->mockOcrService->method('isTesseractAvailable')
+            ->willReturn(true);
+
+        $this->mockOcrService->method('getTesseractVersion')
+            ->willReturn('tesseract 5.3.0');
+
+        $result = $this->settingsService->getOcrStatus();
+
+        $this->assertTrue($result['tesseractAvailable']);
+        $this->assertSame('tesseract 5.3.0', $result['tesseractVersion']);
+
+    }//end testGetOcrStatusReturnsAvailabilityInfo()
+
+
+    /**
+     * Test that OCR keys are accepted by updateSettings
+     *
+     * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.4
+     */
+    public function testUpdateSettingsAcceptsOcrKeys(): void
+    {
+        $this->mockConfig->expects($this->atLeastOnce())
+            ->method('setValueString')
+            ->with('docudesk', 'ocr_enabled', '1');
+
+        $this->mockConfig->method('getValueString')
+            ->willReturn('1');
+
+        $result = $this->settingsService->updateSettings(['ocr_enabled' => '1']);
+        $this->assertArrayHasKey('ocr_enabled', $result);
+
+    }//end testUpdateSettingsAcceptsOcrKeys()
 
 
     /**

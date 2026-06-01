@@ -19,6 +19,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  */
 
 declare(strict_types=1);
@@ -40,6 +41,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  */
 class SettingsService
 {
@@ -74,8 +77,11 @@ class SettingsService
      * @param LoggerInterface          $logger           Logger interface
      * @param RegisterDiscoveryService $discoveryService Register discovery service
      * @param SettingsInitializer      $initializer      Settings initializer
+     * @param OcrService               $ocrService       OCR service for Tesseract status
      *
      * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.2
      */
     public function __construct(
         private readonly IAppConfig $config,
@@ -83,7 +89,8 @@ class SettingsService
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
         private readonly RegisterDiscoveryService $discoveryService,
-        private readonly SettingsInitializer $initializer
+        private readonly SettingsInitializer $initializer,
+        private readonly OcrService $ocrService
     ) {
         $this->appName = 'docudesk';
 
@@ -194,9 +201,40 @@ class SettingsService
                 'signing_request_expiry_days',
                 '30'
             ),
+            'ocr_enabled'                       => $this->config->getValueString(
+                $this->appName,
+                'ocr_enabled',
+                '1'
+            ) === '1',
+            'ocr_languages'                     => $this->config->getValueString(
+                $this->appName,
+                'ocr_languages',
+                'nld+eng'
+            ),
+            'ocr_dpi'                           => (int) $this->config->getValueString(
+                $this->appName,
+                'ocr_dpi',
+                '300'
+            ),
         ];
 
     }//end loadFeatureToggles()
+
+    /**
+     * Get Tesseract OCR availability status
+     *
+     * @return array{tesseractAvailable: bool, tesseractVersion: string|null} OCR status
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.2
+     */
+    public function getOcrStatus(): array
+    {
+        return [
+            'tesseractAvailable' => $this->ocrService->isTesseractAvailable(),
+            'tesseractVersion'   => $this->ocrService->getTesseractVersion(),
+        ];
+
+    }//end getOcrStatus()
 
     /**
      * Retrieve all settings
@@ -206,6 +244,7 @@ class SettingsService
      * @throws RuntimeException If settings retrieval fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
      */
     public function getAllSettings(): array
     {
@@ -232,6 +271,7 @@ class SettingsService
                 $data['objectTypes']
             );
             $data = array_merge($data, $this->loadFeatureToggles());
+            $data['ocrStatus'] = $this->getOcrStatus();
 
             return $data;
         } catch (Exception $e) {
@@ -282,6 +322,9 @@ class SettingsService
         'signing_provider',
         'signing_default_level',
         'signing_request_expiry_days',
+        'ocr_enabled',
+        'ocr_languages',
+        'ocr_dpi',
     ];
 
     /**
