@@ -75,7 +75,6 @@ class PdfControllerTest extends TestCase
      */
     private IUserSession|MockObject $mockUserSession;
 
-
     /**
      * Set up test environment
      *
@@ -90,9 +89,11 @@ class PdfControllerTest extends TestCase
         $this->mockPdfService  = $this->createMock(PdfService::class);
         $this->mockL10n        = $this->createMock(IL10N::class);
         $this->mockUserSession = $this->createMock(IUserSession::class);
-        $this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
-            return vsprintf($text, $params);
-        });
+        $this->mockL10n->method('t')->willReturnCallback(
+                function ($text, $params=[]) {
+                    return vsprintf($text, $params);
+                }
+                );
 
         $mockUser = $this->createMock(\OCP\IUser::class);
         $mockUser->method('getUID')->willReturn('testuser');
@@ -109,7 +110,6 @@ class PdfControllerTest extends TestCase
 
     }//end setUp()
 
-
     /**
      * Test render returns 400 when template empty
      *
@@ -118,12 +118,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturns400WhenTemplateEmpty(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, ''],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'document.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, ''],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'document.pdf'],
+                    ]
+                    );
 
         $result = $this->controller->render();
 
@@ -131,7 +133,6 @@ class PdfControllerTest extends TestCase
         $this->assertEquals(400, $result->getStatus());
 
     }//end testRenderReturns400WhenTemplateEmpty()
-
 
     /**
      * Test render returns PDF on success
@@ -141,12 +142,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturnsPdfOnSuccess(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, '<h1>Test</h1>'],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'output.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, '<h1>Test</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'output.pdf'],
+                    ]
+                    );
 
         $this->mockPdfService->method('renderPdf')
             ->willReturn('%PDF-1.4 fake content');
@@ -157,7 +160,6 @@ class PdfControllerTest extends TestCase
 
     }//end testRenderReturnsPdfOnSuccess()
 
-
     /**
      * Test render returns error on exception
      *
@@ -166,12 +168,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturnsErrorOnException(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, '<h1>Test</h1>'],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'output.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, '<h1>Test</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'output.pdf'],
+                    ]
+                    );
 
         $this->mockPdfService->method('renderPdf')
             ->willThrowException(new \Exception('PDF error', 500));
@@ -182,6 +186,4 @@ class PdfControllerTest extends TestCase
         $this->assertEquals(500, $result->getStatus());
 
     }//end testRenderReturnsErrorOnException()
-
-
 }//end class

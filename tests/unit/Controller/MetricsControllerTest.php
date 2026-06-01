@@ -62,7 +62,6 @@ class MetricsControllerTest extends TestCase
      */
     private MetricsCollector|MockObject $mockCollector;
 
-
     /**
      * Set up test environment
      *
@@ -72,10 +71,10 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest          = $this->createMock(IRequest::class);
-        $this->mockConfig     = $this->createMock(IConfig::class);
-        $this->mockAppConfig  = $this->createMock(IAppConfig::class);
-        $this->mockCollector  = $this->createMock(MetricsCollector::class);
+        $mockRequest         = $this->createMock(IRequest::class);
+        $this->mockConfig    = $this->createMock(IConfig::class);
+        $this->mockAppConfig = $this->createMock(IAppConfig::class);
+        $this->mockCollector = $this->createMock(MetricsCollector::class);
 
         $this->controller = new MetricsController(
             'docudesk',
@@ -86,7 +85,6 @@ class MetricsControllerTest extends TestCase
         );
 
     }//end setUp()
-
 
     /**
      * Test metrics endpoint returns Prometheus format
@@ -112,6 +110,4 @@ class MetricsControllerTest extends TestCase
         $this->assertInstanceOf(\OCP\AppFramework\Http\TextPlainResponse::class, $response);
 
     }//end testIndexReturnsPrometheusFormat()
-
-
 }//end class

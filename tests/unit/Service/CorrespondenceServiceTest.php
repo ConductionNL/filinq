@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
 class CorrespondenceServiceTest extends TestCase
@@ -100,7 +100,6 @@ class CorrespondenceServiceTest extends TestCase
      */
     private ObjectService $objectSvc;
 
-
     /**
      * Set up test fixtures
      *
@@ -126,17 +125,19 @@ class CorrespondenceServiceTest extends TestCase
             ->willReturn(['openregister']);
 
         $container->method('get')
-            ->willReturnCallback(function ($class) use ($appConfig) {
-                if ($class === 'OCA\OpenRegister\Service\ObjectService') {
-                    return $this->objectSvc;
-                }
+            ->willReturnCallback(
+                    function ($class) use ($appConfig) {
+                        if ($class === 'OCA\OpenRegister\Service\ObjectService') {
+                            return $this->objectSvc;
+                        }
 
-                if ($class === IAppConfig::class) {
-                    return $appConfig;
-                }
+                        if ($class === IAppConfig::class) {
+                            return $appConfig;
+                        }
 
-                return null;
-            });
+                        return null;
+                    }
+                    );
 
         $this->service = new CorrespondenceService(
             $this->templateSvc,
@@ -150,7 +151,6 @@ class CorrespondenceServiceTest extends TestCase
         );
 
     }//end setUp()
-
 
     /**
      * Test single PDF generation
@@ -170,11 +170,13 @@ class CorrespondenceServiceTest extends TestCase
             ->willReturn($template);
 
         $this->dataResolver->method('resolve')
-            ->willReturn([
-                'data'     => ['persoon' => ['naam' => 'Jan']],
-                'errors'   => [],
-                'warnings' => [],
-            ]);
+            ->willReturn(
+                    [
+                        'data'     => ['persoon' => ['naam' => 'Jan']],
+                        'errors'   => [],
+                        'warnings' => [],
+                    ]
+                    );
 
         $this->renderer->method('renderTemplate')
             ->willReturn('<h1>Jan</h1>');
@@ -198,7 +200,6 @@ class CorrespondenceServiceTest extends TestCase
         $this->assertEmpty($result['warnings']);
 
     }//end testGeneratePdf()
-
 
     /**
      * Test HTML output format
@@ -238,7 +239,6 @@ class CorrespondenceServiceTest extends TestCase
 
     }//end testGenerateHtml()
 
-
     /**
      * Test invalid format throws exception
      *
@@ -256,7 +256,6 @@ class CorrespondenceServiceTest extends TestCase
         );
 
     }//end testInvalidFormatThrowsException()
-
 
     /**
      * Test synchronous batch for small recipient list
@@ -301,7 +300,6 @@ class CorrespondenceServiceTest extends TestCase
 
     }//end testBatchSyncForSmallList()
 
-
     /**
      * Test async batch for large recipient list
      *
@@ -325,7 +323,6 @@ class CorrespondenceServiceTest extends TestCase
         $this->assertEquals(15, $result['totalRecipients']);
 
     }//end testBatchAsyncForLargeList()
-
 
     /**
      * Test register logging on generation
@@ -357,11 +354,13 @@ class CorrespondenceServiceTest extends TestCase
         $this->objectSvc->expects($this->once())
             ->method('saveObject')
             ->with(
-                $this->callback(function ($entry) {
-                    return $entry['templateId'] === 'tmpl-1'
-                        && $entry['status'] === 'generated'
-                        && $entry['format'] === 'pdf';
-                }),
+                $this->callback(
+                        function ($entry) {
+                            return $entry['templateId'] === 'tmpl-1'
+                            && $entry['status'] === 'generated'
+                            && $entry['format'] === 'pdf';
+                        }
+                        ),
                 $this->equalTo('document'),
                 $this->equalTo('correspondence')
             )
@@ -376,6 +375,4 @@ class CorrespondenceServiceTest extends TestCase
         $this->assertArrayHasKey('registerEntry', $result);
 
     }//end testCorrespondenceLogging()
-
-
 }//end class

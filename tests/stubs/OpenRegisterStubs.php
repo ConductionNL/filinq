@@ -31,8 +31,6 @@ namespace OCA\OpenRegister\Service;
  */
 class ObjectService
 {
-
-
     /**
      * Find an object by id
      *
@@ -47,7 +45,6 @@ class ObjectService
         return null;
 
     }//end find()
-
 
     /**
      * Save an object
@@ -64,7 +61,6 @@ class ObjectService
 
     }//end saveObject()
 
-
     /**
      * Find all objects matching a set of filters
      *
@@ -78,7 +74,6 @@ class ObjectService
 
     }//end findAll()
 
-
     /**
      * Delete an object
      *
@@ -90,7 +85,6 @@ class ObjectService
     {
 
     }//end deleteObject()
-
 
     /**
      * Build a search query
@@ -107,7 +101,6 @@ class ObjectService
 
     }//end buildSearchQuery()
 
-
     /**
      * Search objects (paginated)
      *
@@ -121,7 +114,6 @@ class ObjectService
 
     }//end searchObjectsPaginated()
 
-
     /**
      * Search objects
      *
@@ -134,8 +126,6 @@ class ObjectService
         return [];
 
     }//end searchObjects()
-
-
 }//end class
 
 /**
@@ -149,8 +139,6 @@ class ObjectService
  */
 class RegisterService
 {
-
-
     /**
      * Find all registers
      *
@@ -161,8 +149,6 @@ class RegisterService
         return [];
 
     }//end findAll()
-
-
 }//end class
 
 /**
@@ -176,8 +162,6 @@ class RegisterService
  */
 class ConfigurationService
 {
-
-
     /**
      * Import from app
      *
@@ -187,8 +171,6 @@ class ConfigurationService
     {
 
     }//end importFromApp()
-
-
 }//end class
 
 /**
@@ -202,11 +184,9 @@ class ConfigurationService
  */
 class TextExtractionService
 {
-
-    public function extractFile(int $fileId, bool $force = false): void
+    public function extractFile(int $fileId, bool $force=false): void
     {
-    }
-
+    }//end extractFile()
 }//end class
 
 /**
@@ -233,8 +213,6 @@ class FileService
  */
 class RiskLevelService
 {
-
-
     /**
      * Get risk level
      *
@@ -247,8 +225,6 @@ class RiskLevelService
         return 'none';
 
     }//end getRiskLevel()
-
-
 }//end class
 
 namespace OCA\OpenRegister\Db;
@@ -264,8 +240,6 @@ namespace OCA\OpenRegister\Db;
  */
 class ObjectEntity
 {
-
-
     /**
      * Serialize to array
      *
@@ -276,8 +250,6 @@ class ObjectEntity
         return [];
 
     }//end jsonSerialize()
-
-
 }//end class
 
 /**
@@ -291,8 +263,6 @@ class ObjectEntity
  */
 class EntityRelationMapper
 {
-
-
     /**
      * Find by file ID
      *
@@ -306,7 +276,6 @@ class EntityRelationMapper
 
     }//end findByFileId()
 
-
     /**
      * Find entities for file
      *
@@ -319,8 +288,6 @@ class EntityRelationMapper
         return [];
 
     }//end findEntitiesForFile()
-
-
 }//end class
 
 /**
@@ -334,7 +301,6 @@ class EntityRelationMapper
  */
 class SchemaMapper
 {
-
     public function findAll(?int $limit=null, ?int $offset=null, array $filters=[], array $searchConditions=[], array $searchParams=[]): array
     {
         return [];
@@ -346,7 +312,6 @@ class SchemaMapper
         return null;
 
     }//end find()
-
 }//end class
 
 
@@ -361,7 +326,6 @@ class SchemaMapper
  */
 class Schema
 {
-
     public function getId(): ?int
     {
         return null;
@@ -385,7 +349,6 @@ class Schema
         return [];
 
     }//end jsonSerialize()
-
 }//end class
 
 
@@ -400,7 +363,6 @@ class Schema
  */
 class Register
 {
-
     public function getId(): ?int
     {
         return null;
@@ -424,7 +386,6 @@ class Register
         return [];
 
     }//end jsonSerialize()
-
 }//end class
 
 
@@ -439,7 +400,6 @@ class Register
  */
 class RegisterMapper
 {
-
     public function findAll(?int $limit=null, ?int $offset=null, array $filters=[], array $searchConditions=[], array $searchParams=[]): array
     {
         return [];
@@ -451,7 +411,6 @@ class RegisterMapper
         return null;
 
     }//end find()
-
 }//end class
 
 
@@ -468,7 +427,7 @@ namespace OC\Hooks;
  */
 interface Emitter
 {
-}
+}//end interface
 
 namespace OCP;
 
@@ -483,15 +442,12 @@ namespace OCP;
  */
 interface IUserSession
 {
-
     /**
      * Get the currently logged in user
      *
      * @return \OCP\IUser|null
      */
     public function getUser(): ?\OCP\IUser;
-
-
 }//end interface
 
 
@@ -506,30 +462,48 @@ interface IUserSession
  */
 interface IAppConfig
 {
+    public function getValueFloat(string $app, string $key, float $default=0, bool $lazy=false): float;
 
-    public function getValueFloat(string $app, string $key, float $default = 0, bool $lazy = false): float;
-    public function getValueString(string $app, string $key, string $default = '', bool $lazy = false): string;
-    public function getValueInt(string $app, string $key, int $default = 0, bool $lazy = false): int;
-    public function getValueBool(string $app, string $key, bool $default = false, bool $lazy = false): bool;
-    public function getValueArray(string $app, string $key, array $default = [], bool $lazy = false): array;
-    public function setValueFloat(string $app, string $key, float $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueString(string $app, string $key, string $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueInt(string $app, string $key, int $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueBool(string $app, string $key, bool $value, bool $lazy = false): bool;
-    public function setValueArray(string $app, string $key, array $value, bool $lazy = false, bool $sensitive = false): bool;
+    public function getValueString(string $app, string $key, string $default='', bool $lazy=false): string;
+
+    public function getValueInt(string $app, string $key, int $default=0, bool $lazy=false): int;
+
+    public function getValueBool(string $app, string $key, bool $default=false, bool $lazy=false): bool;
+
+    public function getValueArray(string $app, string $key, array $default=[], bool $lazy=false): array;
+
+    public function setValueFloat(string $app, string $key, float $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueString(string $app, string $key, string $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueInt(string $app, string $key, int $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueBool(string $app, string $key, bool $value, bool $lazy=false): bool;
+
+    public function setValueArray(string $app, string $key, array $value, bool $lazy=false, bool $sensitive=false): bool;
+
     public function getApps(): array;
-    public function getKeys(string $app): array;
-    public function hasKey(string $app, string $key, ?bool $lazy = null): bool;
-    public function deleteKey(string $app, string $key): bool;
-    public function deleteApp(string $app): bool;
-    public function clearCache(bool $reload = false): void;
-    public function getAllValues(string $app, string $prefix = '', bool $filtered = false): array;
-    public function getValueType(string $app, string $key, ?bool $lazy = null): int;
-    public function getValues($app, $key);
-    public function getFilteredValues($app);
-    public function getAppInstalledVersions(bool $onlyEnabled = false): array;
 
-}
+    public function getKeys(string $app): array;
+
+    public function hasKey(string $app, string $key, ?bool $lazy=null): bool;
+
+    public function deleteKey(string $app, string $key): bool;
+
+    public function deleteApp(string $app): bool;
+
+    public function clearCache(bool $reload=false): void;
+
+    public function getAllValues(string $app, string $prefix='', bool $filtered=false): array;
+
+    public function getValueType(string $app, string $key, ?bool $lazy=null): int;
+
+    public function getValues($app, $key);
+
+    public function getFilteredValues($app);
+
+    public function getAppInstalledVersions(bool $onlyEnabled=false): array;
+}//end interface
 
 namespace OCP\App;
 
@@ -544,15 +518,18 @@ namespace OCP\App;
  */
 interface IAppManager
 {
-
     public function getInstalledApps(): array;
-    public function isEnabledForUser(string $appId, ?\OCP\IUser $user = null): bool;
-    public function isInstalled(string $appId): bool;
-    public function enableApp(string $appId, bool $forceEnable = false): void;
-    public function disableApp(string $appId, bool $automaticDisabled = false): void;
-    public function getAppVersion(string $appId, bool $useCache = true): string;
 
-}
+    public function isEnabledForUser(string $appId, ?\OCP\IUser $user=null): bool;
+
+    public function isInstalled(string $appId): bool;
+
+    public function enableApp(string $appId, bool $forceEnable=false): void;
+
+    public function disableApp(string $appId, bool $automaticDisabled=false): void;
+
+    public function getAppVersion(string $appId, bool $useCache=true): string;
+}//end interface
 
 namespace Psr\Log;
 
@@ -567,18 +544,24 @@ namespace Psr\Log;
  */
 interface LoggerInterface
 {
+    public function emergency(string|\Stringable $message, array $context=[]): void;
 
-    public function emergency(string|\Stringable $message, array $context = []): void;
-    public function alert(string|\Stringable $message, array $context = []): void;
-    public function critical(string|\Stringable $message, array $context = []): void;
-    public function error(string|\Stringable $message, array $context = []): void;
-    public function warning(string|\Stringable $message, array $context = []): void;
-    public function notice(string|\Stringable $message, array $context = []): void;
-    public function info(string|\Stringable $message, array $context = []): void;
-    public function debug(string|\Stringable $message, array $context = []): void;
-    public function log(mixed $level, string|\Stringable $message, array $context = []): void;
+    public function alert(string|\Stringable $message, array $context=[]): void;
 
-}
+    public function critical(string|\Stringable $message, array $context=[]): void;
+
+    public function error(string|\Stringable $message, array $context=[]): void;
+
+    public function warning(string|\Stringable $message, array $context=[]): void;
+
+    public function notice(string|\Stringable $message, array $context=[]): void;
+
+    public function info(string|\Stringable $message, array $context=[]): void;
+
+    public function debug(string|\Stringable $message, array $context=[]): void;
+
+    public function log(mixed $level, string|\Stringable $message, array $context=[]): void;
+}//end interface
 
 namespace OCP;
 
@@ -593,13 +576,14 @@ namespace OCP;
  */
 interface IUser
 {
-
     public function getUID(): string;
-    public function getDisplayName(): string;
-    public function getEMailAddress(): ?string;
-    public function isEnabled(): bool;
 
-}
+    public function getDisplayName(): string;
+
+    public function getEMailAddress(): ?string;
+
+    public function isEnabled(): bool;
+}//end interface
 
 
 /**
@@ -613,10 +597,7 @@ interface IUser
  */
 interface IGroupManager
 {
-
     public function isAdmin(string $userId): bool;
-
-
 }//end interface
 
 
@@ -633,7 +614,6 @@ namespace OCP\Files;
  */
 interface Folder extends Node
 {
-
     /**
      * Get nodes by file ID
      *
@@ -674,8 +654,6 @@ interface Folder extends Node
      * @return int
      */
     public function getPermissions(): int;
-
-
 }//end interface
 
 
@@ -690,15 +668,19 @@ interface Folder extends Node
  */
 interface Node
 {
-
     public function getName(): string;
-    public function getPath(): string;
-    public function getId(): ?int;
-    public function getMimeType(): string;
-    public function getRelativePath(string $path): ?string;
-    public function getType(): string;
-    public function getPermissions(): int;
 
+    public function getPath(): string;
+
+    public function getId(): ?int;
+
+    public function getMimeType(): string;
+
+    public function getRelativePath(string $path): ?string;
+
+    public function getType(): string;
+
+    public function getPermissions(): int;
 }//end interface
 
 
@@ -713,9 +695,7 @@ interface Node
  */
 interface File extends Node
 {
-
     public function getContent(): string;
-
 }//end interface
 
 
@@ -730,7 +710,6 @@ interface File extends Node
  */
 interface IRootFolder
 {
-
     /**
      * Get a user's home folder
      *
@@ -739,8 +718,6 @@ interface IRootFolder
      * @return \OCP\Files\Folder
      */
     public function getUserFolder(string $userId): \OCP\Files\Folder;
-
-
 }//end interface
 
 
@@ -757,7 +734,6 @@ namespace OCP;
  */
 final class Server
 {
-
     /**
      * Delegate to \OC::$server->get() so tests can intercept via \OC stub.
      *
@@ -770,7 +746,6 @@ final class Server
         return \OC::$server->get($serviceName);
 
     }//end get()
-
 }//end class
 
 
@@ -787,12 +762,12 @@ class Constants
 {
 
     public const PERMISSION_CREATE = 4;
-    public const PERMISSION_READ = 1;
+    public const PERMISSION_READ   = 1;
     public const PERMISSION_UPDATE = 2;
     public const PERMISSION_DELETE = 8;
-    public const PERMISSION_SHARE = 16;
-    public const PERMISSION_ALL = 31;
-    public const PERMISSION_NONE = 0;
+    public const PERMISSION_SHARE  = 16;
+    public const PERMISSION_ALL    = 31;
+    public const PERMISSION_NONE   = 0;
 
 }//end class
 

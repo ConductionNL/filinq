@@ -86,7 +86,6 @@ class TemplatesControllerTest extends TestCase
      */
     private LoggerInterface|MockObject $mockLogger;
 
-
     /**
      * Set up test environment
      *
@@ -121,7 +120,6 @@ class TemplatesControllerTest extends TestCase
 
     }//end setUp()
 
-
     /**
      * Test index returns template list
      *
@@ -141,7 +139,6 @@ class TemplatesControllerTest extends TestCase
 
     }//end testIndexReturnsTemplateList()
 
-
     /**
      * Test show returns template
      *
@@ -159,7 +156,6 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(200, $result->getStatus());
 
     }//end testShowReturnsTemplate()
-
 
     /**
      * Test create returns created template
@@ -180,7 +176,6 @@ class TemplatesControllerTest extends TestCase
 
     }//end testCreateReturnsCreatedTemplate()
 
-
     /**
      * Test destroy returns success
      *
@@ -198,7 +193,6 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(200, $result->getStatus());
 
     }//end testDestroyReturnsSuccess()
-
 
     /**
      * Test index returns error on exception
@@ -220,6 +214,4 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(500, $result->getStatus());
 
     }//end testIndexReturnsErrorOnException()
-
-
 }//end class
