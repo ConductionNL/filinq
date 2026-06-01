@@ -1,3 +1,5 @@
+status: pr-created
+
 ## Context
 
 `publicationConsent` today is per-(document, entity) workflow. To express "this entity has given blanket prior consent" and "this consent was pre-empted by a policy", the schema needs (a) a `scope` discriminator splitting per-document records from per-entity standing-consent records, and (b) a polymorphic `policyMatch` reference pointing at either a prohibition or a standing-consent record.

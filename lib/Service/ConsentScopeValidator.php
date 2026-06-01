@@ -50,15 +50,15 @@ class ConsentScopeValidator
     private const STANDING_CONSENT_ADMIN_GROUP = 'docudesk-standing-consent-admins';
 
     /**
-     * Terminal consent status values.
+     * Terminal consent status values (from publicationConsent schema enum).
      *
      * @var array<string>
      */
     private const TERMINAL_STATUSES = [
         'consent_given',
-        'consent_refused',
         'objection_received',
-        'publication_blocked',
+        'no_response',
+        'anonymized',
     ];
 
     /**

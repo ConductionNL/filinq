@@ -208,7 +208,7 @@ class ConsentScopeValidatorTest extends TestCase
         ];
 
         $update = [
-            'consentStatus' => 'consent_refused',
+            'consentStatus' => 'objection_received',
         ];
 
         $this->validator->validateTransition(
@@ -232,7 +232,7 @@ class ConsentScopeValidatorTest extends TestCase
         ];
 
         $update = [
-            'consentStatus' => 'consent_refused',
+            'consentStatus' => 'no_response',
         ];
 
         // Should not throw.
