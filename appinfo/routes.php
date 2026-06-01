@@ -62,6 +62,12 @@ return [
         ['name' => 'print#preview', 'url' => 'api/print/preview', 'verb' => 'POST'],
         ['name' => 'print#downloadPdfA', 'url' => 'api/print/pdf-a', 'verb' => 'POST'],
 
+        // Document generation routes (document-creatie-sjablonen).
+        ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],
+        ['name' => 'document#preview', 'url' => 'api/documents/generate/preview', 'verb' => 'POST'],
+        ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
+        ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
+
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
         ['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],

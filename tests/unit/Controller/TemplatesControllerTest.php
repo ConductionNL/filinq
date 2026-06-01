@@ -24,6 +24,7 @@ use OCA\DocuDesk\Service\TemplateService;
 use OCA\DocuDesk\Service\TemplateVersionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -98,8 +99,12 @@ class TemplatesControllerTest extends TestCase
         $this->mockRequestHandler  = $this->createMock(TemplateRequestHandler::class);
         $this->mockVersionService  = $this->createMock(TemplateVersionService::class);
         $this->mockPreviewService  = $this->createMock(TemplatePreviewService::class);
-        $this->mockUserSession     = $this->createMock(IUserSession::class);
-        $this->mockLogger          = $this->createMock(LoggerInterface::class);
+        $this->mockUserSession = $this->createMock(IUserSession::class);
+        $this->mockLogger      = $this->createMock(LoggerInterface::class);
+
+        $mockUser = $this->createMock(IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new TemplatesController(
             'docudesk',
