@@ -23,6 +23,7 @@ use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -84,12 +85,15 @@ class PdfControllerTest extends TestCase
             return vsprintf($text, $params);
         });
 
+        $mockUserSession  = $this->createMock(IUserSession::class);
+
         $this->controller = new PdfController(
             'docudesk',
             $this->mockRequest,
             $this->mockLogger,
             $this->mockPdfService,
-            $this->mockL10n
+            $this->mockL10n,
+            $mockUserSession
         );
 
     }//end setUp()

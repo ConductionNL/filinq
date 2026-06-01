@@ -42,7 +42,7 @@ class ObjectService
      *
      * @return mixed
      */
-    public function find(string $id='', string $register='', string $schema='')
+    public function find(int|string $id='', string $register='', string $schema='')
     {
         return null;
 
@@ -278,6 +278,42 @@ class ObjectEntity
     }//end jsonSerialize()
 
 
+    /**
+     * Get object data
+     *
+     * @return array
+     */
+    public function getObject(): array
+    {
+        return [];
+
+    }//end getObject()
+
+
+    /**
+     * Get object ID
+     *
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return null;
+
+    }//end getId()
+
+
+    /**
+     * Get folder path
+     *
+     * @return string|null
+     */
+    public function getFolder(): ?string
+    {
+        return null;
+
+    }//end getFolder()
+
+
 }//end class
 
 /**
@@ -399,53 +435,9 @@ interface IAppConfig
 
 }
 
-/**
- * Stub for OCP\IRequest
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IRequest
-{
+// IRequest is declared in NextcloudStubs.php; skip duplicate declaration.
 
-    public function getParam(string $key, mixed $default = null): mixed;
-    public function getParams(): array;
-    public function getMethod(): string;
-    public function getUploadedFile(string $key): array;
-    public function getHeader(string $name): string;
-    public function isUserAgent(array $agent): bool;
-    public function getServerProtocol(): string;
-    public function getRawPathInfo(): string;
-    public function getPathInfo(): string|false;
-    public function getRequestUri(): string;
-    public function getId(): string;
-    public function getRemoteAddress(): string;
-    public function getServerHost(): string;
-
-}
-
-/**
- * Stub for OCP\IL10N
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IL10N
-{
-
-    public function t(string $text, array $parameters = []): string;
-    public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string;
-    public function l(string $type, mixed $data, array $options = []): mixed;
-    public function getLanguageCode(): string;
-    public function getLocaleCode(): string;
-
-}
+// IL10N is declared in NextcloudStubs.php; skip duplicate declaration.
 
 namespace OCP\App;
 
@@ -486,6 +478,7 @@ class Http
     public const STATUS_OK = 200;
     public const STATUS_CREATED = 201;
     public const STATUS_NO_CONTENT = 204;
+    public const STATUS_BAD_REQUEST = 400;
     public const STATUS_UNAUTHORIZED = 401;
     public const STATUS_FORBIDDEN = 403;
     public const STATUS_NOT_FOUND = 404;
@@ -493,109 +486,7 @@ class Http
 }//end class
 
 
-namespace OCP\AppFramework\Http;
-
-/**
- * Stub for OCP\AppFramework\Http\JSONResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class JSONResponse
-{
-
-    private int $status;
-    private mixed $data;
-
-    public function __construct(mixed $data = [], int $statusCode = 200)
-    {
-        $this->data   = $data;
-        $this->status = $statusCode;
-    }
-
-    public function getData(): mixed
-    {
-        return $this->data;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(int $code): self
-    {
-        $this->status = $code;
-        return $this;
-    }
-
-    public function setData(mixed $data): self
-    {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function render(): string
-    {
-        return json_encode($this->data);
-    }
-
-    public function addHeader(string $name, string $value): self
-    {
-        return $this;
-    }
-
-    public function getHeaders(): array
-    {
-        return [];
-    }
-
-}
-
-/**
- * Stub for OCP\AppFramework\Http\DataDownloadResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class DataDownloadResponse extends JSONResponse
-{
-
-    public function __construct(string $data, string $filename, string $contentType)
-    {
-        parent::__construct($data);
-    }
-
-}
-
-namespace OCP\AppFramework;
-
-/**
- * Stub for OCP\AppFramework\Controller
- *
- * @category Tests
- * @package  OCP\AppFramework
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Controller
-{
-
-    protected \OCP\IRequest $request;
-
-    public function __construct(string $appName, \OCP\IRequest $request)
-    {
-        $this->request = $request;
-    }
-
-}
+// JSONResponse, DataDownloadResponse, and Controller are declared in NextcloudStubs.php.
 
 namespace Psr\Log;
 
@@ -674,7 +565,7 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface Folder
+interface Folder extends Node
 {
 
     /**
@@ -685,6 +576,14 @@ interface Folder
      * @return array<\OCP\Files\Node>
      */
     public function getById(int $id): array;
+
+    public function nodeExists(string $path): bool;
+
+    public function get(string $path): Node;
+
+    public function newFile(string $path, mixed $content=null): File;
+
+    public function getDirectoryListing(): array;
 
 
 }//end interface
@@ -704,6 +603,8 @@ interface Node
 
     public function getName(): string;
     public function getPath(): string;
+    public function getId(): int;
+    public function getParent(): Folder;
 
 }//end interface
 
@@ -722,6 +623,7 @@ interface File extends Node
 
     public function getContent(): string;
     public function getMimeType(): string;
+    public function putContent(mixed $data): void;
 
 }//end interface
 

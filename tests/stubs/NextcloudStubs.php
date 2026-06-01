@@ -159,10 +159,10 @@ class JSONResponse
      *
      * @return void
      */
-    public function __construct(array $data=[], int $status=200)
+    public function __construct(array $data=[], int $statusCode=200)
     {
         $this->data   = $data;
-        $this->status = $status;
+        $this->status = $statusCode;
 
     }//end __construct()
 
@@ -223,3 +223,79 @@ class DataDownloadResponse
 
 
 }//end class
+
+/**
+ * Stub for OCP\AppFramework\Http\TemplateResponse
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class TemplateResponse extends JSONResponse
+{
+
+    private string $templateName = '';
+
+
+    public function __construct(
+        string $appName,
+        string $templateName,
+        array $params=[],
+        string $renderAs='user'
+    ) {
+        parent::__construct(data: $params);
+        $this->templateName = $templateName;
+
+    }//end __construct()
+
+
+    public function getTemplateName(): string
+    {
+        return $this->templateName;
+
+    }//end getTemplateName()
+
+
+    public function getRenderAs(): string
+    {
+        return 'user';
+
+    }//end getRenderAs()
+
+
+}//end class
+
+namespace OCP\EventDispatcher;
+
+/**
+ * Stub for OCP\EventDispatcher\Event
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Event
+{
+
+}//end class
+
+
+/**
+ * Stub for OCP\EventDispatcher\IEventListener
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IEventListener
+{
+
+    public function handle(Event $event): void;
+
+}//end interface

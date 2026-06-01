@@ -1,0 +1,286 @@
+<?php
+
+/**
+ * Dossier CheckedOn Listener
+ *
+ * Listens for OpenRegister ObjectUpdatedEvent on dossier objects.
+ * When a dossier's `checkedOn` field is updated and
+ * `configuration.grondslagen.autoRegenOnReview` is true (default),
+ * triggers an automatic regeneration of the per-dossier grondslagen summary PDF.
+ *
+ * Regen failure is deliberately swallowed: the dossier update MUST succeed
+ * regardless of whether the summary can be rendered.
+ *
+ * @category EventListener
+ * @package  OCA\DocuDesk\EventListener
+ *
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://conduction.nl
+ *
+ * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\EventListener;
+
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Event listener that auto-regenerates the dossier grondslagen summary on checkedOn update
+ *
+ * @category EventListener
+ * @package  OCA\DocuDesk\EventListener
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://conduction.nl
+ *
+ * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+ *
+ * @template-implements IEventListener<ObjectUpdatedEvent>
+ */
+class DossierCheckedOnListener implements IEventListener
+{
+
+    /**
+     * DocuDesk register slug for dossier objects.
+     *
+     * @var string
+     */
+    private const REGISTER = 'docudesk';
+
+    /**
+     * Dossier schema slug.
+     *
+     * @var string
+     */
+    private const DOSSIER_SCHEMA = 'dossier';
+
+    /**
+     * Constructor is intentionally empty; services are resolved lazily in handle().
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+
+    }//end __construct()
+
+    /**
+     * Handle an ObjectUpdatedEvent and trigger auto-regen when applicable.
+     *
+     * Regen fires iff:
+     * 1. The updated object is a dossier (register=docudesk, schema=dossier)
+     * 2. `checkedOn` has changed between the old and new object data
+     * 3. `configuration.grondslagen.autoRegenOnReview` is true (or absent, defaults to true)
+     *
+     * @param Event $event The dispatched event
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+     */
+    public function handle(Event $event): void
+    {
+        if (($event instanceof ObjectUpdatedEvent) === false) {
+            return;
+        }
+
+        try {
+            $this->processObjectUpdatedEvent(event: $event);
+        } catch (\Throwable $e) {
+            $this->logError(exception: $e, context: 'DossierCheckedOnListener::handle');
+        }
+
+    }//end handle()
+
+    /**
+     * Process the ObjectUpdatedEvent for dossier checkedOn changes.
+     *
+     * @param ObjectUpdatedEvent $event The update event
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
+     */
+    private function processObjectUpdatedEvent(ObjectUpdatedEvent $event): void
+    {
+        $newObject = $event->getNewObject();
+        $oldObject = $event->getOldObject();
+
+        if ($newObject === null) {
+            return;
+        }
+
+        // Only process dossier objects.
+        if ($this->isDossierObject(object: $newObject) === false) {
+            return;
+        }
+
+        $newData = $newObject->getObject();
+        $oldData = [];
+        if ($oldObject !== null) {
+            $oldData = $oldObject->getObject();
+        }
+
+        // Only regen when checkedOn has actually changed.
+        if ($this->hasCheckedOnChanged(newData: $newData, oldData: $oldData) === false) {
+            return;
+        }
+
+        // Honour the opt-out flag (default is true / auto-regen enabled).
+        if ($this->isAutoRegenEnabled(data: $newData) === false) {
+            return;
+        }
+
+        $dossierId = $newObject->getId();
+        if ($dossierId === null) {
+            return;
+        }
+
+        // Run synchronously; catch any failure to preserve the review result.
+        try {
+            $logger         = \OC::$server->get(LoggerInterface::class);
+            $summaryService = \OC::$server->get(GrondslagenSummaryService::class);
+
+            $logger->info(
+                message: 'DocuDesk: Auto-regenerating dossier grondslagen summary on checkedOn update',
+                context: ['dossierId' => $dossierId]
+            );
+
+            $summaryService->renderDossierSummary(dossierId: (int) $dossierId);
+        } catch (\Throwable $e) {
+            // Log but do NOT rethrow — the dossier update must succeed.
+            $this->logError(
+                exception: $e,
+                context: 'GrondslagenSummaryService::renderDossierSummary (auto-regen)',
+                extra: ['dossierId' => $dossierId]
+            );
+        }//end try
+
+    }//end processObjectUpdatedEvent()
+
+    /**
+     * Determine whether the updated object is a dossier.
+     *
+     * Checks the object's register and schema slugs against DocuDesk constants.
+     *
+     * @param mixed $object The updated ObjectEntity
+     *
+     * @return bool True when this is a dossier object
+     */
+    private function isDossierObject(mixed $object): bool
+    {
+        if (is_object($object) === false) {
+            return false;
+        }
+
+        $register = null;
+        $schema   = null;
+
+        if (method_exists(object_or_class: $object, method: 'getRegister') === true) {
+            $register = $object->getRegister();
+        }
+
+        if (method_exists(object_or_class: $object, method: 'getSchema') === true) {
+            $schema = $object->getSchema();
+        }
+
+        // Accept both slug and numeric/UUID identifiers conservatively.
+        $registerSlugMatch = (is_object($register) === true
+            && method_exists(object_or_class: $register, method: 'getSlug') === true
+            && $register->getSlug() === self::REGISTER);
+        $registerMatch     = ($register === self::REGISTER || $registerSlugMatch === true);
+
+        $schemaSlugMatch = (is_object($schema) === true
+            && method_exists(object_or_class: $schema, method: 'getSlug') === true
+            && $schema->getSlug() === self::DOSSIER_SCHEMA);
+        $schemaMatch     = ($schema === self::DOSSIER_SCHEMA || $schemaSlugMatch === true);
+
+        return $registerMatch === true && $schemaMatch === true;
+
+    }//end isDossierObject()
+
+    /**
+     * Determine whether `checkedOn` has changed between old and new object data.
+     *
+     * @param array<string, mixed> $newData New object data
+     * @param array<string, mixed> $oldData Old object data (may be empty)
+     *
+     * @return bool True when checkedOn has changed or was added
+     */
+    private function hasCheckedOnChanged(array $newData, array $oldData): bool
+    {
+        $newCheckedOn = $newData['checkedOn'] ?? null;
+        $oldCheckedOn = $oldData['checkedOn'] ?? null;
+
+        return $newCheckedOn !== $oldCheckedOn && $newCheckedOn !== null;
+
+    }//end hasCheckedOnChanged()
+
+    /**
+     * Read `configuration.grondslagen.autoRegenOnReview` from object data.
+     *
+     * Defaults to true when the field is absent.
+     *
+     * @param array<string, mixed> $data Object data
+     *
+     * @return bool True when auto-regen is enabled
+     */
+    private function isAutoRegenEnabled(array $data): bool
+    {
+        $config = $data['configuration'] ?? [];
+        if (is_array($config) === false) {
+            return true;
+        }
+
+        $grondslagen = $config['grondslagen'] ?? [];
+        if (is_array($grondslagen) === false) {
+            return true;
+        }
+
+        if (isset($grondslagen['autoRegenOnReview']) === false) {
+            return true;
+        }
+
+        return $grondslagen['autoRegenOnReview'] === true;
+
+    }//end isAutoRegenEnabled()
+
+    /**
+     * Log an error from the listener without throwing.
+     *
+     * @param \Throwable           $exception The caught exception
+     * @param string               $context   Human-readable context label
+     * @param array<string, mixed> $extra     Optional additional context
+     *
+     * @return void
+     */
+    private function logError(\Throwable $exception, string $context, array $extra=[]): void
+    {
+        try {
+            $logger = \OC::$server->get(LoggerInterface::class);
+            $logger->error(
+                message: 'DocuDesk: '.$context.' failed: '.$exception->getMessage(),
+                context: array_merge(
+                    $extra,
+                    [
+                        'exception' => $exception->getMessage(),
+                        'file'      => $exception->getFile(),
+                        'line'      => $exception->getLine(),
+                    ]
+                )
+            );
+        } catch (\Throwable) {
+            // Silently fail if logging is unavailable.
+        }
+
+    }//end logError()
+}//end class

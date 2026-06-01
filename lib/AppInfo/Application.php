@@ -23,6 +23,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -67,6 +68,9 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
+
+        // Auto-regen dossier grondslagen summary when checkedOn is updated.
+        $context->registerEventListener(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
 
     }//end register()
 
