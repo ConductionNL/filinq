@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+### Added
+- **`unredactedEntities[]` on per-document and batch anonymise endpoints.**
+  Operators can now pass entities they intend to publish unredacted alongside
+  the usual `entities[]`. Each entry requires `entityId`, `entityText`,
+  `entityType`, and a non-empty `publicationBases[]`; `contactEmail` and
+  `contactAddress` are optional.
+- **`createdConsents[]` in the anonymise response.** When `unredactedEntities`
+  is supplied, the response gains a `createdConsents[]` field with one entry
+  per entity including the resulting `publicationConsent` UUID and status.
+- **Batch endpoint returns HTTP 207** when some files have prohibition
+  violations on `unredactedEntities[]`; HTTP 422 when all files failed; HTTP
+  200 when all succeeded.
+
+### Behavior changes
+- **Anonymise may now respond HTTP 422** when any `unredactedEntities[]` entry
+  matches an active `publicationProhibition` rule (any confidence — hard gate).
+- **Batch anonymise may now respond HTTP 207** on per-file prohibition
+  violations; per-file details in `prohibitedEntries[]` on the file entry.
+
 ### Security / Fixed
 - **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
   The previous implementation held sessions in a per-request `$sessions` PHP

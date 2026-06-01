@@ -26,6 +26,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -61,6 +62,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ *
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 class BatchAnonymizationController extends Controller
 {
@@ -365,18 +368,59 @@ class BatchAnonymizationController extends Controller
                 return $basesError;
             }
 
-            return new JSONResponse(
-                $this->anonService->anonymizeBatch(
-                    batchId: $batchId,
-                    entities: $entities,
-                    appendBasisSummary: $appendBasisSummary
-                )
+            $unredactedEntities = $params['unredactedEntities'] ?? [];
+            if (is_array($unredactedEntities) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities must be an array')],
+                    400
+                );
+            }
+
+            $batchResult = $this->anonService->anonymizeBatch(
+                batchId: $batchId,
+                entities: $entities,
+                appendBasisSummary: $appendBasisSummary,
+                unredactedEntities: $unredactedEntities
             );
+
+            $httpStatus = $this->resolveBatchHttpStatus(result: $batchResult);
+            return new JSONResponse($batchResult, $httpStatus);
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
         }//end try
 
     }//end batchAnonymize()
+
+    /**
+     * Resolve HTTP status for a batch anonymization result.
+     *
+     * HTTP 200 — all files processed without prohibition failures.
+     * HTTP 207 — some files had per-file 422 prohibition violations; others succeeded.
+     * HTTP 422 — every processed file had a prohibition violation (none succeeded).
+     *
+     * @param array<string, mixed> $result Batch anonymization result
+     *
+     * @return int HTTP status code
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
+     */
+    private function resolveBatchHttpStatus(array $result): int
+    {
+        $prohibitionFiles = (int) ($result['prohibitionSkippedFiles'] ?? 0);
+        $processed        = (int) ($result['processedFiles'] ?? 0);
+        $total            = (int) ($result['totalFiles'] ?? 0);
+
+        if ($prohibitionFiles === 0) {
+            return 200;
+        }
+
+        if ($processed === 0 && $prohibitionFiles === $total) {
+            return 422;
+        }
+
+        return 207;
+
+    }//end resolveBatchHttpStatus()
 
     /**
      * Produce the CSV anonymization report for a batch as a file download.
