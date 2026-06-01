@@ -442,7 +442,6 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $this->assertSame(200, $response->getStatus());
 
-    }//end testAnonymizeAcceptsOptionalContactFields(): void
+    }//end testAnonymizeAcceptsOptionalContactFields()
 
-    // phpcs:ignore Squiz.WhiteSpace.FunctionClosingBraceSpace
 }//end class
