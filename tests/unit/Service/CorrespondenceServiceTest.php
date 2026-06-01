@@ -359,7 +359,6 @@ class CorrespondenceServiceTest extends TestCase
                         && $entry['status'] === 'generated'
                         && $entry['format'] === 'pdf';
                 }),
-                $this->anything(),
                 $this->equalTo('document'),
                 $this->equalTo('correspondence')
             )

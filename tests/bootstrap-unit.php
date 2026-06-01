@@ -23,6 +23,9 @@ define('PHPUNIT_RUN', 1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Load global-namespace stubs first (\OC class, etc.).
+require_once __DIR__ . '/stubs/GlobalStubs.php';
+
 // Load Nextcloud OCP stubs (no NC server required).
 require_once __DIR__ . '/stubs/NextcloudStubs.php';
 

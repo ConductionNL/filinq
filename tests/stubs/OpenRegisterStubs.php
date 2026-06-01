@@ -323,6 +323,138 @@ class EntityRelationMapper
 
 }//end class
 
+/**
+ * Stub for SchemaMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class SchemaMapper
+{
+
+    public function findAll(?int $limit=null, ?int $offset=null, array $filters=[], array $searchConditions=[], array $searchParams=[]): array
+    {
+        return [];
+
+    }//end findAll()
+
+    public function find(mixed $id, array $_extend=[], ?bool $published=null, bool $_rbac=true, bool $_multitenancy=true): mixed
+    {
+        return null;
+
+    }//end find()
+
+}//end class
+
+
+/**
+ * Stub for Schema entity
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Schema
+{
+
+    public function getId(): ?int
+    {
+        return null;
+
+    }//end getId()
+
+    public function getSlug(): string
+    {
+        return '';
+
+    }//end getSlug()
+
+    public function getTitle(): string
+    {
+        return '';
+
+    }//end getTitle()
+
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+
+}//end class
+
+
+/**
+ * Stub for Register entity
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Register
+{
+
+    public function getId(): ?int
+    {
+        return null;
+
+    }//end getId()
+
+    public function getSlug(): string
+    {
+        return '';
+
+    }//end getSlug()
+
+    public function getTitle(): string
+    {
+        return '';
+
+    }//end getTitle()
+
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+
+}//end class
+
+
+/**
+ * Stub for RegisterMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class RegisterMapper
+{
+
+    public function findAll(?int $limit=null, ?int $offset=null, array $filters=[], array $searchConditions=[], array $searchParams=[]): array
+    {
+        return [];
+
+    }//end findAll()
+
+    public function find(int $id): mixed
+    {
+        return null;
+
+    }//end find()
+
+}//end class
+
+
 namespace OC\Hooks;
 
 /**
@@ -399,54 +531,6 @@ interface IAppConfig
 
 }
 
-/**
- * Stub for OCP\IRequest
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IRequest
-{
-
-    public function getParam(string $key, mixed $default = null): mixed;
-    public function getParams(): array;
-    public function getMethod(): string;
-    public function getUploadedFile(string $key): array;
-    public function getHeader(string $name): string;
-    public function isUserAgent(array $agent): bool;
-    public function getServerProtocol(): string;
-    public function getRawPathInfo(): string;
-    public function getPathInfo(): string|false;
-    public function getRequestUri(): string;
-    public function getId(): string;
-    public function getRemoteAddress(): string;
-    public function getServerHost(): string;
-
-}
-
-/**
- * Stub for OCP\IL10N
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IL10N
-{
-
-    public function t(string $text, array $parameters = []): string;
-    public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string;
-    public function l(string $type, mixed $data, array $options = []): mixed;
-    public function getLanguageCode(): string;
-    public function getLocaleCode(): string;
-
-}
-
 namespace OCP\App;
 
 /**
@@ -467,133 +551,6 @@ interface IAppManager
     public function enableApp(string $appId, bool $forceEnable = false): void;
     public function disableApp(string $appId, bool $automaticDisabled = false): void;
     public function getAppVersion(string $appId, bool $useCache = true): string;
-
-}
-
-namespace OCP\AppFramework;
-
-/**
- * Stub for OCP\AppFramework\Http constants
- *
- * @category Tests
- * @package  OCP\AppFramework
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Http
-{
-    public const STATUS_OK = 200;
-    public const STATUS_CREATED = 201;
-    public const STATUS_NO_CONTENT = 204;
-    public const STATUS_UNAUTHORIZED = 401;
-    public const STATUS_FORBIDDEN = 403;
-    public const STATUS_NOT_FOUND = 404;
-    public const STATUS_INTERNAL_SERVER_ERROR = 500;
-}//end class
-
-
-namespace OCP\AppFramework\Http;
-
-/**
- * Stub for OCP\AppFramework\Http\JSONResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class JSONResponse
-{
-
-    private int $status;
-    private mixed $data;
-
-    public function __construct(mixed $data = [], int $statusCode = 200)
-    {
-        $this->data   = $data;
-        $this->status = $statusCode;
-    }
-
-    public function getData(): mixed
-    {
-        return $this->data;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(int $code): self
-    {
-        $this->status = $code;
-        return $this;
-    }
-
-    public function setData(mixed $data): self
-    {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function render(): string
-    {
-        return json_encode($this->data);
-    }
-
-    public function addHeader(string $name, string $value): self
-    {
-        return $this;
-    }
-
-    public function getHeaders(): array
-    {
-        return [];
-    }
-
-}
-
-/**
- * Stub for OCP\AppFramework\Http\DataDownloadResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class DataDownloadResponse extends JSONResponse
-{
-
-    public function __construct(string $data, string $filename, string $contentType)
-    {
-        parent::__construct($data);
-    }
-
-}
-
-namespace OCP\AppFramework;
-
-/**
- * Stub for OCP\AppFramework\Controller
- *
- * @category Tests
- * @package  OCP\AppFramework
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Controller
-{
-
-    protected \OCP\IRequest $request;
-
-    public function __construct(string $appName, \OCP\IRequest $request)
-    {
-        $this->request = $request;
-    }
 
 }
 
@@ -674,7 +631,7 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface Folder
+interface Folder extends Node
 {
 
     /**
@@ -685,6 +642,38 @@ interface Folder
      * @return array<\OCP\Files\Node>
      */
     public function getById(int $id): array;
+
+    /**
+     * Get directory listing
+     *
+     * @return array<\OCP\Files\Node>
+     */
+    public function getDirectoryListing(): array;
+
+    /**
+     * Check if node exists
+     *
+     * @param string $path Path to check
+     *
+     * @return bool
+     */
+    public function nodeExists(string $path): bool;
+
+    /**
+     * Get a node by path
+     *
+     * @param string $path Node path
+     *
+     * @return \OCP\Files\Node
+     */
+    public function get(string $path): \OCP\Files\Node;
+
+    /**
+     * Get permissions bitmask
+     *
+     * @return int
+     */
+    public function getPermissions(): int;
 
 
 }//end interface
@@ -704,6 +693,11 @@ interface Node
 
     public function getName(): string;
     public function getPath(): string;
+    public function getId(): ?int;
+    public function getMimeType(): string;
+    public function getRelativePath(string $path): ?string;
+    public function getType(): string;
+    public function getPermissions(): int;
 
 }//end interface
 
@@ -721,7 +715,6 @@ interface File extends Node
 {
 
     public function getContent(): string;
-    public function getMimeType(): string;
 
 }//end interface
 
@@ -749,3 +742,88 @@ interface IRootFolder
 
 
 }//end interface
+
+
+namespace OCP;
+
+/**
+ * Stub for OCP\Server
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+final class Server
+{
+
+    /**
+     * Delegate to \OC::$server->get() so tests can intercept via \OC stub.
+     *
+     * @param string $serviceName Service class name
+     *
+     * @return mixed
+     */
+    public static function get(string $serviceName): mixed
+    {
+        return \OC::$server->get($serviceName);
+
+    }//end get()
+
+}//end class
+
+
+/**
+ * Stub for OCP\Constants
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Constants
+{
+
+    public const PERMISSION_CREATE = 4;
+    public const PERMISSION_READ = 1;
+    public const PERMISSION_UPDATE = 2;
+    public const PERMISSION_DELETE = 8;
+    public const PERMISSION_SHARE = 16;
+    public const PERMISSION_ALL = 31;
+    public const PERMISSION_NONE = 0;
+
+}//end class
+
+
+namespace OCP\Files;
+
+/**
+ * Stub for OCP\Files\NotFoundException
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class NotFoundException extends \Exception
+{
+
+}//end class
+
+
+/**
+ * Stub for OCP\Files\NotPermittedException
+ *
+ * @category Tests
+ * @package  OCP\Files
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class NotPermittedException extends \Exception
+{
+
+}//end class

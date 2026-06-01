@@ -101,6 +101,10 @@ class TemplatesControllerTest extends TestCase
         $this->mockUserSession     = $this->createMock(IUserSession::class);
         $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
+        $mockUser = $this->createMock(\OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('testuser');
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new TemplatesController(
             'docudesk',
             $this->mockRequest,
