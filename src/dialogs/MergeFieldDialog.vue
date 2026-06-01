@@ -22,7 +22,7 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcDialog, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextField } from '@conduction/nextcloud-vue'
 
 export default {
 	name: 'MergeFieldDialog',

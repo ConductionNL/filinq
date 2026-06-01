@@ -78,23 +78,30 @@
 		<NcEmptyContent v-else
 			:name="t('docudesk', 'No templates found')"
 			:description="t('docudesk', 'Create your first template to get started.')" />
+
+		<ConfirmDeleteTemplateDialog v-if="deleteTarget"
+			:template-name="deleteTarget.name"
+			@confirm="executeDelete"
+			@cancel="deleteTarget = null" />
 	</div>
 </template>
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 import { navigationStore } from '../../store/store.js'
+import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
 
 export default {
 	name: 'TemplateIndex',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField },
+	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField, ConfirmDeleteTemplateDialog },
 	data() {
 		return {
 			navigationStore,
 			selectedCategory: null,
 			searchQuery: '',
+			deleteTarget: null,
 		}
 	},
 	computed: {
@@ -171,15 +178,22 @@ export default {
 			}
 		},
 		/**
-		 * Confirm and delete a template, then refresh the list.
+		 * Open the delete confirmation dialog for a template.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
-		async confirmDelete(tmpl) {
-			if (!window.confirm(t('docudesk', 'Delete template "{name}"?', { name: tmpl.name }))) {
-				return
-			}
-			await this.templateStore.deleteTemplate(tmpl.id)
+		confirmDelete(tmpl) {
+			this.deleteTarget = tmpl
+		},
+		/**
+		 * Execute deletion after user confirmed in the dialog.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		async executeDelete() {
+			if (!this.deleteTarget) return
+			await this.templateStore.deleteTemplate(this.deleteTarget.id)
+			this.deleteTarget = null
 			await this.templateStore.fetchTemplates()
 		},
 	},

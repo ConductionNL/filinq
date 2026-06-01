@@ -218,20 +218,26 @@
 		<ConditionalSectionDialog v-if="showConditionalDialog"
 			@close="showConditionalDialog = false"
 			@insert="insertConditionalSection" />
+
+		<ConfirmRestoreVersionDialog v-if="restoreTarget"
+			:version-number="restoreTarget ? restoreTarget.version : 0"
+			@confirm="executeRestore"
+			@cancel="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@conduction/nextcloud-vue'
 import { useTemplateStore } from '../../store/modules/template.js'
 import { navigationStore } from '../../store/store.js'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 
 export default {
 	name: 'TemplateDetail',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog },
+	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog, ConfirmRestoreVersionDialog },
 	data() {
 		return {
 			navigationStore,
@@ -265,6 +271,7 @@ export default {
 			// Dialogs
 			showMergeDialog: false,
 			showConditionalDialog: false,
+			restoreTarget: null,
 		}
 	},
 	computed: {
@@ -415,12 +422,22 @@ export default {
 			this.versionsLoading = false
 		},
 		/**
-		 * Restore the template to a selected prior version.
+		 * Open the restore confirmation dialog for a version.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
-		async restoreVersion(ver) {
-			if (!window.confirm(t('docudesk', 'Restore to version {n}?', { n: ver.version }))) return
+		restoreVersion(ver) {
+			this.restoreTarget = ver
+		},
+		/**
+		 * Execute restore after user confirmed in the dialog.
+		 *
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async executeRestore() {
+			if (!this.restoreTarget) return
+			const ver = this.restoreTarget
+			this.restoreTarget = null
 			const result = await this.templateStore.restoreVersion(
 				this.templateStore.templateItem.id,
 				ver.id,
