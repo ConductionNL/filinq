@@ -1,3 +1,8 @@
+---
+status: pr-created
+pr: https://codeberg.org/Conduction/docudesk/pulls
+---
+
 ## Context
 
 DocuDesk is a Nextcloud app for GDPR-compliant document processing. It currently handles anonymization, consent management, metadata enrichment, and PDF generation. It has zero signing capability. 76% of Dutch government tenders require digital signing, making this a critical gap.
