@@ -3,99 +3,112 @@
 /**
  * Signing Service
  *
- * Orchestrates the signing request lifecycle.
+ * Orchestrates the signing request lifecycle via OR's ApprovalChain/ApprovalStep
+ * entities. All chain-state management (who must sign, sequential advance, completion
+ * detection) is delegated to OR's ApprovalService. This service translates docudesk's
+ * signing API into OR approval-workflow operations and dispatches typed events so that
+ * signing providers can react to step transitions.
  *
- * @category  Service
- * @package   OCA\DocuDesk\Service
+ * @category Service
+ * @package  OCA\DocuDesk\Service
+ *
  * @author    Conduction B.V. <info@conduction.nl>
- * @copyright 2024 Conduction B.V.
+ * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   GIT: <git_id>
- * @link      https://www.DocuDesk.app
+ *
+ * @link https://conduction.nl
+ *
+ * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
  */
 
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use Exception;
+use OCA\DocuDesk\Event\ApprovalStepApprovedEvent;
+use OCA\DocuDesk\Event\ApprovalStepInitiatedEvent;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
-use OCP\IAppConfig;
+use OCA\OpenRegister\Db\ApprovalChain;
+use OCA\OpenRegister\Db\ApprovalChainMapper;
+use OCA\OpenRegister\Db\ApprovalStep;
+use OCA\OpenRegister\Db\ApprovalStepMapper;
+use OCA\OpenRegister\Service\ApprovalService;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IRequest;
 use OCP\IUserSession;
-use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Service for managing signing request lifecycle
+ * Service for managing signing request lifecycle via OR ApprovalChain
+ *
+ * Signing flows are backed by OR's ApprovalChain + ApprovalStep entities.
+ * The bespoke step-state machine (STATUS_TRANSITIONS, sequential-advance,
+ * completion-detection) has been removed; OR handles all of that via
+ * ApprovalService::initializeChain / approveStep / rejectStep.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * @link     https://conduction.nl
+ *
+ * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class SigningService
 {
-
-    /**
-     * Valid status transitions for signing requests
-     *
-     * @var array<string, array<string>>
-     */
-    private const STATUS_TRANSITIONS = [
-        'DRAFT'       => ['PENDING', 'CANCELLED'],
-        'PENDING'     => ['IN_PROGRESS', 'CANCELLED', 'EXPIRED'],
-        'IN_PROGRESS' => ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'],
-        'COMPLETED'   => [],
-        'DECLINED'    => [],
-        'EXPIRED'     => [],
-        'CANCELLED'   => [],
-    ];
-
     /**
      * Constructor
      *
-     * @param SettingsService        $settingsService     Settings service
-     * @param SigningAuditService    $auditService        Audit service
-     * @param SigningProviderFactory $providerFactory     Provider factory
-     * @param IAppConfig             $config              App config
-     * @param IUserSession           $userSession         User session
-     * @param INotificationManager   $notificationManager Notification manager
-     * @param LoggerInterface        $logger              Logger
-     * @param IRequest               $request             HTTP request
+     * @param SettingsService        $settingsService Settings service
+     * @param SigningAuditService    $auditService    Audit service
+     * @param SigningProviderFactory $providerFactory Provider factory
+     * @param IUserSession           $userSession     User session
+     * @param LoggerInterface        $logger          Logger
+     * @param IRequest               $request         HTTP request
+     * @param ApprovalService        $approvalService OR ApprovalService
+     * @param ApprovalChainMapper    $chainMapper     OR chain mapper
+     * @param ApprovalStepMapper     $stepMapper      OR step mapper
+     * @param IEventDispatcher       $eventDispatcher Event dispatcher
      *
      * @return void
+     *
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
      */
     public function __construct(
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
         private readonly SigningProviderFactory $providerFactory,
-        private readonly IAppConfig $config,
         private readonly IUserSession $userSession,
-        private readonly INotificationManager $notificationManager,
         private readonly LoggerInterface $logger,
-        private readonly IRequest $request
+        private readonly IRequest $request,
+        private readonly ApprovalService $approvalService,
+        private readonly ApprovalChainMapper $chainMapper,
+        private readonly ApprovalStepMapper $stepMapper,
+        private readonly IEventDispatcher $eventDispatcher
     ) {
 
     }//end __construct()
 
     /**
-     * Create a new signing request
+     * Create a new signing request backed by an OR ApprovalChain.
+     *
+     * One ApprovalStep is created per signer. The first step starts as
+     * 'pending'; subsequent steps start as 'waiting' and are advanced by
+     * OR's advance-on-approval logic. After chain initialization an
+     * ApprovalStepInitiatedEvent is dispatched so that the signing provider
+     * can present signing UI to the first signer.
      *
      * @param array<string, mixed> $data The signing request data
      *
-     * @return array<string, mixed> The created signing request
+     * @return array<string, mixed> The created signing request (chain representation)
      *
-     * @throws RuntimeException If creation fails
+     * @throws RuntimeException If no authenticated user or creation fails
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
      */
     public function createRequest(array $data): array
     {
@@ -104,127 +117,82 @@ class SigningService
             throw new RuntimeException('No authenticated user');
         }
 
-        $objectService = $this->settingsService->getObjectService();
-        $expiryDays    = (int) $this->config->getValueString('docudesk', 'signing_request_expiry_days', '30');
-        $deadline      = (new DateTimeImmutable())->modify('+'.$expiryDays.' days');
-        $defaultLevel  = $this->config->getValueString('docudesk', 'signing_default_level', 'SES');
-        $defaultProv   = $this->config->getValueString('docudesk', 'signing_provider', 'native');
-
-        $request = [
-            'documentFileId'  => $data['documentFileId'] ?? '',
-            'documentName'    => $data['documentName'] ?? '',
-            'initiatorUserId' => $user->getUID(),
-            'signatureLevel'  => $data['signatureLevel'] ?? $defaultLevel,
-            'signingMode'     => $data['signingMode'] ?? 'sequential',
-            'status'          => 'PENDING',
-            'provider'        => $data['provider'] ?? $defaultProv,
-            'deadline'        => $data['deadline'] ?? $deadline->format(DateTimeInterface::ATOM),
-            'signerIds'       => [],
-        ];
-
-        $this->validateRequestData(data: $request);
-
-        $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $createdRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
-
-        $signers        = $data['signers'] ?? [];
-        $signerIds      = [];
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-
-        foreach ($signers as $index => $signerData) {
-            $signerRecord = [
-                'signingRequestId' => $createdRequest['id'] ?? $createdRequest['uuid'] ?? '',
-                'userId'           => $signerData['userId'] ?? '',
-                'displayName'      => $signerData['displayName'] ?? '',
-                'email'            => $signerData['email'] ?? '',
-                'order'            => $signerData['order'] ?? $index,
-                'status'           => 'PENDING',
+        $signers = $data['signers'] ?? [];
+        $steps   = [];
+        foreach ($signers as $index => $signer) {
+            $steps[] = [
+                'role'  => $signer['groupId'] ?? $signer['userId'] ?? '',
+                'order' => (int) ($signer['order'] ?? ($index + 1)),
             ];
+        }
 
-            $created     = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
-            $signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
-        }//end foreach
+        $documentName = (string) ($data['documentName'] ?? '');
+        $chain        = $this->chainMapper->createFromArray(
+            [
+                'name'    => 'docudesk-signing-'.preg_replace('/[^a-zA-Z0-9_-]/', '-', $documentName),
+                'steps'   => json_encode($steps),
+                'enabled' => true,
+            ]
+        );
 
-        $requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
-        $createdRequest['signerIds'] = $signerIds;
-        $objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
+        $objectUuid   = (string) ($data['documentFileId'] ?? '');
+        $createdSteps = $this->approvalService->initializeChain(chain: $chain, objectUuid: $objectUuid);
 
         $this->auditService->logEvent(
-            signingRequestId: $requestId,
+            signingRequestId: (string) $chain->getId(),
             action: 'CREATED',
             actorUserId: $user->getUID(),
             actorDisplayName: $user->getDisplayName(),
             ipAddress: $this->getClientIp(),
-            signatureLevel: $request['signatureLevel'],
-            provider: $request['provider']
+            signatureLevel: (string) ($data['signatureLevel'] ?? 'SES'),
+            provider: (string) ($data['provider'] ?? 'native')
         );
 
-        return $createdRequest;
+        if (count($createdSteps) > 0) {
+            $this->eventDispatcher->dispatchTyped(
+                new ApprovalStepInitiatedEvent(chain: $chain, step: $createdSteps[0])
+            );
+        }
+
+        return $this->buildRequestResponse(chain: $chain, steps: $createdSteps, data: $data, userId: $user->getUID());
 
     }//end createRequest()
 
     /**
-     * Get a signing request by ID
+     * Get a signing request by chain ID.
      *
-     * @param string $requestId The signing request ID
+     * @param string $requestId The signing request ID (= ApprovalChain ID)
      *
      * @return array<string, mixed> The signing request
      *
      * @throws RuntimeException If not found
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.2
      */
     public function getRequest(string $requestId): array
     {
-        $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        $chain = $this->chainMapper->find(id: (int) $requestId);
+        $steps = $this->stepMapper->findByChain(chainId: $chain->getId());
 
-        $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($object === null) {
-            throw new RuntimeException('Signing request not found: '.$requestId);
-        }
-
-        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            return $object->jsonSerialize();
-        }
-
-        return (array) $object;
+        return $this->buildRequestResponse(chain: $chain, steps: $steps);
 
     }//end getRequest()
 
     /**
-     * List signing requests
+     * List all signing requests (approval chains).
      *
      * @return array<int, array<string, mixed>> List of signing requests
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.2
      */
     public function listRequests(): array
     {
-        $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-
-        $results = $objectService->findAll(
-            [
-                'filters' => [
-                    'register' => $register,
-                    'schema'   => $schema,
-                ],
-            ]
-        );
-
+        $chains   = $this->chainMapper->findAll();
         $requests = [];
-        foreach ($results as $result) {
-            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $requests[] = $result->jsonSerialize();
-                continue;
-            }
 
-            $requests[] = (array) $result;
+        foreach ($chains as $chain) {
+            $steps      = $this->stepMapper->findByChain(chainId: $chain->getId());
+            $requests[] = $this->buildRequestResponse(chain: $chain, steps: $steps);
         }
 
         return $requests;
@@ -232,16 +200,20 @@ class SigningService
     }//end listRequests()
 
     /**
-     * Sign a document within a signing request
+     * Sign (approve) the pending step for this signer.
      *
-     * @param string $requestId The signing request ID
-     * @param string $signerId  The signer record ID
+     * Delegates to OR's ApprovalService::approveStep(), which advances the
+     * next step to 'pending'. If a next step exists, an
+     * ApprovalStepApprovedEvent is dispatched for the signing provider.
      *
-     * @return array<string, mixed> The updated signer record
+     * @param string $requestId The signing request ID (chain ID)
+     * @param string $signerId  The signer record ID (step ID)
      *
-     * @throws RuntimeException If signing fails
+     * @return array<string, mixed> The updated step as an array
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+     * @throws RuntimeException If not authenticated or step operation fails
+     *
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
      */
     public function sign(string $requestId, string $signerId): array
     {
@@ -250,78 +222,51 @@ class SigningService
             throw new RuntimeException('No authenticated user');
         }
 
-        $objectService = $this->settingsService->getObjectService();
-        $request       = $this->getRequest(requestId: $requestId);
-        $status        = $request['status'] ?? '';
-
-        if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
-            throw new RuntimeException('Signing request is not in a signable state: '.$status);
-        }
-
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-
-        if ($signerObject === null) {
-            throw new RuntimeException('Signer record not found: '.$signerId);
-        }
-
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
-
-        // C4 security fix: verify the signer record belongs to this signing
-        // request. Without this check, an attacker who knows any valid
-        // signerId can sign under an arbitrary requestId they do not own.
-        if (($signer['signingRequestId'] ?? '') !== $requestId) {
-            throw new RuntimeException('Signer record does not belong to this signing request');
-        }
-
-        // Security finding #282: ensure the authenticated user is the signer
-        // they claim to be. Without this check any authenticated user could
-        // sign on behalf of another signer by supplying their signer ID.
-        if (($signer['userId'] ?? '') !== $user->getUID()) {
-            throw new RuntimeException('Not authorized to sign as this signer');
-        }
-
-        if (($signer['status'] ?? '') !== 'PENDING') {
-            throw new RuntimeException('Signer has already responded to this request');
-        }
-
-        $now = new DateTimeImmutable();
-        $signer['status']    = 'SIGNED';
-        $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
-        $signer['ipAddress'] = $this->getClientIp();
-        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
+        $result   = $this->approvalService->approveStep(
+            stepId: (int) $signerId,
+            userId: $user->getUID()
+        );
+        $step     = $result['step'];
+        $nextStep = $result['nextStep'];
+        $chain    = $result['chain'];
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'SIGNED',
             actorUserId: $user->getUID(),
             actorDisplayName: $user->getDisplayName(),
-            ipAddress: $this->getClientIp(),
-            signatureLevel: $request['signatureLevel'] ?? 'SES',
-            provider: $request['provider'] ?? 'native'
+            ipAddress: $this->getClientIp()
         );
 
-        $this->updateRequestStatus(requestId: $requestId, request: $request);
+        if ($nextStep !== null) {
+            $this->eventDispatcher->dispatchTyped(
+                new ApprovalStepApprovedEvent(
+                    chain: $chain,
+                    approvedStep: $step,
+                    nextStep: $nextStep
+                )
+            );
+        }
 
-        return $signer;
+        return $step->jsonSerialize();
 
     }//end sign()
 
     /**
-     * Decline a signing request
+     * Decline (reject) the pending step for this signer.
      *
-     * @param string $requestId The signing request ID
-     * @param string $signerId  The signer record ID
-     * @param string $reason    The decline reason
+     * Delegates to OR's ApprovalService::rejectStep(). OR marks the step
+     * 'rejected' and stops chain advance; no further steps are triggered.
      *
-     * @return array<string, mixed> The updated signer record
+     * @param string $requestId The signing request ID (chain ID)
+     * @param string $signerId  The signer record ID (step ID)
+     * @param string $reason    The decline reason stored as step comment
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+     * @return array<string, mixed> The updated step as an array
+     *
+     * @throws RuntimeException If not authenticated or step operation fails
+     *
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
      */
     public function decline(string $requestId, string $signerId, string $reason): array
     {
@@ -330,52 +275,11 @@ class SigningService
             throw new RuntimeException('No authenticated user');
         }
 
-        $objectService  = $this->settingsService->getObjectService();
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-
-        if ($signerObject === null) {
-            throw new RuntimeException('Signer record not found: '.$signerId);
-        }
-
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
-
-        // C4 security fix: verify the signer record belongs to this signing
-        // request. Without this check, an attacker who knows any valid
-        // signerId can decline under an arbitrary requestId they do not own.
-        if (($signer['signingRequestId'] ?? '') !== $requestId) {
-            throw new RuntimeException('Signer record does not belong to this signing request');
-        }
-
-        // Security finding #282: ensure the authenticated user is the signer
-        // they claim to be before allowing them to decline on its behalf.
-        if (($signer['userId'] ?? '') !== $user->getUID()) {
-            throw new RuntimeException('Not authorized to decline as this signer');
-        }
-
-        $signer['status']        = 'DECLINED';
-        $signer['declineReason'] = $reason;
-        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
-
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
-        }
-
-        $signatureLevel = $request['signatureLevel'] ?? 'SES';
-        $provider       = $request['provider'] ?? 'native';
-
-        $request['status'] = 'DECLINED';
-        $objectService->saveObject(object: $request, register: $register, schema: $schema);
+        $result = $this->approvalService->rejectStep(
+            stepId: (int) $signerId,
+            userId: $user->getUID(),
+            comment: $reason
+        );
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -383,23 +287,23 @@ class SigningService
             actorUserId: $user->getUID(),
             actorDisplayName: $user->getDisplayName(),
             ipAddress: $this->getClientIp(),
-            signatureLevel: $signatureLevel,
-            provider: $provider,
             metadata: ['reason' => $reason]
         );
 
-        return $signer;
+        return $result['step']->jsonSerialize();
 
     }//end decline()
 
     /**
-     * Cancel a signing request
+     * Cancel a signing request by marking all open steps as rejected.
      *
-     * @param string $requestId The signing request ID
+     * @param string $requestId The signing request ID (chain ID)
      *
-     * @return array<string, mixed> The cancelled request
+     * @return array<string, mixed> The cancelled request representation
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+     * @throws RuntimeException If not authenticated
+     *
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.3
      */
     public function cancelRequest(string $requestId): array
     {
@@ -408,22 +312,16 @@ class SigningService
             throw new RuntimeException('No authenticated user');
         }
 
-        $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
-        }
+        $chain = $this->chainMapper->find(id: (int) $requestId);
+        $steps = $this->stepMapper->findByChain(chainId: $chain->getId());
 
-        if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
-            throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
+        foreach ($steps as $step) {
+            if (in_array($step->getStatus(), ['pending', 'waiting'], strict: true) === true) {
+                $step->setStatus('rejected');
+                $step->setComment('Cancelled by initiator');
+                $this->stepMapper->update(entity: $step);
+            }
         }
-
-        $request['status'] = 'CANCELLED';
-        $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -433,18 +331,23 @@ class SigningService
             ipAddress: $this->getClientIp()
         );
 
-        return $request;
+        $updatedSteps = $this->stepMapper->findByChain(chainId: $chain->getId());
+
+        return $this->buildRequestResponse(chain: $chain, steps: $updatedSteps);
 
     }//end cancelRequest()
 
     /**
-     * Bulk sign multiple signing requests
+     * Bulk sign multiple signing requests for the current user.
      *
-     * @param array<string> $requestIds Array of request IDs to sign
+     * For each request, finds the pending step whose role matches the current
+     * user and calls sign() on it.
+     *
+     * @param array<string> $requestIds Array of request (chain) IDs to sign
      *
      * @return array<string, array<string, mixed>> Results keyed by request ID
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-4
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.1
      */
     public function bulkSign(array $requestIds): array
     {
@@ -457,20 +360,21 @@ class SigningService
 
         foreach ($requestIds as $requestId) {
             try {
-                $request        = $this->getRequest(requestId: $requestId);
-                $signerIds      = $request['signerIds'] ?? [];
-                $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
+                $steps       = $this->stepMapper->findByChain(chainId: (int) $requestId);
+                $pendingStep = $this->findPendingStepForUser(steps: $steps, userId: $userId);
+
+                if ($pendingStep === null) {
+                    $results[$requestId] = [
+                        'success' => false,
+                        'error'   => 'No pending step found for current user',
+                    ];
+                    continue;
+                }
 
                 $results[$requestId] = [
-                    'success' => false,
-                    'error'   => 'No pending signer record found for current user',
+                    'success' => true,
+                    'signer'  => $this->sign(requestId: $requestId, signerId: (string) $pendingStep->getId()),
                 ];
-                if ($targetSignerId !== null) {
-                    $results[$requestId] = [
-                        'success' => true,
-                        'signer'  => $this->sign(requestId: $requestId, signerId: $targetSignerId),
-                    ];
-                }
             } catch (Exception $e) {
                 $results[$requestId] = [
                     'success' => false,
@@ -484,134 +388,106 @@ class SigningService
     }//end bulkSign()
 
     /**
-     * Validate a status transition
+     * Build the signing-request response array from an ApprovalChain and its steps.
      *
-     * @param string $currentStatus The current status
-     * @param string $newStatus     The proposed new status
+     * Derives the overall status from step statuses:
+     * - all approved  → COMPLETED
+     * - any rejected  → DECLINED
+     * - any approved  → IN_PROGRESS
+     * - otherwise     → PENDING
      *
-     * @return bool True if transition is valid
+     * @param ApprovalChain            $chain  The chain entity
+     * @param array<int, ApprovalStep> $steps  All steps for this chain
+     * @param array<string, mixed>     $data   Optional original request data for
+     *                                         fields not stored in the chain
+     * @param string                   $userId Optional initiator user ID
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+     * @return array<string, mixed>
+     *
+     * @spec openspec/changes/migrate-signing-to-or-approval-workflow/tasks.md#task-D1.2
      */
-    public function isValidTransition(string $currentStatus, string $newStatus): bool
-    {
-        $allowed = self::STATUS_TRANSITIONS[$currentStatus] ?? [];
-        return in_array($newStatus, $allowed, true) === true;
+    private function buildRequestResponse(
+        ApprovalChain $chain,
+        array $steps=[],
+        array $data=[],
+        string $userId=''
+    ): array {
+        $allApproved = count($steps) > 0;
+        $anyRejected = false;
+        $anyApproved = false;
 
-    }//end isValidTransition()
+        foreach ($steps as $step) {
+            if ($step->getStatus() !== 'approved') {
+                $allApproved = false;
+            }
+
+            if ($step->getStatus() === 'rejected') {
+                $anyRejected = true;
+            }
+
+            if ($step->getStatus() === 'approved') {
+                $anyApproved = true;
+            }
+        }
+
+        $status = 'PENDING';
+        if ($anyApproved === true) {
+            $status = 'IN_PROGRESS';
+        }
+
+        if ($anyRejected === true) {
+            $status = 'DECLINED';
+        }
+
+        if ($allApproved === true) {
+            $status = 'COMPLETED';
+        }
+
+        $objectUuid = '';
+        if (count($steps) > 0) {
+            $objectUuid = (string) ($steps[0]->getObjectUuid() ?? '');
+        }
+
+        return [
+            'id'              => (string) $chain->getId(),
+            'chainId'         => (string) $chain->getId(),
+            'chainUuid'       => (string) ($chain->getUuid() ?? ''),
+            'documentFileId'  => $data['documentFileId'] ?? $objectUuid,
+            'documentName'    => $data['documentName'] ?? $chain->getName(),
+            'initiatorUserId' => $data['initiatorUserId'] ?? $userId,
+            'signatureLevel'  => $data['signatureLevel'] ?? 'SES',
+            'signingMode'     => $data['signingMode'] ?? 'sequential',
+            'status'          => $status,
+            'provider'        => $data['provider'] ?? 'native',
+            'signerIds'       => array_map(static fn(ApprovalStep $s) => (string) $s->getId(), $steps),
+        ];
+
+    }//end buildRequestResponse()
 
     /**
-     * Validate signing request data
+     * Find the first pending step whose role matches the given user ID.
      *
-     * @param array<string, mixed> $data The request data
+     * @param array<int, ApprovalStep> $steps  All steps to search
+     * @param string                   $userId The user ID to match against step role
      *
-     * @return void
-     *
-     * @throws RuntimeException If validation fails
+     * @return ApprovalStep|null The matching step or null
      */
-    private function validateRequestData(array $data): void
+    private function findPendingStepForUser(array $steps, string $userId): ?ApprovalStep
     {
-        if (empty($data['documentFileId']) === true) {
-            throw new RuntimeException('Document file ID is required');
-        }
-
-        if (empty($data['documentName']) === true) {
-            throw new RuntimeException('Document name is required');
-        }
-
-        if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new RuntimeException('Invalid signature level');
-        }
-
-        if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new RuntimeException('Invalid signing mode');
-        }
-
-    }//end validateRequestData()
-
-    /**
-     * Update the signing request status based on signer progress
-     *
-     * @param string               $requestId The signing request ID
-     * @param array<string, mixed> $request   The current request data
-     *
-     * @return void
-     */
-    private function updateRequestStatus(string $requestId, array $request): void
-    {
-        $objectService  = $this->settingsService->getObjectService();
-        $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerIds      = $request['signerIds'] ?? [];
-        $allSigned      = true;
-
-        foreach ($signerIds as $signerId) {
-            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
+        foreach ($steps as $step) {
+            if ($step->getStatus() === 'pending' && $step->getRole() === $userId) {
+                return $step;
             }
-
-            if (($signer['status'] ?? '') !== 'SIGNED') {
-                $allSigned = false;
-                break;
-            }
-        }//end foreach
-
-        $freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($freshObj !== null && is_object($freshObj) === true && method_exists($freshObj, 'jsonSerialize') === true) {
-            $freshRequest = $freshObj->jsonSerialize();
-        } else {
-            $freshRequest = (array) $freshObj;
         }
-
-        $freshRequest['status'] = 'IN_PROGRESS';
-        if ($allSigned === true) {
-            $freshRequest['status'] = 'COMPLETED';
-        }
-
-        $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
-
-    }//end updateRequestStatus()
-
-    /**
-     * Find the signer record ID for a given user
-     *
-     * @param array<string> $signerIds The signer record IDs
-     * @param string        $userId    The user ID to find
-     *
-     * @return string|null The signer record ID, or null
-     */
-    private function findSignerForUser(array $signerIds, string $userId): ?string
-    {
-        $objectService  = $this->settingsService->getObjectService();
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-
-        foreach ($signerIds as $signerId) {
-            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
-            }
-
-            if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
-                return $signerId;
-            }
-        }//end foreach
 
         return null;
 
-    }//end findSignerForUser()
+    }//end findPendingStepForUser()
 
     /**
-     * Get the client IP address
+     * Get the client IP address.
      *
-     * @return string The client IP address
+     * @return string
      */
     private function getClientIp(): string
     {

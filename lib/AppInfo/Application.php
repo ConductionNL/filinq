@@ -22,7 +22,10 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
+use OCA\DocuDesk\Event\ApprovalStepApprovedEvent;
+use OCA\DocuDesk\Event\ApprovalStepInitiatedEvent;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\DocuDesk\EventListener\SigningStepEventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -67,6 +70,12 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
+
+        // Register signing step listeners — invokes providers when OR approval
+        // steps transition to pending. These are dispatched by SigningService
+        // after calling ApprovalService::initializeChain / approveStep.
+        $context->registerEventListener(ApprovalStepInitiatedEvent::class, SigningStepEventListener::class);
+        $context->registerEventListener(ApprovalStepApprovedEvent::class, SigningStepEventListener::class);
 
     }//end register()
 

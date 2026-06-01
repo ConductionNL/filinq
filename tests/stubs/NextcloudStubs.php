@@ -61,6 +61,24 @@ interface IRequest
     public function getUploadedFile(string $key): ?array;
 
 
+    /**
+     * Get the remote address
+     *
+     * @return string
+     */
+    public function getRemoteAddress(): string;
+
+
+    /**
+     * Get an HTTP header
+     *
+     * @param string $name Header name
+     *
+     * @return string
+     */
+    public function getHeader(string $name): string;
+
+
 }//end interface
 
 
@@ -223,3 +241,90 @@ class DataDownloadResponse
 
 
 }//end class
+
+namespace OCP\EventDispatcher;
+
+/**
+ * Stub for OCP\EventDispatcher\Event base class
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Event
+{
+
+    /**
+     * Constructor
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+
+    }//end __construct()
+
+
+}//end class
+
+/**
+ * Stub for OCP\EventDispatcher\IEventDispatcher
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IEventDispatcher
+{
+
+    /**
+     * Dispatch a typed event
+     *
+     * @param Event $event The event to dispatch
+     *
+     * @return void
+     */
+    public function dispatchTyped(Event $event): void;
+
+
+    /**
+     * Add a listener
+     *
+     * @param string   $eventClass Event class name
+     * @param callable $listener   Listener callable
+     * @param int      $priority   Priority
+     *
+     * @return void
+     */
+    public function addListener(string $eventClass, callable $listener, int $priority=0): void;
+
+
+}//end interface
+
+/**
+ * Stub for OCP\EventDispatcher\IEventListener
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IEventListener
+{
+
+    /**
+     * Handle an event
+     *
+     * @param Event $event The event to handle
+     *
+     * @return void
+     */
+    public function handle(Event $event): void;
+
+
+}//end interface

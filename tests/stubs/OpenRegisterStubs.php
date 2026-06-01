@@ -251,7 +251,443 @@ class RiskLevelService
 
 }//end class
 
+namespace OCA\OpenRegister\Service;
+
+/**
+ * Stub for ApprovalService
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalService
+{
+
+    /**
+     * Initialize chain
+     *
+     * @param mixed  $chain      The chain
+     * @param string $objectUuid The object UUID
+     *
+     * @return array
+     */
+    public function initializeChain($chain, string $objectUuid): array
+    {
+        return [];
+
+    }//end initializeChain()
+
+
+    /**
+     * Approve a step
+     *
+     * @param int    $stepId  Step ID
+     * @param string $userId  User ID
+     * @param string $comment Comment
+     *
+     * @return array
+     */
+    public function approveStep(int $stepId, string $userId, string $comment=''): array
+    {
+        return [];
+
+    }//end approveStep()
+
+
+    /**
+     * Reject a step
+     *
+     * @param int    $stepId  Step ID
+     * @param string $userId  User ID
+     * @param string $comment Comment
+     *
+     * @return array
+     */
+    public function rejectStep(int $stepId, string $userId, string $comment=''): array
+    {
+        return [];
+
+    }//end rejectStep()
+
+
+}//end class
+
 namespace OCA\OpenRegister\Db;
+
+/**
+ * Stub for ApprovalChain
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalChain
+{
+
+    /** @var int|null */
+    private ?int $id = null;
+
+    /** @var string|null */
+    private ?string $uuid = null;
+
+    /** @var string|null */
+    private ?string $name = null;
+
+    /**
+     * Get ID
+     *
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
+
+    }//end getId()
+
+
+    /**
+     * Get UUID
+     *
+     * @return string|null
+     */
+    public function getUuid(): ?string
+    {
+        return $this->uuid;
+
+    }//end getUuid()
+
+
+    /**
+     * Get name
+     *
+     * @return string|null
+     */
+    public function getName(): ?string
+    {
+        return $this->name;
+
+    }//end getName()
+
+
+    /**
+     * Get steps as array
+     *
+     * @return array
+     */
+    public function getStepsArray(): array
+    {
+        return [];
+
+    }//end getStepsArray()
+
+
+}//end class
+
+/**
+ * Stub for ApprovalStep
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStep
+{
+
+    /** @var int|null */
+    private ?int $id = null;
+
+    /** @var int|null */
+    private ?int $chainId = null;
+
+    /** @var string|null */
+    private ?string $objectUuid = null;
+
+    /** @var int */
+    private int $stepOrder = 0;
+
+    /** @var string|null */
+    private ?string $role = null;
+
+    /** @var string|null */
+    private ?string $status = 'pending';
+
+    /** @var string|null */
+    private ?string $decidedBy = null;
+
+    /** @var string|null */
+    private ?string $comment = null;
+
+    /**
+     * Get ID
+     *
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return $this->id;
+
+    }//end getId()
+
+
+    /**
+     * Get chain ID
+     *
+     * @return int|null
+     */
+    public function getChainId(): ?int
+    {
+        return $this->chainId;
+
+    }//end getChainId()
+
+
+    /**
+     * Get object UUID
+     *
+     * @return string|null
+     */
+    public function getObjectUuid(): ?string
+    {
+        return $this->objectUuid;
+
+    }//end getObjectUuid()
+
+
+    /**
+     * Get step order
+     *
+     * @return int
+     */
+    public function getStepOrder(): int
+    {
+        return $this->stepOrder;
+
+    }//end getStepOrder()
+
+
+    /**
+     * Get role
+     *
+     * @return string|null
+     */
+    public function getRole(): ?string
+    {
+        return $this->role;
+
+    }//end getRole()
+
+
+    /**
+     * Get status
+     *
+     * @return string|null
+     */
+    public function getStatus(): ?string
+    {
+        return $this->status;
+
+    }//end getStatus()
+
+
+    /**
+     * Set status
+     *
+     * @param string|null $status New status
+     *
+     * @return void
+     */
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+
+    }//end setStatus()
+
+
+    /**
+     * Set comment
+     *
+     * @param string|null $comment Comment
+     *
+     * @return void
+     */
+    public function setComment(?string $comment): void
+    {
+        $this->comment = $comment;
+
+    }//end setComment()
+
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            'id'         => $this->id,
+            'chainId'    => $this->chainId,
+            'objectUuid' => $this->objectUuid,
+            'stepOrder'  => $this->stepOrder,
+            'role'       => $this->role,
+            'status'     => $this->status,
+            'decidedBy'  => $this->decidedBy,
+            'comment'    => $this->comment,
+        ];
+
+    }//end jsonSerialize()
+
+
+}//end class
+
+/**
+ * Stub for ApprovalChainMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalChainMapper
+{
+
+    /**
+     * Find a chain by ID
+     *
+     * @param int $id Chain ID
+     *
+     * @return ApprovalChain
+     */
+    public function find(int $id): ApprovalChain
+    {
+        return new ApprovalChain();
+
+    }//end find()
+
+
+    /**
+     * Find all chains
+     *
+     * @param int|null $limit  Limit
+     * @param int|null $offset Offset
+     *
+     * @return array
+     */
+    public function findAll(?int $limit=null, ?int $offset=null): array
+    {
+        return [];
+
+    }//end findAll()
+
+
+    /**
+     * Create a chain from array
+     *
+     * @param array $data Chain data
+     *
+     * @return ApprovalChain
+     */
+    public function createFromArray(array $data): ApprovalChain
+    {
+        return new ApprovalChain();
+
+    }//end createFromArray()
+
+
+    /**
+     * Update a chain
+     *
+     * @param ApprovalChain $entity Chain entity
+     *
+     * @return ApprovalChain
+     */
+    public function update($entity): ApprovalChain
+    {
+        return $entity;
+
+    }//end update()
+
+
+}//end class
+
+/**
+ * Stub for ApprovalStepMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepMapper
+{
+
+    /**
+     * Find a step by ID
+     *
+     * @param int $id Step ID
+     *
+     * @return ApprovalStep
+     */
+    public function find(int $id): ApprovalStep
+    {
+        return new ApprovalStep();
+
+    }//end find()
+
+
+    /**
+     * Find all steps for a chain
+     *
+     * @param int $chainId Chain ID
+     *
+     * @return array
+     */
+    public function findByChain(int $chainId): array
+    {
+        return [];
+
+    }//end findByChain()
+
+
+    /**
+     * Find all steps with filters
+     *
+     * @param array    $filters Filters
+     * @param int|null $limit   Limit
+     * @param int|null $offset  Offset
+     *
+     * @return array
+     */
+    public function findAllFiltered(array $filters=[], ?int $limit=null, ?int $offset=null): array
+    {
+        return [];
+
+    }//end findAllFiltered()
+
+
+    /**
+     * Update a step
+     *
+     * @param ApprovalStep $entity Step entity
+     *
+     * @return ApprovalStep
+     */
+    public function update($entity): ApprovalStep
+    {
+        return $entity;
+
+    }//end update()
+
+
+}//end class
 
 /**
  * Stub for ObjectEntity
@@ -399,54 +835,6 @@ interface IAppConfig
 
 }
 
-/**
- * Stub for OCP\IRequest
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IRequest
-{
-
-    public function getParam(string $key, mixed $default = null): mixed;
-    public function getParams(): array;
-    public function getMethod(): string;
-    public function getUploadedFile(string $key): array;
-    public function getHeader(string $name): string;
-    public function isUserAgent(array $agent): bool;
-    public function getServerProtocol(): string;
-    public function getRawPathInfo(): string;
-    public function getPathInfo(): string|false;
-    public function getRequestUri(): string;
-    public function getId(): string;
-    public function getRemoteAddress(): string;
-    public function getServerHost(): string;
-
-}
-
-/**
- * Stub for OCP\IL10N
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IL10N
-{
-
-    public function t(string $text, array $parameters = []): string;
-    public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string;
-    public function l(string $type, mixed $data, array $options = []): mixed;
-    public function getLanguageCode(): string;
-    public function getLocaleCode(): string;
-
-}
-
 namespace OCP\App;
 
 /**
@@ -492,110 +880,6 @@ class Http
     public const STATUS_INTERNAL_SERVER_ERROR = 500;
 }//end class
 
-
-namespace OCP\AppFramework\Http;
-
-/**
- * Stub for OCP\AppFramework\Http\JSONResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class JSONResponse
-{
-
-    private int $status;
-    private mixed $data;
-
-    public function __construct(mixed $data = [], int $statusCode = 200)
-    {
-        $this->data   = $data;
-        $this->status = $statusCode;
-    }
-
-    public function getData(): mixed
-    {
-        return $this->data;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(int $code): self
-    {
-        $this->status = $code;
-        return $this;
-    }
-
-    public function setData(mixed $data): self
-    {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function render(): string
-    {
-        return json_encode($this->data);
-    }
-
-    public function addHeader(string $name, string $value): self
-    {
-        return $this;
-    }
-
-    public function getHeaders(): array
-    {
-        return [];
-    }
-
-}
-
-/**
- * Stub for OCP\AppFramework\Http\DataDownloadResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class DataDownloadResponse extends JSONResponse
-{
-
-    public function __construct(string $data, string $filename, string $contentType)
-    {
-        parent::__construct($data);
-    }
-
-}
-
-namespace OCP\AppFramework;
-
-/**
- * Stub for OCP\AppFramework\Controller
- *
- * @category Tests
- * @package  OCP\AppFramework
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Controller
-{
-
-    protected \OCP\IRequest $request;
-
-    public function __construct(string $appName, \OCP\IRequest $request)
-    {
-        $this->request = $request;
-    }
-
-}
 
 namespace Psr\Log;
 

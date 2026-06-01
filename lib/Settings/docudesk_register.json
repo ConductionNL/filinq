@@ -813,6 +813,8 @@
                     "signerIds": {"description": "SignerRecord UUID's", "type": "array", "visible": true, "order": 9, "facetable": false, "title": "Ondertekenaars"}
                 },
                 "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
+                "deprecated": true,
+                "deprecatedSince": "migrate-signing-to-or-approval-workflow",
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
@@ -877,6 +879,8 @@
                     "signatureData": {"description": "Handtekeninggegevens (base64)", "type": "string", "visible": false, "order": 10, "facetable": false, "title": "Handtekeninggegevens"}
                 },
                 "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
+                "deprecated": true,
+                "deprecatedSince": "migrate-signing-to-or-approval-workflow",
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "displayName", "objectDescriptionField": "status", "autoPublish": false},
