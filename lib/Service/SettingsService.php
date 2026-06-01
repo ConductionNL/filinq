@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
  */
 class SettingsService
 {
@@ -154,45 +156,50 @@ class SettingsService
     private function loadFeatureToggles(): array
     {
         return [
-            'publication_objection_period_days' => (int) $this->config->getValueString(
+            'publication_objection_period_days'   => (int) $this->config->getValueString(
                 $this->appName,
                 'publication_objection_period_days',
                 '28'
             ),
-            'enable_language_detection'         => $this->config->getValueString(
+            'enable_language_detection'           => $this->config->getValueString(
                 $this->appName,
                 'enable_language_detection',
                 '1'
             ) === '1',
-            'enable_keyword_extraction'         => $this->config->getValueString(
+            'enable_keyword_extraction'           => $this->config->getValueString(
                 $this->appName,
                 'enable_keyword_extraction',
                 '1'
             ) === '1',
-            'enable_topic_classification'       => $this->config->getValueString(
+            'enable_topic_classification'         => $this->config->getValueString(
                 $this->appName,
                 'enable_topic_classification',
                 '1'
             ) === '1',
-            'signing_enabled'                   => $this->config->getValueString(
+            'signing_enabled'                     => $this->config->getValueString(
                 $this->appName,
                 'signing_enabled',
                 '0'
             ) === '1',
-            'signing_provider'                  => $this->config->getValueString(
+            'signing_provider'                    => $this->config->getValueString(
                 $this->appName,
                 'signing_provider',
                 'native'
             ),
-            'signing_default_level'             => $this->config->getValueString(
+            'signing_default_level'               => $this->config->getValueString(
                 $this->appName,
                 'signing_default_level',
                 'SES'
             ),
-            'signing_request_expiry_days'       => (int) $this->config->getValueString(
+            'signing_request_expiry_days'         => (int) $this->config->getValueString(
                 $this->appName,
                 'signing_request_expiry_days',
                 '30'
+            ),
+            'anonymisation.output_subfolder_name' => $this->config->getValueString(
+                $this->appName,
+                'anonymisation.output_subfolder_name',
+                'anonymised'
             ),
         ];
 
@@ -241,6 +248,28 @@ class SettingsService
     }//end getAllSettings()
 
     /**
+     * Validate a subfolder name against the allowed pattern.
+     *
+     * Allowed: non-empty, lowercase letters, digits, hyphens, underscores only.
+     * Dots, slashes, spaces and other characters are rejected.
+     *
+     * @param string $name The subfolder name to validate.
+     *
+     * @return bool True when valid.
+     *
+     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+     */
+    private function isValidSubfolderName(string $name): bool
+    {
+        if ($name === '') {
+            return false;
+        }
+
+        return preg_match('/^[a-z0-9_-]+$/', $name) === 1;
+
+    }//end isValidSubfolderName()
+
+    /**
      * Convert a setting value to string for storage
      *
      * @param mixed $value The value to convert
@@ -282,6 +311,7 @@ class SettingsService
         'signing_provider',
         'signing_default_level',
         'signing_request_expiry_days',
+        'anonymisation.output_subfolder_name',
     ];
 
     /**
@@ -321,6 +351,17 @@ class SettingsService
                 }
 
                 $stringValue = $this->convertValueToString(value: $value);
+
+                if ($key === 'anonymisation.output_subfolder_name') {
+                    if ($this->isValidSubfolderName(name: $stringValue) === false) {
+                        throw new RuntimeException(
+                            'Invalid anonymisation.output_subfolder_name: value must be non-empty and contain '
+                            .'only lowercase letters, digits, hyphens, and underscores (no dots, slashes, or spaces). '
+                            .'Got: '.$stringValue
+                        );
+                    }
+                }
+
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach

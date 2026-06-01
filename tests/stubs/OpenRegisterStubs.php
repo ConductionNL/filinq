@@ -674,7 +674,7 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface Folder
+interface Folder extends Node
 {
 
     /**
@@ -685,6 +685,49 @@ interface Folder
      * @return array<\OCP\Files\Node>
      */
     public function getById(int $id): array;
+
+    /**
+     * Get a child node by path
+     *
+     * @param string $path The child path.
+     *
+     * @return \OCP\Files\Node
+     */
+    public function get(string $path): Node;
+
+    /**
+     * Check whether a node with a given path exists
+     *
+     * @param string $path The path.
+     *
+     * @return bool
+     */
+    public function nodeExists(string $path): bool;
+
+    /**
+     * Create a new folder
+     *
+     * @param string $path The folder path.
+     *
+     * @return Folder
+     */
+    public function newFolder(string $path): Folder;
+
+    /**
+     * Get directory listing
+     *
+     * @return array<\OCP\Files\Node>
+     */
+    public function getDirectoryListing(): array;
+
+    /**
+     * Get the relative path of an item inside the folder
+     *
+     * @param string $path The absolute path.
+     *
+     * @return string|null
+     */
+    public function getRelativePath(string $path): ?string;
 
 
 }//end interface
@@ -704,6 +747,11 @@ interface Node
 
     public function getName(): string;
     public function getPath(): string;
+    public function getId(): int;
+    public function getParent(): Folder;
+    public function getPermissions(): int;
+    public function delete(): void;
+    public function move(string $targetPath): Node;
 
 }//end interface
 

@@ -45,6 +45,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-6
  */
 class FolderBatchService
 {
@@ -305,21 +307,39 @@ class FolderBatchService
     }//end scheduleExtraction()
 
     /**
-     * Enumerate direct file children of a folder (flat, no recursion)
+     * Enumerate direct file children of a folder (flat, no recursion).
      *
-     * @param Folder $folder The folder to enumerate
+     * Files whose base name (without extension) ends with `_anonymized` are
+     * excluded — these are legacy batch outputs that must not be silently
+     * re-anonymised by an automated batch. Operators who genuinely need to
+     * anonymise such a file should use the per-file anonymise endpoint instead,
+     * or rename the file first.
      *
-     * @return File[] Array of file nodes
+     * @param Folder $folder The folder to enumerate.
+     *
+     * @return File[] Array of file nodes.
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-6
      */
     private function enumerateFiles(Folder $folder): array
     {
         $files = [];
         foreach ($folder->getDirectoryListing() as $node) {
-            if ($node instanceof File) {
-                $files[] = $node;
+            if ($node instanceof File === false) {
+                continue;
             }
+
+            $baseName = pathinfo($node->getName(), PATHINFO_FILENAME);
+            if (str_ends_with($baseName, '_anonymized') === true) {
+                $this->logger->debug(
+                    'FolderBatchService: skipping legacy _anonymized file from source discovery.',
+                    ['file' => $node->getName()]
+                );
+                continue;
+            }
+
+            $files[] = $node;
         }
 
         return $files;

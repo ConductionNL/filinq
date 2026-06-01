@@ -112,9 +112,69 @@ and no new fields.
 
 See also: `docs/features/grondslagen-summary.md` (rendering details).
 
+## Batch Output Folder Layout
+
+### File layout (batch / folder flows)
+
+Batch and folder-based anonymisation routes write redacted outputs to a
+**subfolder** inside the source folder, with clean filenames:
+
+```
+Before (legacy):              After (current):
+<dossier>/                    <dossier>/
+  report.pdf                    report.pdf
+  report_anonymized.pdf         anonymised/
+  letter.docx                     report.pdf
+  letter_anonymized.docx          letter.pdf
+```
+
+The subfolder name defaults to `anonymised` and is tenant-configurable.
+
+### Config key
+
+| Key | Default | Allowed values |
+|-----|---------|---------------|
+| `docudesk.anonymisation.output_subfolder_name` | `anonymised` | Non-empty, `[a-z0-9_-]+` |
+
+Set via the admin settings panel. Invalid values are rejected at save time with
+a message identifying the disallowed characters.
+
+### Behavior details
+
+- **Subfolder created on first run** — DocuDesk creates `<source>/anonymised/`
+  automatically if it does not exist.
+- **Second run overwrites** — A re-run reuses the existing subfolder and
+  overwrites files by destination filename. Files not in the current run's
+  source set are left untouched (no auto-cleanup).
+- **Legacy `_anonymized` suffix stripped** — A file ending in `_anonymized`
+  before the extension has its suffix removed in the destination:
+  `foo_anonymized.pdf` → `<subfolder>/foo.pdf`.
+- **Single-file flow unchanged** — The per-document anonymise endpoint
+  continues to write `<file>_anonymized.<ext>` in the same folder as the
+  source. The subfolder layout applies only to batch / folder flows.
+- **Move failure is non-fatal** — If the post-process move fails (permissions,
+  quota), the file is preserved at OR's legacy output path. The response
+  includes a `warning` with `code: "MOVE_FAILED"` and the `anonymizedFilePath`
+  field points to the legacy location.
+- **`anonymizedFilePath` always reflects the actual location** — Clients that
+  read this field from API responses work without code changes; the path simply
+  changes to the subfolder location.
+
+### Source-discovery filter
+
+When creating a batch from an existing folder, files whose base name (without
+extension) ends with `_anonymized` are **excluded** from the source set. These
+are legacy outputs from a previous batch run that should not be silently
+re-anonymised.
+
+> **Edge case:** A genuine source file named `foo_anonymized.pdf` (rare) is
+> also excluded by this filter. Rename it first, or use the per-file anonymise
+> endpoint which does not apply the filter.
+
 ## Technical Details
 
 - Files stored in Nextcloud filesystem under user's `DocuDesk/` folder
 - Entity detection via OpenRegister's TextExtractionService (Presidio/OpenAnonymiser)
 - Anonymization via OpenRegister's FileService
 - Duplicate file names handled with counter suffix (e.g., `report_1.pdf`)
+- Batch output subfolder name configurable via `docudesk.anonymisation.output_subfolder_name`

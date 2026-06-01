@@ -94,7 +94,6 @@ class FolderBatchServiceTest extends TestCase
      */
     private IJobList|MockObject $mockJobList;
 
-
     /**
      * Set up test environment
      *
@@ -125,7 +124,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end setUp()
 
-
     /**
      * Build a mocked Folder with a given directory listing, path, id and permissions.
      *
@@ -151,7 +149,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end buildFolder()
 
-
     /**
      * Build a mocked File child.
      *
@@ -169,14 +166,13 @@ class FolderBatchServiceTest extends TestCase
 
     }//end buildFile()
 
-
     /**
      * Build a user folder mock wrapping a target folder for get()/getById() lookups.
      *
-     * @param array       $getByIdNodes       Array returned by getById(), or null to not stub
+     * @param array     $getByIdNodes       Array returned by getById(), or null to not stub
      * @param Node|null $getPathNode        Node returned by get(), or null to not stub
-     * @param bool        $pathThrowsNotFound When true, get() throws NotFoundException
-     * @param string      $relativePath       The relative path reported by getRelativePath()
+     * @param bool      $pathThrowsNotFound When true, get() throws NotFoundException
+     * @param string    $relativePath       The relative path reported by getRelativePath()
      *
      * @return Folder|MockObject
      */
@@ -203,7 +199,6 @@ class FolderBatchServiceTest extends TestCase
         return $userFolder;
 
     }//end buildUserFolder()
-
 
     /**
      * Test successful folder batch creation via path — existing behaviour preserved,
@@ -247,7 +242,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByPathHappyPath()
 
-
     /**
      * Test successful folder batch creation via ID — node resolved via getById,
      * both identifiers captured on the batch.
@@ -279,7 +273,6 @@ class FolderBatchServiceTest extends TestCase
         $this->assertEquals('/Shared/Cases', $result['folderPath']);
 
     }//end testCreateFolderBatchByIdHappyPath()
-
 
     /**
      * Test that when getById returns multiple mounts (read-only + writable)
@@ -331,7 +324,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdPrefersWritableMount()
 
-
     /**
      * Test that when no writable mount exists, the first readable node is used.
      *
@@ -368,7 +360,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdFallsBackToReadableWhenNoneWritable()
 
-
     /**
      * Test that a folder id that resolves to no nodes returns 404.
      *
@@ -386,7 +377,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(99999, null);
 
     }//end testCreateFolderBatchByIdReturns404WhenIdNotResolvable()
-
 
     /**
      * Test that a folder id resolving to a File (not Folder) returns 400.
@@ -410,7 +400,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdReturns400WhenNodeIsFile()
 
-
     /**
      * Test that a folder id resolving to an empty folder returns 400.
      *
@@ -430,7 +419,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(12345, null);
 
     }//end testCreateFolderBatchByIdReturns400WhenFolderEmpty()
-
 
     /**
      * Test that a folder id resolving to too many files returns 400.
@@ -459,7 +447,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdReturns400WhenTooManyFiles()
 
-
     /**
      * Test that providing both folderId and folderPath is rejected with 400.
      *
@@ -478,7 +465,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchRejectsBothParams()
 
-
     /**
      * Test that providing neither folderId nor folderPath is rejected with 400.
      *
@@ -496,7 +482,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(null, null);
 
     }//end testCreateFolderBatchRejectsNeitherParam()
-
 
     /**
      * Test that directories inside the folder are skipped when enumerating.
@@ -527,7 +512,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testSkipsSubdirectories()
 
-
     /**
      * Test folder-path not found throws 404.
      *
@@ -544,7 +528,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(null, '/nonexistent');
 
     }//end testFolderPathNotFoundThrows404()
-
 
     /**
      * Test path pointing to a file throws 400.
@@ -565,6 +548,61 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testFolderPathIsFileThrows400()
 
+    /**
+     * Files whose base name ends with `_anonymized` are excluded from source discovery.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-6
+     */
+    public function testAnonymizedSuffixFilesExcludedFromSourceDiscovery(): void
+    {
+        $cleanFile    = $this->buildFile(101, 'report.pdf');
+        $legacyFile   = $this->buildFile(102, 'report_anonymized.pdf');
+        $anotherClean = $this->buildFile(103, 'letter.docx');
+
+        $folder     = $this->buildFolder([$cleanFile, $legacyFile, $anotherClean], 500);
+        $userFolder = $this->buildUserFolder(null, $folder);
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+        $this->mockStateService->method('createBatch')->willReturnCallback(
+            function (string $userId, array $files) {
+                // Only clean files should be included; _anonymized file is excluded.
+                $this->assertCount(2, $files);
+                $this->assertEquals(101, $files[0]['fileId']);
+                $this->assertEquals(103, $files[1]['fileId']);
+                return ['batchId' => 'uuid', 'userId' => $userId, 'status' => 'uploading', 'files' => $files];
+            }
+        );
+
+        $this->service->createFolderBatch(folderId: null, folderPath: '/test');
+
+    }//end testAnonymizedSuffixFilesExcludedFromSourceDiscovery()
+
+    /**
+     * A folder containing only `_anonymized` files throws 400 (empty source set).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-6
+     */
+    public function testFolderWithOnlyAnonymizedFilesThrows400(): void
+    {
+        $legacyFile = $this->buildFile(102, 'report_anonymized.pdf');
+        $folder     = $this->buildFolder([$legacyFile], 500);
+        $userFolder = $this->buildUserFolder(null, $folder);
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+        $this->expectExceptionMessage('No files found in folder');
+
+        $this->service->createFolderBatch(folderId: null, folderPath: '/test');
+
+    }//end testFolderWithOnlyAnonymizedFilesThrows400()
 
     /**
      * Test no user session throws 401.
@@ -591,6 +629,4 @@ class FolderBatchServiceTest extends TestCase
         $service->createFolderBatch(null, '/any');
 
     }//end testNoUserThrows401()
-
-
 }//end class
