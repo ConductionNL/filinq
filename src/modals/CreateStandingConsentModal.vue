@@ -18,6 +18,7 @@
 						v-model="form.entityType"
 						:options="entityTypeOptions"
 						:placeholder="t('docudesk', 'Select entity type')"
+						:input-label="t('docudesk', 'Entity Type')"
 						label="label"
 						track-by="value" />
 				</div>
@@ -32,6 +33,7 @@
 						v-model="form.consentMethod"
 						:options="consentMethodOptions"
 						:placeholder="t('docudesk', 'Select consent method')"
+						:input-label="t('docudesk', 'Consent Method')"
 						label="label"
 						track-by="value" />
 					<span v-if="errors.consentMethod" class="field-error">

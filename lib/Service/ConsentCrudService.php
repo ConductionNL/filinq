@@ -235,7 +235,10 @@ class ConsentCrudService
     }//end getConsentsByDocument()
 
     /**
-     * Update consent status for a consent record
+     * Update consent status for a consent record, enforcing policy-transition rules
+     *
+     * Delegates to ConsentService::validateAndUpdateConsent() which checks for
+     * policy-matched transition blocks and the override-up flow before saving.
      *
      * @param string               $consentId The consent object UUID
      * @param string               $register  The register ID
@@ -247,6 +250,8 @@ class ConsentCrudService
      * @throws Exception If update fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
      */
     public function updateConsentStatus(
         string $consentId,
@@ -254,7 +259,7 @@ class ConsentCrudService
         string $schema,
         array $data
     ): array {
-        return $this->consentService->updateConsentStatus($consentId, $register, $schema, $data);
+        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data);
 
     }//end updateConsentStatus()
 }//end class
