@@ -43,8 +43,6 @@ use RuntimeException;
  */
 class PolicyController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -65,7 +63,6 @@ class PolicyController extends Controller
 
     }//end __construct()
 
-
     /**
      * List all prohibitions.
      *
@@ -77,13 +74,13 @@ class PolicyController extends Controller
     public function indexProhibitions(): JSONResponse
     {
         try {
+            $this->crudService->requireProhibitionPermission(action: 'read');
             return new JSONResponse($this->crudService->listProhibitions());
         } catch (Exception $e) {
             return $this->error(message: 'Failed to list prohibitions: ', exception: $e);
         }
 
     }//end indexProhibitions()
-
 
     /**
      * Show a single prohibition.
@@ -100,6 +97,7 @@ class PolicyController extends Controller
     public function showProhibition(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireProhibitionPermission(action: 'read');
             $record = $this->crudService->getProhibition(uuid: $id);
             if ($record === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Prohibition not found')], 404);
@@ -112,7 +110,6 @@ class PolicyController extends Controller
 
     }//end showProhibition()
 
-
     /**
      * Create a prohibition.
      *
@@ -124,6 +121,7 @@ class PolicyController extends Controller
     public function createProhibition(): JSONResponse
     {
         try {
+            $this->crudService->requireProhibitionPermission(action: 'create');
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createProhibition(data: $data), 201);
         } catch (InvalidArgumentException $e) {
@@ -133,7 +131,6 @@ class PolicyController extends Controller
         }
 
     }//end createProhibition()
-
 
     /**
      * Update a prohibition.
@@ -150,6 +147,7 @@ class PolicyController extends Controller
     public function updateProhibition(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireProhibitionPermission(action: 'update');
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->updateProhibition(uuid: $id, data: $data));
         } catch (InvalidArgumentException $e) {
@@ -159,7 +157,6 @@ class PolicyController extends Controller
         }
 
     }//end updateProhibition()
-
 
     /**
      * Delete a prohibition.
@@ -176,6 +173,7 @@ class PolicyController extends Controller
     public function deleteProhibition(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireProhibitionPermission(action: 'delete');
             $this->crudService->deleteProhibition(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
         } catch (Exception $e) {
@@ -183,7 +181,6 @@ class PolicyController extends Controller
         }
 
     }//end deleteProhibition()
-
 
     /**
      * List standing consents.
@@ -196,13 +193,13 @@ class PolicyController extends Controller
     public function indexStandingConsents(): JSONResponse
     {
         try {
+            $this->crudService->requireStandingConsentPermission(action: 'read');
             return new JSONResponse($this->crudService->listStandingConsents());
         } catch (Exception $e) {
             return $this->error(message: 'Failed to list standing consents: ', exception: $e);
         }
 
     }//end indexStandingConsents()
-
 
     /**
      * Show a single standing consent.
@@ -219,6 +216,7 @@ class PolicyController extends Controller
     public function showStandingConsent(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireStandingConsentPermission(action: 'read');
             $record = $this->crudService->getStandingConsent(uuid: $id);
             if ($record === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Standing consent not found')], 404);
@@ -231,7 +229,6 @@ class PolicyController extends Controller
 
     }//end showStandingConsent()
 
-
     /**
      * Create a standing consent.
      *
@@ -243,6 +240,7 @@ class PolicyController extends Controller
     public function createStandingConsent(): JSONResponse
     {
         try {
+            $this->crudService->requireStandingConsentPermission(action: 'create');
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createStandingConsent(data: $data), 201);
         } catch (RuntimeException $e) {
@@ -254,7 +252,6 @@ class PolicyController extends Controller
         }
 
     }//end createStandingConsent()
-
 
     /**
      * Update a standing consent.
@@ -271,6 +268,7 @@ class PolicyController extends Controller
     public function updateStandingConsent(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireStandingConsentPermission(action: 'update');
             $data = $this->request->getParams();
             return new JSONResponse(
                 $this->crudService->updateStandingConsent(uuid: $id, data: $data)
@@ -284,7 +282,6 @@ class PolicyController extends Controller
         }
 
     }//end updateStandingConsent()
-
 
     /**
      * Delete a standing consent.
@@ -301,6 +298,7 @@ class PolicyController extends Controller
     public function deleteStandingConsent(string $id): JSONResponse
     {
         try {
+            $this->crudService->requireStandingConsentPermission(action: 'delete');
             $this->crudService->deleteStandingConsent(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
         } catch (RuntimeException $e) {
@@ -310,7 +308,6 @@ class PolicyController extends Controller
         }
 
     }//end deleteStandingConsent()
-
 
     /**
      * Wrap an exception into a 500 JSON response and log it.
@@ -332,6 +329,4 @@ class PolicyController extends Controller
         );
 
     }//end error()
-
-
 }//end class

@@ -34,10 +34,12 @@ use OCA\DocuDesk\Service\EntityConsolidationService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,8 +56,6 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for BatchAnonymizationController
      *
@@ -71,6 +71,7 @@ class BatchAnonymizationController extends Controller
      * @param WooProfileService          $profileService     Service that stores the WOO entity profile.
      * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
      * @param IL10N                      $l10n               Translator for user-facing error messages.
+     * @param IUserSession               $userSession        Current session user for authorization checks.
      *
      * @return void
      */
@@ -87,11 +88,11 @@ class BatchAnonymizationController extends Controller
         private readonly WooProfileService $profileService,
         private readonly FolderBatchService $folderBatchService,
         private readonly IL10N $l10n,
+        private readonly IUserSession $userSession,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Accept a multipart upload and create a new anonymization batch.
@@ -104,6 +105,10 @@ class BatchAnonymizationController extends Controller
     public function batchUpload(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+            }
+
             $files = $this->uploadService->collectFiles($this->request);
             if (empty($files) === true) {
                 return new JSONResponse(['error' => $this->l10n->t('No files uploaded')], 400);
@@ -127,7 +132,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchUpload()
 
-
     /**
      * Create a folder-based batch from either folderId or folderPath.
      *
@@ -139,6 +143,10 @@ class BatchAnonymizationController extends Controller
     public function folderBatch(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+            }
+
             $folderId   = self::coerceFolderId(raw: $this->request->getParam('folderId'));
             $folderPath = self::coerceFolderPath(raw: $this->request->getParam('folderPath', ''));
 
@@ -167,7 +175,6 @@ class BatchAnonymizationController extends Controller
 
     }//end folderBatch()
 
-
     /**
      * Extract entities from the next pending file in a batch.
      *
@@ -181,13 +188,13 @@ class BatchAnonymizationController extends Controller
     public function batchExtract(string $batchId): JSONResponse
     {
         try {
+            $this->stateService->requireBatchOwnership(batchId: $batchId);
             return new JSONResponse($this->extractService->extractNext($batchId));
         } catch (Exception $e) {
             return $this->err(msg: 'Extraction failed', e: $e);
         }
 
     }//end batchExtract()
-
 
     /**
      * Return progress, per-file status, and total entity count for a batch.
@@ -201,6 +208,12 @@ class BatchAnonymizationController extends Controller
      */
     public function batchStatus(string $batchId): JSONResponse
     {
+        try {
+            $this->stateService->requireBatchOwnership(batchId: $batchId);
+        } catch (Exception $e) {
+            return $this->err(msg: 'Access denied', e: $e);
+        }
+
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
             return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
@@ -235,7 +248,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchStatus()
 
-
     /**
      * Return the consolidated entity list for a batch once extraction has started.
      *
@@ -253,6 +265,7 @@ class BatchAnonymizationController extends Controller
     public function batchEntities(string $batchId): JSONResponse
     {
         try {
+            $this->stateService->requireBatchOwnership(batchId: $batchId);
             $batch = $this->stateService->getBatch($batchId);
             if ($batch === null) {
                 return new JSONResponse(['error' => 'Batch not found'], 404);
@@ -285,7 +298,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchEntities()
 
-
     /**
      * Apply the user-approved entity list to every extracted file in a batch.
      *
@@ -299,10 +311,17 @@ class BatchAnonymizationController extends Controller
     public function batchAnonymize(string $batchId): JSONResponse
     {
         try {
+            $this->stateService->requireBatchOwnership(batchId: $batchId);
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
                 return new JSONResponse(['error' => 'No entities provided'], 400);
+            }
+
+            // Validate per-entity bases field before calling the service.
+            $basesError = $this->validateEntityBases(entities: $entities);
+            if ($basesError !== null) {
+                return $basesError;
             }
 
             // Wave 4a: optional `appendBasisSummary` flag — applied per file.
@@ -327,7 +346,6 @@ class BatchAnonymizationController extends Controller
 
     }//end batchAnonymize()
 
-
     /**
      * Produce the CSV anonymization report for a batch as a file download.
      *
@@ -341,6 +359,7 @@ class BatchAnonymizationController extends Controller
     public function batchReport(string $batchId): JSONResponse|DataDownloadResponse
     {
         try {
+            $this->stateService->requireBatchOwnership(batchId: $batchId);
             $csv = $this->reportService->generateReport($batchId);
             return new DataDownloadResponse($csv, 'anonymization-report-'.$batchId.'.csv', 'text/csv');
         } catch (Exception $e) {
@@ -348,7 +367,6 @@ class BatchAnonymizationController extends Controller
         }
 
     }//end batchReport()
-
 
     /**
      * Return the active WOO anonymization profile.
@@ -360,10 +378,13 @@ class BatchAnonymizationController extends Controller
      */
     public function getProfiles(): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(['error' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+        }
+
         return new JSONResponse($this->profileService->getProfile());
 
     }//end getProfiles()
-
 
     /**
      * Persist a new WOO anonymization profile from the request body.
@@ -375,6 +396,10 @@ class BatchAnonymizationController extends Controller
     public function updateProfiles(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+            }
+
             $p = $this->request->getParams();
             if (is_array($p['anonymize'] ?? null) === false || is_array($p['keep'] ?? null) === false) {
                 return new JSONResponse(['error' => 'Invalid format'], 400);
@@ -388,6 +413,41 @@ class BatchAnonymizationController extends Controller
 
     }//end updateProfiles()
 
+    /**
+     * Validate that each entity's `bases` field, when present, is an array of strings.
+     *
+     * @param array<int, array<string, mixed>> $entities The raw entity list from the request.
+     *
+     * @return JSONResponse|null 400 response when validation fails, null on success.
+     */
+    private function validateEntityBases(array $entities): ?JSONResponse
+    {
+        foreach ($entities as $entity) {
+            if (array_key_exists('bases', (array) $entity) === false) {
+                continue;
+            }
+
+            $bases = $entity['bases'] ?? null;
+            if (is_array($bases) === false) {
+                return new JSONResponse(
+                    ['error' => 'Entity bases must be an array of strings'],
+                    400
+                );
+            }
+
+            foreach ($bases as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => 'Each basis reference must be a string'],
+                        400
+                    );
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateEntityBases()
 
     /**
      * Build a JSON error response, logging the underlying exception.
@@ -415,7 +475,6 @@ class BatchAnonymizationController extends Controller
 
     }//end err()
 
-
     /**
      * Coerce the raw folderId request param to an int, or null when absent/empty.
      *
@@ -433,7 +492,6 @@ class BatchAnonymizationController extends Controller
 
     }//end coerceFolderId()
 
-
     /**
      * Coerce the raw folderPath request param to a string, or null when absent/empty.
      *
@@ -450,7 +508,6 @@ class BatchAnonymizationController extends Controller
         return (string) $raw;
 
     }//end coerceFolderPath()
-
 
     /**
      * Validate XOR between folderId and folderPath at the controller boundary.
@@ -479,6 +536,4 @@ class BatchAnonymizationController extends Controller
         return null;
 
     }//end validateFolderParams()
-
-
 }//end class

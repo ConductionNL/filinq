@@ -917,7 +917,7 @@
                     "provider": {"description": "Provider", "type": "string", "visible": true, "order": 8, "facetable": true, "title": "Provider"},
                     "metadata": {"description": "Metadata (JSON)", "type": "object", "visible": true, "order": 9, "facetable": false, "title": "Metadata"}
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": true,
+                "archive": [], "source": "internal", "hardValidation": false, "immutable": true, "appendOnly": true,
                 "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
                 "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "action", "objectDescriptionField": "actorDisplayName", "autoPublish": false},

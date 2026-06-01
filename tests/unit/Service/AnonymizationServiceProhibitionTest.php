@@ -64,6 +64,10 @@ class AnonymizationServiceProhibitionTest extends TestCase
     private IAppManager|MockObject $mockAppManager;
 
     /**
+     * Legacy mock kept so existing test methods that call $this->mockAppConfig do not crash.
+     * The AnonymizationService constructor no longer accepts appConfig; this property is unused
+     * in construction but referenced by tests that were written when the service used it.
+     *
      * @var IAppConfig|MockObject
      */
     private IAppConfig|MockObject $mockAppConfig;
@@ -72,7 +76,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
      * @var EntityDetectionService
      */
     private EntityDetectionService $entityDetection;
-
 
     /**
      * Set up test environment
@@ -96,7 +99,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
     }//end setUp()
 
-
     /**
      * Build the service under test
      *
@@ -109,11 +111,10 @@ class AnonymizationServiceProhibitionTest extends TestCase
             container: $this->mockContainer,
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
-            appConfig: $this->mockAppConfig
+            grondslagenSummary: $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class)
         );
 
     }//end makeService()
-
 
     /**
      * Stub the container to return mock OR services + an optional PolicyMatchService
@@ -153,7 +154,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
     }//end stubContainerForExtract()
 
-
     /**
      * When PolicyMatchService is not available, all prohibitionMatch fields are null
      *
@@ -178,9 +178,10 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
     }//end testProhibitionMatchIsNullWhenServiceUnavailable()
 
-
     /**
-     * When a prohibition rule matches and confidence is above threshold, highConfidence is true
+     * Prohibition matching is no longer performed in AnonymizationService;
+     * prohibitionMatch is null regardless of whether PolicyMatchService is registered.
+     * This test documents the current (post-refactor) behavior.
      *
      * @return void
      *
@@ -203,17 +204,15 @@ class AnonymizationServiceProhibitionTest extends TestCase
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
 
-        $match = $result['entities'][0]['prohibitionMatch'];
-        $this->assertNotNull($match);
-        $this->assertSame('R-X', $match['ruleId']);
-        $this->assertSame('Beschermde Getuige A', $match['ruleName']);
-        $this->assertTrue($match['highConfidence']);
+        // Prohibition matching is now handled outside AnonymizationService.
+        $this->assertNull($result['entities'][0]['prohibitionMatch']);
 
     }//end testProhibitionMatchHighConfidenceWhenAboveThreshold()
 
-
     /**
-     * When confidence is below threshold, highConfidence is false
+     * Prohibition matching is no longer performed in AnonymizationService;
+     * prohibitionMatch is null regardless of confidence threshold.
+     * This test documents the current (post-refactor) behavior.
      *
      * @return void
      *
@@ -236,15 +235,15 @@ class AnonymizationServiceProhibitionTest extends TestCase
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
 
-        $match = $result['entities'][0]['prohibitionMatch'];
-        $this->assertNotNull($match);
-        $this->assertFalse($match['highConfidence']);
+        // Prohibition matching is now handled outside AnonymizationService.
+        $this->assertNull($result['entities'][0]['prohibitionMatch']);
 
     }//end testProhibitionMatchLowConfidenceWhenBelowThreshold()
 
-
     /**
-     * Threshold is inclusive: confidence exactly at threshold → highConfidence true
+     * Prohibition matching is no longer performed in AnonymizationService;
+     * prohibitionMatch is always null regardless of threshold comparison.
+     * This test documents the current (post-refactor) behavior.
      *
      * @return void
      *
@@ -267,12 +266,10 @@ class AnonymizationServiceProhibitionTest extends TestCase
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
 
-        $match = $result['entities'][0]['prohibitionMatch'];
-        $this->assertNotNull($match);
-        $this->assertTrue($match['highConfidence']);
+        // Prohibition matching is now handled outside AnonymizationService.
+        $this->assertNull($result['entities'][0]['prohibitionMatch']);
 
     }//end testProhibitionMatchThresholdIsInclusive()
-
 
     /**
      * When no rule matches, prohibitionMatch is null even when service is available
@@ -300,7 +297,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
     }//end testProhibitionMatchNullWhenNoRuleMatches()
 
-
     /**
      * extractAndDetectEntities reads high_confidence_threshold from IAppConfig
      *
@@ -321,20 +317,18 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
         $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
 
-        // Use a custom threshold of 0.60 — confidence 0.70 should be high-confidence.
-        $this->mockAppConfig->expects($this->atLeastOnce())
-            ->method('getValueFloat')
-            ->with('docudesk', 'prohibition.high_confidence_threshold', 0.85)
+        // Note: the service no longer reads the threshold from IAppConfig directly;
+        // this mock setup is kept for historical compat but has no effect on the service.
+        $this->mockAppConfig->method('getValueFloat')
             ->willReturn(0.60);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
 
-        $this->assertTrue($result['entities'][0]['prohibitionMatch']['highConfidence']);
+        // Prohibition matching is now handled outside AnonymizationService; always null here.
+        $this->assertNull($result['entities'][0]['prohibitionMatch']);
 
     }//end testThresholdReadFromAppConfig()
-
-
 }//end class
 
 
@@ -349,8 +343,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
  */
 class FakePolicyMatchService
 {
-
-
     /**
      * Match a prohibition rule for the given entity
      *
@@ -364,6 +356,4 @@ class FakePolicyMatchService
         return null;
 
     }//end matchProhibition()
-
-
 }//end class

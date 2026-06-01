@@ -37,8 +37,6 @@ use PHPUnit\Framework\TestCase;
  */
 class AnonymizationServiceTest extends TestCase
 {
-
-
     /**
      * Check if the class can be loaded without parse errors
      *
@@ -58,7 +56,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end requireClassOrSkip()
 
-
     /**
      * Test that the source file exists
      *
@@ -72,7 +69,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testSourceFileExists()
 
-
     /**
      * Test file contains expected class declaration
      *
@@ -84,7 +80,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('class AnonymizationService', $content);
 
     }//end testFileContainsClassDeclaration()
-
 
     /**
      * Test file contains expected methods
@@ -98,7 +93,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function anonymizeDocument', $content);
 
     }//end testFileContainsExpectedMethods()
-
 
     /**
      * Test anonymizeDocument signature accepts appendBasisSummary and outputFormat.
@@ -115,7 +109,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testAnonymizeDocumentSignatureAcceptsNewParams()
 
-
     /**
      * Test that tryAppendBasisSummary is defined as a private method.
      *
@@ -129,7 +122,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function tryAppendBasisSummary', $content);
 
     }//end testTryAppendBasisSummaryMethodExists()
-
 
     /**
      * Test the service records a structured warning field on summary failure.
@@ -146,7 +138,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testWarningFieldDefinedOnSummaryFailure()
 
-
     /**
      * Test that preserve mode path sets summaryFileId and summaryFilePath fields.
      *
@@ -162,7 +153,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString("'preserve'", $content);
 
     }//end testPreserveModeSetsSummaryFields()
-
 
     /**
      * Test #286: source code no longer derives replacementCount from
@@ -191,7 +181,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testReplacementCountIsNoLongerFabricatedFromMappedEntities()
 
-
     /**
      * Test #286: a helper that verifies replacements + a helper that
      * safely reads node text are both present in the implementation.
@@ -207,7 +196,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function readNodeTextSafely', $content);
 
     }//end testVerificationHelpersExist()
-
 
     /**
      * Test #286 (behavioural): verifyReplacements correctly identifies
@@ -250,7 +238,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testVerifyReplacementsDistinguishesAppliedFromUnmatched()
 
-
     /**
      * Test #286: verifyReplacements is case-insensitive (mirrors OR's
      * str_ireplace semantics in DocumentProcessingHandler).
@@ -277,7 +264,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertCount(0, $result['unmatchedEntities']);
 
     }//end testVerifyReplacementsIsCaseInsensitive()
-
 
     /**
      * Test #286: when source text is null (binary format), verification
@@ -313,7 +299,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testVerifyReplacementsReportsUnverifiedForBinaryFormats()
 
-
     /**
      * Test #286: readNodeTextSafely returns null for binary mime types
      * (PDF, DOCX, …) so verifyReplacements correctly degrades to
@@ -337,18 +322,17 @@ class AnonymizationServiceTest extends TestCase
             public function getMimeType(): string
             {
                 return 'application/pdf';
-            }
+            }//end getMimeType()
 
             public function getContent(): string
             {
                 return "%PDF-1.4\n...binary...";
-            }
+            }//end getContent()
         };
 
         $this->assertNull($reflection->invoke($service, $binaryNode));
 
     }//end testReadNodeTextSafelyReturnsNullForBinaryMime()
-
 
     /**
      * Test #286: readNodeTextSafely returns content for text-like mime
@@ -370,18 +354,17 @@ class AnonymizationServiceTest extends TestCase
             public function getMimeType(): string
             {
                 return 'text/plain';
-            }
+            }//end getMimeType()
 
             public function getContent(): string
             {
                 return 'Hello John Doe.';
-            }
+            }//end getContent()
         };
 
         $this->assertSame('Hello John Doe.', $reflection->invoke($service, $textNode));
 
     }//end testReadNodeTextSafelyReturnsContentForTextMime()
-
 
     /**
      * Build an AnonymizationService with all constructor deps stubbed so
@@ -399,17 +382,14 @@ class AnonymizationServiceTest extends TestCase
         $container       = $this->createMock(\Psr\Container\ContainerInterface::class);
         $appManager      = $this->createMock(\OCP\App\IAppManager::class);
         $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
-        $appConfig       = $this->createMock(\OCP\IAppConfig::class);
-
+        $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
         return new \OCA\DocuDesk\Service\AnonymizationService(
             $logger,
             $container,
             $appManager,
             $entityDetection,
-            $appConfig
+            $grondslagenSummary
         );
 
     }//end buildServiceWithoutDependencies()
-
-
 }//end class

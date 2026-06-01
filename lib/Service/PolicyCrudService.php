@@ -82,7 +82,6 @@ class PolicyCrudService
      */
     public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
 
-
     /**
      * Constructor.
      *
@@ -104,7 +103,6 @@ class PolicyCrudService
 
     }//end __construct()
 
-
     /**
      * List all publicationProhibition records.
      *
@@ -120,7 +118,6 @@ class PolicyCrudService
         );
 
     }//end listProhibitions()
-
 
     /**
      * List publicationConsent records with `scope: "entity"` (standing consents).
@@ -144,7 +141,6 @@ class PolicyCrudService
                 );
 
     }//end listStandingConsents()
-
 
     /**
      * List publicationConsent records with `scope: "document"` (workflow records).
@@ -172,7 +168,6 @@ class PolicyCrudService
 
     }//end listDocumentConsents()
 
-
     /**
      * Get a single prohibition by UUID.
      *
@@ -191,7 +186,6 @@ class PolicyCrudService
         );
 
     }//end getProhibition()
-
 
     /**
      * Get a single standing consent by UUID, asserting its scope.
@@ -222,7 +216,6 @@ class PolicyCrudService
 
     }//end getStandingConsent()
 
-
     /**
      * Create a publicationProhibition record.
      *
@@ -234,7 +227,7 @@ class PolicyCrudService
      */
     public function createProhibition(array $data): array
     {
-        $this->assertProhibitionPermission(action: 'create');
+        $this->requireProhibitionPermission(action: 'create');
 
         $payload = $this->stripFrameworkParams(data: $data);
 
@@ -249,7 +242,6 @@ class PolicyCrudService
 
     }//end createProhibition()
 
-
     /**
      * Update an existing prohibition record.
      *
@@ -262,7 +254,7 @@ class PolicyCrudService
      */
     public function updateProhibition(string $uuid, array $data): array
     {
-        $this->assertProhibitionPermission(action: 'update');
+        $this->requireProhibitionPermission(action: 'update');
 
         $payload = $this->stripFrameworkParams(data: $data);
         return $this->saveObject(
@@ -273,7 +265,6 @@ class PolicyCrudService
         );
 
     }//end updateProhibition()
-
 
     /**
      * Delete a prohibition record.
@@ -286,7 +277,7 @@ class PolicyCrudService
      */
     public function deleteProhibition(string $uuid): void
     {
-        $this->assertProhibitionPermission(action: 'delete');
+        $this->requireProhibitionPermission(action: 'delete');
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
@@ -298,7 +289,6 @@ class PolicyCrudService
         );
 
     }//end deleteProhibition()
-
 
     /**
      * Create a standing consent (scope=entity publicationConsent) record.
@@ -314,7 +304,7 @@ class PolicyCrudService
      */
     public function createStandingConsent(array $data): array
     {
-        $this->assertStandingConsentPermission(action: 'create');
+        $this->requireStandingConsentPermission(action: 'create');
 
         $payload           = $this->stripFrameworkParams(data: $data);
         $payload['scope']  = 'entity';
@@ -330,7 +320,6 @@ class PolicyCrudService
 
     }//end createStandingConsent()
 
-
     /**
      * Update an existing standing consent record.
      *
@@ -343,7 +332,7 @@ class PolicyCrudService
      */
     public function updateStandingConsent(string $uuid, array $data): array
     {
-        $this->assertStandingConsentPermission(action: 'update');
+        $this->requireStandingConsentPermission(action: 'update');
 
         $existing = $this->getStandingConsent(uuid: $uuid);
         if ($existing === null) {
@@ -364,7 +353,6 @@ class PolicyCrudService
 
     }//end updateStandingConsent()
 
-
     /**
      * Delete a standing consent.
      *
@@ -376,7 +364,7 @@ class PolicyCrudService
      */
     public function deleteStandingConsent(string $uuid): void
     {
-        $this->assertStandingConsentPermission(action: 'delete');
+        $this->requireStandingConsentPermission(action: 'delete');
 
         $existing = $this->getStandingConsent(uuid: $uuid);
         if ($existing === null) {
@@ -394,7 +382,6 @@ class PolicyCrudService
 
     }//end deleteStandingConsent()
 
-
     /**
      * Enforce service-level standing-consent group membership.
      *
@@ -407,13 +394,13 @@ class PolicyCrudService
      * Admin users bypass this gate (NC convention — they implicitly belong to
      * every privileged group).
      *
-     * @param string $action 'create', 'update', or 'delete' (used in error msg only).
+     * @param string $action 'read', 'create', 'update', or 'delete' (used in error msg only).
      *
      * @return void
      *
      * @throws RuntimeException When the current user is not authorised. Mapped to 403 by the controller.
      */
-    private function assertStandingConsentPermission(string $action): void
+    public function requireStandingConsentPermission(string $action): void
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -438,22 +425,21 @@ class PolicyCrudService
             )
         );
 
-    }//end assertStandingConsentPermission()
-
+    }//end requireStandingConsentPermission()
 
     /**
-     * Assert the current user can create/update/delete a prohibition record.
+     * Assert the current user can read/create/update/delete a prohibition record.
      *
      * Prohibitions are tenant-wide blocking rules; write authorisation requires
      * admin role or membership in `PROHIBITION_GROUP`. Throws otherwise.
      *
-     * @param string $action The operator action being authorised (`create`, `update`, `delete`).
+     * @param string $action The operator action being authorised (`read`, `create`, `update`, `delete`).
      *
      * @return void
      *
      * @throws RuntimeException When the current user is not authorised. Mapped to 403 by the controller.
      */
-    private function assertProhibitionPermission(string $action): void
+    public function requireProhibitionPermission(string $action): void
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -478,8 +464,7 @@ class PolicyCrudService
             )
         );
 
-    }//end assertProhibitionPermission()
-
+    }//end requireProhibitionPermission()
 
     /**
      * Strip framework-injected request params before persistence.
@@ -494,7 +479,6 @@ class PolicyCrudService
         return $data;
 
     }//end stripFrameworkParams()
-
 
     /**
      * List records by register+schema slugs and serialise them to plain arrays.
@@ -538,7 +522,6 @@ class PolicyCrudService
 
     }//end listByRegisterSchema()
 
-
     /**
      * Look up one record by UUID.
      *
@@ -572,7 +555,6 @@ class PolicyCrudService
         return (array) $object;
 
     }//end findOne()
-
 
     /**
      * Persist a record via ObjectService::saveObject.
@@ -612,6 +594,4 @@ class PolicyCrudService
         }//end try
 
     }//end saveObject()
-
-
 }//end class

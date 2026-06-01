@@ -26,9 +26,12 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,8 +45,6 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
-
-
     /**
      * Constructor for AnonymizationController
      *
@@ -53,6 +54,8 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IUserSession         $userSession          Current session user for authorization checks.
+     * @param IRootFolder          $rootFolder           Nextcloud root folder for file access checks.
      *
      * @return void
      */
@@ -62,12 +65,13 @@ class AnonymizationController extends Controller
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession,
+        private readonly IRootFolder $rootFolder
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * List all processed files with entity counts and status
@@ -83,6 +87,11 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
+            $authError = $this->requireAuthenticated();
+            if ($authError !== null) {
+                return $authError;
+            }
+
             $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
@@ -100,10 +109,9 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
-        }
+        }//end try
 
     }//end files()
-
 
     /**
      * Upload a file to the user's DocuDesk folder
@@ -119,6 +127,11 @@ class AnonymizationController extends Controller
     public function upload(): JSONResponse
     {
         try {
+            $authError = $this->requireAuthenticated();
+            if ($authError !== null) {
+                return $authError;
+            }
+
             $file = $this->request->getUploadedFile('file');
 
             if (empty($file) === true || isset($file['tmp_name']) === false) {
@@ -166,7 +179,6 @@ class AnonymizationController extends Controller
 
     }//end upload()
 
-
     /**
      * Extract text and detect entities in a file
      *
@@ -182,6 +194,11 @@ class AnonymizationController extends Controller
     public function extract(int $fileId): JSONResponse
     {
         try {
+            $accessError = $this->requireFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
+            }
+
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
 
             return new JSONResponse($result);
@@ -197,7 +214,6 @@ class AnonymizationController extends Controller
         }
 
     }//end extract()
-
 
     /**
      * Anonymize entities in a document
@@ -225,6 +241,18 @@ class AnonymizationController extends Controller
                 );
             }
 
+            // Validate bases field in each entity before the file-access check
+            // so malformed input receives 400 regardless of whether the file exists.
+            $basesError = $this->validateEntityBases(entities: $entities);
+            if ($basesError !== null) {
+                return $basesError;
+            }
+
+            $accessError = $this->requireFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
+            }
+
             // Wave 4a: optional `appendBasisSummary` flag. Default false; type-strict.
             $appendBasisSummary = false;
             if (array_key_exists('appendBasisSummary', $params) === true) {
@@ -241,10 +269,14 @@ class AnonymizationController extends Controller
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
+            // Optional outputFormat — 'pdf' (default) or 'preserve'.
+            $outputFormat = (string) ($params['outputFormat'] ?? 'pdf');
+
             $result = $this->anonymizationService->anonymizeDocument(
-                $fileId,
-                $entities,
-                $appendBasisSummary
+                fileId: $fileId,
+                entities: $entities,
+                appendBasisSummary: $appendBasisSummary,
+                outputFormat: $outputFormat
             );
 
             return new JSONResponse($result);
@@ -261,6 +293,94 @@ class AnonymizationController extends Controller
 
     }//end anonymize()
 
+    /**
+     * Validate that each entity's `bases` field, when present, is an array of strings.
+     *
+     * Called before the file-access check so malformed input returns 400 regardless
+     * of whether the target file exists.
+     *
+     * @param array<int, array<string, mixed>> $entities The raw entity list from the request.
+     *
+     * @return JSONResponse|null 400 response when validation fails, null on success.
+     */
+    private function validateEntityBases(array $entities): ?JSONResponse
+    {
+        foreach ($entities as $entity) {
+            if (array_key_exists('bases', (array) $entity) === false) {
+                continue;
+            }
+
+            $bases = $entity['bases'] ?? null;
+            if (is_array($bases) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Entity bases must be an array of strings')],
+                    400
+                );
+            }
+
+            foreach ($bases as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each basis reference must be a string')],
+                        400
+                    );
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateEntityBases()
+
+    /**
+     * Verify the calling user owns the given file and return a 404 response if not.
+     *
+     * @param int $fileId Nextcloud file ID to check.
+     *
+     * @return JSONResponse|null 404 JSONResponse when the file is not accessible, null on success.
+     */
+
+    /**
+     * Verify the session user is authenticated and return a 401 if not.
+     *
+     * @return JSONResponse|null 401 response when unauthenticated, null on success.
+     */
+    private function requireAuthenticated(): ?JSONResponse
+    {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Not authenticated')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
+        return null;
+
+    }//end requireAuthenticated()
+
+    /**
+     * Verify the calling user owns the given file and return a 404 response if not.
+     *
+     * @param int $fileId Nextcloud file ID to check.
+     *
+     * @return JSONResponse|null 404 JSONResponse when the file is not accessible, null on success.
+     */
+    private function requireFileAccess(int $fileId): ?JSONResponse
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], 401);
+        }
+
+        $userFolder = $this->rootFolder->getUserFolder(userId: $user->getUID());
+        $nodes      = $userFolder->getById($fileId);
+        if (empty($nodes) === true) {
+            return new JSONResponse(['error' => $this->l10n->t('File not found')], 404);
+        }
+
+        return null;
+
+    }//end requireFileAccess()
 
     /**
      * Filter entities by excluded types
@@ -289,7 +409,6 @@ class AnonymizationController extends Controller
 
     }//end filterByExcludeTypes()
 
-
     /**
      * Filter entities by minimum confidence threshold
      *
@@ -316,6 +435,4 @@ class AnonymizationController extends Controller
         );
 
     }//end filterByConfidence()
-
-
 }//end class

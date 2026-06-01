@@ -41,6 +41,10 @@ use Psr\Log\LoggerInterface;
 class AnonymizationService
 {
 
+    /**
+     * Result key used when the grondslagen-summary step fails but anonymisation succeeded.
+     */
+    private const SUMMARY_APPEND_FAILED = 'grondslagen_summary_failed';
 
     /**
      * Constructor for AnonymizationService
@@ -65,7 +69,6 @@ class AnonymizationService
 
     }//end __construct()
 
-
     /**
      * Get an OpenRegister service or mapper by class name
      *
@@ -84,7 +87,6 @@ class AnonymizationService
         throw new RuntimeException($className.' is not available.');
 
     }//end getOpenRegisterService()
-
 
     /**
      * Extract text from a file and detect entities
@@ -128,7 +130,6 @@ class AnonymizationService
 
     }//end extractAndDetectEntities()
 
-
     /**
      * Anonymize entities in a document
      *
@@ -144,6 +145,10 @@ class AnonymizationService
      *                                                        the anonymise — a structured
      *                                                        `warning` is attached to the result
      *                                                        instead.
+     * @param string                      $outputFormat       Requested output format: 'pdf' (default)
+     *                                                        appends the summary to the output PDF;
+     *                                                        'preserve' saves the summary as a
+     *                                                        separate file regardless of MIME type.
      *
      * @return array<string, mixed> Anonymization result. Adds the optional `warning` field when
      *                              the grondslagen-summary step failed but the anonymise itself
@@ -152,8 +157,12 @@ class AnonymizationService
      *
      * @throws Exception If anonymization fails
      */
-    public function anonymizeDocument(int $fileId, array $entities, bool $appendBasisSummary=false): array
-    {
+    public function anonymizeDocument(
+        int $fileId,
+        array $entities,
+        bool $appendBasisSummary=false,
+        string $outputFormat='pdf'
+    ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
@@ -166,12 +175,23 @@ class AnonymizationService
             );
 
             $resultInfo = $this->entityDetection->parseAnonymizationResult($result);
-            $resultInfo['replacementCount'] = count($mappedEntities);
+
+            // Derive replacement stats from the actual result, not from count($mappedEntities).
+            $sourceText   = $this->readNodeTextSafely(node: $node);
+            $verifyResult = $this->verifyReplacements(
+                mappedEntities: $mappedEntities,
+                originalText: $sourceText
+            );
+            $resultInfo['replacementsAttempted'] = $verifyResult['replacementsAttempted'];
+            $resultInfo['replacementsApplied']   = $verifyResult['replacementsApplied'];
+            $resultInfo['replacementsVerified']  = $verifyResult['replacementsVerified'];
+            $resultInfo['unmatchedEntities']     = $verifyResult['unmatchedEntities'];
 
             if ($appendBasisSummary === true) {
-                $resultInfo = $this->attachGrondslagenSummary(
+                $resultInfo = $this->tryAppendBasisSummary(
                     anonymisedNode: $result,
                     sourceFileId: $fileId,
+                    outputFormat: $outputFormat,
                     resultInfo: $resultInfo
                 );
             }
@@ -186,7 +206,6 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
-
 
     /**
      * Render and attach the grondslagen summary to a freshly-anonymised file.
@@ -209,18 +228,124 @@ class AnonymizationService
      *
      * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
+
+    /**
+     * Verify that anonymised entities are actually present in the source text.
+     *
+     * Uses case-insensitive matching to mirror OpenRegister's str_ireplace semantics.
+     *
+     * @param array<int, array<string, mixed>> $mappedEntities Entities submitted for anonymisation.
+     * @param string                           $originalText   Full source-document text (empty when unreadable).
+     *
+     * @return array<string, mixed> Stats: replacementsAttempted, replacementsApplied, replacementsVerified, unmatchedEntities.
+     */
+    private function verifyReplacements(array $mappedEntities, ?string $originalText): array
     {
+        $attempted = count($mappedEntities);
+
+        if ($originalText === null) {
+            // Binary source — verification not possible; callers see the truth.
+            return [
+                'replacementsAttempted' => $attempted,
+                'replacementsApplied'   => null,
+                'replacementsVerified'  => false,
+                'unmatchedEntities'     => [],
+            ];
+        }
+
+        $applied   = 0;
+        $unmatched = [];
+
+        foreach ($mappedEntities as $entity) {
+            $text = (string) ($entity['text'] ?? '');
+            if ($text !== '' && stripos($originalText, $text) !== false) {
+                $applied++;
+            } else {
+                $unmatched[] = $entity;
+            }
+        }
+
+        return [
+            'replacementsAttempted' => $attempted,
+            'replacementsApplied'   => $applied,
+            'replacementsVerified'  => ($applied > 0),
+            'unmatchedEntities'     => $unmatched,
+        ];
+
+    }//end verifyReplacements()
+
+    /**
+     * Read a file node's text content without throwing on binary formats.
+     *
+     * Returns null for non-File nodes and for binary MIME types (anything that
+     * is not text/*). Callers should treat null as "text unavailable" and skip
+     * verification rather than failing.
+     *
+     * @param mixed $node The file node returned by OpenRegister's FileService.
+     *
+     * @return string|null The raw text content, or null when the file is binary/unreadable.
+     */
+    private function readNodeTextSafely(mixed $node): ?string
+    {
+        if (is_object($node) === false) {
+            return null;
+        }
+
+        if (method_exists($node, 'getMimeType') === false || method_exists($node, 'getContent') === false) {
+            return null;
+        }
+
+        $mime = $node->getMimeType();
+        if (str_starts_with($mime, 'text/') === false) {
+            return null;
+        }
+
+        try {
+            return $node->getContent();
+        } catch (Exception $e) {
+            $this->logger->debug(
+                'AnonymizationService: could not read node text for verification',
+                ['error' => $e->getMessage()]
+            );
+            return null;
+        }
+
+    }//end readNodeTextSafely()
+
+    /**
+     * Render and attach the grondslagen summary to a freshly-anonymised file.
+     *
+     * When `$outputFormat === 'preserve'` the caller explicitly opted out of
+     * PDF conversion; the summary is always saved as a separate file in that
+     * case regardless of the anonymised file's MIME type.
+     *
+     * Summary-step failure is non-fatal: the anonymise call still returns
+     * success; the result gets a structured `warning` field.
+     *
+     * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
+     * @param int                  $sourceFileId   Pre-anonymisation source file id.
+     * @param string               $outputFormat   Caller's requested output format ('pdf' or 'preserve').
+     * @param array<string, mixed> $resultInfo     Current result info — extended and returned.
+     *
+     * @return array<string, mixed> The (possibly-extended) result info.
+     */
+    private function tryAppendBasisSummary(
+        mixed $anonymisedNode,
+        int $sourceFileId,
+        string $outputFormat,
+        array $resultInfo
+    ): array {
         if (($anonymisedNode instanceof \OCP\Files\File) === false) {
-            $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
+            $resultInfo['warning'] = self::SUMMARY_APPEND_FAILED.': anonymised result is not a File node';
             return $resultInfo;
         }
 
-        $mime  = $anonymisedNode->getMimeType();
-        $isPdf = ($mime === 'application/pdf');
+        $mime     = $anonymisedNode->getMimeType();
+        $isPdf    = ($mime === 'application/pdf');
+        $preserve = ($outputFormat === 'preserve');
 
         try {
-            if ($isPdf === true) {
+            if ($isPdf === true && $preserve === false) {
                 $this->grondslagenSummary->appendSummaryToPdf(
                     anonymisedFile: $anonymisedNode,
                     sourceFileId: $sourceFileId
@@ -242,15 +367,14 @@ class AnonymizationService
                     'fileId'       => $anonymisedNode->getId(),
                     'sourceFileId' => $sourceFileId,
                     'isPdf'        => $isPdf,
+                    'outputFormat' => $outputFormat,
                     'error'        => $e->getMessage(),
                 ]
             );
-            $resultInfo['warning'] = 'grondslagen_summary_failed: '.$e->getMessage();
+            $resultInfo['warning'] = self::SUMMARY_APPEND_FAILED.': '.$e->getMessage();
         }//end try
 
         return $resultInfo;
 
-    }//end attachGrondslagenSummary()
-
-
+    }//end tryAppendBasisSummary()
 }//end class

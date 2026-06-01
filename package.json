@@ -29,7 +29,7 @@
     "@nextcloud/initial-state": "^2.2.0",
     "@nextcloud/l10n": "^2.0.1",
     "@nextcloud/router": "^2.0.1",
-    "@nextcloud/vue": "^8.12.0",
+    "@nextcloud/vue": "^8.39.0",
     "css-loader": "^6.8.1",
     "mammoth": "^1.12.0",
     "pdfjs-dist": "^5.7.284",
@@ -65,6 +65,7 @@
     "typescript": "^5.5.4"
   },
   "overrides": {
+    "dompurify": ">=3.2.4",
     "sha.js": "^2.4.12",
     "cipher-base": "^1.0.7",
     "elliptic": "^6.6.1",
