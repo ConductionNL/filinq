@@ -59,6 +59,9 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * @spec openspec/changes/folder-analysis-anonymization/tasks.md#task-3
+ * @spec openspec/changes/folder-analysis-anonymization/tasks.md#task-5
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
