@@ -17,6 +17,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\ConsentScopeValidator;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\ConsentUpdateHandler;
 use OCA\DocuDesk\Service\ObjectionDeadlineChecker;
@@ -70,6 +71,11 @@ class ConsentServiceTest extends TestCase
      */
     private ConsentUpdateHandler|MockObject $mockUpdateHandler;
 
+    /**
+     * @var ConsentScopeValidator|MockObject
+     */
+    private ConsentScopeValidator|MockObject $mockScopeValidator;
+
 
     /**
      * Set up test environment
@@ -80,18 +86,20 @@ class ConsentServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger           = $this->createMock(LoggerInterface::class);
-        $this->mockContainer        = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager       = $this->createMock(IAppManager::class);
-        $this->mockDeadlineChecker  = $this->createMock(ObjectionDeadlineChecker::class);
-        $this->mockUpdateHandler    = $this->createMock(ConsentUpdateHandler::class);
+        $this->mockLogger          = $this->createMock(LoggerInterface::class);
+        $this->mockContainer       = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager      = $this->createMock(IAppManager::class);
+        $this->mockDeadlineChecker = $this->createMock(ObjectionDeadlineChecker::class);
+        $this->mockUpdateHandler   = $this->createMock(ConsentUpdateHandler::class);
+        $this->mockScopeValidator  = $this->createMock(ConsentScopeValidator::class);
 
         $this->service = new ConsentService(
             $this->mockLogger,
             $this->mockContainer,
             $this->mockAppManager,
             $this->mockDeadlineChecker,
-            $this->mockUpdateHandler
+            $this->mockUpdateHandler,
+            $this->mockScopeValidator
         );
 
     }//end setUp()

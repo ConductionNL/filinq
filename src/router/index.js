@@ -4,6 +4,7 @@ import { generateUrl } from '@nextcloud/router'
 import Dashboard from '../views/dashboard/DashboardIndex.vue'
 import AnonymizationIndex from '../views/anonymization/AnonymizationIndex.vue'
 import ConsentIndex from '../views/consent/ConsentIndex.vue'
+import StandingConsentIndex from '../views/consent/StandingConsentIndex.vue'
 import ConsentDetail from '../views/consent/ConsentDetail.vue'
 import PrintPreview from '../components/PrintPreview.vue'
 import TemplateIndex from '../views/templates/TemplateIndex.vue'
@@ -20,6 +21,7 @@ export default new Router(
 			{ path: '/anonymization', name: 'Anonymization', component: AnonymizationIndex },
 			{ path: '/consent', name: 'Consent', component: ConsentIndex },
 			{ path: '/consent/:id', name: 'ConsentDetail', component: ConsentDetail, props: route => ({ consentId: route.params.id }) },
+			{ path: '/standing-consents', name: 'StandingConsents', component: StandingConsentIndex },
 			{ path: '/print-preview/:templateId?', name: 'PrintPreview', component: PrintPreview, props: route => ({ templateId: route.params.templateId || '' }) },
 			{ path: '/templates', name: 'Templates', component: TemplateIndex },
 			{ path: '/templates/:id', name: 'TemplateDetail', component: TemplateDetail, props: route => ({ templateId: route.params.id }) },

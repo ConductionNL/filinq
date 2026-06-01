@@ -110,6 +110,26 @@ export const useConsentStore = defineStore(
 					this.loading = false
 				}
 			},
+			/**
+			 * Create a new consent record.
+			 *
+			 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
+			 */
+			async createConsent(data) {
+				this.loading = true
+				this.error = null
+				try {
+					const response = await axios.post(generateUrl('/apps/docudesk/api/consents'), data)
+					this.consents.push(response.data)
+					return response.data
+				} catch (err) {
+					console.error('Failed to create consent:', err)
+					this.error = err.message
+					return null
+				} finally {
+					this.loading = false
+				}
+			},
 			setConsentItem(consent) {
 				this.consentItem = consent
 			},

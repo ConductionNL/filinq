@@ -4,6 +4,7 @@
 		<template #default>
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
 			<ConsentIndex v-if="navigationStore.selected === 'consent'" />
+			<StandingConsentIndex v-if="navigationStore.selected === 'standingConsent'" />
 			<ConsentDetail v-if="navigationStore.selected === 'consentDetail'" />
 			<AnonymizationWidget v-if="navigationStore.selected === 'anonymization'" />
 			<TemplateIndex v-if="navigationStore.selected === 'templates'" />
@@ -20,6 +21,7 @@ import { navigationStore } from '../store/store.js'
 
 import Dashboard from './dashboard/DashboardIndex.vue'
 import ConsentIndex from './consent/ConsentIndex.vue'
+import StandingConsentIndex from './consent/StandingConsentIndex.vue'
 import ConsentDetail from './consent/ConsentDetail.vue'
 import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
 import TemplateIndex from './templates/TemplateIndex.vue'
@@ -33,6 +35,7 @@ export default {
 		NcAppContent,
 		Dashboard,
 		ConsentIndex,
+		StandingConsentIndex,
 		ConsentDetail,
 		AnonymizationWidget,
 		TemplateIndex,

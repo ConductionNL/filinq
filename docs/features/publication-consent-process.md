@@ -226,36 +226,67 @@ Final publication step:
    - `rejected`: Publication is rejected
 3. **Audit Trail**: All decisions and timestamps are recorded for compliance
 
+## Scope Discriminator
+
+The `publicationConsent` schema supports two types of records, distinguished by the `scope` field:
+
+| Scope | Description |
+|-------|-------------|
+| `document` | Per-document WOO workflow record (default — backward compatible). Linked to a specific document via `documentId`. |
+| `entity` | Standing-consent record. Grants blanket prior consent for an entity; consulted before starting the WOO workflow. |
+
+Existing records without a `scope` field are treated as `scope: "document"` automatically.
+
+## Standing-Consent Pre-emption
+
+When detection creates a per-document `publicationConsent` record, the consent service first checks for matching standing-consent records **before** starting the WOO notification workflow:
+
+1. **Prohibition match** (sibling change `publication-prohibition-schema`): `consentStatus: "anonymized"`, `notificationStatus: "skipped"`, `policyMatch → publicationProhibition`.
+2. **Standing-consent match**: `consentStatus: "consent_given"`, `notificationStatus: "skipped"`, `publicationDecision: "publish_with_consent"`, `policyMatch → publicationConsent (scope=entity)`.
+3. **No match**: existing WOO workflow runs unchanged.
+
+### Override-Up Flow
+
+When an operator decides to anonymise a standing-consent-matched entity anyway:
+
+1. The per-document record's `publicationDecision` transitions to `"anonymize"`.
+2. `consentStatus` stays `"consent_given"` — the standing consent still matched.
+3. `policyMatch` is preserved — the audit trail remains complete.
+4. An audit event is emitted.
+
 ## Publication Consent Schema Fields
 
-### Required Fields
+### Core Fields (all scopes)
 
-- `documentId`: Reference to the document being published
+- `scope`: `document` (default) or `entity` — discriminator
 - `entityType`: PERSON or ORGANIZATION
 - `entityText`: The detected entity text
+- `legalBasis`: Legal justification
+- `notes`: Internal notes
 
-### Status Fields
+### Document-Scope Fields (`scope: "document"`)
 
+- `documentId`: Reference to the document being published (required for document scope)
 - `notificationStatus`: pending, sent, delivered, failed, skipped
 - `consentStatus`: pending, consent_given, objection_received, no_response, anonymized
 - `publicationDecision`: pending, anonymize, publish_with_consent, publish_anonymized, reject
-
-### Timeline Fields
-
 - `notificationSentAt`: When notification was sent
 - `objectionDeadline`: Deadline for objection (minimum 28 days)
 - `objectionReceivedAt`: When objection was received (if applicable)
-
-### Contact Fields
-
+- `objectionReason`: Reason for objection (if provided)
 - `contactEmail`: Email address for notification
 - `contactAddress`: Postal address for notification
+- `policyMatch`: Polymorphic reference to the rule that pre-empted this record (either a `publicationProhibition` or a `scope: "entity"` `publicationConsent`)
 
-### Decision Fields
+### Entity-Scope Fields (`scope: "entity"`)
 
-- `objectionReason`: Reason for objection (if provided)
-- `legalBasis`: Legal basis for publication decision
-- `notes`: Internal notes about the process
+- `matchRules`: Array of `{type, value}` matching rules. Supported types: `exact`, `normalized`, `bsn`, `kvk`
+- `validFrom`: Start of the standing consent's validity (null = immediate)
+- `validUntil`: End of the standing consent's validity (null = open-ended; UI warns when blank)
+- `active`: Boolean — inactive records are kept for audit but not consulted
+- `consentMethod`: How consent was obtained: `paper`, `digital_signature`, `verbal_recorded`, `opt_in_form` (required for entity scope)
+- `consentDocument`: File reference to the signed consent document (optional)
+- `consentScope`: Free text describing which publications the consent applies to
 
 ## Configuration
 
@@ -409,6 +440,27 @@ Before publishing a document, ensure:
 3. Notification status: `skipped`
 4. Decision: `anonymize` (default for skipped)
 5. Document published with anonymized entity
+
+## Admin Pages
+
+### Consent Workflow
+
+The **Consent Workflow** admin page (`/consent`) shows only `scope: "document"` records — the per-document WOO notification workflow. It filters out standing-consent records so operators see only the active notification queue.
+
+Per-entity toggle behaviour:
+- `policyMatch → publicationConsent (scope=entity)` — toggle is OFF by default, enabled. Operator may flip ON to anonymise anyway (override-up flow).
+- `policyMatch: null` — existing UX based on `consentStatus`.
+
+### Standing Publication Consents
+
+The **Standing Publication Consents** admin page (`/standing-consents`) shows only `scope: "entity"` records. It allows authorised operators (members of `docudesk-standing-consent-admins`) to:
+
+- List all active and inactive standing consents
+- Create new standing consents (requires `consentMethod`; UI warns when `validUntil` is blank)
+- Expire a consent (sets `active: false`, preserves for audit)
+- Revoke a consent (sets `consentStatus: "anonymized"`, `active: false`)
+
+Creating a standing consent requires membership in the `docudesk-standing-consent-admins` group.
 
 ## Related Documentation
 

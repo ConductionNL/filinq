@@ -399,54 +399,6 @@ interface IAppConfig
 
 }
 
-/**
- * Stub for OCP\IRequest
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IRequest
-{
-
-    public function getParam(string $key, mixed $default = null): mixed;
-    public function getParams(): array;
-    public function getMethod(): string;
-    public function getUploadedFile(string $key): array;
-    public function getHeader(string $name): string;
-    public function isUserAgent(array $agent): bool;
-    public function getServerProtocol(): string;
-    public function getRawPathInfo(): string;
-    public function getPathInfo(): string|false;
-    public function getRequestUri(): string;
-    public function getId(): string;
-    public function getRemoteAddress(): string;
-    public function getServerHost(): string;
-
-}
-
-/**
- * Stub for OCP\IL10N
- *
- * @category Tests
- * @package  OCP
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-interface IL10N
-{
-
-    public function t(string $text, array $parameters = []): string;
-    public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string;
-    public function l(string $type, mixed $data, array $options = []): mixed;
-    public function getLanguageCode(): string;
-    public function getLocaleCode(): string;
-
-}
-
 namespace OCP\App;
 
 /**
@@ -470,6 +422,37 @@ interface IAppManager
 
 }
 
+namespace OCP\AppFramework\OCS;
+
+/**
+ * Stub for OCP\AppFramework\OCS\OCSForbiddenException
+ *
+ * @category Tests
+ * @package  OCP\AppFramework\OCS
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class OCSForbiddenException extends \RuntimeException
+{
+
+    /**
+     * Constructor
+     *
+     * @param string $message Exception message
+     * @param int    $code    Exception code
+     *
+     * @return void
+     */
+    public function __construct(string $message='', int $code=403)
+    {
+        parent::__construct($message, $code);
+
+    }//end __construct()
+
+
+}//end class
+
 namespace OCP\AppFramework;
 
 /**
@@ -492,110 +475,6 @@ class Http
     public const STATUS_INTERNAL_SERVER_ERROR = 500;
 }//end class
 
-
-namespace OCP\AppFramework\Http;
-
-/**
- * Stub for OCP\AppFramework\Http\JSONResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class JSONResponse
-{
-
-    private int $status;
-    private mixed $data;
-
-    public function __construct(mixed $data = [], int $statusCode = 200)
-    {
-        $this->data   = $data;
-        $this->status = $statusCode;
-    }
-
-    public function getData(): mixed
-    {
-        return $this->data;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->status;
-    }
-
-    public function setStatus(int $code): self
-    {
-        $this->status = $code;
-        return $this;
-    }
-
-    public function setData(mixed $data): self
-    {
-        $this->data = $data;
-        return $this;
-    }
-
-    public function render(): string
-    {
-        return json_encode($this->data);
-    }
-
-    public function addHeader(string $name, string $value): self
-    {
-        return $this;
-    }
-
-    public function getHeaders(): array
-    {
-        return [];
-    }
-
-}
-
-/**
- * Stub for OCP\AppFramework\Http\DataDownloadResponse
- *
- * @category Tests
- * @package  OCP\AppFramework\Http
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class DataDownloadResponse extends JSONResponse
-{
-
-    public function __construct(string $data, string $filename, string $contentType)
-    {
-        parent::__construct($data);
-    }
-
-}
-
-namespace OCP\AppFramework;
-
-/**
- * Stub for OCP\AppFramework\Controller
- *
- * @category Tests
- * @package  OCP\AppFramework
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Controller
-{
-
-    protected \OCP\IRequest $request;
-
-    public function __construct(string $appName, \OCP\IRequest $request)
-    {
-        $this->request = $request;
-    }
-
-}
 
 namespace Psr\Log;
 
@@ -658,6 +537,8 @@ interface IGroupManager
 {
 
     public function isAdmin(string $userId): bool;
+
+    public function isInGroup(string $uid, string $gid): bool;
 
 
 }//end interface

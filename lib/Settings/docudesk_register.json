@@ -75,7 +75,7 @@
             "publicationConsent": {
                 "x-openregister-notifications": {
                     "objectionDeadline": {
-                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "consentStatus": "pending" } },
+                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "consentStatus": "pending", "scope": "document" } },
                         "enabled": true,
                         "channels": ["nc-notification"],
                         "recipients": [
@@ -88,20 +88,29 @@
                 "uri": null,
                 "slug": "publicationConsent",
                 "title": "Publication Consent",
-                "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat informatie over entiteiten (personen/organisaties) die ge\u00efnformeerd moeten worden voordat een document wordt gepubliceerd, en hun reactie daarop.",
-                "version": "1.0.0",
+                "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat per-document WOO workflow records (scope: document) en staande entiteit-toestemmingen (scope: entity).",
+                "version": "2.0.0",
                 "summary": "",
                 "icon": "AccountCheck",
                 "required": [
-                    "documentId",
                     "entityType",
                     "entityText"
                 ],
                 "properties": {
-                    "documentId": {
-                        "description": "Verwijzing naar het document dat gepubliceerd moet worden",
+                    "scope": {
+                        "description": "Discriminator: 'document' voor per-document WOO workflow records (standaard, backward compatible), 'entity' voor staande entiteit-toestemmingen",
                         "type": "string",
-                        "required": true,
+                        "visible": true,
+                        "order": 0,
+                        "facetable": true,
+                        "title": "Scope",
+                        "enum": ["document", "entity"],
+                        "default": "document"
+                    },
+                    "documentId": {
+                        "description": "Verwijzing naar het document dat gepubliceerd moet worden (verplicht voor scope: document, verboden voor scope: entity)",
+                        "type": "string",
+                        "required": false,
                         "visible": true,
                         "order": 1,
                         "facetable": false,
@@ -265,13 +274,101 @@
                         "facetable": false,
                         "title": "Notities",
                         "maxLength": 2000
+                    },
+                    "matchRules": {
+                        "description": "Matchregels voor staande toestemming (scope: entity). Array van {type, value} objecten. Ondersteunde types: exact, normalized, bsn, kvk.",
+                        "type": "array",
+                        "visible": true,
+                        "order": 16,
+                        "facetable": false,
+                        "title": "Matchregels",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["exact", "normalized", "bsn", "kvk"]
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "validFrom": {
+                        "description": "Begindatum van de staande toestemming (scope: entity). Null = meteen geldig.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 17,
+                        "facetable": false,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Einddatum van de staande toestemming (scope: entity). Null = open-ended. UI toont waarschuwing als leeg.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 18,
+                        "facetable": false,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Geeft aan of de staande toestemming actief is (scope: entity). Inactieve records worden bewaard voor audit maar niet geconsulteerd.",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 19,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "consentMethod": {
+                        "description": "Methode waarmee toestemming is verkregen (scope: entity). Verplicht voor staande toestemmingen.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 20,
+                        "facetable": true,
+                        "title": "Toestemmingsmethode",
+                        "enum": ["paper", "digital_signature", "verbal_recorded", "opt_in_form"]
+                    },
+                    "consentDocument": {
+                        "description": "Bestandsreferentie naar het toestemmingsdocument (bijv. ondertekend PDF). Optioneel.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 21,
+                        "facetable": false,
+                        "title": "Toestemmingsdocument"
+                    },
+                    "consentScope": {
+                        "description": "Vrije tekst die beschrijft waarop de toestemming van toepassing is (bijv. 'documenten gerelateerd aan de officiële taken van de burgemeester').",
+                        "type": "string",
+                        "visible": true,
+                        "order": 22,
+                        "facetable": false,
+                        "title": "Toestemmingsbereik",
+                        "maxLength": 1000
+                    },
+                    "policyMatch": {
+                        "description": "Polymorfische referentie naar de beleidsregel die dit record heeft gepre-empted (alleen geldig voor scope: document). Verwijst naar een publicationProhibition of een scope: entity publicationConsent record.",
+                        "type": "object",
+                        "visible": true,
+                        "order": 23,
+                        "facetable": false,
+                        "title": "Beleidsovereenkomst",
+                        "oneOf": [
+                            { "$ref": "#/components/schemas/publicationProhibition" },
+                            { "$ref": "#/components/schemas/publicationConsent" }
+                        ],
+                        "objectConfiguration": {
+                            "handling": "related-object"
+                        }
                     }
                 },
                 "archive": [],
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2025-12-08T12:00:00+00:00",
+                "updated": "2026-06-01T12:00:00+00:00",
                 "created": "2025-12-08T12:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,
@@ -1034,6 +1131,80 @@
             }
         },
         "objects": [
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-mayor-blanket"},
+                "scope": "entity",
+                "entityType": "PERSON",
+                "entityText": "Burgemeester De Vries",
+                "matchRules": [
+                    {"type": "exact", "value": "Burgemeester De Vries"},
+                    {"type": "normalized", "value": "burgemeester de vries"}
+                ],
+                "consentStatus": "consent_given",
+                "consentMethod": "opt_in_form",
+                "validFrom": "2026-01-01T00:00:00+00:00",
+                "validUntil": null,
+                "active": true,
+                "legalBasis": "Blanket publication consent for official mayoral duties — signed opt-in form dated 2026-01-01. Applies to documents related to the mayor's official capacity.",
+                "consentScope": "Documenten gerelateerd aan de officiële taken van de burgemeester",
+                "notes": "Blanket consent verleend door burgemeester voor publicatie in officiële hoedanigheid."
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-org-signed-optin"},
+                "scope": "entity",
+                "entityType": "ORGANIZATION",
+                "entityText": "Sportvereniging Demostad",
+                "matchRules": [
+                    {"type": "exact", "value": "Sportvereniging Demostad"},
+                    {"type": "normalized", "value": "sportvereniging demostad"},
+                    {"type": "kvk", "value": "12345678"}
+                ],
+                "consentStatus": "consent_given",
+                "consentMethod": "digital_signature",
+                "validFrom": "2026-02-01T00:00:00+00:00",
+                "validUntil": "2027-02-01T00:00:00+00:00",
+                "active": true,
+                "legalBasis": "Organisatie heeft digitale toestemming verleend via ondertekend opt-in formulier (KvK 12345678). Geldig t/m 2027-02-01.",
+                "consentScope": "Alle Woo-publicaties waarbij de organisatie als subsidieontvanger of contractpartner verschijnt",
+                "notes": "Jaarlijkse verlenging vereist — herinnering instellen voor 2027-01-01."
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-council-member"},
+                "scope": "entity",
+                "entityType": "PERSON",
+                "entityText": "Raadslid Jansen",
+                "matchRules": [
+                    {"type": "exact", "value": "Raadslid Jansen"},
+                    {"type": "exact", "value": "J. Jansen"},
+                    {"type": "normalized", "value": "raadslid jansen"}
+                ],
+                "consentStatus": "consent_given",
+                "consentMethod": "paper",
+                "validFrom": "2026-03-01T00:00:00+00:00",
+                "validUntil": "2030-12-31T00:00:00+00:00",
+                "active": true,
+                "legalBasis": "Schriftelijke toestemming verleend als gekozen volksvertegenwoordiger voor publicatie van raadsstukken gedurende de raadsperiode.",
+                "consentScope": "Raadsnotulen, agendastukken en besluitenlijsten waarbij raadslid in officiële hoedanigheid verschijnt",
+                "notes": "Toestemming loopt af aan het einde van de huidige raadsperiode (2030)."
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-verbal-recorded"},
+                "scope": "entity",
+                "entityType": "PERSON",
+                "entityText": "Wethouder Bakker",
+                "matchRules": [
+                    {"type": "exact", "value": "Wethouder Bakker"},
+                    {"type": "normalized", "value": "wethouder bakker"}
+                ],
+                "consentStatus": "consent_given",
+                "consentMethod": "verbal_recorded",
+                "validFrom": "2026-04-01T00:00:00+00:00",
+                "validUntil": null,
+                "active": true,
+                "legalBasis": "Mondelinge toestemming vastgelegd in vergadernotulen van 2026-04-01. Wethouder heeft uitdrukkelijk toestemming verleend voor publicatie in officiële hoedanigheid.",
+                "consentScope": "Alle officiële publicaties waarbij de wethouder in portefeuillehouder-hoedanigheid verschijnt",
+                "notes": "Opname beschikbaar als bewijs. Mondelinge toestemming vastgelegd conform WOO-procedure."
+            },
             {
                 "@self": {"register": "dossier", "schema": "base", "slug": "persoonsgegevens"},
                 "name": "Persoonsgegevens",

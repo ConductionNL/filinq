@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Added
+- **`scope` discriminator on `publicationConsent`** (#35): new `scope` field (enum `document` / `entity`, default `document`). Existing records are valid as `scope: "document"` without migration.
+- **Entity-scope field set on `publicationConsent`** (#35): `matchRules` (exact / normalized / bsn / kvk), `validFrom`, `validUntil`, `active`, `consentMethod`, `consentDocument`, `consentScope`. None are in the schema's `required` array — service-level enforcement gates them by scope.
+- **`policyMatch` polymorphic reference on `publicationConsent`** (#35): optional `oneOf` + `$ref` reference (valid only on `scope: "document"` records) pointing at either a `publicationProhibition` or a `scope: "entity"` `publicationConsent` record.
+- **"Standing Publication Consents" admin page** (#35): filtered view of `publicationConsent` where `scope: "entity"`. Supports list / create / expire / revoke. Creating requires membership in `docudesk-standing-consent-admins`.
+- **Four standing-consent seed records** (#35): mayor blanket consent (opt-in form), organisation signed opt-in (KvK), council member (paper), wethouder verbal recorded consent.
+
+### Behavior Changes
+- **Standing-consent pre-emption in publication-clearance flows** (#35): `ConsentService::createConsentRequest()` now checks for active standing-consent matches before falling through to the WOO workflow. A match resolves to `consentStatus: "consent_given"` + `policyMatch → entity consent` + `notificationStatus: "skipped"` with no notification dispatched. Generic anonymisation flows are unaffected.
+- **Consent Workflow page now filtered to `scope: "document"` records** (#35): standing-consent records no longer appear in the per-document WOO workflow queue.
+
 ### Security / Fixed
 - **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
   The previous implementation held sessions in a per-request `$sessions` PHP

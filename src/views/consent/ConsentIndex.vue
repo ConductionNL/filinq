@@ -9,7 +9,7 @@ import { consentStore, navigationStore } from '../../store/store.js'
 		:title="t('docudesk', 'Consent Management')"
 		:description="t('docudesk', 'Manage publication consent records for detected entities')"
 		:show-title="true"
-		:objects="consentStore.consents"
+		:objects="documentConsents"
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
@@ -165,6 +165,14 @@ export default {
 	},
 	computed: {
 		/**
+		 * Filter consents to only document-scope records (backward-compat: no scope = document).
+		 *
+		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-12
+		 */
+		documentConsents() {
+			return consentStore.consents.filter(c => c.scope === 'document' || !c.scope)
+		},
+		/**
 		 * Column definitions for the consent records table.
 		 *
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
@@ -185,7 +193,7 @@ export default {
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 		 */
 		paginationData() {
-			const total = consentStore.consents.length
+			const total = this.documentConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},

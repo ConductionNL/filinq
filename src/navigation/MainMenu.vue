@@ -26,6 +26,11 @@ import { navigationStore } from '../store/store.js'
 					<AccountCheck :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem :active="navigationStore.selected === 'standingConsent'" :name="t('docudesk', 'Standing Consents')" @click="navigationStore.setSelected('standingConsent')">
+				<template #icon>
+					<AccountMultipleCheck :size="20" />
+				</template>
+			</NcAppNavigationItem>
 			<NcAppNavigationItem :active="navigationStore.selected === 'templates' || navigationStore.selected === 'templateDetail'" :name="t('docudesk', 'Templates')" @click="navigationStore.setSelected('templates')">
 				<template #icon>
 					<FileDocumentMultiple :size="20" />
@@ -48,6 +53,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import ShieldLock from 'vue-material-design-icons/ShieldLock.vue'
 import FileDocumentMultiple from 'vue-material-design-icons/FileDocumentMultiple.vue'
 import FolderSearch from 'vue-material-design-icons/FolderSearch.vue'
+import AccountMultipleCheck from 'vue-material-design-icons/AccountMultipleCheck.vue'
 
 export default {
 	name: 'MainMenu',
@@ -60,6 +66,7 @@ export default {
 		ShieldLock,
 		FileDocumentMultiple,
 		FolderSearch,
+		AccountMultipleCheck,
 	},
 }
 </script>
