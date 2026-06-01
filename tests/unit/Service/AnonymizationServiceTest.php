@@ -126,7 +126,7 @@ class AnonymizationServiceTest extends TestCase
     public function testTryAppendBasisSummaryMethodExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function tryAppendBasisSummary', $content);
+        $this->assertStringContainsString(needle: 'function attachGrondslagenSummary', haystack: $content);
 
     }//end testTryAppendBasisSummaryMethodExists()
 
@@ -141,8 +141,8 @@ class AnonymizationServiceTest extends TestCase
     public function testWarningFieldDefinedOnSummaryFailure(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('SUMMARY_APPEND_FAILED', $content);
-        $this->assertStringContainsString("'warning'", $content);
+        $this->assertStringContainsString(needle: 'grondslagen_summary_failed', haystack: $content);
+        $this->assertStringContainsString(needle: "'warning'", haystack: $content);
 
     }//end testWarningFieldDefinedOnSummaryFailure()
 
@@ -400,20 +400,20 @@ class AnonymizationServiceTest extends TestCase
         $appManager      = $this->createMock(\OCP\App\IAppManager::class);
         $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
         $appConfig       = $this->createMock(\OCP\IAppConfig::class);
-        $consentCrud     = $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class);
-        $consentService  = $this->createMock(\OCA\DocuDesk\Service\ConsentService::class);
+        $consentCrud     = $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConsentCrudService::class);
+        $consentService  = $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConsentService::class);
 
-        $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
+        $grondslagenSummary = $this->createMock(originalClassName: \OCA\DocuDesk\Service\GrondslagenSummaryService::class);
 
         return new \OCA\DocuDesk\Service\AnonymizationService(
-            $logger,
-            $container,
-            $appManager,
-            $entityDetection,
-            $appConfig,
-            $consentCrud,
-            $consentService,
-            $grondslagenSummary
+            logger: $logger,
+            container: $container,
+            appManager: $appManager,
+            entityDetection: $entityDetection,
+            appConfig: $appConfig,
+            consentCrud: $consentCrud,
+            consentService: $consentService,
+            grondslagenSummary: $grondslagenSummary
         );
 
     }//end buildServiceWithoutDependencies()

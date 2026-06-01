@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress                               PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  *
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-6
@@ -55,73 +55,90 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 {
 
     /**
+     * Mock HTTP request object.
+     *
      * @var IRequest|MockObject
      */
     private IRequest|MockObject $mockRequest;
 
     /**
+     * Mock logger interface.
+     *
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $mockLogger;
 
     /**
+     * Mock anonymization service.
+     *
      * @var AnonymizationService|MockObject
      */
     private AnonymizationService|MockObject $mockAnonService;
 
     /**
+     * Mock file listing service.
+     *
      * @var FileListingService|MockObject
      */
     private FileListingService|MockObject $mockFileService;
 
     /**
+     * Mock localization interface.
+     *
      * @var IL10N|MockObject
      */
     private IL10N|MockObject $mockL10n;
 
     /**
+     * Mock user session interface.
+     *
      * @var IUserSession|MockObject
      */
     private IUserSession|MockObject $mockUserSession;
 
     /**
+     * Mock root folder interface.
+     *
      * @var IRootFolder|MockObject
      */
     private IRootFolder|MockObject $mockRootFolder;
 
     /**
+     * Controller under test.
+     *
      * @var AnonymizationController
      */
     private AnonymizationController $controller;
 
-
     /**
+     * Set up test environment.
+     *
      * @return void
      */
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->mockRequest     = $this->createMock(IRequest::class);
-        $this->mockLogger      = $this->createMock(LoggerInterface::class);
-        $this->mockAnonService = $this->createMock(AnonymizationService::class);
-        $this->mockFileService = $this->createMock(FileListingService::class);
-        $this->mockL10n        = $this->createMock(IL10N::class);
+        $this->mockRequest     = $this->createMock(originalClassName: IRequest::class);
+        $this->mockLogger      = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockAnonService = $this->createMock(originalClassName: AnonymizationService::class);
+        $this->mockFileService = $this->createMock(originalClassName: FileListingService::class);
+        $this->mockL10n        = $this->createMock(originalClassName: IL10N::class);
         $this->mockL10n->method('t')->willReturnCallback(
             static function (string $text): string {
                 return $text;
             }
         );
 
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('test-user');
-        $this->mockUserSession = $this->createMock(IUserSession::class);
+        $this->mockUserSession = $this->createMock(originalClassName: IUserSession::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $mockFile   = $this->createMock(File::class);
-        $mockFolder = $this->createMock(Folder::class);
+        $mockFile   = $this->createMock(originalClassName: File::class);
+        $mockFolder = $this->createMock(originalClassName: Folder::class);
         $mockFolder->method('getById')->willReturn([$mockFile]);
-        $this->mockRootFolder = $this->createMock(IRootFolder::class);
+        $this->mockRootFolder = $this->createMock(originalClassName: IRootFolder::class);
         $this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
         $this->controller = new AnonymizationController(
@@ -136,7 +153,6 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
         );
 
     }//end setUp()
-
 
     /**
      * Backward-compat: omitting unredactedEntities produces no createdConsents field.
@@ -157,14 +173,13 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
         $response = $this->controller->anonymize(fileId: 1);
         $data     = $response->getData();
 
-        $this->assertSame(200, $response->getStatus());
-        $this->assertArrayNotHasKey('createdConsents', $data);
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertArrayNotHasKey(key: 'createdConsents', array: $data);
 
     }//end testAnonymizeWithoutUnredactedEntitiesProducesNoCreatedConsents()
 
-
     /**
-     * unredactedEntities that is not an array returns 400.
+     * Returns 400 when unredactedEntities is not an array.
      *
      * @return void
      *
@@ -181,10 +196,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(expected: 400, actual: $response->getStatus());
 
     }//end testAnonymizeReturns400WhenUnredactedEntitiesIsNotArray()
-
 
     /**
      * Missing required entityId returns 400.
@@ -206,12 +220,11 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(expected: 400, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('error', $data);
+        $this->assertArrayHasKey(key: 'error', array: $data);
 
     }//end testAnonymizeReturns400WhenEntityIdMissing()
-
 
     /**
      * Missing required entityText returns 400.
@@ -233,10 +246,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(expected: 400, actual: $response->getStatus());
 
     }//end testAnonymizeReturns400WhenEntityTextMissing()
-
 
     /**
      * Empty publicationBases array returns 400.
@@ -263,10 +275,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(expected: 400, actual: $response->getStatus());
 
     }//end testAnonymizeReturns400WhenPublicationBasesEmpty()
-
 
     /**
      * Prohibition match on an unredacted entity returns 422 with structured body.
@@ -309,14 +320,13 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(422, $response->getStatus());
+        $this->assertSame(expected: 422, actual: $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('error', $data);
-        $this->assertArrayHasKey('prohibitedEntries', $data);
-        $this->assertCount(1, $data['prohibitedEntries']);
+        $this->assertArrayHasKey(key: 'error', array: $data);
+        $this->assertArrayHasKey(key: 'prohibitedEntries', array: $data);
+        $this->assertCount(expectedCount: 1, haystack: $data['prohibitedEntries']);
 
     }//end testAnonymizeReturns422WhenProhibitionMatches()
-
 
     /**
      * Success path: valid unredactedEntities with no prohibition match returns 200
@@ -366,13 +376,12 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
         $response = $this->controller->anonymize(fileId: 1);
         $data     = $response->getData();
 
-        $this->assertSame(200, $response->getStatus());
-        $this->assertArrayHasKey('createdConsents', $data);
-        $this->assertCount(1, $data['createdConsents']);
-        $this->assertSame('created', $data['createdConsents'][0]['action']);
+        $this->assertSame(expected: 200, actual: $response->getStatus());
+        $this->assertArrayHasKey(key: 'createdConsents', array: $data);
+        $this->assertCount(expectedCount: 1, haystack: $data['createdConsents']);
+        $this->assertSame(expected: 'created', actual: $data['createdConsents'][0]['action']);
 
     }//end testAnonymizeReturns200WithCreatedConsentsWhenUnredactedEntitiesValid()
-
 
     /**
      * Backward-compat: request without unredactedEntities passes unredactedEntities=[] to service.
@@ -402,10 +411,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 10);
 
-        $this->assertSame(200, $response->getStatus());
+        $this->assertSame(expected: 200, actual: $response->getStatus());
 
     }//end testAnonymizePassesEmptyUnredactedEntitiesToServiceWhenAbsent()
-
 
     /**
      * Optional contactEmail and contactAddress fields are accepted without error.
@@ -440,8 +448,7 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
 
         $response = $this->controller->anonymize(fileId: 1);
 
-        $this->assertSame(200, $response->getStatus());
+        $this->assertSame(expected: 200, actual: $response->getStatus());
 
     }//end testAnonymizeAcceptsOptionalContactFields()
-
 }//end class

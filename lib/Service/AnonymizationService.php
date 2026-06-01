@@ -747,5 +747,4 @@ class AnonymizationService
         return $resultInfo;
 
     }//end attachGrondslagenSummary()
-
 }//end class

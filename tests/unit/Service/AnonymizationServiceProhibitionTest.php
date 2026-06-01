@@ -113,9 +113,9 @@ class AnonymizationServiceProhibitionTest extends TestCase
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
             appConfig: $this->mockAppConfig,
-            consentCrud: $this->createMock(ConsentCrudService::class),
-            consentService: $this->createMock(ConsentService::class),
-            grondslagenSummary: $this->createMock(GrondslagenSummaryService::class)
+            consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
+            consentService: $this->createMock(originalClassName: ConsentService::class),
+            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class)
         );
 
     }//end makeService()

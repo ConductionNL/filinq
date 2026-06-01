@@ -108,15 +108,12 @@ class ConsentServiceTest extends TestCase
         $this->mockAppManager      = $this->createMock(originalClassName: IAppManager::class);
         $this->mockDeadlineChecker = $this->createMock(originalClassName: ObjectionDeadlineChecker::class);
         $this->mockUpdateHandler   = $this->createMock(originalClassName: ConsentUpdateHandler::class);
-        $this->mockPolicyMatcher   = $this->createMock(originalClassName: PolicyMatchService::class);
-
         $this->service = new ConsentService(
             logger: $this->mockLogger,
             container: $this->mockContainer,
             appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
-            updateHandler: $this->mockUpdateHandler,
-            policyMatcher: $this->mockPolicyMatcher
+            updateHandler: $this->mockUpdateHandler
         );
 
     }//end setUp()

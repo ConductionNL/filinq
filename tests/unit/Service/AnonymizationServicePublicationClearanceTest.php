@@ -49,13 +49,11 @@ use Psr\Log\NullLogger;
  */
 class AnonymizationServicePublicationClearanceTest extends TestCase
 {
-
-
     /**
      * Build an AnonymizationService with all constructor deps stubbed.
      *
-     * @param ContainerInterface|null $container     Optional container override
-     * @param ConsentCrudService|null $consentCrud   Optional consentCrud override
+     * @param ContainerInterface|null $container      Optional container override
+     * @param ConsentCrudService|null $consentCrud    Optional consentCrud override
      * @param ConsentService|null     $consentService Optional consentService override
      *
      * @return AnonymizationService
@@ -66,31 +64,30 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         ?ConsentService $consentService=null
     ): AnonymizationService {
         $logger          = new NullLogger();
-        $container       = $container ?? $this->createMock(ContainerInterface::class);
-        $appManager      = $this->createMock(IAppManager::class);
-        $entityDetection = $this->createMock(EntityDetectionService::class);
-        $appConfig       = $this->createMock(IAppConfig::class);
-        $consentCrud     = $consentCrud ?? $this->createMock(ConsentCrudService::class);
-        $consentService  = $consentService ?? $this->createMock(ConsentService::class);
+        $container       = $container ?? $this->createMock(originalClassName: ContainerInterface::class);
+        $appManager      = $this->createMock(originalClassName: IAppManager::class);
+        $entityDetection = $this->createMock(originalClassName: EntityDetectionService::class);
+        $appConfig       = $this->createMock(originalClassName: IAppConfig::class);
+        $consentCrud     = $consentCrud ?? $this->createMock(originalClassName: ConsentCrudService::class);
+        $consentService  = $consentService ?? $this->createMock(originalClassName: ConsentService::class);
 
-        $grondslagenSummary = $this->createMock(GrondslagenSummaryService::class);
+        $grondslagenSummary = $this->createMock(originalClassName: GrondslagenSummaryService::class);
 
         return new AnonymizationService(
-            $logger,
-            $container,
-            $appManager,
-            $entityDetection,
-            $appConfig,
-            $consentCrud,
-            $consentService,
-            $grondslagenSummary
+            logger: $logger,
+            container: $container,
+            appManager: $appManager,
+            entityDetection: $entityDetection,
+            appConfig: $appConfig,
+            consentCrud: $consentCrud,
+            consentService: $consentService,
+            grondslagenSummary: $grondslagenSummary
         );
 
     }//end buildService()
 
-
     /**
-     * checkUnredactedProhibitions returns empty array when PolicyMatchService is unavailable.
+     * Returns empty array when PolicyMatchService is unavailable.
      *
      * @return void
      *
@@ -99,7 +96,7 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
      */
     public function testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
+        $container = $this->createMock(originalClassName: ContainerInterface::class);
         $container->method('get')->willThrowException(new \RuntimeException('not found'));
 
         $service = $this->buildService(container: $container);
@@ -115,14 +112,12 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
 
         $result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
 
-        $this->assertSame([], $result, 'No violations when policy service is unavailable.');
+        $this->assertSame(expected: [], actual: $result, message: 'No violations when policy service is unavailable.');
 
     }//end testCheckUnredactedProhibitionsReturnsEmptyWhenPolicyServiceUnavailable()
 
-
     /**
-     * checkUnredactedProhibitions returns a violation record when the policy service
-     * matches an entity.
+     * Returns a violation record when the policy service matches an entity.
      *
      * @return void
      *
@@ -133,7 +128,9 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
     {
         $fakePolicyService = new class {
             /**
-             * @param string $entityType The entity type.
+             * Match a prohibition rule against an entity.
+             *
+             * @param string $entityType  The entity type.
              * @param string $entityValue The entity value.
              *
              * @return array<string, mixed>|null Match record or null.
@@ -145,10 +142,11 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
                 }
 
                 return null;
-            }
+
+            }//end matchProhibition()
         };
 
-        $container = $this->createMock(ContainerInterface::class);
+        $container = $this->createMock(originalClassName: ContainerInterface::class);
         $container->method('get')->willReturn($fakePolicyService);
 
         $service = $this->buildService(container: $container);
@@ -164,17 +162,15 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
 
         $result = $service->checkUnredactedProhibitions(unredactedEntities: $unredacted);
 
-        $this->assertCount(1, $result);
-        $this->assertSame(2, $result[0]['entityId']);
-        $this->assertSame('Verboden Persoon', $result[0]['entityText']);
-        $this->assertSame('rule-x', $result[0]['ruleId']);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertSame(expected: 2, actual: $result[0]['entityId']);
+        $this->assertSame(expected: 'Verboden Persoon', actual: $result[0]['entityText']);
+        $this->assertSame(expected: 'rule-x', actual: $result[0]['ruleId']);
 
     }//end testCheckUnredactedProhibitionsReturnsViolationsOnMatch()
 
-
     /**
-     * anonymizeDocument accepts an unredactedEntities param without failing
-     * when ConsentCrudService returns null config (consents not configured).
+     * AnonymizeDocument accepts an unredactedEntities param without failing.
      *
      * @return void
      *
@@ -184,15 +180,14 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
     public function testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('unredactedEntities', $content);
-        $this->assertStringContainsString('checkUnredactedProhibitions', $content);
-        $this->assertStringContainsString('createConsentsForUnredactedEntities', $content);
+        $this->assertStringContainsString(needle: 'unredactedEntities', haystack: $content);
+        $this->assertStringContainsString(needle: 'checkUnredactedProhibitions', haystack: $content);
+        $this->assertStringContainsString(needle: 'createConsentsForUnredactedEntities', haystack: $content);
 
     }//end testAnonymizeDocumentSignatureAcceptsUnredactedEntitiesParam()
 
-
     /**
-     * createConsentsForUnredactedEntities is present as a private method.
+     * CreateConsentsForUnredactedEntities is present as a private method.
      *
      * @return void
      *
@@ -202,13 +197,12 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
     public function testCreateConsentsForUnredactedEntitiesMethodExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function createConsentsForUnredactedEntities', $content);
+        $this->assertStringContainsString(needle: 'function createConsentsForUnredactedEntities', haystack: $content);
 
     }//end testCreateConsentsForUnredactedEntitiesMethodExists()
 
-
     /**
-     * createConsentsForUnredactedEntities calls ConsentService::createConsentRequest once per entry.
+     * CreateConsentsForUnredactedEntities calls ConsentService::createConsentRequest once per entry.
      *
      * @return void
      *
@@ -217,15 +211,15 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
      */
     public function testCreateConsentsCallsConsentServiceOncePerEntry(): void
     {
-        /** @var ConsentCrudService|MockObject $consentCrud */
-        $consentCrud = $this->createMock(ConsentCrudService::class);
+        // @var ConsentCrudService|MockObject $consentCrud
+        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
         $consentCrud->method('getConsentConfig')->willReturn(
             ['register' => 'docudesk', 'schema' => 'publicationConsent']
         );
 
-        /** @var ConsentService|MockObject $consentService */
-        $consentService = $this->createMock(ConsentService::class);
-        $consentService->expects($this->exactly(2))
+        // @var ConsentService|MockObject $consentService
+        $consentService = $this->createMock(originalClassName: ConsentService::class);
+        $consentService->expects($this->exactly(count: 2))
             ->method('createConsentRequest')
             ->willReturnCallback(
                 static function (
@@ -269,16 +263,15 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         $resultInfo = ['anonymizedFileId' => 'anon-file-1'];
         $result     = $reflection->invoke($service, $resultInfo, $unredacted);
 
-        $this->assertArrayHasKey('createdConsents', $result);
-        $this->assertCount(2, $result['createdConsents']);
-        $this->assertSame('created', $result['createdConsents'][0]['action']);
-        $this->assertSame('created', $result['createdConsents'][1]['action']);
+        $this->assertArrayHasKey(key: 'createdConsents', array: $result);
+        $this->assertCount(expectedCount: 2, haystack: $result['createdConsents']);
+        $this->assertSame(expected: 'created', actual: $result['createdConsents'][0]['action']);
+        $this->assertSame(expected: 'created', actual: $result['createdConsents'][1]['action']);
 
     }//end testCreateConsentsCallsConsentServiceOncePerEntry()
 
-
     /**
-     * createConsentsForUnredactedEntities returns createdConsents=[] when config is null.
+     * CreateConsentsForUnredactedEntities returns createdConsents=[] when config is null.
      *
      * @return void
      *
@@ -287,12 +280,12 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
      */
     public function testCreateConsentsReturnsEmptyWhenConsentConfigNull(): void
     {
-        /** @var ConsentCrudService|MockObject $consentCrud */
-        $consentCrud = $this->createMock(ConsentCrudService::class);
+        // @var ConsentCrudService|MockObject $consentCrud
+        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
         $consentCrud->method('getConsentConfig')->willReturn(null);
 
-        /** @var ConsentService|MockObject $consentService */
-        $consentService = $this->createMock(ConsentService::class);
+        // @var ConsentService|MockObject $consentService
+        $consentService = $this->createMock(originalClassName: ConsentService::class);
         $consentService->expects($this->never())->method('createConsentRequest');
 
         $service = $this->buildService(
@@ -315,11 +308,10 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         $resultInfo = ['anonymizedFileId' => 'anon-file-1'];
         $result     = $reflection->invoke($service, $resultInfo, $unredacted);
 
-        $this->assertArrayHasKey('createdConsents', $result);
-        $this->assertSame([], $result['createdConsents']);
+        $this->assertArrayHasKey(key: 'createdConsents', array: $result);
+        $this->assertSame(expected: [], actual: $result['createdConsents']);
 
     }//end testCreateConsentsReturnsEmptyWhenConsentConfigNull()
-
 
     /**
      * Call order matches input array: first entry's consent is created before the second.
@@ -330,16 +322,16 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
      */
     public function testCreateConsentsPreservesEntryOrder(): void
     {
-        /** @var ConsentCrudService|MockObject $consentCrud */
-        $consentCrud = $this->createMock(ConsentCrudService::class);
+        // @var ConsentCrudService|MockObject $consentCrud
+        $consentCrud = $this->createMock(originalClassName: ConsentCrudService::class);
         $consentCrud->method('getConsentConfig')->willReturn(
             ['register' => 'reg', 'schema' => 'sch']
         );
 
         $order = [];
 
-        /** @var ConsentService|MockObject $consentService */
-        $consentService = $this->createMock(ConsentService::class);
+        // @var ConsentService|MockObject $consentService
+        $consentService = $this->createMock(originalClassName: ConsentService::class);
         $consentService->method('createConsentRequest')
             ->willReturnCallback(
                 static function (
@@ -370,9 +362,11 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         $reflection->setAccessible(true);
         $reflection->invoke($service, ['anonymizedFileId' => 'anon-f'], $unredacted);
 
-        $this->assertSame(['First', 'Second', 'Third'], $order, 'Consent creation order must match input array order.');
+        $this->assertSame(
+            expected: ['First', 'Second', 'Third'],
+            actual: $order,
+            message: 'Consent creation order must match input array order.'
+        );
 
     }//end testCreateConsentsPreservesEntryOrder()
-
-
 }//end class

@@ -62,7 +62,6 @@ class MetricsControllerTest extends TestCase
      */
     private MetricsCollector|MockObject $mockCollector;
 
-
     /**
      * Set up test environment
      *
@@ -72,21 +71,20 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest           = $this->createMock(IRequest::class);
-        $this->mockConfig      = $this->createMock(IConfig::class);
-        $this->mockAppConfig   = $this->createMock(IAppConfig::class);
-        $this->mockCollector   = $this->createMock(MetricsCollector::class);
+        $mockRequest         = $this->createMock(originalClassName: IRequest::class);
+        $this->mockConfig    = $this->createMock(originalClassName: IConfig::class);
+        $this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
+        $this->mockCollector = $this->createMock(originalClassName: MetricsCollector::class);
 
         $this->controller = new MetricsController(
-            'docudesk',
-            $mockRequest,
-            $this->mockConfig,
-            $this->mockAppConfig,
-            $this->mockCollector
+            appName: 'docudesk',
+            request: $mockRequest,
+            config: $this->mockConfig,
+            appConfig: $this->mockAppConfig,
+            metricsCollector: $this->mockCollector
         );
 
     }//end setUp()
-
 
     /**
      * Test metrics endpoint returns Prometheus format
@@ -96,11 +94,13 @@ class MetricsControllerTest extends TestCase
     public function testIndexReturnsPrometheusFormat(): void
     {
         $this->mockConfig->method('getAppValue')
-            ->willReturnMap([
-                ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
-                ['docudesk', 'pdf_generations_total', '0', '5'],
-                ['docudesk', 'anonymizations_total', '0', '3'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
+                        ['docudesk', 'pdf_generations_total', '0', '5'],
+                        ['docudesk', 'anonymizations_total', '0', '3'],
+                    ]
+                    );
 
         $this->mockConfig->method('getSystemValueString')
             ->willReturn('29.0.0');
@@ -113,6 +113,4 @@ class MetricsControllerTest extends TestCase
         $this->assertInstanceOf(\OCP\AppFramework\Http\TextPlainResponse::class, $response);
 
     }//end testIndexReturnsPrometheusFormat()
-
-
 }//end class
