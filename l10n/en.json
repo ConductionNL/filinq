@@ -137,6 +137,21 @@
         "Extraction has not started": "Extraction has not started",
         "No folder path provided": "No folder path provided",
         "Either folderId or folderPath must be provided": "Either folderId or folderPath must be provided",
-        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath"
+        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath",
+        "Content language": "Content language",
+        "Showing fallback language": "Showing fallback language",
+        "Language": "Language",
+        "Template language settings": "Template language settings",
+        "Default template language": "Default template language",
+        "The default language for template metadata (name, description). Dutch is the primary language per REQ-I18N-050.": "The default language for template metadata (name, description). Dutch is the primary language per REQ-I18N-050.",
+        "Nederlands": "Nederlands",
+        "English": "English",
+        "Template name in {language}": "Template name in {language}",
+        "Template description in {language}": "Template description in {language}",
+        "Translation": "Translation",
+        "Translations": "Translations",
+        "No translation available": "No translation available",
+        "Add translation": "Add translation",
+        "Fallback to {language}": "Fallback to {language}"
     }
 }

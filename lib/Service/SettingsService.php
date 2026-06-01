@@ -150,6 +150,7 @@ class SettingsService
      * @return array<string, mixed> Feature toggle settings
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+     * @spec openspec/changes/register-i18n/tasks.md#task-1
      */
     private function loadFeatureToggles(): array
     {
@@ -193,6 +194,11 @@ class SettingsService
                 $this->appName,
                 'signing_request_expiry_days',
                 '30'
+            ),
+            'template_default_language'         => $this->config->getValueString(
+                $this->appName,
+                'template_default_language',
+                'nl'
             ),
         ];
 

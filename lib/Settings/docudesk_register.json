@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "5.1.0"
+        "version": "5.2.0"
     },
     "x-openregister": {
         "type": "application",
@@ -43,8 +43,10 @@
             "templates": {
                 "slug": "templates",
                 "title": "Template Register",
-                "version": "2.0.0",
-                "description": "Register voor herbruikbare PDF/document templates met versiebeheer",
+                "version": "2.1.0",
+                "description": "Register voor herbruikbare PDF/document templates met versiebeheer. Ondersteunt meertalige metadata via register-i18n (title, description).",
+                "defaultLanguage": "nl",
+                "languages": ["nl", "en"],
                 "schemas": [
                     "template",
                     "templateVersion"
@@ -291,8 +293,8 @@
                 "uri": null,
                 "slug": "template",
                 "title": "Document Template",
-                "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.0.0",
+                "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld. Metadata-velden name en description ondersteunen meertalige inhoud via register-i18n.",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -302,23 +304,25 @@
                 ],
                 "properties": {
                     "name": {
-                        "description": "Naam van het template",
+                        "description": "Naam van het template (meertalig: nl en en ondersteund)",
                         "type": "string",
                         "required": true,
                         "visible": true,
                         "order": 1,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "description": {
-                        "description": "Beschrijving van het doel van het template",
+                        "description": "Beschrijving van het doel van het template (meertalig: nl en en ondersteund)",
                         "type": "string",
                         "visible": true,
                         "order": 2,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "content": {
                         "description": "Twig/HTML template content voor PDF-rendering",
@@ -412,7 +416,7 @@
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2026-05-18T12:00:00+00:00",
+                "updated": "2026-06-01T12:00:00+00:00",
                 "created": "2026-03-01T12:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,

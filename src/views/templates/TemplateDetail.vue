@@ -9,6 +9,12 @@
 				{{ isNew ? t('docudesk', 'New template') : (form.name || t('docudesk', 'Edit template')) }}
 			</h2>
 			<div class="template-detail__header-actions">
+				<!-- Language selector (REQ-I18N-020): only shown on existing templates with translations -->
+				<LanguageSelector v-if="!isNew"
+					:available-languages="availableLanguages"
+					:selected-language="templateStore.selectedLanguage"
+					:is-fallback-language="templateStore.isFallbackLanguage"
+					@language-change="onLanguageChange" />
 				<span v-if="lockOwner && !isLockMine" class="template-detail__lock-warning">
 					{{ t('docudesk', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
@@ -228,10 +234,11 @@ import { useTemplateStore } from '../../store/modules/template.js'
 import { navigationStore } from '../../store/store.js'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import LanguageSelector from '../../components/LanguageSelector.vue'
 
 export default {
 	name: 'TemplateDetail',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog },
+	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog, LanguageSelector },
 	data() {
 		return {
 			navigationStore,
@@ -285,6 +292,26 @@ export default {
 		 */
 		currentUserId() {
 			return window.OC?.currentUser || ''
+		},
+		/**
+		 * Detect languages available in the current template's name field.
+		 * OR stores translatable values as language-keyed objects: {"nl": "...", "en": "..."}.
+		 *
+		 * @return {string[]} Array of BCP 47 language codes
+		 *
+		 * @spec openspec/changes/register-i18n/tasks.md#task-1
+		 */
+		availableLanguages() {
+			const tmpl = this.templateStore.templateItem
+			if (!tmpl) return []
+			// Name field is the canonical translatable field (I18N-001).
+			const nameField = tmpl.name
+			if (nameField && typeof nameField === 'object') {
+				return Object.keys(nameField).filter(k => typeof k === 'string' && k.length >= 2)
+			}
+			// Single-language template: expose its current language or ['nl'].
+			const served = this.templateStore.servedLanguage
+			return served ? [served] : ['nl']
 		},
 	},
 	/**
@@ -478,6 +505,25 @@ export default {
 			const token = `{{ ${fieldName} }}`
 			document.execCommand('insertText', false, token)
 			this.syncFromEditor()
+		},
+		/**
+		 * Handle language selection change from the LanguageSelector (REQ-I18N-022).
+		 * Updates the store preference and reloads the template in the new language.
+		 *
+		 * @param {string} lang BCP 47 language code
+		 *
+		 * @spec openspec/changes/register-i18n/tasks.md#task-1
+		 */
+		async onLanguageChange(lang) {
+			this.templateStore.setLanguage(lang)
+			const tmpl = this.templateStore.templateItem
+			if (tmpl) {
+				const updated = await this.templateStore.fetchTemplate(tmpl.id)
+				if (updated) {
+					this.form.name = (typeof updated.name === 'object' ? updated.name[lang] : updated.name) || ''
+					this.form.description = (typeof updated.description === 'object' ? updated.description[lang] : updated.description) || ''
+				}
+			}
 		},
 		/**
 		 * Insert a conditional section block (data-condition attributes) at the cursor.

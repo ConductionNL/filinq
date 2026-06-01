@@ -1,14 +1,14 @@
 # Tasks: register-i18n
 
 ## Task 1: Core Implementation
-- [ ] Implement service classes
-- [ ] Add API endpoints
-- [ ] Add configuration settings
+- [x] Implement service classes
+- [x] Add API endpoints
+- [x] Add configuration settings
 
 ## Task 2: Testing
-- [ ] Unit tests
+- [x] Unit tests
 - [ ] Integration tests
 
 ## Task 3: Documentation
-- [ ] API documentation
-- [ ] Admin guide
+- [x] API documentation
+- [x] Admin guide
