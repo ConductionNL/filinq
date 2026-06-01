@@ -100,4 +100,83 @@ class AnonymizationControllerTest extends TestCase
     }//end testFileContainsAnonymizeMethod()
 
 
+    /**
+     * anonymise-output-as-pdf-by-default: the controller must accept
+     * the per-call `outputFormat` field and validate it against the
+     * documented allow-list.
+     *
+     * @return void
+     */
+    public function testControllerAcceptsAndValidatesOutputFormat(): void
+    {
+        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+
+        $this->assertStringContainsString(
+            "self::VALID_OUTPUT_FORMATS",
+            $content,
+            'Controller must expose a VALID_OUTPUT_FORMATS allow-list'
+        );
+        $this->assertMatchesRegularExpression(
+            "/'pdf'\\s*,\\s*'preserve'/",
+            $content,
+            'VALID_OUTPUT_FORMATS must contain pdf and preserve'
+        );
+        $this->assertStringContainsString(
+            'resolveOutputFormat',
+            $content,
+            'Controller must implement resolveOutputFormat helper'
+        );
+
+    }//end testControllerAcceptsAndValidatesOutputFormat()
+
+
+    /**
+     * anonymise-output-as-pdf-by-default: the controller must map
+     * ConversionFailedException to an HTTP 422 response with the
+     * structured body documented in design D5.
+     *
+     * @return void
+     */
+    public function testControllerSurfacesConversionFailureAsHttp422(): void
+    {
+        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+
+        $this->assertStringContainsString(
+            'ConversionFailedException',
+            $content,
+            'Controller must catch ConversionFailedException'
+        );
+        $this->assertStringContainsString(
+            "'conversionAttempts'",
+            $content,
+            'Controller must surface conversionAttempts on the 422 body'
+        );
+        $this->assertMatchesRegularExpression(
+            '/JSONResponse\([^)]*422\)/s',
+            $content,
+            'Controller must return 422 for ConversionFailedException'
+        );
+
+    }//end testControllerSurfacesConversionFailureAsHttp422()
+
+
+    /**
+     * anonymise-output-as-pdf-by-default: tenant default is read from
+     * the documented IAppConfig key.
+     *
+     * @return void
+     */
+    public function testControllerReadsTenantDefaultOutputFormat(): void
+    {
+        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+
+        $this->assertStringContainsString(
+            'docudesk.anonymisation.default_output_format',
+            $content,
+            'Controller must read tenant default via the documented IAppConfig key'
+        );
+
+    }//end testControllerReadsTenantDefaultOutputFormat()
+
+
 }//end class
