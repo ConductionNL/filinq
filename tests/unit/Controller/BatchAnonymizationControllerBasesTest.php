@@ -30,6 +30,7 @@ use OCA\DocuDesk\Service\EntityConsolidationService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -98,6 +99,9 @@ class BatchAnonymizationControllerBasesTest extends TestCase
         $this->mockUserSession   = $this->createMock(IUserSession::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
+        $mockAppConfig = $this->createMock(IAppConfig::class);
+        $mockAppConfig->method('getValueString')->willReturn('pdf');
+
         $this->controller = new BatchAnonymizationController(
             appName: 'docudesk',
             request: $this->mockRequest,
@@ -111,7 +115,8 @@ class BatchAnonymizationControllerBasesTest extends TestCase
             profileService: $this->createMock(WooProfileService::class),
             folderBatchService: $this->createMock(FolderBatchService::class),
             l10n: $this->mockL10n,
-            userSession: $this->mockUserSession
+            userSession: $this->mockUserSession,
+            appConfig: $mockAppConfig
         );
 
     }//end setUp()

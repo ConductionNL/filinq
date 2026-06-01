@@ -21,6 +21,8 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -28,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
@@ -35,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -52,6 +56,20 @@ use Psr\Log\LoggerInterface;
 class AnonymizationController extends Controller
 {
     /**
+     * Allowed values for the outputFormat request field.
+     *
+     * @var array<string>
+     */
+    private const ALLOWED_OUTPUT_FORMATS = ['pdf', 'preserve'];
+
+    /**
+     * IAppConfig key for the tenant-level output-format default.
+     *
+     * @var string
+     */
+    private const OUTPUT_FORMAT_CONFIG_KEY = 'anonymisation.default_output_format';
+
+    /**
      * Constructor for AnonymizationController
      *
      * @param string               $appName              The application name
@@ -62,6 +80,7 @@ class AnonymizationController extends Controller
      * @param IL10N                $l10n                 The localization service
      * @param IUserSession         $userSession          User session for authentication
      * @param IRootFolder          $rootFolder           Root folder for file access checks
+     * @param IAppConfig           $appConfig            App configuration for tenant defaults
      *
      * @return void
      */
@@ -74,6 +93,7 @@ class AnonymizationController extends Controller
         private readonly IL10N $l10n,
         private readonly IUserSession $userSession,
         private readonly IRootFolder $rootFolder,
+        private readonly IAppConfig $appConfig,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -275,12 +295,23 @@ class AnonymizationController extends Controller
      * outputFormat parameters. Each entity may carry an optional `bases[]` array
      * (array of strings) that is forwarded verbatim to OpenRegister.
      *
+     * The effective outputFormat is resolved as: per-call value → tenant default
+     * (docudesk.anonymisation.default_output_format) → 'pdf'. Allowed values are
+     * 'pdf' and 'preserve' (lowercase only); any other value returns HTTP 400.
+     *
+     * When outputFormat resolves to 'pdf' and conversion fails, returns HTTP 422
+     * with a structured conversionAttempts body so operators see which backends
+     * were tried and why.
+     *
      * @param int $fileId The Nextcloud file ID
      *
      * @return JSONResponse JSON response with anonymization result
      *
      * @NoAdminRequired
      *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
@@ -314,14 +345,14 @@ class AnonymizationController extends Controller
                 return $appendBasisSummary;
             }
 
+            $outputFormatResult = $this->resolveOutputFormat(params: $params);
+            if ($outputFormatResult instanceof JSONResponse) {
+                return $outputFormatResult;
+            }
+
             $accessError = $this->verifyFileAccess(fileId: $fileId);
             if ($accessError !== null) {
                 return $accessError;
-            }
-
-            $outputFormat = 'pdf';
-            if (isset($params['outputFormat']) === true) {
-                $outputFormat = (string) $params['outputFormat'];
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
@@ -331,10 +362,22 @@ class AnonymizationController extends Controller
                 fileId: $fileId,
                 entities: $entities,
                 appendBasisSummary: $appendBasisSummary,
-                outputFormat: $outputFormat
+                outputFormat: $outputFormatResult
             );
 
             return new JSONResponse($result);
+        } catch (ConversionFailedException $e) {
+            return new JSONResponse(
+                [
+                    'error'              => $this->l10n->t('PDF conversion failed: no backend could handle the file.'),
+                    'conversionAttempts' => $e->getAttempts(),
+                    'outputFormat'       => 'pdf',
+                    'fallback'           => $this->l10n->t(
+                        "To keep the native format, send outputFormat: 'preserve'."
+                    ),
+                ],
+                422
+            );
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
@@ -347,6 +390,48 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+    /**
+     * Resolve the effective outputFormat from per-call value, tenant default, or hard default 'pdf'.
+     *
+     * Returns the resolved format string on success, or a 400 JSONResponse when
+     * the supplied value is not in the allowed enum ('pdf', 'preserve').
+     *
+     * @param array<string, mixed> $params Request parameters
+     *
+     * @return string|JSONResponse Resolved format string or 400 error response
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
+     */
+    private function resolveOutputFormat(array $params): string|JSONResponse
+    {
+        if (array_key_exists('outputFormat', $params) === true) {
+            $format = (string) $params['outputFormat'];
+        } else {
+            $format = $this->appConfig->getValueString(
+                app: 'docudesk',
+                key: self::OUTPUT_FORMAT_CONFIG_KEY,
+                default: 'pdf'
+            );
+        }
+
+        if (in_array($format, self::ALLOWED_OUTPUT_FORMATS, true) === false) {
+            return new JSONResponse(
+                [
+                    'error'         => $this->l10n->t(
+                        'Invalid outputFormat "%s". Allowed values: %s.',
+                        [$format, implode(', ', self::ALLOWED_OUTPUT_FORMATS)]
+                    ),
+                    'allowedValues' => self::ALLOWED_OUTPUT_FORMATS,
+                ],
+                400
+            );
+        }
+
+        return $format;
+
+    }//end resolveOutputFormat()
 
     /**
      * Extract and validate the appendBasisSummary flag from request params.

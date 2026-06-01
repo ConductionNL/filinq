@@ -30,6 +30,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUser;
@@ -103,6 +104,13 @@ class AnonymizationControllerTest extends TestCase
     private IRootFolder|MockObject $mockRootFolder;
 
     /**
+     * Mocked IAppConfig
+     *
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockAppConfig;
+
+    /**
      * Controller under test
      *
      * @var AnonymizationController
@@ -143,6 +151,9 @@ class AnonymizationControllerTest extends TestCase
         $this->mockRootFolder = $this->createMock(IRootFolder::class);
         $this->mockRootFolder->method('getUserFolder')->willReturn($mockFolder);
 
+        $this->mockAppConfig = $this->createMock(IAppConfig::class);
+        $this->mockAppConfig->method('getValueString')->willReturn('pdf');
+
         $this->controller = new AnonymizationController(
             appName: 'docudesk',
             request: $this->mockRequest,
@@ -151,7 +162,8 @@ class AnonymizationControllerTest extends TestCase
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession,
-            rootFolder: $this->mockRootFolder
+            rootFolder: $this->mockRootFolder,
+            appConfig: $this->mockAppConfig
         );
 
     }//end setUp()
@@ -245,7 +257,8 @@ class AnonymizationControllerTest extends TestCase
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
+            rootFolder: $emptyRootFolder,
+            appConfig: $this->mockAppConfig
         );
 
         $response = $controller->extract(fileId: 999);
@@ -282,7 +295,8 @@ class AnonymizationControllerTest extends TestCase
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
+            rootFolder: $emptyRootFolder,
+            appConfig: $this->mockAppConfig
         );
 
         $response = $controller->anonymize(fileId: 999);
@@ -380,7 +394,8 @@ class AnonymizationControllerTest extends TestCase
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
+            rootFolder: $emptyRootFolder,
+            appConfig: $this->mockAppConfig
         );
 
         $response = $controller->anonymize(fileId: 999999);
@@ -424,7 +439,8 @@ class AnonymizationControllerTest extends TestCase
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
             userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
+            rootFolder: $emptyRootFolder,
+            appConfig: $this->mockAppConfig
         );
 
         $response = $controller->anonymize(fileId: 999999);

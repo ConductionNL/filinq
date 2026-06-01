@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+### Added
+- **`outputFormat` parameter on anonymise and batch anonymise endpoints** (#16).
+  Both `POST /api/anonymization/anonymize/{fileId}` and
+  `POST /api/anonymization/batch/{batchId}/anonymize` now accept an optional top-level
+  `outputFormat` field with values `"pdf"` (default) or `"preserve"`. Any other value
+  returns HTTP 400.
+- **Tenant-level `default_output_format` config key** (`docudesk.anonymisation.default_output_format`).
+  Administrators can override the default output format without requiring per-call changes.
+  Per-call value takes precedence over tenant default; both fall back to `"pdf"`.
+- **`ConversionFailedException`** — new typed exception in `lib/Exception/` that carries
+  a per-backend attempt log for structured HTTP 422 responses when PDF conversion fails.
+
+### Behavior changes
+- **Anonymise endpoint now produces PDF/A-3b output by default** (#16).
+  Callers that need native-format output (DOCX, ODT, TXT, etc.) must explicitly send
+  `outputFormat: "preserve"` or set the tenant default via IAppConfig.
+- **Conversion failures return HTTP 422** instead of falling back to native-format output.
+  Operators previously getting native-format output for unsupported file types may need to
+  install LibreOffice, an Office app (Collabora/OnlyOffice), or send `outputFormat: "preserve"`.
+- **Batch endpoint returns HTTP 207 Multi-Status** when some files succeed and some fail
+  conversion (previously, all failures were HTTP 422).
+
 ### Security / Fixed
 - **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
   The previous implementation held sessions in a per-request `$sessions` PHP

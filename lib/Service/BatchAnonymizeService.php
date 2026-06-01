@@ -19,6 +19,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -26,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -65,9 +67,15 @@ class BatchAnonymizeService
      * HTTP 200.  Files with a non-extracted status are skipped (previous
      * errors are recorded in the skipped list; other states are ignored).
      *
+     * When outputFormat is 'pdf', each file is converted to PDF/A-3b after
+     * anonymization. Per-file conversion failures are recorded in `conversionFailures`
+     * and `conversionFailedFiles` so the controller can return HTTP 207 (partial success)
+     * or HTTP 422 (all failed). Successfully converted files remain in NC as PDFs.
+     *
      * @param string                           $batchId            Identifier of the batch to anonymize.
      * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
      * @param bool                             $appendBasisSummary Whether to append a grondslagen summary per file.
+     * @param string                           $outputFormat       Output format: 'pdf' (default) or 'preserve'.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -75,18 +83,22 @@ class BatchAnonymizeService
      *     batchStatus: string,
      *     processedFiles: int,
      *     skippedFiles: array<int, array{fileId: mixed, reason: string}>,
+     *     conversionFailures: int,
+     *     conversionFailedFiles: array<int, array{fileId: mixed, attempts: array}>,
      *     totalFiles: int,
      *   }
      *
      * @throws Exception When the batch cannot be found.
      *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
     public function anonymizeBatch(
         string $batchId,
         array $entities,
-        bool $appendBasisSummary=false
+        bool $appendBasisSummary=false,
+        string $outputFormat='pdf'
     ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -95,8 +107,11 @@ class BatchAnonymizeService
 
         $batch['status'] = 'anonymizing';
         $this->stateService->updateBatch($batchId, $batch);
-        $skipped   = [];
-        $processed = 0;
+        $skipped = [];
+        $conversionFailedFiles = [];
+        $processed          = 0;
+        $conversionFailures = 0;
+
         foreach ($batch['files'] as $i => $file) {
             if ($file['status'] === 'error') {
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $file['error'] ?? 'Previous error'];
@@ -111,7 +126,8 @@ class BatchAnonymizeService
                 $result = $this->anonService->anonymizeDocument(
                     fileId: (int) $file['fileId'],
                     entities: $entities,
-                    appendBasisSummary: $appendBasisSummary
+                    appendBasisSummary: $appendBasisSummary,
+                    outputFormat: $outputFormat
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
@@ -126,6 +142,14 @@ class BatchAnonymizeService
                 }
 
                 $processed++;
+            } catch (ConversionFailedException $e) {
+                $batch['files'][$i]['status'] = 'conversion_failed';
+                $batch['files'][$i]['conversionAttempts'] = $e->getAttempts();
+                $conversionFailedFiles[] = [
+                    'fileId'   => $file['fileId'],
+                    'attempts' => $e->getAttempts(),
+                ];
+                $conversionFailures++;
             } catch (Exception $e) {
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
@@ -136,11 +160,13 @@ class BatchAnonymizeService
         $batch['status'] = 'completed';
         $this->stateService->updateBatch($batchId, $batch);
         return [
-            'batchId'        => $batchId,
-            'batchStatus'    => 'completed',
-            'processedFiles' => $processed,
-            'skippedFiles'   => $skipped,
-            'totalFiles'     => count($batch['files']),
+            'batchId'               => $batchId,
+            'batchStatus'           => 'completed',
+            'processedFiles'        => $processed,
+            'skippedFiles'          => $skipped,
+            'conversionFailures'    => $conversionFailures,
+            'conversionFailedFiles' => $conversionFailedFiles,
+            'totalFiles'            => count($batch['files']),
         ];
 
     }//end anonymizeBatch()

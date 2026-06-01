@@ -112,9 +112,72 @@ and no new fields.
 
 See also: `docs/features/grondslagen-summary.md` (rendering details).
 
+## PDF Output by Default (anonymise-output-format-flag)
+
+The anonymise endpoint now produces **PDF/A-3b output by default**. After OpenRegister
+returns the anonymised file in its native format, DocuDesk invokes `PdfConversionService`
+(from the `pdf-conversion-service` capability) and atomically replaces the native-format
+file in Nextcloud Files with the converted PDF.
+
+### `outputFormat` parameter
+
+Both the single-file and batch anonymise endpoints accept an optional top-level
+`outputFormat` field:
+
+| Value      | Behaviour                                          |
+|------------|----------------------------------------------------|
+| `"pdf"`    | Convert to PDF/A-3b after anonymization (default)  |
+| `"preserve"` | Keep native format — identical to pre-change behaviour |
+
+Any other value returns HTTP 400.
+
+The effective format is resolved as: **per-call value → tenant default → `"pdf"`**.
+
+### Tenant default
+
+Administrators can change the default for all requests by setting the IAppConfig key
+`docudesk.anonymisation.default_output_format` to `"preserve"` (admin UI follow-up
+planned). This lets tenants keep native-format output for existing integrations without
+requiring per-call changes.
+
+### Conversion failure — HTTP 422
+
+When `outputFormat` resolves to `"pdf"` and `PdfConversionService` cannot convert the
+file (because no backend supports the input type), the endpoint returns **HTTP 422**
+with a structured body. The native-format intermediate is deleted so callers never see
+a partially-anonymised mixed-format result.
+
+```json
+{
+  "error": "PDF conversion failed: no backend could handle the file.",
+  "conversionAttempts": [
+    {"backend": "office_app", "available": false, "supports": true, "reason": "Not installed"},
+    {"backend": "libreoffice_headless", "available": false, "supports": true, "reason": "Binary not found"}
+  ],
+  "outputFormat": "pdf",
+  "fallback": "To keep the native format, send outputFormat: 'preserve'."
+}
+```
+
+### Batch endpoint — HTTP 207 / HTTP 422 / HTTP 200
+
+The batch endpoint (`POST /api/anonymization/batch/{batchId}/anonymize`) honours the
+same `outputFormat` field. Per-file conversion failures are tracked separately:
+
+- **HTTP 200** — all files anonymised and converted successfully.
+- **HTTP 207 Multi-Status** — some files converted, some failed. Successfully converted
+  files remain in NC as PDFs; failed files are not written to NC in any format.
+- **HTTP 422** — all files failed conversion.
+
+### Cross-link
+
+See `docs/features/pdf-conversion.md` for the conversion cascade and per-backend
+configuration (Office app → LibreOffice headless → PhpWord → mPDF → EML).
+
 ## Technical Details
 
 - Files stored in Nextcloud filesystem under user's `DocuDesk/` folder
 - Entity detection via OpenRegister's TextExtractionService (Presidio/OpenAnonymiser)
 - Anonymization via OpenRegister's FileService
 - Duplicate file names handled with counter suffix (e.g., `report_1.pdf`)
+- PDF conversion delegated to `PdfConversionService` (pdf-conversion-service capability)

@@ -29,8 +29,11 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use RuntimeException;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -273,6 +276,11 @@ class AnonymizationService
      * is non-fatal: the anonymised file is always preserved and a `warning`
      * field is added to the response instead (HTTP 200).
      *
+     * When outputFormat is 'pdf', the anonymised native file is converted to
+     * PDF/A-3b via PdfConversionService and atomically replaced in NC. On
+     * ConversionFailedException the native intermediate is rolled back
+     * (deleted) and the exception propagates to the controller for HTTP 422.
+     *
      * @param int                         $fileId             The Nextcloud file ID
      * @param array<array<string, mixed>> $entities           The entities to anonymize
      * @param bool                        $appendBasisSummary Whether to append a grondslagen summary (default false)
@@ -280,8 +288,11 @@ class AnonymizationService
      *
      * @return array<string, mixed> Anonymization result with optional warning/summaryFileId fields
      *
-     * @throws Exception If anonymization fails
+     * @throws ConversionFailedException When outputFormat is 'pdf' and all conversion backends fail
+     * @throws Exception If anonymization fails for other reasons
      *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
@@ -369,6 +380,17 @@ class AnonymizationService
             // unconfirmed.
             $resultInfo['replacementCount'] = $verification['replacementsApplied'] ?? $verification['replacementsAttempted'];
 
+            // PDF conversion path: invoke PdfConversionService and atomically
+            // replace the native-format anonymised intermediate with the PDF.
+            // On failure, roll back the intermediate so the caller never sees a
+            // partially-anonymised non-PDF file (spec D4).
+            if ($outputFormat === 'pdf') {
+                $resultInfo = $this->convertAndReplaceWithPdf(
+                    fileService: $fileService,
+                    resultInfo: $resultInfo
+                );
+            }
+
             if ($appendBasisSummary === true) {
                 $resultInfo = $this->tryAppendBasisSummary(
                     resultInfo: $resultInfo,
@@ -378,6 +400,10 @@ class AnonymizationService
             }
 
             return $resultInfo;
+        } catch (ConversionFailedException $e) {
+            // Let conversion failures propagate unmodified so the controller
+            // can surface HTTP 422 with the structured attempts body.
+            throw $e;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
@@ -387,6 +413,163 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Invoke PdfConversionService and atomically replace the native file with the PDF.
+     *
+     * On ConversionFailedException the native-format intermediate is deleted from NC
+     * before re-throwing so callers never see a partially-anonymised result.
+     *
+     * @param mixed                $fileService OR FileService instance
+     * @param array<string, mixed> $resultInfo  Current anonymization result (must contain anonymizedFileId)
+     *
+     * @return array<string, mixed> Updated resultInfo with PDF file metadata
+     *
+     * @throws ConversionFailedException When all conversion backends fail (after rollback)
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+     */
+    private function convertAndReplaceWithPdf(mixed $fileService, array $resultInfo): array
+    {
+        $anonymizedFileId = $resultInfo['anonymizedFileId'] ?? null;
+
+        try {
+            $pdfService     = $this->getPdfConversionService();
+            $anonymizedNode = $fileService->getFileById($anonymizedFileId);
+
+            $convertedFile = $pdfService->convertToPdf($anonymizedNode);
+
+            $resultInfo = $this->atomicReplacement(
+                anonymizedNode: $anonymizedNode,
+                convertedFile: $convertedFile,
+                resultInfo: $resultInfo
+            );
+
+            $this->logger->info(
+                'Anonymised file converted to PDF/A-3b',
+                ['anonymizedFileId' => $anonymizedFileId]
+            );
+
+            return $resultInfo;
+        } catch (ConversionFailedException $e) {
+            $this->rollbackAnonymizedFile(fileId: $anonymizedFileId, fileService: $fileService);
+            throw $e;
+        }//end try
+
+    }//end convertAndReplaceWithPdf()
+
+    /**
+     * Perform the atomic swap: write PDF → delete native → return updated metadata.
+     *
+     * Write first so the operator never sees a gap in NC. The PDF node is named
+     * after the anonymised file with the extension replaced by `.pdf`.
+     *
+     * @param mixed                $anonymizedNode Nextcloud File node of the anonymised native file
+     * @param mixed                $convertedFile  Nextcloud File node of the converted PDF
+     * @param array<string, mixed> $resultInfo     Current anonymization result
+     *
+     * @return array<string, mixed> Result with PDF file metadata
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     */
+    private function atomicReplacement(mixed $anonymizedNode, mixed $convertedFile, array $resultInfo): array
+    {
+        // Derive the PDF filename from the native filename.
+        $originalName = (string) $anonymizedNode->getName();
+        $baseName     = pathinfo($originalName, PATHINFO_FILENAME);
+        $pdfName      = $baseName.'.pdf';
+
+        $pdfContent = (string) $convertedFile->getContent();
+
+        // @var Folder $parent
+        $parent  = $anonymizedNode->getParent();
+        $pdfNode = $parent->newFile($pdfName, $pdfContent);
+
+        // Delete the native intermediate after the PDF is safely written.
+        $anonymizedNode->delete();
+
+        // Clean up the converted temp node when it differs from the native node.
+        if (method_exists($convertedFile, 'getId') === true
+            && $convertedFile->getId() !== ($anonymizedNode->getId() ?? null)
+            && $convertedFile->getId() !== ($pdfNode->getId() ?? null)
+        ) {
+            try {
+                $convertedFile->delete();
+            } catch (\Throwable $e) {
+                $this->logger->debug('Could not delete conversion temp file: '.$e->getMessage());
+            }
+        }
+
+        $resultInfo['anonymizedFileId']   = $pdfNode->getId();
+        $resultInfo['anonymizedFileName'] = $pdfNode->getName();
+        $resultInfo['anonymizedFilePath'] = $pdfNode->getPath();
+
+        return $resultInfo;
+
+    }//end atomicReplacement()
+
+    /**
+     * Delete the native-format anonymised intermediate on conversion failure.
+     *
+     * Swallows all throwables and logs a warning — rollback is best-effort.
+     * The priority is that the ConversionFailedException propagates cleanly.
+     *
+     * @param mixed $fileId      NC file ID of the intermediate (may be null)
+     * @param mixed $fileService OR FileService for getFileById lookup
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
+     */
+    private function rollbackAnonymizedFile(mixed $fileId, mixed $fileService): void
+    {
+        if ($fileId === null) {
+            return;
+        }
+
+        try {
+            $node = $fileService->getFileById($fileId);
+            $node->delete();
+            $this->logger->info(
+                'Rolled back anonymised intermediate after conversion failure',
+                ['fileId' => $fileId]
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'Failed to roll back anonymised intermediate: '.$e->getMessage(),
+                ['fileId' => $fileId, 'exception' => $e]
+            );
+        }
+
+    }//end rollbackAnonymizedFile()
+
+    /**
+     * Resolve PdfConversionService from the container.
+     *
+     * Throws RuntimeException when the service is not registered so callers
+     * receive a clear error instead of a confusing "class not found" from DI.
+     *
+     * @return mixed PdfConversionService instance
+     *
+     * @throws RuntimeException When PdfConversionService is not available
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     */
+    private function getPdfConversionService(): mixed
+    {
+        try {
+            return $this->container->get('OCA\DocuDesk\Service\PdfConversionService');
+        } catch (\Throwable $e) {
+            throw new RuntimeException(
+                'PdfConversionService is not available. Ensure pdf-conversion-service is installed: '
+                .$e->getMessage(),
+                0,
+                $e
+            );
+        }
+
+    }//end getPdfConversionService()
 
     /**
      * Read a Nextcloud file node's content as text, safely.

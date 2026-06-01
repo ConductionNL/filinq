@@ -26,6 +26,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
+ * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
  */
 
 declare(strict_types=1);
@@ -34,6 +37,7 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use OCA\DocuDesk\Service\BatchAnonymizeService;
+use OCP\IAppConfig;
 use OCA\DocuDesk\Service\BatchExtractionService;
 use OCA\DocuDesk\Service\BatchReportService;
 use OCA\DocuDesk\Service\BatchStateService;
@@ -64,6 +68,21 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizationController extends Controller
 {
+
+    /**
+     * Allowed values for the outputFormat request field.
+     *
+     * @var array<string>
+     */
+    private const ALLOWED_OUTPUT_FORMATS = ['pdf', 'preserve'];
+
+    /**
+     * IAppConfig key for the tenant-level output-format default.
+     *
+     * @var string
+     */
+    private const OUTPUT_FORMAT_CONFIG_KEY = 'anonymisation.default_output_format';
+
     /**
      * Constructor for BatchAnonymizationController
      *
@@ -80,6 +99,7 @@ class BatchAnonymizationController extends Controller
      * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
      * @param IL10N                      $l10n               Translator for user-facing error messages.
      * @param IUserSession               $userSession        User session for authentication.
+     * @param IAppConfig                 $appConfig          App configuration for tenant defaults.
      *
      * @return void
      */
@@ -97,6 +117,7 @@ class BatchAnonymizationController extends Controller
         private readonly FolderBatchService $folderBatchService,
         private readonly IL10N $l10n,
         private readonly IUserSession $userSession,
+        private readonly IAppConfig $appConfig,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -326,12 +347,20 @@ class BatchAnonymizationController extends Controller
      * anonymization. Per-file summary failures surface as per-file warnings
      * in the response; the overall batch still completes as HTTP 200.
      *
+     * Accepts an optional `outputFormat` field ('pdf' | 'preserve', default from tenant config
+     * or 'pdf'). When 'pdf', each file in the batch is converted to PDF/A-3b after anonymization.
+     * Per-file conversion failures are returned as per-file outcomes: HTTP 207 when some succeed
+     * and some fail; HTTP 422 when none succeed; HTTP 200 when all succeed.
+     *
      * @param string $batchId Identifier of the batch to anonymize.
      *
      * @return JSONResponse Summary of the run, or an error payload when the request body is malformed.
      *
      * @NoAdminRequired
      *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
@@ -360,23 +389,101 @@ class BatchAnonymizationController extends Controller
                 }
             }
 
+            $outputFormatResult = $this->resolveBatchOutputFormat(params: $params);
+            if ($outputFormatResult instanceof JSONResponse) {
+                return $outputFormatResult;
+            }
+
             $basesError = $this->validateEntityBases(entities: $entities);
             if ($basesError !== null) {
                 return $basesError;
             }
 
-            return new JSONResponse(
-                $this->anonService->anonymizeBatch(
-                    batchId: $batchId,
-                    entities: $entities,
-                    appendBasisSummary: $appendBasisSummary
-                )
+            $result = $this->anonService->anonymizeBatch(
+                batchId: $batchId,
+                entities: $entities,
+                appendBasisSummary: $appendBasisSummary,
+                outputFormat: $outputFormatResult
             );
+
+            return $this->buildBatchResponse(result: $result);
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
         }//end try
 
     }//end batchAnonymize()
+
+    /**
+     * Build the appropriate JSONResponse from a batch anonymization result.
+     *
+     * HTTP 207 multi-status when some files succeeded and some failed conversion.
+     * HTTP 422 when all files failed conversion.
+     * HTTP 200 when all files succeeded.
+     *
+     * @param array<string, mixed> $result Result from BatchAnonymizeService::anonymizeBatch
+     *
+     * @return JSONResponse Response with appropriate HTTP status
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
+     */
+    private function buildBatchResponse(array $result): JSONResponse
+    {
+        $conversionFailures = (int) ($result['conversionFailures'] ?? 0);
+        $processedFiles     = (int) ($result['processedFiles'] ?? 0);
+
+        if ($conversionFailures > 0 && $processedFiles > 0) {
+            return new JSONResponse($result, Http::STATUS_MULTI_STATUS);
+        }
+
+        if ($conversionFailures > 0 && $processedFiles === 0) {
+            return new JSONResponse($result, 422);
+        }
+
+        return new JSONResponse($result);
+
+    }//end buildBatchResponse()
+
+    /**
+     * Resolve the effective outputFormat from per-call value or tenant default.
+     *
+     * Returns the resolved format string on success, or a 400 JSONResponse on
+     * invalid values.
+     *
+     * @param array<string, mixed> $params Request parameters
+     *
+     * @return string|JSONResponse Resolved format or 400 error response
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
+     */
+    private function resolveBatchOutputFormat(array $params): string|JSONResponse
+    {
+        if (array_key_exists('outputFormat', $params) === true) {
+            $format = (string) $params['outputFormat'];
+        } else {
+            $format = $this->appConfig->getValueString(
+                app: 'docudesk',
+                key: self::OUTPUT_FORMAT_CONFIG_KEY,
+                default: 'pdf'
+            );
+        }
+
+        if (in_array($format, self::ALLOWED_OUTPUT_FORMATS, true) === false) {
+            return new JSONResponse(
+                [
+                    'error'         => $this->l10n->t(
+                        'Invalid outputFormat "%s". Allowed values: %s.',
+                        [$format, implode(', ', self::ALLOWED_OUTPUT_FORMATS)]
+                    ),
+                    'allowedValues' => self::ALLOWED_OUTPUT_FORMATS,
+                ],
+                400
+            );
+        }
+
+        return $format;
+
+    }//end resolveBatchOutputFormat()
 
     /**
      * Produce the CSV anonymization report for a batch as a file download.
