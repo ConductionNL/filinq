@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -72,6 +73,8 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         $consentCrud     = $consentCrud ?? $this->createMock(ConsentCrudService::class);
         $consentService  = $consentService ?? $this->createMock(ConsentService::class);
 
+        $grondslagenSummary = $this->createMock(GrondslagenSummaryService::class);
+
         return new AnonymizationService(
             $logger,
             $container,
@@ -79,7 +82,8 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
             $entityDetection,
             $appConfig,
             $consentCrud,
-            $consentService
+            $consentService,
+            $grondslagenSummary
         );
 
     }//end buildService()

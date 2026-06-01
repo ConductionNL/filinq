@@ -403,6 +403,8 @@ class AnonymizationServiceTest extends TestCase
         $consentCrud     = $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class);
         $consentService  = $this->createMock(\OCA\DocuDesk\Service\ConsentService::class);
 
+        $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
+
         return new \OCA\DocuDesk\Service\AnonymizationService(
             $logger,
             $container,
@@ -410,7 +412,8 @@ class AnonymizationServiceTest extends TestCase
             $entityDetection,
             $appConfig,
             $consentCrud,
-            $consentService
+            $consentService,
+            $grondslagenSummary
         );
 
     }//end buildServiceWithoutDependencies()

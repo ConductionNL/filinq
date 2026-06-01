@@ -25,6 +25,7 @@ use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -113,7 +114,8 @@ class AnonymizationServiceProhibitionTest extends TestCase
             entityDetection: $this->entityDetection,
             appConfig: $this->mockAppConfig,
             consentCrud: $this->createMock(ConsentCrudService::class),
-            consentService: $this->createMock(ConsentService::class)
+            consentService: $this->createMock(ConsentService::class),
+            grondslagenSummary: $this->createMock(GrondslagenSummaryService::class)
         );
 
     }//end makeService()
