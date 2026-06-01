@@ -1,5 +1,7 @@
 # Design: migrate-signing-to-or-approval-workflow
 
+status: pr-created
+
 ## Context
 
 OR's `approval-workflow` spec provides `ApprovalChain` CRUD and `ApprovalStep` decision
