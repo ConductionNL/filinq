@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "folder-batch-accept-folder-id",
+  "repo": "https://codeberg.org/Conduction/docudesk",
+  "issue": 46,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T12:31:41Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
