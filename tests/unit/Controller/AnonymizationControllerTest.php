@@ -152,7 +152,7 @@ class AnonymizationControllerTest extends TestCase
             'Controller must surface conversionAttempts on the 422 body'
         );
         $this->assertMatchesRegularExpression(
-            '/JSONResponse\([^)]*422\)/s',
+            '/new JSONResponse\b[\s\S]*?422\s*\);/',
             $content,
             'Controller must return 422 for ConversionFailedException'
         );

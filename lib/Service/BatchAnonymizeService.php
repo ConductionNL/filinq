@@ -62,21 +62,21 @@ class BatchAnonymizeService
      *
      * @param string                           $batchId            Identifier of the batch to anonymize.
      * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
-     * @param bool                              $appendBasisSummary When true, each per-file anonymise
-     *                                                              call is invoked with the
-     *                                                              `appendBasisSummary` flag set; the
-     *                                                              per-file result's `warning` /
-     *                                                              `summaryFileId` outcomes propagate
-     *                                                              to that file's batch entry.
-     * @param string                            $outputFormat       Per-batch output format gate
-     *                                                              ('pdf'|'preserve'). Passed
-     *                                                              through to each per-file
-     *                                                              anonymise call. Per-file
-     *                                                              ConversionFailedException is
-     *                                                              recorded as an error on that
-     *                                                              file's batch entry and the
-     *                                                              batch continues with the next
-     *                                                              file.
+     * @param bool                             $appendBasisSummary When true, each per-file anonymise
+     *                                                             call is invoked with the
+     *                                                             `appendBasisSummary` flag set; the
+     *                                                             per-file result's `warning` /
+     *                                                             `summaryFileId` outcomes propagate
+     *                                                             to that file's batch entry.
+     * @param string                           $outputFormat       Per-batch output format gate
+     *                                                             ('pdf'|'preserve'). Passed
+     *                                                             through to each per-file
+     *                                                             anonymise call. Per-file
+     *                                                             ConversionFailedException is
+     *                                                             recorded as an error on that
+     *                                                             file's batch entry and the
+     *                                                             batch continues with the
+     *                                                             next file.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -139,8 +139,8 @@ class BatchAnonymizeService
                 // mark this file as error, attach the attempts surface
                 // for the batch caller to inspect, and continue with
                 // the next file.
-                $batch['files'][$i]['status']             = 'error';
-                $batch['files'][$i]['error']              = $e->getMessage();
+                $batch['files'][$i]['status'] = 'error';
+                $batch['files'][$i]['error']  = $e->getMessage();
                 $batch['files'][$i]['conversionAttempts'] = $e->getAttempts();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];
             } catch (Exception $e) {

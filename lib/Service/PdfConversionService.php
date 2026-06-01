@@ -84,7 +84,11 @@ class PdfConversionService
         $mimeType = (string) $source->getMimeType();
         $name     = $source->getName();
         $dotPos   = strrpos($name, '.');
-        $ext      = $dotPos === false ? '' : strtolower(substr($name, ($dotPos + 1)));
+        if ($dotPos === false) {
+            $ext = '';
+        } else {
+            $ext = strtolower(substr($name, ($dotPos + 1)));
+        }
 
         $attempts = [];
 
@@ -111,6 +115,12 @@ class PdfConversionService
 
             $supports = $backend->canHandle($mimeType, $ext);
             if ($supports === false) {
+                if ($ext === '') {
+                    $extLabel = '(none)';
+                } else {
+                    $extLabel = $ext;
+                }
+
                 $attempts[] = [
                     'name'      => $backendName,
                     'available' => true,
@@ -118,7 +128,7 @@ class PdfConversionService
                     'reason'    => sprintf(
                         'backend does not support MIME %s / extension %s',
                         $mimeType,
-                        $ext === '' ? '(none)' : $ext
+                        $extLabel
                     ),
                 ];
                 continue;
@@ -157,8 +167,8 @@ class PdfConversionService
 
         // No backend succeeded — emit a structured failure.
         throw new ConversionFailedException(
-            'Conversion to PDF failed; no backend in the cascade succeeded.',
-            $attempts
+            message: 'Conversion to PDF failed; no backend in the cascade succeeded.',
+            attempts: $attempts
         );
 
     }//end convertToPdf()

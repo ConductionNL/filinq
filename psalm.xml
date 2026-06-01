@@ -46,6 +46,15 @@
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+                <!--
+                  PhpOffice\PhpWord — declared in composer.json as a
+                  hard require (^1.2), but the package is only present
+                  after `composer install` finishes resolving it.
+                  Class-existence is guarded at runtime by
+                  PhpWordBackend::isAvailable() via class_exists().
+                -->
+                <referencedClass name="PhpOffice\PhpWord\Settings"/>
+                <referencedClass name="PhpOffice\PhpWord\IOFactory"/>
             </errorLevel>
         </UndefinedClass>
         <UndefinedMagicMethod errorLevel="suppress"/>

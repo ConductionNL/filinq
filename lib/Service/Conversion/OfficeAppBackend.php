@@ -71,16 +71,14 @@ class OfficeAppBackend implements ConversionBackendInterface
      */
     private const TARGET_MIME = 'application/pdf';
 
-
     /**
      * Cached `hasProviders()` result per request to avoid repeated
      * HTTP probing across multiple isAvailable() calls within one
      * conversion attempt.
      *
-     * @var bool|null
+     * @var boolean|null
      */
     private ?bool $hasProvidersCache = null;
-
 
     /**
      * Cached provider list per request.
@@ -116,6 +114,8 @@ class OfficeAppBackend implements ConversionBackendInterface
 
 
     /**
+     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+     *
      * @return string
      */
     public function name(): string
@@ -163,6 +163,8 @@ class OfficeAppBackend implements ConversionBackendInterface
 
 
     /**
+     * Declare whether any registered conversion provider can map this source MIME to PDF.
+     *
      * @param string $mimeType  Source MIME.
      * @param string $extension Source extension (lowercased, no dot). Unused here.
      *
@@ -204,8 +206,8 @@ class OfficeAppBackend implements ConversionBackendInterface
     {
         if ($this->conversionManager === null) {
             throw new ConversionFailedException(
-                'OfficeAppBackend reached convert() without IConversionManager bound.',
-                [
+                message: 'OfficeAppBackend reached convert() without IConversionManager bound.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => false,
@@ -219,8 +221,8 @@ class OfficeAppBackend implements ConversionBackendInterface
         $user = $this->userSession->getUser();
         if ($user === null) {
             throw new ConversionFailedException(
-                'OfficeAppBackend requires a user session.',
-                [
+                message: 'OfficeAppBackend requires a user session.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -233,7 +235,7 @@ class OfficeAppBackend implements ConversionBackendInterface
 
         $sourceName     = $source->getName();
         $sourceFolder   = $source->getParent();
-        $targetBaseName = $this->stripExtension($sourceName).'.pdf';
+        $targetBaseName = $this->stripExtension(name: $sourceName).'.pdf';
         $destFullPath   = $sourceFolder->getPath().'/'.$targetBaseName;
 
         // If a previous conversion left a file behind, delete it —
@@ -250,8 +252,8 @@ class OfficeAppBackend implements ConversionBackendInterface
             );
         } catch (Throwable $e) {
             throw new ConversionFailedException(
-                'IConversionManager->convert threw: '.$e->getMessage(),
-                [
+                message: 'IConversionManager->convert threw: '.$e->getMessage(),
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -259,7 +261,7 @@ class OfficeAppBackend implements ConversionBackendInterface
                         'reason'    => 'manager convert exception: '.$e->getMessage(),
                     ],
                 ],
-                $e
+                previous: $e
             );
         }
 
@@ -281,8 +283,8 @@ class OfficeAppBackend implements ConversionBackendInterface
                 ]
             );
             throw new ConversionFailedException(
-                'Office-app conversion reported success but the resulting PDF could not be located.',
-                [
+                message: 'Office-app conversion reported success but the resulting PDF could not be located.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -290,14 +292,14 @@ class OfficeAppBackend implements ConversionBackendInterface
                         'reason'    => 'post-convert file lookup failed: '.$e->getMessage(),
                     ],
                 ],
-                $e
+                previous: $e
             );
-        }
+        }//end try
 
         if ($resolved instanceof File === false) {
             throw new ConversionFailedException(
-                'Office-app conversion result is not a regular file node.',
-                [
+                message: 'Office-app conversion result is not a regular file node.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,

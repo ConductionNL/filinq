@@ -102,6 +102,8 @@ class PhpWordBackend implements ConversionBackendInterface
 
 
     /**
+     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+     *
      * @return string Identifier surfaced in 422 attempt records.
      */
     public function name(): string
@@ -131,6 +133,8 @@ class PhpWordBackend implements ConversionBackendInterface
 
 
     /**
+     * Declare whether PhpWord can read the source format.
+     *
      * @param string $mimeType  Source MIME.
      * @param string $extension Source extension (lowercased, no dot).
      *
@@ -143,13 +147,13 @@ class PhpWordBackend implements ConversionBackendInterface
         }
 
         $mimeMap = [
-            'application/msword'                                                        => true,
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'   => true,
-            'application/vnd.oasis.opendocument.text'                                   => true,
-            'application/rtf'                                                           => true,
-            'text/rtf'                                                                  => true,
-            'text/html'                                                                 => true,
-            'application/xhtml+xml'                                                     => true,
+            'application/msword'                                                      => true,
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => true,
+            'application/vnd.oasis.opendocument.text'                                 => true,
+            'application/rtf'                                                         => true,
+            'text/rtf'                                                                => true,
+            'text/html'                                                               => true,
+            'application/xhtml+xml'                                                   => true,
         ];
 
         return isset($mimeMap[$mimeType]);
@@ -169,15 +173,19 @@ class PhpWordBackend implements ConversionBackendInterface
      */
     public function convert(File $source): File
     {
-        $name      = $source->getName();
-        $dotPos    = strrpos($name, '.');
-        $extension = $dotPos === false ? '' : strtolower(substr($name, ($dotPos + 1)));
+        $name   = $source->getName();
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            $extension = '';
+        } else {
+            $extension = strtolower(substr($name, ($dotPos + 1)));
+        }
 
         $readerName = self::READER_BY_EXT[$extension] ?? null;
         if ($readerName === null) {
             throw new ConversionFailedException(
-                'PhpWord backend reached convert() for unsupported extension '.$extension,
-                [
+                message: 'PhpWord backend reached convert() for unsupported extension '.$extension,
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -194,8 +202,8 @@ class PhpWordBackend implements ConversionBackendInterface
         $bytes     = $source->getContent();
         if (is_string($bytes) === false) {
             throw new ConversionFailedException(
-                'PhpWord backend could not read source content.',
-                [
+                message: 'PhpWord backend could not read source content.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -205,6 +213,7 @@ class PhpWordBackend implements ConversionBackendInterface
                 ]
             );
         }
+
         file_put_contents($sourceTmp, $bytes);
 
         // Configure mPDF as PhpWord's PDF renderer. The render path
@@ -222,8 +231,8 @@ class PhpWordBackend implements ConversionBackendInterface
             $phpWord = IOFactory::load($sourceTmp, $readerName);
         } catch (Throwable $e) {
             throw new ConversionFailedException(
-                'PhpWord could not read source ('.$readerName.'): '.$e->getMessage(),
-                [
+                message: 'PhpWord could not read source ('.$readerName.'): '.$e->getMessage(),
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -231,7 +240,7 @@ class PhpWordBackend implements ConversionBackendInterface
                         'reason'    => 'IOFactory::load failed: '.$e->getMessage(),
                     ],
                 ],
-                $e
+                previous: $e
             );
         }
 
@@ -242,8 +251,8 @@ class PhpWordBackend implements ConversionBackendInterface
             $writer->save($outputTmp);
         } catch (Throwable $e) {
             throw new ConversionFailedException(
-                'PhpWord PdfWriter failed: '.$e->getMessage(),
-                [
+                message: 'PhpWord PdfWriter failed: '.$e->getMessage(),
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -251,15 +260,15 @@ class PhpWordBackend implements ConversionBackendInterface
                         'reason'    => 'createWriter/save failed: '.$e->getMessage(),
                     ],
                 ],
-                $e
+                previous: $e
             );
         }
 
         $pdfBytes = file_get_contents($outputTmp);
         if (is_string($pdfBytes) === false || $pdfBytes === '') {
             throw new ConversionFailedException(
-                'PhpWord PdfWriter produced empty output.',
-                [
+                message: 'PhpWord PdfWriter produced empty output.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -271,7 +280,7 @@ class PhpWordBackend implements ConversionBackendInterface
         }
 
         $parent     = $source->getParent();
-        $outputName = $this->stripExtension($name).'.pdf';
+        $outputName = $this->stripExtension(name: $name).'.pdf';
         if ($parent->nodeExists($outputName) === true) {
             $parent->get($outputName)->delete();
         }

@@ -96,15 +96,15 @@ class Application extends App implements IBootstrap
         // openspec/changes/anonymise-output-as-pdf-by-default/design.md (D2).
         //
         // Cascade:
-        //   1. OfficeAppBackend  — Collabora / OnlyOffice / Euro Office
-        //                          via Nextcloud's IConversionManager
-        //                          (NC 31+ providers register here).
-        //   2. PhpWordBackend    — DOC / DOCX / ODT / RTF / HTML via
-        //                          PhpOffice\PhpWord + mPDF.
-        //   3. MpdfBackend       — HTML / TXT direct via mPDF (reuses
-        //                          PdfService's PDF/A-3b config).
-        //   4. EmlBackend        — stub; activates when OR ships its
-        //                          message/rfc822 text extractor.
+        // 1. OfficeAppBackend  — Collabora / OnlyOffice / Euro Office
+        // via Nextcloud's IConversionManager
+        // (NC 31+ providers register here).
+        // 2. PhpWordBackend    — DOC / DOCX / ODT / RTF / HTML via
+        // PhpOffice\PhpWord + mPDF.
+        // 3. MpdfBackend       — HTML / TXT direct via mPDF (reuses
+        // PdfService's PDF/A-3b config).
+        // 4. EmlBackend        — stub; activates when OR ships its
+        // message/rfc822 text extractor.
         $context->registerService(
             PdfConversionService::class,
             static function (ContainerInterface $c): PdfConversionService {

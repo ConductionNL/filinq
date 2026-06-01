@@ -69,6 +69,8 @@ class BatchAnonymizationController extends Controller
      * @param WooProfileService          $profileService     Service that stores the WOO entity profile.
      * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
      * @param IL10N                      $l10n               Translator for user-facing error messages.
+     * @param IAppConfig                 $appConfig          Tenant configuration provider (reads
+     *                                                       docudesk.anonymisation.default_output_format).
      *
      * @return void
      */
@@ -331,10 +333,10 @@ class BatchAnonymizationController extends Controller
                 $appendBasisSummary = $params['appendBasisSummary'];
             }
 
-            // anonymise-output-as-pdf-by-default: per-batch outputFormat.
+            // Anonymise-output-as-pdf-by-default: per-batch outputFormat.
             // Per-call value overrides tenant default; missing/invalid
             // values mirror AnonymizationController semantics.
-            $outputFormat = $this->resolveOutputFormat($params);
+            $outputFormat = $this->resolveOutputFormat(params: $params);
             if ($outputFormat === null) {
                 return new JSONResponse(
                     [

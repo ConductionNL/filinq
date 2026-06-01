@@ -52,6 +52,9 @@ class AnonymizationService
      * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
      *                                                      summary page (Wave 4a — opt-in via
      *                                                      `appendBasisSummary: true` on the request).
+     * @param PdfConversionService      $pdfConversion      Cascade orchestrator that converts the
+     *                                                      anonymised intermediate to PDF when
+     *                                                      `outputFormat: "pdf"` is in effect.
      *
      * @return void
      */
@@ -219,6 +222,7 @@ class AnonymizationService
                                 ]
                             );
                         }
+
                         throw $e;
                     }//end try
                 }//end if

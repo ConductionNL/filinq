@@ -52,6 +52,8 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IAppConfig           $appConfig            Tenant configuration provider (reads
+     *                                                   docudesk.anonymisation.default_output_format)
      *
      * @return void
      */
@@ -252,12 +254,12 @@ class AnonymizationController extends Controller
                 $appendBasisSummary = $params['appendBasisSummary'];
             }
 
-            // anonymise-output-as-pdf-by-default: optional `outputFormat`
+            // Anonymise-output-as-pdf-by-default: optional `outputFormat`
             // selects PDF conversion vs native-format preservation.
             // Per-call value overrides the tenant default; missing
             // value falls back to the tenant default which itself
             // defaults to 'pdf'.
-            $outputFormat = $this->resolveOutputFormat($params);
+            $outputFormat = $this->resolveOutputFormat(params: $params);
             if ($outputFormat === null) {
                 return new JSONResponse(
                     [

@@ -81,6 +81,8 @@ class EmlBackend implements ConversionBackendInterface
 
 
     /**
+     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+     *
      * @return string
      */
     public function name(): string
@@ -114,6 +116,8 @@ class EmlBackend implements ConversionBackendInterface
 
 
     /**
+     * Declare the input formats this backend claims for cascade routing.
+     *
      * @param string $mimeType  Source MIME.
      * @param string $extension Source extension (lowercased, no dot).
      *
@@ -147,8 +151,8 @@ class EmlBackend implements ConversionBackendInterface
         );
 
         throw new ConversionFailedException(
-            'EML conversion is not yet supported — depends on a forthcoming OpenRegister EML extractor.',
-            [
+            message: 'EML conversion is not yet supported — depends on a forthcoming OpenRegister EML extractor.',
+            attempts: [
                 [
                     'name'      => $this->name(),
                     'available' => false,

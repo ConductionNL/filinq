@@ -40,7 +40,6 @@ use Throwable;
 class ConversionFailedException extends RuntimeException
 {
 
-
     /**
      * Per-backend attempt records. Each entry has the shape
      * `{name: string, available: bool, supports: bool, reason: string}`
@@ -54,13 +53,13 @@ class ConversionFailedException extends RuntimeException
     /**
      * Constructor.
      *
-     * @param string                                                                   $message  Human-readable summary.
-     * @param array<int, array{name:string,available:bool,supports:bool,reason:string}> $attempts Per-backend attempt records (see D5).
-     * @param Throwable|null                                                           $previous Underlying cause if any.
+     * @param string                                                                    $message  Human-readable summary.
+     * @param array<int, array{name:string,available:bool,supports:bool,reason:string}> $attempts Per-backend records.
+     * @param Throwable|null                                                            $previous Underlying cause if any.
      */
     public function __construct(string $message, array $attempts, ?Throwable $previous=null)
     {
-        parent::__construct($message, 0, $previous);
+        parent::__construct(message: $message, code: 0, previous: $previous);
         $this->attempts = $attempts;
 
     }//end __construct()

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * mPDF Conversion Backend
+ * MPDF Conversion Backend
  *
  * Handles HTML and plain-TXT inputs directly via mPDF, reusing
  * `PdfService::generatePdfFromHtml` so PDF/A-3b configuration stays
@@ -159,15 +159,19 @@ class MpdfBackend implements ConversionBackendInterface
      */
     public function convert(File $source): File
     {
-        $name      = $source->getName();
-        $dotPos    = strrpos($name, '.');
-        $extension = $dotPos === false ? '' : strtolower(substr($name, ($dotPos + 1)));
+        $name   = $source->getName();
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            $extension = '';
+        } else {
+            $extension = strtolower(substr($name, ($dotPos + 1)));
+        }
 
         $rawContent = $source->getContent();
         if (is_string($rawContent) === false) {
             throw new ConversionFailedException(
-                'mPDF backend could not read source content.',
-                [
+                message: 'mPDF backend could not read source content.',
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -185,7 +189,7 @@ class MpdfBackend implements ConversionBackendInterface
         );
 
         if ($isPlainText === true) {
-            $html = $this->wrapPlainTextAsHtml($rawContent);
+            $html = $this->wrapPlainTextAsHtml(text: $rawContent);
         } else {
             $html = $rawContent;
         }
@@ -196,7 +200,7 @@ class MpdfBackend implements ConversionBackendInterface
                 options: [
                     'pdfa'   => true,
                     'format' => 'A4',
-                    'title'  => $this->stripExtension($name),
+                    'title'  => $this->stripExtension(name: $name),
                 ]
             );
         } catch (Throwable $e) {
@@ -209,8 +213,8 @@ class MpdfBackend implements ConversionBackendInterface
                 ]
             );
             throw new ConversionFailedException(
-                'mPDF rendering threw: '.$e->getMessage(),
-                [
+                message: 'mPDF rendering threw: '.$e->getMessage(),
+                attempts: [
                     [
                         'name'      => $this->name(),
                         'available' => true,
@@ -218,7 +222,7 @@ class MpdfBackend implements ConversionBackendInterface
                         'reason'    => 'mPDF render exception: '.$e->getMessage(),
                     ],
                 ],
-                $e
+                previous: $e
             );
         }//end try
 
@@ -226,7 +230,7 @@ class MpdfBackend implements ConversionBackendInterface
         // already exists, delete it first — this is a fresh conversion,
         // not an incremental update.
         $parent     = $source->getParent();
-        $outputName = $this->stripExtension($name).'.pdf';
+        $outputName = $this->stripExtension(name: $name).'.pdf';
         if ($parent->nodeExists($outputName) === true) {
             $parent->get($outputName)->delete();
         }
@@ -247,11 +251,13 @@ class MpdfBackend implements ConversionBackendInterface
      */
     private function wrapPlainTextAsHtml(string $text): string
     {
-        $escaped = htmlspecialchars($text, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
-        return '<!DOCTYPE html><html><head><meta charset="utf-8"></head>'
-            .'<body><pre style="font-family:DejaVuSansMono,monospace; font-size:10pt; white-space:pre-wrap;">'
-            .$escaped
-            .'</pre></body></html>';
+        $escaped  = htmlspecialchars($text, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
+        $preStyle = 'font-family:DejaVuSansMono,monospace; font-size:10pt; white-space:pre-wrap;';
+        return sprintf(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><pre style="%s">%s</pre></body></html>',
+            $preStyle,
+            $escaped
+        );
 
     }//end wrapPlainTextAsHtml()
 
