@@ -57,3 +57,5 @@ parameters:
         - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'
         - '#Call to an undefined method OCP\\Mail\\IMessage::attachFile\(\)#'
         - '#Call to an undefined method OCP\\AppFramework\\Db\\Entity::jsonSerialize#'
+        # TesseractOCR uses a fluent builder with __call() magic — dpi/lang/etc. are runtime methods
+        - '#Call to an undefined method thiagoalessio\\TesseractOCR\\TesseractOCR::#'

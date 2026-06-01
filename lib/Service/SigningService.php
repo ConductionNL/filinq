@@ -21,12 +21,9 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
-use OCP\Notification\IManager as INotificationManager;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -62,25 +59,19 @@ class SigningService
     /**
      * Constructor
      *
-     * @param SettingsService        $settingsService     Settings service
-     * @param SigningAuditService    $auditService        Audit service
-     * @param SigningProviderFactory $providerFactory     Provider factory
-     * @param IAppConfig             $config              App config
-     * @param IUserSession           $userSession         User session
-     * @param INotificationManager   $notificationManager Notification manager
-     * @param LoggerInterface        $logger              Logger
-     * @param IRequest               $request             HTTP request
+     * @param SettingsService     $settingsService Settings service
+     * @param SigningAuditService $auditService    Audit service
+     * @param IAppConfig          $config          App config
+     * @param IUserSession        $userSession     User session
+     * @param IRequest            $request         HTTP request
      *
      * @return void
      */
     public function __construct(
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
-        private readonly SigningProviderFactory $providerFactory,
         private readonly IAppConfig $config,
         private readonly IUserSession $userSession,
-        private readonly INotificationManager $notificationManager,
-        private readonly LoggerInterface $logger,
         private readonly IRequest $request
     ) {
 
@@ -266,11 +257,7 @@ class SigningService
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
+        $signer = $this->resolveToArray(value: $signerObject);
 
         // C4 security fix: verify the signer record belongs to this signing
         // request. Without this check, an attacker who knows any valid
@@ -339,11 +326,7 @@ class SigningService
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
+        $signer = $this->resolveToArray(value: $signerObject);
 
         // C4 security fix: verify the signer record belongs to this signing
         // request. Without this check, an attacker who knows any valid
@@ -362,15 +345,10 @@ class SigningService
         $signer['declineReason'] = $reason;
         $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
-        }
-
+        $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+        $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        $requestObject  = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $request        = $this->resolveToArray(value: $requestObject);
         $signatureLevel = $request['signatureLevel'] ?? 'SES';
         $provider       = $request['provider'] ?? 'native';
 
@@ -412,11 +390,7 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
         $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
-        }
+        $request       = $this->resolveToArray(value: $requestObject);
 
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
             throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
@@ -549,11 +523,7 @@ class SigningService
 
         foreach ($signerIds as $signerId) {
             $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
-            }
+            $signer    = $this->resolveToArray(value: $signerObj);
 
             if (($signer['status'] ?? '') !== 'SIGNED') {
                 $allSigned = false;
@@ -561,12 +531,8 @@ class SigningService
             }
         }//end foreach
 
-        $freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($freshObj !== null && is_object($freshObj) === true && method_exists($freshObj, 'jsonSerialize') === true) {
-            $freshRequest = $freshObj->jsonSerialize();
-        } else {
-            $freshRequest = (array) $freshObj;
-        }
+        $freshObj     = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $freshRequest = $this->resolveToArray(value: $freshObj);
 
         $freshRequest['status'] = 'IN_PROGRESS';
         if ($allSigned === true) {
@@ -593,11 +559,7 @@ class SigningService
 
         foreach ($signerIds as $signerId) {
             $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
-            }
+            $signer    = $this->resolveToArray(value: $signerObj);
 
             if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
                 return $signerId;
@@ -607,6 +569,23 @@ class SigningService
         return null;
 
     }//end findSignerForUser()
+
+    /**
+     * Resolve an OR object or raw value into a plain array.
+     *
+     * @param mixed $value The raw object or value returned by OR ObjectService::find().
+     *
+     * @return array<string, mixed> The resolved array.
+     */
+    private function resolveToArray(mixed $value): array
+    {
+        if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
+            return $value->jsonSerialize();
+        }
+
+        return (array) $value;
+
+    }//end resolveToArray()
 
     /**
      * Get the client IP address

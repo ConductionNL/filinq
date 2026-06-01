@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 
 /**
  * Service for consent CRUD operations used by the controller
@@ -45,14 +44,12 @@ class ConsentCrudService
      *
      * @param SettingsService $settingsService Settings service for register/schema IDs
      * @param ConsentService  $consentService  Consent service for consent operations
-     * @param LoggerInterface $logger          Logger for error reporting
      *
      * @return void
      */
     public function __construct(
         private readonly SettingsService $settingsService,
-        private readonly ConsentService $consentService,
-        private readonly LoggerInterface $logger
+        private readonly ConsentService $consentService
     ) {
 
     }//end __construct()

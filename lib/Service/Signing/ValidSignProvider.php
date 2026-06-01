@@ -19,7 +19,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -36,14 +35,12 @@ class ValidSignProvider implements SigningProviderInterface
     /**
      * Constructor
      *
-     * @param IAppConfig      $config The app config
-     * @param LoggerInterface $logger Logger interface
+     * @param IAppConfig $config The app config
      *
      * @return void
      */
     public function __construct(
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()

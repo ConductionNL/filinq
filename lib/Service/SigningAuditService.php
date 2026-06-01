@@ -22,7 +22,6 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -60,14 +59,12 @@ class SigningAuditService
      *
      * @param SettingsService $settingsService Settings service
      * @param IAppConfig      $config          App config
-     * @param LoggerInterface $logger          Logger
      *
      * @return void
      */
     public function __construct(
         private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()

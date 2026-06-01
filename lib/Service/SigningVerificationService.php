@@ -23,7 +23,6 @@ use DateTimeInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -40,15 +39,13 @@ class SigningVerificationService
     /**
      * Constructor
      *
-     * @param IRootFolder     $rootFolder Root folder
-     * @param LoggerInterface $logger     Logger
-     * @param IAppConfig      $config     App config
+     * @param IRootFolder $rootFolder Root folder
+     * @param IAppConfig  $config     App config
      *
      * @return void
      */
     public function __construct(
         private readonly IRootFolder $rootFolder,
-        private readonly LoggerInterface $logger,
         private readonly IAppConfig $config
     ) {
 

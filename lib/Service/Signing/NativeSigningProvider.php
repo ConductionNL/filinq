@@ -25,7 +25,6 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -51,7 +50,6 @@ class NativeSigningProvider implements SigningProviderInterface
     /**
      * Constructor
      *
-     * @param IUserSession    $userSession     The user session
      * @param LoggerInterface $logger          Logger interface
      * @param SettingsService $settingsService Settings service (provides OR ObjectService)
      * @param IAppConfig      $config          App config (resolves session register/schema)
@@ -59,7 +57,6 @@ class NativeSigningProvider implements SigningProviderInterface
      * @return void
      */
     public function __construct(
-        private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService,
         private readonly IAppConfig $config
