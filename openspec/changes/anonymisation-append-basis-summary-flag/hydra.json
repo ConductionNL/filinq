@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "anonymisation-append-basis-summary-flag",
+  "repo": "https://codeberg.org/Conduction/docudesk",
+  "issue": 20,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T19:27:00Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
