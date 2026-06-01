@@ -68,6 +68,15 @@ class BatchAnonymizeService
      *                                                              per-file result's `warning` /
      *                                                              `summaryFileId` outcomes propagate
      *                                                              to that file's batch entry.
+     * @param string                            $outputFormat       Per-batch output format gate
+     *                                                              ('pdf'|'preserve'). Passed
+     *                                                              through to each per-file
+     *                                                              anonymise call. Per-file
+     *                                                              ConversionFailedException is
+     *                                                              recorded as an error on that
+     *                                                              file's batch entry and the
+     *                                                              batch continues with the next
+     *                                                              file.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -80,8 +89,12 @@ class BatchAnonymizeService
      *
      * @throws Exception When the batch cannot be found.
      */
-    public function anonymizeBatch(string $batchId, array $entities, bool $appendBasisSummary=false): array
-    {
+    public function anonymizeBatch(
+        string $batchId,
+        array $entities,
+        bool $appendBasisSummary=false,
+        string $outputFormat='pdf'
+    ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
             throw new Exception('Batch not found or expired', 404);
@@ -105,7 +118,8 @@ class BatchAnonymizeService
                 $result = $this->anonService->anonymizeDocument(
                     (int) $file['fileId'],
                     $entities,
-                    $appendBasisSummary
+                    $appendBasisSummary,
+                    $outputFormat
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
@@ -120,6 +134,15 @@ class BatchAnonymizeService
                 }
 
                 $processed++;
+            } catch (\OCA\DocuDesk\Exception\ConversionFailedException $e) {
+                // PDF conversion exhausted the cascade for this file —
+                // mark this file as error, attach the attempts surface
+                // for the batch caller to inspect, and continue with
+                // the next file.
+                $batch['files'][$i]['status']             = 'error';
+                $batch['files'][$i]['error']              = $e->getMessage();
+                $batch['files'][$i]['conversionAttempts'] = $e->getAttempts();
+                $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];
             } catch (Exception $e) {
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();

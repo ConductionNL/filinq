@@ -188,6 +188,15 @@ class SettingsService
                 'signing_request_expiry_days',
                 '30'
             ),
+            // anonymise-output-as-pdf-by-default — tenant-wide default
+            // for the anonymise endpoint's `outputFormat` request param.
+            // 'pdf' converts the anonymised output via the cascade;
+            // 'preserve' returns it in the native input format.
+            'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
+                $this->appName,
+                'docudesk.anonymisation.default_output_format',
+                'pdf'
+            ),
         ];
 
     }//end loadFeatureToggles()
