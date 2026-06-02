@@ -520,6 +520,7 @@ interface IAppConfig
     public function getAppInstalledVersions(bool $onlyEnabled=false): array;
 }//end interface
 
+
 namespace OCP\App;
 
 /**
@@ -568,7 +569,6 @@ class Http
     public const STATUS_NOT_FOUND    = 404;
     public const STATUS_INTERNAL_SERVER_ERROR = 500;
 }//end class
-
 
 namespace Psr\Log;
 
