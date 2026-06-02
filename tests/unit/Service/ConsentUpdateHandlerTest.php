@@ -39,21 +39,29 @@ class ConsentUpdateHandlerTest extends TestCase
 {
 
     /**
+     * Handler under test.
+     *
      * @var ConsentUpdateHandler
      */
     private ConsentUpdateHandler $handler;
 
     /**
+     * Mock logger.
+     *
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $mockLogger;
 
     /**
+     * Mock DI container.
+     *
      * @var ContainerInterface|MockObject
      */
     private ContainerInterface|MockObject $mockContainer;
 
     /**
+     * Mock app manager.
+     *
      * @var IAppManager|MockObject
      */
     private IAppManager|MockObject $mockAppManager;
@@ -68,14 +76,14 @@ class ConsentUpdateHandlerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
-        $this->mockContainer  = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockLogger     = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockContainer  = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->mockAppManager = $this->createMock(originalClassName: IAppManager::class);
 
         $this->handler = new ConsentUpdateHandler(
-            $this->mockLogger,
-            $this->mockContainer,
-            $this->mockAppManager
+            logger: $this->mockLogger,
+            container: $this->mockContainer,
+            appManager: $this->mockAppManager
         );
 
     }//end setUp()
@@ -88,8 +96,8 @@ class ConsentUpdateHandlerTest extends TestCase
      */
     public function testUpdateConsentStatusThrowsWhenNotInstalled(): void
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Failed to update consent status');
+        $this->expectException(exception: \Exception::class);
+        $this->expectExceptionMessage(message: 'Failed to update consent status');
 
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn([]);
@@ -106,8 +114,8 @@ class ConsentUpdateHandlerTest extends TestCase
      */
     public function testGetConsentsByDocumentThrowsWhenNotInstalled(): void
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Failed to get consents for document');
+        $this->expectException(exception: \Exception::class);
+        $this->expectExceptionMessage(message: 'Failed to get consents for document');
 
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn([]);
@@ -124,7 +132,7 @@ class ConsentUpdateHandlerTest extends TestCase
      */
     public function testCanBeInstantiated(): void
     {
-        $this->assertInstanceOf(ConsentUpdateHandler::class, $this->handler);
+        $this->assertInstanceOf(expected: ConsentUpdateHandler::class, actual: $this->handler);
 
     }//end testCanBeInstantiated()
 

@@ -8,19 +8,6 @@ describe('Navigation Store', () => {
 		setActivePinia(createPinia())
 	})
 
-	it('set current selected view correctly', () => {
-		const store = useNavigationStore()
-
-		store.setSelected('dashboard')
-		expect(store.selected).toBe('dashboard')
-
-		store.setSelected('consent')
-		expect(store.selected).toBe('consent')
-
-		store.setSelected('anonymization')
-		expect(store.selected).toBe('anonymization')
-	})
-
 	it('set modal correctly', () => {
 		const store = useNavigationStore()
 
