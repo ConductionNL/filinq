@@ -407,7 +407,7 @@ class BatchAnonymizationController extends Controller
             $csv = $this->reportService->generateReport($batchId);
             return new DataDownloadResponse($csv, 'anonymization-report-'.$batchId.'.csv', 'text/csv');
         } catch (Exception $e) {
-            return $this->err(msg: $e->getMessage(), e: $e);
+            return $this->err(msg: 'Failed to generate report', e: $e);
         }
 
     }//end batchReport()
