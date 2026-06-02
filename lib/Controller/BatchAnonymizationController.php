@@ -227,40 +227,44 @@ class BatchAnonymizationController extends Controller
      */
     public function batchStatus(string $batchId): JSONResponse
     {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        $batch = $this->stateService->getBatch($batchId);
-        if ($batch === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
-        }
-
-        $ent = 0;
-        $ext = 0;
-        foreach ($batch['files'] as $f) {
-            $ent += ($f['entityCount'] ?? 0);
-            if (in_array($f['status'], ['extracted', 'anonymized', 'error'], true) === true) {
-                $ext++;
+        try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
-        }
 
-        $total = count($batch['files']);
-        $prog  = 0;
-        if ($total > 0) {
-            $prog = round(($ext / $total) * 100, 1);
-        }
+            $batch = $this->stateService->getBatch($batchId);
+            if ($batch === null) {
+                return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
+            }
 
-        return new JSONResponse(
-                [
-                    'batchId'       => $batch['batchId'],
-                    'batchStatus'   => $batch['status'],
-                    'files'         => $batch['files'],
-                    'totalEntities' => $ent,
-                    'progress'      => $prog,
-                    'totalFiles'    => $total,
-                ]
-                );
+            $ent = 0;
+            $ext = 0;
+            foreach ($batch['files'] as $f) {
+                $ent += ($f['entityCount'] ?? 0);
+                if (in_array($f['status'], ['extracted', 'anonymized', 'error'], true) === true) {
+                    $ext++;
+                }
+            }
+
+            $total = count($batch['files']);
+            $prog  = 0;
+            if ($total > 0) {
+                $prog = round(($ext / $total) * 100, 1);
+            }
+
+            return new JSONResponse(
+                    [
+                        'batchId'       => $batch['batchId'],
+                        'batchStatus'   => $batch['status'],
+                        'files'         => $batch['files'],
+                        'totalEntities' => $ent,
+                        'progress'      => $prog,
+                        'totalFiles'    => $total,
+                    ]
+                    );
+        } catch (Exception $e) {
+            return $this->err(msg: 'Failed to get batch status', e: $e);
+        }//end try
 
     }//end batchStatus()
 

@@ -153,7 +153,7 @@ class BatchStateService
             $isAdmin     = $this->groupManager->isAdmin($currentUid);
 
             if ($isAdmin === false && $batchUserId !== $currentUid) {
-                throw new RuntimeException('Access denied: batch belongs to another user');
+                throw new RuntimeException('Access denied: batch belongs to another user', 403);
             }
         }
 
