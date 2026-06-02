@@ -18,5 +18,11 @@
     {"task": "15", "file": "lib/Service/EmlPdfAssemblyService.php", "ok": true}
   ],
   "stubs": [],
-  "missing_routes": []
+  "missing_routes": [],
+  "deferred": [
+    {"task": "7", "reason": "Runtime verification requires occ access (permission denied in container); register JSON is correct per static analysis and PHPUnit"},
+    {"task": "8", "reason": "Referential integrity requires a live Nextcloud + OpenRegister instance; design confirms OR handles via existing @self.folder pipeline"},
+    {"task": "9", "reason": "Audit trail verification requires two live user sessions; design confirms OR's AuditTrailMapper handles this natively"},
+    {"task": "13", "reason": "Playwright screenshots require browser-1 MCP which is not available in this headless container"}
+  ]
 }
