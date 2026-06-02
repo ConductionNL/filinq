@@ -11,7 +11,6 @@ import ConsentDetail from '../views/consent/ConsentDetail.vue'
 import TemplateIndex from '../views/templates/TemplateIndex.vue'
 import TemplateDetail from '../views/templates/TemplateDetail.vue'
 import MyDocumentsIndex from '../views/myDocuments/MyDocumentsIndex.vue'
-import SettingsIndex from '../views/settings/SettingsIndex.vue'
 import PrintPreview from '../components/PrintPreview.vue'
 import ProhibitionIndex from '../views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from '../views/policy/StandingConsentIndex.vue'
@@ -36,7 +35,6 @@ export default new Router(
 			{ path: '/templates/new', name: 'TemplateNew', component: TemplateDetail },
 			{ path: '/templates/:id', name: 'TemplateDetail', component: TemplateDetail, props: route => ({ templateId: route.params.id }) },
 			{ path: '/my-documents', name: 'MyDocuments', component: MyDocumentsIndex },
-			{ path: '/settings', name: 'Settings', component: SettingsIndex },
 			{ path: '/print-preview/:templateId?', name: 'PrintPreview', component: PrintPreview, props: route => ({ templateId: route.params.templateId || '' }) },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],

@@ -13,12 +13,16 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\MetricsCollector;
 use OCA\DocuDesk\Controller\MetricsController;
+use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -49,10 +53,14 @@ class MetricsControllerTest extends TestCase
     private IConfig|MockObject $mockConfig;
 
     /**
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockAppConfig;
+
+    /**
      * @var MetricsCollector|MockObject
      */
     private MetricsCollector|MockObject $mockCollector;
-
 
     /**
      * Set up test environment
@@ -63,19 +71,20 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest         = $this->createMock(IRequest::class);
-        $this->mockConfig    = $this->createMock(IConfig::class);
-        $this->mockCollector = $this->createMock(MetricsCollector::class);
+        $mockRequest         = $this->createMock(originalClassName: IRequest::class);
+        $this->mockConfig    = $this->createMock(originalClassName: IConfig::class);
+        $this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
+        $this->mockCollector = $this->createMock(originalClassName: MetricsCollector::class);
 
         $this->controller = new MetricsController(
-            'docudesk',
-            $mockRequest,
-            $this->mockConfig,
-            $this->mockCollector
+            appName: 'docudesk',
+            request: $mockRequest,
+            config: $this->mockConfig,
+            appConfig: $this->mockAppConfig,
+            metricsCollector: $this->mockCollector
         );
 
     }//end setUp()
-
 
     /**
      * Test metrics endpoint returns Prometheus format
@@ -85,11 +94,13 @@ class MetricsControllerTest extends TestCase
     public function testIndexReturnsPrometheusFormat(): void
     {
         $this->mockConfig->method('getAppValue')
-            ->willReturnMap([
-                ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
-                ['docudesk', 'pdf_generations_total', '0', '5'],
-                ['docudesk', 'anonymizations_total', '0', '3'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
+                        ['docudesk', 'pdf_generations_total', '0', '5'],
+                        ['docudesk', 'anonymizations_total', '0', '3'],
+                    ]
+                    );
 
         $this->mockConfig->method('getSystemValueString')
             ->willReturn('29.0.0');
@@ -102,6 +113,4 @@ class MetricsControllerTest extends TestCase
         $this->assertInstanceOf(\OCP\AppFramework\Http\TextPlainResponse::class, $response);
 
     }//end testIndexReturnsPrometheusFormat()
-
-
 }//end class
