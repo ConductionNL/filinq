@@ -446,8 +446,9 @@ class AnonymizationServiceTest extends TestCase
         $container       = $this->createMock(\Psr\Container\ContainerInterface::class);
         $appManager      = $this->createMock(\OCP\App\IAppManager::class);
         $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
-        $appConfig       = $this->createMock(\OCP\IAppConfig::class);
-        $ocrService      = $this->createMock(\OCA\DocuDesk\Service\OcrService::class);
+        $appConfig             = $this->createMock(\OCP\IAppConfig::class);
+        $ocrService            = $this->createMock(\OCA\DocuDesk\Service\OcrService::class);
+        $grondslagenSummary    = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
 
         return new \OCA\DocuDesk\Service\AnonymizationService(
             $logger,
@@ -455,7 +456,8 @@ class AnonymizationServiceTest extends TestCase
             $appManager,
             $entityDetection,
             $appConfig,
-            $ocrService
+            $ocrService,
+            $grondslagenSummary
         );
 
     }//end buildServiceWithoutDependencies()

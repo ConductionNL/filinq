@@ -23,6 +23,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCA\DocuDesk\Service\OcrService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -79,6 +80,11 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private OcrService|MockObject $mockOcrService;
 
+    /**
+     * @var GrondslagenSummaryService|MockObject
+     */
+    private GrondslagenSummaryService|MockObject $mockGrondslagenSummary;
+
 
     /**
      * Set up test environment
@@ -89,11 +95,12 @@ class AnonymizationServiceProhibitionTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
-        $this->mockContainer  = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager = $this->createMock(IAppManager::class);
-        $this->mockAppConfig  = $this->createMock(IAppConfig::class);
-        $this->mockOcrService = $this->createMock(OcrService::class);
+        $this->mockLogger             = $this->createMock(LoggerInterface::class);
+        $this->mockContainer          = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager         = $this->createMock(IAppManager::class);
+        $this->mockAppConfig          = $this->createMock(IAppConfig::class);
+        $this->mockOcrService         = $this->createMock(OcrService::class);
+        $this->mockGrondslagenSummary = $this->createMock(GrondslagenSummaryService::class);
 
         $this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -124,7 +131,8 @@ class AnonymizationServiceProhibitionTest extends TestCase
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
             appConfig: $this->mockAppConfig,
-            ocrService: $this->mockOcrService
+            ocrService: $this->mockOcrService,
+            grondslagenSummary: $this->mockGrondslagenSummary
         );
 
     }//end makeService()
