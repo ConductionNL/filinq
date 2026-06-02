@@ -53,17 +53,17 @@ return [
 		['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
 
 		// Batch anonymization routes
-		['name' => 'batch_anonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
-		['name' => 'batch_anonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
-		['name' => 'batch_anonymization#batchExtract', 'url' => 'api/anonymization/batch/{batchId}/extract', 'verb' => 'POST'],
-		['name' => 'batch_anonymization#batchStatus', 'url' => 'api/anonymization/batch/{batchId}/status', 'verb' => 'GET'],
-		['name' => 'batch_anonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
-		['name' => 'batch_anonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
-		['name' => 'batch_anonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
+		['name' => 'batchAnonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
+		['name' => 'batchAnonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
+		['name' => 'batchAnonymization#batchExtract', 'url' => 'api/anonymization/batch/{batchId}/extract', 'verb' => 'POST'],
+		['name' => 'batchAnonymization#batchStatus', 'url' => 'api/anonymization/batch/{batchId}/status', 'verb' => 'GET'],
+		['name' => 'batchAnonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
+		['name' => 'batchAnonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
+		['name' => 'batchAnonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
 
 		// WOO entity profile routes
-		['name' => 'batch_anonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
-		['name' => 'batch_anonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
+		['name' => 'batchAnonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
+		['name' => 'batchAnonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
 
 		// PDF generation routes		['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
 		['name' => 'pdf#renderPdfA', 'url' => 'api/pdf/render-pdfa', 'verb' => 'POST'],
