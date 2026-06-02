@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "5.1.0"
+        "description": "DocuDesk register v5.2.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
+        "version": "5.2.0"
     },
     "x-openregister": {
         "type": "application",
@@ -57,7 +57,8 @@
                 "description": "Register voor correspondentie logging en huisstijl configuratie",
                 "schemas": [
                     "correspondence",
-                    "huisstijl"
+                    "huisstijl",
+                    "batchCorrespondenceJob"
                 ]
             },
             "dossier": {
@@ -75,20 +76,39 @@
             "publicationConsent": {
                 "x-openregister-notifications": {
                     "objectionDeadline": {
-                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "consentStatus": "pending" } },
+                        "trigger": {
+                            "type": "scheduled",
+                            "intervalSec": 86400,
+                            "filter": {
+                                "consentStatus": "pending"
+                            }
+                        },
                         "enabled": true,
-                        "channels": ["nc-notification"],
-                        "recipients": [
-                            { "kind": "groups", "groups": ["docudesk-woo-officers"] },
-                            { "kind": "object-acl", "permission": "manage" }
+                        "channels": [
+                            "nc-notification"
                         ],
-                        "subject": { "nl": "Bezwaartermijn verloopt binnenkort voor een publicatie", "en": "Objection deadline is approaching for a publication" }
+                        "recipients": [
+                            {
+                                "kind": "groups",
+                                "groups": [
+                                    "docudesk-woo-officers"
+                                ]
+                            },
+                            {
+                                "kind": "object-acl",
+                                "permission": "manage"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Bezwaartermijn verloopt binnenkort voor een publicatie",
+                            "en": "Objection deadline is approaching for a publication"
+                        }
                     }
                 },
                 "uri": null,
                 "slug": "publicationConsent",
                 "title": "Publication Consent",
-                "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat informatie over entiteiten (personen/organisaties) die ge\u00efnformeerd moeten worden voordat een document wordt gepubliceerd, en hun reactie daarop.",
+                "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat informatie over entiteiten (personen/organisaties) die geïnformeerd moeten worden voordat een document wordt gepubliceerd, en hun reactie daarop.",
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "AccountCheck",
@@ -550,14 +570,29 @@
             "correspondence": {
                 "x-openregister-notifications": {
                     "correspondenceFailed": {
-                        "trigger": { "type": "created" },
+                        "trigger": {
+                            "type": "created"
+                        },
                         "enabled": true,
-                        "channels": ["nc-notification"],
-                        "recipients": [
-                            { "kind": "field", "field": "generatedBy" },
-                            { "kind": "groups", "groups": ["docudesk-woo-officers"] }
+                        "channels": [
+                            "nc-notification"
                         ],
-                        "subject": { "nl": "Documentgeneratie mislukt: {{templateName}}", "en": "Document generation failed: {{templateName}}" }
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "generatedBy"
+                            },
+                            {
+                                "kind": "groups",
+                                "groups": [
+                                    "docudesk-woo-officers"
+                                ]
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Documentgeneratie mislukt: {{templateName}}",
+                            "en": "Document generation failed: {{templateName}}"
+                        }
                     }
                 },
                 "uri": null,
@@ -699,7 +734,13 @@
                     "objectDescriptionField": "status",
                     "autoPublish": false
                 },
-                "searchable": true
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": "P7Y",
+                    "category": "Archiefwet 1995 selectielijst — cat. 3.2: zakelijke correspondentie voor organisatorische continuïteit",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
             },
             "huisstijl": {
                 "uri": null,
@@ -783,14 +824,31 @@
                     "autoPublish": false
                 },
                 "searchable": false
-            },            "signingRequest": {
+            },
+            "signingRequest": {
                 "x-openregister-notifications": {
                     "signingCompleted": {
-                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "COMPLETED" } },
+                        "trigger": {
+                            "type": "scheduled",
+                            "intervalSec": 86400,
+                            "filter": {
+                                "status": "COMPLETED"
+                            }
+                        },
                         "enabled": true,
-                        "channels": ["nc-notification"],
-                        "recipients": [ { "kind": "field", "field": "initiatorUserId" } ],
-                        "subject": { "nl": "Ondertekeningsverzoek '{{documentName}}' is voltooid", "en": "Signing request '{{documentName}}' is complete" }
+                        "channels": [
+                            "nc-notification"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "initiatorUserId"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Ondertekeningsverzoek '{{documentName}}' is voltooid",
+                            "en": "Signing request '{{documentName}}' is complete"
+                        }
                     }
                 },
                 "uri": null,
@@ -800,60 +858,268 @@
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "FileSign",
-                "required": ["documentFileId", "documentName", "initiatorUserId", "signatureLevel", "signingMode", "status", "provider"],
+                "required": [
+                    "documentFileId",
+                    "documentName",
+                    "initiatorUserId",
+                    "signatureLevel",
+                    "signingMode",
+                    "status",
+                    "provider"
+                ],
                 "properties": {
-                    "documentFileId": {"description": "Nextcloud bestand-ID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": false, "title": "Document ID"},
-                    "documentName": {"description": "Naam document", "type": "string", "required": true, "visible": true, "order": 2, "facetable": false, "title": "Documentnaam", "maxLength": 255},
-                    "initiatorUserId": {"description": "Initiator gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 3, "facetable": true, "title": "Initiator"},
-                    "signatureLevel": {"description": "eIDAS niveau", "type": "string", "required": true, "visible": true, "order": 4, "facetable": true, "title": "Niveau", "enum": ["SES", "AdES", "QES"], "default": "SES"},
-                    "signingMode": {"description": "Ondertekeningsvolgorde", "type": "string", "required": true, "visible": true, "order": 5, "facetable": true, "title": "Modus", "enum": ["sequential", "parallel"], "default": "sequential"},
-                    "status": {"description": "Status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["DRAFT", "PENDING", "IN_PROGRESS", "COMPLETED", "DECLINED", "EXPIRED", "CANCELLED"], "default": "DRAFT"},
-                    "provider": {"description": "Provider", "type": "string", "required": true, "visible": true, "order": 7, "facetable": true, "title": "Provider", "enum": ["native", "validsign", "docusign", "adobesign", "libresign"], "default": "native"},
-                    "deadline": {"description": "Deadline (ISO 8601)", "type": "string", "format": "date-time", "visible": true, "order": 8, "facetable": false, "title": "Deadline"},
-                    "signerIds": {"description": "SignerRecord UUID's", "type": "array", "visible": true, "order": 9, "facetable": false, "title": "Ondertekenaars"}
+                    "documentFileId": {
+                        "description": "Nextcloud bestand-ID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Document ID"
+                    },
+                    "documentName": {
+                        "description": "Naam document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Documentnaam",
+                        "maxLength": 255
+                    },
+                    "initiatorUserId": {
+                        "description": "Initiator gebruikers-ID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Initiator"
+                    },
+                    "signatureLevel": {
+                        "description": "eIDAS niveau",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Niveau",
+                        "enum": [
+                            "SES",
+                            "AdES",
+                            "QES"
+                        ],
+                        "default": "SES"
+                    },
+                    "signingMode": {
+                        "description": "Ondertekeningsvolgorde",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Modus",
+                        "enum": [
+                            "sequential",
+                            "parallel"
+                        ],
+                        "default": "sequential"
+                    },
+                    "status": {
+                        "description": "Status",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "DRAFT",
+                            "PENDING",
+                            "IN_PROGRESS",
+                            "COMPLETED",
+                            "DECLINED",
+                            "EXPIRED",
+                            "CANCELLED"
+                        ],
+                        "default": "DRAFT"
+                    },
+                    "provider": {
+                        "description": "Provider",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Provider",
+                        "enum": [
+                            "native",
+                            "validsign",
+                            "docusign",
+                            "adobesign",
+                            "libresign"
+                        ],
+                        "default": "native"
+                    },
+                    "deadline": {
+                        "description": "Deadline (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Deadline"
+                    },
+                    "signerIds": {
+                        "description": "SignerRecord UUID's",
+                        "type": "array",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Ondertekenaars"
+                    }
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
-                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
-                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "documentName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
                 "searchable": true,
                 "x-openregister-lifecycle": {
                     "field": "status",
                     "initialState": "DRAFT",
                     "states": {
-                        "DRAFT":       {"label": "Draft",       "description": "Signing request is being assembled by the initiator; not yet sent to signers."},
-                        "PENDING":     {"label": "Pending",     "description": "Request has been sent and is awaiting signer action."},
-                        "IN_PROGRESS": {"label": "In progress", "description": "At least one signer has started; the request is being signed."},
-                        "COMPLETED":   {"label": "Completed",   "description": "All signers have signed. Terminal state."},
-                        "DECLINED":    {"label": "Declined",    "description": "A signer declined; the request is terminated. Terminal."},
-                        "EXPIRED":     {"label": "Expired",     "description": "The deadline passed before completion. Terminal."},
-                        "CANCELLED":   {"label": "Cancelled",   "description": "The initiator cancelled the request. Terminal."}
+                        "DRAFT": {
+                            "label": "Draft",
+                            "description": "Signing request is being assembled by the initiator; not yet sent to signers."
+                        },
+                        "PENDING": {
+                            "label": "Pending",
+                            "description": "Request has been sent and is awaiting signer action."
+                        },
+                        "IN_PROGRESS": {
+                            "label": "In progress",
+                            "description": "At least one signer has started; the request is being signed."
+                        },
+                        "COMPLETED": {
+                            "label": "Completed",
+                            "description": "All signers have signed. Terminal state."
+                        },
+                        "DECLINED": {
+                            "label": "Declined",
+                            "description": "A signer declined; the request is terminated. Terminal."
+                        },
+                        "EXPIRED": {
+                            "label": "Expired",
+                            "description": "The deadline passed before completion. Terminal."
+                        },
+                        "CANCELLED": {
+                            "label": "Cancelled",
+                            "description": "The initiator cancelled the request. Terminal."
+                        }
                     },
                     "transitions": {
-                        "send":     {"from": "DRAFT",       "to": "PENDING",     "label": "Send for signing", "description": "Notify the configured signers and start collecting signatures."},
-                        "start":    {"from": "PENDING",     "to": "IN_PROGRESS", "label": "Start signing",    "description": "A signer has opened the request; mark the request as in progress."},
-                        "complete": {"from": "IN_PROGRESS", "to": "COMPLETED",   "label": "Complete signing", "description": "All signers have signed; finalise the request. Terminal."},
-                        "decline":  {"from": "IN_PROGRESS", "to": "DECLINED",    "label": "Decline",          "description": "A signer declined; terminate the request. Terminal."},
-                        "expire":   {"from": "PENDING",     "to": "EXPIRED",     "label": "Expire",           "description": "Deadline passed before completion. Terminal."},
-                        "cancel":   {"from": "PENDING",     "to": "CANCELLED",   "label": "Cancel",           "description": "Initiator cancels the request before completion. Terminal."}
+                        "send": {
+                            "from": "DRAFT",
+                            "to": "PENDING",
+                            "label": "Send for signing",
+                            "description": "Notify the configured signers and start collecting signatures."
+                        },
+                        "start": {
+                            "from": "PENDING",
+                            "to": "IN_PROGRESS",
+                            "label": "Start signing",
+                            "description": "A signer has opened the request; mark the request as in progress."
+                        },
+                        "complete": {
+                            "from": "IN_PROGRESS",
+                            "to": "COMPLETED",
+                            "label": "Complete signing",
+                            "description": "All signers have signed; finalise the request. Terminal."
+                        },
+                        "decline": {
+                            "from": "IN_PROGRESS",
+                            "to": "DECLINED",
+                            "label": "Decline",
+                            "description": "A signer declined; terminate the request. Terminal."
+                        },
+                        "expire": {
+                            "from": "PENDING",
+                            "to": "EXPIRED",
+                            "label": "Expire",
+                            "description": "Deadline passed before completion. Terminal."
+                        },
+                        "cancel": {
+                            "from": "PENDING",
+                            "to": "CANCELLED",
+                            "label": "Cancel",
+                            "description": "Initiator cancels the request before completion. Terminal."
+                        }
                     }
+                },
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsverzoeken als juridisch bewijsmiddel",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
                 }
             },
             "signerRecord": {
                 "x-openregister-notifications": {
                     "signingRequested": {
-                        "trigger": { "type": "created" },
+                        "trigger": {
+                            "type": "created"
+                        },
                         "enabled": true,
-                        "channels": ["nc-notification"],
-                        "recipients": [ { "kind": "field", "field": "userId" } ],
-                        "subject": { "nl": "Je moet een document ondertekenen", "en": "You have a document to sign" }
+                        "channels": [
+                            "nc-notification"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "userId"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Je moet een document ondertekenen",
+                            "en": "You have a document to sign"
+                        }
                     },
                     "signingDeadline": {
-                        "trigger": { "type": "scheduled", "intervalSec": 86400, "filter": { "status": "PENDING" } },
+                        "trigger": {
+                            "type": "scheduled",
+                            "intervalSec": 86400,
+                            "filter": {
+                                "status": "PENDING"
+                            }
+                        },
                         "enabled": true,
-                        "channels": ["nc-notification"],
-                        "recipients": [ { "kind": "field", "field": "userId" } ],
-                        "subject": { "nl": "Herinnering: een document wacht op je handtekening", "en": "Reminder: a document is awaiting your signature" }
+                        "channels": [
+                            "nc-notification"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "userId"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Herinnering: een document wacht op je handtekening",
+                            "en": "Reminder: a document is awaiting your signature"
+                        }
                     }
                 },
                 "uri": null,
@@ -863,50 +1129,276 @@
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "AccountEdit",
-                "required": ["signingRequestId", "userId", "displayName", "status"],
+                "required": [
+                    "signingRequestId",
+                    "userId",
+                    "displayName",
+                    "status"
+                ],
                 "properties": {
-                    "signingRequestId": {"description": "Ondertekeningsverzoek UUID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Verzoek ID"},
-                    "userId": {"description": "Gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 2, "facetable": true, "title": "Gebruiker"},
-                    "displayName": {"description": "Weergavenaam", "type": "string", "required": true, "visible": true, "order": 3, "facetable": false, "title": "Naam", "maxLength": 255},
-                    "email": {"description": "E-mailadres", "type": "string", "format": "email", "visible": true, "order": 4, "facetable": false, "title": "E-mail", "maxLength": 255},
-                    "order": {"description": "Volgorde", "type": "integer", "visible": true, "order": 5, "facetable": false, "title": "Volgorde", "default": 0},
-                    "status": {"description": "Status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["PENDING", "SIGNED", "DECLINED", "EXPIRED", "CANCELLED"], "default": "PENDING"},
-                    "signedAt": {"description": "Datum ondertekening", "type": "string", "format": "date-time", "visible": true, "order": 7, "facetable": false, "title": "Ondertekend op"},
-                    "declineReason": {"description": "Reden weigering", "type": "string", "visible": true, "order": 8, "facetable": false, "title": "Reden weigering", "maxLength": 2000},
-                    "ipAddress": {"description": "IP-adres", "type": "string", "visible": true, "order": 9, "facetable": false, "title": "IP-adres", "maxLength": 45},
-                    "signatureData": {"description": "Handtekeninggegevens (base64)", "type": "string", "visible": false, "order": 10, "facetable": false, "title": "Handtekeninggegevens"}
+                    "signingRequestId": {
+                        "description": "Ondertekeningsverzoek UUID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Verzoek ID"
+                    },
+                    "userId": {
+                        "description": "Gebruikers-ID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Gebruiker"
+                    },
+                    "displayName": {
+                        "description": "Weergavenaam",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "description": "E-mailadres",
+                        "type": "string",
+                        "format": "email",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "E-mail",
+                        "maxLength": 255
+                    },
+                    "order": {
+                        "description": "Volgorde",
+                        "type": "integer",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Volgorde",
+                        "default": 0
+                    },
+                    "status": {
+                        "description": "Status",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "PENDING",
+                            "SIGNED",
+                            "DECLINED",
+                            "EXPIRED",
+                            "CANCELLED"
+                        ],
+                        "default": "PENDING"
+                    },
+                    "signedAt": {
+                        "description": "Datum ondertekening",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Ondertekend op"
+                    },
+                    "declineReason": {
+                        "description": "Reden weigering",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Reden weigering",
+                        "maxLength": 2000
+                    },
+                    "ipAddress": {
+                        "description": "IP-adres",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "IP-adres",
+                        "maxLength": 45
+                    },
+                    "signatureData": {
+                        "description": "Handtekeninggegevens (base64)",
+                        "type": "string",
+                        "visible": false,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Handtekeninggegevens"
+                    }
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
-                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
-                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "displayName", "objectDescriptionField": "status", "autoPublish": false},
-                "searchable": true
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "displayName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsbewijsmiddelen",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
             },
             "signingAuditEntry": {
                 "uri": null,
                 "slug": "signingAuditEntry",
                 "title": "Signing Audit Entry",
-                "description": "Onveranderbaar auditlogrecord (Archiefwet 1995, min. 10 jaar)",
+                "description": "Onveranderbaar auditlogrecord voor digitale ondertekeningsacties. Retentie gedeclareerd via x-openregister-archival (P10Y).",
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "ShieldCheck",
-                "required": ["signingRequestId", "action", "actorUserId", "actorDisplayName", "timestamp"],
+                "required": [
+                    "signingRequestId",
+                    "action",
+                    "actorUserId",
+                    "actorDisplayName",
+                    "timestamp"
+                ],
                 "properties": {
-                    "signingRequestId": {"description": "Ondertekeningsverzoek UUID", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Verzoek ID"},
-                    "action": {"description": "Actie", "type": "string", "required": true, "visible": true, "order": 2, "facetable": true, "title": "Actie", "enum": ["CREATED", "SIGNED", "DECLINED", "CANCELLED", "EXPIRED", "COMPLETED", "VIEWED"]},
-                    "actorUserId": {"description": "Actor gebruikers-ID", "type": "string", "required": true, "visible": true, "order": 3, "facetable": true, "title": "Actor"},
-                    "actorDisplayName": {"description": "Actornaam", "type": "string", "required": true, "visible": true, "order": 4, "facetable": false, "title": "Actornaam", "maxLength": 255},
-                    "timestamp": {"description": "Tijdstip (ISO 8601)", "type": "string", "format": "date-time", "required": true, "visible": true, "order": 5, "facetable": false, "title": "Tijdstip"},
-                    "ipAddress": {"description": "IP-adres", "type": "string", "visible": true, "order": 6, "facetable": false, "title": "IP-adres", "maxLength": 45},
-                    "signatureLevel": {"description": "eIDAS niveau", "type": "string", "visible": true, "order": 7, "facetable": true, "title": "Niveau", "enum": ["SES", "AdES", "QES"]},
-                    "provider": {"description": "Provider", "type": "string", "visible": true, "order": 8, "facetable": true, "title": "Provider"},
-                    "metadata": {"description": "Metadata (JSON)", "type": "object", "visible": true, "order": 9, "facetable": false, "title": "Metadata"}
+                    "signingRequestId": {
+                        "description": "Ondertekeningsverzoek UUID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Verzoek ID"
+                    },
+                    "action": {
+                        "description": "Actie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Actie",
+                        "enum": [
+                            "CREATED",
+                            "SIGNED",
+                            "DECLINED",
+                            "CANCELLED",
+                            "EXPIRED",
+                            "COMPLETED",
+                            "VIEWED"
+                        ]
+                    },
+                    "actorUserId": {
+                        "description": "Actor gebruikers-ID",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Actor"
+                    },
+                    "actorDisplayName": {
+                        "description": "Actornaam",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Actornaam",
+                        "maxLength": 255
+                    },
+                    "timestamp": {
+                        "description": "Tijdstip (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Tijdstip"
+                    },
+                    "ipAddress": {
+                        "description": "IP-adres",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "IP-adres",
+                        "maxLength": 45
+                    },
+                    "signatureLevel": {
+                        "description": "eIDAS niveau",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Niveau",
+                        "enum": [
+                            "SES",
+                            "AdES",
+                            "QES"
+                        ]
+                    },
+                    "provider": {
+                        "description": "Provider",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Provider"
+                    },
+                    "metadata": {
+                        "description": "Metadata (JSON)",
+                        "type": "object",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Metadata"
+                    }
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": true, "appendOnly": true,
-                "updated": "2026-03-22T12:00:00+00:00", "created": "2026-03-22T12:00:00+00:00",
-                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "action", "objectDescriptionField": "actorDisplayName", "autoPublish": false},
-                "searchable": true
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": true,
+                "appendOnly": true,
+                "updated": "2026-03-22T12:00:00+00:00",
+                "created": "2026-03-22T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "action",
+                    "objectDescriptionField": "actorDisplayName",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsauditverslagen als juridisch bewijsmiddel",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
             },
             "signingSession": {
                 "uri": null,
@@ -916,25 +1408,202 @@
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "FileSign",
-                "required": ["externalId", "documentPath", "documentName", "status"],
+                "required": [
+                    "externalId",
+                    "documentPath",
+                    "documentName",
+                    "status"
+                ],
                 "properties": {
-                    "externalId": {"description": "Identifier van de signing-sessie (natuurlijke sleutel binnen de native provider)", "type": "string", "required": true, "visible": true, "order": 1, "facetable": true, "title": "Sessie ID", "maxLength": 128},
-                    "documentPath": {"description": "Pad naar het bron-document binnen Nextcloud", "type": "string", "required": true, "visible": true, "order": 2, "facetable": false, "title": "Documentpad", "maxLength": 4000},
-                    "documentName": {"description": "Naam van het document", "type": "string", "required": true, "visible": true, "order": 3, "facetable": false, "title": "Documentnaam", "maxLength": 255},
-                    "signers": {"description": "Array van ondertekenaars die in deze sessie betrokken zijn", "type": "array", "visible": true, "order": 4, "facetable": false, "title": "Ondertekenaars"},
-                    "level": {"description": "Handtekeningsniveau (alleen SES voor de native provider)", "type": "string", "visible": true, "order": 5, "facetable": true, "title": "Niveau", "enum": ["SES"], "default": "SES"},
-                    "status": {"description": "Sessie-status", "type": "string", "required": true, "visible": true, "order": 6, "facetable": true, "title": "Status", "enum": ["pending", "in_progress", "completed", "cancelled", "expired"], "default": "pending"},
-                    "signatures": {"description": "Lijst van toegevoegde handtekeningen", "type": "array", "visible": true, "order": 7, "facetable": false, "title": "Handtekeningen"},
-                    "createdAt": {"description": "Aangemaakt (ISO 8601)", "type": "string", "format": "date-time", "visible": true, "order": 8, "facetable": false, "title": "Aangemaakt"},
-                    "completedAt": {"description": "Afgerond (ISO 8601), null tot completion", "type": "string", "format": "date-time", "visible": true, "order": 9, "facetable": false, "title": "Afgerond"},
-                    "signedDocumentPath": {"description": "Pad naar het ondertekende document (kan gelijk zijn aan documentPath totdat SES-marker geschreven is)", "type": "string", "visible": true, "order": 10, "facetable": false, "title": "Ondertekend pad", "maxLength": 4000},
-                    "markerEmbedded": {"description": "Of de SES-marker (HMAC-blob) in het document is geschreven", "type": "boolean", "visible": true, "order": 11, "facetable": true, "title": "Marker ingebed", "default": false}
+                    "externalId": {
+                        "description": "Identifier van de signing-sessie (natuurlijke sleutel binnen de native provider)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Sessie ID",
+                        "maxLength": 128
+                    },
+                    "documentPath": {
+                        "description": "Pad naar het bron-document binnen Nextcloud",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Documentpad",
+                        "maxLength": 4000
+                    },
+                    "documentName": {
+                        "description": "Naam van het document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Documentnaam",
+                        "maxLength": 255
+                    },
+                    "signers": {
+                        "description": "Array van ondertekenaars die in deze sessie betrokken zijn",
+                        "type": "array",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Ondertekenaars"
+                    },
+                    "level": {
+                        "description": "Handtekeningsniveau (alleen SES voor de native provider)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Niveau",
+                        "enum": [
+                            "SES"
+                        ],
+                        "default": "SES"
+                    },
+                    "status": {
+                        "description": "Sessie-status",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled",
+                            "expired"
+                        ],
+                        "default": "pending"
+                    },
+                    "signatures": {
+                        "description": "Lijst van toegevoegde handtekeningen",
+                        "type": "array",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Handtekeningen"
+                    },
+                    "createdAt": {
+                        "description": "Aangemaakt (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Aangemaakt"
+                    },
+                    "completedAt": {
+                        "description": "Afgerond (ISO 8601), null tot completion",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Afgerond"
+                    },
+                    "signedDocumentPath": {
+                        "description": "Pad naar het ondertekende document (kan gelijk zijn aan documentPath totdat SES-marker geschreven is)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Ondertekend pad",
+                        "maxLength": 4000
+                    },
+                    "markerEmbedded": {
+                        "description": "Of de SES-marker (HMAC-blob) in het document is geschreven",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 11,
+                        "facetable": true,
+                        "title": "Marker ingebed",
+                        "default": false
+                    }
                 },
-                "archive": [], "source": "internal", "hardValidation": false, "immutable": false,
-                "updated": "2026-05-27T12:00:00+00:00", "created": "2026-05-27T12:00:00+00:00",
-                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "documentName", "objectDescriptionField": "status", "autoPublish": false},
-                "searchable": false
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-05-27T12:00:00+00:00",
+                "created": "2026-05-27T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "documentName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": false,
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "pending",
+                    "states": {
+                        "pending": {
+                            "label": "Wachtend",
+                            "terminal": false
+                        },
+                        "in_progress": {
+                            "label": "Bezig",
+                            "terminal": false
+                        },
+                        "completed": {
+                            "label": "Voltooid",
+                            "terminal": true
+                        },
+                        "cancelled": {
+                            "label": "Geannuleerd",
+                            "terminal": true
+                        },
+                        "expired": {
+                            "label": "Verlopen",
+                            "terminal": true
+                        }
+                    },
+                    "transitions": {
+                        "start": {
+                            "from": "pending",
+                            "to": "in_progress",
+                            "label": "Start sessie",
+                            "description": "Eerste signer heeft de sessie geopend."
+                        },
+                        "complete": {
+                            "from": "in_progress",
+                            "to": "completed",
+                            "label": "Voltooi sessie",
+                            "description": "Alle handtekeningen zijn verzameld. Terminal."
+                        },
+                        "cancel": {
+                            "from": [
+                                "pending",
+                                "in_progress"
+                            ],
+                            "to": "cancelled",
+                            "label": "Annuleer sessie",
+                            "description": "Sessie geannuleerd door initiator of provider."
+                        },
+                        "expire": {
+                            "from": [
+                                "pending",
+                                "in_progress"
+                            ],
+                            "to": "expired",
+                            "label": "Sessie verlopen",
+                            "description": "TTL verstreken — sessie automatisch verlopen."
+                        }
+                    }
+                }
             },
             "base": {
                 "uri": null,
@@ -944,7 +1613,10 @@
                 "version": "1.0.0",
                 "summary": "Legal basis (grondslag) for anonymisation under Woo Art. 5",
                 "icon": "Gavel",
-                "required": ["name", "description"],
+                "required": [
+                    "name",
+                    "description"
+                ],
                 "properties": {
                     "name": {
                         "title": "Naam",
@@ -967,10 +1639,24 @@
                         "maxLength": 1000
                     }
                 },
-                "archive": [], "source": "internal", "hardValidation": true, "immutable": false,
-                "updated": "2026-05-12T12:00:00+00:00", "created": "2026-05-12T12:00:00+00:00",
-                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "name", "objectDescriptionField": "description", "autoPublish": false},
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-05-12T12:00:00+00:00",
+                "created": "2026-05-12T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
                 "searchable": true
             },
             "dossier": {
@@ -981,7 +1667,9 @@
                 "version": "1.0.0",
                 "summary": "Anonymisation dossier — folder + grondslagen + review timestamp",
                 "icon": "FolderAccount",
-                "required": ["name"],
+                "required": [
+                    "name"
+                ],
                 "properties": {
                     "name": {
                         "title": "Naam",
@@ -1026,74 +1714,414 @@
                         "facetable": true
                     }
                 },
-                "archive": [], "source": "internal", "hardValidation": true, "immutable": false,
-                "updated": "2026-05-12T12:00:00+00:00", "created": "2026-05-12T12:00:00+00:00",
-                "maxDepth": 1, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
-                "configuration": {"objectNameField": "name", "objectDescriptionField": "description", "autoPublish": false},
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-05-12T12:00:00+00:00",
+                "created": "2026-05-12T12:00:00+00:00",
+                "maxDepth": 1,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "name",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
                 "searchable": true
+            },
+            "batchCorrespondenceJob": {
+                "uri": null,
+                "slug": "batchCorrespondenceJob",
+                "title": "Batch Correspondence Job",
+                "description": "Bijhouding van een batch-correspondentieopdracht. Vervangt IAppConfig-gebaseerde statusopslag. Lifecycle-transitiebeheer via x-openregister-lifecycle.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "EmailMultipleOutline",
+                "required": [
+                    "templateId",
+                    "recipientCount",
+                    "status",
+                    "initiatedBy"
+                ],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het gebruikte template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Template"
+                    },
+                    "templateName": {
+                        "description": "Naam van het template (denormalized)",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Template naam",
+                        "maxLength": 255
+                    },
+                    "recipientCount": {
+                        "description": "Totaal aantal ontvangers in de batch",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Ontvangers"
+                    },
+                    "completedCount": {
+                        "description": "Aantal succesvol gegenereerde brieven",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Geslaagd"
+                    },
+                    "errorCount": {
+                        "description": "Aantal mislukte generaties",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Mislukt"
+                    },
+                    "status": {
+                        "description": "Batchstatus",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "pending",
+                            "processing",
+                            "success",
+                            "error",
+                            "completed"
+                        ],
+                        "default": "pending"
+                    },
+                    "initiatedBy": {
+                        "description": "Nextcloud gebruiker die de batch heeft gestart",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Gestart door",
+                        "maxLength": 64
+                    },
+                    "startedAt": {
+                        "description": "Start van verwerking (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Gestart"
+                    },
+                    "completedAt": {
+                        "description": "Voltooiing (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Afgerond"
+                    },
+                    "errorMessage": {
+                        "description": "Foutmelding bij volledig mislukte batch",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Foutmelding",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-06-01T00:00:00+00:00",
+                "created": "2026-06-01T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "templateName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": "P1Y",
+                    "category": "Archiefwet 1995 selectielijst — cat. 1.2: operationele verwerkingslogboeken, korte bewaarplicht",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                },
+                "x-openregister-lifecycle": {
+                    "field": "status",
+                    "initial": "pending",
+                    "states": {
+                        "pending": {
+                            "label": "Wachtend",
+                            "terminal": false
+                        },
+                        "processing": {
+                            "label": "Verwerken",
+                            "terminal": false
+                        },
+                        "success": {
+                            "label": "Geslaagd",
+                            "terminal": true
+                        },
+                        "error": {
+                            "label": "Mislukt",
+                            "terminal": true
+                        },
+                        "completed": {
+                            "label": "Voltooid",
+                            "terminal": true
+                        }
+                    },
+                    "transitions": {
+                        "start": {
+                            "from": "pending",
+                            "to": "processing",
+                            "label": "Start verwerking",
+                            "requiresRole": "system",
+                            "description": "BatchCorrespondenceJob::run() begint."
+                        },
+                        "succeed": {
+                            "from": "processing",
+                            "to": "success",
+                            "label": "Geslaagd",
+                            "requiresRole": "system",
+                            "description": "Alle ontvangers verwerkt zonder fouten."
+                        },
+                        "fail": {
+                            "from": "processing",
+                            "to": "error",
+                            "label": "Mislukt",
+                            "requiresRole": "system",
+                            "description": "Fatale fout, batch afgebroken."
+                        },
+                        "complete": {
+                            "from": [
+                                "success",
+                                "error"
+                            ],
+                            "to": "completed",
+                            "label": "Afronden",
+                            "requiresRole": "system",
+                            "description": "Definitieve afsluiting na verwerking."
+                        }
+                    }
+                },
+                "x-openregister-notifications": {
+                    "batchCompleted": {
+                        "trigger": {
+                            "type": "lifecycle",
+                            "transition": "complete"
+                        },
+                        "enabled": true,
+                        "channels": [
+                            "nc-notification"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "initiatedBy"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Batchcorrespondentie voltooid: {{templateName}}",
+                            "en": "Batch correspondence completed: {{templateName}}"
+                        },
+                        "body": {
+                            "nl": "{{completedCount}} van {{recipientCount}} brieven gegenereerd. Fouten: {{errorCount}}.",
+                            "en": "{{completedCount}} of {{recipientCount}} letters generated. Errors: {{errorCount}}."
+                        }
+                    },
+                    "batchFailed": {
+                        "trigger": {
+                            "type": "lifecycle",
+                            "transition": "fail"
+                        },
+                        "enabled": true,
+                        "channels": [
+                            "nc-notification"
+                        ],
+                        "recipients": [
+                            {
+                                "kind": "field",
+                                "field": "initiatedBy"
+                            }
+                        ],
+                        "subject": {
+                            "nl": "Batchcorrespondentie mislukt: {{templateName}}",
+                            "en": "Batch correspondence failed: {{templateName}}"
+                        }
+                    }
+                },
+                "x-openregister-calculations": {
+                    "errorRate": {
+                        "expression": "errorCount / recipientCount",
+                        "type": "number",
+                        "format": "float",
+                        "description": "Ratio of failed generations over total recipients (0.0 – 1.0)",
+                        "readOnly": true
+                    },
+                    "successRate": {
+                        "expression": "completedCount / recipientCount",
+                        "type": "number",
+                        "format": "float",
+                        "description": "Ratio of successfully generated letters over total recipients",
+                        "readOnly": true
+                    }
+                }
             }
         },
         "objects": [
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "persoonsgegevens"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "persoonsgegevens"
+                },
                 "name": "Persoonsgegevens",
                 "description": "Herleidbare gegevens van een natuurlijke persoon (Art. 5.1 Woo jo. AVG Art. 4 lid 1). Denk aan namen, adressen, BSN, contactgegevens, functie gekoppeld aan persoon."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "bijzondere-persoonsgegevens"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "bijzondere-persoonsgegevens"
+                },
                 "name": "Bijzondere persoonsgegevens",
                 "description": "Gegevens over ras/etniciteit, politieke opvattingen, religie, lidmaatschap vakbond, genetica/biometrie, gezondheid, seksueel leven of geaardheid (Art. 5.1 Woo jo. AVG Art. 9). Strikte anonimiseringsplicht."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "strafrechtelijk"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "strafrechtelijk"
+                },
                 "name": "Strafrechtelijke gegevens",
                 "description": "Gegevens over strafrechtelijke veroordelingen en strafbare feiten (Art. 5.1 Woo jo. AVG Art. 10). Alleen onder wettelijke grondslag verwerkbaar; in openbaarmaking altijd geanonimiseerd."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "bedrijfs-fabricagegegevens"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "bedrijfs-fabricagegegevens"
+                },
                 "name": "Bedrijfs- en fabricagegegevens",
                 "description": "Vertrouwelijk meegedeelde bedrijfs- en fabricagegegevens (Art. 5.1 sub c Woo). Beschermt concurrentiepositie — bijv. offertebedragen, receptuur, leveranciersafspraken."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "onevenredige-benadeling"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "onevenredige-benadeling"
+                },
                 "name": "Onevenredige benadeling",
                 "description": "Openbaarmaking zou leiden tot onevenredige benadeling van betrokkenen of derden (Art. 5.2 Woo). Brede restcategorie; belangenafweging per geval gedocumenteerd."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "nationale-veiligheid"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "base",
+                    "slug": "nationale-veiligheid"
+                },
                 "name": "Nationale veiligheid",
                 "description": "Gegevens waarvan openbaarmaking de veiligheid van de Staat of de opsporing en vervolging van strafbare feiten schaadt (Art. 5.1 sub a/b Woo). Zelden van toepassing bij gemeenten."
             },
             {
-                "@self": {"register": "dossier", "schema": "dossier", "slug": "demostad-woo-2025-017", "folder": "seed-folder-demostad-woo-2025-017"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "demostad-woo-2025-017",
+                    "folder": "seed-folder-demostad-woo-2025-017"
+                },
                 "name": "Woo-verzoek 2025-017 — Subsidietoekenningen cultuur",
                 "description": "Woo-verzoek van lokale krant over alle subsidietoekenningen cultuur 2022–2024. Folder bevat 47 beschikkingen, 12 bezwaarschriften en bijbehorende correspondentie. Anonimiseren vóór publicatie op overheid.nl.",
-                "bases": ["persoonsgegevens", "onevenredige-benadeling"],
+                "bases": [
+                    "persoonsgegevens",
+                    "onevenredige-benadeling"
+                ],
                 "checkedOn": "2026-03-14T10:22:00+00:00"
             },
             {
-                "@self": {"register": "dossier", "schema": "dossier", "slug": "demostad-wmo-2024", "folder": "seed-folder-demostad-wmo-2024"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "demostad-wmo-2024",
+                    "folder": "seed-folder-demostad-wmo-2024"
+                },
                 "name": "Bezwaarschriften WMO 2024",
                 "description": "Geanonimiseerd archief van WMO-bezwaarschriften 2024 ten behoeve van kwartaalrapportage Raad. Bevat medische onderbouwing — alles met AVG Art. 9-grondslag.",
-                "bases": ["persoonsgegevens", "bijzondere-persoonsgegevens"],
+                "bases": [
+                    "persoonsgegevens",
+                    "bijzondere-persoonsgegevens"
+                ],
                 "checkedOn": "2026-02-28T15:45:00+00:00"
             },
             {
-                "@self": {"register": "dossier", "schema": "dossier", "slug": "conduction-demo", "folder": "seed-folder-conduction-demo"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "conduction-demo",
+                    "folder": "seed-folder-conduction-demo"
+                },
                 "name": "Referentieproject — Anonimiseringsvoorbeelden",
                 "description": "Werkvoorbeelden voor klantendemonstraties. Alle persoonsgegevens zijn synthetisch maar behandeld alsof echt, om anonimiseringsflow end-to-end te tonen.",
-                "bases": ["persoonsgegevens"],
+                "bases": [
+                    "persoonsgegevens"
+                ],
                 "checkedOn": "2026-04-01T09:00:00+00:00"
             },
             {
-                "@self": {"register": "dossier", "schema": "dossier", "slug": "zonnestraal-klachten-2025", "folder": "seed-folder-zonnestraal-klachten-2025"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "zonnestraal-klachten-2025",
+                    "folder": "seed-folder-zonnestraal-klachten-2025"
+                },
                 "name": "Klachtendossier zomerseizoen 2025",
                 "description": "Interne behandeling van klantklachten zomer 2025 t.b.v. verbetertraject. Gedeeld met verzekeraar en branchevereniging — namen klanten + accommodaties anonimiseren.",
-                "bases": ["persoonsgegevens", "bedrijfs-fabricagegegevens"],
+                "bases": [
+                    "persoonsgegevens",
+                    "bedrijfs-fabricagegegevens"
+                ],
                 "checkedOn": "2026-01-20T11:00:00+00:00"
             },
             {
-                "@self": {"register": "dossier", "schema": "dossier", "slug": "zonnestraal-incident-2026-03", "folder": "seed-folder-zonnestraal-incident-2026-03"},
+                "@self": {
+                    "register": "dossier",
+                    "schema": "dossier",
+                    "slug": "zonnestraal-incident-2026-03",
+                    "folder": "seed-folder-zonnestraal-incident-2026-03"
+                },
                 "name": "Incident-analyse vlucht AMS-CAN 2026-03",
                 "description": "Nieuw dossier voor anonimiseringstraject — grondslagen nog te bepalen door privacy officer.",
                 "bases": [],

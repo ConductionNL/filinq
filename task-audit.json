@@ -17,5 +17,6 @@
     {"task": "11", "file": "phpstan-baseline.neon", "ok": true, "note": "Cleared to empty baseline — PHPStan reports 0 errors"}
   ],
   "stubs": [],
-  "missing_routes": []
+  "missing_routes": [],
+  "deferred": []
 }

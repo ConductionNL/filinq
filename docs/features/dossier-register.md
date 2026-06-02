@@ -51,11 +51,32 @@ Five seed dossiers ship across the three personas:
 
 The last entry exercises the optionality cases: empty `bases` + null `checkedOn`. Consumer code and the review UI MUST handle both as valid in-progress states.
 
+## `@self.folder` trust model and the `validate-self-folder-access` follow-up
+
+Dossier folder binding uses OpenRegister's existing `@self.folder` pipeline
+(`FolderManagementHandler::createObjectFolderById`). The `@self.folder` value is
+accepted without verifying that the authenticated user can read or write the target
+folder — the same trust model applies to every OpenRegister object that sets
+`@self.folder` today.
+
+A dedicated follow-up change — **`validate-self-folder-access`** in the OpenRegister
+repository — will add an access-control check that rejects `@self.folder` writes when
+the caller lacks the necessary folder permission. This change (`add-dossier-schema`) is
+the first consumer of that follow-up, and its existence makes the access-control work
+more valuable. Until `validate-self-folder-access` lands, dossier folder writes trust
+the caller the same way every other `@self.folder` write does.
+
+Tracking: open an issue on the
+[OpenRegister repository](https://codeberg.org/Conduction/OpenRegister) titled
+"`validate-self-folder-access`: add caller-permission check for @self.folder writes,
+first consumer: DocuDesk add-dossier-schema (#10)".
+
 ## Relation to other changes
 
 - **`entity-relation-grondslagen`** (OpenRegister) — the `EntityRelation.bases` column stores UUID references to `base` objects from this register. Cross-register references are not validated by OpenRegister (consumer-owned vocabulary).
 - **`anonymisation-grondslagen-summary`** (DocuDesk) — renders per-document and per-dossier summaries that resolve `EntityRelation.bases` UUIDs back to `base.name` via this register.
 - **`anonymisation-output-folder-layout`** (DocuDesk) — anonymised outputs land in `<dossier-folder>/anonymised/`, where `<dossier-folder>` is the dossier's `@self.folder`.
+- **`validate-self-folder-access`** (OpenRegister, follow-up) — will add access-control for `@self.folder` writes. DocuDesk's dossier register is cited as the first consumer.
 
 ## Spec references
 
