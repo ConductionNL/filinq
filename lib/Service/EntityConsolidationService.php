@@ -14,8 +14,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
- *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
  */
 
 declare(strict_types=1);
@@ -38,6 +36,8 @@ use RuntimeException;
  */
 class EntityConsolidationService
 {
+
+
     /**
      * Constructor for EntityConsolidationService
      *
@@ -57,6 +57,7 @@ class EntityConsolidationService
 
     }//end __construct()
 
+
     /**
      * Consolidate entity detections across every extracted file in a batch.
      *
@@ -68,8 +69,6 @@ class EntityConsolidationService
      * @param float                $minConfidence Minimum confidence required for an entity to be included by default.
      *
      * @return array<int, array<string, mixed>> Consolidated, confidence-sorted list of entities.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     public function consolidateEntities(array $batch, float $minConfidence=0.0): array
     {
@@ -96,6 +95,7 @@ class EntityConsolidationService
 
     }//end consolidateEntities()
 
+
     /**
      * Merge a single entity detection into the running consolidation map.
      *
@@ -106,44 +106,56 @@ class EntityConsolidationService
      * @param mixed                               $entity Raw entity detection (object or array-like).
      *
      * @return array<string, array<string, mixed>> Updated consolidation map.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     private function mergeEntity(array $map, mixed $entity): array
     {
-        $data = (array) $entity;
         if (is_object($entity) === true && method_exists($entity, 'jsonSerialize') === true) {
-            $data = $entity->jsonSerialize();
+            $d = $entity->jsonSerialize();
+        } else {
+            $d = (array) $entity;
         }
 
-        $type  = $data['entity_type'] ?? $data['entityType'] ?? 'UNKNOWN';
-        $value = $data['entity_value'] ?? $data['entityValue'] ?? '';
-        $conf  = (float) ($data['confidence'] ?? 0.0);
-        $key   = mb_strtolower((string) $value);
+        $type       = $d['entity_type'] ?? $d['entityType'] ?? 'UNKNOWN';
+        $value      = $d['entity_value'] ?? $d['entityValue'] ?? '';
+        $conf       = (float) ($d['confidence'] ?? 0.0);
+        $relationId = $d['relation_id'] ?? $d['relationId'] ?? null;
+        $key        = mb_strtolower((string) $value);
         if ($key === '') {
             return $map;
         }
 
-        if (isset($map[$key]) === false) {
+        // Collect every underlying EntityRelation row so the folder-flow
+        // review UI can PATCH grondslagen / skip decisions onto every
+        // occurrence in one go.
+        $seedRelationIds = [];
+        if ($relationId !== null) {
+            $seedRelationIds[] = (int) $relationId;
+        }
+
+        if (isset($map[$key]) === true) {
+            $map[$key]['fileCount']++;
+            if ($conf > $map[$key]['highestConfidence']) {
+                $map[$key]['highestConfidence'] = $conf;
+            }
+
+            if ($relationId !== null) {
+                $map[$key]['relationIds'][] = (int) $relationId;
+            }
+        } else {
             $map[$key] = [
                 'type'              => $type,
                 'value'             => $value,
                 'highestConfidence' => $conf,
                 'fileCount'         => 1,
                 'included'          => $this->wooProfile->shouldAnonymize((string) $type),
+                'relationIds'       => $seedRelationIds,
             ];
-
-            return $map;
-        }
-
-        $map[$key]['fileCount']++;
-        if ($conf > $map[$key]['highestConfidence']) {
-            $map[$key]['highestConfidence'] = $conf;
-        }
+        }//end if
 
         return $map;
 
     }//end mergeEntity()
+
 
     /**
      * Fetch the entity detections stored for a single file by OpenRegister.
@@ -155,8 +167,6 @@ class EntityConsolidationService
      * @param int $fileId Nextcloud file ID whose entities should be fetched.
      *
      * @return array<int, mixed> Raw entity detections, or an empty array on failure.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
      */
     private function getEntitiesForFile(int $fileId): array
     {
@@ -172,4 +182,6 @@ class EntityConsolidationService
         }
 
     }//end getEntitiesForFile()
+
+
 }//end class

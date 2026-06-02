@@ -14,11 +14,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  */
 
 declare(strict_types=1);
@@ -39,6 +34,8 @@ use Psr\Log\LoggerInterface;
  */
 class BatchAnonymizeService
 {
+
+
     /**
      * Constructor for BatchAnonymizeService
      *
@@ -56,18 +53,21 @@ class BatchAnonymizeService
 
     }//end __construct()
 
+
     /**
      * Anonymize every extracted file in a batch using the approved entity list.
      *
-     * When appendBasisSummary is true the flag is forwarded to each per-file
-     * anonymization call. Summary failures are collected as per-file `warning`
-     * entries and do not abort the batch; the batch always completes as
-     * HTTP 200.  Files with a non-extracted status are skipped (previous
-     * errors are recorded in the skipped list; other states are ignored).
+     * Files with a non-extracted status are skipped (previous errors are
+     * recorded in the skipped list; other states are ignored silently).
      *
      * @param string                           $batchId            Identifier of the batch to anonymize.
      * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
-     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary per file.
+     * @param bool                              $appendBasisSummary When true, each per-file anonymise
+     *                                                              call is invoked with the
+     *                                                              `appendBasisSummary` flag set; the
+     *                                                              per-file result's `warning` /
+     *                                                              `summaryFileId` outcomes propagate
+     *                                                              to that file's batch entry.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -79,15 +79,9 @@ class BatchAnonymizeService
      *   }
      *
      * @throws Exception When the batch cannot be found.
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      */
-    public function anonymizeBatch(
-        string $batchId,
-        array $entities,
-        bool $appendBasisSummary=false
-    ): array {
+    public function anonymizeBatch(string $batchId, array $entities, bool $appendBasisSummary=false): array
+    {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
             throw new Exception('Batch not found or expired', 404);
@@ -109,20 +103,20 @@ class BatchAnonymizeService
 
             try {
                 $result = $this->anonService->anonymizeDocument(
-                    fileId: (int) $file['fileId'],
-                    entities: $entities,
-                    appendBasisSummary: $appendBasisSummary
+                    (int) $file['fileId'],
+                    $entities,
+                    $appendBasisSummary
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
                 $batch['files'][$i]['anonymizedFileId'] = $result['anonymizedFileId'] ?? null;
+                // Wave 4a: per-file summary outcome / warning surfaced to the batch caller.
                 if (isset($result['warning']) === true) {
                     $batch['files'][$i]['warning'] = $result['warning'];
                 }
 
                 if (isset($result['summaryFileId']) === true) {
-                    $batch['files'][$i]['summaryFileId']   = $result['summaryFileId'];
-                    $batch['files'][$i]['summaryFilePath'] = $result['summaryFilePath'] ?? null;
+                    $batch['files'][$i]['summaryFileId'] = $result['summaryFileId'];
                 }
 
                 $processed++;
@@ -144,4 +138,6 @@ class BatchAnonymizeService
         ];
 
     }//end anonymizeBatch()
+
+
 }//end class
