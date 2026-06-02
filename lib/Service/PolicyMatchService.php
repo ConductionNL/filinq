@@ -1,0 +1,608 @@
+<?php
+
+/**
+ * PolicyMatchService — detection-time matcher for the publication policy layer.
+ *
+ * Loads two policy surfaces from the consent register at first call:
+ *
+ *   - **Prohibitions** — `publicationProhibition` records with `active: true`
+ *     and time bounds open. A match resolves to "anonymise" (deny-list).
+ *   - **Standing consents** — `publicationConsent` records with `scope: "entity"`,
+ *     `active: true`, and time bounds open. A match resolves to "consent_given"
+ *     (allow-list, but the per-document workflow may still override).
+ *
+ * Match-types supported in v1: `exact`, `normalized`, `bsn`, `kvk`. Unknown
+ * types are logged and skipped (defence-in-depth — the schema rejects them at
+ * write time).
+ *
+ * Conflict resolution: prohibitions are consulted first. On multi-prohibition
+ * match, the rule with the lexicographically lowest UUID wins (deterministic).
+ *
+ * The service caches loaded rules per-request. Cache invalidation on
+ * upstream rule changes is deferred to Nextcloud event-listener wiring
+ * (task 3.5). Within a single request the cache is stable; across requests
+ * (one per HTTP call) the cache is rebuilt on first use.
+ *
+ * @category Service
+ * @package  OCA\DocuDesk\Service
+ *
+ * @author    Conduction Development Team <dev@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\DocuDesk\Service;
+
+use Exception;
+use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use Transliterator;
+
+/**
+ * Detection-time policy matcher.
+ */
+class PolicyMatchService
+{
+
+    /**
+     * Match result kind — prohibition (force anonymise).
+     */
+    public const KIND_PROHIBITION = 'prohibition';
+
+    /**
+     * Match result kind — standing consent (allow publication).
+     */
+    public const KIND_STANDING_CONSENT = 'standing_consent';
+
+    /**
+     * Lazily-built cache: list of normalised rule records.
+     *
+     * Each entry: [
+     *   'uuid'        => string,
+     *   'kind'        => self::KIND_PROHIBITION | self::KIND_STANDING_CONSENT,
+     *   'entityType'  => 'PERSON' | 'ORGANIZATION' | 'OTHER',
+     *   'matchRules'  => array<int, array{type: string, value: string}>,
+     *   'validFrom'   => ?DateTimeInterface,
+     *   'validUntil'  => ?DateTimeInterface,
+     *   'primaryName' => string (for response/audit context),
+     * ]
+     *
+     * @var array<int, array<string, mixed>>|null
+     */
+    private ?array $rulesCache = null;
+
+    /**
+     * Pre-built ASCII transliterator for the `normalized` match type.
+     *
+     * @var Transliterator|null
+     */
+    private ?Transliterator $normaliser = null;
+
+
+    /**
+     * Constructor.
+     *
+     * @param LoggerInterface    $logger     Structured log sink.
+     * @param ContainerInterface $container  DI container for OpenRegister lookup.
+     * @param IAppManager        $appManager App manager (used to confirm OR is installed).
+     */
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly ContainerInterface $container,
+        private readonly IAppManager $appManager
+    ) {
+
+    }//end __construct()
+
+
+    /**
+     * Match a detected entity against the policy layer.
+     *
+     * @param string               $entityText          Detected entity text (e.g. "Pieter de Vries").
+     * @param string               $entityType          'PERSON', 'ORGANIZATION', or 'OTHER'.
+     * @param array<string, mixed> $resolvedIdentifiers Optional structured identifiers
+     *                                                  attached to the entity (BSN, KvK, etc.).
+     *                                                  Shape: `['bsn' => '123456789', 'kvk' => '12345678']`.
+     *
+     * @return array<string, mixed>|null Match data, or null when no rule matches.
+     *
+     * @phpstan-return null|array{
+     *   uuid: string,
+     *   kind: 'prohibition'|'standing_consent',
+     *   entityType: string,
+     *   primaryName: string
+     * }
+     */
+    public function match(
+        string $entityText,
+        string $entityType,
+        array $resolvedIdentifiers=[]
+    ): ?array {
+        $rules = $this->loadRules();
+
+        // Prohibitions win on conflict — split into two passes.
+        $prohibitionMatch = $this->firstMatchOf(
+            kind: self::KIND_PROHIBITION,
+            rules: $rules,
+            entityText: $entityText,
+            entityType: $entityType,
+            resolvedIdentifiers: $resolvedIdentifiers
+        );
+
+        if ($prohibitionMatch !== null) {
+            return $prohibitionMatch;
+        }
+
+        return $this->firstMatchOf(
+            kind: self::KIND_STANDING_CONSENT,
+            rules: $rules,
+            entityText: $entityText,
+            entityType: $entityType,
+            resolvedIdentifiers: $resolvedIdentifiers
+        );
+
+    }//end match()
+
+
+    /**
+     * Find the first rule of the given kind that matches the entity.
+     *
+     * Sorts candidates by UUID lexicographically so multi-match resolution
+     * is deterministic.
+     *
+     * @param string                          $kind                Rule kind to scan.
+     * @param array<int, array<string,mixed>> $rules               Cached rule list.
+     * @param string                          $entityText          Entity literal text.
+     * @param string                          $entityType          Entity type.
+     * @param array<string, mixed>            $resolvedIdentifiers Structured identifiers.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function firstMatchOf(
+        string $kind,
+        array $rules,
+        string $entityText,
+        string $entityType,
+        array $resolvedIdentifiers
+    ): ?array {
+        $matchesKind = static function (array $r) use ($kind, $entityType): bool {
+            if ($r['kind'] !== $kind) {
+                return false;
+            }
+
+            return $r['entityType'] === $entityType || $r['entityType'] === 'OTHER';
+        };
+
+        $candidates = array_values(array_filter($rules, $matchesKind));
+
+        usort(
+            $candidates,
+            static fn (array $a, array $b): int => strcmp($a['uuid'], $b['uuid'])
+        );
+
+        $entityTextNormalised = $this->normalise(value: $entityText);
+
+        foreach ($candidates as $rule) {
+            foreach ($rule['matchRules'] as $matchRule) {
+                if ($this->ruleMatches(
+                    type: $matchRule['type'] ?? '',
+                    value: $matchRule['value'] ?? '',
+                    entityText: $entityText,
+                    entityTextNormalised: $entityTextNormalised,
+                    resolvedIdentifiers: $resolvedIdentifiers
+                ) === true
+                ) {
+                    return [
+                        'uuid'        => $rule['uuid'],
+                        'kind'        => $rule['kind'],
+                        'entityType'  => $rule['entityType'],
+                        'primaryName' => $rule['primaryName'],
+                    ];
+                }
+            }
+        }
+
+        return null;
+
+    }//end firstMatchOf()
+
+
+    /**
+     * Test whether any rule in a `matchRules` array matches the given entity.
+     *
+     * Public so the retroactive layer (`PolicyRetroactiveService`) can ask the
+     * inverse question — "does this new rule match this existing entity?" —
+     * without duplicating the type-by-type semantics.
+     *
+     * @param array<int, array<string, mixed>> $matchRules          List of {type, value} rules.
+     * @param string                           $entityText          Entity literal text.
+     * @param array<string, mixed>             $resolvedIdentifiers Structured identifiers (BSN, KvK).
+     *
+     * @return bool
+     */
+    public function entityMatchesAnyRule(
+        array $matchRules,
+        string $entityText,
+        array $resolvedIdentifiers=[]
+    ): bool {
+        $entityTextNormalised = $this->normalise(value: $entityText);
+        foreach ($matchRules as $rule) {
+            if ($this->ruleMatches(
+                type: (string) ($rule['type'] ?? ''),
+                value: (string) ($rule['value'] ?? ''),
+                entityText: $entityText,
+                entityTextNormalised: $entityTextNormalised,
+                resolvedIdentifiers: $resolvedIdentifiers
+            ) === true
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+
+    }//end entityMatchesAnyRule()
+
+
+    /**
+     * Test a single match rule against an entity.
+     *
+     * @param string               $type                 Match type ('exact', 'normalized', 'bsn', 'kvk').
+     * @param string               $value                Match value (literal or wildcard).
+     * @param string               $entityText           Entity literal text.
+     * @param string               $entityTextNormalised Lower-cased + accent-stripped text.
+     * @param array<string, mixed> $resolvedIdentifiers  Structured identifiers (BSN, KvK).
+     *
+     * @return bool
+     */
+    private function ruleMatches(
+        string $type,
+        string $value,
+        string $entityText,
+        string $entityTextNormalised,
+        array $resolvedIdentifiers
+    ): bool {
+        switch ($type) {
+            case 'exact':
+                return $entityText === $value;
+
+            case 'normalized':
+                return $entityTextNormalised === $this->normalise(value: $value);
+
+            case 'bsn':
+                $bsn = (string) ($resolvedIdentifiers['bsn'] ?? '');
+                if ($bsn === '') {
+                    return false;
+                }
+                return $value === '*' || $bsn === $value;
+
+            case 'kvk':
+                $kvk = (string) ($resolvedIdentifiers['kvk'] ?? '');
+                if ($kvk === '') {
+                    return false;
+                }
+                return $value === '*' || $kvk === $value;
+
+            default:
+                $this->logger->warning(
+                    'PolicyMatchService: unknown match type, skipping',
+                    ['type' => $type]
+                );
+                return false;
+        }//end switch
+
+    }//end ruleMatches()
+
+
+    /**
+     * Lower-case + accent-strip a string for `normalized` matching.
+     *
+     * @param string $value Source string.
+     *
+     * @return string Normalised string.
+     */
+    private function normalise(string $value): string
+    {
+        if ($this->normaliser === null) {
+            $this->normaliser = Transliterator::create(
+                'Any-Latin; Latin-ASCII; Lower'
+            );
+        }
+
+        if ($this->normaliser !== null) {
+            $transliterated = $this->normaliser->transliterate($value);
+            if (is_string($transliterated) === true) {
+                return trim($transliterated);
+            }
+        }
+
+        return trim(mb_strtolower($value));
+
+    }//end normalise()
+
+
+    /**
+     * Load both rule sources and normalise into a single cache.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function loadRules(): array
+    {
+        if ($this->rulesCache !== null) {
+            return $this->rulesCache;
+        }
+
+        $rules = [];
+
+        try {
+            $rules = array_merge(
+                $this->loadProhibitions(),
+                $this->loadStandingConsents()
+            );
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'PolicyMatchService: failed to load rules — falling through to no-match',
+                ['error' => $e->getMessage()]
+            );
+        }
+
+        $this->rulesCache = $rules;
+        return $rules;
+
+    }//end loadRules()
+
+
+    /**
+     * Load active prohibition records.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function loadProhibitions(): array
+    {
+        $objectService = $this->container->get(
+            'OCA\OpenRegister\Service\ObjectService'
+        );
+
+        $result = $objectService->findAll(
+            config: ['filters' => ['register' => 'consent', 'schema' => 'publicationProhibition']],
+            _rbac: false
+        );
+
+        $rules = [];
+        foreach ($this->extractObjects(result: $result) as $obj) {
+            $normalised = $this->normaliseRule(
+                kind: self::KIND_PROHIBITION,
+                object: $obj
+            );
+            if ($normalised !== null) {
+                $rules[] = $normalised;
+            }
+        }
+
+        return $rules;
+
+    }//end loadProhibitions()
+
+
+    /**
+     * Load active standing-consent records (scope=entity).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function loadStandingConsents(): array
+    {
+        $objectService = $this->container->get(
+            'OCA\OpenRegister\Service\ObjectService'
+        );
+
+        // Push the scope filter down to the DB. The schema is shared with
+        // scope=document records, so a naive `findAll(register, schema)` loads
+        // every consent record across every tenant and every file, then
+        // discards most of them in PHP. Adding `scope=entity` to the filter
+        // bounds the result to standing-consent rows and lets ObjectService
+        // index on the column. The defensive PHP scope check is retained as
+        // a belt-and-braces in case the filter is later dropped.
+        $result = $objectService->findAll(
+            config: [
+                'filters' => [
+                    'register' => 'consent',
+                    'schema'   => 'publicationConsent',
+                    'scope'    => 'entity',
+                    'active'   => true,
+                ],
+            ],
+            _rbac: false
+        );
+
+        $rules = [];
+        foreach ($this->extractObjects(result: $result) as $obj) {
+            if (($obj['scope'] ?? 'document') !== 'entity') {
+                continue;
+            }
+
+            $normalised = $this->normaliseRule(
+                kind: self::KIND_STANDING_CONSENT,
+                object: $obj
+            );
+            if ($normalised !== null) {
+                $rules[] = $normalised;
+            }
+        }
+
+        return $rules;
+
+    }//end loadStandingConsents()
+
+
+    /**
+     * Extract plain-array objects from an ObjectService findAll result.
+     *
+     * The service returns ObjectEntity instances; we want the plain data.
+     *
+     * @param mixed $result Whatever findAll returned.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractObjects($result): array
+    {
+        // Newer OR versions return ['results' => [...]] or just [...].
+        if (is_array($result) === true) {
+            $candidates = $result['results'] ?? $result;
+            if (is_array($candidates) === false) {
+                return [];
+            }
+        } else if ($result instanceof \Traversable) {
+            $candidates = iterator_to_array(iterator: $result);
+        } else {
+            return [];
+        }
+
+        $objects = [];
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate) === true) {
+                $objects[] = $candidate;
+                continue;
+            }
+
+            // Common ObjectEntity / Magic accessors.
+            if (is_object($candidate) === true) {
+                if (method_exists($candidate, 'getObject') === true) {
+                    $payload = $candidate->getObject();
+                    if (is_array($payload) === true) {
+                        $self = null;
+                        if (method_exists($candidate, 'getUuid') === true) {
+                            $self = $candidate->getUuid();
+                        }
+
+                        if ($self !== null && isset($payload['@self']) === false) {
+                            $payload['@self'] = ['id' => $self];
+                        }
+
+                        $objects[] = $payload;
+                        continue;
+                    }
+                }
+
+                if (method_exists($candidate, 'jsonSerialize') === true) {
+                    $payload = $candidate->jsonSerialize();
+                    if (is_array($payload) === true) {
+                        $objects[] = $payload;
+                        continue;
+                    }
+                }
+            }//end if
+        }//end foreach
+
+        return $objects;
+
+    }//end extractObjects()
+
+
+    /**
+     * Normalise a raw object into the cache shape.
+     *
+     * Applies time-bound + active filters; returns null when the row should
+     * not be matched (inactive, validity-window closed, missing match rules).
+     *
+     * @param string               $kind   Rule kind.
+     * @param array<string, mixed> $object Raw object data.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function normaliseRule(string $kind, array $object): ?array
+    {
+        if (($object['active'] ?? true) !== true) {
+            return null;
+        }
+
+        $matchRules = $object['matchRules'] ?? null;
+        if (is_array($matchRules) === false || count($matchRules) === 0) {
+            return null;
+        }
+
+        $now        = new \DateTimeImmutable();
+        $validFrom  = $this->parseDateTime(value: (string) ($object['validFrom'] ?? ''));
+        $validUntil = $this->parseDateTime(value: (string) ($object['validUntil'] ?? ''));
+
+        if ($validFrom !== null && $validFrom > $now) {
+            return null;
+        }
+
+        if ($validUntil !== null && $validUntil < $now) {
+            return null;
+        }
+
+        $self = $object['@self'] ?? [];
+        $uuid = (string) ($self['id'] ?? $self['uuid'] ?? $object['id'] ?? $object['uuid'] ?? '');
+        if ($uuid === '') {
+            return null;
+        }
+
+        return [
+            'uuid'        => $uuid,
+            'kind'        => $kind,
+            'entityType'  => (string) ($object['entityType'] ?? 'OTHER'),
+            'matchRules'  => array_values(
+                    array_filter(
+                $matchRules,
+                static fn ($r): bool => is_array($r) === true
+                    && isset($r['type'], $r['value']) === true
+            )
+                    ),
+            'validFrom'   => $validFrom,
+            'validUntil'  => $validUntil,
+            'primaryName' => (string) ($object['primaryName'] ?? $object['entityText'] ?? ''),
+        ];
+
+    }//end normaliseRule()
+
+
+    /**
+     * Parse an ISO-8601 string into DateTimeImmutable; null on failure.
+     *
+     * @param string $value The raw value (may be empty).
+     *
+     * @return \DateTimeImmutable|null
+     */
+    private function parseDateTime(string $value): ?\DateTimeImmutable
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            return new \DateTimeImmutable($value);
+        } catch (Exception) {
+            return null;
+        }
+
+    }//end parseDateTime()
+
+
+    /**
+     * Invalidate the in-memory rule cache.
+     *
+     * Public so an external event subscriber can call it when policy records
+     * change. Until that wiring lands (task 3.5), the cache is naturally
+     * stable within a single request and rebuilt on the next one.
+     *
+     * @return void
+     */
+    public function invalidateCache(): void
+    {
+        $this->rulesCache = null;
+
+    }//end invalidateCache()
+
+
+}//end class
