@@ -332,7 +332,17 @@ class AnonymizationController extends Controller
                 if ($validationError !== null) {
                     return $validationError;
                 }
+            }//end if
 
+            // File access check MUST precede the prohibition oracle so that unauthenticated
+            // or unauthorized callers cannot probe prohibition rules by supplying arbitrary
+            // entity names without holding access to the target file (OWASP A01:2021).
+            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            if ($accessError !== null) {
+                return $accessError;
+            }
+
+            if (empty($unredactedEntities) === false) {
                 $violations = $this->anonymizationService->checkUnredactedProhibitions(
                     unredactedEntities: $unredactedEntities
                 );
@@ -349,11 +359,6 @@ class AnonymizationController extends Controller
                     );
                 }
             }//end if
-
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
-            if ($accessError !== null) {
-                return $accessError;
-            }
 
             $outputFormat = 'pdf';
             if (isset($params['outputFormat']) === true) {
