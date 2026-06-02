@@ -1135,7 +1135,6 @@ class GrondslagenSummaryService
             file_put_contents($summaryTemp, $summaryPdfBytes);
 
             $pdf = new Fpdi();
-            $pdf->setSourceFile($originalTemp);
             $pageCount = $pdf->setSourceFile($originalTemp);
             for ($i = 1; $i <= $pageCount; $i++) {
                 $tplId = $pdf->importPage($i);

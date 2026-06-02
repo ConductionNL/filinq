@@ -27,6 +27,9 @@
  * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-6
  * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-7
  * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-9
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -206,7 +209,7 @@ class EmlPdfAssemblyService
             $this->logger->warning(
                 '[EmlPdfAssemblyService] parseEmlStructured failed, falling back to flat text.',
                 [
-                    'source'    => $source ?? $name,
+                    'source'    => $sourceFile->getPath(),
                     'exception' => get_class($parseEx),
                     'message'   => $parseEx->getMessage(),
                 ]
