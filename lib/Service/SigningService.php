@@ -395,6 +395,10 @@ class SigningService
         $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
         $request       = $this->resolveToArray(value: $requestObject);
 
+        if (($request['initiatorUserId'] ?? '') !== $user->getUID()) {
+            throw new RuntimeException('Not authorized to cancel this signing request');
+        }
+
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
             throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
         }
