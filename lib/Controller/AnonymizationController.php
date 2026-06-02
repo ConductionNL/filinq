@@ -13,14 +13,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -31,13 +23,9 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -51,6 +39,8 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
+
+
     /**
      * Constructor for AnonymizationController
      *
@@ -60,8 +50,6 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
-     * @param IUserSession         $userSession          User session for authentication
-     * @param IRootFolder          $rootFolder           Root folder for file access checks
      *
      * @return void
      */
@@ -71,13 +59,12 @@ class AnonymizationController extends Controller
         private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
-        private readonly IL10N $l10n,
-        private readonly IUserSession $userSession,
-        private readonly IRootFolder $rootFolder,
+        private readonly IL10N $l10n
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
 
     /**
      * List all processed files with entity counts and status
@@ -89,16 +76,10 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function files(): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-            }
-
             $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
@@ -116,9 +97,10 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to list processed files: %s', [$e->getMessage()])],
                 $statusCode
             );
-        }//end try
+        }
 
     }//end files()
+
 
     /**
      * Upload a file to the user's DocuDesk folder
@@ -129,16 +111,11 @@ class AnonymizationController extends Controller
      * @return JSONResponse JSON response with upload result
      *
      * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @NoCSRFRequired
      */
     public function upload(): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-            }
-
             $file = $this->request->getUploadedFile('file');
 
             if (empty($file) === true || isset($file['tmp_name']) === false) {
@@ -186,45 +163,6 @@ class AnonymizationController extends Controller
 
     }//end upload()
 
-    /**
-     * Verify the current user has access to the given file ID
-     *
-     * Resolves the file via the user's own file tree so that an authenticated
-     * user cannot operate on files they do not own (security finding C3 —
-     * file IDOR). Returns 404 on failure so callers cannot probe for existence.
-     *
-     * @param int $fileId The Nextcloud file ID to check
-     *
-     * @return JSONResponse|null Null when access is granted, 404 response otherwise
-     */
-    private function verifyFileAccess(int $fileId): ?JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Not authenticated')],
-                Http::STATUS_UNAUTHORIZED
-            );
-        }
-
-        $nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-        if (empty($nodes) === true) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('File not found')],
-                Http::STATUS_NOT_FOUND
-            );
-        }
-
-        if (($nodes[0] instanceof File) === false) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('File not found')],
-                Http::STATUS_NOT_FOUND
-            );
-        }
-
-        return null;
-
-    }//end verifyFileAccess()
 
     /**
      * Extract text and detect entities in a file
@@ -236,21 +174,11 @@ class AnonymizationController extends Controller
      * @return JSONResponse JSON response with extraction and detection results
      *
      * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @NoCSRFRequired
      */
     public function extract(int $fileId): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-            }
-
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
-            if ($accessError !== null) {
-                return $accessError;
-            }
-
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
 
             return new JSONResponse($result);
@@ -263,37 +191,27 @@ class AnonymizationController extends Controller
                 ['error' => $this->l10n->t('Failed to extract and detect entities: %s', [$e->getMessage()])],
                 500
             );
-        }//end try
+        }
 
     }//end extract()
+
 
     /**
      * Anonymize entities in a document
      *
      * Replaces detected entities in the document with anonymized placeholders.
-     * Supports optional excludeTypes, minConfidence, appendBasisSummary, and
-     * outputFormat parameters. Each entity may carry an optional `bases[]` array
-     * (array of strings) that is forwarded verbatim to OpenRegister.
+     * Supports optional excludeTypes and minConfidence filtering.
      *
      * @param int $fileId The Nextcloud file ID
      *
      * @return JSONResponse JSON response with anonymization result
      *
      * @NoAdminRequired
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @NoCSRFRequired
      */
     public function anonymize(int $fileId): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-            }
-
-            // Validate request body BEFORE file-access checks so that malformed
-            // input always yields HTTP 400 regardless of whether the file exists.
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
 
@@ -304,34 +222,26 @@ class AnonymizationController extends Controller
                 );
             }
 
-            $basesError = $this->validateEntityBases(entities: $entities);
-            if ($basesError !== null) {
-                return $basesError;
-            }
+            // Wave 4a: optional `appendBasisSummary` flag. Default false; type-strict.
+            $appendBasisSummary = false;
+            if (array_key_exists('appendBasisSummary', $params) === true) {
+                if (is_bool($params['appendBasisSummary']) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Invalid appendBasisSummary: must be a boolean')],
+                        400
+                    );
+                }
 
-            $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
-            if ($appendBasisSummary instanceof JSONResponse) {
-                return $appendBasisSummary;
-            }
-
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
-            if ($accessError !== null) {
-                return $accessError;
-            }
-
-            $outputFormat = 'pdf';
-            if (isset($params['outputFormat']) === true) {
-                $outputFormat = (string) $params['outputFormat'];
+                $appendBasisSummary = $params['appendBasisSummary'];
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
             $result = $this->anonymizationService->anonymizeDocument(
-                fileId: $fileId,
-                entities: $entities,
-                appendBasisSummary: $appendBasisSummary,
-                outputFormat: $outputFormat
+                $fileId,
+                $entities,
+                $appendBasisSummary
             );
 
             return new JSONResponse($result);
@@ -348,73 +258,6 @@ class AnonymizationController extends Controller
 
     }//end anonymize()
 
-    /**
-     * Extract and validate the appendBasisSummary flag from request params.
-     *
-     * Returns a JSONResponse (HTTP 400) when the field is present but not boolean.
-     *
-     * @param array<string, mixed> $params Request parameters
-     *
-     * @return bool|JSONResponse False when omitted, true when set, 400 response on type error.
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
-     */
-    private function extractAppendBasisSummary(array $params): bool|JSONResponse
-    {
-        if (array_key_exists('appendBasisSummary', $params) === false) {
-            return false;
-        }
-
-        $value = $params['appendBasisSummary'];
-        if (is_bool($value) === false) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
-                400
-            );
-        }
-
-        return $value;
-
-    }//end extractAppendBasisSummary()
-
-    /**
-     * Validate that each entity's optional `bases` field is an array of strings
-     *
-     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
-     *
-     * @param array<int, array<string, mixed>> $entities The entities to validate
-     *
-     * @return JSONResponse|null Error response or null when all bases are valid
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
-     */
-    private function validateEntityBases(array $entities): ?JSONResponse
-    {
-        foreach ($entities as $entity) {
-            if (isset($entity['bases']) === false) {
-                continue;
-            }
-
-            if (is_array($entity['bases']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
-                    400
-                );
-            }
-
-            foreach ($entity['bases'] as $base) {
-                if (is_string($base) === false) {
-                    return new JSONResponse(
-                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
-                        400
-                    );
-                }
-            }
-        }//end foreach
-
-        return null;
-
-    }//end validateEntityBases()
 
     /**
      * Filter entities by excluded types
@@ -423,8 +266,6 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByExcludeTypes(array $entities, array $params): array
     {
@@ -445,6 +286,7 @@ class AnonymizationController extends Controller
 
     }//end filterByExcludeTypes()
 
+
     /**
      * Filter entities by minimum confidence threshold
      *
@@ -452,8 +294,6 @@ class AnonymizationController extends Controller
      * @param array<string, mixed>             $params   Request parameters
      *
      * @return array<int, array<string, mixed>> Filtered entities
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      */
     private function filterByConfidence(array $entities, array $params): array
     {
@@ -473,4 +313,6 @@ class AnonymizationController extends Controller
         );
 
     }//end filterByConfidence()
+
+
 }//end class

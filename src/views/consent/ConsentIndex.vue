@@ -1,15 +1,15 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { consentStore, navigationStore } from '../../store/store.js'
+import { consentStore } from '../../store/store.js'
 </script>
 
 <template>
 	<CnIndexPage
 		ref="indexPage"
-		:title="t('docudesk', 'Consent Management')"
-		:description="t('docudesk', 'Manage publication consent records for detected entities')"
+		:title="t('docudesk', 'Consent Workflow')"
+		:description="t('docudesk', 'Per-document consent records produced by the publication-clearance workflow.')"
 		:show-title="true"
-		:objects="consentStore.consents"
+		:objects="workflowConsents"
 		:columns="tableColumns"
 		:pagination="paginationData"
 		:loading="consentStore.loading"
@@ -62,6 +62,16 @@ import { consentStore, navigationStore } from '../../store/store.js'
 					horizontal
 					show-zero-count />
 			</div>
+		</template>
+
+		<!-- Entity text with policy-pre-empted indicator -->
+		<template #column-entityText="{ row }">
+			<span>{{ row.entityText }}</span>
+			<CnStatusBadge
+				v-if="row.policyMatch"
+				class="policy-preempted-badge"
+				:label="t('docudesk', 'policy')"
+				:color-map="{ [t('docudesk', 'policy')]: 'primary' }" />
 		</template>
 
 		<!-- Entity type badge -->
@@ -164,11 +174,6 @@ export default {
 		}
 	},
 	computed: {
-		/**
-		 * Column definitions for the consent records table.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		tableColumns() {
 			return [
 				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
@@ -179,21 +184,15 @@ export default {
 				{ key: 'publicationDecision', label: t('docudesk', 'Decision'), sortable: true },
 			]
 		},
-		/**
-		 * Pagination metadata derived from the loaded consent list.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
-		 */
+		// Workflow records only — scope:"entity" rows live on the Standing Consents page.
+		workflowConsents() {
+			return consentStore.consents.filter(c => (c.scope || 'document') === 'document')
+		},
 		paginationData() {
-			const total = consentStore.consents.length
+			const total = this.workflowConsents.length
 			const pages = Math.ceil(total / this.pageSize)
 			return { page: this.currentPage, pages, total, limit: this.pageSize }
 		},
-		/**
-		 * Empty-state message, surfacing any store error when present.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		emptyContentName() {
 			if (consentStore.error) {
 				return consentStore.error
@@ -205,20 +204,10 @@ export default {
 		consentStore.fetchConsents()
 	},
 	methods: {
-		/**
-		 * Open the selected consent record in the detail view.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
-			navigationStore.setSelected('consentDetail')
+			this.$router.push({ name: 'ConsentDetail', params: { id: consent.id || consent.uuid } })
 		},
-		/**
-		 * Reload the consent list from the backend.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
-		 */
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {
@@ -227,28 +216,13 @@ export default {
 				this.isRefreshing = false
 			}
 		},
-		/**
-		 * Update the current page index of the consent table.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
-		 */
 		onPageChanged(page) {
 			this.currentPage = page
 		},
-		/**
-		 * Update the page size and reset to the first page.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
-		 */
 		onPageSizeChanged(size) {
 			this.pageSize = size
 			this.currentPage = 1
 		},
-		/**
-		 * Map a consent/notification status code to a localized label.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		formatStatus(status) {
 			const map = {
 				pending: t('docudesk', 'Pending'),
@@ -263,11 +237,6 @@ export default {
 			}
 			return map[status] || status || t('docudesk', 'Unknown')
 		},
-		/**
-		 * Map a publication-decision code to a localized label.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		formatDecision(decision) {
 			const map = {
 				pending: t('docudesk', 'Pending'),
@@ -278,11 +247,6 @@ export default {
 			}
 			return map[decision] || decision || t('docudesk', 'Pending')
 		},
-		/**
-		 * Format a date string for display, falling back gracefully.
-		 *
-		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
-		 */
 		formatDate(dateStr) {
 			if (!dateStr) return '-'
 			try {
@@ -301,5 +265,8 @@ export default {
 	gap: 16px;
 	margin-bottom: 16px;
 	flex-wrap: wrap;
+}
+.policy-preempted-badge {
+	margin-left: 8px;
 }
 </style>
