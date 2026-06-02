@@ -1,9 +1,7 @@
 ## Purpose
 
 @e2e exclude batch anonymization API not yet exposed in the DocuDesk UI — batch upload/extraction/review flow is API-only (ICache-backed); covered by PHPUnit and API contract tests
-
-## ADDED Requirements
-
+## Requirements
 ### Requirement: Batch creation via multi-file upload
 The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored in the user's DocuDesk/ folder. Batch state SHALL be persisted in Nextcloud ICache with a 2-hour TTL. The batch SHALL track each file's processing status independently. Maximum batch size SHALL be 100 files (admin-configurable via IAppConfig key `docudesk_batch_max_files`).
 
@@ -44,7 +42,7 @@ The system SHALL extract text and detect entities for each file in a batch seque
 - **AND** the response includes the error details for the failed file
 
 ### Requirement: Batch status endpoint
-The system SHALL provide `GET /api/anonymization/batch/{batchId}/status` returning the current state of the batch: batchId, batchStatus (uploading/extracting/review/anonymizing/completed/error), files array with per-file status, total entity count, and overall progress percentage.
+The system SHALL provide `GET /api/anonymization/batch/{batchId}/status` returning the current state of the batch: batchId, batchStatus (uploading/extracting/review/anonymizing/completed/error), files array with per-file status, total entity count, and overall progress percentage. Reading batch status SHALL reset the cache TTL, keeping the batch alive as long as it is being actively polled.
 
 #### Scenario: Query batch status during extraction
 - **WHEN** a user queries `GET /api/anonymization/batch/{batchId}/status` while extraction is in progress
@@ -53,6 +51,11 @@ The system SHALL provide `GET /api/anonymization/batch/{batchId}/status` returni
 #### Scenario: Query expired batch
 - **WHEN** a user queries a batchId whose ICache entry has expired (TTL exceeded)
 - **THEN** the system returns HTTP 404 with error "Batch not found or expired"
+
+#### Scenario: TTL is reset on status poll
+- **WHEN** a user polls batch status at time T (within the 2-hour TTL window)
+- **THEN** the cache TTL is reset to 2 hours from time T
+- **AND** the batch remains accessible for another 2 hours of inactivity
 
 ### Requirement: Batch anonymization
 The system SHALL anonymize all extracted files in a batch via `POST /api/anonymization/batch/{batchId}/anonymize`. The request body SHALL include an `entities` array of entity values/types to anonymize (from the review step). The system SHALL apply the entity list to each file using OpenRegister's FileService::anonymizeDocument(). Per GDPR Article 4(5), entity replacements SHALL use unique UUID pseudonyms per entity value (consistent across all files in the batch).
@@ -100,3 +103,28 @@ The system SHALL support pre-configured entity category profiles stored in IAppC
 #### Scenario: Non-admin cannot update profiles
 - **WHEN** a non-admin user calls `PUT /api/anonymization/profiles`
 - **THEN** the system returns HTTP 403
+
+### Requirement: Batch entity consolidation with partial results
+The system SHALL provide `GET /api/anonymization/batch/{batchId}/entities` returning consolidated entities. The endpoint SHALL be accessible when batch status is "extracting" OR "review" (previously only "review"). The response SHALL include a `complete` boolean (true only when batch status is "review") and `filesProcessed` count alongside the existing `entities` array and `entityCount`. The `minConfidence` query parameter SHALL continue to work as before.
+
+#### Scenario: Poll entities during extraction (partial results)
+- **WHEN** `GET /api/anonymization/batch/{batchId}/entities` is called while batch status is "extracting"
+- **THEN** the response includes entities consolidated from all files with status "extracted"
+- **AND** `complete: false`
+- **AND** `filesProcessed` reflects the number of extracted files
+
+#### Scenario: Poll entities after extraction complete
+- **WHEN** `GET /api/anonymization/batch/{batchId}/entities` is called when batch status is "review"
+- **THEN** the response includes the full consolidated entity list
+- **AND** `complete: true`
+- **AND** `filesProcessed` equals the total file count (minus error files)
+
+#### Scenario: Poll entities before extraction starts
+- **WHEN** `GET /api/anonymization/batch/{batchId}/entities` is called when batch status is "uploading" or "queued"
+- **THEN** the system returns HTTP 409 with error "Extraction has not started"
+
+#### Scenario: Apply minimum confidence filter on partial results
+- **WHEN** `GET /api/anonymization/batch/{batchId}/entities?minConfidence=0.7` is called during extraction
+- **THEN** only entities with highestConfidence >= 0.7 are included
+- **AND** the `complete` and `filesProcessed` fields are still present
+

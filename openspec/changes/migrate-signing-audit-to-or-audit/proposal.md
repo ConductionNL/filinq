@@ -1,5 +1,7 @@
 # Proposal: migrate-signing-audit-to-or-audit
 
+> REVERTED 2026-06-01: archived prematurely; implementation not present on development — re-opened for real apply. `SigningAuditService` still uses `settingsService->getObjectService()` against the private `signingAuditEntry_register` and never calls OR's `AuditTrailMapper`.
+
 ## Why
 
 ADR-022 (Apps Consume OpenRegister Abstractions) prohibits home-grown audit trails for
