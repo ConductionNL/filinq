@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -65,15 +68,15 @@ class BatchStateServiceKeepAliveTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockCache = $this->createMock(ICache::class);
+        $this->mockCache = $this->createMock(originalClassName: ICache::class);
 
-        $mockCacheFactory = $this->createMock(ICacheFactory::class);
+        $mockCacheFactory = $this->createMock(originalClassName: ICacheFactory::class);
         $mockCacheFactory->method('createDistributed')->willReturn($this->mockCache);
 
-        $mockAppConfig    = $this->createMock(IAppConfig::class);
-        $mockLogger       = $this->createMock(LoggerInterface::class);
-        $mockUserSession  = $this->createMock(IUserSession::class);
-        $mockGroupManager = $this->createMock(IGroupManager::class);
+        $mockAppConfig    = $this->createMock(originalClassName: IAppConfig::class);
+        $mockLogger       = $this->createMock(originalClassName: LoggerInterface::class);
+        $mockUserSession  = $this->createMock(originalClassName: IUserSession::class);
+        $mockGroupManager = $this->createMock(originalClassName: IGroupManager::class);
 
         // No user session in keep-alive tests — ownership check is skipped.
         $mockUserSession->method('getUser')->willReturn(null);

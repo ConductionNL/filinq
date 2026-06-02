@@ -15,6 +15,9 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-10
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\EventListener;
