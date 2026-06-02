@@ -554,7 +554,7 @@ class DocumentService
 
         $tempDir = '/tmp/docudesk_odf_convert';
         if (file_exists($tempDir) === false) {
-            mkdir($tempDir, 0777, true);
+            mkdir($tempDir, 0700, true);
         }
 
         $tempFile = $tempDir.'/'.uniqid('odf_').'.html';
