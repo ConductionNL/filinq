@@ -35,6 +35,10 @@
 .phpunit.result.cache
 phpmetrics/
 
+# Claude Code
+/.claude/
+/CLAUDE.md
+
 # SBOM is published as release asset (see SECURITY.md), not stored in repo
 sbom.cdx.json
 bom-php.cdx.json

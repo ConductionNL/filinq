@@ -10,6 +10,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 return [
@@ -53,6 +56,23 @@ return [
         // WOO entity profile routes.
         ['name' => 'batchAnonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
         ['name' => 'batchAnonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
+
+        // Dossier routes.
+        ['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
+
+        // Policy — prohibition routes.
+        ['name' => 'policy#indexProhibitions', 'url' => 'api/policy/prohibitions', 'verb' => 'GET'],
+        ['name' => 'policy#createProhibition', 'url' => 'api/policy/prohibitions', 'verb' => 'POST'],
+        ['name' => 'policy#showProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'GET'],
+        ['name' => 'policy#updateProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'PUT'],
+        ['name' => 'policy#deleteProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'DELETE'],
+
+        // Policy — standing consent routes.
+        ['name' => 'policy#indexStandingConsents', 'url' => 'api/policy/standing-consents', 'verb' => 'GET'],
+        ['name' => 'policy#createStandingConsent', 'url' => 'api/policy/standing-consents', 'verb' => 'POST'],
+        ['name' => 'policy#showStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'GET'],
+        ['name' => 'policy#updateStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
+        ['name' => 'policy#deleteStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
 
         // PDF generation routes.
         ['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
