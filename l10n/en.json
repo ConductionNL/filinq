@@ -166,6 +166,19 @@
         "Extraction has not started": "Extraction has not started",
         "No folder path provided": "No folder path provided",
         "Either folderId or folderPath must be provided": "Either folderId or folderPath must be provided",
-        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath"
+        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath",
+        "Dossier": "Dossier",
+        "Dossier Register": "Dossier Register",
+        "Grondslag": "Legal basis (grondslag)",
+        "Grondslagen": "Legal bases (grondslagen)",
+        "Naam": "Name",
+        "Omschrijving": "Description",
+        "Beoordeeld op": "Reviewed on",
+        "Persoonsgegevens": "Personal data (Art. 5.1 Woo / GDPR Art. 4(1))",
+        "Bijzondere persoonsgegevens": "Special categories of personal data (Art. 5.1 Woo / GDPR Art. 9)",
+        "Strafrechtelijke gegevens": "Criminal-law data (Art. 5.1 Woo / GDPR Art. 10)",
+        "Bedrijfs- en fabricagegegevens": "Business and manufacturing data (Art. 5.1 sub c Woo)",
+        "Onevenredige benadeling": "Disproportionate disadvantage (Art. 5.2 Woo)",
+        "Nationale veiligheid": "National security (Art. 5.1 sub a/b Woo)"
     }
 }

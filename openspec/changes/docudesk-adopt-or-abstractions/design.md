@@ -1,5 +1,7 @@
 # Design — docudesk: adopt OR abstractions
 
+status: pr-created
+
 ## Context
 
 docudesk is the document-management app of the Conduction stack: OCR, anonymization,
