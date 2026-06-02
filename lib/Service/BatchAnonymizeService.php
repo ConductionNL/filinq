@@ -21,6 +21,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-4
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-5
@@ -48,6 +49,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
  */
 class BatchAnonymizeService
@@ -90,9 +92,14 @@ class BatchAnonymizeService
      * attach a `warning` to the per-file result; the anonymisation is still
      * counted as successful.
      *
+     * When unredactedEntities is non-empty, the prohibition gate is checked
+     * per file. Files with prohibition violations are recorded with a
+     * `prohibitionViolation` status and counted in prohibitionSkippedFiles.
+     *
      * @param string                           $batchId            Identifier of the batch to anonymize.
      * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
      * @param bool                             $appendBasisSummary Whether to append a grondslagen summary per file.
+     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -100,6 +107,7 @@ class BatchAnonymizeService
      *     batchStatus: string,
      *     processedFiles: int,
      *     skippedFiles: array<int, array{fileId: mixed, reason: string}>,
+     *     prohibitionSkippedFiles: int,
      *     totalFiles: int,
      *   }
      *
@@ -107,12 +115,14 @@ class BatchAnonymizeService
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
      * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
      */
     public function anonymizeBatch(
         string $batchId,
         array $entities,
-        bool $appendBasisSummary=false
+        bool $appendBasisSummary=false,
+        array $unredactedEntities=[]
     ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -121,8 +131,10 @@ class BatchAnonymizeService
 
         $batch['status'] = 'anonymizing';
         $this->stateService->updateBatch($batchId, $batch);
-        $skipped   = [];
-        $processed = 0;
+        $skipped            = [];
+        $processed          = 0;
+        $prohibitionSkipped = 0;
+
         foreach ($batch['files'] as $i => $file) {
             if ($file['status'] === 'error') {
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $file['error'] ?? 'Previous error'];
@@ -133,11 +145,29 @@ class BatchAnonymizeService
                 continue;
             }
 
+            if (empty($unredactedEntities) === false) {
+                $violations = $this->anonService->checkUnredactedProhibitions(
+                    unredactedEntities: $unredactedEntities
+                );
+                if (empty($violations) === false) {
+                    $batch['files'][$i]['status']            = 'prohibitionViolation';
+                    $batch['files'][$i]['prohibitedEntries'] = $violations;
+                    $skipped[] = [
+                        'fileId'     => $file['fileId'],
+                        'reason'     => 'Prohibition violation on unredacted entities',
+                        'httpStatus' => 422,
+                    ];
+                    $prohibitionSkipped++;
+                    continue;
+                }
+            }
+
             try {
                 $result = $this->anonService->anonymizeDocument(
                     fileId: (int) $file['fileId'],
                     entities: $entities,
-                    appendBasisSummary: $appendBasisSummary
+                    appendBasisSummary: $appendBasisSummary,
+                    unredactedEntities: $unredactedEntities
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
@@ -162,6 +192,10 @@ class BatchAnonymizeService
                     $batch['files'][$i]['warning'] = $moveResult['warning'];
                 }
 
+                if (isset($result['createdConsents']) === true) {
+                    $batch['files'][$i]['createdConsents'] = $result['createdConsents'];
+                }
+
                 $processed++;
             } catch (Exception $e) {
                 $batch['files'][$i]['status'] = 'error';
@@ -173,11 +207,12 @@ class BatchAnonymizeService
         $batch['status'] = 'completed';
         $this->stateService->updateBatch($batchId, $batch);
         return [
-            'batchId'        => $batchId,
-            'batchStatus'    => 'completed',
-            'processedFiles' => $processed,
-            'skippedFiles'   => $skipped,
-            'totalFiles'     => count($batch['files']),
+            'batchId'                 => $batchId,
+            'batchStatus'             => 'completed',
+            'processedFiles'          => $processed,
+            'skippedFiles'            => $skipped,
+            'prohibitionSkippedFiles' => $prohibitionSkipped,
+            'totalFiles'              => count($batch['files']),
         ];
 
     }//end anonymizeBatch()

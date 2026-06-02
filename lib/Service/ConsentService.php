@@ -19,6 +19,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,6 +42,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
  */
 class ConsentService
 {
@@ -238,4 +243,47 @@ class ConsentService
         return $this->updateHandler->getConsentsByDocument($documentId, $register, $schema, $ownerUid);
 
     }//end getConsentsByDocument()
+
+    /**
+     * Validate publication consent data against scope rules.
+     *
+     * @param array<string, mixed> $data Consent data to validate
+     *
+     * @return void
+     *
+     * @throws \InvalidArgumentException When data violates scope constraints
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     */
+    public function validatePublicationConsentData(array $data): void
+    {
+        $scope = ($data['scope'] ?? null);
+
+        if ($scope === 'document') {
+            if (empty($data['documentId']) === true) {
+                throw new \InvalidArgumentException('scope=document requires a non-empty documentId');
+            }
+
+            return;
+        }
+
+        if ($scope === 'entity') {
+            if (isset($data['documentId']) === true) {
+                throw new \InvalidArgumentException('scope=entity must not include documentId');
+            }
+
+            if (empty($data['matchRules']) === true) {
+                throw new \InvalidArgumentException('scope=entity requires a non-empty matchRules array');
+            }
+
+            if (empty($data['consentMethod']) === true) {
+                throw new \InvalidArgumentException('scope=entity requires a non-empty consentMethod');
+            }
+
+            if (isset($data['policyMatch']) === true) {
+                throw new \InvalidArgumentException('scope=entity must not include policyMatch');
+            }
+        }//end if
+
+    }//end validatePublicationConsentData()
 }//end class
