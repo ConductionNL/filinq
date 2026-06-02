@@ -35,7 +35,6 @@
   violations; per-file details in `prohibitedEntries[]` on the file entry.
 - Inside publication-clearance flows, the consent service consults the policy layer **before** defaulting to the WOO workflow. Existing `consentStatus` enum is unchanged; the policy-pre-empted distinction lives in `policyMatch` + `notificationStatus: "skipped"`. (`entity-publication-policies`)
 - Generic anonymisation flows (file sanitisation prior to email/storage) are unaffected — they do not call `ConsentService::createConsentRequest` and therefore do not consult the policy layer. (`entity-publication-policies`)
-
 ### Security / Fixed
 - **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
   The previous implementation held sessions in a per-request `$sessions` PHP

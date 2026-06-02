@@ -15,6 +15,9 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-47
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
