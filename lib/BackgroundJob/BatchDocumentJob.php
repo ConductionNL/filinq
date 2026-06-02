@@ -92,7 +92,7 @@ class BatchDocumentJob extends QueuedJob
             return;
         }
 
-        $this->initializeJobStatus(jobId: $jobId, total: count($objectIds));
+        $this->initializeJobStatus(jobId: $jobId, total: count($objectIds), options: $options);
         $this->processObjects(
             jobId: $jobId,
             templateId: $templateId,
@@ -105,12 +105,13 @@ class BatchDocumentJob extends QueuedJob
     /**
      * Initialize job status to processing.
      *
-     * @param string $jobId The job UUID
-     * @param int    $total Total number of objects to process
+     * @param string $jobId   The job UUID
+     * @param int    $total   Total number of objects to process
+     * @param array  $options Generation options (preserved so userId survives for auth checks)
      *
      * @return void
      */
-    private function initializeJobStatus(string $jobId, int $total): void
+    private function initializeJobStatus(string $jobId, int $total, array $options): void
     {
         $this->documentSvc->updateJobStatus(
             jobId: $jobId,
@@ -121,6 +122,7 @@ class BatchDocumentJob extends QueuedJob
                 'completed' => 0,
                 'errors'    => 0,
                 'results'   => [],
+                'options'   => $options,
             ]
         );
 
@@ -197,6 +199,7 @@ class BatchDocumentJob extends QueuedJob
                     'completed' => $completed,
                     'errors'    => $errors,
                     'results'   => $results,
+                    'options'   => $options,
                 ]
             );
         }//end foreach
@@ -215,6 +218,7 @@ class BatchDocumentJob extends QueuedJob
                 'completed' => $completed,
                 'errors'    => $errors,
                 'results'   => $results,
+                'options'   => $options,
             ]
         );
 
