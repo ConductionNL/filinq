@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -99,17 +102,14 @@ class BatchStateServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockCache        = $this->createMock(className: ICache::class);
-        $this->mockAppConfig    = $this->createMock(className: IAppConfig::class);
-        $this->mockLogger       = $this->createMock(className: LoggerInterface::class);
-        $this->mockUserSession  = $this->createMock(className: IUserSession::class);
-        $this->mockGroupManager = $this->createMock(className: IGroupManager::class);
+        $this->mockCache        = $this->createMock(originalClassName: ICache::class);
+        $this->mockAppConfig    = $this->createMock(originalClassName: IAppConfig::class);
+        $this->mockLogger       = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockUserSession  = $this->createMock(originalClassName: IUserSession::class);
+        $this->mockGroupManager = $this->createMock(originalClassName: IGroupManager::class);
 
-        // Default: no user logged in (no ownership check needed for tests
-        // that don't exercise the ownership path).
-        $this->mockUserSession->method('getUser')->willReturn(null);
-
-        $mockCacheFactory = $this->createMock(className: ICacheFactory::class);
+        // Default: no user logged in (PHPUnit mock returns null for unconfigured methods).
+        $mockCacheFactory = $this->createMock(originalClassName: ICacheFactory::class);
         $mockCacheFactory->method('createDistributed')
             ->with('docudesk')
             ->willReturn($this->mockCache);
@@ -207,7 +207,7 @@ class BatchStateServiceTest extends TestCase
      */
     public function testGetBatchReturnsBatchArray(): void
     {
-        $mockUser = $this->createMock(className: IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('user1');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
         $this->mockGroupManager->method('isAdmin')->willReturn(false);
@@ -231,7 +231,7 @@ class BatchStateServiceTest extends TestCase
      */
     public function testGetBatchThrowsForForeignBatch(): void
     {
-        $mockUser = $this->createMock(className: IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('attacker');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
         $this->mockGroupManager->method('isAdmin')->willReturn(false);
@@ -253,7 +253,7 @@ class BatchStateServiceTest extends TestCase
      */
     public function testGetBatchAllowsAdminToAccessForeignBatch(): void
     {
-        $mockUser = $this->createMock(className: IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('admin-user');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
         $this->mockGroupManager->method('isAdmin')->willReturn(true);

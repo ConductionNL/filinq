@@ -33,7 +33,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-1. Inject AuditTrailMapper into SigningAuditService (M)
 
-- [x] D-1.1 Update the constructor of `lib/Service/SigningAuditService.php` to inject
+- [ ] D-1.1 Update the constructor of `lib/Service/SigningAuditService.php` to inject
   `OCA\OpenRegister\Db\AuditTrailMapper`. Remove `SettingsService` and `IAppConfig` from
   constructor (they are no longer needed for audit writes). Retain `LoggerInterface`.
   The method to call is `createAuditTrailEntry(ObjectEntity $object, string $action, array $context = [])`.
@@ -43,7 +43,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-2. Rewrite SigningAuditService.logEvent() to emit via OR (M)
 
-- [x] D-2.1 Implement the new `logEvent()` body:
+- [ ] D-2.1 Implement the new `logEvent()` body:
   (a) validate `$action` against `VALID_ACTIONS` (same guard),
   (b) build action type `'docudesk.signing.' . $action`,
   (c) build `$context` array (`signRequestId`, `actorUserId`, `actorDisplayName`, `ipAddress`,
@@ -55,7 +55,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
     called once per `logEvent()` call with the correct action type. All seven VALID_ACTIONS
     tested. `composer check:strict` passes.
 
-- [x] D-2.2 Remove the old `ObjectService::saveObject()` path and the `signingAuditEntry_register`
+- [ ] D-2.2 Remove the old `ObjectService::saveObject()` path and the `signingAuditEntry_register`
   / `signingAuditEntry_schema` IAppConfig reads from `logEvent()`. Add deprecation comment
   to the IAppConfig keys.
   - **Acceptance:** No reference to `signingAuditEntry_register` or `signingAuditEntry_schema`
@@ -63,7 +63,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-3. Rewrite SigningAuditService.getAuditTrail() to read from OR (M)
 
-- [x] D-3.1 Rewrite `getAuditTrail()` to query OR's audit trail for entries matching
+- [ ] D-3.1 Rewrite `getAuditTrail()` to query OR's audit trail for entries matching
   `objectUuid = $signingRequestId`, sort chronologically, and return as array. Use
   `AuditTrailMapper::findAllByObject()` or `findAll(filters: ['objectUuid' => ...])`.
   - **Acceptance:** PHPUnit unit test with mocked mapper confirms the correct query method
@@ -71,7 +71,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-4. Remove rejectUpdate() and rejectDelete() methods (S)
 
-- [x] D-4.1 Remove `rejectUpdate()` and `rejectDelete()` from `SigningAuditService`. If any
+- [ ] D-4.1 Remove `rejectUpdate()` and `rejectDelete()` from `SigningAuditService`. If any
   code calls these methods, update callers to remove the calls (they should no longer be needed
   since OR enforces immutability).
   - **Acceptance:** Neither method exists in `SigningAuditService` after this task;
@@ -79,7 +79,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-5. Add 10-year retention configuration (deploy-time) (S)
 
-- [x] D-5.1 Document the 10-year Archiefwet retention requirement in docudesk's
+- [ ] D-5.1 Document the 10-year Archiefwet retention requirement in docudesk's
   administration/deployment documentation. Specify: OR retention for the signing register
   MUST be configured to ≥ 3650 days per Archiefwet 1995. This is an OR admin UI / occ
   command configuration, not a code change.
@@ -88,14 +88,14 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-6. Mark old audit storage deprecated; document sunset in CHANGELOG (S)
 
-- [x] D-6.1 Add deprecation comments to the `signingAuditEntry_register` and
+- [ ] D-6.1 Add deprecation comments to the `signingAuditEntry_register` and
   `signingAuditEntry_schema` IAppConfig key reads (retain the keys for legacy read access
   until sunset). Update any docudesk openspec that previously referenced the parallel audit
   storage to note the new discovery path.
   - **Acceptance:** Deprecation comment present on each legacy config key reference;
     no active write path to `signingAuditEntry_schema` after migration.
 
-- [x] D-6.2 Add an entry to `CHANGELOG.md` noting:
+- [ ] D-6.2 Add an entry to `CHANGELOG.md` noting:
   - `SigningAuditService` now emits via OR audit trail.
   - `signingAuditEntry` schema is deprecated as of this release.
   - Sunset: existing records remain readable for one major release.
@@ -104,7 +104,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
 
 ### D-7. Integration tests (L)
 
-- [x] D-7.1 Write integration tests that trigger each of the seven VALID_ACTIONS via the
+- [ ] D-7.1 Write integration tests that trigger each of the seven VALID_ACTIONS via the
   signing flow (or directly via `SigningAuditService::logEvent()`), then query
   `GET /api/audit-trails?objectUuid={signRequestId}` and assert:
   - At least one entry per action type exists with the correct `docudesk.signing.*` action.
@@ -113,7 +113,7 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days
   - **Acceptance:** All seven action types tested; tests pass against a running NC dev
     instance with docudesk + OR installed; `composer check:strict` passes.
 
-- [x] D-7.2 Add a test confirming no new `signingAuditEntry` objects are written after
+- [ ] D-7.2 Add a test confirming no new `signingAuditEntry` objects are written after
   the migration is applied. The test triggers a `logEvent()` call and asserts the
   `signingAuditEntry` object count is unchanged.
   - **Acceptance:** Test passes; verifies the migration fully redirects writes to OR audit trail.
