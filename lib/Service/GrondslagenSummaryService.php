@@ -251,14 +251,9 @@ class GrondslagenSummaryService
 
         $perFile = $this->walkDossierFiles(folder: $folder);
 
-<<<<<<< HEAD
-        // Base labels are already resolved per file by loadAnonymisedEntitiesForFile;
-        // aggregateForDossier just unfolds those rows and sorts. No second pass needed.
-=======
         // LoadAnonymisedEntitiesForFile already resolves base labels per
         // file. AggregateForDossier just unfolds those rows across files
         // and sorts. No second label-resolution pass needed here.
->>>>>>> origin/development
         $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
 
         $data = [
@@ -553,22 +548,9 @@ class GrondslagenSummaryService
                 $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
                 $distinctEntityKeys[$entityKey] = true;
 
-<<<<<<< HEAD
                 $bases = ($entity['bases'] ?? []);
                 if (is_array($bases) === false) {
                     $bases = [];
-=======
-                foreach (($entity['bases'] ?? []) as $ref) {
-                    $refString = (string) $ref;
-                    $distinctBasisRefs[$refString] = true;
-                    $fileBasisRefs[$refString]     = true;
-
-                    if (isset($perBasisData[$refString]) === false) {
-                        $perBasisData[$refString] = ['entityCount' => 0, 'documentRefs' => []];
-                    }
-
-                    $perBasisData[$refString]['entityCount'] += $count;
->>>>>>> origin/development
                 }
 
                 foreach ($bases as $ref) {
@@ -597,17 +579,6 @@ class GrondslagenSummaryService
                 'filename'    => $filename,
                 'entityCount' => $fileEntityCount,
             ];
-<<<<<<< HEAD
-=======
-
-            // Mark each basis as present for this document.
-            foreach ($fileBasisRefs as $refString => $unused) {
-                unset($unused);
-                if (isset($perBasisData[$refString]) === true) {
-                    $perBasisData[$refString]['documentRefs'][$fileId] = true;
-                }
-            }
->>>>>>> origin/development
         }//end foreach
 
         usort(
@@ -622,7 +593,6 @@ class GrondslagenSummaryService
             }
         );
 
-<<<<<<< HEAD
         $perBasis = [];
         foreach (array_keys($distinctBasisRefs) as $ref) {
             $perBasis[] = [
@@ -630,16 +600,6 @@ class GrondslagenSummaryService
                 'name'          => ($labelMap[$ref] ?? $ref),
                 'documentCount' => count($perBasisDocFiles[$ref] ?? []),
                 'entityCount'   => ($perBasisCount[$ref] ?? 0),
-=======
-        // Build perBasis array with labels from labelMap.
-        $perBasis = [];
-        foreach ($perBasisData as $ref => $data) {
-            $perBasis[] = [
-                'ref'           => $ref,
-                'name'          => ($labelMap[$ref] ?? $ref),
-                'documentCount' => count($data['documentRefs']),
-                'entityCount'   => $data['entityCount'],
->>>>>>> origin/development
             ];
         }
 
@@ -842,13 +802,8 @@ class GrondslagenSummaryService
 
         $objectService = $this->getObjectService();
         if ($objectService === null) {
-<<<<<<< HEAD
-            // ObjectService unavailable — use placeholder format so the
-            // operator sees a clear data-gap marker instead of a raw slug.
-=======
             // ObjectService unavailable — show a placeholder so the operator
             // can distinguish a failed lookup from an actual label value.
->>>>>>> origin/development
             foreach ($baseRefs as $ref) {
                 $labels[(string) $ref] = '⟨grondslag verwijderd: '.(string) $ref.'⟩';
             }
@@ -1206,11 +1161,7 @@ class GrondslagenSummaryService
                 $pdf->useTemplate($tplId);
             }
 
-<<<<<<< HEAD
-            // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
-=======
             // FPDI inherits Output() from FPDF; calling 'S' returns the PDF bytes.
->>>>>>> origin/development
             // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis).
             return (string) $pdf->Output('S');
         } catch (Exception $e) {

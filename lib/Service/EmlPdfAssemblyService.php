@@ -829,7 +829,7 @@ class EmlPdfAssemblyService
                 $mime    = $att['mimeType'] ?? 'application/octet-stream';
                 $content = $att['content'] ?? '';
                 $b64     = base64_encode($content);
-                return '<img'.$attrs.' src='.$quote.'data:'.$mime.';base64,'.$b64.$quote;
+                return '<img'.$attrs.' src='.$quote.'data:'.htmlspecialchars($mime, ENT_QUOTES, 'UTF-8').';base64,'.$b64.$quote;
             },
             $html
         );
@@ -989,7 +989,7 @@ class EmlPdfAssemblyService
     {
         $templateDir = dirname(__DIR__).'/Resources/templates';
         $loader      = new FilesystemLoader($templateDir);
-        return new TwigEnvironment($loader, ['autoescape' => false]);
+        return new TwigEnvironment($loader, ['autoescape' => 'html']);
 
     }//end createTwig()
 
