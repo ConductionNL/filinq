@@ -31,7 +31,6 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
