@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Grondslagen-rapportage — {{ dossier.name|default('dossier')|escape }}</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  h1 { font-size: 18pt; margin: 0 0 4pt 0; }
+  .description { font-size: 10pt; color: #444; margin: 4pt 0 10pt 0; }
+  .header-grid { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt 0; }
+  .header-grid td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
+  .header-grid td.label { color: #666; width: 32%; }
+  table.summary { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 12pt 0 6pt 0; }
+  table.summary th { background: #eee; padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #999; }
+  table.summary td { padding: 3pt 6pt; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
+  table.summary td.numeric { text-align: right; white-space: nowrap; }
+  .totals-line { margin-top: 10pt; font-size: 9pt; color: #444; }
+  .empty-note { font-style: italic; color: #888; }
+  .placeholder-cell { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<h1>Grondslagen-rapportage</h1>
+
+<table class="header-grid">
+  <tr>
+    <td class="label">Dossier</td>
+    <td>{{ dossier.name|default('—')|escape }}</td>
+  </tr>
+  {% if dossier.description|default('') != '' %}
+    <tr>
+      <td class="label">Omschrijving</td>
+      <td class="description">{{ dossier.description|escape }}</td>
+    </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Laatste review</td>
+    <td>{{ dossier.checkedOn|default('—')|escape }}</td>
+  </tr>
+  <tr>
+    <td class="label">Rapport gegenereerd op</td>
+    <td>{{ generatedAt|default('—')|escape }}</td>
+  </tr>
+</table>
+
+{% if rows|length == 0 %}
+  <p class="empty-note">Dit dossier bevat geen geanonimiseerde documenten.</p>
+{% else %}
+  <table class="summary">
+    <thead>
+      <tr>
+        <th>Placeholder</th>
+        <th class="numeric">Aantal keer geanonimiseerd</th>
+        <th>Bestand</th>
+        <th>Grondslag</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td class="placeholder-cell">{{ row.placeholder|escape }}</td>
+          <td class="numeric">{{ row.count|default(0) }}</td>
+          <td>{{ row.filename|default('—')|escape }}</td>
+          <td>
+            {% if row.basesText|default('') != '' %}
+              {{ row.basesText|escape }}
+            {% else %}
+              <span class="empty-note">geen grondslag</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+<p class="totals-line">
+  Totaal: {{ totals.documentCount|default(0) }} document{% if totals.documentCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.distinctEntityCount|default(0) }} unieke entiteit{% if totals.distinctEntityCount|default(0) != 1 %}en{% endif %} ·
+  {{ totals.entityCount|default(0) }} keer geanonimiseerd ·
+  {{ totals.distinctBasesCount|default(0) }} unieke grondsla{% if totals.distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
+</p>
+
+</body>
+</html>
