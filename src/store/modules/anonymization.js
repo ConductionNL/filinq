@@ -32,8 +32,49 @@ import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
+import { extractDocumentText } from '../../services/fileViewerService.js'
 
 let fileCounter = 0
+
+/**
+ * Matches the in-file anonymisation placeholder `[<TYPE>: <entity_id>]`
+ * produced by OpenRegister's DocumentProcessingHandler. The type is an
+ * uppercase token (LOCATION, ORGANIZATION, PERSON, …) and the id is the
+ * stable `openregister_entities.id` primary key, resolvable via
+ * `GET /apps/openregister/api/entities/{id}`.
+ *
+ * @type {RegExp}
+ */
+const PLACEHOLDER_RE = /\[([A-Z][A-Z0-9_]*):\s*(\d+)\]/g
+
+/**
+ * Scan anonymised document text for `[<TYPE>: <entity_id>]` placeholders.
+ * Returns one record per distinct entity id, preserving first-appearance
+ * order and counting how often each id occurs in the document.
+ *
+ * @param {string} text Plain text of the anonymised document.
+ * @return {Array<{entityId: number, type: string, count: number}>}
+ */
+function parsePlaceholders(text) {
+	if (typeof text !== 'string' || text.length === 0) {
+		return []
+	}
+	const byId = new Map()
+	for (const match of text.matchAll(PLACEHOLDER_RE)) {
+		const type = match[1]
+		const entityId = Number(match[2])
+		if (!Number.isFinite(entityId)) {
+			continue
+		}
+		const existing = byId.get(entityId)
+		if (existing) {
+			existing.count += 1
+		} else {
+			byId.set(entityId, { entityId, type, count: 1 })
+		}
+	}
+	return Array.from(byId.values())
+}
 
 /**
  * Build the WebDAV base URL for the currently logged-in user.
@@ -534,6 +575,111 @@ export const useAnonymizationStore = defineStore(
 					entry.status = 'error'
 				}
 
+				return entry
+			},
+
+			/**
+			 * Build a read-only review entry for an already-anonymised file by
+			 * resolving the `[<TYPE>: <entity_id>]` placeholders baked into the
+			 * document text back to their source entities.
+			 *
+			 * Unlike `ensureExtracted` (which detects PII in the *source*
+			 * file), this works on the *anonymised output* itself: the
+			 * placeholders carry stable `openregister_entities.id` keys, so we
+			 * never need the source↔anonymised link. Each id is resolved via
+			 * `GET /apps/openregister/api/entities/{id}`, which returns the
+			 * original value, type and the entity's relations (bases).
+			 *
+			 * Returns `null` when the document contains no placeholders — the
+			 * caller should then fall back to `ensureExtracted`.
+			 *
+			 * NOTE: `entity.value` is the *original, un-anonymised* text.
+			 * Surfacing it re-exposes the data the file hid — the sidebar
+			 * gates this behind an explicit reveal. See [[project-anonymized-pair-persistence]].
+			 *
+			 * @param {object} fileMeta File descriptor.
+			 * @param {number} fileMeta.fileId   Nextcloud file id (anonymised file).
+			 * @param {string} fileMeta.fileName File name with extension.
+			 * @param {string} fileMeta.path     Absolute path.
+			 * @param {string} [fileMeta.mimeType] MIME type (picks the text extractor).
+			 * @return {Promise<object|null>} The review entry, or null when not anonymised.
+			 */
+			async loadAnonymizedEntities(fileMeta) {
+				let text
+				try {
+					text = await extractDocumentText({
+						path: fileMeta.path,
+						mimeType: fileMeta.mimeType,
+						fileName: fileMeta.fileName,
+					})
+				} catch (err) {
+					console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
+					return null
+				}
+
+				const placeholders = parsePlaceholders(text)
+				if (placeholders.length === 0) {
+					return null
+				}
+
+				// Resolve every distinct entity id in parallel. A failed lookup
+				// (deleted entity, permission) degrades to a placeholder-only
+				// row rather than dropping the occurrence entirely.
+				const resolved = await Promise.all(
+					placeholders.map(async (ph) => {
+						try {
+							const r = await axios.get(
+								generateUrl(`/apps/openregister/api/entities/${ph.entityId}`),
+							)
+							const data = r.data?.data || {}
+							const relations = Array.isArray(r.data?.relations) ? r.data.relations : []
+							// Collect bases across this entity's relations.
+							const bases = relations
+								.flatMap((rel) => (Array.isArray(rel.bases) ? rel.bases : []))
+							return {
+								type: data.type || ph.type,
+								value: data.value ?? null,
+								confidence: data.confidence ?? null,
+								entityId: ph.entityId,
+								count: ph.count,
+								bases: [...new Set(bases)],
+								placeholder: `[${ph.type}: ${ph.entityId}]`,
+								_resolveError: null,
+							}
+						} catch (err) {
+							return {
+								type: ph.type,
+								value: null,
+								confidence: null,
+								entityId: ph.entityId,
+								count: ph.count,
+								bases: [],
+								placeholder: `[${ph.type}: ${ph.entityId}]`,
+								_resolveError: err.response?.status === 404
+									? 'Entity no longer exists'
+									: (err.response?.data?.message || err.message),
+							}
+						}
+					}),
+				)
+
+				const entry = {
+					id: `file-${++fileCounter}`,
+					name: fileMeta.fileName,
+					status: 'completed',
+					viewMode: 'anonymized',
+					error: null,
+					fileId: fileMeta.fileId,
+					filePath: fileMeta.path,
+					entities: resolved,
+					entityCount: resolved.length,
+					replacementCount: resolved.reduce((sum, e) => sum + e.count, 0),
+					anonymizedFileId: null,
+					anonymizedFileName: null,
+					anonymizedFilePath: null,
+					dossier: inferDossier(fileMeta.path),
+				}
+				this.files.push(entry)
 				return entry
 			},
 

@@ -209,8 +209,15 @@ OC.L10N.register(
     "Skip" : "Overslaan",
     "Grondslagen" : "Grondslagen",
     "Pick grondslagen…" : "Selecteer grondslagen…",
+    "These items were removed from this document." : "Deze items zijn uit dit document verwijderd.",
+    "Reveal original values" : "Originele waarden tonen",
+    "Hide original values" : "Originele waarden verbergen",
+    "Unknown value" : "Onbekende waarde",
+    "Resolved from the GDPR register." : "Opgehaald uit het AVG-register.",
     "%n entity detected" : ["%n entiteit gedetecteerd", "%n entiteiten gedetecteerd"],
-    "%n entity replaced" : ["%n entiteit vervangen", "%n entiteiten vervangen"]
+    "%n entity replaced" : ["%n entiteit vervangen", "%n entiteiten vervangen"],
+    "%n occurrence" : ["%n keer", "%n keer"],
+    "%n item anonymised" : ["%n item geanonimiseerd", "%n items geanonimiseerd"]
 },
 "nplurals=2; plural=(n != 1);"
 );
