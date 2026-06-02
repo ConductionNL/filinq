@@ -45,6 +45,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-5
  */
 class PdfService
 {
@@ -91,6 +93,29 @@ class PdfService
         return $this->generatePdf(html: $html, options: $options);
 
     }//end renderPdf()
+
+    /**
+     * Generate a PDF from a raw HTML string (no Twig pre-processing).
+     *
+     * Public wrapper for callers that already have rendered HTML — used by
+     * conversion backends (MpdfBackend, EmlPdfAssemblyService) that want
+     * the same PDF/A-3b configuration as print-preview.
+     *
+     * @param string              $html    Pre-rendered HTML document body.
+     * @param array<string,mixed> $options PDF configuration options; same shape as renderPdf.
+     *
+     * @return string PDF binary content.
+     *
+     * @throws Exception When mPDF rendering fails.
+     *
+     * @spec openspec/changes/anonymise-output-as-pdf-by-default/tasks.md
+     * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-5
+     */
+    public function generatePdfFromHtml(string $html, array $options=[]): string
+    {
+        return $this->generatePdf(html: $html, options: $options);
+
+    }//end generatePdfFromHtml()
 
     /**
      * Render HTML from a Twig template string and data context (for print preview)

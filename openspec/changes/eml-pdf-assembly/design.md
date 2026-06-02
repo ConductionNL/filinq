@@ -1,3 +1,7 @@
+---
+status: pr-created
+---
+
 ## Context
 
 `anonymise-output-as-pdf-by-default` (Change A) introduced a conversion cascade that flattens any anonymisation output to PDF/A-3b. Its `EmlBackend` was specced as a thin path: extract email body, wrap in HTML, render via mPDF. That path produces a PDF containing only the body — sender / recipient / subject / date metadata is lost, attachments are not represented at all. For real correspondence (Wob/Woo email threads, complaint dossiers), the rendered artifact has to carry the full visible structure of the email plus the attachments that came with it.

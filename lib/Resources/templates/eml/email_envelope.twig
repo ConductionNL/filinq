@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: DejaVuSans, Arial, sans-serif; font-size: 10pt; margin: 0; padding: 0; }
+        .header-block { border-bottom: 1px solid #999; padding-bottom: 8px; margin-bottom: 12px; }
+        .header-row { display: table; width: 100%; margin-bottom: 3px; }
+        .header-label { display: table-cell; font-weight: bold; width: 90px; vertical-align: top; }
+        .header-value { display: table-cell; vertical-align: top; word-break: break-word; }
+        .body-section { margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header-block">
+        <div class="header-row">
+            <span class="header-label">Van:</span>
+            <span class="header-value">{{ from }}</span>
+        </div>
+        <div class="header-row">
+            <span class="header-label">Aan:</span>
+            <span class="header-value">{{ to }}</span>
+        </div>
+        {% if show_cc %}
+        <div class="header-row">
+            <span class="header-label">Cc:</span>
+            <span class="header-value">{{ cc }}</span>
+        </div>
+        {% endif %}
+        <div class="header-row">
+            <span class="header-label">Onderwerp:</span>
+            <span class="header-value">{{ subject }}</span>
+        </div>
+        <div class="header-row">
+            <span class="header-label">Datum:</span>
+            <span class="header-value">{{ date }}</span>
+        </div>
+    </div>
+    <div class="body-section">
+        {{ body }}
+    </div>
+</body>
+</html>
