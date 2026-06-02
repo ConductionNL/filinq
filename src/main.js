@@ -109,6 +109,26 @@ const customComponentsProp = Object.fromEntries(
 		.map(([key, entry]) => [key, entry.component]),
 )
 
+// Phase 1 of the store migration (openspec/changes/docudesk-store-migration):
+// pre-register the seven OR-backed object types against the lib's
+// useObjectStore so any consumer (manifest pages, sub-resource plugins,
+// future OR-backed code paths) binds to a known-shape store. Fire-and-
+// forget — registration is synchronous after the settings fetch resolves,
+// and the mount stays unblocked even if the boot path fails.
+// Called BEFORE mount per REQ-DSM-6 (spec: openspec/specs/docudesk-store-migration/spec.md).
+try {
+	const result = initializeStores()
+	if (result && typeof result.then === 'function') {
+		result.then(() => {}, (e) => {
+			// eslint-disable-next-line no-console
+			console.warn('[docudesk] initializeStores failed', e)
+		})
+	}
+} catch (e) {
+	// eslint-disable-next-line no-console
+	console.warn('[docudesk] initializeStores threw synchronously', e)
+}
+
 // Create and mount Vue instance immediately so the App renders.
 new Vue({
 	pinia,
@@ -122,22 +142,3 @@ new Vue({
 		},
 	}),
 }).$mount('#content')
-
-// Phase 1 of the store migration (openspec/changes/docudesk-store-migration):
-// pre-register the seven OR-backed object types against the lib's
-// useObjectStore so any consumer (manifest pages, sub-resource plugins,
-// future OR-backed code paths) binds to a known-shape store. Fire-and-
-// forget — registration is synchronous after the settings fetch resolves,
-// and the mount stays unblocked even if the boot path fails.
-try {
-	const result = initializeStores()
-	if (result && typeof result.then === 'function') {
-		result.then(() => {}, (e) => {
-			// eslint-disable-next-line no-console
-			console.warn('[docudesk] initializeStores failed', e)
-		})
-	}
-} catch (e) {
-	// eslint-disable-next-line no-console
-	console.warn('[docudesk] initializeStores threw synchronously', e)
-}
