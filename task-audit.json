@@ -1,67 +1,23 @@
 {
-  "spec": "openspec/changes/publication-clearance-anonymise-payload",
+  "spec": "openspec/changes/add-dossier-schema",
   "verified": [
-    {
-      "task": "1",
-      "file": "lib/Controller/AnonymizationController.php",
-      "ok": true,
-      "note": "validateUnredactedEntities() added; entityId/entityText/entityType/publicationBases validated; 400 on malformed"
-    },
-    {
-      "task": "2",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "checkUnredactedProhibitions() calls PolicyMatchService at any-confidence; controller returns 422 on violations"
-    },
-    {
-      "task": "3",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "createConsentsForUnredactedEntities() called after anonymise pipeline; skips on pipeline failure"
-    },
-    {
-      "task": "4",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "createdConsents[] field added to resultInfo; absent when unredactedEntities not supplied"
-    },
-    {
-      "task": "5a",
-      "file": "lib/Controller/BatchAnonymizationController.php",
-      "ok": true,
-      "note": "batchAnonymize accepts unredactedEntities[]; resolveBatchHttpStatus() handles 200/207/422"
-    },
-    {
-      "task": "5b",
-      "file": "lib/Service/BatchAnonymizeService.php",
-      "ok": true,
-      "note": "per-file prohibition gate; prohibitionViolation status; prohibitionSkippedFiles counter"
-    },
-    {
-      "task": "6",
-      "file": "tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php",
-      "ok": true,
-      "note": "9 tests: validation, prohibition 422, success with createdConsents, backward-compat"
-    },
-    {
-      "task": "7",
-      "file": "tests/unit/Service/AnonymizationServicePublicationClearanceTest.php",
-      "ok": true,
-      "note": "7 tests: prohibition gate, consent creation calls, order, config null case"
-    },
-    {
-      "task": "9a",
-      "file": "docs/features/publication-consent-process.md",
-      "ok": true,
-      "note": "Publication-clearance-via-anonymise section added with payload shape, gate semantics, response, batch semantics"
-    },
-    {
-      "task": "9b",
-      "file": "CHANGELOG.md",
-      "ok": true,
-      "note": "Added and Behavior-changes sections with all three new behaviors"
-    }
+    {"task": "1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier register entry present under components.registers"},
+    {"task": "2", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "base schema present under components.schemas.base with required name+description"},
+    {"task": "3", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier schema present under components.schemas.dossier with required name, optional bases+checkedOn"},
+    {"task": "4", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "jq valid + composer check:strict ALL CHECKS PASSED"},
+    {"task": "5", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "6 canonical base seed objects present: persoonsgegevens, bijzondere-persoonsgegevens, strafrechtelijk, bedrijfs-fabricagegegevens, onevenredige-benadeling, nationale-veiligheid"},
+    {"task": "6", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "5 dossier seed objects present; zonnestraal-incident-2026-03 has bases=[] and checkedOn=null"},
+    {"task": "10", "file": "tests/unit/Settings/DossierRegisterConfigTest.php", "ok": true, "note": "6/6 tests pass via phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest"},
+    {"task": "11", "file": "l10n/en.json + l10n/nl.json + l10n/en.js + l10n/nl.js", "ok": true, "note": "Dutch and English translations added for schema titles, property titles, and 6 grondslag names"},
+    {"task": "12", "file": "docs/features/dossier-register.md", "ok": true, "note": "Feature doc present; dossier-register added to docs/features.json"},
+    {"task": "14", "file": "docs/features/dossier-register.md", "ok": true, "note": "@self.folder trust model documented + validate-self-folder-access follow-up referenced"}
   ],
   "stubs": [],
-  "missing_routes": []
+  "missing_routes": [],
+  "deferred": [
+    {"task": "7", "reason": "Runtime verification requires occ access (permission denied in container); register JSON is correct per static analysis and PHPUnit"},
+    {"task": "8", "reason": "Referential integrity requires a live Nextcloud + OpenRegister instance; design confirms OR handles via existing @self.folder pipeline"},
+    {"task": "9", "reason": "Audit trail verification requires two live user sessions; design confirms OR's AuditTrailMapper handles this natively"},
+    {"task": "13", "reason": "Playwright screenshots require browser-1 MCP which is not available in this headless container"}
+  ]
 }

@@ -1,16 +1,16 @@
 ## Tasks
 
-- [ ] 1. Add a `dossier` register entry under `components.registers` in `lib/Settings/docudesk_register.json` with slug, Dutch title/description, and `schemas: ["dossier", "base"]`.
-- [ ] 2. Add the `base` schema under `components.schemas.base` (required `name`, `description`; `objectNameField: "name"`, icon, Dutch property titles) following the file's existing schema field ordering.
-- [ ] 3. Add the `dossier` schema under `components.schemas.dossier` (required `name`; optional `description`, `bases` array of `$ref` base, `checkedOn` date-time), with Dutch titles, order, `facetable: true` on `bases` + `checkedOn`, and an icon.
-- [ ] 4. Validate the JSON (`jq . lib/Settings/docudesk_register.json > /dev/null`) and confirm `composer check:strict` stays green.
-- [ ] 5. Seed the six canonical `base` records from design.md (Dutch names/descriptions, exact slugs) under `components.objects`.
-- [ ] 6. Seed the five canonical `dossier` records from design.md, referencing `bases` by base UUID/slug and populating `@self.folder` with `seed-folder-<slug>` placeholders; ensure at least one dossier has `bases: []` AND `checkedOn: null` (Zonnestraal incident).
+- [x] 1. Add a `dossier` register entry under `components.registers` in `lib/Settings/docudesk_register.json` with slug, Dutch title/description, and `schemas: ["dossier", "base"]`.
+- [x] 2. Add the `base` schema under `components.schemas.base` (required `name`, `description`; `objectNameField: "name"`, icon, Dutch property titles) following the file's existing schema field ordering.
+- [x] 3. Add the `dossier` schema under `components.schemas.dossier` (required `name`; optional `description`, `bases` array of `$ref` base, `checkedOn` date-time), with Dutch titles, order, `facetable: true` on `bases` + `checkedOn`, and an icon.
+- [x] 4. Validate the JSON (`jq . lib/Settings/docudesk_register.json > /dev/null`) and confirm `composer check:strict` stays green.
+- [x] 5. Seed the six canonical `base` records from design.md (Dutch names/descriptions, exact slugs) under `components.objects`.
+- [x] 6. Seed the five canonical `dossier` records from design.md, referencing `bases` by base UUID/slug and populating `@self.folder` with `seed-folder-<slug>` placeholders; ensure at least one dossier has `bases: []` AND `checkedOn: null` (Zonnestraal incident).
 - [ ] 7. Install and verify: reset env, enable DocuDesk, confirm `RegistersLoader` runs clean, register present via `occ openregister:registers:list`, and `GET /api/objects/base` / `GET /api/objects/dossier` return the expected seed counts with non-empty `@self.folder` pointing to real Nextcloud folders.
 - [ ] 8. Verify referential integrity: POST/PUT a dossier with a real folder ID and confirm `@self.folder` round-trips; assert OR blocks deleting a `base` that is still referenced; assert OR rejects POSTing a dossier with an invalid `bases[]` UUID.
 - [ ] 9. Verify audit trail: as a non-admin, update `checkedOn` twice as two different users; confirm the audit trail records actor + old/new `checkedOn` diff + timestamp for each update.
-- [ ] 10. Add PHPUnit `Tests/Unit/Settings/DossierRegisterConfigTest.php` asserting (a) register + schema shape, (b) seed object completeness (six bases, five dossiers), (c) at least one dossier with empty bases + null checkedOn; run via `phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest` and confirm ≥75% coverage on new code.
-- [ ] 11. Add Dutch + English translations for schema titles, property titles, and the six grondslag names + short English legal glosses; keep slugs stable (canonical Dutch); verify in UI.
-- [ ] 12. Write `docs/features/dossier-register.md` describing the register, the two schemas, the `@self.folder` binding, the `bases` reference model, and the six canonical grondslagen; reference it from top-level `docs/FEATURES.md` if present.
+- [x] 10. Add PHPUnit `Tests/Unit/Settings/DossierRegisterConfigTest.php` asserting (a) register + schema shape, (b) seed object completeness (six bases, five dossiers), (c) at least one dossier with empty bases + null checkedOn; run via `phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest` and confirm ≥75% coverage on new code.
+- [x] 11. Add Dutch + English translations for schema titles, property titles, and the six grondslag names + short English legal glosses; keep slugs stable (canonical Dutch); verify in UI.
+- [x] 12. Write `docs/features/dossier-register.md` describing the register, the two schemas, the `@self.folder` binding, the `bases` reference model, and the six canonical grondslagen; reference it from top-level `docs/FEATURES.md` if present.
 - [ ] 13. Capture Playwright MCP screenshots (`browser-1`): dossier list of five seeds, single dossier detail with `bases` expanded, base list of six grondslagen, and a dossier's linked folder in Files; reference all from the new feature doc.
-- [ ] 14. Open or reference a tracking issue for OpenRegister `validate-self-folder-access` citing this change as the first consumer, and note the current `@self.folder` trust model in the feature doc.
+- [x] 14. Open or reference a tracking issue for OpenRegister `validate-self-folder-access` citing this change as the first consumer, and note the current `@self.folder` trust model in the feature doc.
