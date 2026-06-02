@@ -525,7 +525,7 @@ class GrondslagenSummaryService
 
             foreach (($fileRow['entities'] ?? []) as $entity) {
                 $placeholder = (string) ($entity['placeholder'] ?? '');
-                $count       = (int) ($entity['count'] ?? 1);
+                $count       = (int) ($entity['count'] ?? 0);
                 $basesText   = (string) ($entity['basesText'] ?? '');
                 $baseLabels  = ($entity['baseLabels'] ?? []);
                 if (is_array($baseLabels) === false) {

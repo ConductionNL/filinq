@@ -166,8 +166,8 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->assertCount(expectedCount: 2, haystack: $result);
         $this->assertArrayHasKey(key: 'persoonsgegevens', array: $result);
         $this->assertArrayHasKey(key: 'long-uuid-12345', array: $result);
-        // When ObjectService is unavailable the raw ref is used as the label.
-        $this->assertSame(expected: 'persoonsgegevens', actual: $result['persoonsgegevens']);
+        // When ObjectService is unavailable each ref gets a placeholder label.
+        $this->assertSame(expected: '⟨grondslag verwijderd: persoonsgegevens⟩', actual: $result['persoonsgegevens']);
 
     }//end testResolveBaseLabelsProducesPlaceholders()
 
