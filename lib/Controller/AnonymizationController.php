@@ -396,7 +396,6 @@ class AnonymizationController extends Controller
                 }
             }//end if
 
-
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
