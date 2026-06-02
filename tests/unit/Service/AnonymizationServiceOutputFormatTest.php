@@ -335,18 +335,24 @@ class AnonymizationServiceOutputFormatTest extends TestCase
      */
     private function buildServiceWithoutDependencies(): AnonymizationService
     {
-        $logger          = new \Psr\Log\NullLogger();
-        $container       = $this->createMock(\Psr\Container\ContainerInterface::class);
-        $appManager      = $this->createMock(\OCP\App\IAppManager::class);
-        $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
-        $appConfig       = $this->createMock(\OCP\IAppConfig::class);
+        $logger             = new \Psr\Log\NullLogger();
+        $container          = $this->createMock(\Psr\Container\ContainerInterface::class);
+        $appManager         = $this->createMock(\OCP\App\IAppManager::class);
+        $entityDetection    = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
+        $appConfig          = $this->createMock(\OCP\IAppConfig::class);
+        $consentCrud        = $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class);
+        $consentService     = $this->createMock(\OCA\DocuDesk\Service\ConsentService::class);
+        $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
 
         return new AnonymizationService(
             $logger,
             $container,
             $appManager,
             $entityDetection,
-            $appConfig
+            $appConfig,
+            $consentCrud,
+            $consentService,
+            $grondslagenSummary
         );
 
     }//end buildServiceWithoutDependencies()
