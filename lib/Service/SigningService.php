@@ -351,12 +351,13 @@ class SigningService
      */
     public function bulkSign(array $requestIds): array
     {
-        $results = [];
-        $user    = $this->userSession->getUser();
-        $userId  = '';
-        if ($user !== null) {
-            $userId = $user->getUID();
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            throw new RuntimeException('No authenticated user');
         }
+
+        $results = [];
+        $userId  = $user->getUID();
 
         foreach ($requestIds as $requestId) {
             try {
