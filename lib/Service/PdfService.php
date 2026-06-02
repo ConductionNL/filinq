@@ -19,6 +19,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -220,17 +223,24 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        $orientationName = 'portrait';
-        if ($orientation === 'L') {
-            $orientationName = 'landscape';
-        }
+        // Note on `@page`: this stylesheet intentionally omits the
+        // `@page { size: ...; margin: ...; }` rule. mPDF's CSS parser
+        // produced a degenerate page size (one character per page) when
+        // `@page` was nested inside `@media print`, regardless of
+        // whether `size: A4`, `size: A4 portrait`, or `size: A4
+        // landscape` was emitted. Page dimensions are driven by the
+        // mPDF config (`format` / `orientation` / `margin_*` in
+        // `buildMpdfConfig`) instead, which mPDF interprets reliably.
+        // The remaining rules are layout hints that don't touch page
+        // dimensions.
+        //
+        // `$format` / `$orientation` remain part of the public contract
+        // for callers that may key off them later; not consumed locally
+        // since page sizing is delegated to the config path.
+        unset($format, $orientation);
 
         return '<style>
 @media print {
-    @page {
-        size: '.$format.' '.$orientationName.';
-        margin: 15mm;
-    }
     body {
         margin: 0;
         padding: 0;

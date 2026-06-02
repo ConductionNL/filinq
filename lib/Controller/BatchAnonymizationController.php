@@ -26,6 +26,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-1
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-2
  * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
@@ -65,6 +66,8 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ *
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 class BatchAnonymizationController extends Controller
 {
@@ -399,11 +402,27 @@ class BatchAnonymizationController extends Controller
                 return $basesError;
             }
 
+            $unredactedEntities = $params['unredactedEntities'] ?? [];
+            if (is_array($unredactedEntities) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities must be an array')],
+                    400
+                );
+            }
+
+            if (empty($unredactedEntities) === false) {
+                $unredactedError = $this->validateUnredactedEntities(entries: $unredactedEntities);
+                if ($unredactedError !== null) {
+                    return $unredactedError;
+                }
+            }
+
             $result = $this->anonService->anonymizeBatch(
                 batchId: $batchId,
                 entities: $entities,
                 appendBasisSummary: $appendBasisSummary,
-                outputFormat: $outputFormatResult
+                outputFormat: $outputFormatResult,
+                unredactedEntities: $unredactedEntities
             );
 
             return $this->buildBatchResponse(result: $result);
@@ -416,8 +435,8 @@ class BatchAnonymizationController extends Controller
     /**
      * Build the appropriate JSONResponse from a batch anonymization result.
      *
-     * HTTP 207 multi-status when some files succeeded and some failed conversion.
-     * HTTP 422 when all files failed conversion.
+     * HTTP 207 multi-status when some files succeeded and some failed (conversion or prohibition).
+     * HTTP 422 when all files failed.
      * HTTP 200 when all files succeeded.
      *
      * @param array<string, mixed> $result Result from BatchAnonymizeService::anonymizeBatch
@@ -425,17 +444,21 @@ class BatchAnonymizationController extends Controller
      * @return JSONResponse Response with appropriate HTTP status
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-5
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
      */
     private function buildBatchResponse(array $result): JSONResponse
     {
-        $conversionFailures = (int) ($result['conversionFailures'] ?? 0);
-        $processedFiles     = (int) ($result['processedFiles'] ?? 0);
+        $conversionFailures  = (int) ($result['conversionFailures'] ?? 0);
+        $prohibitionFailures = (int) ($result['prohibitionSkippedFiles'] ?? 0);
+        $processedFiles      = (int) ($result['processedFiles'] ?? 0);
 
-        if ($conversionFailures > 0 && $processedFiles > 0) {
+        $anyFailures = $conversionFailures + $prohibitionFailures;
+
+        if ($anyFailures > 0 && $processedFiles > 0) {
             return new JSONResponse($result, Http::STATUS_MULTI_STATUS);
         }
 
-        if ($conversionFailures > 0 && $processedFiles === 0) {
+        if ($anyFailures > 0 && $processedFiles === 0) {
             return new JSONResponse($result, 422);
         }
 
@@ -597,6 +620,92 @@ class BatchAnonymizationController extends Controller
         return null;
 
     }//end validateEntityBases()
+
+    /**
+     * Validate the structure of each unredactedEntities[] entry.
+     *
+     * Mirrors AnonymizationController::validateUnredactedEntities so that
+     * the batch endpoint rejects malformed payloads with HTTP 400 before
+     * forwarding to the service layer.
+     *
+     * @param array<int, mixed> $entries The unredactedEntities array from the request
+     *
+     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
+     */
+    private function validateUnredactedEntities(array $entries): ?JSONResponse
+    {
+        foreach ($entries as $idx => $entry) {
+            if (is_array($entry) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each unredactedEntities entry must be an object (index %s)', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['entityId']) === false || is_int($entry['entityId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityId is required and must be an integer', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['entityText']) === true || is_string($entry['entityText']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityText is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['entityType']) === true || is_string($entry['entityType']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityType is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['publicationBases']) === false || is_array($entry['publicationBases']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases is required and must be an array', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['publicationBases']) === true) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases must contain at least one basis', [$idx])],
+                    400
+                );
+            }
+
+            foreach ($entry['publicationBases'] as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each entry in unredactedEntities[%s].publicationBases must be a string', [$idx])],
+                        400
+                    );
+                }
+            }
+
+            if (isset($entry['contactEmail']) === true && is_string($entry['contactEmail']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].contactEmail must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['contactAddress']) === true && is_string($entry['contactAddress']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].contactAddress must be a string', [$idx])],
+                    400
+                );
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateUnredactedEntities()
 
     /**
      * Build a JSON error response, logging the underlying exception.

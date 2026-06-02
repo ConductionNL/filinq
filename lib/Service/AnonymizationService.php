@@ -21,6 +21,8 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -67,11 +69,16 @@ class AnonymizationService
     /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface        $logger          Logger for error reporting
-     * @param ContainerInterface     $container       Container for dependency injection
-     * @param IAppManager            $appManager      App manager interface
-     * @param EntityDetectionService $entityDetection Entity detection and mapping service
-     * @param IAppConfig             $appConfig       App configuration for threshold settings
+     * @param LoggerInterface           $logger             Logger for error reporting
+     * @param ContainerInterface        $container          Container for dependency injection
+     * @param IAppManager               $appManager         App manager interface
+     * @param EntityDetectionService    $entityDetection    Entity detection and mapping service
+     * @param IAppConfig                $appConfig          App configuration for threshold settings
+     * @param ConsentCrudService        $consentCrud        Consent CRUD service for register/schema config
+     * @param ConsentService            $consentService     Consent service for creating publication consents
+     * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
+     *                                                      summary page (Wave 4a — opt-in via
+     *                                                      `appendBasisSummary: true` on the request).
      *
      * @return void
      */
@@ -80,7 +87,10 @@ class AnonymizationService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
-        private readonly IAppConfig $appConfig
+        private readonly IAppConfig $appConfig,
+        private readonly ConsentCrudService $consentCrud,
+        private readonly ConsentService $consentService,
+        private readonly GrondslagenSummaryService $grondslagenSummary
     ) {
 
     }//end __construct()
@@ -271,8 +281,8 @@ class AnonymizationService
      *
      * When appendBasisSummary is true, invokes GrondslagenSummaryService after
      * the anonymised file has been written. For PDF output the summary is
-     * appended as an extra page; for preserve mode a separate
-     * `<base>_anonymized_grondslagen.pdf` is written alongside. Summary failure
+     * appended as an extra page; for non-PDF output a separate
+     * `<base>_grondslagen.pdf` is written alongside. Summary failure
      * is non-fatal: the anonymised file is always preserved and a `warning`
      * field is added to the response instead (HTTP 200).
      *
@@ -281,12 +291,17 @@ class AnonymizationService
      * ConversionFailedException the native intermediate is rolled back
      * (deleted) and the exception propagates to the controller for HTTP 422.
      *
-     * @param int                         $fileId             The Nextcloud file ID
-     * @param array<array<string, mixed>> $entities           The entities to anonymize
-     * @param bool                        $appendBasisSummary Whether to append a grondslagen summary (default false)
-     * @param string                      $outputFormat       Output format: 'pdf' (default) or 'preserve'
+     * When unredactedEntities is non-empty, a publicationConsent record is
+     * created for each entry AFTER the anonymise pipeline succeeds. The
+     * createdConsents[] field in the response aggregates the resulting records.
      *
-     * @return array<string, mixed> Anonymization result with optional warning/summaryFileId fields
+     * @param int                              $fileId             The Nextcloud file ID
+     * @param array<array<string, mixed>>      $entities           The entities to anonymize
+     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary (default false)
+     * @param string                           $outputFormat       Output format: 'pdf' (default) or 'preserve'
+     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation
+     *
+     * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
      *
      * @throws ConversionFailedException When outputFormat is 'pdf' and all conversion backends fail
      * @throws Exception If anonymization fails for other reasons
@@ -295,12 +310,15 @@ class AnonymizationService
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
      */
     public function anonymizeDocument(
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        array $unredactedEntities=[]
     ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
@@ -391,11 +409,18 @@ class AnonymizationService
                 );
             }
 
-            if ($appendBasisSummary === true) {
-                $resultInfo = $this->tryAppendBasisSummary(
+            if (empty($unredactedEntities) === false) {
+                $resultInfo = $this->createConsentsForUnredactedEntities(
                     resultInfo: $resultInfo,
-                    node: $node,
-                    outputFormat: $outputFormat
+                    unredactedEntities: $unredactedEntities
+                );
+            }
+
+            if ($appendBasisSummary === true) {
+                $resultInfo = $this->attachGrondslagenSummary(
+                    anonymisedNode: $result,
+                    sourceFileId: $fileId,
+                    resultInfo: $resultInfo
                 );
             }
 
@@ -572,6 +597,141 @@ class AnonymizationService
     }//end getPdfConversionService()
 
     /**
+     * Check unredacted entities against publication-prohibition rules.
+     *
+     * Returns an array of violation records (one per matching entity).
+     * An empty array means no violations — all entries may proceed to consent creation.
+     * Uses PolicyMatchService at any confidence (operator made an explicit decision;
+     * the 0.85-threshold logic of the regular gate does NOT apply here — D2).
+     *
+     * @param array<int, array<string, mixed>> $unredactedEntities Entries from the unredactedEntities[] payload field
+     *
+     * @return array<int, array<string, mixed>> Violation records: [{entityId, entityText, ruleId, ruleName}]
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+     */
+    public function checkUnredactedProhibitions(array $unredactedEntities): array
+    {
+        $policyService = $this->tryGetPolicyMatchService();
+        if ($policyService === null) {
+            return [];
+        }
+
+        $violations = [];
+        foreach ($unredactedEntities as $entry) {
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $entityText = (string) ($entry['entityText'] ?? '');
+
+            try {
+                $match = $policyService->matchProhibition(
+                    entityType: $entityType,
+                    entityValue: $entityText
+                );
+            } catch (\Throwable $e) {
+                $this->logger->debug(
+                    'PolicyMatchService::matchProhibition threw during unredacted check; skipping',
+                    ['exception' => $e->getMessage()]
+                );
+                continue;
+            }
+
+            if ($match !== null) {
+                $violations[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'ruleId'     => $match['ruleId'] ?? null,
+                    'ruleName'   => $match['ruleName'] ?? null,
+                ];
+            }
+        }//end foreach
+
+        return $violations;
+
+    }//end checkUnredactedProhibitions()
+
+    /**
+     * Create publicationConsent records for each unredacted entity after a successful anonymise run.
+     *
+     * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
+     * failure is logged but does NOT abort the response — the consent failure is surfaced as
+     * a structured error entry in createdConsents[].
+     *
+     * @param array<string, mixed>             $resultInfo         Current anonymization result
+     * @param array<int, array<string, mixed>> $unredactedEntities Validated unredacted-entity entries
+     *
+     * @return array<string, mixed> Result enriched with createdConsents[] field
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+     */
+    private function createConsentsForUnredactedEntities(
+        array $resultInfo,
+        array $unredactedEntities
+    ): array {
+        $config = $this->consentCrud->getConsentConfig();
+        if ($config === null) {
+            $this->logger->warning(
+                'Publication consent register/schema not configured; skipping consent creation for unredacted entities.'
+            );
+            $resultInfo['createdConsents'] = [];
+            return $resultInfo;
+        }
+
+        $documentId      = (string) ($resultInfo['anonymizedFileId'] ?? '');
+        $createdConsents = [];
+
+        foreach ($unredactedEntities as $entry) {
+            $entityText = (string) ($entry['entityText'] ?? '');
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $extra      = [
+                'publicationBases' => $entry['publicationBases'] ?? [],
+            ];
+
+            if (empty($entry['contactEmail']) === false) {
+                $extra['contactEmail'] = (string) $entry['contactEmail'];
+            }
+
+            if (empty($entry['contactAddress']) === false) {
+                $extra['contactAddress'] = (string) $entry['contactAddress'];
+            }
+
+            try {
+                $consent = $this->consentService->createConsentRequest(
+                    documentId: $documentId,
+                    entityType: $entityType,
+                    entityText: $entityText,
+                    register: $config['register'],
+                    schema: $config['schema'],
+                    extra: $extra
+                );
+
+                $createdConsents[] = [
+                    'entityId'      => $entry['entityId'] ?? null,
+                    'entityText'    => $entityText,
+                    'consentId'     => $consent['id'] ?? $consent['uuid'] ?? null,
+                    'consentStatus' => $consent['consentStatus'] ?? 'pending',
+                    'action'        => 'created',
+                ];
+            } catch (Exception $e) {
+                $this->logger->error(
+                    'Failed to create consent for unredacted entity: '.$e->getMessage(),
+                    ['entityText' => $entityText, 'exception' => $e]
+                );
+                $createdConsents[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'action'     => 'failed',
+                    'error'      => 'Consent creation failed.',
+                ];
+            }//end try
+        }//end foreach
+
+        $resultInfo['createdConsents'] = $createdConsents;
+        return $resultInfo;
+
+    }//end createConsentsForUnredactedEntities()
+
+    /**
      * Read a Nextcloud file node's content as text, safely.
      *
      * Returns the raw content for text-like MIME types (text/*,
@@ -708,58 +868,66 @@ class AnonymizationService
     }//end verifyReplacements()
 
     /**
-     * Attempt to append a grondslagen basis summary to the anonymized document.
+     * Render and attach the grondslagen summary to a freshly-anonymised file.
      *
-     * Soft-depends on GrondslagenSummaryService from the
-     * anonymisation-grondslagen-summary-rendering change. When the service is
-     * unavailable or throws, the failure is logged and a structured `warning`
-     * field is added to the result. The anonymised file is always preserved.
+     * If the anonymised file is a PDF, the summary is appended to it in place
+     * (one extra page). For other formats, the summary is saved as a separate
+     * `<base>_grondslagen.pdf` file beside the anonymised file.
      *
-     * For PDF output: summary is appended as an extra page (in-place).
-     * For preserve output: a separate _grondslagen.pdf is written alongside;
-     * the result gains `summaryFileId` and `summaryFilePath` fields.
+     * Summary-step failure is **non-fatal**: the anonymise call still
+     * returns success; the result gets a structured `warning` field so the
+     * caller can surface the issue to the operator without rolling back the
+     * anonymisation.
      *
-     * @param array<string, mixed> $resultInfo   Current anonymization result
-     * @param mixed                $node         Nextcloud file node of the anonymised file
-     * @param string               $outputFormat 'pdf' or 'preserve'
+     * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
+     * @param int                  $sourceFileId   The pre-anonymisation source file id (used to look
+     *                                             up the EntityRelation rows that carry the bases).
+     * @param array<string, mixed> $resultInfo     The current result info — extended with the
+     *                                             summary's `summaryFileId` / `warning` fields and
+     *                                             returned.
      *
-     * @return array<string, mixed> Result enriched with summary fields or a warning entry
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-4
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-5
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-6
+     * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function tryAppendBasisSummary(array $resultInfo, mixed $node, string $outputFormat): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
     {
+        if (($anonymisedNode instanceof \OCP\Files\File) === false) {
+            $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
+            return $resultInfo;
+        }
+
+        $mime  = $anonymisedNode->getMimeType();
+        $isPdf = ($mime === 'application/pdf');
+
         try {
-            $summaryService = $this->container->get('OCA\DocuDesk\Service\GrondslagenSummaryService');
-
-            if ($outputFormat === 'preserve') {
-                $summaryResult = $summaryService->appendSummaryAsSeparatePdf(node: $node);
-                $resultInfo['summaryFileId']   = $summaryResult['fileId'] ?? null;
-                $resultInfo['summaryFilePath'] = $summaryResult['filePath'] ?? null;
+            if ($isPdf === true) {
+                $this->grondslagenSummary->appendSummaryToPdf(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId
+                );
+                $resultInfo['summaryAppended'] = true;
+            } else {
+                $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId
+                );
+                $resultInfo['summaryAppended'] = false;
+                $resultInfo['summaryFileId']   = $summaryFile->getId();
+                $resultInfo['summaryFilePath'] = $summaryFile->getPath();
             }
-
-            if ($outputFormat !== 'preserve') {
-                $summaryService->appendSummaryToPdf(node: $node);
-            }
-
-            $this->logger->info(
-                'Grondslagen basis summary appended',
-                ['outputFormat' => $outputFormat]
-            );
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             $this->logger->warning(
-                'Failed to append grondslagen summary; anonymised file preserved: '.$e->getMessage(),
-                ['exception' => $e]
+                'Grondslagen summary attach failed',
+                [
+                    'fileId'       => $anonymisedNode->getId(),
+                    'sourceFileId' => $sourceFileId,
+                    'isPdf'        => $isPdf,
+                    'error'        => $e->getMessage(),
+                ]
             );
-            $resultInfo['warning'] = [
-                'code'    => 'SUMMARY_APPEND_FAILED',
-                'message' => 'Basis summary could not be appended. The anonymised file is preserved.',
-            ];
+            $resultInfo['warning'] = 'grondslagen_summary_failed: '.$e->getMessage();
         }//end try
 
         return $resultInfo;
 
-    }//end tryAppendBasisSummary()
+    }//end attachGrondslagenSummary()
 }//end class

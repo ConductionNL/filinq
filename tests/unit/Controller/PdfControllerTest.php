@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -66,7 +69,6 @@ class PdfControllerTest extends TestCase
      */
     private IL10N|MockObject $mockL10n;
 
-
     /**
      * Set up test environment
      *
@@ -76,24 +78,31 @@ class PdfControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockRequest    = $this->createMock(IRequest::class);
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
-        $this->mockPdfService = $this->createMock(PdfService::class);
-        $this->mockL10n       = $this->createMock(IL10N::class);
-        $this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
-            return vsprintf($text, $params);
-        });
+        $this->mockRequest    = $this->createMock(originalClassName: IRequest::class);
+        $this->mockLogger     = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockPdfService = $this->createMock(originalClassName: PdfService::class);
+        $this->mockL10n       = $this->createMock(originalClassName: IL10N::class);
+        $this->mockL10n->method('t')->willReturnCallback(
+                function ($text, $params=[]) {
+                    return vsprintf($text, $params);
+                }
+                );
+
+        $mockUser = $this->createMock(originalClassName: \OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $mockUserSession = $this->createMock(originalClassName: \OCP\IUserSession::class);
+        $mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new PdfController(
-            'docudesk',
-            $this->mockRequest,
-            $this->mockLogger,
-            $this->mockPdfService,
-            $this->mockL10n
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            logger: $this->mockLogger,
+            pdfService: $this->mockPdfService,
+            l10n: $this->mockL10n,
+            userSession: $mockUserSession
         );
 
     }//end setUp()
-
 
     /**
      * Test render returns 400 when template empty
@@ -103,12 +112,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturns400WhenTemplateEmpty(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, ''],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'document.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, ''],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'document.pdf'],
+                    ]
+                    );
 
         $result = $this->controller->render();
 
@@ -116,7 +127,6 @@ class PdfControllerTest extends TestCase
         $this->assertEquals(400, $result->getStatus());
 
     }//end testRenderReturns400WhenTemplateEmpty()
-
 
     /**
      * Test render returns PDF on success
@@ -126,12 +136,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturnsPdfOnSuccess(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, '<h1>Test</h1>'],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'output.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, '<h1>Test</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'output.pdf'],
+                    ]
+                    );
 
         $this->mockPdfService->method('renderPdf')
             ->willReturn('%PDF-1.4 fake content');
@@ -142,7 +154,6 @@ class PdfControllerTest extends TestCase
 
     }//end testRenderReturnsPdfOnSuccess()
 
-
     /**
      * Test render returns error on exception
      *
@@ -151,12 +162,14 @@ class PdfControllerTest extends TestCase
     public function testRenderReturnsErrorOnException(): void
     {
         $this->mockRequest->method('getParam')
-            ->willReturnMap([
-                ['template', null, '<h1>Test</h1>'],
-                ['data', [], []],
-                ['options', [], []],
-                ['filename', 'document.pdf', 'output.pdf'],
-            ]);
+            ->willReturnMap(
+                    [
+                        ['template', null, '<h1>Test</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'output.pdf'],
+                    ]
+                    );
 
         $this->mockPdfService->method('renderPdf')
             ->willThrowException(new \Exception('PDF error', 500));
@@ -167,6 +180,4 @@ class PdfControllerTest extends TestCase
         $this->assertEquals(500, $result->getStatus());
 
     }//end testRenderReturnsErrorOnException()
-
-
 }//end class
