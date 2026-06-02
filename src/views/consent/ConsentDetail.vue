@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { consentStore } from '../../store/store.js'
+import { consentStore, navigationStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -59,29 +59,6 @@ import { consentStore } from '../../store/store.js'
 				<td>{{ consentStore.consentItem.contactAddress }}</td>
 			</tr>
 		</template>
-
-		<!-- Policy-driven anonymisation toggle (§6.1, §6.2) -->
-		<div v-if="consentStore.consentItem" class="detail-section">
-			<h3>{{ t('docudesk', 'Anonymisation') }}</h3>
-			<div class="anonymisation-toggle">
-				<NcCheckboxRadioSwitch
-					v-model="anonymiseToggle"
-					type="switch"
-					:disabled="toggleLocked"
-					@update:checked="onToggleAnonymise">
-					{{ t('docudesk', 'Anonymise this entity in the published document') }}
-				</NcCheckboxRadioSwitch>
-				<p v-if="policyMatchKind === 'prohibition'" class="toggle-note toggle-note-locked">
-					{{ t('docudesk', 'This entity is on the publication prohibition list. The decision is locked.') }}
-				</p>
-				<p v-else-if="policyMatchKind === 'standing_consent'" class="toggle-note">
-					{{ t('docudesk', 'A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.') }}
-				</p>
-				<p v-else-if="consentStore.consentItem.policyMatch" class="toggle-note">
-					{{ t('docudesk', 'Pre-empted by policy match {ref}.', { ref: consentStore.consentItem.policyMatch }) }}
-				</p>
-			</div>
-		</div>
 
 		<!-- Consent status section -->
 		<div v-if="consentStore.consentItem" class="detail-section">
@@ -171,9 +148,7 @@ import { consentStore } from '../../store/store.js'
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
@@ -183,19 +158,12 @@ export default {
 	name: 'ConsentDetail',
 	components: {
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcSelect,
 		NcLoadingIcon,
 		CnDetailPage,
 		CnStatusBadge,
 		ArrowLeft,
 		ContentSave,
-	},
-	props: {
-		consentId: {
-			type: String,
-			default: '',
-		},
 	},
 	data() {
 		return {
@@ -204,8 +172,6 @@ export default {
 				notificationStatus: null,
 				publicationDecision: null,
 			},
-			anonymiseToggle: false,
-			policyMatchKind: null,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
@@ -233,11 +199,6 @@ export default {
 			],
 		}
 	},
-	computed: {
-		toggleLocked() {
-			return this.policyMatchKind === 'prohibition'
-		},
-	},
 	watch: {
 		'consentStore.consentItem': {
 			immediate: true,
@@ -251,15 +212,9 @@ export default {
 					this.editData.consentStatus = this.consentStatusOptions.find(o => o.value === item.consentStatus) || null
 					this.editData.notificationStatus = this.notificationStatusOptions.find(o => o.value === item.notificationStatus) || null
 					this.editData.publicationDecision = this.publicationDecisionOptions.find(o => o.value === item.publicationDecision) || null
-					this.refreshPolicyMatch()
 				}
 			},
 		},
-	},
-	created() {
-		if (this.consentId && !consentStore.consentItem) {
-			consentStore.fetchConsent(this.consentId)
-		}
 	},
 	methods: {
 		/**
@@ -269,75 +224,7 @@ export default {
 		 */
 		goBack() {
 			consentStore.clearConsentItem()
-			this.$router.push({ name: 'Consent' })
-		},
-		/**
-		 * Resolve the policyMatch UUID into a kind for toggle behaviour.
-		 *
-		 * Toggle rules per spec §UI:
-		 *   - referent is a prohibition  → ON + locked
-		 *   - referent is a standing consent (scope=entity) → OFF + interactive
-		 *   - no policyMatch → driven by consentStatus (legacy UX)
-		 */
-		async refreshPolicyMatch() {
-			const item = consentStore.consentItem
-			this.policyMatchKind = null
-			if (!item?.policyMatch) {
-				this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
-				return
-			}
-
-			try {
-				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/prohibitions/${item.policyMatch}`),
-				)
-				this.policyMatchKind = 'prohibition'
-				this.anonymiseToggle = true
-				return
-			} catch (err) {
-				// 404 / other → falls through to standing-consent probe.
-			}
-
-			try {
-				await axios.get(
-					generateUrl(`/apps/docudesk/api/policy/standing-consents/${item.policyMatch}`),
-				)
-				this.policyMatchKind = 'standing_consent'
-				// Default OFF for standing consent; user may override.
-				this.anonymiseToggle = (item.publicationDecision === 'anonymize')
-				return
-			} catch (err) {
-				// Dangling reference — fall through to legacy.
-			}
-
-			this.anonymiseToggle = (item?.publicationDecision === 'anonymize')
-		},
-		/**
-		 * Handle toggle clicks. For standing-consent matches, flipping ON
-		 * records an override: publicationDecision=anonymize while consentStatus
-		 * stays consent_given and policyMatch is preserved. The audit trail
-		 * comes from OpenRegister's mapper-level history.
-		 */
-		async onToggleAnonymise(checked) {
-			if (this.policyMatchKind === 'prohibition') {
-				// Should be impossible due to disabled; defensive.
-				this.anonymiseToggle = true
-				return
-			}
-
-			const id = consentStore.consentItem?.['@self']?.id || consentStore.consentItem?.id || consentStore.consentItem?.uuid
-			if (!id) return
-
-			const update = {
-				publicationDecision: checked ? 'anonymize' : 'publish_with_consent',
-			}
-			try {
-				await consentStore.updateConsent(id, update)
-				showSuccess(t('docudesk', 'Anonymisation decision updated'))
-			} catch (err) {
-				showError(t('docudesk', 'Failed to update anonymisation decision'))
-				this.anonymiseToggle = !checked
-			}
+			navigationStore.setSelected('consent')
 		},
 		/**
 		 * Format a date string for display, falling back gracefully.
@@ -416,23 +303,6 @@ export default {
 .notes-text {
 	white-space: pre-wrap;
 	color: var(--color-main-text);
-}
-
-.anonymisation-toggle {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
-.toggle-note {
-	margin: 0;
-	font-size: 13px;
-	color: var(--color-text-maxcontrast);
-}
-
-.toggle-note-locked {
-	font-weight: 600;
-	color: var(--color-error);
 }
 
 .detail-actions {

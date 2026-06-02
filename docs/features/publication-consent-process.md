@@ -410,6 +410,105 @@ Before publishing a document, ensure:
 4. Decision: `anonymize` (default for skipped)
 5. Document published with anonymized entity
 
+## Publication-Clearance via the Anonymise Endpoint
+
+> **Added:** `unredactedEntities[]` on the per-document and batch anonymise endpoints.
+
+### Overview
+
+Operators can trigger `publicationConsent` record creation directly from the anonymise call.
+Rather than submitting entities separately via `POST /api/consents`, include them in the
+`unredactedEntities[]` array of the same anonymise request:
+
+```json
+POST /index.php/apps/docudesk/api/v1/anonymize/{fileId}
+{
+  "entities": [
+    { "entityId": 1, "text": "Amsterdam", "type": "LOCATION" }
+  ],
+  "unredactedEntities": [
+    {
+      "entityId": 7,
+      "entityText": "Jan Jansen",
+      "entityType": "PERSON",
+      "publicationBases": ["woo-artikel-3.1"],
+      "contactEmail": "j.jansen@example.nl",
+      "contactAddress": "Dorpsstraat 1, 1234 AB"
+    }
+  ]
+}
+```
+
+### Required fields per `unredactedEntities[]` entry
+
+| Field              | Type     | Required | Description                                   |
+|--------------------|----------|----------|-----------------------------------------------|
+| `entityId`         | integer  | yes      | Nextcloud entity relation ID                  |
+| `entityText`       | string   | yes      | Literal text of the entity                    |
+| `entityType`       | string   | yes      | Entity type (e.g. `PERSON`, `ORGANIZATION`)   |
+| `publicationBases` | string[] | yes      | One or more legal publication bases; non-empty |
+| `contactEmail`     | string   | no       | Optional contact e-mail for the data subject  |
+| `contactAddress`   | string   | no       | Optional postal address for the data subject  |
+
+### Prohibition gate (any-confidence, hard 422)
+
+Before creating consents, every `unredactedEntities[]` entry is checked against
+active `publicationProhibition` rules (via `PolicyMatchService`). Unlike the regular
+prohibition gate (which only blocks at ≥ 0.85 confidence), the publication-clearance
+gate is **any-confidence** — the operator made an explicit decision to publish unredacted,
+so any prohibition match is a contradiction.
+
+If any entry matches, the request fails with **HTTP 422** and no file mutation occurs:
+
+```json
+{
+  "error": "One or more unredacted entities match a publication-prohibition rule. ...",
+  "prohibitedEntries": [
+    { "entityId": 7, "entityText": "Jan Jansen", "ruleId": "rule-1", "ruleName": "..." }
+  ]
+}
+```
+
+The operator must either move the prohibited entity to `entities[]` (to anonymise it)
+and re-submit, or remove it entirely.
+
+### `createdConsents[]` response field
+
+On success the response gains a `createdConsents[]` field (absent when
+`unredactedEntities` was not supplied):
+
+```json
+{
+  "replacementCount": 1,
+  "anonymizedFileId": "...",
+  "createdConsents": [
+    {
+      "entityId": 7,
+      "entityText": "Jan Jansen",
+      "consentId": "<uuid>",
+      "consentStatus": "pending",
+      "action": "created"
+    }
+  ]
+}
+```
+
+### Batch endpoint multi-status semantics
+
+The batch `POST /api/v1/batch/{batchId}/anonymize` accepts the same
+`unredactedEntities[]` (applied to every file in the batch). Per-file prohibition
+violations are recorded but do not abort the batch:
+
+| Outcome              | HTTP status |
+|----------------------|-------------|
+| All files processed  | **200**     |
+| Some files violated  | **207**     |
+| All files violated   | **422**     |
+
+Files that violated the prohibition gate get status `prohibitionViolation` in the
+batch response; successfully processed files carry `createdConsents[]` alongside the
+usual `replacementCount` and `anonymizedFileId`.
+
 ## Entity-Level Policy Layer
 
 Beyond the per-document workflow, DocuDesk supports two **entity-level** policy surfaces that pre-empt the workflow at detection time:

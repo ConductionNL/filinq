@@ -22,9 +22,10 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
-use OCA\DocuDesk\Service\OcrService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -75,16 +76,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private EntityDetectionService $entityDetection;
 
-    /**
-     * @var OcrService|MockObject
-     */
-    private OcrService|MockObject $mockOcrService;
-
-    /**
-     * @var GrondslagenSummaryService|MockObject
-     */
-    private GrondslagenSummaryService|MockObject $mockGrondslagenSummary;
-
 
     /**
      * Set up test environment
@@ -95,12 +86,10 @@ class AnonymizationServiceProhibitionTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger             = $this->createMock(LoggerInterface::class);
-        $this->mockContainer          = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager         = $this->createMock(IAppManager::class);
-        $this->mockAppConfig          = $this->createMock(IAppConfig::class);
-        $this->mockOcrService         = $this->createMock(OcrService::class);
-        $this->mockGrondslagenSummary = $this->createMock(GrondslagenSummaryService::class);
+        $this->mockLogger     = $this->createMock(LoggerInterface::class);
+        $this->mockContainer  = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockAppConfig  = $this->createMock(IAppConfig::class);
 
         $this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -118,21 +107,15 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private function makeService(): AnonymizationService
     {
-        $this->mockOcrService->method('processFile')
-            ->willReturn([
-                'text'         => '',
-                'confidence'   => 0.0,
-                'ocrProcessed' => false,
-            ]);
-
         return new AnonymizationService(
             logger: $this->mockLogger,
             container: $this->mockContainer,
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
             appConfig: $this->mockAppConfig,
-            ocrService: $this->mockOcrService,
-            grondslagenSummary: $this->mockGrondslagenSummary
+            consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
+            consentService: $this->createMock(originalClassName: ConsentService::class),
+            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class)
         );
 
     }//end makeService()

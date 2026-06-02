@@ -31,8 +31,6 @@ namespace OCA\OpenRegister\Service;
  */
 class ObjectService
 {
-
-
     /**
      * Find an object by id
      *
@@ -47,7 +45,6 @@ class ObjectService
         return null;
 
     }//end find()
-
 
     /**
      * Save an object
@@ -64,7 +61,6 @@ class ObjectService
 
     }//end saveObject()
 
-
     /**
      * Find all objects matching a set of filters
      *
@@ -78,7 +74,6 @@ class ObjectService
 
     }//end findAll()
 
-
     /**
      * Delete an object
      *
@@ -90,7 +85,6 @@ class ObjectService
     {
 
     }//end deleteObject()
-
 
     /**
      * Build a search query
@@ -107,7 +101,6 @@ class ObjectService
 
     }//end buildSearchQuery()
 
-
     /**
      * Search objects (paginated)
      *
@@ -121,7 +114,6 @@ class ObjectService
 
     }//end searchObjectsPaginated()
 
-
     /**
      * Search objects
      *
@@ -134,8 +126,6 @@ class ObjectService
         return [];
 
     }//end searchObjects()
-
-
 }//end class
 
 /**
@@ -149,8 +139,6 @@ class ObjectService
  */
 class RegisterService
 {
-
-
     /**
      * Find all registers
      *
@@ -161,8 +149,6 @@ class RegisterService
         return [];
 
     }//end findAll()
-
-
 }//end class
 
 /**
@@ -176,8 +162,6 @@ class RegisterService
  */
 class ConfigurationService
 {
-
-
     /**
      * Import from app
      *
@@ -187,8 +171,6 @@ class ConfigurationService
     {
 
     }//end importFromApp()
-
-
 }//end class
 
 /**
@@ -202,11 +184,9 @@ class ConfigurationService
  */
 class TextExtractionService
 {
-
-    public function extractFile(int $fileId, bool $force = false): void
+    public function extractFile(int $fileId, bool $force=false): void
     {
-    }
-
+    }//end extractFile()
 }//end class
 
 /**
@@ -233,8 +213,6 @@ class FileService
  */
 class RiskLevelService
 {
-
-
     /**
      * Get risk level
      *
@@ -247,11 +225,110 @@ class RiskLevelService
         return 'none';
 
     }//end getRiskLevel()
-
-
 }//end class
 
 namespace OCA\OpenRegister\Db;
+
+/**
+ * Stub for Register entity
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Register
+{
+    /**
+     * Get slug
+     *
+     * @return string
+     */
+    public function getSlug(): string
+    {
+        return '';
+
+    }//end getSlug()
+
+    /**
+     * Get title
+     *
+     * @return string
+     */
+    public function getTitle(): string
+    {
+        return '';
+
+    }//end getTitle()
+
+    /**
+     * Get ID
+     *
+     * @return int
+     */
+    public function getId(): int
+    {
+        return 0;
+
+    }//end getId()
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+}//end class
+
+/**
+ * Stub for Schema entity
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Schema
+{
+    /**
+     * Get title
+     *
+     * @return string
+     */
+    public function getTitle(): string
+    {
+        return '';
+
+    }//end getTitle()
+
+    /**
+     * Get ID
+     *
+     * @return int
+     */
+    public function getId(): int
+    {
+        return 0;
+
+    }//end getId()
+
+    /**
+     * Serialize to array
+     *
+     * @return array
+     */
+    public function jsonSerialize(): array
+    {
+        return [];
+
+    }//end jsonSerialize()
+}//end class
 
 /**
  * Stub for ObjectEntity
@@ -264,8 +341,6 @@ namespace OCA\OpenRegister\Db;
  */
 class ObjectEntity
 {
-
-
     /**
      * Serialize to array
      *
@@ -276,8 +351,6 @@ class ObjectEntity
         return [];
 
     }//end jsonSerialize()
-
-
 }//end class
 
 /**
@@ -291,8 +364,6 @@ class ObjectEntity
  */
 class EntityRelationMapper
 {
-
-
     /**
      * Find by file ID
      *
@@ -306,7 +377,6 @@ class EntityRelationMapper
 
     }//end findByFileId()
 
-
     /**
      * Find entities for file
      *
@@ -319,8 +389,44 @@ class EntityRelationMapper
         return [];
 
     }//end findEntitiesForFile()
+}//end class
 
+/**
+ * Stub for SchemaMapper
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class SchemaMapper
+{
+    /**
+     * Find schema by id
+     *
+     * @param mixed $id Schema ID
+     *
+     * @return mixed
+     */
+    public function find(mixed $id): mixed
+    {
+        return null;
 
+    }//end find()
+
+    /**
+     * Find all schemas
+     *
+     * @param array $filters Filters
+     *
+     * @return array
+     */
+    public function findAll(array $filters=[]): array
+    {
+        return [];
+
+    }//end findAll()
 }//end class
 
 namespace OC\Hooks;
@@ -336,7 +442,7 @@ namespace OC\Hooks;
  */
 interface Emitter
 {
-}
+}//end interface
 
 namespace OCP;
 
@@ -351,15 +457,12 @@ namespace OCP;
  */
 interface IUserSession
 {
-
     /**
      * Get the currently logged in user
      *
      * @return \OCP\IUser|null
      */
     public function getUser(): ?\OCP\IUser;
-
-
 }//end interface
 
 
@@ -374,30 +477,48 @@ interface IUserSession
  */
 interface IAppConfig
 {
+    public function getValueFloat(string $app, string $key, float $default=0, bool $lazy=false): float;
 
-    public function getValueFloat(string $app, string $key, float $default = 0, bool $lazy = false): float;
-    public function getValueString(string $app, string $key, string $default = '', bool $lazy = false): string;
-    public function getValueInt(string $app, string $key, int $default = 0, bool $lazy = false): int;
-    public function getValueBool(string $app, string $key, bool $default = false, bool $lazy = false): bool;
-    public function getValueArray(string $app, string $key, array $default = [], bool $lazy = false): array;
-    public function setValueFloat(string $app, string $key, float $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueString(string $app, string $key, string $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueInt(string $app, string $key, int $value, bool $lazy = false, bool $sensitive = false): bool;
-    public function setValueBool(string $app, string $key, bool $value, bool $lazy = false): bool;
-    public function setValueArray(string $app, string $key, array $value, bool $lazy = false, bool $sensitive = false): bool;
+    public function getValueString(string $app, string $key, string $default='', bool $lazy=false): string;
+
+    public function getValueInt(string $app, string $key, int $default=0, bool $lazy=false): int;
+
+    public function getValueBool(string $app, string $key, bool $default=false, bool $lazy=false): bool;
+
+    public function getValueArray(string $app, string $key, array $default=[], bool $lazy=false): array;
+
+    public function setValueFloat(string $app, string $key, float $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueString(string $app, string $key, string $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueInt(string $app, string $key, int $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    public function setValueBool(string $app, string $key, bool $value, bool $lazy=false): bool;
+
+    public function setValueArray(string $app, string $key, array $value, bool $lazy=false, bool $sensitive=false): bool;
+
     public function getApps(): array;
-    public function getKeys(string $app): array;
-    public function hasKey(string $app, string $key, ?bool $lazy = null): bool;
-    public function deleteKey(string $app, string $key): bool;
-    public function deleteApp(string $app): bool;
-    public function clearCache(bool $reload = false): void;
-    public function getAllValues(string $app, string $prefix = '', bool $filtered = false): array;
-    public function getValueType(string $app, string $key, ?bool $lazy = null): int;
-    public function getValues($app, $key);
-    public function getFilteredValues($app);
-    public function getAppInstalledVersions(bool $onlyEnabled = false): array;
 
-}
+    public function getKeys(string $app): array;
+
+    public function hasKey(string $app, string $key, ?bool $lazy=null): bool;
+
+    public function deleteKey(string $app, string $key): bool;
+
+    public function deleteApp(string $app): bool;
+
+    public function clearCache(bool $reload=false): void;
+
+    public function getAllValues(string $app, string $prefix='', bool $filtered=false): array;
+
+    public function getValueType(string $app, string $key, ?bool $lazy=null): int;
+
+    public function getValues($app, $key);
+
+    public function getFilteredValues($app);
+
+    public function getAppInstalledVersions(bool $onlyEnabled=false): array;
+}//end interface
 
 namespace OCP\App;
 
@@ -412,15 +533,18 @@ namespace OCP\App;
  */
 interface IAppManager
 {
-
     public function getInstalledApps(): array;
-    public function isEnabledForUser(string $appId, ?\OCP\IUser $user = null): bool;
-    public function isInstalled(string $appId): bool;
-    public function enableApp(string $appId, bool $forceEnable = false): void;
-    public function disableApp(string $appId, bool $automaticDisabled = false): void;
-    public function getAppVersion(string $appId, bool $useCache = true): string;
 
-}
+    public function isEnabledForUser(string $appId, ?\OCP\IUser $user=null): bool;
+
+    public function isInstalled(string $appId): bool;
+
+    public function enableApp(string $appId, bool $forceEnable=false): void;
+
+    public function disableApp(string $appId, bool $automaticDisabled=false): void;
+
+    public function getAppVersion(string $appId, bool $useCache=true): string;
+}//end interface
 
 namespace OCP\AppFramework;
 
@@ -435,15 +559,47 @@ namespace OCP\AppFramework;
  */
 class Http
 {
-    public const STATUS_OK = 200;
-    public const STATUS_CREATED = 201;
-    public const STATUS_NO_CONTENT = 204;
+    public const STATUS_OK           = 200;
+    public const STATUS_CREATED      = 201;
+    public const STATUS_NO_CONTENT   = 204;
     public const STATUS_UNAUTHORIZED = 401;
-    public const STATUS_FORBIDDEN = 403;
-    public const STATUS_NOT_FOUND = 404;
+    public const STATUS_FORBIDDEN    = 403;
+    public const STATUS_NOT_FOUND    = 404;
     public const STATUS_INTERNAL_SERVER_ERROR = 500;
 }//end class
 
+
+namespace Psr\Log;
+
+/**
+ * Stub for Psr\Log\LoggerInterface
+ *
+ * @category Tests
+ * @package  Psr\Log
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface LoggerInterface
+{
+    public function emergency(string|\Stringable $message, array $context=[]): void;
+
+    public function alert(string|\Stringable $message, array $context=[]): void;
+
+    public function critical(string|\Stringable $message, array $context=[]): void;
+
+    public function error(string|\Stringable $message, array $context=[]): void;
+
+    public function warning(string|\Stringable $message, array $context=[]): void;
+
+    public function notice(string|\Stringable $message, array $context=[]): void;
+
+    public function info(string|\Stringable $message, array $context=[]): void;
+
+    public function debug(string|\Stringable $message, array $context=[]): void;
+
+    public function log(mixed $level, string|\Stringable $message, array $context=[]): void;
+}//end interface
 
 namespace OCP;
 
@@ -458,13 +614,14 @@ namespace OCP;
  */
 interface IUser
 {
-
     public function getUID(): string;
-    public function getDisplayName(): string;
-    public function getEMailAddress(): ?string;
-    public function isEnabled(): bool;
 
-}
+    public function getDisplayName(): string;
+
+    public function getEMailAddress(): ?string;
+
+    public function isEnabled(): bool;
+}//end interface
 
 
 /**
@@ -478,10 +635,7 @@ interface IUser
  */
 interface IGroupManager
 {
-
     public function isAdmin(string $userId): bool;
-
-
 }//end interface
 
 
@@ -496,9 +650,8 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface Folder
+interface Folder extends Node
 {
-
     /**
      * Get nodes by file ID
      *
@@ -508,7 +661,21 @@ interface Folder
      */
     public function getById(int $id): array;
 
+    public function get(string $path): \OCP\Files\Node;
 
+    public function getDirectoryListing(): array;
+
+    public function getRelativePath(string $path): ?string;
+
+    public function nodeExists(string $path): bool;
+
+    public function newFolder(string $path): \OCP\Files\Folder;
+
+    public function newFile(string $path, mixed $content=null): \OCP\Files\File;
+
+    public function search(string $query): array;
+
+    public function searchByMime(string $mimetype): array;
 }//end interface
 
 
@@ -523,10 +690,15 @@ interface Folder
  */
 interface Node
 {
-
     public function getName(): string;
+
     public function getPath(): string;
 
+    public function getId(): int;
+
+    public function getPermissions(): int;
+
+    public function getMimeType(): string;
 }//end interface
 
 
@@ -541,10 +713,7 @@ interface Node
  */
 interface File extends Node
 {
-
     public function getContent(): string;
-    public function getMimeType(): string;
-
 }//end interface
 
 
@@ -559,7 +728,6 @@ interface File extends Node
  */
 interface IRootFolder
 {
-
     /**
      * Get a user's home folder
      *
@@ -568,6 +736,4 @@ interface IRootFolder
      * @return \OCP\Files\Folder
      */
     public function getUserFolder(string $userId): \OCP\Files\Folder;
-
-
 }//end interface

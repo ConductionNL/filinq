@@ -21,7 +21,8 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
- * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.2
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
  */
 
 declare(strict_types=1);
@@ -70,14 +71,13 @@ class AnonymizationService
      * @param IAppManager               $appManager         App manager interface
      * @param EntityDetectionService    $entityDetection    Entity detection and mapping service
      * @param IAppConfig                $appConfig          App configuration for threshold settings
-     * @param OcrService                $ocrService         OCR service for scanned document processing
+     * @param ConsentCrudService        $consentCrud        Consent CRUD service for register/schema config
+     * @param ConsentService            $consentService     Consent service for creating publication consents
      * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
      *                                                      summary page (Wave 4a — opt-in via
      *                                                      `appendBasisSummary: true` on the request).
      *
      * @return void
-     *
-     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.2
      */
     public function __construct(
         private readonly LoggerInterface $logger,
@@ -85,7 +85,8 @@ class AnonymizationService
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
         private readonly IAppConfig $appConfig,
-        private readonly OcrService $ocrService,
+        private readonly ConsentCrudService $consentCrud,
+        private readonly ConsentService $consentService,
         private readonly GrondslagenSummaryService $grondslagenSummary
     ) {
 
@@ -115,41 +116,22 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
-     * When the file is image-based or a scanned PDF (no embedded text), OCR is
-     * attempted first via OcrService before falling through to OpenRegister's
-     * TextExtractionService. The response includes `ocrProcessed` (bool) and
-     * `ocrConfidence` (float 0–100) so callers can assess result quality.
-     *
      * Each entity in the response includes a `prohibitionMatch` field: null when
      * no publication-prohibition rule matches, or an object with ruleId, ruleName,
      * and highConfidence (score >= configured threshold, inclusive).
      *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount, ocrProcessed, ocrConfidence
+     * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
-     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.3
      */
     public function extractAndDetectEntities(int $fileId): array
     {
         try {
-            // Run OCR before TextExtractionService for image-based and scanned PDF files.
-            // OcrService returns immediately when OCR is disabled or Tesseract is unavailable.
-            $ocrResult = $this->ocrService->processFile(fileId: $fileId);
-
-            $this->logger->debug(
-                'OCR pre-processing complete',
-                [
-                    'fileId'        => $fileId,
-                    'ocrProcessed'  => $ocrResult['ocrProcessed'],
-                    'ocrConfidence' => $ocrResult['confidence'],
-                ]
-            );
-
             $textExtractor = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
@@ -165,10 +147,8 @@ class AnonymizationService
             $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
             return [
-                'entities'      => $normalized,
-                'entityCount'   => count($entities),
-                'ocrProcessed'  => $ocrResult['ocrProcessed'],
-                'ocrConfidence' => $ocrResult['confidence'],
+                'entities'    => $normalized,
+                'entityCount' => count($entities),
             ];
         } catch (Exception $e) {
             $this->logger->error(
@@ -298,28 +278,36 @@ class AnonymizationService
      *
      * When appendBasisSummary is true, invokes GrondslagenSummaryService after
      * the anonymised file has been written. For PDF output the summary is
-     * appended as an extra page; for preserve mode a separate
-     * `<base>_grondslagen.pdf` file is written alongside. Summary failure
-     * is non-fatal: the anonymised file is always preserved and a structured
-     * `warning` field is added to the response instead (HTTP 200).
+     * appended as an extra page; for non-PDF output a separate
+     * `<base>_grondslagen.pdf` is written alongside. Summary failure
+     * is non-fatal: the anonymised file is always preserved and a `warning`
+     * field is added to the response instead (HTTP 200).
      *
-     * @param int                         $fileId             The Nextcloud file ID
-     * @param array<array<string, mixed>> $entities           The entities to anonymize
-     * @param bool                        $appendBasisSummary Whether to append a grondslagen summary (default false)
-     * @param string                      $outputFormat       Output format: 'pdf' (default) or 'preserve'
+     * When unredactedEntities is non-empty, a publicationConsent record is
+     * created for each entry AFTER the anonymise pipeline succeeds. The
+     * createdConsents[] field in the response aggregates the resulting records.
      *
-     * @return array<string, mixed> Anonymization result with optional warning/summaryFileId fields
+     * @param int                              $fileId             The Nextcloud file ID
+     * @param array<array<string, mixed>>      $entities           The entities to anonymize
+     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary (default false)
+     * @param string                           $outputFormat       Output format: 'pdf' (default) or 'preserve'
+     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation
+     *
+     * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
      *
      * @throws Exception If anonymization fails
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
      */
     public function anonymizeDocument(
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        array $unredactedEntities=[]
     ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
@@ -399,6 +387,13 @@ class AnonymizationService
             // unconfirmed.
             $resultInfo['replacementCount'] = $verification['replacementsApplied'] ?? $verification['replacementsAttempted'];
 
+            if (empty($unredactedEntities) === false) {
+                $resultInfo = $this->createConsentsForUnredactedEntities(
+                    resultInfo: $resultInfo,
+                    unredactedEntities: $unredactedEntities
+                );
+            }
+
             if ($appendBasisSummary === true) {
                 $resultInfo = $this->attachGrondslagenSummary(
                     anonymisedNode: $result,
@@ -417,6 +412,141 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Check unredacted entities against publication-prohibition rules.
+     *
+     * Returns an array of violation records (one per matching entity).
+     * An empty array means no violations — all entries may proceed to consent creation.
+     * Uses PolicyMatchService at any confidence (operator made an explicit decision;
+     * the 0.85-threshold logic of the regular gate does NOT apply here — D2).
+     *
+     * @param array<int, array<string, mixed>> $unredactedEntities Entries from the unredactedEntities[] payload field
+     *
+     * @return array<int, array<string, mixed>> Violation records: [{entityId, entityText, ruleId, ruleName}]
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+     */
+    public function checkUnredactedProhibitions(array $unredactedEntities): array
+    {
+        $policyService = $this->tryGetPolicyMatchService();
+        if ($policyService === null) {
+            return [];
+        }
+
+        $violations = [];
+        foreach ($unredactedEntities as $entry) {
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $entityText = (string) ($entry['entityText'] ?? '');
+
+            try {
+                $match = $policyService->matchProhibition(
+                    entityType: $entityType,
+                    entityValue: $entityText
+                );
+            } catch (\Throwable $e) {
+                $this->logger->debug(
+                    'PolicyMatchService::matchProhibition threw during unredacted check; skipping',
+                    ['exception' => $e->getMessage()]
+                );
+                continue;
+            }
+
+            if ($match !== null) {
+                $violations[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'ruleId'     => $match['ruleId'] ?? null,
+                    'ruleName'   => $match['ruleName'] ?? null,
+                ];
+            }
+        }//end foreach
+
+        return $violations;
+
+    }//end checkUnredactedProhibitions()
+
+    /**
+     * Create publicationConsent records for each unredacted entity after a successful anonymise run.
+     *
+     * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
+     * failure is logged but does NOT abort the response — the consent failure is surfaced as
+     * a structured error entry in createdConsents[].
+     *
+     * @param array<string, mixed>             $resultInfo         Current anonymization result
+     * @param array<int, array<string, mixed>> $unredactedEntities Validated unredacted-entity entries
+     *
+     * @return array<string, mixed> Result enriched with createdConsents[] field
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+     */
+    private function createConsentsForUnredactedEntities(
+        array $resultInfo,
+        array $unredactedEntities
+    ): array {
+        $config = $this->consentCrud->getConsentConfig();
+        if ($config === null) {
+            $this->logger->warning(
+                'Publication consent register/schema not configured; skipping consent creation for unredacted entities.'
+            );
+            $resultInfo['createdConsents'] = [];
+            return $resultInfo;
+        }
+
+        $documentId      = (string) ($resultInfo['anonymizedFileId'] ?? '');
+        $createdConsents = [];
+
+        foreach ($unredactedEntities as $entry) {
+            $entityText = (string) ($entry['entityText'] ?? '');
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $extra      = [
+                'publicationBases' => $entry['publicationBases'] ?? [],
+            ];
+
+            if (empty($entry['contactEmail']) === false) {
+                $extra['contactEmail'] = (string) $entry['contactEmail'];
+            }
+
+            if (empty($entry['contactAddress']) === false) {
+                $extra['contactAddress'] = (string) $entry['contactAddress'];
+            }
+
+            try {
+                $consent = $this->consentService->createConsentRequest(
+                    documentId: $documentId,
+                    entityType: $entityType,
+                    entityText: $entityText,
+                    register: $config['register'],
+                    schema: $config['schema'],
+                    extra: $extra
+                );
+
+                $createdConsents[] = [
+                    'entityId'      => $entry['entityId'] ?? null,
+                    'entityText'    => $entityText,
+                    'consentId'     => $consent['id'] ?? $consent['uuid'] ?? null,
+                    'consentStatus' => $consent['consentStatus'] ?? 'pending',
+                    'action'        => 'created',
+                ];
+            } catch (Exception $e) {
+                $this->logger->error(
+                    'Failed to create consent for unredacted entity: '.$e->getMessage(),
+                    ['entityText' => $entityText, 'exception' => $e]
+                );
+                $createdConsents[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'action'     => 'failed',
+                    'error'      => 'Consent creation failed.',
+                ];
+            }//end try
+        }//end foreach
+
+        $resultInfo['createdConsents'] = $createdConsents;
+        return $resultInfo;
+
+    }//end createConsentsForUnredactedEntities()
 
     /**
      * Read a Nextcloud file node's content as text, safely.
