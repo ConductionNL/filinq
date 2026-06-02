@@ -65,12 +65,15 @@ class AnonymizationService
     /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface        $logger          Logger for error reporting
-     * @param ContainerInterface     $container       Container for dependency injection
-     * @param IAppManager            $appManager      App manager interface
-     * @param EntityDetectionService $entityDetection Entity detection and mapping service
-     * @param IAppConfig             $appConfig       App configuration for threshold settings
-     * @param OcrService             $ocrService      OCR service for scanned document processing
+     * @param LoggerInterface           $logger             Logger for error reporting
+     * @param ContainerInterface        $container          Container for dependency injection
+     * @param IAppManager               $appManager         App manager interface
+     * @param EntityDetectionService    $entityDetection    Entity detection and mapping service
+     * @param IAppConfig                $appConfig          App configuration for threshold settings
+     * @param OcrService                $ocrService         OCR service for scanned document processing
+     * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
+     *                                                      summary page (Wave 4a — opt-in via
+     *                                                      `appendBasisSummary: true` on the request).
      *
      * @return void
      *
@@ -82,7 +85,8 @@ class AnonymizationService
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
         private readonly IAppConfig $appConfig,
-        private readonly OcrService $ocrService
+        private readonly OcrService $ocrService,
+        private readonly GrondslagenSummaryService $grondslagenSummary
     ) {
 
     }//end __construct()
@@ -295,9 +299,9 @@ class AnonymizationService
      * When appendBasisSummary is true, invokes GrondslagenSummaryService after
      * the anonymised file has been written. For PDF output the summary is
      * appended as an extra page; for preserve mode a separate
-     * `<base>_anonymized_grondslagen.pdf` is written alongside. Summary failure
-     * is non-fatal: the anonymised file is always preserved and a `warning`
-     * field is added to the response instead (HTTP 200).
+     * `<base>_grondslagen.pdf` file is written alongside. Summary failure
+     * is non-fatal: the anonymised file is always preserved and a structured
+     * `warning` field is added to the response instead (HTTP 200).
      *
      * @param int                         $fileId             The Nextcloud file ID
      * @param array<array<string, mixed>> $entities           The entities to anonymize
@@ -396,10 +400,10 @@ class AnonymizationService
             $resultInfo['replacementCount'] = $verification['replacementsApplied'] ?? $verification['replacementsAttempted'];
 
             if ($appendBasisSummary === true) {
-                $resultInfo = $this->tryAppendBasisSummary(
-                    resultInfo: $resultInfo,
-                    node: $node,
-                    outputFormat: $outputFormat
+                $resultInfo = $this->attachGrondslagenSummary(
+                    anonymisedNode: $result,
+                    sourceFileId: $fileId,
+                    resultInfo: $resultInfo
                 );
             }
 
@@ -551,58 +555,66 @@ class AnonymizationService
     }//end verifyReplacements()
 
     /**
-     * Attempt to append a grondslagen basis summary to the anonymized document.
+     * Render and attach the grondslagen summary to a freshly-anonymised file.
      *
-     * Soft-depends on GrondslagenSummaryService from the
-     * anonymisation-grondslagen-summary-rendering change. When the service is
-     * unavailable or throws, the failure is logged and a structured `warning`
-     * field is added to the result. The anonymised file is always preserved.
+     * If the anonymised file is a PDF, the summary is appended to it in place
+     * (one extra page). For other formats, the summary is saved as a separate
+     * `<base>_grondslagen.pdf` file beside the anonymised file.
      *
-     * For PDF output: summary is appended as an extra page (in-place).
-     * For preserve output: a separate _grondslagen.pdf is written alongside;
-     * the result gains `summaryFileId` and `summaryFilePath` fields.
+     * Summary-step failure is **non-fatal**: the anonymise call still
+     * returns success; the result gets a structured `warning` field so the
+     * caller can surface the issue to the operator without rolling back the
+     * anonymisation.
      *
-     * @param array<string, mixed> $resultInfo   Current anonymization result
-     * @param mixed                $node         Nextcloud file node of the anonymised file
-     * @param string               $outputFormat 'pdf' or 'preserve'
+     * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
+     * @param int                  $sourceFileId   The pre-anonymisation source file id (used to look
+     *                                             up the EntityRelation rows that carry the bases).
+     * @param array<string, mixed> $resultInfo     The current result info — extended with the
+     *                                             summary's `summaryFileId` / `warning` fields and
+     *                                             returned.
      *
-     * @return array<string, mixed> Result enriched with summary fields or a warning entry
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-4
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-5
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-6
+     * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function tryAppendBasisSummary(array $resultInfo, mixed $node, string $outputFormat): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
     {
+        if (($anonymisedNode instanceof \OCP\Files\File) === false) {
+            $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
+            return $resultInfo;
+        }
+
+        $mime  = $anonymisedNode->getMimeType();
+        $isPdf = ($mime === 'application/pdf');
+
         try {
-            $summaryService = $this->container->get('OCA\DocuDesk\Service\GrondslagenSummaryService');
-
-            if ($outputFormat === 'preserve') {
-                $summaryResult = $summaryService->appendSummaryAsSeparatePdf(node: $node);
-                $resultInfo['summaryFileId']   = $summaryResult['fileId'] ?? null;
-                $resultInfo['summaryFilePath'] = $summaryResult['filePath'] ?? null;
+            if ($isPdf === true) {
+                $this->grondslagenSummary->appendSummaryToPdf(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId
+                );
+                $resultInfo['summaryAppended'] = true;
+            } else {
+                $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId
+                );
+                $resultInfo['summaryAppended'] = false;
+                $resultInfo['summaryFileId']   = $summaryFile->getId();
+                $resultInfo['summaryFilePath'] = $summaryFile->getPath();
             }
-
-            if ($outputFormat !== 'preserve') {
-                $summaryService->appendSummaryToPdf(node: $node);
-            }
-
-            $this->logger->info(
-                'Grondslagen basis summary appended',
-                ['outputFormat' => $outputFormat]
-            );
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             $this->logger->warning(
-                'Failed to append grondslagen summary; anonymised file preserved: '.$e->getMessage(),
-                ['exception' => $e]
+                'Grondslagen summary attach failed',
+                [
+                    'fileId'       => $anonymisedNode->getId(),
+                    'sourceFileId' => $sourceFileId,
+                    'isPdf'        => $isPdf,
+                    'error'        => $e->getMessage(),
+                ]
             );
-            $resultInfo['warning'] = [
-                'code'    => 'SUMMARY_APPEND_FAILED',
-                'message' => 'Basis summary could not be appended. The anonymised file is preserved.',
-            ];
+            $resultInfo['warning'] = 'grondslagen_summary_failed: '.$e->getMessage();
         }//end try
 
         return $resultInfo;
 
-    }//end tryAppendBasisSummary()
+    }//end attachGrondslagenSummary()
 }//end class
