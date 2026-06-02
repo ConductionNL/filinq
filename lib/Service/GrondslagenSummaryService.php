@@ -90,7 +90,6 @@ class GrondslagenSummaryService
      */
     private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
-
     /**
      * Constructor.
      *
@@ -112,7 +111,6 @@ class GrondslagenSummaryService
     ) {
 
     }//end __construct()
-
 
     /**
      * Append a grondslagen summary page to an already-anonymised PDF file.
@@ -168,7 +166,6 @@ class GrondslagenSummaryService
         return $anonymisedFile;
 
     }//end appendSummaryToPdf()
-
 
     /**
      * Produce a separate grondslagen-summary PDF beside the anonymised file.
@@ -226,7 +223,6 @@ class GrondslagenSummaryService
 
     }//end renderSummaryBesideFile()
 
-
     /**
      * Render the per-dossier summary PDF for one dossier.
      *
@@ -255,9 +251,8 @@ class GrondslagenSummaryService
 
         $perFile = $this->walkDossierFiles(folder: $folder);
 
-        // loadAnonymisedEntitiesForFile already resolves base labels per
-        // file. aggregateForDossier just unfolds those rows across files
-        // and sorts. No second label-resolution pass needed here.
+        // Base labels are already resolved per file by loadAnonymisedEntitiesForFile;
+        // aggregateForDossier just unfolds those rows and sorts. No second pass needed.
         $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
 
         $data = [
@@ -306,7 +301,6 @@ class GrondslagenSummaryService
         return $summaryFile;
 
     }//end renderDossierSummary()
-
 
     /**
      * Load the minimum dossier context the renderer needs.
@@ -391,7 +385,6 @@ class GrondslagenSummaryService
 
     }//end loadDossierContext()
 
-
     /**
      * Resolve the dossier's `@self.folder` reference to a Nextcloud Folder node.
      *
@@ -438,7 +431,6 @@ class GrondslagenSummaryService
 
     }//end resolveDossierFolder()
 
-
     /**
      * Walk every file under the dossier folder and collect its anonymised entities.
      *
@@ -484,7 +476,6 @@ class GrondslagenSummaryService
 
     }//end walkDossierFiles()
 
-
     /**
      * Build the flat row set the per-dossier template renders.
      *
@@ -505,34 +496,36 @@ class GrondslagenSummaryService
      *                                        entities[]}` where `entities[]` is the
      *                                        per-entity-aggregated output of
      *                                        loadAnonymisedEntitiesForFile.
-     * @param array<string, string> $labelMap Map of base-ref → human-readable label
-     *                                        (unused here — labels are already
-     *                                        resolved upstream; kept for signature
-     *                                        compat).
+     * @param array<string, string> $labelMap Map of base-ref → human-readable label,
+     *                                        used to populate `perBasis[].name`.
      *
      * @return array<string, mixed> Shape:
      *                              `{ rows: array<int, {placeholder, filename,
      *                                 fileId, count, baseLabels, basesText,
      *                                 entityType, entityId}>,
+     *                                perDocument: array<int, {fileId, filename, entityCount}>,
+     *                                perBasis: array<int, {ref, name, documentCount, entityCount}>,
      *                                totals: { documentCount, entityCount,
      *                                  distinctEntityCount, distinctBasesCount } }`.
      */
     private function aggregateForDossier(array $perFile, array $labelMap): array
     {
-        unset($labelMap);
-
         $rows = [];
         $totalOccurrences   = 0;
         $distinctEntityKeys = [];
         $distinctBasisRefs  = [];
+        $perDocument        = [];
+        $perBasisDocFiles   = [];
+        $perBasisCount      = [];
 
         foreach ($perFile as $fileRow) {
-            $fileId   = ($fileRow['fileId'] ?? 0);
-            $filename = (string) ($fileRow['filename'] ?? '');
+            $fileId          = ($fileRow['fileId'] ?? 0);
+            $filename        = (string) ($fileRow['filename'] ?? '');
+            $fileEntityCount = 0;
 
             foreach (($fileRow['entities'] ?? []) as $entity) {
                 $placeholder = (string) ($entity['placeholder'] ?? '');
-                $count       = (int) ($entity['count'] ?? 0);
+                $count       = (int) ($entity['count'] ?? 1);
                 $basesText   = (string) ($entity['basesText'] ?? '');
                 $baseLabels  = ($entity['baseLabels'] ?? []);
                 if (is_array($baseLabels) === false) {
@@ -540,25 +533,42 @@ class GrondslagenSummaryService
                 }
 
                 $totalOccurrences += $count;
+                $fileEntityCount  += $count;
 
                 $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
                 $distinctEntityKeys[$entityKey] = true;
 
-                foreach (($entity['bases'] ?? []) as $ref) {
-                    $distinctBasisRefs[(string) $ref] = true;
+                $bases = ($entity['bases'] ?? []);
+                if (is_array($bases) === false) {
+                    $bases = [];
                 }
 
-                $rows[] = [
-                    'placeholder' => $placeholder,
-                    'fileId'      => $fileId,
-                    'filename'    => $filename,
-                    'count'       => $count,
-                    'baseLabels'  => $baseLabels,
-                    'basesText'   => $basesText,
-                    'entityType'  => (string) ($entity['entityType'] ?? ''),
-                    'entityId'    => (int) ($entity['entityId'] ?? 0),
-                ];
+                foreach ($bases as $ref) {
+                    $refStr = (string) $ref;
+                    $distinctBasisRefs[$refStr]         = true;
+                    $perBasisDocFiles[$refStr][$fileId] = true;
+                    $perBasisCount[$refStr] = ($perBasisCount[$refStr] ?? 0) + $count;
+                }
+
+                if ($placeholder !== '') {
+                    $rows[] = [
+                        'placeholder' => $placeholder,
+                        'fileId'      => $fileId,
+                        'filename'    => $filename,
+                        'count'       => $count,
+                        'baseLabels'  => $baseLabels,
+                        'basesText'   => $basesText,
+                        'entityType'  => (string) ($entity['entityType'] ?? ''),
+                        'entityId'    => (int) ($entity['entityId'] ?? 0),
+                    ];
+                }
             }//end foreach
+
+            $perDocument[] = [
+                'fileId'      => $fileId,
+                'filename'    => $filename,
+                'entityCount' => $fileEntityCount,
+            ];
         }//end foreach
 
         usort(
@@ -573,9 +583,21 @@ class GrondslagenSummaryService
             }
         );
 
+        $perBasis = [];
+        foreach (array_keys($distinctBasisRefs) as $ref) {
+            $perBasis[] = [
+                'ref'           => $ref,
+                'name'          => ($labelMap[$ref] ?? $ref),
+                'documentCount' => count($perBasisDocFiles[$ref] ?? []),
+                'entityCount'   => ($perBasisCount[$ref] ?? 0),
+            ];
+        }
+
         return [
-            'rows'   => $rows,
-            'totals' => [
+            'rows'        => $rows,
+            'perDocument' => $perDocument,
+            'perBasis'    => $perBasis,
+            'totals'      => [
                 'documentCount'       => count($perFile),
                 'entityCount'         => $totalOccurrences,
                 'distinctEntityCount' => count($distinctEntityKeys),
@@ -584,7 +606,6 @@ class GrondslagenSummaryService
         ];
 
     }//end aggregateForDossier()
-
 
     /**
      * Save the rendered per-dossier summary PDF.
@@ -626,7 +647,6 @@ class GrondslagenSummaryService
         return $newFile;
 
     }//end saveDossierSummary()
-
 
     /**
      * Update the dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}`.
@@ -745,7 +765,6 @@ class GrondslagenSummaryService
 
     }//end updateDossierConfiguration()
 
-
     /**
      * Resolve a list of `base` references (slugs or UUIDs) to human-readable labels.
      *
@@ -773,11 +792,10 @@ class GrondslagenSummaryService
 
         $objectService = $this->getObjectService();
         if ($objectService === null) {
-            // ObjectService unavailable — best-effort: show the raw ref so
-            // the operator at least sees the slug, not a dangling
-            // placeholder. Better than masking the failure entirely.
+            // ObjectService unavailable — use placeholder format so the
+            // operator sees a clear data-gap marker instead of a raw slug.
             foreach ($baseRefs as $ref) {
-                $labels[(string) $ref] = (string) $ref;
+                $labels[(string) $ref] = '⟨grondslag verwijderd: '.(string) $ref.'⟩';
             }
 
             return $labels;
@@ -842,14 +860,13 @@ class GrondslagenSummaryService
             } else if (isset($uuidToName[$refString]) === true) {
                 $labels[$refString] = $uuidToName[$refString];
             } else {
-                $labels[$refString] = $refString;
+                $labels[$refString] = '⟨grondslag verwijderd: '.$refString.'⟩';
             }
         }
 
         return $labels;
 
     }//end resolveBaseLabels()
-
 
     /**
      * Coerce an ObjectService findAll result into a plain array of object payloads.
@@ -904,7 +921,6 @@ class GrondslagenSummaryService
         return $out;
 
     }//end extractObjects()
-
 
     /**
      * Load the EntityRelation rows that this service cares about for a file.
@@ -1026,7 +1042,6 @@ class GrondslagenSummaryService
 
     }//end loadAnonymisedEntitiesForFile()
 
-
     /**
      * Render the per-document summary template into PDF bytes.
      *
@@ -1087,7 +1102,6 @@ class GrondslagenSummaryService
 
     }//end renderPerDocumentSummary()
 
-
     /**
      * Merge an anonymised PDF + the freshly-rendered summary PDF into one PDF.
      *
@@ -1139,7 +1153,7 @@ class GrondslagenSummaryService
             }
 
             // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
-            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis)
+            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis).
             return (string) $pdf->Output('S');
         } catch (Exception $e) {
             throw new RuntimeException(
@@ -1157,7 +1171,6 @@ class GrondslagenSummaryService
         }//end try
 
     }//end mergeSummaryIntoPdf()
-
 
     /**
      * Count distinct base references across a set of shaped entity rows.
@@ -1185,7 +1198,6 @@ class GrondslagenSummaryService
         return count($seen);
 
     }//end countDistinctBases()
-
 
     /**
      * Load a Twig template's source from disk.
@@ -1222,7 +1234,6 @@ class GrondslagenSummaryService
 
     }//end loadTemplate()
 
-
     /**
      * Get the OpenRegister EntityRelationMapper, or null when unavailable.
      *
@@ -1245,7 +1256,6 @@ class GrondslagenSummaryService
         }
 
     }//end getEntityRelationMapper()
-
 
     /**
      * Get the OpenRegister ObjectService, or null when unavailable.
@@ -1270,7 +1280,6 @@ class GrondslagenSummaryService
 
     }//end getObjectService()
 
-
     /**
      * True when the OpenRegister app is installed and enabled.
      *
@@ -1281,6 +1290,4 @@ class GrondslagenSummaryService
         return in_array('openregister', $this->appManager->getInstalledApps(), true);
 
     }//end isOpenRegisterAvailable()
-
-
 }//end class

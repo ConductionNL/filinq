@@ -82,7 +82,6 @@ class PolicyCrudService
      */
     public const PROHIBITION_GROUP = 'docudesk-prohibition-admins';
 
-
     /**
      * Constructor.
      *
@@ -104,7 +103,6 @@ class PolicyCrudService
 
     }//end __construct()
 
-
     /**
      * List all publicationProhibition records.
      *
@@ -120,7 +118,6 @@ class PolicyCrudService
         );
 
     }//end listProhibitions()
-
 
     /**
      * List publicationConsent records with `scope: "entity"` (standing consents).
@@ -144,7 +141,6 @@ class PolicyCrudService
                 );
 
     }//end listStandingConsents()
-
 
     /**
      * List publicationConsent records with `scope: "document"` (workflow records).
@@ -172,7 +168,6 @@ class PolicyCrudService
 
     }//end listDocumentConsents()
 
-
     /**
      * Get a single prohibition by UUID.
      *
@@ -191,7 +186,6 @@ class PolicyCrudService
         );
 
     }//end getProhibition()
-
 
     /**
      * Get a single standing consent by UUID, asserting its scope.
@@ -222,7 +216,6 @@ class PolicyCrudService
 
     }//end getStandingConsent()
 
-
     /**
      * Create a publicationProhibition record.
      *
@@ -249,7 +242,6 @@ class PolicyCrudService
 
     }//end createProhibition()
 
-
     /**
      * Update an existing prohibition record.
      *
@@ -274,7 +266,6 @@ class PolicyCrudService
 
     }//end updateProhibition()
 
-
     /**
      * Delete a prohibition record.
      *
@@ -298,7 +289,6 @@ class PolicyCrudService
         );
 
     }//end deleteProhibition()
-
 
     /**
      * Create a standing consent (scope=entity publicationConsent) record.
@@ -329,7 +319,6 @@ class PolicyCrudService
         );
 
     }//end createStandingConsent()
-
 
     /**
      * Update an existing standing consent record.
@@ -364,7 +353,6 @@ class PolicyCrudService
 
     }//end updateStandingConsent()
 
-
     /**
      * Delete a standing consent.
      *
@@ -393,7 +381,6 @@ class PolicyCrudService
         );
 
     }//end deleteStandingConsent()
-
 
     /**
      * Enforce service-level standing-consent group membership.
@@ -440,7 +427,6 @@ class PolicyCrudService
 
     }//end assertStandingConsentPermission()
 
-
     /**
      * Assert the current user can create/update/delete a prohibition record.
      *
@@ -480,7 +466,6 @@ class PolicyCrudService
 
     }//end assertProhibitionPermission()
 
-
     /**
      * Strip framework-injected request params before persistence.
      *
@@ -494,7 +479,6 @@ class PolicyCrudService
         return $data;
 
     }//end stripFrameworkParams()
-
 
     /**
      * List records by register+schema slugs and serialise them to plain arrays.
@@ -538,7 +522,6 @@ class PolicyCrudService
 
     }//end listByRegisterSchema()
 
-
     /**
      * Look up one record by UUID.
      *
@@ -572,7 +555,6 @@ class PolicyCrudService
         return (array) $object;
 
     }//end findOne()
-
 
     /**
      * Persist a record via ObjectService::saveObject.
@@ -612,6 +594,4 @@ class PolicyCrudService
         }//end try
 
     }//end saveObject()
-
-
 }//end class
