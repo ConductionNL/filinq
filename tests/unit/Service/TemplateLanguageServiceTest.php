@@ -13,9 +13,6 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/register-i18n/tasks.md#task-2
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
