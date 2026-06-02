@@ -32,7 +32,6 @@ use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
 /**
@@ -73,7 +72,6 @@ class SigningVerificationServiceTest extends TestCase
 
         $this->service = new SigningVerificationService(
             rootFolder: $this->createMock(IRootFolder::class),
-            logger: $this->createMock(LoggerInterface::class),
             config: $this->mockConfig
         );
 

@@ -25,7 +25,6 @@ use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\SettingsService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 /**
  * Unit tests for ConsentCrudService
@@ -68,12 +67,10 @@ class ConsentCrudServiceTest extends TestCase
 
         $this->mockSettingsService = $this->createMock(SettingsService::class);
         $this->mockConsentService  = $this->createMock(ConsentService::class);
-        $mockLogger                = $this->createMock(LoggerInterface::class);
 
         $this->service = new ConsentCrudService(
             $this->mockSettingsService,
-            $this->mockConsentService,
-            $mockLogger
+            $this->mockConsentService
         );
 
     }//end setUp()

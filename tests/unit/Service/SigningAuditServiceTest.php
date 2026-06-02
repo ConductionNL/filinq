@@ -36,7 +36,6 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
 /**
@@ -198,8 +197,7 @@ class SigningAuditServiceTest extends TestCase
 
         $service = new SigningAuditService(
             $mockSettings,
-            $mockConfig,
-            $this->createMock(LoggerInterface::class)
+            $mockConfig
         );
 
         $result = $service->getAuditTrail('req-1');
@@ -265,8 +263,7 @@ class SigningAuditServiceTest extends TestCase
 
         $service = new SigningAuditService(
             $mockSettings,
-            $mockConfig,
-            $this->createMock(LoggerInterface::class)
+            $mockConfig
         );
 
         // If the old getObjects path were still present, PHPUnit would raise
