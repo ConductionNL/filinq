@@ -1,59 +1,65 @@
 {
-  "spec": "openspec/changes/register-i18n",
+  "spec": "openspec/changes/publication-clearance-anonymise-payload",
   "verified": [
     {
-      "task": "1.1",
-      "file": "lib/Settings/docudesk_register.json",
+      "task": "1",
+      "file": "lib/Controller/AnonymizationController.php",
       "ok": true,
-      "note": "template.name and template.description marked translatable: true; templates register v2.1.0 with defaultLanguage/languages; schema v1.1.0"
+      "note": "validateUnredactedEntities() added; entityId/entityText/entityType/publicationBases validated; 400 on malformed"
     },
     {
-      "task": "1.2",
-      "file": "lib/Service/TemplateLanguageService.php",
+      "task": "2",
+      "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "resolveUserLanguage, getAvailableLanguages, resolveFieldValue, buildAcceptLanguageHeader — all implemented and tested"
+      "note": "checkUnredactedProhibitions() calls PolicyMatchService at any-confidence; controller returns 422 on violations"
     },
     {
-      "task": "1.3",
-      "file": "lib/Service/SettingsService.php",
+      "task": "3",
+      "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "template_default_language config key added to loadFeatureToggles()"
+      "note": "createConsentsForUnredactedEntities() called after anonymise pipeline; skips on pipeline failure"
     },
     {
-      "task": "1.4",
-      "file": "src/store/modules/template.js",
+      "task": "4",
+      "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "selectedLanguage state, setLanguage action, buildLanguageHeaders, recordResponseLanguage added; fetchTemplates and fetchTemplate pass Accept-Language header"
+      "note": "createdConsents[] field added to resultInfo; absent when unredactedEntities not supplied"
     },
     {
-      "task": "1.5",
-      "file": "src/components/LanguageSelector.vue",
+      "task": "5a",
+      "file": "lib/Controller/BatchAnonymizationController.php",
       "ok": true,
-      "note": "Language dropdown + fallback badge component"
+      "note": "batchAnonymize accepts unredactedEntities[]; resolveBatchHttpStatus() handles 200/207/422"
     },
     {
-      "task": "1.6",
-      "file": "src/views/templates/TemplateDetail.vue",
+      "task": "5b",
+      "file": "lib/Service/BatchAnonymizeService.php",
       "ok": true,
-      "note": "LanguageSelector integrated, onLanguageChange method, availableLanguages computed property"
+      "note": "per-file prohibition gate; prohibitionViolation status; prohibitionSkippedFiles counter"
     },
     {
-      "task": "2.1",
-      "file": "tests/unit/Service/TemplateLanguageServiceTest.php",
+      "task": "6",
+      "file": "tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php",
       "ok": true,
-      "note": "12 tests, 23 assertions — all passing"
+      "note": "9 tests: validation, prohibition 422, success with createdConsents, backward-compat"
     },
     {
-      "task": "3.1",
-      "file": "openspec/changes/register-i18n/design.md",
+      "task": "7",
+      "file": "tests/unit/Service/AnonymizationServicePublicationClearanceTest.php",
       "ok": true,
-      "note": "Architecture, API and admin documentation in design.md"
+      "note": "7 tests: prohibition gate, consent creation calls, order, config null case"
     },
     {
-      "task": "3.2",
-      "file": "l10n/en.json",
+      "task": "9a",
+      "file": "docs/features/publication-consent-process.md",
       "ok": true,
-      "note": "15 new strings added; nl.json has same keys (ADR-007 zero-gap)"
+      "note": "Publication-clearance-via-anonymise section added with payload shape, gate semantics, response, batch semantics"
+    },
+    {
+      "task": "9b",
+      "file": "CHANGELOG.md",
+      "ok": true,
+      "note": "Added and Behavior-changes sections with all three new behaviors"
     }
   ],
   "stubs": [],

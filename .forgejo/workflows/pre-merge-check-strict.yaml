@@ -36,9 +36,11 @@ jobs:
           path: .hydra
 
       - name: Run all 19 Hydra gates (diff-scoped per ADR-020)
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch origin ${{ github.base_ref }}:${{ github.base_ref }} || true
-          bash .hydra/scripts/run-hydra-gates.sh --scope-to-diff --base origin/${{ github.base_ref }} .
+          git fetch origin "${BASE_REF}:${BASE_REF}" || true
+          bash .hydra/scripts/run-hydra-gates.sh --scope-to-diff --base "origin/${BASE_REF}" .
 
       - name: Gate-19 e2e coverage report (informational)
         if: always()

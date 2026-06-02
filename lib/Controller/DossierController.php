@@ -23,6 +23,9 @@
  * @link      https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,9 +35,11 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -58,13 +63,15 @@ class DossierController extends Controller
      * @param LoggerInterface           $logger             Logger for error reporting.
      * @param GrondslagenSummaryService $grondslagenSummary Per-dossier renderer.
      * @param IL10N                     $l10n               Localisation service.
+     * @param IUserSession              $userSession        User session for auth check.
      */
     public function __construct(
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly GrondslagenSummaryService $grondslagenSummary,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -91,6 +98,13 @@ class DossierController extends Controller
      */
     public function generateGrondslagenSummary(string $dossierId): JSONResponse
     {
+        if ($this->userSession->getUser() === null) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Not authenticated')],
+                Http::STATUS_UNAUTHORIZED
+            );
+        }
+
         try {
             $file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
 
