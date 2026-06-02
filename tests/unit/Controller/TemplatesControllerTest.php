@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -83,7 +86,6 @@ class TemplatesControllerTest extends TestCase
      */
     private LoggerInterface|MockObject $mockLogger;
 
-
     /**
      * Set up test environment
      *
@@ -93,27 +95,30 @@ class TemplatesControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockRequest         = $this->createMock(IRequest::class);
-        $this->mockTemplateService = $this->createMock(TemplateService::class);
-        $this->mockRequestHandler  = $this->createMock(TemplateRequestHandler::class);
-        $this->mockVersionService  = $this->createMock(TemplateVersionService::class);
-        $this->mockPreviewService  = $this->createMock(TemplatePreviewService::class);
-        $this->mockUserSession     = $this->createMock(IUserSession::class);
-        $this->mockLogger          = $this->createMock(LoggerInterface::class);
+        $this->mockRequest         = $this->createMock(originalClassName: IRequest::class);
+        $this->mockTemplateService = $this->createMock(originalClassName: TemplateService::class);
+        $this->mockRequestHandler  = $this->createMock(originalClassName: TemplateRequestHandler::class);
+        $this->mockVersionService  = $this->createMock(originalClassName: TemplateVersionService::class);
+        $this->mockPreviewService  = $this->createMock(originalClassName: TemplatePreviewService::class);
+        $this->mockUserSession     = $this->createMock(originalClassName: IUserSession::class);
+        $this->mockLogger          = $this->createMock(originalClassName: LoggerInterface::class);
+
+        $mockUser = $this->createMock(originalClassName: \OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('test-user');
+        $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new TemplatesController(
-            'docudesk',
-            $this->mockRequest,
-            $this->mockTemplateService,
-            $this->mockRequestHandler,
-            $this->mockVersionService,
-            $this->mockPreviewService,
-            $this->mockUserSession,
-            $this->mockLogger
+            appName: 'docudesk',
+            request: $this->mockRequest,
+            templateService: $this->mockTemplateService,
+            requestHandler: $this->mockRequestHandler,
+            versionService: $this->mockVersionService,
+            previewService: $this->mockPreviewService,
+            userSession: $this->mockUserSession,
+            logger: $this->mockLogger
         );
 
     }//end setUp()
-
 
     /**
      * Test index returns template list
@@ -134,7 +139,6 @@ class TemplatesControllerTest extends TestCase
 
     }//end testIndexReturnsTemplateList()
 
-
     /**
      * Test show returns template
      *
@@ -152,7 +156,6 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(200, $result->getStatus());
 
     }//end testShowReturnsTemplate()
-
 
     /**
      * Test create returns created template
@@ -173,7 +176,6 @@ class TemplatesControllerTest extends TestCase
 
     }//end testCreateReturnsCreatedTemplate()
 
-
     /**
      * Test destroy returns success
      *
@@ -191,7 +193,6 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(200, $result->getStatus());
 
     }//end testDestroyReturnsSuccess()
-
 
     /**
      * Test index returns error on exception
@@ -213,6 +214,4 @@ class TemplatesControllerTest extends TestCase
         $this->assertEquals(500, $result->getStatus());
 
     }//end testIndexReturnsErrorOnException()
-
-
 }//end class

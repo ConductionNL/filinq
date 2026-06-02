@@ -1,91 +1,67 @@
 {
-  "spec": "openspec/changes/anonymisation-append-basis-summary-flag",
+  "spec": "openspec/changes/publication-clearance-anonymise-payload",
   "verified": [
     {
       "task": "1",
       "file": "lib/Controller/AnonymizationController.php",
       "ok": true,
-      "note": "extractAppendBasisSummary() validates boolean, rejects non-bool with HTTP 400; outputFormat defaulting to 'pdf'"
-    },
-    {
-      "task": "1",
-      "file": "lib/Controller/BatchAnonymizationController.php",
-      "ok": true,
-      "note": "batchAnonymize() reads appendBasisSummary, validates type, passes to anonService"
+      "note": "validateUnredactedEntities() added; entityId/entityText/entityType/publicationBases validated; 400 on malformed"
     },
     {
       "task": "2",
       "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "anonymizeDocument() accepts appendBasisSummary/outputFormat; calls tryAppendBasisSummary() when flag is true"
+      "note": "checkUnredactedProhibitions() calls PolicyMatchService at any-confidence; controller returns 422 on violations"
     },
     {
       "task": "3",
-      "file": "lib/Service/BatchAnonymizeService.php",
+      "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "anonymizeBatch() accepts appendBasisSummary; forwards per-file; collects warnings and summaryFileId"
+      "note": "createConsentsForUnredactedEntities() called after anonymise pipeline; skips on pipeline failure"
     },
     {
       "task": "4",
       "file": "lib/Service/AnonymizationService.php",
       "ok": true,
-      "note": "tryAppendBasisSummary() catches Throwable, logs warning, sets warning field; anonymised file always preserved"
+      "note": "createdConsents[] field added to resultInfo; absent when unredactedEntities not supplied"
     },
     {
-      "task": "5",
-      "file": "lib/Service/AnonymizationService.php",
+      "task": "5a",
+      "file": "lib/Controller/BatchAnonymizationController.php",
       "ok": true,
-      "note": "preserve mode path calls appendSummaryAsSeparatePdf(), sets summaryFileId and summaryFilePath on result"
+      "note": "batchAnonymize accepts unredactedEntities[]; resolveBatchHttpStatus() handles 200/207/422"
+    },
+    {
+      "task": "5b",
+      "file": "lib/Service/BatchAnonymizeService.php",
+      "ok": true,
+      "note": "per-file prohibition gate; prohibitionViolation status; prohibitionSkippedFiles counter"
     },
     {
       "task": "6",
-      "file": "lib/Service/AnonymizationService.php",
+      "file": "tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php",
       "ok": true,
-      "note": "GrondslagenSummaryService.appendSummaryToPdf/appendSummaryAsSeparatePdf called unconditionally — service handles missing-grondslag case"
+      "note": "9 tests: validation, prohibition 422, success with createdConsents, backward-compat"
     },
     {
       "task": "7",
-      "file": "tests/unit/Controller/AnonymizationControllerTest.php",
+      "file": "tests/unit/Service/AnonymizationServicePublicationClearanceTest.php",
       "ok": true,
-      "note": "5 behavioral tests: flag defaults to false, flag true+PDF, flag true+preserve, warning field, non-boolean rejection"
+      "note": "7 tests: prohibition gate, consent creation calls, order, config null case"
     },
     {
-      "task": "8",
-      "file": "tests/unit/Service/AnonymizationServiceTest.php",
+      "task": "9a",
+      "file": "docs/features/publication-consent-process.md",
       "ok": true,
-      "note": "Structural tests: signature, tryAppendBasisSummary, warning field, preserve mode fields"
+      "note": "Publication-clearance-via-anonymise section added with payload shape, gate semantics, response, batch semantics"
     },
     {
-      "task": "8",
-      "file": "tests/unit/Service/BatchAnonymizeServiceTest.php",
-      "ok": true,
-      "note": "Behavioral tests: flag forwarded per file, defaults to false, warnings propagated, preserve-mode fields stored"
-    },
-    {
-      "task": "10",
-      "file": "docs/features/anonymization.md",
-      "ok": true,
-      "note": "appendBasisSummary flag, opt-in mechanics, warning shape, preserve-mode separate-PDF documented"
-    },
-    {
-      "task": "10",
+      "task": "9b",
       "file": "CHANGELOG.md",
       "ok": true,
-      "note": "Unreleased section added with appendBasisSummary description"
+      "note": "Added and Behavior-changes sections with all three new behaviors"
     }
   ],
   "stubs": [],
-  "missing_routes": [],
-  "gate_notes": {
-    "gate_7_no_admin_idor": {
-      "status": "FAIL",
-      "pre_existing": true,
-      "note": "13 methods flagged, all pre-existing on development branch before this change. My changes (anonymize + batchAnonymize) did not add new @NoAdminRequired annotations or remove existing guards. Tracked for cleanup in a dedicated security PR."
-    },
-    "gate_14_route_reachability": {
-      "status": "FAIL",
-      "pre_existing": true,
-      "note": "Gate expects camelCase batchAnonymization# but routes.php uses snake_case batch_anonymization# (NC convention). All routes exist. False positive in gate naming pattern. Pre-existing before this branch."
-    }
-  }
+  "missing_routes": []
 }

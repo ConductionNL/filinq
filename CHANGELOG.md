@@ -3,6 +3,17 @@
 ## Unreleased
 
 ### Added
+- **`unredactedEntities[]` on per-document and batch anonymise endpoints.**
+  Operators can now pass entities they intend to publish unredacted alongside
+  the usual `entities[]`. Each entry requires `entityId`, `entityText`,
+  `entityType`, and a non-empty `publicationBases[]`; `contactEmail` and
+  `contactAddress` are optional.
+- **`createdConsents[]` in the anonymise response.** When `unredactedEntities`
+  is supplied, the response gains a `createdConsents[]` field with one entry
+  per entity including the resulting `publicationConsent` UUID and status.
+- **Batch endpoint returns HTTP 207** when some files have prohibition
+  violations on `unredactedEntities[]`; HTTP 422 when all files failed; HTTP
+  200 when all succeeded.
 - **Dossier register and `dossier` / `base` schemas in `docudesk_register.json`.** A dossier is a Nextcloud folder (`@self.folder`) whose contents are anonymised under one or more Woo Art. 5 grondslagen; the `base` schema holds the canonical six grondslagen as seed objects (`persoonsgegevens`, `bijzondere-persoonsgegevens`, `strafrechtelijk`, `bedrijfs-fabricagegegevens`, `onevenredige-benadeling`, `nationale-veiligheid`). The dossier schema carries `name`, optional `description`, optional `bases[]` (JSON array of strings — each element is the slug of a `base` object in the same register; intentionally NOT a `$ref` array per design D1's v1 trade-off, see `openspec/changes/add-dossier-schema/`), and optional `checkedOn` (date-time review timestamp). Five seed dossiers ship across the three personas (Gemeente Demostad × 2, Conduction × 1, ReisBureau Zonnestraal × 2), including one with empty `bases` + `null` `checkedOn` to exercise the optionality cases. No new PHP code — folder binding and CRUD ride on OpenRegister's existing `@self.folder` pipeline and the generic `/api/objects/{register}` routes. (`add-dossier-schema`)
 - `publicationProhibition` schema for entity-level deny rules in the publication-clearance flow (court orders, minor protection, undercover officers, AVG categorical exemptions). Includes seed data covering four representative scenarios. (`entity-publication-policies`)
 - `scope` discriminator on `publicationConsent` plus the entity-scope field set (`matchRules`, `validFrom`, `validUntil`, `active`, `consentMethod`, `consentDocument`, `consentScope`) — enables "standing publication consent" records that pre-empt the per-document workflow. (`entity-publication-policies`)
@@ -17,14 +28,51 @@
 - Auto-regeneration of the per-dossier summary on `dossier.checkedOn` updates. Opt-out per dossier via `configuration.grondslagen.autoRegenOnReview: false`. (`anonymisation-grondslagen-summary`)
 - Dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}` populated after a successful render so the dossier UI can badge the report as fresh. (`anonymisation-grondslagen-summary`)
 
+### Behavior changes
+- **Anonymise may now respond HTTP 422** when any `unredactedEntities[]` entry
+  matches an active `publicationProhibition` rule (any confidence — hard gate).
+- **Batch anonymise may now respond HTTP 207** on per-file prohibition
+  violations; per-file details in `prohibitedEntries[]` on the file entry.
+- Inside publication-clearance flows, the consent service consults the policy layer **before** defaulting to the WOO workflow. Existing `consentStatus` enum is unchanged; the policy-pre-empted distinction lives in `policyMatch` + `notificationStatus: "skipped"`. (`entity-publication-policies`)
+- Generic anonymisation flows (file sanitisation prior to email/storage) are unaffected — they do not call `ConsentService::createConsentRequest` and therefore do not consult the policy layer. (`entity-publication-policies`)
+### Security / Fixed
+- **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
+  The previous implementation held sessions in a per-request `$sessions` PHP
+  array, so `initiateSigning()` wrote one entry that `checkStatus()`,
+  `downloadSignedDocument()` and `cancelSigning()` (running in fresh requests)
+  could never find — every native signing flow failed with "session not found".
+  A new `signingSession` schema is added to the `signing` register (keyed by
+  `externalId`); the provider reads/writes via the OR `ObjectService`. The SES
+  marker / HMAC embedding in `downloadSignedDocument()` is acknowledged as a
+  separate follow-up: until the PDF marker writer ships, the provider returns
+  the persisted `signedDocumentPath` (or the original `documentPath`) and logs
+  an info-level note flagging that the marker hasn't been embedded yet.
+- **`SigningController::listRequests()` no longer masks real failures as empty
+  success** (fixes #288). The broad `catch (\Throwable)` previously returned
+  an empty list with `notConfigured: true` and logged at WARNING for any
+  failure — an OR/DB outage was indistinguishable from "not configured". The
+  catch is now narrowed to `\Error` (the genuine missing-method/OR-sidecar-lag
+  case) and logs at ERROR; real `\Exception` / runtime infra failures now
+  propagate to the framework's 500 handler so they surface in monitoring.
+- **Signing audit immutability is now enforced at the OpenRegister storage
+  layer** (fixes #289). The `signingAuditEntry` schema in
+  `lib/Settings/docudesk_register.json` carries `immutable: true` *and*
+  `appendOnly: true`, so OR rejects update/delete against existing audit
+  entries regardless of which code path tries it. The misleading dead-code
+  `rejectUpdate()` / `rejectDelete()` methods on `SigningAuditService` —
+  which were never wired into any mutation path and could give the false
+  impression that immutability was enforced in-app — have been removed.
+
 ### Changed
+- **DocuDesk register configuration version bumped 5.0.0 → 5.1.0** to trigger
+  OpenRegister's `imported_config_docudesk_version` gate so the new
+  `signingSession` schema and the `appendOnly` flag on `signingAuditEntry`
+  are imported on app upgrade. Consumers reading
+  `occ config:app:get openregister imported_config_docudesk_version` MUST
+  expect `5.1.0` post-upgrade. (#287, #289)
 - **DocuDesk register configuration version bumped 4.0.0 → 5.0.0** to trigger OpenRegister's `imported_config_docudesk_version` gate so the new `dossier` register + `base` / `dossier` schemas + the eleven seed objects (6 base + 5 dossier) are imported on app upgrade. Consumers reading the configuration version (e.g. `occ config:app:get openregister imported_config_docudesk_version`) MUST expect `5.0.0` post-upgrade. (`add-dossier-schema`)
 - The Consent Management admin page is now **Consent Workflow** and filters to `scope: "document"` records only. Rows whose `policyMatch` is non-null show a "policy" badge. (`entity-publication-policies`)
 - The publication-prep anonymisation toggle is now keyed off the **referent type** of `policyMatch`, not `consentStatus`: prohibition → ON+locked, standing consent → OFF+overridable, no match → existing UX. (`entity-publication-policies`)
-
-### Behavior changes
-- Inside publication-clearance flows, the consent service consults the policy layer **before** defaulting to the WOO workflow. Existing `consentStatus` enum is unchanged; the policy-pre-empted distinction lives in `policyMatch` + `notificationStatus: "skipped"`. (`entity-publication-policies`)
-- Generic anonymisation flows (file sanitisation prior to email/storage) are unaffected — they do not call `ConsentService::createConsentRequest` and therefore do not consult the policy layer. (`entity-publication-policies`)
 
 ### Cross-change dependencies (Wave 4a)
 - Hard: `openregister:entity-relation-grondslagen` (Wave 1.3) provides `EntityRelation.bases` and the `findAnonymisedEntitiesWithBasesForFile` read method this feature consumes.
