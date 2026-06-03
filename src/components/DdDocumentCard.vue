@@ -148,7 +148,6 @@ export default {
 	--dd-card-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
 	--dd-card-shadow-hover: 0 6px 26px -3px rgba(0, 0, 0, 0.12);
 	--dd-card-focus-ring: 0 0 0 2px var(--color-primary-element, #0a5eaf);
-
 	display: grid;
 	grid-template-rows: auto 1fr auto auto;
 	gap: var(--dd-card-gap);
