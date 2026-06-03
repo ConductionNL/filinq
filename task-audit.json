@@ -1,20 +1,25 @@
 {
-  "spec": "openspec/changes/anonymisation-entity-review-prohibition-hints",
+  "spec": "openspec/changes/anonymisation-prohibition-gate",
   "verified": [
-    {"task": "1", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "1", "file": "lib/Service/PolicyMatchService.php", "ok": true},
-    {"task": "2", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "3", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "4", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "5", "file": "tests/unit/Service/BasesResolverServiceTest.php", "ok": true},
-    {"task": "6", "file": "tests/unit/Service/EntityConsolidationProhibitionTest.php", "ok": true},
-    {"task": "8", "file": "docs/features/anonymization-entity-review.md", "ok": true},
-    {"task": "8", "file": "CHANGELOG.md", "ok": true},
-    {"task": "9", "file": "lib/", "ok": true, "note": "398 tests pass; 14 hydra gates green"}
+    {"task": "1", "file": "lib/Service/PolicyMatchService.php", "ok": true, "note": "matchProhibition() already present"},
+    {"task": "2", "file": "tests/unit/Service/PolicyMatchServiceTest.php", "ok": true},
+    {"task": "3", "file": "lib/Service/AnonymizationService.php", "ok": true},
+    {"task": "4", "file": "lib/Exception/ProhibitionGateException.php", "ok": true},
+    {"task": "4", "file": "lib/Controller/AnonymizationController.php", "ok": true},
+    {"task": "5", "file": "lib/Service/AnonymizationService.php", "ok": true},
+    {"task": "6", "file": "lib/Controller/AnonymizationController.php", "ok": true},
+    {"task": "6", "file": "lib/Service/AnonymizationService.php", "ok": true},
+    {"task": "7", "file": "lib/Service/AnonymizationService.php", "ok": true},
+    {"task": "8", "file": "openspec/changes/publication-prohibition-schema/specs/entity-publication-policies/spec.md", "ok": true},
+    {"task": "9", "file": "openspec/changes/publication-consent-policy-fields/specs/consent-management/spec.md", "ok": true},
+    {"task": "10", "file": "tests/unit/Service/AnonymizationServiceGateTest.php", "ok": true},
+    {"task": "11", "file": "tests/unit/Controller/AnonymizationControllerProhibitionGateTest.php", "ok": true},
+    {"task": "13", "file": "docs/features/anonymisation-prohibition-gate.md", "ok": true},
+    {"task": "14", "note": "phpcs zero errors on changed files; 422/422 phpunit pass; 14/14 hydra gates green"}
   ],
   "stubs": [],
   "missing_routes": [],
   "skipped": [
-    {"task": "7", "reason": "Newman integration tests require live Nextcloud+OpenRegister; marked pending in tasks.md"}
+    {"task": "12", "reason": "Newman integration tests require a live NC instance with publicationProhibition seed data — deferred to integration test phase"}
   ]
 }
