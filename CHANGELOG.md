@@ -3,6 +3,15 @@
 ## Unreleased
 
 ### Added
+- **PDF-by-default output on the anonymise endpoints.** After OpenRegister returns an anonymised file in its native format, DocuDesk now converts the result to PDF (PDF/A-3b where feasible) before writing back to Nextcloud Files. The conversion is driven by a new `PdfConversionService` cascade:
+  1. `OfficeAppBackend` — Collabora, OnlyOffice, or Euro Office via Nextcloud's `OCP\Files\Conversion\IConversionManager` (NC 31+). Single API for all three Office app integrations.
+  2. `PhpWordBackend` — DOC, DOCX, ODT, RTF, HTML via PhpOffice\PhpWord + mPDF. Spreadsheet and presentation formats are explicitly out of scope.
+  3. `MpdfBackend` — HTML and TXT direct via mPDF, reusing the print-preview PDF/A-3b configuration.
+  4. `EmlBackend` — stubbed; activates once OpenRegister ships `message/rfc822` text extraction.
+  First success wins; total failure throws `ConversionFailedException` whose attempt records surface in the HTTP 422 response body. (`anonymise-output-as-pdf-by-default`)
+- **Per-call `outputFormat` request field** on `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batchAnonymize/{batchId}`. Accepts `"pdf"` (default) or `"preserve"`. Per-call value overrides the tenant default. (`anonymise-output-as-pdf-by-default`)
+- **Admin setting "Always export anonymised documents as PDF"** in the new Anonymisation section of the DocuDesk settings panel. Backed by the `docudesk.anonymisation.default_output_format` `IAppConfig` key. Switching off flips the tenant default to `"preserve"`; callers can still override per-request. (`anonymise-output-as-pdf-by-default`)
+- **`phpoffice/phpword ^1.2`** added to `composer.json` as the engine for the in-process PhpWord conversion backend. Reuses the existing `mpdf/mpdf` dependency for PDF/A-3b emission. (`anonymise-output-as-pdf-by-default`)
 - **`unredactedEntities[]` on per-document and batch anonymise endpoints.**
   Operators can now pass entities they intend to publish unredacted alongside
   the usual `entities[]`. Each entry requires `entityId`, `entityText`,
@@ -33,6 +42,8 @@
   matches an active `publicationProhibition` rule (any confidence — hard gate).
 - **Batch anonymise may now respond HTTP 207** on per-file prohibition
   violations; per-file details in `prohibitedEntries[]` on the file entry.
+- **The anonymise endpoint now returns PDF/A-3b output by default.** Callers that need the legacy native-format behaviour must send `outputFormat: "preserve"` on the request body. Conversion failures return HTTP 422 with a structured `conversionAttempts` array — operators that previously got native-format output for unsupported types may need to install a supported Office app integration (Collabora, OnlyOffice, or Euro Office) or send `outputFormat: "preserve"`. The un-converted anonymised intermediate is best-effort rolled back on conversion failure so the operator never sees a half-finished mixed-format result. Spreadsheet and presentation formats (XLSX, ODS, PPTX, ODP) are NOT supported by the no-Office-app fallback tier — they will return 422 unless an Office app is configured. (`anonymise-output-as-pdf-by-default`)
+- **Batch anonymise responses now carry per-file `conversionAttempts`** on the file's batch entry when conversion fails for that file. The batch continues with the next file rather than aborting. (`anonymise-output-as-pdf-by-default`)
 - Inside publication-clearance flows, the consent service consults the policy layer **before** defaulting to the WOO workflow. Existing `consentStatus` enum is unchanged; the policy-pre-empted distinction lives in `policyMatch` + `notificationStatus: "skipped"`. (`entity-publication-policies`)
 - Generic anonymisation flows (file sanitisation prior to email/storage) are unaffected — they do not call `ConsentService::createConsentRequest` and therefore do not consult the policy layer. (`entity-publication-policies`)
 ### Security / Fixed

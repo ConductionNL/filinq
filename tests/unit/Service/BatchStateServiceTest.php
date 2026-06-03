@@ -30,7 +30,6 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * Unit tests for BatchStateService
@@ -229,7 +228,15 @@ class BatchStateServiceTest extends TestCase
      *
      * @return void
      */
-    public function testGetBatchThrowsForForeignBatch(): void
+    /**
+     * WF3 fix: getBatch returns null (not throws RuntimeException) for a
+     * non-owner so the controller returns 404 for both "not found" and
+     * "found-but-owned-by-another-user", preventing existence probing via
+     * the 500-vs-404 response distinction.
+     *
+     * @return void
+     */
+    public function testGetBatchReturnsNullForForeignBatch(): void
     {
         $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('attacker');
@@ -239,12 +246,11 @@ class BatchStateServiceTest extends TestCase
         $batch = ['batchId' => 'abc-123', 'userId' => 'victim', 'status' => 'uploading', 'files' => []];
         $this->mockCache->method('get')->willReturn(json_encode($batch));
 
-        $this->expectException(exception: RuntimeException::class);
-        $this->expectExceptionMessage(message: 'Access denied');
+        // WF3: must return null, never throw (existence probing fix).
+        $result = $this->service->getBatch(batchId: 'abc-123');
+        $this->assertNull(actual: $result);
 
-        $this->service->getBatch(batchId: 'abc-123');
-
-    }//end testGetBatchThrowsForForeignBatch()
+    }//end testGetBatchReturnsNullForForeignBatch()
 
     /**
      * Test getBatch allows admin to access any batch (C2 admin bypass)

@@ -737,3 +737,84 @@ interface IRootFolder
      */
     public function getUserFolder(string $userId): \OCP\Files\Folder;
 }//end interface
+
+namespace OCP;
+
+/**
+ * Stub for OCP\ICache (wave-12 addition for BatchStateService tests)
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICache
+{
+
+    /**
+     * Get a value from the cache
+     *
+     * @param string $key Cache key
+     *
+     * @return mixed
+     */
+    public function get(string $key): mixed;
+
+    /**
+     * Set a value in the cache
+     *
+     * @param string $key   Cache key
+     * @param mixed  $value Value to cache
+     * @param int    $ttl   Time-to-live in seconds
+     *
+     * @return bool
+     */
+    public function set(string $key, mixed $value, int $ttl=0): bool;
+
+    /**
+     * Remove a key from the cache
+     *
+     * @param string $key Cache key
+     *
+     * @return bool
+     */
+    public function remove(string $key): bool;
+
+    /**
+     * Check if a key exists in the cache
+     *
+     * @param string $key Cache key
+     *
+     * @return bool
+     */
+    public function hasKey(string $key): bool;
+
+
+}//end interface
+
+
+/**
+ * Stub for OCP\ICacheFactory (wave-12 addition for BatchStateService tests)
+ *
+ * @category Tests
+ * @package  OCP
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICacheFactory
+{
+
+    /**
+     * Create a distributed cache
+     *
+     * @param string $prefix Cache prefix
+     *
+     * @return ICache
+     */
+    public function createDistributed(string $prefix): ICache;
+
+
+}//end interface
+

@@ -93,6 +93,31 @@ class PdfService
     }//end renderPdf()
 
     /**
+     * Generate a PDF from a raw HTML string (no Twig pre-processing).
+     *
+     * Public wrapper around the private generatePdf path for callers
+     * that already have rendered HTML — used by
+     * `Service\Conversion\MpdfBackend` (and any future conversion
+     * backend that wants the same PDF/A-3b configuration as
+     * print-preview without re-implementing it).
+     *
+     * @param string              $html    Pre-rendered HTML document body.
+     * @param array<string,mixed> $options PDF configuration options; same shape as
+     *                                     {@see renderPdf} (`format`, `orientation`,
+     *                                     `margin`, `title`, `pdfa`).
+     *
+     * @return string PDF binary content.
+     *
+     * @throws Exception When mPDF rendering fails.
+     */
+    public function generatePdfFromHtml(string $html, array $options=[]): string
+    {
+        return $this->generatePdf(html: $html, options: $options);
+
+    }//end generatePdfFromHtml()
+
+
+    /**
      * Render HTML from a Twig template string and data context (for print preview)
      *
      * @param string $templateContent Twig template content (HTML with Twig syntax)
