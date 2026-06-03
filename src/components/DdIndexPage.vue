@@ -207,7 +207,7 @@ export default {
 .dd-index-page {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 32px;
 	padding-inline: calc(5 * var(--default-grid-baseline));
 }
 

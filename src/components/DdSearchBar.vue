@@ -158,15 +158,20 @@ export default {
 
 .dd-search-bar__input {
 	width: 100%;
-	padding: 10px 40px 10px 40px;
+	padding: 10px 40px 10px 48px;
 	border: 1px solid var(--dd-search-bar-border, #D9D9D9);
 	border-radius: 999px;
 	background: var(--color-main-background, #FFF);
 	font-size: 14px;
+	font-weight: 300;
 	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
 	min-width: 392px;
 	max-width: 100%;
 	min-height: 40px;
+}
+
+.dd-search-bar__input::placeholder {
+	font-weight: 300;
 }
 
 .dd-search-bar__input:focus {
