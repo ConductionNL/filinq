@@ -15,6 +15,7 @@ jobs:
     with:
       cf-project-name: docudesk-docs
       source-folder: docs
+      event-name: ${{ github.event_name }}
     secrets:
       CF_API_TOKEN:   ${{ secrets.CF_API_TOKEN }}
       CF_ACCOUNT_ID:  ${{ secrets.CF_ACCOUNT_ID }}
