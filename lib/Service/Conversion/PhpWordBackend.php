@@ -246,6 +246,7 @@ class PhpWordBackend implements ConversionBackendInterface
 
         try {
             $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
+            // @phpstan-ignore-next-line method.notFound (createWriter() is typed WriterInterface, but the concrete HTML writer exposes getContent()).
             $html       = $htmlWriter->getContent();
             $html       = $this->stripAtPageRules(html: $html);
         } catch (Throwable $e) {
