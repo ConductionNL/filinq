@@ -3,6 +3,12 @@
 ## Unreleased
 
 ### Added
+- **`prohibitionMatch` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
+  Each consolidated entity now carries a `prohibitionMatch` field: `null` when no publication-prohibition rule matches, or `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when the entity's `highestConfidence` is at or above the configured threshold (`docudesk.prohibition.high_confidence_threshold`, default 0.85). The frontend review UI uses this to render prohibition-locked entities without re-running the matcher client-side. (`anonymisation-entity-review-prohibition-hints`)
+- **`suggestedBases` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
+  Each consolidated entity now carries a `suggestedBases` field: a deduplicated union of `bases[]` from the dossier(s) the batch's files belong to. Empty array when files are not in any dossier or the dossier has no bases configured. Used to pre-fill the grondslag picker in the review UI. (`anonymisation-entity-review-prohibition-hints`)
+- **`BasesResolverService`** — new service that resolves the union of Woo Art. 5 grondslagen bases from dossier(s) for a batch's files, supporting folder-based batches, upload batches, multi-dossier batches, and orphan files. (`anonymisation-entity-review-prohibition-hints`)
+- **`PolicyMatchService::matchProhibition()`** — new convenience method that wraps the existing `match()` call and returns only prohibition matches in the shape expected by the entity-review and extract surfaces. (`anonymisation-entity-review-prohibition-hints`)
 - **PDF-by-default output on the anonymise endpoints.** After OpenRegister returns an anonymised file in its native format, DocuDesk now converts the result to PDF (PDF/A-3b where feasible) before writing back to Nextcloud Files. The conversion is driven by a new `PdfConversionService` cascade:
   1. `OfficeAppBackend` — Collabora, OnlyOffice, or Euro Office via Nextcloud's `OCP\Files\Conversion\IConversionManager` (NC 31+). Single API for all three Office app integrations.
   2. `PhpWordBackend` — DOC, DOCX, ODT, RTF, HTML via PhpOffice\PhpWord + mPDF. Spreadsheet and presentation formats are explicitly out of scope.
