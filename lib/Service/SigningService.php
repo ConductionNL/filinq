@@ -171,15 +171,21 @@ class SigningService
     /**
      * Get a signing request by ID
      *
-     * @param string $requestId The signing request ID
+     * Access control: the caller must be the initiator, a listed signer, or an
+     * admin. Pass callerUserId='' and isAdmin=true to bypass the check (e.g.
+     * when called from an internal method that already verified access).
+     *
+     * @param string $requestId    The signing request ID
+     * @param string $callerUserId UID of the calling user ('' = skip check)
+     * @param bool   $isAdmin      True when the caller is an NC admin
      *
      * @return array<string, mixed> The signing request
      *
-     * @throws RuntimeException If not found
+     * @throws RuntimeException If not found or access is denied (WF2 fix)
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
-    public function getRequest(string $requestId): array
+    public function getRequest(string $requestId, string $callerUserId='', bool $isAdmin=false): array
     {
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -191,21 +197,40 @@ class SigningService
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            return $object->jsonSerialize();
+            $request = $object->jsonSerialize();
+        } else {
+            $request = (array) $object;
         }
 
-        return (array) $object;
+        // WF2 security fix: scope single-record access to initiator, signer, or admin.
+        if ($callerUserId !== '' && $isAdmin === false) {
+            $isInitiator    = ($request['initiatorUserId'] ?? '') === $callerUserId;
+            $isSignerInList = in_array($callerUserId, (array) ($request['signerIds'] ?? []), true);
+
+            if ($isInitiator === false && $isSignerInList === false) {
+                throw new RuntimeException('Access denied: signing request belongs to another user');
+            }
+        }
+
+        return $request;
 
     }//end getRequest()
 
     /**
-     * List signing requests
+     * List signing requests scoped to the calling user
+     *
+     * Admins see all requests. Regular users see only requests where they are
+     * the initiator or a listed signer (WF2 fix: previously returned all
+     * requests regardless of ownership — full cross-tenant data disclosure).
+     *
+     * @param string $callerUserId UID of the calling user
+     * @param bool   $isAdmin      True when the caller is an NC admin
      *
      * @return array<int, array<string, mixed>> List of signing requests
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
-    public function listRequests(): array
+    public function listRequests(string $callerUserId='', bool $isAdmin=false): array
     {
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -223,11 +248,23 @@ class SigningService
         $requests = [];
         foreach ($results as $result) {
             if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $requests[] = $result->jsonSerialize();
-                continue;
+                $item = $result->jsonSerialize();
+            } else {
+                $item = (array) $result;
             }
 
-            $requests[] = (array) $result;
+            // WF2 security fix: non-admins see only requests they initiated or
+            // are listed as a signer on. Admins see all.
+            if ($isAdmin === false && $callerUserId !== '') {
+                $isInitiator    = ($item['initiatorUserId'] ?? '') === $callerUserId;
+                $isSignerInList = in_array($callerUserId, (array) ($item['signerIds'] ?? []), true);
+
+                if ($isInitiator === false && $isSignerInList === false) {
+                    continue;
+                }
+            }
+
+            $requests[] = $item;
         }
 
         return $requests;

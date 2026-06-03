@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
@@ -37,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -65,6 +67,8 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IAppConfig           $appConfig            Tenant configuration provider (reads
+     *                                                   docudesk.anonymisation.default_output_format)
      * @param IUserSession         $userSession          User session for authentication
      * @param IRootFolder          $rootFolder           Root folder for file access checks
      *
@@ -77,12 +81,27 @@ class AnonymizationController extends Controller
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
         private readonly IL10N $l10n,
+        private readonly IAppConfig $appConfig,
         private readonly IUserSession $userSession,
         private readonly IRootFolder $rootFolder,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
+    /**
+     * Default-output-format tenant config key. The per-call
+     * `outputFormat` request param overrides this when supplied.
+     */
+    private const DEFAULT_OUTPUT_FORMAT_KEY = 'docudesk.anonymisation.default_output_format';
+
+
+    /**
+     * Supported values for the `outputFormat` request param + tenant
+     * config. Anything else from the request results in HTTP 400.
+     */
+    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
+
 
     /**
      * List all processed files with entity counts and status
@@ -360,21 +379,54 @@ class AnonymizationController extends Controller
                 }
             }//end if
 
-            $outputFormat = 'pdf';
-            if (isset($params['outputFormat']) === true) {
-                $outputFormat = (string) $params['outputFormat'];
+            // Anonymise-output-as-pdf-by-default: optional `outputFormat`
+            // selects PDF conversion vs native-format preservation.
+            // Per-call value overrides the tenant default; missing
+            // value falls back to the tenant default which itself
+            // defaults to 'pdf'.
+            $outputFormat = $this->resolveOutputFormat(params: $params);
+            if ($outputFormat === null) {
+                return new JSONResponse(
+                    [
+                        'error' => $this->l10n->t(
+                            'Invalid outputFormat: must be one of %s',
+                            [implode(', ', self::VALID_OUTPUT_FORMATS)]
+                        ),
+                    ],
+                    400
+                );
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
-            $result = $this->anonymizationService->anonymizeDocument(
-                fileId: $fileId,
-                entities: $entities,
-                appendBasisSummary: $appendBasisSummary,
-                outputFormat: $outputFormat,
-                unredactedEntities: $unredactedEntities
-            );
+            try {
+                $result = $this->anonymizationService->anonymizeDocument(
+                    fileId: $fileId,
+                    entities: $entities,
+                    appendBasisSummary: $appendBasisSummary,
+                    outputFormat: $outputFormat,
+                    unredactedEntities: $unredactedEntities
+                );
+            } catch (ConversionFailedException $e) {
+                $this->logger->warning(
+                    'PDF conversion cascade exhausted; returning 422.',
+                    ['attempts' => $e->getAttempts()]
+                );
+                return new JSONResponse(
+                    [
+                        'error'              => $this->l10n->t(
+                            'Conversion to PDF failed; anonymisation rolled back.'
+                        ),
+                        'conversionAttempts' => $e->getAttempts(),
+                        'outputFormat'       => $outputFormat,
+                        'fallback'           => $this->l10n->t(
+                            'Set outputFormat to "preserve" to bypass conversion if you must keep the native format.'
+                        ),
+                    ],
+                    422
+                );
+            }//end try
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -548,6 +600,50 @@ class AnonymizationController extends Controller
         return null;
 
     }//end validateUnredactedEntities()
+
+    /**
+     * Resolve the effective `outputFormat` for this request.
+     *
+     * Order: per-call value (when supplied and valid) → tenant default
+     * from IAppConfig → hard-coded `"pdf"` fallback.
+     *
+     * Returns `null` when the per-call value is supplied but invalid;
+     * the caller maps that to HTTP 400.
+     *
+     * @param array<string,mixed> $params Request params.
+     *
+     * @return string|null Resolved outputFormat ('pdf'|'preserve'), or
+     *                     null when an invalid value was supplied.
+     */
+    private function resolveOutputFormat(array $params): ?string
+    {
+        if (array_key_exists('outputFormat', $params) === true) {
+            $value = $params['outputFormat'];
+            if (is_string($value) === false
+                || in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
+            ) {
+                return null;
+            }
+
+            return $value;
+        }
+
+        $tenantDefault = $this->appConfig->getValueString(
+            'docudesk',
+            self::DEFAULT_OUTPUT_FORMAT_KEY,
+            'pdf'
+        );
+
+        if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
+            // Malformed tenant setting falls back to spec default
+            // rather than rejecting the call.
+            return 'pdf';
+        }
+
+        return $tenantDefault;
+
+    }//end resolveOutputFormat()
+
 
     /**
      * Filter entities by excluded types

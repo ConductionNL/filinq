@@ -109,6 +109,60 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testAnonymizeDocumentSignatureAcceptsNewParams()
 
+
+    /**
+     * anonymise-output-as-pdf-by-default: AnonymizationService must
+     * accept an `$outputFormat` argument on anonymizeDocument so the
+     * controller can pass through the per-call gate.
+     *
+     * @return void
+     */
+    public function testAnonymizeDocumentAcceptsOutputFormatArgument(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+
+        // Signature must include the outputFormat parameter with a
+        // default of 'pdf' (per design D6 / proposal "default pdf").
+        $this->assertMatchesRegularExpression(
+            '/function anonymizeDocument\([^)]*\$outputFormat\s*=\s*\'pdf\'[^)]*\)/s',
+            $content,
+            'anonymizeDocument must accept $outputFormat with a default of \'pdf\''
+        );
+
+    }//end testAnonymizeDocumentAcceptsOutputFormatArgument()
+
+
+    /**
+     * anonymise-output-as-pdf-by-default: AnonymizationService must
+     * depend on PdfConversionService and catch ConversionFailedException
+     * for the rollback path. Shape-level check; the actual cascade
+     * behaviour is covered by PdfConversionServiceTest.
+     *
+     * @return void
+     */
+    public function testServiceWiresPdfConversionAndRollback(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+
+        $this->assertStringContainsString(
+            'PdfConversionService',
+            $content,
+            'AnonymizationService must wire PdfConversionService for the pdf-output path'
+        );
+        $this->assertStringContainsString(
+            'ConversionFailedException',
+            $content,
+            'AnonymizationService must catch ConversionFailedException for the rollback path'
+        );
+        $this->assertStringContainsString(
+            '$result->delete()',
+            $content,
+            'AnonymizationService must delete the un-converted intermediate when conversion fails'
+        );
+
+    }//end testServiceWiresPdfConversionAndRollback()
+
+
     /**
      * Test that tryAppendBasisSummary is defined as a private method.
      *
@@ -388,6 +442,7 @@ class AnonymizationServiceTest extends TestCase
 
         $grondslagenSummary = $this->createMock(originalClassName: \OCA\DocuDesk\Service\GrondslagenSummaryService::class);
         $fileEntityStats    = $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class);
+        $pdfConversion      = $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class);
 
         return new \OCA\DocuDesk\Service\AnonymizationService(
             logger: $logger,
@@ -398,7 +453,8 @@ class AnonymizationServiceTest extends TestCase
             consentCrud: $consentCrud,
             consentService: $consentService,
             grondslagenSummary: $grondslagenSummary,
-            fileEntityStats: $fileEntityStats
+            fileEntityStats: $fileEntityStats,
+            pdfConversion: $pdfConversion
         );
 
     }//end buildServiceWithoutDependencies()
@@ -438,4 +494,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertInstanceOf(\OCA\DocuDesk\Service\AnonymizationService::class, $service);
 
     }//end testAnonymizationServiceAcceptsFileEntityStatsService()
+
+
 }//end class
