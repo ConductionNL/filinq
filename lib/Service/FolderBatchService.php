@@ -16,6 +16,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,6 +28,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
 use OCP\Files\File;
@@ -52,18 +54,20 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  */
 class FolderBatchService
 {
     /**
      * Constructor for FolderBatchService
      *
-     * @param LoggerInterface      $logger       Logger for error reporting
-     * @param IRootFolder          $rootFolder   Root folder for file operations
-     * @param IUserSession         $userSession  User session for current user
-     * @param BatchStateService    $stateService Batch state management
-     * @param IJobList             $jobList      Background job list
-     * @param AnonymizationService $anonService  Anonymization/extraction service
+     * @param LoggerInterface      $logger         Logger for error reporting
+     * @param IRootFolder          $rootFolder     Root folder for file operations
+     * @param IUserSession         $userSession    User session for current user
+     * @param BatchStateService    $stateService   Batch state management
+     * @param IJobList             $jobList        Background job list
+     * @param AnonymizationService $anonService    Anonymization/extraction service
+     * @param OutputLayoutResolver $layoutResolver Output layout resolver for source-discovery filter
      *
      * @return void
      */
@@ -73,7 +77,8 @@ class FolderBatchService
         private readonly IUserSession $userSession,
         private readonly BatchStateService $stateService,
         private readonly IJobList $jobList,
-        private readonly AnonymizationService $anonService
+        private readonly AnonymizationService $anonService,
+        private readonly OutputLayoutResolver $layoutResolver
     ) {
 
     }//end __construct()
@@ -315,21 +320,38 @@ class FolderBatchService
     }//end scheduleExtraction()
 
     /**
-     * Enumerate direct file children of a folder (flat, no recursion)
+     * Enumerate direct file children of a folder (flat, no recursion).
+     *
+     * Excludes files whose base name ends with `_anonymized` — these are
+     * legacy redacted outputs from pre-layout runs and must not be
+     * re-anonymised by automated folder analysis. The filter is provided
+     * by OutputLayoutResolver so both FolderBatchService and
+     * FolderExtractionJob use the same rule.
      *
      * @param Folder $folder The folder to enumerate
      *
-     * @return File[] Array of file nodes
+     * @return File[] Array of file nodes (legacy _anonymized files excluded)
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
      */
     private function enumerateFiles(Folder $folder): array
     {
         $files = [];
         foreach ($folder->getDirectoryListing() as $node) {
-            if ($node instanceof File) {
-                $files[] = $node;
+            if (($node instanceof File) === false) {
+                continue;
             }
+
+            if ($this->layoutResolver->hasAnonymizedSuffix(fileName: $node->getName()) === true) {
+                $this->logger->debug(
+                    'FolderBatchService: skipping legacy _anonymized file in source discovery.',
+                    ['fileName' => $node->getName()]
+                );
+                continue;
+            }
+
+            $files[] = $node;
         }
 
         return $files;

@@ -21,6 +21,7 @@ use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -35,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
 class FolderExtractionJobTest extends TestCase
@@ -69,6 +70,12 @@ class FolderExtractionJobTest extends TestCase
      */
     private LoggerInterface|MockObject $mockLogger;
 
+    /**
+     * Mocked OutputLayoutResolver
+     *
+     * @var OutputLayoutResolver|MockObject
+     */
+    private OutputLayoutResolver|MockObject $mockLayoutResolver;
 
     /**
      * Set up test environment
@@ -79,20 +86,21 @@ class FolderExtractionJobTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockAnonService  = $this->createMock(AnonymizationService::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
-        $this->mockLogger       = $this->createMock(LoggerInterface::class);
-        $mockTime               = $this->createMock(ITimeFactory::class);
+        $this->mockAnonService    = $this->createMock(AnonymizationService::class);
+        $this->mockStateService   = $this->createMock(BatchStateService::class);
+        $this->mockLogger         = $this->createMock(LoggerInterface::class);
+        $this->mockLayoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $mockTime = $this->createMock(ITimeFactory::class);
 
         $this->job = new FolderExtractionJob(
             $mockTime,
             $this->mockAnonService,
             $this->mockStateService,
-            $this->mockLogger
+            $this->mockLogger,
+            $this->mockLayoutResolver
         );
 
     }//end setUp()
-
 
     /**
      * Test sequential extraction of all files
@@ -114,17 +122,21 @@ class FolderExtractionJobTest extends TestCase
 
         $this->mockAnonService->expects($this->exactly(2))
             ->method('extractAndDetectEntities')
-            ->willReturnMap([
-                [1, ['entityCount' => 5, 'entities' => []]],
-                [2, ['entityCount' => 3, 'entities' => []]],
-            ]);
+            ->willReturnMap(
+                    [
+                        [1, ['entityCount' => 5, 'entities' => []]],
+                        [2, ['entityCount' => 3, 'entities' => []]],
+                    ]
+                    );
 
         // Capture all updateBatch calls to verify state transitions.
         $updates = [];
         $this->mockStateService->method('updateBatch')
-            ->willReturnCallback(function (string $id, array $b) use (&$updates) {
-                $updates[] = $b;
-            });
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$updates) {
+                        $updates[] = $b;
+                    }
+                    );
 
         // Use reflection to call protected run().
         $ref = new \ReflectionMethod($this->job, 'run');
@@ -139,7 +151,6 @@ class FolderExtractionJobTest extends TestCase
         $this->assertEquals(5, $last['files'][0]['entityCount']);
 
     }//end testProcessesAllFilesSequentially()
-
 
     /**
      * Test that a single file failure does not abort the batch
@@ -161,18 +172,23 @@ class FolderExtractionJobTest extends TestCase
         $this->mockStateService->method('getBatch')->willReturn($batch);
 
         $this->mockAnonService->method('extractAndDetectEntities')
-            ->willReturnCallback(function (int $fileId) {
-                if ($fileId === 2) {
-                    throw new Exception('Extraction failed');
-                }
-                return ['entityCount' => 3, 'entities' => []];
-            });
+            ->willReturnCallback(
+                    function (int $fileId) {
+                        if ($fileId === 2) {
+                            throw new Exception('Extraction failed');
+                        }
+
+                        return ['entityCount' => 3, 'entities' => []];
+                    }
+                    );
 
         $updates = [];
         $this->mockStateService->method('updateBatch')
-            ->willReturnCallback(function (string $id, array $b) use (&$updates) {
-                $updates[] = $b;
-            });
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$updates) {
+                        $updates[] = $b;
+                    }
+                    );
 
         $ref = new \ReflectionMethod($this->job, 'run');
         $ref->setAccessible(true);
@@ -186,7 +202,6 @@ class FolderExtractionJobTest extends TestCase
         $this->assertNotEmpty($last['files'][1]['error']);
 
     }//end testSingleFileFailureDoesNotAbortBatch()
-
 
     /**
      * Test that missing batchId logs error and returns
@@ -204,7 +219,6 @@ class FolderExtractionJobTest extends TestCase
 
     }//end testMissingBatchIdLogsError()
 
-
     /**
      * Test that expired batch logs error and returns
      *
@@ -221,7 +235,6 @@ class FolderExtractionJobTest extends TestCase
         $ref->invoke($this->job, ['batchId' => 'expired-batch']);
 
     }//end testExpiredBatchLogsError()
-
 
     /**
      * Test status transitions through extracting to review
@@ -243,9 +256,11 @@ class FolderExtractionJobTest extends TestCase
 
         $statuses = [];
         $this->mockStateService->method('updateBatch')
-            ->willReturnCallback(function (string $id, array $b) use (&$statuses) {
-                $statuses[] = $b['status'];
-            });
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$statuses) {
+                        $statuses[] = $b['status'];
+                    }
+                    );
 
         $ref = new \ReflectionMethod($this->job, 'run');
         $ref->setAccessible(true);
@@ -256,5 +271,101 @@ class FolderExtractionJobTest extends TestCase
 
     }//end testStatusTransitionsExtractingToReview()
 
+    /**
+     * Test that _anonymized-suffixed files are skipped during extraction.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     */
+    public function testSkipsLegacyAnonymizedSuffixedFiles(): void
+    {
+        $batch = [
+            'batchId' => 'batch-filter',
+            'status'  => 'uploading',
+            'files'   => [
+                ['fileId' => 1, 'fileName' => 'report.pdf',            'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
+                ['fileId' => 2, 'fileName' => 'report_anonymized.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
+                ['fileId' => 3, 'fileName' => 'letter.docx',           'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
+            ],
+        ];
 
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+
+        // hasAnonymizedSuffix returns true only for the legacy file.
+        $this->mockLayoutResolver->method('hasAnonymizedSuffix')
+            ->willReturnCallback(
+                    function (string $fileName): bool {
+                        return str_ends_with(pathinfo($fileName, PATHINFO_FILENAME), '_anonymized');
+                    }
+                    );
+
+        // extractAndDetectEntities must NOT be called for the _anonymized file.
+        $this->mockAnonService->expects($this->exactly(2))
+            ->method('extractAndDetectEntities')
+            ->willReturn(['entityCount' => 2, 'entities' => []]);
+
+        $updates = [];
+        $this->mockStateService->method('updateBatch')
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$updates) {
+                        $updates[] = $b;
+                    }
+                    );
+
+        $ref = new \ReflectionMethod($this->job, 'run');
+        $ref->setAccessible(true);
+        $ref->invoke($this->job, ['batchId' => 'batch-filter']);
+
+        $last = end($updates);
+        $this->assertEquals('extracted', $last['files'][0]['status'], 'clean file should be extracted');
+        $this->assertEquals('skipped',   $last['files'][1]['status'], 'legacy file should be skipped');
+        $this->assertEquals('extracted', $last['files'][2]['status'], 'clean file should be extracted');
+
+    }//end testSkipsLegacyAnonymizedSuffixedFiles()
+
+    /**
+     * Test that retry is idempotent: if a file is already extracted, it is not re-processed.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+     */
+    public function testRetryIsIdempotentForAlreadyExtractedFiles(): void
+    {
+        $batch = [
+            'batchId' => 'batch-retry',
+            'status'  => 'extracting',
+            'files'   => [
+                ['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'extracted', 'entityCount' => 3, 'error' => null],
+                ['fileId' => 2, 'fileName' => 'b.pdf', 'status' => 'uploaded',  'entityCount' => 0, 'error' => null],
+            ],
+        ];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+
+        // Only the un-extracted file should be processed.
+        $this->mockAnonService->expects($this->once())
+            ->method('extractAndDetectEntities')
+            ->with(2)
+            ->willReturn(['entityCount' => 5, 'entities' => []]);
+
+        $updates = [];
+        $this->mockStateService->method('updateBatch')
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$updates) {
+                        $updates[] = $b;
+                    }
+                    );
+
+        $ref = new \ReflectionMethod($this->job, 'run');
+        $ref->setAccessible(true);
+        $ref->invoke($this->job, ['batchId' => 'batch-retry']);
+
+        $last = end($updates);
+        $this->assertEquals('review', $last['status']);
+        $this->assertEquals('extracted', $last['files'][0]['status']);
+        $this->assertEquals('extracted', $last['files'][1]['status']);
+
+    }//end testRetryIsIdempotentForAlreadyExtractedFiles()
 }//end class

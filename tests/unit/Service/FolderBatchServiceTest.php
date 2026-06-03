@@ -15,6 +15,7 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-3
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,6 +27,7 @@ use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
@@ -99,6 +101,12 @@ class FolderBatchServiceTest extends TestCase
      */
     private IJobList|MockObject $mockJobList;
 
+    /**
+     * Mocked OutputLayoutResolver
+     *
+     * @var OutputLayoutResolver|MockObject
+     */
+    private OutputLayoutResolver|MockObject $mockLayoutResolver;
 
     /**
      * Set up test environment
@@ -109,11 +117,12 @@ class FolderBatchServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger       = $this->createMock(LoggerInterface::class);
-        $this->mockRootFolder   = $this->createMock(IRootFolder::class);
-        $this->mockUserSession  = $this->createMock(IUserSession::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
-        $this->mockJobList      = $this->createMock(IJobList::class);
+        $this->mockLogger         = $this->createMock(LoggerInterface::class);
+        $this->mockRootFolder     = $this->createMock(IRootFolder::class);
+        $this->mockUserSession    = $this->createMock(IUserSession::class);
+        $this->mockStateService   = $this->createMock(BatchStateService::class);
+        $this->mockJobList        = $this->createMock(IJobList::class);
+        $this->mockLayoutResolver = $this->createMock(OutputLayoutResolver::class);
 
         $mockUser = $this->createMock(IUser::class);
         $mockUser->method('getUID')->willReturn('testuser');
@@ -125,11 +134,11 @@ class FolderBatchServiceTest extends TestCase
             $this->mockUserSession,
             $this->mockStateService,
             $this->mockJobList,
-            $this->createMock(AnonymizationService::class)
+            $this->createMock(AnonymizationService::class),
+            $this->mockLayoutResolver
         );
 
     }//end setUp()
-
 
     /**
      * Build a mocked Folder with a given directory listing, path, id and permissions.
@@ -156,7 +165,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end buildFolder()
 
-
     /**
      * Build a mocked File child.
      *
@@ -174,14 +182,13 @@ class FolderBatchServiceTest extends TestCase
 
     }//end buildFile()
 
-
     /**
      * Build a user folder mock wrapping a target folder for get()/getById() lookups.
      *
-     * @param array       $getByIdNodes       Array returned by getById(), or null to not stub
+     * @param array     $getByIdNodes       Array returned by getById(), or null to not stub
      * @param Node|null $getPathNode        Node returned by get(), or null to not stub
-     * @param bool        $pathThrowsNotFound When true, get() throws NotFoundException
-     * @param string      $relativePath       The relative path reported by getRelativePath()
+     * @param bool      $pathThrowsNotFound When true, get() throws NotFoundException
+     * @param string    $relativePath       The relative path reported by getRelativePath()
      *
      * @return Folder|MockObject
      */
@@ -208,7 +215,6 @@ class FolderBatchServiceTest extends TestCase
         return $userFolder;
 
     }//end buildUserFolder()
-
 
     /**
      * Test successful folder batch creation via path — existing behaviour preserved,
@@ -252,7 +258,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByPathHappyPath()
 
-
     /**
      * Test successful folder batch creation via ID — node resolved via getById,
      * both identifiers captured on the batch.
@@ -284,7 +289,6 @@ class FolderBatchServiceTest extends TestCase
         $this->assertEquals('/Shared/Cases', $result['folderPath']);
 
     }//end testCreateFolderBatchByIdHappyPath()
-
 
     /**
      * Test that when getById returns multiple mounts (read-only + writable)
@@ -336,7 +340,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdPrefersWritableMount()
 
-
     /**
      * Test that when no writable mount exists, the first readable node is used.
      *
@@ -373,7 +376,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdFallsBackToReadableWhenNoneWritable()
 
-
     /**
      * Test that a folder id that resolves to no nodes returns 404.
      *
@@ -391,7 +393,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(99999, null);
 
     }//end testCreateFolderBatchByIdReturns404WhenIdNotResolvable()
-
 
     /**
      * Test that a folder id resolving to a File (not Folder) returns 400.
@@ -415,7 +416,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdReturns400WhenNodeIsFile()
 
-
     /**
      * Test that a folder id resolving to an empty folder returns 400.
      *
@@ -435,7 +435,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(12345, null);
 
     }//end testCreateFolderBatchByIdReturns400WhenFolderEmpty()
-
 
     /**
      * Test that a folder id resolving to too many files returns 400.
@@ -464,7 +463,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchByIdReturns400WhenTooManyFiles()
 
-
     /**
      * Test that providing both folderId and folderPath is rejected with 400.
      *
@@ -483,7 +481,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testCreateFolderBatchRejectsBothParams()
 
-
     /**
      * Test that providing neither folderId nor folderPath is rejected with 400.
      *
@@ -501,7 +498,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(null, null);
 
     }//end testCreateFolderBatchRejectsNeitherParam()
-
 
     /**
      * Test that directories inside the folder are skipped when enumerating.
@@ -532,7 +528,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testSkipsSubdirectories()
 
-
     /**
      * Test folder-path not found throws 404.
      *
@@ -549,7 +544,6 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(null, '/nonexistent');
 
     }//end testFolderPathNotFoundThrows404()
-
 
     /**
      * Test path pointing to a file throws 400.
@@ -570,7 +564,6 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testFolderPathIsFileThrows400()
 
-
     /**
      * Test no user session throws 401.
      *
@@ -587,7 +580,8 @@ class FolderBatchServiceTest extends TestCase
             $mockUserSession,
             $this->mockStateService,
             $this->mockJobList,
-            $this->createMock(AnonymizationService::class)
+            $this->createMock(AnonymizationService::class),
+            $this->mockLayoutResolver
         );
 
         $this->expectException(Exception::class);
@@ -597,5 +591,90 @@ class FolderBatchServiceTest extends TestCase
 
     }//end testNoUserThrows401()
 
+    /**
+     * Test that _anonymized-suffixed files are excluded from source discovery.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     */
+    public function testSourceDiscoveryExcludesAnonymizedSuffixedFiles(): void
+    {
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $cleanFile    = $this->buildFile(101, 'report.pdf');
+        $legacyFile   = $this->buildFile(102, 'report_anonymized.pdf');
+        $anotherClean = $this->buildFile(103, 'letter.docx');
+        // phpcs:enable CustomSn.Functions.NamedParameters
 
+        // HasAnonymizedSuffix returns true only for the legacy file.
+        $this->mockLayoutResolver->method('hasAnonymizedSuffix')
+            ->willReturnCallback(
+                    function (string $fileName): bool {
+                        return str_ends_with($fileName, '_anonymized.pdf')
+                        || str_ends_with(pathinfo($fileName, PATHINFO_FILENAME), '_anonymized');
+                    }
+                    );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $folder     = $this->buildFolder([$cleanFile, $legacyFile, $anotherClean], 500);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+        $this->mockStateService->method('createBatch')->willReturnCallback(
+            function (string $userId, array $files) {
+                // Only the two clean files should have been passed.
+                // phpcs:disable CustomSn.Functions.NamedParameters
+                $this->assertCount(2, $files);
+                $fileIds = array_column($files, 'fileId');
+                $this->assertContains(101, $fileIds);
+                $this->assertContains(103, $fileIds);
+                $this->assertNotContains(102, $fileIds);
+                // phpcs:enable CustomSn.Functions.NamedParameters
+                return [
+                    'batchId' => 'uuid',
+                    'userId'  => $userId,
+                    'status'  => 'uploading',
+                    'files'   => $files,
+                ];
+            }
+        );
+
+        $this->service->createFolderBatch(null, '/Documents/WOB');
+
+    }//end testSourceDiscoveryExcludesAnonymizedSuffixedFiles()
+
+    /**
+     * Test that a folder containing only _anonymized files throws 400 (no files found).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     */
+    public function testSourceDiscoveryAllFilteredThrowsNoFiles(): void
+    {
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $legacyFile = $this->buildFile(102, 'report_anonymized.pdf');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $this->mockLayoutResolver->method('hasAnonymizedSuffix')->willReturn(true);
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $folder     = $this->buildFolder([$legacyFile], 500);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+        $this->expectExceptionMessage('No files found in folder');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $this->service->createFolderBatch(null, '/Documents/WOB');
+
+    }//end testSourceDiscoveryAllFilteredThrowsNoFiles()
 }//end class

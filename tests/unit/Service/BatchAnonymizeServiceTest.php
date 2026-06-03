@@ -15,6 +15,7 @@
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -26,6 +27,9 @@ use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchAnonymizeService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
+use OCP\Files\IRootFolder;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -39,7 +43,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress  PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
 class BatchAnonymizeServiceTest extends TestCase
@@ -73,6 +77,26 @@ class BatchAnonymizeServiceTest extends TestCase
      */
     private BatchStateService|MockObject $mockStateService;
 
+    /**
+     * Mocked IRootFolder
+     *
+     * @var IRootFolder|MockObject
+     */
+    private IRootFolder|MockObject $mockRootFolder;
+
+    /**
+     * Mocked IUserSession
+     *
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
+    /**
+     * Mocked OutputLayoutResolver
+     *
+     * @var OutputLayoutResolver|MockObject
+     */
+    private OutputLayoutResolver|MockObject $mockLayoutResolver;
 
     /**
      * Set up test environment
@@ -83,18 +107,26 @@ class BatchAnonymizeServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger       = $this->createMock(LoggerInterface::class);
-        $this->mockAnonService  = $this->createMock(AnonymizationService::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
+        $this->mockLogger         = $this->createMock(LoggerInterface::class);
+        $this->mockAnonService    = $this->createMock(AnonymizationService::class);
+        $this->mockStateService   = $this->createMock(BatchStateService::class);
+        $this->mockRootFolder     = $this->createMock(IRootFolder::class);
+        $this->mockUserSession    = $this->createMock(IUserSession::class);
+        $this->mockLayoutResolver = $this->createMock(OutputLayoutResolver::class);
+
+        // Default: no user logged in — postProcessMove falls back to legacy path.
+        $this->mockUserSession->method('getUser')->willReturn(null);
 
         $this->service = new BatchAnonymizeService(
             $this->mockLogger,
             $this->mockAnonService,
-            $this->mockStateService
+            $this->mockStateService,
+            $this->mockRootFolder,
+            $this->mockUserSession,
+            $this->mockLayoutResolver
         );
 
     }//end setUp()
-
 
     /**
      * Test anonymizeBatch throws when batch not found
@@ -111,7 +143,6 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->service->anonymizeBatch(batchId: 'missing-id', entities: []);
 
     }//end testAnonymizeBatchThrowsWhenBatchNotFound()
-
 
     /**
      * Test anonymizeBatch skips files with error status
@@ -138,7 +169,6 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->assertCount(1, $result['skippedFiles']);
 
     }//end testAnonymizeBatchSkipsErrorFiles()
-
 
     /**
      * Test anonymizeBatch processes extracted files successfully
@@ -169,7 +199,6 @@ class BatchAnonymizeServiceTest extends TestCase
 
     }//end testAnonymizeBatchProcessesExtractedFiles()
 
-
     /**
      * Test anonymizeBatch records error when anonymization throws
      *
@@ -196,7 +225,6 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->assertSame('Presidio unavailable', $result['skippedFiles'][0]['reason']);
 
     }//end testAnonymizeBatchRecordsErrorOnException()
-
 
     /**
      * Test anonymizeBatch returns correct totalFiles count
@@ -225,7 +253,6 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->assertSame(2, $result['processedFiles']);
 
     }//end testAnonymizeBatchReturnsTotalFilesCount()
-
 
     /**
      * Flag true is forwarded to anonymizeDocument for each extracted file.
@@ -265,7 +292,6 @@ class BatchAnonymizeServiceTest extends TestCase
 
     }//end testAppendBasisSummaryFlagForwardedToEachFile()
 
-
     /**
      * Flag false (default) means anonymizeDocument is called without the flag.
      *
@@ -296,7 +322,6 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->service->anonymizeBatch(batchId: 'batch-6', entities: []);
 
     }//end testAppendBasisSummaryFlagDefaultsFalse()
-
 
     /**
      * Per-file warnings from summary failure are propagated into batch file entries.
@@ -341,7 +366,6 @@ class BatchAnonymizeServiceTest extends TestCase
 
     }//end testPerFileSummaryWarningPropagated()
 
-
     /**
      * Preserve-mode summary fields (summaryFileId, summaryFilePath) are stored per file.
      *
@@ -381,5 +405,87 @@ class BatchAnonymizeServiceTest extends TestCase
 
     }//end testPreserveModeSummaryFieldsStoredPerFile()
 
+    /**
+     * Test that anonymizedFilePath falls back to legacy path when no user is logged in.
+     *
+     * This covers the postProcessMove early-return when the user session is unavailable.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
+     */
+    public function testPostProcessMoveReturnsLegacyPathWhenNoUser(): void
+    {
+        $batch = [
+            'batchId' => 'batch-layout-1',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 90, 'status' => 'extracted'],
+            ],
+        ];
 
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(
+                    [
+                        'replacementCount'   => 2,
+                        'anonymizedFileId'   => 'anon-90',
+                        'anonymizedFilePath' => '/alice/files/docs/report_anonymized.pdf',
+                    ]
+                    );
+
+        // userSession returns null → postProcessMove falls back to legacy path.
+        $updates = [];
+        $this->mockStateService->method('updateBatch')
+            ->willReturnCallback(
+                    function (string $id, array $b) use (&$updates) {
+                        $updates[] = $b;
+                    }
+                    );
+
+        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
+
+        $this->assertSame(1, $result['processedFiles']);
+        $last = end($updates);
+        // When fallback occurs, the path is the legacy path from anonymizeDocument result.
+        $this->assertSame(
+            '/alice/files/docs/report_anonymized.pdf',
+            $last['files'][0]['anonymizedFilePath']
+        );
+
+    }//end testPostProcessMoveReturnsLegacyPathWhenNoUser()
+
+    /**
+     * Test that move failure preserves file at legacy path with warning.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-4
+     */
+    public function testPostProcessMoveSetsLegacyPathWhenAnonymizedFileIdIsNull(): void
+    {
+        $batch = [
+            'batchId' => 'batch-layout-2',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 91, 'status' => 'extracted'],
+            ],
+        ];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(
+                    [
+                        'replacementCount'   => 1,
+                        'anonymizedFileId'   => null,
+                        'anonymizedFilePath' => null,
+                    ]
+                    );
+
+        $result = $this->service->anonymizeBatch(batchId: 'batch-layout-2', entities: []);
+
+        $this->assertSame(1, $result['processedFiles']);
+        $this->assertSame('completed', $result['batchStatus']);
+
+    }//end testPostProcessMoveSetsLegacyPathWhenAnonymizedFileIdIsNull()
 }//end class

@@ -16,6 +16,8 @@
  * @link      https://www.DocuDesk.app
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,6 +30,7 @@ namespace OCA\DocuDesk\BackgroundJob;
 use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\QueuedJob;
 use Psr\Log\LoggerInterface;
@@ -44,16 +47,20 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  */
 class FolderExtractionJob extends QueuedJob
 {
     /**
      * Constructor for FolderExtractionJob
      *
-     * @param ITimeFactory         $time         Time factory
-     * @param AnonymizationService $anonService  Anonymization/extraction service
-     * @param BatchStateService    $stateService Batch state management
-     * @param LoggerInterface      $logger       Logger for error reporting
+     * @param ITimeFactory         $time           Time factory
+     * @param AnonymizationService $anonService    Anonymization/extraction service
+     * @param BatchStateService    $stateService   Batch state management
+     * @param LoggerInterface      $logger         Logger for error reporting
+     * @param OutputLayoutResolver $layoutResolver Output layout resolver for source-discovery filter
      *
      * @return void
      */
@@ -61,7 +68,8 @@ class FolderExtractionJob extends QueuedJob
         ITimeFactory $time,
         private readonly AnonymizationService $anonService,
         private readonly BatchStateService $stateService,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly OutputLayoutResolver $layoutResolver
     ) {
         parent::__construct(time: $time);
 
@@ -99,6 +107,19 @@ class FolderExtractionJob extends QueuedJob
 
         foreach ($batch['files'] as $i => $file) {
             if ($file['status'] !== 'uploaded') {
+                continue;
+            }
+
+            // Skip legacy _anonymized-suffixed files: these are redacted outputs
+            // from pre-layout runs and must not be re-extracted by the job.
+            $fileName = $file['fileName'] ?? '';
+            if ($this->layoutResolver->hasAnonymizedSuffix(fileName: $fileName) === true) {
+                $this->logger->debug(
+                    'FolderExtractionJob: skipping legacy _anonymized file.',
+                    ['batchId' => $batchId, 'fileName' => $fileName]
+                );
+                $batch['files'][$i]['status'] = 'skipped';
+                $this->stateService->updateBatch($batchId, $batch);
                 continue;
             }
 
