@@ -14,11 +14,8 @@
  *
  * @link https://www.DocuDesk.app
  *
-<<<<<<< HEAD
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
  *
-=======
->>>>>>> 820e564291fed1f82a1ac1cf5099f64044a7b298
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
