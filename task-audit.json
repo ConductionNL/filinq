@@ -1,23 +1,20 @@
 {
-  "spec": "openspec/changes/add-dossier-schema",
+  "spec": "openspec/changes/anonymisation-entity-review-prohibition-hints",
   "verified": [
-    {"task": "1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier register entry present under components.registers"},
-    {"task": "2", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "base schema present under components.schemas.base with required name+description"},
-    {"task": "3", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier schema present under components.schemas.dossier with required name, optional bases+checkedOn"},
-    {"task": "4", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "jq valid + composer check:strict ALL CHECKS PASSED"},
-    {"task": "5", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "6 canonical base seed objects present: persoonsgegevens, bijzondere-persoonsgegevens, strafrechtelijk, bedrijfs-fabricagegegevens, onevenredige-benadeling, nationale-veiligheid"},
-    {"task": "6", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "5 dossier seed objects present; zonnestraal-incident-2026-03 has bases=[] and checkedOn=null"},
-    {"task": "10", "file": "tests/unit/Settings/DossierRegisterConfigTest.php", "ok": true, "note": "6/6 tests pass via phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest"},
-    {"task": "11", "file": "l10n/en.json + l10n/nl.json + l10n/en.js + l10n/nl.js", "ok": true, "note": "Dutch and English translations added for schema titles, property titles, and 6 grondslag names"},
-    {"task": "12", "file": "docs/features/dossier-register.md", "ok": true, "note": "Feature doc present; dossier-register added to docs/features.json"},
-    {"task": "14", "file": "docs/features/dossier-register.md", "ok": true, "note": "@self.folder trust model documented + validate-self-folder-access follow-up referenced"}
+    {"task": "1", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
+    {"task": "1", "file": "lib/Service/PolicyMatchService.php", "ok": true},
+    {"task": "2", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
+    {"task": "3", "file": "lib/Service/BasesResolverService.php", "ok": true},
+    {"task": "4", "file": "lib/Service/BasesResolverService.php", "ok": true},
+    {"task": "5", "file": "tests/unit/Service/BasesResolverServiceTest.php", "ok": true},
+    {"task": "6", "file": "tests/unit/Service/EntityConsolidationProhibitionTest.php", "ok": true},
+    {"task": "8", "file": "docs/features/anonymization-entity-review.md", "ok": true},
+    {"task": "8", "file": "CHANGELOG.md", "ok": true},
+    {"task": "9", "file": "lib/", "ok": true, "note": "398 tests pass; 14 hydra gates green"}
   ],
   "stubs": [],
   "missing_routes": [],
-  "deferred": [
-    {"task": "7", "reason": "Runtime verification requires occ access (permission denied in container); register JSON is correct per static analysis and PHPUnit"},
-    {"task": "8", "reason": "Referential integrity requires a live Nextcloud + OpenRegister instance; design confirms OR handles via existing @self.folder pipeline"},
-    {"task": "9", "reason": "Audit trail verification requires two live user sessions; design confirms OR's AuditTrailMapper handles this natively"},
-    {"task": "13", "reason": "Playwright screenshots require browser-1 MCP which is not available in this headless container"}
+  "skipped": [
+    {"task": "7", "reason": "Newman integration tests require live Nextcloud+OpenRegister; marked pending in tasks.md"}
   ]
 }
