@@ -7,10 +7,10 @@ status: implemented
 ## Purpose
 
 Provides configuration management for DocuDesk, including OpenRegister integration setup, GDPR consent period configuration, and metadata enrichment feature toggles. Settings are exposed both via the Nextcloud Admin Settings panel (under a dedicated DocuDesk section) and via a REST API. On application boot, DocuDesk automatically initializes its OpenRegister configuration by importing the register/schema definitions from `docudesk_register.json`.
-
 ## Requirements
+### Requirement: Nextcloud Admin Panel Integration (REQ-SET-01)
 
-### REQ-SET-01: Nextcloud Admin Panel Integration (Priority: Must)
+**Priority:** Must
 
 DocuDesk registers a dedicated section in the Nextcloud admin settings panel with its own icon, accessible only to administrators.
 
@@ -34,6 +34,7 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 - AND all configuration sections are displayed in NcSettingsSection blocks
 
 #### Scenario: Settings section registration
+@e2e exclude pure PHP class registration — verified by Nextcloud admin panel presence (covered by admin-opens-docudesk-settings-section)
 - GIVEN DocuDesk is installed and enabled
 - WHEN Nextcloud loads admin sections
 - THEN `OCA\DocuDesk\Settings\DocuDeskAdmin` (ISettings) provides the form template
@@ -46,7 +47,9 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 | SET-003 | The admin section is registered via `OCA\DocuDesk\Settings\DocuDeskAdmin` (ISettings) and `OCA\DocuDesk\Sections\DocuDeskAdmin` (IIconSection) -- two separate classes in different namespaces | MUST | Implemented |
 | SET-004 | Settings are rendered using a Vue component (`Settings.vue`) via the `settings` entry point | MUST | Implemented |
 
-### REQ-SET-02: OpenRegister Integration Configuration (Priority: Must)
+### Requirement: OpenRegister Integration Configuration (REQ-SET-02)
+
+**Priority:** Must
 
 Administrators can configure which OpenRegister register and schema to use for consent object storage, with validation and discovery of available registers.
 
@@ -60,6 +63,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND consent endpoints use the newly configured register/schema
 
 #### Scenario: OpenRegister version check fails
+@e2e exclude pure backend version-gate logic; tested by PHPUnit; no reproducible UI state in this env (OR meets version)
 - GIVEN OpenRegister is installed but version is 0.2.9 (below minimum 0.2.10)
 - WHEN the settings service checks OpenRegister availability
 - THEN `isOpenRegisterInstalled()` returns false
@@ -73,6 +77,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND register/schema selectors are not displayed
 
 #### Scenario: Schema listing excludes properties
+@e2e exclude API response shape — backend serialization verified by PHPUnit; not observable in UI (properties column never rendered)
 - GIVEN OpenRegister is installed with multiple registers containing schemas
 - WHEN the settings page fetches available registers
 - THEN each schema in the response excludes the `properties` field for cleaner display
@@ -88,11 +93,14 @@ Administrators can configure which OpenRegister register and schema to use for c
 | SET-015 | Store register/schema configuration as `publicationConsent_register`, `publicationConsent_schema`, `publicationConsent_source` in IAppConfig | MUST | Implemented |
 | SET-016 | Schema listing excludes the `properties` field for cleaner API responses | MUST | Implemented |
 
-### REQ-SET-03: Auto-Initialization on Boot (Priority: Must)
+### Requirement: Auto-Initialization on Boot (REQ-SET-03)
+
+**Priority:** Must
 
 On application boot, DocuDesk automatically imports its register/schema definitions from a versioned JSON file, ensuring the required data structures exist in OpenRegister.
 
 #### Scenario: First boot auto-initialization
+@e2e exclude pure backend initialization flow — Application::boot() logic verified by PHPUnit; not observable in UI
 - GIVEN DocuDesk is freshly installed
 - AND OpenRegister is installed and enabled (>= v0.2.10)
 - WHEN the app boots for the first time
@@ -101,6 +109,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND the `configuration_version` is updated to the version in the JSON file
 
 #### Scenario: Version-gated configuration import
+@e2e exclude pure backend version-gate on initialization — verified by PHPUnit; not UI-observable
 - GIVEN DocuDesk has been initialized with configuration_version "0.0.1"
 - AND the `docudesk_register.json` file has been updated to version "0.0.2"
 - WHEN the app boots
@@ -108,6 +117,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND `configuration_version` is updated to "0.0.2"
 
 #### Scenario: Same version skips re-import
+@e2e exclude pure backend idempotency guard — verified by PHPUnit; not UI-observable
 - GIVEN DocuDesk has been initialized with configuration_version "0.0.1"
 - AND the `docudesk_register.json` file has version "0.0.1"
 - WHEN the app boots
@@ -115,6 +125,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND no unnecessary writes to OpenRegister occur
 
 #### Scenario: Initialization failure does not crash app
+@e2e exclude backend silent-fail behavior — verified by PHPUnit; not observable in UI without forced failure injection
 - GIVEN DocuDesk is booting
 - AND OpenRegister's ConfigurationService throws an exception during import
 - WHEN Application::boot() calls initialize()
@@ -123,6 +134,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 - AND the settings page still renders
 
 #### Scenario: JSON file validation
+@e2e exclude pure backend file-validation chain — verified by PHPUnit unit tests
 - GIVEN the `docudesk_register.json` file exists in `lib/Settings/`
 - WHEN SettingsService reads the file during initialization
 - THEN file existence, readability, JSON validity, and version presence are all validated
@@ -135,7 +147,9 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 | SET-022 | Initialization failures are logged but do not prevent app startup (silent failure) | MUST | Implemented |
 | SET-023 | The `docudesk_register.json` file follows OpenAPI 3.0.0 format with `x-openregister` extensions | MUST | Implemented |
 
-### REQ-SET-04: WOO Consent Period Configuration (Priority: Must)
+### Requirement: WOO Consent Period Configuration (REQ-SET-04)
+
+**Priority:** Must
 
 Administrators can configure the publication objection period per WOO requirements, with validation ensuring compliance with the minimum 4-week objection period.
 
@@ -153,6 +167,7 @@ Administrators can configure the publication objection period per WOO requiremen
 - AND the administrator is informed this may violate WOO requirements
 
 #### Scenario: Default objection period
+@e2e exclude consent record creation is not UI-accessible (no POST /api/consents endpoint); backend default verified by PHPUnit
 - GIVEN DocuDesk is freshly installed with no custom settings
 - WHEN a consent record is created
 - THEN the default objection period of 28 days (4 weeks) is used
@@ -164,7 +179,9 @@ Administrators can configure the publication objection period per WOO requiremen
 | SET-031 | Objection period input accepts values from 1 to 365 | MUST | Implemented |
 | SET-032 | Display descriptive text referencing WOO minimum 4-week requirement | MUST | Implemented |
 
-### REQ-SET-05: Metadata Enrichment Feature Toggles (Priority: Must)
+### Requirement: Metadata Enrichment Feature Toggles (REQ-SET-05)
+
+**Priority:** Must
 
 Administrators can independently toggle language detection, keyword extraction, and topic classification features on or off.
 
@@ -183,6 +200,7 @@ Administrators can independently toggle language detection, keyword extraction, 
 - AND each toggle uses an NcCheckboxRadioSwitch component with descriptive label
 
 #### Scenario: Disable all enrichment features
+@e2e exclude event-listener behavior is not observable in UI — backend side-effect verified by PHPUnit; UI part (saving toggles) covered by disable-keyword-extraction test
 - GIVEN an administrator toggles off all three enrichment features
 - AND clicks Save All Settings
 - WHEN an ObjectCreatedEvent fires in OpenRegister
@@ -196,17 +214,21 @@ Administrators can independently toggle language detection, keyword extraction, 
 | SET-042 | Toggle topic classification on/off (`enable_topic_classification`, default: enabled) | MUST | Implemented |
 | SET-043 | Toggles use NcCheckboxRadioSwitch components with descriptive labels | MUST | Implemented |
 
-### REQ-SET-06: Settings REST API (Priority: Must)
+### Requirement: Settings REST API (REQ-SET-06)
+
+**Priority:** Must
 
 Settings can be retrieved and updated programmatically via REST API endpoints.
 
 #### Scenario: Retrieve all settings
+@e2e exclude raw API response shape — SettingsController JSON structure verified by PHPUnit; UI displays parsed values (covered by other settings UI tests)
 - GIVEN DocuDesk is configured with consent register and enrichment toggles
 - WHEN GET /api/settings is called
 - THEN the response includes objectTypes, openRegisters flag, availableRegisters, configuration object, and feature toggle values
 - AND the response format matches the documented structure
 
 #### Scenario: Update settings via API
+@e2e exclude direct REST API call — backend IAppConfig update verified by PHPUnit; UI save flow covered by adjust-objection-period test
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with `{"publication_objection_period_days": "42"}`
 - THEN the setting is updated in IAppConfig
@@ -214,12 +236,14 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 - AND a log entry confirms the update
 
 #### Scenario: Array values are JSON-encoded
+@e2e exclude backend serialization detail — verified by PHPUnit; no UI surface for array settings
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with an array value `{"custom_list": ["a", "b"]}`
 - THEN the array is JSON-encoded before storage in IAppConfig
 - AND retrieving the setting returns the JSON string
 
 #### Scenario: Empty keys are skipped
+@e2e exclude backend input-sanitization — verified by PHPUnit; not observable via UI
 - GIVEN an authenticated administrator
 - WHEN POST /api/settings is called with `{"": "some_value"}`
 - THEN the empty key is skipped with a warning log
@@ -233,23 +257,28 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 | SET-053 | Array/object values are JSON-encoded before storage in IAppConfig | MUST | Implemented |
 | SET-054 | Empty keys are skipped with a warning log during update | MUST | Implemented |
 
-### REQ-SET-07: SettingsService Public Helper Methods (Priority: Must)
+### Requirement: SettingsService Public Helper Methods (REQ-SET-07)
+
+**Priority:** Must
 
 SettingsService exposes reusable public methods for OpenRegister service resolution and availability checking, used by other DocuDesk services and controllers.
 
 #### Scenario: ConsentController uses getObjectService
+@e2e exclude internal DI wiring — SettingsService helper method verified by PHPUnit; no direct UI surface
 - GIVEN ConsentController needs to query consent records
 - WHEN it calls `$this->settingsService->getObjectService()`
 - THEN the ObjectService is lazily resolved from the container
 - AND the controller can query consent records directly
 
 #### Scenario: OpenRegister not available throws RuntimeException
+@e2e exclude backend exception propagation — verified by PHPUnit; no reproducible UI state in this env
 - GIVEN OpenRegister is not installed
 - WHEN any service calls `getObjectService()` or `getConfigurationService()`
 - THEN a `\RuntimeException` is thrown with descriptive message
 - AND the caller can handle the exception gracefully
 
 #### Scenario: Initialize checks both installed and enabled
+@e2e exclude backend initialization guards — verified by PHPUnit; not directly observable in UI
 - GIVEN DocuDesk is booting
 - WHEN `initialize()` is called
 - THEN it first checks `isOpenRegisterInstalled()` for version >= 0.2.10
@@ -264,22 +293,27 @@ SettingsService exposes reusable public methods for OpenRegister service resolut
 | SET-063 | `getConfigurationService()` provides public access to the OpenRegister ConfigurationService via lazy resolution | MUST | Implemented |
 | SET-064 | Both service getters throw `\RuntimeException` when OpenRegister is not available | MUST | Implemented |
 
-### REQ-SET-08: App Metadata and Compatibility (Priority: Must)
+### Requirement: App Metadata and Compatibility (REQ-SET-08)
+
+**Priority:** Must
 
 DocuDesk declares platform compatibility and app identity in its `appinfo/info.xml`.
 
 #### Scenario: Database compatibility verification
+@e2e exclude app metadata in info.xml — platform compatibility verified at install time by Nextcloud; not UI-observable
 - GIVEN DocuDesk is installed on a PostgreSQL 10+ server
 - WHEN the app is enabled
 - THEN the app functions correctly with PostgreSQL as the primary database
 - AND SQLite and MySQL 8.0+ are also supported
 
 #### Scenario: PHP version check
+@e2e exclude app metadata in info.xml — PHP version gate enforced by Nextcloud at install time; not UI-testable
 - GIVEN a server running PHP 7.4
 - WHEN attempting to install DocuDesk
 - THEN the installation fails because PHP 8.0+ with 64-bit integer support is required
 
 #### Scenario: Nextcloud version compatibility
+@e2e exclude app metadata in info.xml — NC version compatibility enforced by app marketplace; not UI-testable
 - GIVEN Nextcloud version 27 is running
 - WHEN attempting to enable DocuDesk
 - THEN the app cannot be enabled because the minimum required version is Nextcloud 28
@@ -291,7 +325,9 @@ DocuDesk declares platform compatibility and app identity in its `appinfo/info.x
 | SET-071 | App requires PHP 8.0+ with 64-bit integer support | MUST | Implemented |
 | SET-072 | App is compatible with Nextcloud versions 28 through 32 | MUST | Implemented |
 
-### REQ-SET-09: External Documentation URLs (Priority: Must)
+### Requirement: External Documentation URLs (REQ-SET-09)
+
+**Priority:** Must
 
 DocuDesk references external documentation for users, administrators, and developers.
 
@@ -302,6 +338,7 @@ DocuDesk references external documentation for users, administrators, and develo
 - AND comprehensive user, admin, and developer documentation is available
 
 #### Scenario: Roadmap access
+@e2e exclude info.xml metadata link — not surfaced in the Settings.vue UI; verified by static analysis
 - GIVEN a user wants to check the DocuDesk roadmap
 - WHEN they access the roadmap URL from info.xml
 - THEN they are directed to the GitHub Projects board
@@ -313,23 +350,28 @@ DocuDesk references external documentation for users, administrators, and develo
 | SET-074 | All doc types (user, admin, developer) in info.xml use the same Gitbook URL | MUST | Implemented |
 | SET-075 | Roadmap is tracked at GitHub Projects | MUST | Implemented |
 
-### REQ-SET-10: Configuration File Resolution and Validation (Priority: Must)
+### Requirement: Configuration File Resolution and Validation (REQ-SET-10)
+
+**Priority:** Must
 
 SettingsService resolves and validates the configuration JSON file with a strict validation chain.
 
 #### Scenario: Successful configuration file loading
+@e2e exclude internal file resolution path — backend file-load logic verified by PHPUnit
 - GIVEN the `docudesk_register.json` file exists at `lib/Settings/docudesk_register.json`
 - WHEN SettingsService reads the file during initialization
 - THEN the file is resolved via relative path `__DIR__.'/../Settings/docudesk_register.json'`
 - AND the JSON content is parsed and version is extracted
 
 #### Scenario: Missing configuration file
+@e2e exclude backend exception path — RuntimeException on missing file verified by PHPUnit
 - GIVEN the `docudesk_register.json` file is missing from `lib/Settings/`
 - WHEN SettingsService attempts to load the file
 - THEN a RuntimeException is thrown with "Configuration file not found" message
 - AND the initialization fails gracefully without crashing the app
 
 #### Scenario: Invalid JSON in configuration file
+@e2e exclude backend exception path — RuntimeException on invalid JSON verified by PHPUnit
 - GIVEN the `docudesk_register.json` file contains invalid JSON
 - WHEN SettingsService attempts to parse the file
 - THEN a RuntimeException is thrown with "Invalid JSON" message
@@ -340,11 +382,14 @@ SettingsService resolves and validates the configuration JSON file with a strict
 | SET-076 | Settings file path is resolved relative to SettingsService via `__DIR__.'/../Settings/docudesk_register.json'` | MUST | Implemented |
 | SET-077 | File existence, readability, JSON validity, and version presence are all validated with descriptive RuntimeException messages | MUST | Implemented |
 
-### REQ-SET-11: TypeError Catch Fallback for OpenRegister (Priority: Must)
+### Requirement: TypeError Catch Fallback for OpenRegister (REQ-SET-11)
+
+**Priority:** Must
 
 Settings retrieval gracefully handles TypeErrors from OpenRegister internals to prevent crashes.
 
 #### Scenario: OpenRegister throws TypeError during register listing
+@e2e exclude backend catch-block behavior — TypeError recovery logic verified by PHPUnit; not reproducible in UI
 - GIVEN OpenRegister has inconsistent data (e.g., null schema properties)
 - WHEN `getAllSettings()` calls `RegisterService::findAll()`
 - AND a TypeError is thrown internally
@@ -353,6 +398,7 @@ Settings retrieval gracefully handles TypeErrors from OpenRegister internals to 
 - AND the settings page remains functional
 
 #### Scenario: OpenRegister throws generic Exception during register listing
+@e2e exclude backend catch-block behavior — generic Exception recovery verified by PHPUnit; not reproducible in UI
 - GIVEN OpenRegister's `findAll()` throws a generic Exception
 - WHEN `getAllSettings()` processes the call
 - THEN the error is caught and logged as a warning with different diagnostic message
@@ -372,6 +418,54 @@ Settings retrieval gracefully handles TypeErrors from OpenRegister internals to 
 | SET-079 | `getAllSettings()` catches generic `Exception` from `findAll()` and falls back to empty register list | MUST | Implemented |
 | SET-080 | Both catch blocks log warnings with exception details (message, file, line) for diagnostics | MUST | Implemented |
 | SET-081 | The settings page remains functional even when OpenRegister throws internal errors | MUST | Implemented |
+
+### Requirement: Signing provider configuration
+The admin settings page SHALL include a "Digital Signing" section that allows administrators to configure the signing provider, provider-specific settings, default signature level, and request expiry period.
+
+#### Scenario: Configure native signing provider
+- **WHEN** an administrator selects "Native (built-in)" as the signing provider
+- **THEN** no additional configuration fields are shown
+- **AND** the `signing_provider` setting is stored as "native" in IAppConfig
+
+#### Scenario: Configure ValidSign provider
+- **WHEN** an administrator selects "ValidSign" as the signing provider
+- **THEN** configuration fields for OpenConnector source reference are shown
+- **AND** the `signing_provider` is stored as "validsign"
+- **AND** the `signing_provider_config` stores the OpenConnector source ID as JSON
+
+#### Scenario: Configure default signature level
+- **WHEN** an administrator selects a default signature level (SES, AdES, or QES)
+- **THEN** the `signing_default_level` setting is stored in IAppConfig
+- **AND** new signing requests default to this level unless overridden
+
+#### Scenario: Configure signing request expiry
+- **WHEN** an administrator sets the signing request expiry to 14 days
+- **THEN** the `signing_request_expiry_days` setting is stored as "14" in IAppConfig
+- **AND** new signing requests use this as the default deadline
+
+### Requirement: Signing settings API
+The existing settings API SHALL include signing configuration in its response and accept signing settings in updates.
+
+#### Scenario: Settings response includes signing configuration
+- **WHEN** a GET request is made to `/api/settings`
+- **THEN** the response includes: `signing_provider`, `signing_default_level`, `signing_request_expiry_days`, and `signing_enabled` (boolean)
+
+#### Scenario: Update signing settings
+- **WHEN** a POST request is made to `/api/settings` with signing configuration fields
+- **THEN** the signing settings are stored in IAppConfig
+- **AND** the response confirms the updated values
+
+### Requirement: Signing settings data model
+The system SHALL store signing configuration using the following IAppConfig keys.
+
+#### Scenario: Signing configuration keys
+- **WHEN** signing settings are saved
+- **THEN** the following keys are stored in IAppConfig:
+  - `signing_provider` (string, default: "native") -- active signing provider
+  - `signing_provider_config` (JSON string, default: "{}") -- provider-specific configuration
+  - `signing_default_level` (string, default: "SES") -- default eIDAS signature level
+  - `signing_request_expiry_days` (string, default: "30") -- default request expiry in days
+  - `signing_enabled` (string boolean, default: "0") -- global signing feature toggle
 
 ## Data Model
 

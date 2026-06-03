@@ -1,3 +1,8 @@
+---
+status: pr-created
+pr: https://codeberg.org/Conduction/docudesk/pulls/68
+---
+
 ## Context
 Current pipeline processes one file at a time. Batch processing needed for WOO compliance.
 

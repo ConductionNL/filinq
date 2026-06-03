@@ -14,6 +14,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -42,8 +47,6 @@ use Psr\Log\LoggerInterface;
  */
 class FolderExtractionJob extends QueuedJob
 {
-
-
     /**
      * Constructor for FolderExtractionJob
      *
@@ -64,7 +67,6 @@ class FolderExtractionJob extends QueuedJob
 
     }//end __construct()
 
-
     /**
      * Run the folder extraction job
      *
@@ -75,6 +77,8 @@ class FolderExtractionJob extends QueuedJob
      * @param mixed $argument Job arguments containing batchId
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      */
     protected function run(mixed $argument): void
     {
@@ -133,6 +137,4 @@ class FolderExtractionJob extends QueuedJob
         );
 
     }//end run()
-
-
 }//end class

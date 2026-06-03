@@ -113,8 +113,23 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Count of entities currently included for anonymization.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		selectedCount() { return this.entities.filter(e => e.included).length },
+		/**
+		 * Distinct sorted list of entity types for the type filter dropdown.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		availableTypes() { return [...new Set(this.entities.map(e => e.type))].sort() },
+		/**
+		 * Entities filtered by search query and type, then sorted.
+		 *
+		 * @spec openspec/specs/anonymization-entity-review/spec.md
+		 */
 		filteredEntities() {
 			const q = this.searchQuery.toLowerCase()
 			return this.entities.map((e, i) => ({ e, idx: i }))

@@ -10,11 +10,14 @@ Provides GDPR-compliant publication consent tracking for entities (persons and o
 
 ## Requirements
 
-### REQ-CONS-01: Consent Record Creation (Priority: Must)
+### Requirement: Consent Record Creation (REQ-CONS-01)
+
+**Priority:** Must
 
 Consent records are created for detected entities in documents, initialized with pending status and an automatic objection deadline.
 
 #### Scenario: Create consent for a detected person
+@e2e exclude ConsentService::createConsentRequest() has no REST API endpoint (CONS-048); creation is PHP-only; verified by PHPUnit
 - GIVEN a document with detected PERSON entities
 - WHEN a consent request is created via ConsentService for entity "Jan de Vries"
 - THEN a PublicationConsent object is stored in OpenRegister
@@ -24,12 +27,14 @@ Consent records are created for detected entities in documents, initialized with
 - AND the objectionDeadline is set to current date + configured objection period days
 
 #### Scenario: Create consent with extra data
+@e2e exclude no REST API endpoint for consent creation (CONS-048); PHP-only; verified by PHPUnit
 - GIVEN a document entity with additional contact information
 - WHEN createConsentRequest is called with extra fields (contactEmail, contactAddress)
 - THEN the extra fields are merged into the consent record
 - AND the base consent data (statuses, deadline) is preserved
 
 #### Scenario: Custom objection period
+@e2e exclude no REST API endpoint for consent creation (CONS-048); deadline calculation verified by PHPUnit
 - GIVEN the admin has configured an objection period of 42 days
 - WHEN a consent request is created
 - THEN the objectionDeadline is set to current date + 42 days
@@ -44,17 +49,21 @@ Consent records are created for detected entities in documents, initialized with
 | CONS-005 | An objection deadline is automatically calculated based on the configurable objection period (default 28 days) | MUST | Implemented |
 | CONS-006 | Consent records are stored in OpenRegister via ObjectService using the configured register and schema | MUST | Implemented |
 
-### REQ-CONS-02: Consent Status Lifecycle (Priority: Must)
+### Requirement: Consent Status Lifecycle (REQ-CONS-02)
+
+**Priority:** Must
 
 Consent records progress through defined status transitions for consent, notification, and publication decision fields.
 
 #### Scenario: Update consent status to consent_given
+@e2e exclude status update via API (PUT /api/consents/{id}) — REST endpoint verified by PHPUnit; UI detail view covered by click-consent-to-view-details
 - GIVEN a pending consent record
 - WHEN an administrator updates the consent status to "consent_given"
 - THEN the consent record is updated in OpenRegister
 - AND the updated record is returned with the new status
 
 #### Scenario: Record an objection
+@e2e exclude objection recording via API — ConsentService::updateConsentStatus logic verified by PHPUnit; no seed data for UI test
 - GIVEN a consent record with pending status
 - WHEN the entity submits an objection with a reason
 - THEN consentStatus transitions to "objection_received"
@@ -62,6 +71,7 @@ Consent records progress through defined status transitions for consent, notific
 - AND objectionReason stores the provided text
 
 #### Scenario: Notification delivery tracking
+@e2e exclude notification status field transitions — pure backend ConsentService logic; no UI surface for notification tracking
 - GIVEN a consent record with notificationStatus "pending"
 - WHEN the notification is sent successfully
 - THEN notificationStatus transitions to "sent"
@@ -69,6 +79,7 @@ Consent records progress through defined status transitions for consent, notific
 - AND notificationSentAt is set to the send datetime
 
 #### Scenario: Publication decision after objection period
+@e2e exclude publication decision after deadline — requires a consent record past its deadline; no UI to create records; verified by PHPUnit
 - GIVEN a consent record where the objection deadline has passed
 - AND consentStatus is "no_response"
 - WHEN the administrator makes a publication decision
@@ -82,27 +93,33 @@ Consent records progress through defined status transitions for consent, notific
 | CONS-013 | Consent status can be updated via `PUT /api/consents/{id}` | MUST | Implemented |
 | CONS-014 | Objection deadline expiry can be checked via ConsentService::checkObjectionDeadline() | MUST | Implemented |
 
-### REQ-CONS-03: Consent Listing and Querying (Priority: Must)
+### Requirement: Consent Listing and Querying (REQ-CONS-03)
+
+**Priority:** Must
 
 Consent records can be listed, queried by ID, and filtered by document.
 
 #### Scenario: List all consent records
+@e2e exclude direct REST API call assertion — ConsentController::index() verified by PHPUnit; UI list view covered by view-consent-statistics test
 - GIVEN multiple consent records exist across several documents
 - WHEN GET /api/consents is called
 - THEN all consent records are returned as serialized arrays
 - AND each record includes all status fields and entity information
 
 #### Scenario: Get consent by ID
+@e2e exclude REST API detail endpoint — ConsentController::show() verified by PHPUnit; UI covered by click-consent-to-view-details test
 - GIVEN a consent record with UUID "abc-123"
 - WHEN GET /api/consents/abc-123 is called
 - THEN the specific consent record is returned with all fields
 
 #### Scenario: Get consents for a specific document
+@e2e exclude document-scoped REST API endpoint — ConsentController::byDocument() verified by PHPUnit; no UI surface for document-specific consent listing
 - GIVEN a document with 5 detected entities and 5 consent records
 - WHEN GET /api/consents/document/{documentId} is called
 - THEN all 5 consent records linked to that document are returned
 
 #### Scenario: Register/schema not configured
+@e2e exclude backend validation on missing register config — 400 error verified by PHPUnit; UI shows configuration notice (covered by settings tests)
 - GIVEN the publicationConsent register and schema are not configured in settings
 - WHEN any consent endpoint is called
 - THEN a 400 error is returned with message "PublicationConsent register/schema not configured"
@@ -115,23 +132,28 @@ Consent records can be listed, queried by ID, and filtered by document.
 | CONS-023 | Consent listing requires the publicationConsent register and schema to be configured | MUST | Implemented |
 | CONS-024 | If register/schema is not configured, a 400 error is returned | MUST | Implemented |
 
-### REQ-CONS-04: WOO Objection Period Compliance (Priority: Must)
+### Requirement: WOO Objection Period Compliance (REQ-CONS-04)
+
+**Priority:** Must
 
 The objection period complies with Wet Open Overheid requirements for a minimum 4-week notification period before publication.
 
 #### Scenario: Default 28-day objection period
+@e2e exclude deadline calculation is backend-only — ObjectionDeadlineChecker verified by PHPUnit; no consent creation UI
 - GIVEN DocuDesk is configured with the default objection period
 - WHEN a consent record is created
 - THEN the objectionDeadline is 28 days from creation date
 - AND this satisfies the WOO minimum 4-week requirement
 
 #### Scenario: Check if objection deadline has passed
+@e2e exclude backend deadline boolean check — ObjectionDeadlineChecker::checkObjectionDeadline() verified by PHPUnit
 - GIVEN a consent record created 30 days ago with a 28-day objection period
 - WHEN checkObjectionDeadline() is called
 - THEN it returns true (deadline has passed)
 - AND the publication decision can proceed
 
 #### Scenario: Objection deadline not yet passed
+@e2e exclude backend deadline boolean check — ObjectionDeadlineChecker::checkObjectionDeadline() verified by PHPUnit
 - GIVEN a consent record created 14 days ago with a 28-day objection period
 - WHEN checkObjectionDeadline() is called
 - THEN it returns false (deadline has not passed)
@@ -143,11 +165,14 @@ The objection period complies with Wet Open Overheid requirements for a minimum 
 | CONS-031 | The objection period is configurable via admin settings | MUST | Implemented |
 | CONS-032 | The objection deadline is stored as ISO 8601 datetime | MUST | Implemented |
 
-### REQ-CONS-05: Controller Read Path Architecture (Priority: Must)
+### Requirement: Controller Read Path Architecture (REQ-CONS-05)
+
+**Priority:** Must
 
 ConsentController uses different service paths for read vs. write operations -- reading directly via ObjectService, writing via ConsentService.
 
 #### Scenario: Controller lists consents via ObjectService
+@e2e exclude internal controller architecture (ObjectService direct path vs ConsentService delegation) — verified by PHPUnit; not observable in UI
 - GIVEN the consent endpoint is called for listing
 - WHEN ConsentController::index() processes the request
 - THEN it calls `settingsService->getAllSettings()` to get register/schema
@@ -155,12 +180,14 @@ ConsentController uses different service paths for read vs. write operations -- 
 - AND queries ObjectService via `searchObjects()` bypassing ConsentService
 
 #### Scenario: Controller updates consent via ConsentService
+@e2e exclude internal delegation path — ConsentController::update() routing verified by PHPUnit; not directly observable in UI
 - GIVEN a consent update request is received
 - WHEN ConsentController::update() processes the request
 - THEN it delegates to `ConsentService::updateConsentStatus()`
 - AND the update goes through the full service layer
 
 #### Scenario: Controller queries by document via ConsentService
+@e2e exclude internal delegation path — ConsentController::byDocument() routing verified by PHPUnit
 - GIVEN a document-specific consent query is received
 - WHEN ConsentController::byDocument() processes the request
 - THEN it delegates to `ConsentService::getConsentsByDocument()`
@@ -172,23 +199,28 @@ ConsentController uses different service paths for read vs. write operations -- 
 | CONS-042 | `ConsentController::update()` delegates to ConsentService | MUST | Implemented |
 | CONS-043 | `ConsentController::byDocument()` delegates to ConsentService | MUST | Implemented |
 
-### REQ-CONS-06: RBAC and Multitenancy Configuration (Priority: Must)
+### Requirement: RBAC and Multitenancy Configuration (REQ-CONS-06)
+
+**Priority:** Must
 
 All consent ObjectService calls currently bypass RBAC and multitenancy, which is a known security concern for multi-tenant deployments.
 
 #### Scenario: Single-tenant deployment
+@e2e exclude RBAC flag values passed to ObjectService — backend API parameter verified by PHPUnit; not UI-observable
 - GIVEN a single-tenant Nextcloud deployment
 - WHEN consent operations are performed with `_rbac: false` and `_multitenancy: false`
 - THEN all authenticated users can access all consent records
 - AND this is acceptable for single-tenant use
 
 #### Scenario: Multi-tenant deployment concern
+@e2e exclude known security concern documented in spec — not a UI-testable behavior; tracked as CONS-044/045/046
 - GIVEN a multi-tenant Nextcloud deployment with multiple organizations
 - WHEN consent operations bypass RBAC and multitenancy
 - THEN users from Organization A could view and modify consent records of Organization B
 - AND this is a security concern that must be addressed
 
 #### Scenario: RBAC bypass scope
+@e2e exclude ObjectService call parameter inspection — verified by PHPUnit mock assertions; not UI-observable
 - GIVEN ConsentService and ConsentController perform consent operations
 - WHEN any create, read, update operation is executed
 - THEN `_rbac: false` and `_multitenancy: false` are passed to ObjectService
@@ -200,23 +232,28 @@ All consent ObjectService calls currently bypass RBAC and multitenancy, which is
 | CONS-045 | All ConsentService ObjectService calls bypass multitenancy (`_multitenancy: false`) | MUST | Bug |
 | CONS-046 | ConsentController::show() bypasses RBAC when querying directly | MUST | Bug |
 
-### REQ-CONS-07: Consent Creation API Gap (Priority: Must)
+### Requirement: Consent Creation API Gap (REQ-CONS-07)
+
+**Priority:** Must
 
 ConsentService::createConsentRequest() exists but has no REST API endpoint or automated trigger, making consent records impossible to create via the frontend.
 
 #### Scenario: Attempt to create consent via API
+@e2e exclude documented absence of endpoint (CONS-048) — absence of POST /api/consents is a known gap; not a UI-testable behavior
 - GIVEN a frontend user wants to create a consent record for a detected entity
 - WHEN they look for a POST /api/consents endpoint
 - THEN no such endpoint exists
 - AND consent records cannot be created via the REST API
 
 #### Scenario: Event listener does not create consents
+@e2e exclude negative assertion on event listener code path — verified by PHPUnit static analysis; ConsentService import absence is code-level
 - GIVEN the DocuDeskEventListener handles ObjectCreated events
 - WHEN an object is created in OpenRegister
 - THEN only metadata enrichment is performed
 - AND ConsentService is NOT imported or called by the event listener
 
 #### Scenario: Programmatic consent creation works
+@e2e exclude PHP-only internal API — ConsentService::createConsentRequest() verified by PHPUnit
 - GIVEN internal PHP code has access to ConsentService
 - WHEN createConsentRequest() is called directly
 - THEN a consent record is created successfully in OpenRegister
@@ -229,22 +266,27 @@ ConsentService::createConsentRequest() exists but has no REST API endpoint or au
 | CONS-049 | The event listener does NOT trigger consent creation | MUST | Implemented |
 | CONS-050 | Consent records cannot currently be created via REST API or UI | MUST | Bug |
 
-### REQ-CONS-08: Objection Period Configuration Reading (Priority: Must)
+### Requirement: Objection Period Configuration Reading (REQ-CONS-08)
+
+**Priority:** Must
 
 ConsentService reads the objection period directly from IAppConfig, bypassing SettingsService.
 
 #### Scenario: Read objection period from config
+@e2e exclude IAppConfig direct-read path — ConsentService::getObjectionPeriodDays() verified by PHPUnit
 - GIVEN the objection period is configured as 42 days in IAppConfig
 - WHEN ConsentService::getObjectionPeriodDays() is called (via ObjectionDeadlineChecker)
 - THEN it reads directly from IAppConfig key 'publication_objection_period_days'
 - AND returns 42
 
 #### Scenario: Default objection period
+@e2e exclude hardcoded default in getValueString — PHPUnit verifiable; not UI-observable
 - GIVEN no custom objection period is configured
 - WHEN getObjectionPeriodDays() is called
 - THEN it returns the default of 28 days (hardcoded in getValueString)
 
 #### Scenario: Config key duplication risk
+@e2e exclude maintenance risk documented in spec — not a behavioral assertion; purely a code-quality concern
 - GIVEN SettingsService also reads the same config key in getAllSettings()
 - WHEN the config key name would change in one place
 - THEN the other place would break silently
@@ -255,23 +297,28 @@ ConsentService reads the objection period directly from IAppConfig, bypassing Se
 | CONS-051 | ConsentService reads objection period directly from IAppConfig | MUST | Implemented |
 | CONS-052 | Default objection period is 28 days (hardcoded in getValueString default) | MUST | Implemented |
 
-### REQ-CONS-09: Duplicated ObjectService Resolution Pattern (Priority: Must)
+### Requirement: Duplicated ObjectService Resolution Pattern (REQ-CONS-09)
+
+**Priority:** Must
 
 ConsentService and ObjectionDeadlineChecker have their own private getObjectService() methods duplicating the pattern found in SettingsService.
 
 #### Scenario: ConsentService resolves ObjectService
+@e2e exclude internal private method pattern — code duplication documented; verified by PHPUnit; not UI-observable
 - GIVEN ConsentService needs to create a consent record
 - WHEN it calls its private `getObjectService()`
 - THEN the same `getInstalledApps()` + `container->get()` pattern is used
 - AND this duplicates the public SettingsService::getObjectService()
 
 #### Scenario: ObjectionDeadlineChecker resolves ObjectService
+@e2e exclude internal private method pattern — code duplication documented; verified by PHPUnit; not UI-observable
 - GIVEN ObjectionDeadlineChecker needs to check a deadline
 - WHEN it calls its private `getObjectService()`
 - THEN the same pattern is used again
 - AND this is the third duplication of the same code
 
 #### Scenario: OpenRegister unavailable
+@e2e exclude backend RuntimeException path — not reproducible in env where OR is installed; verified by PHPUnit
 - GIVEN OpenRegister is not installed
 - WHEN any duplicated getObjectService() is called
 - THEN a RuntimeException is thrown with the same pattern across all services
@@ -281,7 +328,9 @@ ConsentService and ObjectionDeadlineChecker have their own private getObjectServ
 | CONS-053 | ConsentService has its own private `getObjectService()` duplicating SettingsService pattern | MUST | Implemented |
 | CONS-054 | ObjectionDeadlineChecker has its own private `getObjectService()` with the same pattern | MUST | Implemented |
 
-### REQ-CONS-10: Consent UI (Priority: Must)
+### Requirement: Consent UI (REQ-CONS-10)
+
+**Priority:** Must
 
 The consent management UI provides a list view with statistics and a detail view for editing consent records.
 
@@ -305,6 +354,7 @@ The consent management UI provides a list view with statistics and a detail view
 - AND guidance text indicates no records exist yet
 
 #### Scenario: Consent store state management
+@e2e exclude Pinia store getter API — internal store shape; UI observes rendered data (covered by view-consent-statistics test); unit-testable directly
 - GIVEN the consent Pinia store is initialized
 - WHEN consents are fetched
 - THEN the store provides getters: pendingConsents, approvedConsents, objectedConsents, consentStats

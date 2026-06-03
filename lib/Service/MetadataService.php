@@ -14,6 +14,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -37,8 +43,6 @@ use Psr\Log\LoggerInterface;
  */
 class MetadataService
 {
-
-
     /**
      * Constructor for MetadataService
      *
@@ -60,7 +64,6 @@ class MetadataService
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -78,7 +81,6 @@ class MetadataService
 
     }//end getObjectService()
 
-
     /**
      * Enhance text-based metadata (language, keywords, topic)
      *
@@ -86,6 +88,8 @@ class MetadataService
      * @param array<string, mixed> $objectData The document object data
      *
      * @return array<string, mixed> Enhanced metadata from text analysis
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
      */
     private function enhanceTextMetadata(string $text, array $objectData): array
     {
@@ -116,7 +120,6 @@ class MetadataService
 
     }//end enhanceTextMetadata()
 
-
     /**
      * Enhance metadata for a document object
      *
@@ -125,6 +128,8 @@ class MetadataService
      * @return array<string, mixed> Enhanced metadata fields
      *
      * @throws Exception If metadata enhancement fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
      */
     public function enhanceMetadata(array $objectData): array
     {
@@ -157,7 +162,6 @@ class MetadataService
 
     }//end enhanceMetadata()
 
-
     /**
      * Enrich a document object with metadata and save it back via ObjectService
      *
@@ -169,6 +173,8 @@ class MetadataService
      * @return array<string, mixed> Updated object data
      *
      * @throws Exception If saving fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
      */
     public function saveEnrichedMetadata(
         string $objectId,
@@ -179,12 +185,13 @@ class MetadataService
         try {
             $objectService = $this->getObjectService();
 
+            // Security (C2): _rbac:false / _multitenancy:false removed — OR's
+            // per-object RBAC and multitenancy guards must apply so callers
+            // cannot read or overwrite objects in other tenants/users.
             $object = $objectService->find(
                 id: $objectId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {
@@ -195,9 +202,7 @@ class MetadataService
             $savedObject = $objectService->saveObject(
                 object: $objectData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info(
@@ -218,6 +223,4 @@ class MetadataService
         }//end try
 
     }//end saveEnrichedMetadata()
-
-
 }//end class

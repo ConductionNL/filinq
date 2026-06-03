@@ -187,6 +187,11 @@ import EntityReviewTable from './EntityReviewTable.vue'
 export default {
 	name: 'FolderAnonymizationView',
 	components: { NcButton, NcProgressBar, NcLoadingIcon, NcNoteCard, EntityReviewTable },
+	/**
+	 * Expose the folder anonymization store to the Options API.
+	 *
+	 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
+	 */
 	setup() {
 		return { store: folderAnonymizationStore }
 	},
@@ -195,12 +200,22 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Start a folder anonymization batch for the entered folder path.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
+		 */
 		startAnalysis() {
 			const path = this.folderPath.trim()
 			if (path) {
 				folderAnonymizationStore.startFolderBatch(path)
 			}
 		},
+		/**
+		 * Open the completed batch report in a new tab.
+		 *
+		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#8-1
+		 */
 		downloadReport() {
 			window.open(folderAnonymizationStore.getReportUrl(), '_blank')
 		},

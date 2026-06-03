@@ -1,80 +1,17 @@
 # Tasks: DocuDesk Legacy Quality Cleanup
 
-## Phase 1 — Inventory + planning
+## Tasks
 
-- [ ] Run `composer phpcs` and capture current baseline error count
-      (target: starting from 6 exclude-patterns in phpcs.xml)
-- [ ] Run `composer phpmd` for the first time as a unified gate
-      and capture violation count + categories
-- [ ] Run `composer phpstan` and capture current error count
-      (target: starting from 311-line phpstan-baseline.neon)
-- [ ] Group PHPStan errors by directory cluster
-- [ ] Decide PHPMD strategy: fix-outright or capture baseline
-- [ ] Confirm CI runs `composer check:strict` on every PR before
-      starting burn-down work
-
-## Phase 2 — PHPCS burn-down (per excluded file)
-
-For each file: fix errors, remove the phpcs.xml `<exclude-pattern>`
-entry, verify gate stays green.
-
-- [ ] Excluded file 1 — fix sniffs + drop exclude
-- [ ] Excluded file 2 — fix sniffs + drop exclude
-- [ ] Excluded file 3 — fix sniffs + drop exclude
-- [ ] Excluded file 4 — fix sniffs + drop exclude
-- [ ] Excluded file 5 — fix sniffs + drop exclude
-- [ ] Excluded file 6 — fix sniffs + drop exclude
-- [ ] Once all excludes are gone, drop the legacy-debt block from
-      phpcs.xml entirely
-
-## Phase 3 — PHPMD burn-down
-
-Contingent on Phase 1's first-run output.
-
-- [ ] If baseline captured: ElseExpression — re-shape `if/else` to
-      early-return
-- [ ] If baseline captured: CyclomaticComplexity / NPathComplexity —
-      extract methods
-- [ ] If baseline captured: MissingImport — add `use` statements
-- [ ] If baseline captured: ExcessiveMethodLength — extract helpers
-- [ ] If baseline captured: StaticAccess — replace with DI
-- [ ] If baseline captured: variable-naming sniffs (Long/Short/
-      Undefined/UnusedFormalParameter)
-- [ ] Once baseline reaches 0 lines: delete phpmd.baseline.xml and
-      drop `--baseline-file` from composer.json's phpmd script
-
-## Phase 4 — PHPStan burn-down (311 lines)
-
-Group errors by directory cluster (per Phase 1 inventory) and
-work cluster-by-cluster. Regenerate baseline between PRs.
-
-- [ ] Cluster 1: Controllers (`lib/Controller/`)
-- [ ] Cluster 2: Services (`lib/Service/`)
-- [ ] Cluster 3: Db mappers + entities (`lib/Db/`)
-- [ ] Cluster 4: Migrations (`lib/Migration/`)
-- [ ] Cluster 5: Settings (`lib/Settings/`)
-- [ ] Cluster 6: Cron / background jobs
-- [ ] Cluster 7: Bootstrap / appinfo / util
-- [ ] Common patterns to fix:
-  - [ ] Missing return-type / param-type declarations
-  - [ ] Mixed types (specify generic / union)
-  - [ ] Possibly-null dereferences
-  - [ ] Strict-comparison nudges (`==` to `===`)
-- [ ] Once baseline reaches 0 lines: delete phpstan-baseline.neon
-
-## Phase 5 — CI integration
-
-- [ ] Verify `composer check:strict` runs in CI on every PR
-- [ ] Once all baselines are empty:
-  - [ ] Delete `phpmd.baseline.xml` (if it was created)
-  - [ ] Delete `phpstan-baseline.neon`
-  - [ ] Drop the legacy-debt section from `phpcs.xml`
-- [ ] Add a smoke-test cron that runs `composer check:strict`
-      weekly on `development`
-
-## Phase 6 — Documentation
-
-- [ ] Update README quality-gates section
-- [ ] Note in `app-config.json` that legacy quality cleanup is done
-- [ ] Close the burn-down tracking issue once the last baseline
-      line is removed
+- [ ] 1. **Baseline + planning** — run `composer phpcs`, `composer phpmd`, and `composer phpstan`; capture current counts (PHPCS: 6 exclude-patterns; PHPMD: first unified-gate violations + categories; PHPStan: 311-line baseline); group PHPStan errors by directory cluster; decide PHPMD strategy (fix-outright vs capture-baseline); confirm CI runs `composer check:strict` on every PR before burn-down work begins.
+- [ ] 2. **PHPCS — file 1** — fix sniffs on the first excluded file, drop its `<exclude-pattern>` entry from `phpcs.xml`, verify the gate stays green.
+- [ ] 3. **PHPCS — file 2** — fix sniffs on the second excluded file, drop its `<exclude-pattern>`, verify gate green.
+- [ ] 4. **PHPCS — file 3** — fix sniffs on the third excluded file, drop its `<exclude-pattern>`, verify gate green.
+- [ ] 5. **PHPCS — file 4** — fix sniffs on the fourth excluded file, drop its `<exclude-pattern>`, verify gate green.
+- [ ] 6. **PHPCS — files 5–6 + legacy block removal** — fix sniffs on the fifth and sixth excluded files, drop their `<exclude-pattern>` entries, then remove the legacy-debt block from `phpcs.xml` entirely.
+- [ ] 7. **PHPMD burn-down (categories)** — burn down ElseExpression (early-return reshape), CyclomaticComplexity/NPathComplexity (method extraction), MissingImport (add `use`), ExcessiveMethodLength (extract helpers), StaticAccess (replace with DI), and variable-naming sniffs (Long/Short/Undefined/UnusedFormalParameter); once the baseline reaches zero, delete `phpmd.baseline.xml` and drop `--baseline-file` from composer.json's `phpmd` script.
+- [ ] 8. **PHPStan — Controllers + Services clusters** — burn down `lib/Controller/` and `lib/Service/` errors; common patterns: missing return/param types, mixed types (specify generic/union), possibly-null dereferences, strict-comparison (`==` → `===`); regenerate baseline between PRs.
+- [ ] 9. **PHPStan — Db + Migrations + Settings clusters** — burn down `lib/Db/` (mappers + entities), `lib/Migration/`, and `lib/Settings/`; same common patterns; regenerate baseline.
+- [ ] 10. **PHPStan — Cron + Bootstrap clusters** — burn down cron/background-jobs and bootstrap/appinfo/util; same common patterns; regenerate baseline.
+- [ ] 11. **PHPStan finalisation** — once baseline reaches zero lines, delete `phpstan-baseline.neon`.
+- [ ] 12. **CI integration** — verify `composer check:strict` runs in CI on every PR; once all baselines are empty, delete `phpmd.baseline.xml` (if created) and `phpstan-baseline.neon`, and drop the legacy-debt section from `phpcs.xml`; add a smoke-test cron running `composer check:strict` weekly against `development`.
+- [ ] 13. **Documentation + closeout** — update README quality-gates section; note in `app-config.json` that legacy quality cleanup is done; close the burn-down tracking issue once the last baseline line is removed.

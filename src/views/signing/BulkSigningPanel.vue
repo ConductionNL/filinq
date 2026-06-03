@@ -39,16 +39,36 @@ export default {
 	components: { NcButton, NcLoadingIcon, NcEmptyContent },
 	data() { return { selected: [] } },
 	computed: {
+		/**
+		 * Pinia signing store accessor for the bulk-signing panel.
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
+		 */
 		signingStore() { return useSigningStore() },
+		/**
+		 * Requests eligible for bulk signing (PENDING or IN_PROGRESS).
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
+		 */
 		pending() { return this.signingStore.signingRequests.filter((r) => ['PENDING', 'IN_PROGRESS'].includes(r.status)) },
 	},
 	mounted() { this.signingStore.fetchSigningRequests() },
 	methods: {
 		t,
+		/**
+		 * Toggle selection of a request in the bulk-signing batch.
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
+		 */
 		toggle(id) {
 			const idx = this.selected.indexOf(id)
 			if (idx === -1) { this.selected.push(id) } else { this.selected.splice(idx, 1) }
 		},
+		/**
+		 * Submit the selected requests for batch signing.
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
+		 */
 		async bulkSign() {
 			await this.signingStore.bulkSign(this.selected)
 			showSuccess(t('docudesk', 'Bulk signing completed'))

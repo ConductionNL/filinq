@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,6 +23,7 @@ namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Factory for resolving signing providers
@@ -39,7 +43,6 @@ class SigningProviderFactory
      * @var array<string, SigningProviderInterface>
      */
     private array $providers = [];
-
 
     /**
      * Constructor
@@ -62,11 +65,12 @@ class SigningProviderFactory
 
     }//end __construct()
 
-
     /**
      * Get the currently configured signing provider
      *
      * @return SigningProviderInterface The active signing provider
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getActiveProvider(): SigningProviderInterface
     {
@@ -80,7 +84,6 @@ class SigningProviderFactory
 
     }//end getActiveProvider()
 
-
     /**
      * Get a specific provider by identifier
      *
@@ -88,18 +91,19 @@ class SigningProviderFactory
      *
      * @return SigningProviderInterface The requested provider
      *
-     * @throws \RuntimeException If the provider is not available
+     * @throws RuntimeException If the provider is not available
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getProvider(string $identifier): SigningProviderInterface
     {
         if (isset($this->providers[$identifier]) === false) {
-            throw new \RuntimeException('Signing provider not available: '.$identifier);
+            throw new RuntimeException('Signing provider not available: '.$identifier);
         }
 
         return $this->providers[$identifier];
 
     }//end getProvider()
-
 
     /**
      * Get all available provider identifiers
@@ -111,6 +115,4 @@ class SigningProviderFactory
         return array_keys($this->providers);
 
     }//end getAvailableProviders()
-
-
 }//end class

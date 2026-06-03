@@ -14,6 +14,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -103,7 +108,6 @@ class TemplateRenderer
         'autoescape',
     ];
 
-
     /**
      * Constructor for TemplateRenderer
      *
@@ -117,7 +121,6 @@ class TemplateRenderer
 
     }//end __construct()
 
-
     /**
      * Render a Twig template string with the given data context
      *
@@ -130,6 +133,8 @@ class TemplateRenderer
      * @return string Rendered HTML
      *
      * @throws Exception If Twig rendering fails (syntax error, security violation)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
      */
     public function renderTemplate(string $templateContent, array $data): string
     {
@@ -162,7 +167,6 @@ class TemplateRenderer
 
     }//end renderTemplate()
 
-
     /**
      * Convert conditional section data attributes to Twig if blocks.
      *
@@ -175,6 +179,8 @@ class TemplateRenderer
      * @param string $html HTML content with conditional data attributes
      *
      * @return string HTML with data attributes replaced by Twig if blocks
+     *
+     * @spec openspec/changes/advanced-template-management/tasks.md#task-7
      */
     public function convertConditionalSections(string $html): string
     {
@@ -195,13 +201,14 @@ class TemplateRenderer
 
     }//end convertConditionalSections()
 
-
     /**
      * Replace a single conditional section match with Twig if block
      *
      * @param array $matches The regex match groups
      *
      * @return string The replacement string with Twig conditional
+     *
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      */
     private function replaceConditionalSection(array $matches): string
     {
@@ -240,7 +247,6 @@ class TemplateRenderer
 
     }//end replaceConditionalSection()
 
-
     /**
      * Build a Twig condition expression from field, operator, and value
      *
@@ -271,7 +277,6 @@ class TemplateRenderer
 
     }//end buildTwigCondition()
 
-
     /**
      * Escape a string for safe use inside Twig string literals
      *
@@ -288,6 +293,4 @@ class TemplateRenderer
         );
 
     }//end escapeTwigString()
-
-
 }//end class

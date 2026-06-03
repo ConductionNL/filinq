@@ -14,6 +14,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -60,7 +66,6 @@ class SettingsInitializer
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
-
     /**
      * Constructor for SettingsInitializer
      *
@@ -81,7 +86,6 @@ class SettingsInitializer
 
     }//end __construct()
 
-
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -98,7 +102,6 @@ class SettingsInitializer
 
     }//end isOpenRegisterInstalled()
 
-
     /**
      * Checks if OpenRegister is enabled
      *
@@ -109,7 +112,6 @@ class SettingsInitializer
         return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
 
     }//end isOpenRegisterEnabled()
-
 
     /**
      * Attempts to retrieve the Configuration service from the container
@@ -133,13 +135,14 @@ class SettingsInitializer
 
     }//end getConfigurationService()
 
-
     /**
      * Load settings from the docudesk_register.json file
      *
      * @return array<string, mixed> The loaded settings configuration
      *
      * @throws \RuntimeException If settings loading fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
      */
     private function loadSettings(): array
     {
@@ -173,13 +176,14 @@ class SettingsInitializer
 
     }//end loadSettings()
 
-
     /**
      * Initializes the app with all required components
      *
      * @return array<string, mixed> The initialization results
      *
      * @throws \RuntimeException If initialization fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
      */
     public function initialize(): array
     {
@@ -247,6 +251,4 @@ class SettingsInitializer
         return $results;
 
     }//end initialize()
-
-
 }//end class

@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -79,7 +82,6 @@ class LanguageClassifier
         'technical' => ['system', 'software', 'technical', 'code', 'development', 'api'],
     ];
 
-
     /**
      * Count word occurrences for a list of target words in text
      *
@@ -87,6 +89,8 @@ class LanguageClassifier
      * @param array<string> $words The words to count
      *
      * @return int Total occurrence count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
      */
     private function countWordOccurrences(string $text, array $words): int
     {
@@ -99,13 +103,14 @@ class LanguageClassifier
 
     }//end countWordOccurrences()
 
-
     /**
      * Detect language from text content
      *
      * @param string $text Text content to analyze
      *
      * @return string|null Detected language code or null if detection fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
      */
     public function detectLanguage(string $text): ?string
     {
@@ -126,13 +131,14 @@ class LanguageClassifier
 
     }//end detectLanguage()
 
-
     /**
      * Classify document topic based on text content
      *
      * @param string $text Text content to analyze
      *
      * @return string|null Classified topic or null if classification fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
      */
     public function classifyTopic(string $text): ?string
     {
@@ -156,6 +162,4 @@ class LanguageClassifier
         return null;
 
     }//end classifyTopic()
-
-
 }//end class

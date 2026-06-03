@@ -1,3 +1,7 @@
+## Purpose
+
+@e2e exclude entity review UI for batch anonymization is not yet shipped in the current DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review table are unbuilt; covered by PHPUnit and API contract tests when implemented
+
 ## ADDED Requirements
 
 ### Requirement: Consolidated entity list endpoint
@@ -81,3 +85,18 @@ The frontend SHALL display the entity review as a table with columns: checkbox (
 - **WHEN** a user clicks the "Confidence" column header
 - **THEN** entities are sorted by confidence descending (highest first)
 - **AND** clicking again sorts ascending
+## Requirements
+### Requirement: Consolidated entity list endpoint
+The system SHALL deduplicate entities across files.
+
+#### Scenario: Retrieve consolidated entities
+- **WHEN** GET /api/anonymization/batch/{batchId}/entities is called
+- **THEN** deduplicated entities are returned with included flags
+
+### Requirement: Confidence threshold filter
+The system SHALL support configurable confidence thresholds.
+
+#### Scenario: Apply confidence threshold
+- **WHEN** minConfidence=0.7 parameter is provided
+- **THEN** entities below 0.7 have included=false
+

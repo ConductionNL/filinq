@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,6 +23,7 @@ namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * ValidSign signing provider
@@ -32,8 +36,6 @@ use Psr\Log\LoggerInterface;
  */
 class ValidSignProvider implements SigningProviderInterface
 {
-
-
     /**
      * Constructor
      *
@@ -49,7 +51,6 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end __construct()
 
-
     /**
      * Get provider identifier
      *
@@ -60,7 +61,6 @@ class ValidSignProvider implements SigningProviderInterface
         return 'validsign';
 
     }//end getIdentifier()
-
 
     /**
      * Initiate a ValidSign signing flow (stub)
@@ -73,7 +73,9 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @return array<string, mixed> Result with ValidSign package ID
      *
-     * @throws \RuntimeException If provider is not configured
+     * @throws RuntimeException If provider is not configured
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function initiateSigning(
         string $documentPath,
@@ -85,7 +87,7 @@ class ValidSignProvider implements SigningProviderInterface
         $providerConfig = $this->getProviderConfig();
 
         if (empty($providerConfig['sourceId']) === true) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'ValidSign provider is not configured. Set the OpenConnector source ID in admin settings.'
             );
         }
@@ -100,13 +102,14 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end initiateSigning()
 
-
     /**
      * Check status of a ValidSign signing flow (stub)
      *
      * @param string $externalId The ValidSign package identifier
      *
      * @return array<string, mixed> The signing flow status
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function checkStatus(string $externalId): array
     {
@@ -118,7 +121,6 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end checkStatus()
 
-
     /**
      * Download the signed document from ValidSign (stub)
      *
@@ -126,16 +128,17 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @return string The signed document content
      *
-     * @throws \RuntimeException Always throws - not yet implemented
+     * @throws RuntimeException Always throws - not yet implemented
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function downloadSignedDocument(string $externalId): string
     {
-        throw new \RuntimeException(
+        throw new RuntimeException(
             'ValidSign document download not yet implemented. External ID: '.$externalId
         );
 
     }//end downloadSignedDocument()
-
 
     /**
      * Cancel a ValidSign signing flow (stub)
@@ -143,6 +146,8 @@ class ValidSignProvider implements SigningProviderInterface
      * @param string $externalId The ValidSign package identifier
      *
      * @return bool True if cancelled
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function cancelSigning(string $externalId): bool
     {
@@ -150,20 +155,20 @@ class ValidSignProvider implements SigningProviderInterface
 
     }//end cancelSigning()
 
-
     /**
      * Check if this provider supports the given signature level
      *
      * @param string $level The signature level to check
      *
      * @return bool True if supported
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function supportsLevel(string $level): bool
     {
         return in_array($level, ['SES', 'AdES', 'QES'], true) === true;
 
     }//end supportsLevel()
-
 
     /**
      * Get the provider configuration from app config
@@ -182,6 +187,4 @@ class ValidSignProvider implements SigningProviderInterface
         return $decoded;
 
     }//end getProviderConfig()
-
-
 }//end class

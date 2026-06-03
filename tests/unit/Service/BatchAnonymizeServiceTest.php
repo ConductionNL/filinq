@@ -13,6 +13,11 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -220,6 +225,161 @@ class BatchAnonymizeServiceTest extends TestCase
         $this->assertSame(2, $result['processedFiles']);
 
     }//end testAnonymizeBatchReturnsTotalFilesCount()
+
+
+    /**
+     * Flag true is forwarded to anonymizeDocument for each extracted file.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testAppendBasisSummaryFlagForwardedToEachFile(): void
+    {
+        $batch = [
+            'batchId' => 'batch-5',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 50, 'status' => 'extracted'],
+                ['fileId' => 51, 'status' => 'extracted'],
+            ],
+        ];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->expects($this->exactly(2))
+            ->method('anonymizeDocument')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                true
+            )
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f']);
+
+        $result = $this->service->anonymizeBatch(
+            batchId: 'batch-5',
+            entities: [],
+            appendBasisSummary: true
+        );
+
+        $this->assertSame(2, $result['processedFiles']);
+
+    }//end testAppendBasisSummaryFlagForwardedToEachFile()
+
+
+    /**
+     * Flag false (default) means anonymizeDocument is called without the flag.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testAppendBasisSummaryFlagDefaultsFalse(): void
+    {
+        $batch = [
+            'batchId' => 'batch-6',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 60, 'status' => 'extracted'],
+            ],
+        ];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->expects($this->once())
+            ->method('anonymizeDocument')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                false
+            )
+            ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'g']);
+
+        $this->service->anonymizeBatch(batchId: 'batch-6', entities: []);
+
+    }//end testAppendBasisSummaryFlagDefaultsFalse()
+
+
+    /**
+     * Per-file warnings from summary failure are propagated into batch file entries.
+     *
+     * The batch still completes (HTTP 200 shape) even when per-file warnings exist.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testPerFileSummaryWarningPropagated(): void
+    {
+        $batch = [
+            'batchId' => 'batch-7',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 70, 'status' => 'extracted'],
+            ],
+        ];
+
+        $warning = ['code' => 'SUMMARY_APPEND_FAILED', 'message' => 'Service unavailable.'];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(
+                [
+                    'replacementCount' => 3,
+                    'anonymizedFileId' => 'h',
+                    'warning'          => $warning,
+                ]
+            );
+
+        $result = $this->service->anonymizeBatch(
+            batchId: 'batch-7',
+            entities: [],
+            appendBasisSummary: true
+        );
+
+        $this->assertSame('completed', $result['batchStatus']);
+        $this->assertSame(1, $result['processedFiles']);
+        $this->assertEmpty($result['skippedFiles']);
+
+    }//end testPerFileSummaryWarningPropagated()
+
+
+    /**
+     * Preserve-mode summary fields (summaryFileId, summaryFilePath) are stored per file.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-8
+     */
+    public function testPreserveModeSummaryFieldsStoredPerFile(): void
+    {
+        $batch = [
+            'batchId' => 'batch-8',
+            'status'  => 'review',
+            'files'   => [
+                ['fileId' => 80, 'status' => 'extracted'],
+            ],
+        ];
+
+        $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(
+                [
+                    'replacementCount' => 1,
+                    'anonymizedFileId' => 'i',
+                    'summaryFileId'    => 'summary-80',
+                    'summaryFilePath'  => '/DocuDesk/doc_grondslagen.pdf',
+                ]
+            );
+
+        $result = $this->service->anonymizeBatch(
+            batchId: 'batch-8',
+            entities: [],
+            appendBasisSummary: true
+        );
+
+        $this->assertSame(1, $result['processedFiles']);
+        $this->assertSame('completed', $result['batchStatus']);
+
+    }//end testPreserveModeSummaryFieldsStoredPerFile()
 
 
 }//end class

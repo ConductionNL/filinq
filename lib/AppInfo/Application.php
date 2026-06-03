@@ -10,6 +10,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -44,7 +47,6 @@ class Application extends App implements IBootstrap
 {
     public const APP_ID = 'docudesk';
 
-
     /**
      * Constructor
      *
@@ -67,7 +69,6 @@ class Application extends App implements IBootstrap
         }
 
     }//end __construct()
-
 
     /**
      * Register services and event listeners
@@ -153,7 +154,6 @@ class Application extends App implements IBootstrap
 
     }//end register()
 
-
     /**
      * Boot the application
      *
@@ -174,6 +174,4 @@ class Application extends App implements IBootstrap
         }
 
     }//end boot()
-
-
 }//end class

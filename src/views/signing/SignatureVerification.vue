@@ -27,6 +27,11 @@ export default {
 	computed: { signingStore() { return useSigningStore() } },
 	methods: {
 		t,
+		/**
+		 * Verify the signatures of the entered file ID.
+		 *
+		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-6
+		 */
 		async verify() { if (this.fileId) { await this.signingStore.verifyDocument(this.fileId) } },
 	},
 }

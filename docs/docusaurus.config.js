@@ -93,6 +93,27 @@ const config = createConfig({
 
   themes: [BRAND_THEME, '@docusaurus/theme-mermaid'],
 
+  /* Cross-domain redirects to reclaim SEO equity from URLs Google has
+     in its index from when each app shipped its own legal pages.
+     Those pages were centralised on www.conduction.nl/{iso,privacy,
+     terms} as part of the SEO baseline; the per-app legal slugs now
+     404 in production. The plugin emits a static HTML page per `from`
+     with a meta-refresh + <link rel="canonical"> to the new target,
+     which Google treats as a 301 signal. */
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        redirects: [
+          {from: '/iso/', to: 'https://www.conduction.nl/iso/'},
+          {from: '/privacy/', to: 'https://www.conduction.nl/privacy/'},
+          {from: '/terms/', to: 'https://www.conduction.nl/terms/'},
+          {from: '/nl/terms/', to: 'https://www.conduction.nl/terms/'},
+        ],
+      },
+    ],
+  ],
+
   /* Brand navbar provides locale dropdown + GitHub by default; we
      replace items[] with docudesk's own (Documentation sidebar link,
      API link, docudesk GitHub, locale dropdown). Object.assign in
@@ -138,6 +159,7 @@ const config = createConfig({
   /* themeConfig is shallow-merged into the preset's defaults
      (colorMode + navbar + footer). prism + mermaid land alongside. */
   themeConfig: {
+    image: 'img/og-docudesk.png',
     prism: {
       theme: require('prism-react-renderer/themes/github'),
       darkTheme: require('prism-react-renderer/themes/dracula'),

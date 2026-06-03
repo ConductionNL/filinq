@@ -267,6 +267,7 @@ import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
+import { loadState } from '@nextcloud/initial-state'
 
 export default {
 	name: 'Settings',
@@ -283,7 +284,7 @@ export default {
 	},
 	data() {
 		return {
-			appVersion: document.getElementById('admin-settings')?.dataset?.version || 'Unknown',
+			appVersion: loadState('docudesk', 'version', 'Unknown'),
 			loading: false,
 			saving: false,
 			openRegisterInstalled: false,
@@ -318,6 +319,11 @@ export default {
 		this.fetchAll()
 	},
 	methods: {
+		/**
+		 * Reset the selected schema when the register for a type changes.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-openregister-integration-configuration-req-set-02
+		 */
 		onRegisterChange(type) {
 			this.sections = {
 				...this.sections,
@@ -327,6 +333,11 @@ export default {
 				},
 			}
 		},
+		/**
+		 * Load all settings, available registers and OpenRegister status.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+		 */
 		fetchAll() {
 			this.loading = true
 			fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
@@ -412,6 +423,11 @@ export default {
 					this.loading = false
 				})
 		},
+		/**
+		 * Save the register/schema configuration for a single object type.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-openregister-integration-configuration-req-set-02
+		 */
 		saveConfig(type) {
 			this.sections[type].loading = true
 			this.saving = true
@@ -440,6 +456,11 @@ export default {
 					this.sections[type].loading = false
 				})
 		},
+		/**
+		 * Save all DocuDesk settings (consent period, feature toggles, OCR, registers).
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+		 */
 		saveAll() {
 			this.saving = true
 
@@ -484,6 +505,11 @@ export default {
 					this.saving = false
 				})
 		},
+		/**
+		 * Open an external documentation/configuration link.
+		 *
+		 * @spec openspec/specs/admin-settings/spec.md#requirement-external-documentation-urls-req-set-09
+		 */
 		openLink(url, target = '') {
 			window.open(url, target)
 		},

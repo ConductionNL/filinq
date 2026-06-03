@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,8 +37,6 @@ use Exception;
  */
 class TemplatePreviewService
 {
-
-
     /**
      * Constructor for TemplatePreviewService
      *
@@ -49,7 +52,6 @@ class TemplatePreviewService
 
     }//end __construct()
 
-
     /**
      * Preview template content with sample data
      *
@@ -62,6 +64,8 @@ class TemplatePreviewService
      * @return string Rendered HTML output
      *
      * @throws Exception If rendering fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
      */
     public function preview(string $content, array $data): string
     {
@@ -77,7 +81,6 @@ class TemplatePreviewService
 
     }//end preview()
 
-
     /**
      * Preview an existing template with sample data
      *
@@ -89,6 +92,8 @@ class TemplatePreviewService
      * @return string Rendered HTML output
      *
      * @throws Exception If the template is not found or rendering fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
      */
     public function previewTemplate(string $templateId, array $data): string
     {
@@ -100,6 +105,4 @@ class TemplatePreviewService
         );
 
     }//end previewTemplate()
-
-
 }//end class

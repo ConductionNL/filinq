@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,8 +44,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventHandler
 {
-
-
     /**
      * Handles object creation events
      *
@@ -54,6 +57,8 @@ class DocuDeskEventHandler
      *                                                   service-locator).
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function handleObjectCreated(
         ObjectCreatedEvent $event,
@@ -86,7 +91,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectCreated()
 
-
     /**
      * Handles object update events
      *
@@ -98,6 +102,8 @@ class DocuDeskEventHandler
      * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     public function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -157,7 +163,6 @@ class DocuDeskEventHandler
 
     }//end handleObjectUpdated()
 
-
     /**
      * On a dossier `checkedOn` change, fire the per-dossier grondslagen summary regen.
      *
@@ -183,6 +188,8 @@ class DocuDeskEventHandler
      * @param LoggerInterface      $logger        Structured logger.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     private function maybeRegenerateGrondslagenSummary(
         array $objectData,
@@ -294,7 +301,6 @@ class DocuDeskEventHandler
         );
 
     }//end handleObjectDeleted()
-
 
     /**
      * Route policy-surface mutations to the retroactive layer.
@@ -417,6 +423,8 @@ class DocuDeskEventHandler
      * @param array<string, mixed> $oldObjectData The old object data
      *
      * @return bool True if content has changed
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
      */
     private function hasContentChanged(array $objectData, array $oldObjectData): bool
     {
@@ -430,6 +438,4 @@ class DocuDeskEventHandler
         return false;
 
     }//end hasContentChanged()
-
-
 }//end class

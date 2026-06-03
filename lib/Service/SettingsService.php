@@ -14,6 +14,14 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -60,7 +68,6 @@ class SettingsService
      */
     private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
-
     /**
      * SettingsService constructor
      *
@@ -85,7 +92,6 @@ class SettingsService
 
     }//end __construct()
 
-
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
@@ -102,13 +108,14 @@ class SettingsService
 
     }//end isOpenRegisterInstalled()
 
-
     /**
      * Attempts to retrieve the OpenRegister service from the container
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service
      *
      * @throws \RuntimeException If the service is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -125,13 +132,14 @@ class SettingsService
 
     }//end getObjectService()
 
-
     /**
      * Initializes the app with all required components
      *
      * @return array<string, mixed> The initialization results
      *
      * @throws \RuntimeException If initialization fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
      */
     public function initialize(): array
     {
@@ -139,11 +147,12 @@ class SettingsService
 
     }//end initialize()
 
-
     /**
      * Load feature toggle settings from app config
      *
      * @return array<string, mixed> Feature toggle settings
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
      */
     private function loadFeatureToggles(): array
     {
@@ -201,13 +210,14 @@ class SettingsService
 
     }//end loadFeatureToggles()
 
-
     /**
      * Retrieve all settings
      *
      * @return array<string, mixed> The current settings configuration
      *
      * @throws RuntimeException If settings retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
      */
     public function getAllSettings(): array
     {
@@ -242,7 +252,6 @@ class SettingsService
 
     }//end getAllSettings()
 
-
     /**
      * Convert a setting value to string for storage
      *
@@ -260,15 +269,47 @@ class SettingsService
 
     }//end convertValueToString()
 
+    /**
+     * Keys that are permitted to be written via the settings endpoint.
+     *
+     * This allowlist prevents any authenticated user (wave-3 C1) from
+     * overwriting security-sensitive keys such as signing_verification_secret
+     * through the open settings POST endpoint.  Secret keys (signing_* tokens
+     * etc.) must be managed through dedicated, separately-secured endpoints.
+     *
+     * @var array<int, string>
+     */
+    private const WRITABLE_KEYS = [
+        'publicationConsent_register',
+        'publicationConsent_schema',
+        'publicationConsent_source',
+        'template_register',
+        'template_schema',
+        'template_source',
+        'publication_objection_period_days',
+        'enable_language_detection',
+        'enable_keyword_extraction',
+        'enable_topic_classification',
+        'signing_enabled',
+        'signing_provider',
+        'signing_default_level',
+        'signing_request_expiry_days',
+    ];
 
     /**
      * Update the settings configuration
+     *
+     * Only keys present in WRITABLE_KEYS may be written; all other keys are
+     * silently skipped.  This prevents escalation via security-sensitive keys
+     * such as signing_verification_secret (wave-3 C1).
      *
      * @param array<string, mixed> $data The settings data to update
      *
      * @return array<string, mixed> The updated settings configuration
      *
      * @throws \RuntimeException If settings update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function updateSettings(array $data): array
     {
@@ -279,6 +320,15 @@ class SettingsService
                         'Skipping empty key in updateSettings',
                         ['value' => $value]
                     );
+                    continue;
+                }
+
+                if (in_array($key, self::WRITABLE_KEYS, true) === false) {
+                    $this->logger->warning(
+                        'Skipping non-allowlisted key in updateSettings',
+                        ['key' => $key]
+                    );
+                    unset($data[$key]);
                     continue;
                 }
 
@@ -298,6 +348,4 @@ class SettingsService
         }//end try
 
     }//end updateSettings()
-
-
 }//end class

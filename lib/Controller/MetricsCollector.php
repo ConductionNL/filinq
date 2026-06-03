@@ -12,6 +12,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -19,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use OCA\DocuDesk\AppInfo\Application;
-use OCP\IConfig;
+use OCP\IAppConfig;
 use OCP\IDBConnection;
 use Psr\Log\LoggerInterface;
 
@@ -34,30 +39,29 @@ use Psr\Log\LoggerInterface;
  */
 class MetricsCollector
 {
-
-
     /**
      * Constructor for MetricsCollector
      *
-     * @param IConfig         $config   The config service
+     * @param IAppConfig      $config   The typed app config service
      * @param IDBConnection   $database The database connection
      * @param LoggerInterface $logger   Logger for error reporting
      *
      * @return void
      */
     public function __construct(
-        private readonly IConfig $config,
+        private readonly IAppConfig $config,
         private readonly IDBConnection $database,
         private readonly LoggerInterface $logger
     ) {
 
     }//end __construct()
 
-
     /**
      * Count documents managed by DocuDesk via OpenRegister
      *
      * @return int The total document count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     public function countDocuments(): int
     {
@@ -65,11 +69,12 @@ class MetricsCollector
 
     }//end countDocuments()
 
-
     /**
      * Count templates managed by DocuDesk via OpenRegister
      *
      * @return int The total template count
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     public function countTemplates(): int
     {
@@ -77,19 +82,20 @@ class MetricsCollector
 
     }//end countTemplates()
 
-
     /**
      * Count objects of a given type in OpenRegister
      *
      * @param string $type The object type prefix (e.g. 'document', 'template')
      *
      * @return int The count of objects
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-21
      */
     private function countObjects(string $type): int
     {
         try {
-            $registerId = $this->config->getAppValue(Application::APP_ID, $type.'_register', '');
-            $schemaId   = $this->config->getAppValue(Application::APP_ID, $type.'_schema', '');
+            $registerId = $this->config->getValueString(Application::APP_ID, $type.'_register', '');
+            $schemaId   = $this->config->getValueString(Application::APP_ID, $type.'_schema', '');
 
             if ($registerId === '' || $schemaId === '') {
                 return 0;
@@ -125,6 +131,4 @@ class MetricsCollector
         }//end try
 
     }//end countObjects()
-
-
 }//end class

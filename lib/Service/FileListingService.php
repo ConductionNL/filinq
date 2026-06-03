@@ -13,6 +13,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -33,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileListingService
 {
-
-
     /**
      * Constructor for FileListingService
      *
@@ -52,7 +56,6 @@ class FileListingService
 
     }//end __construct()
 
-
     /**
      * Build info array for a single file
      *
@@ -61,6 +64,8 @@ class FileListingService
      * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService     The service
      *
      * @return array<string, mixed> File info
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     private function buildFileInfo(
         \OCP\Files\File $file,
@@ -100,16 +105,18 @@ class FileListingService
 
     }//end buildFileInfo()
 
-
     /**
      * List all processed files in the user's DocuDesk folder
      *
      * @return array<int, array<string, mixed>> Array of file info
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function listProcessedFiles(): array
     {
         try {
-            $userId         = $this->fileUploadService->getCurrentUserId();
+            // Ensures the user is authenticated (throws otherwise).
+            $this->fileUploadService->getCurrentUserId();
             $docuDeskFolder = $this->fileUploadService->getDocuDeskFolder();
 
             $files = $docuDeskFolder->getDirectoryListing();
@@ -151,7 +158,6 @@ class FileListingService
 
     }//end listProcessedFiles()
 
-
     /**
      * Upload a file to the user's DocuDesk folder
      *
@@ -161,12 +167,12 @@ class FileListingService
      * @return array<string, mixed> Upload result with fileId, filePath, fileName, fileSize
      *
      * @throws Exception If the upload fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {
         return $this->fileUploadService->uploadFile($fileName, $fileContent);
 
     }//end uploadFile()
-
-
 }//end class

@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -20,8 +23,11 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 use OCA\DocuDesk\Controller\ConsentController;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -65,6 +71,15 @@ class ConsentControllerTest extends TestCase
      */
     private IL10N|MockObject $mockL10n;
 
+    /**
+     * @var IUserSession|MockObject
+     */
+    private IUserSession|MockObject $mockUserSession;
+
+    /**
+     * @var IGroupManager|MockObject
+     */
+    private IGroupManager|MockObject $mockGroupManager;
 
     /**
      * Set up test environment
@@ -75,24 +90,35 @@ class ConsentControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockRequest     = $this->createMock(IRequest::class);
-        $this->mockLogger      = $this->createMock(LoggerInterface::class);
-        $this->mockCrudService = $this->createMock(ConsentCrudService::class);
-        $this->mockL10n        = $this->createMock(IL10N::class);
-        $this->mockL10n->method('t')->willReturnCallback(function ($text, $params = []) {
-            return vsprintf($text, $params);
-        });
+        $this->mockRequest      = $this->createMock(IRequest::class);
+        $this->mockLogger       = $this->createMock(LoggerInterface::class);
+        $this->mockCrudService  = $this->createMock(ConsentCrudService::class);
+        $this->mockL10n         = $this->createMock(IL10N::class);
+        $this->mockUserSession  = $this->createMock(IUserSession::class);
+        $this->mockGroupManager = $this->createMock(IGroupManager::class);
+        $this->mockL10n->method('t')->willReturnCallback(
+                function ($text, $params=[]) {
+                    return vsprintf($text, $params);
+                }
+                );
+
+        // Default: an authenticated, non-admin user named "owner".
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('owner');
+        $this->mockUserSession->method('getUser')->willReturn($user);
+        $this->mockGroupManager->method('isAdmin')->willReturn(false);
 
         $this->controller = new ConsentController(
             'docudesk',
             $this->mockRequest,
             $this->mockLogger,
             $this->mockCrudService,
-            $this->mockL10n
+            $this->mockL10n,
+            $this->mockUserSession,
+            $this->mockGroupManager
         );
 
     }//end setUp()
-
 
     /**
      * Test index returns 400 when not configured
@@ -110,7 +136,6 @@ class ConsentControllerTest extends TestCase
         $this->assertEquals(400, $result->getStatus());
 
     }//end testIndexReturns400WhenNotConfigured()
-
 
     /**
      * Test index returns consent list when configured
@@ -131,7 +156,6 @@ class ConsentControllerTest extends TestCase
 
     }//end testIndexReturnsConsentList()
 
-
     /**
      * Test create returns 400 when missing required fields
      *
@@ -148,7 +172,6 @@ class ConsentControllerTest extends TestCase
         $this->assertEquals(400, $result->getStatus());
 
     }//end testCreateReturns400WhenMissingFields()
-
 
     /**
      * Test show returns 404 when not found
@@ -169,7 +192,6 @@ class ConsentControllerTest extends TestCase
 
     }//end testShowReturns404WhenNotFound()
 
-
     /**
      * Test show returns consent record when found
      *
@@ -180,7 +202,13 @@ class ConsentControllerTest extends TestCase
         $this->mockCrudService->method('getConsentConfig')
             ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
         $this->mockCrudService->method('getConsent')
-            ->willReturn(['id' => 'uuid-1', 'consentStatus' => 'pending']);
+            ->willReturn(
+                [
+                    'id'            => 'uuid-1',
+                    'consentStatus' => 'pending',
+                    '@self'         => ['owner' => 'owner'],
+                ]
+            );
 
         $result = $this->controller->show('uuid-1');
 
@@ -189,5 +217,88 @@ class ConsentControllerTest extends TestCase
 
     }//end testShowReturnsConsentWhenFound()
 
+    /**
+     * Test show returns 404 when the record belongs to another user
+     *
+     * Security finding #283: a non-owner must not be able to read another
+     * user's consent record.
+     *
+     * @return void
+     */
+    public function testShowReturns404ForNonOwner(): void
+    {
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('getConsent')
+            ->willReturn(
+                [
+                    'id'            => 'uuid-1',
+                    'consentStatus' => 'pending',
+                    '@self'         => ['owner' => 'someone-else'],
+                ]
+            );
 
+        $result = $this->controller->show('uuid-1');
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(404, $result->getStatus());
+
+    }//end testShowReturns404ForNonOwner()
+
+    /**
+     * Test update returns 404 when the record belongs to another user
+     *
+     * Security finding #283: a non-owner must not be able to overwrite
+     * another user's consent record.
+     *
+     * @return void
+     */
+    public function testUpdateReturns404ForNonOwner(): void
+    {
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('getConsent')
+            ->willReturn(
+                [
+                    'id'    => 'uuid-1',
+                    '@self' => ['owner' => 'someone-else'],
+                ]
+            );
+        $this->mockRequest->method('getParams')
+            ->willReturn(['consentStatus' => 'granted']);
+
+        $result = $this->controller->update('uuid-1');
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(404, $result->getStatus());
+
+    }//end testUpdateReturns404ForNonOwner()
+
+    /**
+     * Test update succeeds for the record owner
+     *
+     * @return void
+     */
+    public function testUpdateSucceedsForOwner(): void
+    {
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('getConsent')
+            ->willReturn(
+                [
+                    'id'    => 'uuid-1',
+                    '@self' => ['owner' => 'owner'],
+                ]
+            );
+        $this->mockCrudService->method('updateConsentStatus')
+            ->willReturn(['id' => 'uuid-1', 'consentStatus' => 'granted']);
+        $this->mockRequest->method('getParams')
+            ->willReturn(['consentStatus' => 'granted']);
+
+        $result = $this->controller->update('uuid-1');
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(200, $result->getStatus());
+
+    }//end testUpdateSucceedsForOwner()
 }//end class

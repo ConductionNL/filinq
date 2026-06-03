@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -30,6 +33,8 @@ use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -113,6 +118,10 @@ class BatchAnonymizationControllerFolderTest extends TestCase
 
         $this->mockL10n->method('t')->willReturnCallback(fn($s) => $s);
 
+        $mockUser        = $this->createMock(IUser::class);
+        $mockUserSession = $this->createMock(IUserSession::class);
+        $mockUserSession->method('getUser')->willReturn($mockUser);
+
         $this->controller = new BatchAnonymizationController(
             'docudesk',
             $this->mockRequest,
@@ -126,7 +135,8 @@ class BatchAnonymizationControllerFolderTest extends TestCase
             $this->createMock(WooProfileService::class),
             $this->mockFolderService,
             $this->mockL10n,
-            $this->createMock(\OCP\IAppConfig::class)
+            $this->createMock(\OCP\IAppConfig::class),
+            $mockUserSession
         );
 
     }//end setUp()

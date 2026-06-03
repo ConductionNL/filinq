@@ -68,3 +68,111 @@ export async function fetchFileAsText(path) {
 	const response = await axios.get(url, { responseType: 'text' })
 	return response.data
 }
+
+// Lazy module promises — pdfjs (~2MB) and mammoth are only pulled in when a
+// binary document actually needs its text layer read. Mirrors the loaders in
+// PdfViewer.vue / WordViewer.vue so we don't double-bundle.
+let pdfjsLibPromise = null
+let mammothPromise = null
+
+/**
+ * Lazy-load pdfjs-dist plus its worker.
+ *
+ * @return {Promise<object>} pdfjsLib module.
+ */
+async function loadPdfjs() {
+	if (!pdfjsLibPromise) {
+		pdfjsLibPromise = (async () => {
+			const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
+			const workerUrl = new URL(
+				'pdfjs-dist/build/pdf.worker.min.mjs',
+				import.meta.url,
+			)
+			pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
+			return pdfjsLib
+		})()
+	}
+	return pdfjsLibPromise
+}
+
+/**
+ * Lazy-load mammoth (docx → text).
+ *
+ * @return {Promise<object>} mammoth module.
+ */
+async function loadMammoth() {
+	if (!mammothPromise) {
+		mammothPromise = import('mammoth/mammoth.browser.js')
+	}
+	return mammothPromise
+}
+
+/**
+ * Whether a MIME type / file name looks like a PDF.
+ *
+ * @param {string} mime MIME type.
+ * @param {string} name File name.
+ * @return {boolean}
+ */
+function isPdf(mime, name) {
+	return mime.includes('pdf') || /\.pdf$/i.test(name)
+}
+
+/**
+ * Whether a MIME type / file name looks like a Word .docx document.
+ *
+ * @param {string} mime MIME type.
+ * @param {string} name File name.
+ * @return {boolean}
+ */
+function isWord(mime, name) {
+	return mime.includes('wordprocessingml') || mime.includes('msword') || /\.docx?$/i.test(name)
+}
+
+/**
+ * Extract the plain-text layer of a document regardless of format. Used to
+ * scan an anonymised file for `[<TYPE>: <entity_id>]` placeholders.
+ *
+ * - text/* (and json/xml/markdown): fetched verbatim over WebDAV.
+ * - PDF: every page's text content concatenated via pdfjs.
+ * - Word (.docx): raw text via mammoth.
+ * - Anything else: best-effort WebDAV text fetch.
+ *
+ * @param {object} file File descriptor.
+ * @param {string} file.path     Absolute path inside the user's storage.
+ * @param {string} [file.mimeType] MIME type (used to pick the extractor).
+ * @param {string} [file.fileName] File name (fallback for extension sniffing).
+ * @return {Promise<string>} The document's plain text (may be empty).
+ */
+export async function extractDocumentText(file) {
+	const mime = (file.mimeType || '').toLowerCase()
+	const name = file.fileName || ''
+
+	if (isPdf(mime, name)) {
+		const [pdfjsLib, data] = await Promise.all([
+			loadPdfjs(),
+			fetchFileAsArrayBuffer(file.path),
+		])
+		const pdf = await pdfjsLib.getDocument({ data }).promise
+		const pages = []
+		for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+			const page = await pdf.getPage(pageNumber)
+			const textContent = await page.getTextContent()
+			pages.push(textContent.items.map((item) => item.str).join(' '))
+		}
+		return pages.join('\n')
+	}
+
+	if (isWord(mime, name)) {
+		const [mammothModule, arrayBuffer] = await Promise.all([
+			loadMammoth(),
+			fetchFileAsArrayBuffer(file.path),
+		])
+		const mammoth = mammothModule.default || mammothModule
+		const result = await mammoth.extractRawText({ arrayBuffer })
+		return result.value || ''
+	}
+
+	// text/plain, markdown, json, xml, or unknown — fetch verbatim.
+	return fetchFileAsText(file.path)
+}

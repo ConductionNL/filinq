@@ -12,6 +12,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,10 +27,12 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use OCA\DocuDesk\Service\PdfService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -38,16 +46,15 @@ use Psr\Log\LoggerInterface;
  */
 class PdfController extends Controller
 {
-
-
     /**
      * Constructor for PdfController
      *
-     * @param string          $appName    The application name
-     * @param IRequest        $request    The request object
-     * @param LoggerInterface $logger     Logger for error reporting
-     * @param PdfService      $pdfService Service for PDF generation
-     * @param IL10N           $l10n       The localization service
+     * @param string          $appName     The application name
+     * @param IRequest        $request     The request object
+     * @param LoggerInterface $logger      Logger for error reporting
+     * @param PdfService      $pdfService  Service for PDF generation
+     * @param IL10N           $l10n        The localization service
+     * @param IUserSession    $userSession User session for authentication
      *
      * @return void
      */
@@ -56,12 +63,12 @@ class PdfController extends Controller
         IRequest $request,
         private readonly LoggerInterface $logger,
         private readonly PdfService $pdfService,
-        private readonly IL10N $l10n
+        private readonly IL10N $l10n,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Generate a PDF from a Twig template and data context
@@ -75,11 +82,19 @@ class PdfController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF download or error response
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
      */
     public function render(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $template = $this->request->getParam('template');
             $data     = $this->request->getParam('data', []);
             $options  = $this->request->getParam('options', []);
@@ -130,7 +145,6 @@ class PdfController extends Controller
 
     }//end render()
 
-
     /**
      * Generate a PDF/A-3b compliant document from a Twig template
      *
@@ -146,13 +160,21 @@ class PdfController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF/A download or error response
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
      */
     public function renderPdfA(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $template = $this->request->getParam('template');
             $data     = $this->request->getParam('data', []);
             $options  = $this->request->getParam('options', []);
@@ -204,6 +226,4 @@ class PdfController extends Controller
         }//end try
 
     }//end renderPdfA()
-
-
 }//end class

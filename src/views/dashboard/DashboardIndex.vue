@@ -108,6 +108,11 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Definitions of the dashboard statistic/activity widgets.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
 		widgetDefs() {
 			return [
 				{ id: 'total-consents', title: t('docudesk', 'Total Consents') },
@@ -118,6 +123,11 @@ export default {
 				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
 			]
 		},
+		/**
+		 * The ten most recent consent records for the activity panel.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
 		recentConsents() {
 			return consentStore.consents.slice(0, 10)
 		},
@@ -126,6 +136,11 @@ export default {
 		consentStore.fetchConsents()
 	},
 	methods: {
+		/**
+		 * Map a consent status code to a localized label for the dashboard.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
 		formatStatus(status) {
 			const map = {
 				pending: t('docudesk', 'Pending'),

@@ -41,6 +41,47 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 				</a>
 			</NcNoteCard>
 
+			<!-- Anonymised-document view: a read-only list resolved from the
+			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
+			     Original values stay hidden behind an explicit reveal so
+			     opening the result doesn't silently de-anonymise it. -->
+			<div v-else-if="entry && entry.viewMode === 'anonymized'" class="entities-list">
+				<NcNoteCard type="warning" class="reveal-note">
+					<div>{{ t('docudesk', 'These items were removed from this document.') }}</div>
+					<NcButton type="tertiary" class="reveal-toggle" @click="revealValues = !revealValues">
+						{{ revealValues
+							? t('docudesk', 'Hide original values')
+							: t('docudesk', 'Reveal original values') }}
+					</NcButton>
+				</NcNoteCard>
+				<div
+					v-for="(item, idx) in entry.entities"
+					:key="'anon-' + idx"
+					class="entity-card">
+					<div class="entity-card__header">
+						<span class="entity-card__type">{{ item.type }}</span>
+						<span class="entity-card__confidence">
+							{{ n('docudesk', '%n occurrence', '%n occurrences', item.count) }}
+						</span>
+					</div>
+					<div
+						v-if="revealValues"
+						class="entity-card__value"
+						:title="item.value || ''">
+						{{ item.value || t('docudesk', 'Unknown value') }}
+					</div>
+					<div v-else class="entity-card__value entity-card__value--hidden">
+						{{ item.placeholder }}
+					</div>
+					<div v-if="item.bases && item.bases.length" class="entity-card__bases-tags">
+						<span v-for="b in item.bases" :key="b" class="basis-tag">{{ b }}</span>
+					</div>
+					<div v-if="item._resolveError" class="entity-card__error" :title="item._resolveError">
+						{{ item._resolveError }}
+					</div>
+				</div>
+			</div>
+
 			<!-- Empty state. -->
 			<div v-else-if="entry && entry.entities.length === 0" class="empty-state">
 				<p>{{ t('docudesk', 'No entities detected in this file.') }}</p>
@@ -78,14 +119,6 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 							:placeholder="t('docudesk', 'Pick grondslagen…')"
 							:disabled="!hasRelation(item)"
 							@input="anonymizationStore.setEntityBases(entry, idx, $event)" />
-						<label class="entity-card__skip">
-							<NcCheckboxRadioSwitch
-								:checked="!!item._decisionSkip"
-								:disabled="!hasRelation(item)"
-								@update:checked="anonymizationStore.setEntitySkip(entry, idx, $event)">
-								{{ t('docudesk', 'Skip') }}
-							</NcCheckboxRadioSwitch>
-						</label>
 					</div>
 					<div v-if="item._patchError" class="entity-card__error" :title="item._patchError">
 						{{ item._patchError }}
@@ -112,7 +145,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import DdSkeleton from '../components/DdSkeleton.vue'
 
@@ -134,7 +167,6 @@ export default {
 	components: {
 		NcAppSidebar,
 		NcButton,
-		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -144,9 +176,23 @@ export default {
 		return {
 			basesOptions: BASES_OPTIONS,
 			loadingFileId: null,
+			// Anonymised-document view shows the original values by default —
+			// the whole point of the panel is to review what was removed. The
+			// toggle still lets the user hide them again (e.g. screen-sharing).
+			revealValues: true,
 		}
 	},
 	computed: {
+		/**
+		 * Id of the file currently open in the viewer, or null. Watched to
+		 * trigger entity loading — a plain instance computed fires reliably
+		 * where a string-path watch on the imported store does not.
+		 *
+		 * @return {number|null}
+		 */
+		currentFileId() {
+			return fileViewerStore.currentFile?.fileId ?? null
+		},
 		/**
 		 * The queue entry for the file currently displayed in the viewer.
 		 * Updated reactively whenever `anonymizationStore.files` mutates
@@ -203,6 +249,14 @@ export default {
 		 * @return {string}
 		 */
 		sidebarTitle() {
+			if (this.entry?.viewMode === 'anonymized') {
+				return n(
+					'docudesk',
+					'%n item anonymised',
+					'%n items anonymised',
+					this.entry.entities.length,
+				)
+			}
 			if (this.entry && Array.isArray(this.entry.entities)) {
 				return n(
 					'docudesk',
@@ -221,6 +275,9 @@ export default {
 		 * @return {string}
 		 */
 		sidebarSubtitle() {
+			if (this.entry?.viewMode === 'anonymized') {
+				return t('docudesk', 'Resolved from the GDPR register.')
+			}
 			if (this.isLoading) {
 				return t('docudesk', 'Detecting entities…')
 			}
@@ -253,25 +310,28 @@ export default {
 	},
 	watch: {
 		/**
-		 * When the viewer opens a different file, make sure the store
-		 * holds an entry for it — fetch entities if not.
+		 * React to the viewer opening a different file. We watch the local
+		 * `currentFileId` computed rather than `fileViewerStore.currentFile`
+		 * directly: the store is a `<script setup>` import, so it is NOT a
+		 * `this`-property and a string-path watch on it never fires.
 		 *
-		 * @param {object|null} newFile
+		 * @param {number|null} fileId New file id (null when viewer closed).
 		 */
-		'fileViewerStore.currentFile': {
-			handler(newFile) {
-				if (!newFile) {
+		currentFileId: {
+			handler(fileId) {
+				const file = fileViewerStore.currentFile
+				if (!fileId || !file) {
 					return
 				}
-				this.loadEntitiesForCurrentFile(newFile)
+				this.loadEntitiesForCurrentFile(file)
 			},
 			immediate: true,
 		},
 	},
 	methods: {
 		/**
-		 * Whether an entity has any relation id — bases / skip controls
-		 * only persist when the entity is backed by an OR relation.
+		 * Whether an entity has any relation id — bases control only
+		 * persists when the entity is backed by an OR relation.
 		 *
 		 * @param {object} item Entity row.
 		 * @return {boolean}
@@ -292,13 +352,21 @@ export default {
 				return
 			}
 			this.loadingFileId = file.fileId
+			const meta = {
+				fileId: file.fileId,
+				fileName: file.fileName,
+				path: file.path,
+				mimeType: file.mimeType,
+			}
 			try {
-				await anonymizationStore.ensureExtracted({
-					fileId: file.fileId,
-					fileName: file.fileName,
-					path: file.path,
-					mimeType: file.mimeType,
-				})
+				// Prefer the anonymised-document path: if the file carries
+				// `[<TYPE>: <entity_id>]` placeholders we resolve those to the
+				// original entities directly. Falls back to detecting PII in a
+				// (still un-anonymised) source file.
+				const anonymized = await anonymizationStore.loadAnonymizedEntities(meta)
+				if (!anonymized) {
+					await anonymizationStore.ensureExtracted(meta)
+				}
 			} finally {
 				if (this.loadingFileId === file.fileId) {
 					this.loadingFileId = null
@@ -430,14 +498,35 @@ export default {
 	width: 100%;
 }
 
-.entity-card__skip {
-	display: inline-flex;
-	font-size: 0.85rem;
-}
-
 .entity-card__error {
 	color: var(--color-error);
 	font-size: 0.75rem;
+}
+
+/* Anonymised-document view — placeholder shown until the user reveals the
+ * original value, plus the read-only grondslagen tags. */
+.entity-card__value--hidden {
+	font-family: var(--font-face-monospace, monospace);
+	color: var(--color-text-maxcontrast);
+	font-weight: 400;
+}
+
+.entity-card__bases-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.basis-tag {
+	font-size: 0.7rem;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background-color: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+}
+
+.reveal-note .reveal-toggle {
+	margin-top: 6px;
 }
 
 .skeleton-card {

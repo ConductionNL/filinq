@@ -12,6 +12,13 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -40,8 +47,6 @@ use Psr\Log\LoggerInterface;
  */
 class CorrespondenceController extends Controller
 {
-
-
     /**
      * Constructor for CorrespondenceController
      *
@@ -66,7 +71,6 @@ class CorrespondenceController extends Controller
 
     }//end __construct()
 
-
     /**
      * Generate a single correspondence document
      *
@@ -79,11 +83,20 @@ class CorrespondenceController extends Controller
      * @return DataDownloadResponse|JSONResponse Generated document or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $params = $this->parseGenerateParams();
             if ($params instanceof JSONResponse) {
                 return $params;
@@ -105,11 +118,12 @@ class CorrespondenceController extends Controller
 
     }//end generate()
 
-
     /**
      * Parse and validate generation request parameters
      *
      * @return array|JSONResponse Parsed params or error response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function parseGenerateParams(): array | JSONResponse
     {
@@ -147,7 +161,6 @@ class CorrespondenceController extends Controller
 
     }//end parseGenerateParams()
 
-
     /**
      * Format the generate response based on output format
      *
@@ -155,6 +168,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse|JSONResponse The formatted response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function formatGenerateResponse(
         array $result,
@@ -183,7 +198,6 @@ class CorrespondenceController extends Controller
 
     }//end formatGenerateResponse()
 
-
     /**
      * Build a download response for binary document formats
      *
@@ -192,6 +206,8 @@ class CorrespondenceController extends Controller
      * @param string $filename The requested filename
      *
      * @return DataDownloadResponse The download response
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
      */
     private function buildDownloadResponse(
         array $result,
@@ -217,7 +233,6 @@ class CorrespondenceController extends Controller
 
     }//end buildDownloadResponse()
 
-
     /**
      * Generate correspondence for a batch of recipients
      *
@@ -229,11 +244,20 @@ class CorrespondenceController extends Controller
      * @return JSONResponse Batch results or job info
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function generateBatch(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $templateId   = $this->request->getParam('templateId');
             $recipientIds = $this->request->getParam('recipientIds', []);
             $options      = $this->request->getParam('options', []);
@@ -279,7 +303,6 @@ class CorrespondenceController extends Controller
 
     }//end generateBatch()
 
-
     /**
      * Get the status of a batch correspondence job
      *
@@ -289,16 +312,36 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function jobStatus(string $jobId): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Not authenticated')],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $status = $this->corrSvc->getJobStatus(jobId: $jobId);
 
             if ($status === null) {
                 return new JSONResponse(
                     data: ['error' => $this->l10n->t('Job not found')],
                     statusCode: Http::STATUS_NOT_FOUND
+                );
+            }
+
+            // C3 security fix: enforce job ownership so an authenticated user
+            // cannot poll another user's job by guessing or brute-forcing the jobId.
+            $jobUserId = (string) ($status['options']['userId'] ?? '');
+            if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Access denied')],
+                    statusCode: Http::STATUS_FORBIDDEN
                 );
             }
 
@@ -310,7 +353,6 @@ class CorrespondenceController extends Controller
         }//end try
 
     }//end jobStatus()
-
 
     /**
      * Get the current user ID from the session
@@ -327,7 +369,6 @@ class CorrespondenceController extends Controller
         return '';
 
     }//end getCurrentUserId()
-
 
     /**
      * Handle exceptions and return appropriate JSON error responses
@@ -357,6 +398,4 @@ class CorrespondenceController extends Controller
         );
 
     }//end handleException()
-
-
 }//end class

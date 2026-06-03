@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -29,15 +32,12 @@ namespace OCA\DocuDesk\Service\Signing;
  */
 interface SigningProviderInterface
 {
-
-
     /**
      * Get the unique identifier for this provider
      *
      * @return string The provider identifier
      */
     public function getIdentifier(): string;
-
 
     /**
      * Initiate a signing flow for a document
@@ -49,6 +49,8 @@ interface SigningProviderInterface
      * @param array<string, mixed> $options      Additional options
      *
      * @return array<string, mixed> Result with keys: success, externalId, message
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function initiateSigning(
         string $documentPath,
@@ -58,16 +60,16 @@ interface SigningProviderInterface
         array $options=[]
     ): array;
 
-
     /**
      * Check the status of an ongoing signing flow
      *
      * @param string $externalId The external signing flow identifier
      *
      * @return array<string, mixed> Status with keys: status, signers, completedAt
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function checkStatus(string $externalId): array;
-
 
     /**
      * Download the signed document from the provider
@@ -75,9 +77,10 @@ interface SigningProviderInterface
      * @param string $externalId The external signing flow identifier
      *
      * @return string The signed document content
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function downloadSignedDocument(string $externalId): string;
-
 
     /**
      * Cancel an ongoing signing flow
@@ -85,9 +88,10 @@ interface SigningProviderInterface
      * @param string $externalId The external signing flow identifier
      *
      * @return bool True if cancellation succeeded
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function cancelSigning(string $externalId): bool;
-
 
     /**
      * Check if this provider supports a given signature level
@@ -95,8 +99,8 @@ interface SigningProviderInterface
      * @param string $level The signature level (SES, AdES, QES)
      *
      * @return bool True if the level is supported
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function supportsLevel(string $level): bool;
-
-
 }//end interface

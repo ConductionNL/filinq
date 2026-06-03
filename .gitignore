@@ -1,24 +1,34 @@
+# IDE
 /.idea/
 /*.iml
 *.Identifier
 
+# Dependencies
 /vendor/
 /vendor-bin/*/vendor/
-
-/.php-cs-fixer.cache
-/tests/.phpunit.cache
-
 /node_modules/
-/js
 
+# Build artifacts
+/js/
+
+# Documentation
 /docs/node_modules/
 /docs/build/
 /docs/.docusaurus/
-/custom_apps/
-/config/
+/website/node_modules/
+/website/.docusaurus/
 
+# Testing & Quality
+/.php-cs-fixer.cache
+/tests/.phpunit.cache
+/.phpunit.cache/
+.phpunit.cache/
+.phpunit.result.cache
 /coverage/
 /coverage-frontend/
+/phpmetrics/
+/quality-reports/
+/phpqa/
 
 # Test/build artifacts
 .phpunit.cache/
@@ -40,3 +50,14 @@ bom-npm.cdx.json
 /tests/e2e/test-results/
 /test-results/
 /playwright-report/
+
+# Nextcloud
+/custom_apps/
+/config/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/worktrees/

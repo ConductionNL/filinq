@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
@@ -168,7 +171,7 @@ class SettingsServiceTest extends TestCase
 
 
     /**
-     * Test updateSettings persists values
+     * Test updateSettings persists values for allowlisted keys
      *
      * @return void
      */
@@ -176,15 +179,37 @@ class SettingsServiceTest extends TestCase
     {
         $this->mockConfig->expects($this->once())
             ->method('setValueString')
-            ->with('docudesk', 'test_key', 'test_value');
+            ->with('docudesk', 'signing_provider', 'docusign');
 
         $this->mockConfig->method('getValueString')
-            ->willReturn('test_value');
+            ->willReturn('docusign');
 
-        $result = $this->settingsService->updateSettings(['test_key' => 'test_value']);
-        $this->assertEquals('test_value', $result['test_key']);
+        $result = $this->settingsService->updateSettings(['signing_provider' => 'docusign']);
+        $this->assertEquals('docusign', $result['signing_provider']);
 
     }//end testUpdateSettingsPersistsValues()
+
+
+    /**
+     * Test updateSettings silently rejects unknown keys
+     *
+     * Keys not present in WRITABLE_KEYS must be dropped from the result and
+     * must never reach setValueString (wave-3 C1 allowlist behaviour).
+     *
+     * @return void
+     */
+    public function testUpdateSettingsSilentlyRejectsUnknownKeys(): void
+    {
+        $this->mockConfig->expects($this->never())
+            ->method('setValueString');
+
+        $this->mockLogger->expects($this->once())
+            ->method('warning');
+
+        $result = $this->settingsService->updateSettings(['unknown_key' => 'some_value']);
+        $this->assertArrayNotHasKey('unknown_key', $result);
+
+    }//end testUpdateSettingsSilentlyRejectsUnknownKeys()
 
 
     /**

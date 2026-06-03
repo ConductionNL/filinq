@@ -14,6 +14,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -36,7 +41,6 @@ class WooProfileService
     private const DEFAULT_ANONYMIZE = ['PERSON', 'BSN', 'PHONE', 'EMAIL', 'IBAN', 'ADDRESS'];
     private const DEFAULT_KEEP      = ['ORGANIZATION', 'LOCATION', 'DATE'];
 
-
     /**
      * Constructor for WooProfileService
      *
@@ -49,11 +53,12 @@ class WooProfileService
 
     }//end __construct()
 
-
     /**
      * Return the active WOO anonymization profile.
      *
      * @return array{anonymize: array<string>, keep: array<string>} Active profile (configured or default).
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function getProfile(): array
     {
@@ -77,13 +82,14 @@ class WooProfileService
 
     }//end getProfile()
 
-
     /**
      * Persist a WOO anonymization profile.
      *
      * @param array{anonymize: array<string>, keep: array<string>} $profile Profile to store.
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function saveProfile(array $profile): void
     {
@@ -91,19 +97,18 @@ class WooProfileService
 
     }//end saveProfile()
 
-
     /**
      * Check whether the given entity type is subject to anonymization under the active profile.
      *
      * @param string $entityType Entity type to check (e.g., "PERSON", "BSN").
      *
      * @return bool True when the type should be anonymized.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
      */
     public function shouldAnonymize(string $entityType): bool
     {
         return in_array($entityType, $this->getProfile()['anonymize'], true);
 
     }//end shouldAnonymize()
-
-
 }//end class

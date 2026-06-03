@@ -10,7 +10,9 @@ Provides a central overview of DocuDesk activity, including consent tracking sta
 
 ## Requirements
 
-### REQ-DASH-01: DocuDesk Dashboard View (Priority: Must)
+### Requirement: DocuDesk Dashboard View (REQ-DASH-01)
+
+**Priority:** Must
 
 The dashboard serves as the default landing page displaying consent statistics, recent activity, and quick anonymization access.
 
@@ -51,7 +53,9 @@ The dashboard serves as the default landing page displaying consent statistics, 
 | DASH-007 | Show empty state when no consent records exist | MUST | Implemented |
 | DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
 
-### REQ-DASH-02: Nextcloud Dashboard Widgets (Priority: Must)
+### Requirement: Nextcloud Dashboard Widgets (REQ-DASH-02)
+
+**Priority:** Must
 
 DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
 
@@ -67,6 +71,7 @@ DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance d
 - THEN they are navigated to the DocuDesk main page via `docudesk.dashboard.page` route
 
 #### Scenario: Widget script loading
+@e2e exclude script bundle loading is a build artifact — verified by webpack output inspection; not directly observable as a UI assertion
 - GIVEN the Nextcloud Dashboard page loads
 - WHEN DocuDesk widgets are rendered
 - THEN both widgets load the `docudesk-dashboard` script bundle
@@ -83,7 +88,9 @@ DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance d
 | DASH-016 | Both widgets load the `docudesk-dashboard` script bundle | MUST | Implemented |
 | DASH-017 | Widgets registered in Application::register() via registerDashboardWidget() | MUST | Implemented |
 
-### REQ-DASH-03: Navigation Menu (Priority: Must)
+### Requirement: Navigation Menu (REQ-DASH-03)
+
+**Priority:** Must
 
 The main navigation provides three items with Material Design icons for switching between DocuDesk views.
 
@@ -99,12 +106,14 @@ The main navigation provides three items with Material Design icons for switchin
 - THEN three items are shown: Dashboard (Finance icon), Anonymization (ShieldLock icon), Consent Management (AccountCheck icon)
 
 #### Scenario: Consent detail navigation state
+@e2e exclude consent detail view requires a consent record to navigate to; no consent creation UI exists (CONS-048); covered by navigate-between-views test for nav highlighting
 - GIVEN the user navigates to a consent detail view
 - WHEN the navigation menu is displayed
 - THEN the Consent Management item remains active
 - AND the active state applies to both consent list and detail views
 
 #### Scenario: Conditional view rendering
+@e2e exclude internal Pinia store→Vue component wiring — covered by navigate-between-views test which observes the rendered views; unit-testable directly
 - GIVEN the navigation store tracks the selected view
 - WHEN `navigationStore.selected` changes
 - THEN the Views.vue component renders the corresponding view:
@@ -122,23 +131,28 @@ The main navigation provides three items with Material Design icons for switchin
 | DASH-024 | Active navigation item is visually highlighted | MUST | Implemented |
 | DASH-025 | Consent Management item active for both list and detail views | MUST | Implemented |
 
-### REQ-DASH-04: Dashboard Controller (Priority: Must)
+### Requirement: Dashboard Controller (REQ-DASH-04)
+
+**Priority:** Must
 
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
 #### Scenario: Serve main app page
+@e2e exclude DashboardController::page() PHP implementation — HTTP 200 response verified by view-dashboard test navigating to /apps/docudesk
 - GIVEN an authenticated user
 - WHEN GET / is requested
 - THEN DashboardController::page() returns a TemplateResponse
 - AND the template renders the Vue app entry point
 
 #### Scenario: Error handling
+@e2e exclude backend controller error path — exception-to-template conversion verified by PHPUnit; not injectable via UI
 - GIVEN an error occurs during page rendering
 - WHEN the controller catches the exception
 - THEN an error template is returned
 - AND the user sees a meaningful error message
 
 #### Scenario: Unused parameter on page method
+@e2e exclude dead code documentation — no behavioral impact; verified by code inspection
 - GIVEN DashboardController::page() accepts `$getParameter`
 - WHEN the method is called with or without this parameter
 - THEN the parameter has no effect on the response
@@ -150,7 +164,9 @@ The DashboardController serves the main app page as a Nextcloud TemplateResponse
 | DASH-031 | Default Nextcloud CSP applies (no custom CSP) | MUST | Implemented |
 | DASH-032 | Error handling returns an error template on failure | MUST | Implemented |
 
-### REQ-DASH-05: Status Badge Display (Priority: Must)
+### Requirement: Status Badge Display (REQ-DASH-05)
+
+**Priority:** Must
 
 Consent status values are displayed with consistent color-coded badges throughout the dashboard and consent views.
 
@@ -174,7 +190,9 @@ Consent status values are displayed with consistent color-coded badges throughou
 | DASH-040 | Status badges use consistent color mapping across all views | MUST | Implemented |
 | DASH-041 | Five status values mapped: pending, consent_given, objection_received, no_response, anonymized | MUST | Implemented |
 
-### REQ-DASH-06: Icon File Differentiation (Priority: Must)
+### Requirement: Icon File Differentiation (REQ-DASH-06)
+
+**Priority:** Must
 
 DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
 
@@ -200,23 +218,28 @@ DocuDesk uses different icon files for navigation vs. dashboard widgets, followi
 | DASH-044 | Dashboard widgets use `app-dark.svg` icon | MUST | Implemented |
 | DASH-045 | Two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
 
-### REQ-DASH-07: Dead Code and Removed Features (Priority: Must)
+### Requirement: Dead Code and Removed Features (REQ-DASH-07)
+
+**Priority:** Must
 
 Previously identified issues have been resolved through removal.
 
 #### Scenario: DashboardController::index() removed
+@e2e exclude dead code removal — verified by static code inspection; no UI behavior to assert
 - GIVEN DashboardController previously had an index() method with dead code
 - WHEN the codebase is inspected
 - THEN the method has been removed
 - AND only the page() method remains
 
 #### Scenario: Permissive CSP removed
+@e2e exclude CSP header is a browser security header — not inspectable via UI assertions without network interception
 - GIVEN DashboardController previously set `addAllowedConnectDomain('*')`
 - WHEN the codebase is inspected
 - THEN the CSP customization has been removed
 - AND default Nextcloud CSP applies
 
 #### Scenario: Unused parameter documented
+@e2e exclude dead code documentation — duplicate of unused-parameter-on-page-method scenario above
 - GIVEN page() accepts `?string $getParameter`
 - WHEN the parameter is inspected
 - THEN it is never used in the method body

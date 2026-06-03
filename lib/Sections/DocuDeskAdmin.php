@@ -10,6 +10,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Sections;
@@ -47,7 +52,6 @@ class DocuDeskAdmin implements IIconSection
      */
     private IURLGenerator $urlGenerator;
 
-
     /**
      * Constructor for DocuDeskAdmin section
      *
@@ -63,7 +67,6 @@ class DocuDeskAdmin implements IIconSection
 
     }//end __construct()
 
-
     /**
      * Get the icon for the admin section
      *
@@ -71,13 +74,14 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getIcon(): string
     {
         return $this->urlGenerator->imagePath(appName: 'docudesk', file: 'app-dark.svg');
 
     }//end getIcon()
-
 
     /**
      * Get the ID of the admin section
@@ -86,13 +90,14 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getID(): string
     {
         return 'docudesk';
 
     }//end getID()
-
 
     /**
      * Get the name of the admin section
@@ -101,13 +106,14 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getName(): string
     {
         return $this->l10n->t('DocuDesk');
 
     }//end getName()
-
 
     /**
      * Get the priority of the admin section
@@ -116,12 +122,12 @@ class DocuDeskAdmin implements IIconSection
      *
      * @psalm-return   int
      * @phpstan-return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getPriority(): int
     {
         return 97;
 
     }//end getPriority()
-
-
 }//end class

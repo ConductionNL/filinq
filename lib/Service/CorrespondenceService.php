@@ -13,6 +13,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-40
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-41
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-42
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -63,7 +74,6 @@ class CorrespondenceService
      */
     private const VALID_FORMATS = ['pdf', 'docx', 'html', 'email'];
 
-
     /**
      * Constructor for CorrespondenceService
      *
@@ -91,7 +101,6 @@ class CorrespondenceService
 
     }//end __construct()
 
-
     /**
      * Get the ObjectService from OpenRegister
      *
@@ -114,7 +123,6 @@ class CorrespondenceService
 
     }//end getObjectService()
 
-
     /**
      * Generate a single correspondence document
      *
@@ -129,6 +137,8 @@ class CorrespondenceService
      * @return array{content: string, format: string, warnings: array, registerEntry: array}
      *
      * @throws Exception If generation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
      */
     public function generate(string $templateId, array $dataRefs, array $options=[]): array
     {
@@ -192,7 +202,6 @@ class CorrespondenceService
 
     }//end generate()
 
-
     /**
      * Generate correspondence for a batch of recipients
      *
@@ -205,6 +214,8 @@ class CorrespondenceService
      *                             caseReference, recipientType, userId
      *
      * @return array Synchronous results or job info
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     public function generateBatch(
         string $templateId,
@@ -229,7 +240,6 @@ class CorrespondenceService
 
     }//end generateBatch()
 
-
     /**
      * Process a batch synchronously
      *
@@ -238,6 +248,8 @@ class CorrespondenceService
      * @param array  $options      Generation options
      *
      * @return array{results: array, total: int, completed: int, errors: int}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function generateBatchSync(
         string $templateId,
@@ -306,7 +318,6 @@ class CorrespondenceService
 
     }//end generateBatchSync()
 
-
     /**
      * Dispatch a batch generation as a background job
      *
@@ -315,6 +326,8 @@ class CorrespondenceService
      * @param array  $options      Generation options
      *
      * @return array{jobId: string, status: string, totalRecipients: int}
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     private function dispatchBatchJob(
         string $templateId,
@@ -353,20 +366,20 @@ class CorrespondenceService
 
     }//end dispatchBatchJob()
 
-
     /**
      * Get the status of a batch job
      *
      * @param string $jobId The job UUID
      *
      * @return array|null The job status or null if not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     public function getJobStatus(string $jobId): ?array
     {
         return $this->loadJobStatus(jobId: $jobId);
 
     }//end getJobStatus()
-
 
     /**
      * Update the status of a batch job
@@ -375,6 +388,8 @@ class CorrespondenceService
      * @param array  $data  The status data to store
      *
      * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
     public function storeJobStatus(string $jobId, array $data): void
     {
@@ -395,13 +410,14 @@ class CorrespondenceService
 
     }//end storeJobStatus()
 
-
     /**
      * Load the status of a batch job from app config
      *
      * @param string $jobId The job UUID
      *
      * @return array|null The job status or null if not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
      */
     private function loadJobStatus(string $jobId): ?array
     {
@@ -429,7 +445,6 @@ class CorrespondenceService
 
     }//end loadJobStatus()
 
-
     /**
      * Validate the requested output format
      *
@@ -438,6 +453,8 @@ class CorrespondenceService
      * @return void
      *
      * @throws Exception If the format is not valid
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function validateFormat(string $format): void
     {
@@ -451,13 +468,14 @@ class CorrespondenceService
 
     }//end validateFormat()
 
-
     /**
      * Load huisstijl configuration from OpenRegister
      *
      * @param string|null $huisstijlId Optional specific huisstijl UUID
      *
      * @return array|null The huisstijl configuration or null if not found
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-40
      */
     private function loadHuisstijl(?string $huisstijlId): ?array
     {
@@ -494,7 +512,6 @@ class CorrespondenceService
 
     }//end loadHuisstijl()
 
-
     /**
      * Build PDF options from template, huisstijl, and request options
      *
@@ -503,6 +520,8 @@ class CorrespondenceService
      * @param array      $options   The request options
      *
      * @return array The merged PDF options
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-40
      */
     private function buildPdfOptions(array $template, ?array $huisstijl, array $options): array
     {
@@ -525,7 +544,6 @@ class CorrespondenceService
 
     }//end buildPdfOptions()
 
-
     /**
      * Render template content with huisstijl header and footer
      *
@@ -536,6 +554,8 @@ class CorrespondenceService
      * @return string The rendered HTML
      *
      * @throws Exception If rendering fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-40
      */
     private function renderWithHuisstijl(
         string $templateContent,
@@ -574,7 +594,6 @@ class CorrespondenceService
 
     }//end renderWithHuisstijl()
 
-
     /**
      * Produce output in the requested format
      *
@@ -585,6 +604,8 @@ class CorrespondenceService
      * @return string The generated content
      *
      * @throws Exception If output generation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function produceOutput(string $htmlContent, string $format, array $pdfOptions): string
     {
@@ -612,7 +633,6 @@ class CorrespondenceService
 
     }//end produceOutput()
 
-
     /**
      * Strip page-specific CSS for email output
      *
@@ -622,6 +642,8 @@ class CorrespondenceService
      * @param string $html The rendered HTML content
      *
      * @return string Clean HTML for email use
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-41
      */
     private function stripPageStyling(string $html): string
     {
@@ -634,7 +656,6 @@ class CorrespondenceService
         return $html;
 
     }//end stripPageStyling()
-
 
     /**
      * Convert HTML to DOCX using LibreOffice headless
@@ -650,6 +671,8 @@ class CorrespondenceService
      *
      * @psalm-suppress UnusedParam $pdfOptions reserved for future page config
      * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
      */
     private function convertToDocx(string $htmlContent, array $pdfOptions): string
     {
@@ -707,7 +730,6 @@ class CorrespondenceService
 
     }//end convertToDocx()
 
-
     /**
      * Log correspondence generation to the document register
      *
@@ -720,6 +742,8 @@ class CorrespondenceService
      * @param array       $options      The request options
      *
      * @return array The created correspondence register entry
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-42
      */
     private function logCorrespondence(
         string $templateId,
@@ -774,27 +798,21 @@ class CorrespondenceService
 
     }//end logCorrespondence()
 
-
     /**
-     * Generate a unique job ID
+     * Generate a unique job ID using a cryptographically secure source
      *
-     * @return string A UUID-like job identifier
+     * Uses random_bytes() (CSPRNG) rather than mt_rand() so job IDs cannot
+     * be predicted by an attacker who knows the approximate creation time
+     * (C3 security fix).
+     *
+     * @return string A RFC-4122 v4 UUID job identifier
      */
     private function generateJobId(): string
     {
-        return sprintf(
-            '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            (mt_rand(0, 0x0fff) | 0x4000),
-            (mt_rand(0, 0x3fff) | 0x8000),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff)
-        );
+        $data    = random_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 
     }//end generateJobId()
-
-
 }//end class

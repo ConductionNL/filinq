@@ -13,6 +13,19 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use Imagick;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -82,7 +96,6 @@ class OcrService
      */
     private const APP_NAME = 'docudesk';
 
-
     /**
      * Constructor for OcrService
      *
@@ -102,11 +115,12 @@ class OcrService
 
     }//end __construct()
 
-
     /**
      * Check if Tesseract OCR binary is available on the system
      *
      * @return bool True if Tesseract is installed and executable
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
      */
     public function isTesseractAvailable(): bool
     {
@@ -125,11 +139,12 @@ class OcrService
 
     }//end isTesseractAvailable()
 
-
     /**
      * Get the installed Tesseract version string
      *
      * @return string|null The version string or null if not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
      */
     public function getTesseractVersion(): ?string
     {
@@ -153,7 +168,6 @@ class OcrService
 
     }//end getTesseractVersion()
 
-
     /**
      * Determine if a file needs OCR processing based on MIME type and existing text
      *
@@ -161,6 +175,8 @@ class OcrService
      * @param string|null $existingText Existing extracted text content
      *
      * @return bool True if the file needs OCR processing
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
      */
     public function needsOcr(string $mimeType, ?string $existingText=null): bool
     {
@@ -179,11 +195,12 @@ class OcrService
 
     }//end needsOcr()
 
-
     /**
      * Check if OCR is enabled in admin settings
      *
      * @return bool True if OCR is enabled
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
      */
     public function isOcrEnabled(): bool
     {
@@ -195,11 +212,12 @@ class OcrService
 
     }//end isOcrEnabled()
 
-
     /**
      * Get configured OCR languages
      *
      * @return string Tesseract language string (e.g., "nld+eng")
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
      */
     public function getOcrLanguages(): string
     {
@@ -211,11 +229,12 @@ class OcrService
 
     }//end getOcrLanguages()
 
-
     /**
      * Get configured OCR DPI for PDF conversion
      *
      * @return int DPI value
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
      */
     public function getOcrDpi(): int
     {
@@ -227,7 +246,6 @@ class OcrService
 
     }//end getOcrDpi()
 
-
     /**
      * Extract text from an image file using Tesseract OCR
      *
@@ -238,6 +256,8 @@ class OcrService
      * @return array{text: string, confidence: float} Extracted text and confidence
      *
      * @throws Exception If OCR processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
      */
     public function extractTextFromImage(
         string $filePath,
@@ -288,7 +308,6 @@ class OcrService
 
     }//end extractTextFromImage()
 
-
     /**
      * Extract text from a PDF by converting pages to images and running OCR
      *
@@ -299,6 +318,8 @@ class OcrService
      * @return array{text: string, confidence: float} Extracted text and average confidence
      *
      * @throws Exception If PDF conversion or OCR processing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
      */
     public function extractTextFromPdf(
         string $filePath,
@@ -322,7 +343,7 @@ class OcrService
         }
 
         try {
-            $imagick = new \Imagick();
+            $imagick = new Imagick();
             $imagick->setResolution($dpi, $dpi);
             $imagick->readImage($filePath);
 
@@ -358,10 +379,9 @@ class OcrService
                 rmdir($tempDir);
             }
 
+            $avgConfidence = 0.0;
             if ($pageCount > 0) {
                 $avgConfidence = ($totalConfidence / $pageCount);
-            } else {
-                $avgConfidence = 0.0;
             }
 
             $this->logger->debug(
@@ -391,7 +411,6 @@ class OcrService
 
     }//end extractTextFromPdf()
 
-
     /**
      * Process a file for OCR text extraction
      *
@@ -401,6 +420,8 @@ class OcrService
      * @param int $fileId The Nextcloud file ID
      *
      * @return array{text: string, confidence: float, ocrProcessed: bool} OCR results
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
      */
     public function processFile(int $fileId): array
     {
@@ -445,10 +466,9 @@ class OcrService
             $tempFile = $this->writeToTemp(file: $file);
 
             try {
+                $result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
                 if (in_array($mimeType, self::IMAGE_MIME_TYPES, true) === true) {
                     $result = $this->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-                } else {
-                    $result = $this->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
                 }
 
                 return [
@@ -474,7 +494,6 @@ class OcrService
         }//end try
 
     }//end processFile()
-
 
     /**
      * Get a file by its Nextcloud file ID
@@ -506,7 +525,6 @@ class OcrService
 
     }//end getFileById()
 
-
     /**
      * Write a Nextcloud file to a temporary location for processing
      *
@@ -530,7 +548,6 @@ class OcrService
 
     }//end writeToTemp()
 
-
     /**
      * Get OCR confidence score for a file
      *
@@ -541,6 +558,8 @@ class OcrService
      * @param int    $dpi       DPI setting
      *
      * @return float Confidence score (0-100)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
      */
     private function getConfidenceScore(string $filePath, string $languages, int $dpi): float
     {
@@ -588,6 +607,4 @@ class OcrService
         }//end try
 
     }//end getConfidenceScore()
-
-
 }//end class

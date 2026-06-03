@@ -13,6 +13,13 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,9 +30,11 @@ use Exception;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -42,8 +51,6 @@ use Psr\Log\LoggerInterface;
  */
 class PrintController extends Controller
 {
-
-
     /**
      * Constructor for PrintController
      *
@@ -52,6 +59,7 @@ class PrintController extends Controller
      * @param LoggerInterface $logger          Logger for error reporting
      * @param PdfService      $pdfService      Service for PDF generation
      * @param TemplateService $templateService Service for template retrieval
+     * @param IUserSession    $userSession     User session for authentication
      *
      * @return void
      */
@@ -61,11 +69,11 @@ class PrintController extends Controller
         private readonly LoggerInterface $logger,
         private readonly PdfService $pdfService,
         private readonly TemplateService $templateService,
+        private readonly IUserSession $userSession
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Get request options as an array, defaulting to empty array
@@ -83,7 +91,6 @@ class PrintController extends Controller
 
     }//end getRequestOptions()
 
-
     /**
      * Resolve template content and options from request parameters
      *
@@ -94,6 +101,8 @@ class PrintController extends Controller
      * @return array{content: string, title: string, data: array, options: array} Resolved template data
      *
      * @throws Exception If neither templateId nor template content is provided
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
      */
     private function resolveTemplate(): array
     {
@@ -134,7 +143,6 @@ class PrintController extends Controller
 
     }//end resolveTemplate()
 
-
     /**
      * Generate a print preview with rendered HTML and print-optimized CSS
      *
@@ -149,13 +157,21 @@ class PrintController extends Controller
      * @return JSONResponse JSON with rendered HTML and title, or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
      */
     public function preview(): JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $resolved = $this->resolveTemplate();
 
             $options = $resolved['options'];
@@ -191,7 +207,6 @@ class PrintController extends Controller
 
     }//end preview()
 
-
     /**
      * Generate and download a PDF/A-3b compliant document
      *
@@ -206,13 +221,21 @@ class PrintController extends Controller
      * @return DataDownloadResponse|JSONResponse PDF/A download or error
      *
      * @NoAdminRequired
-     * @NoCSRFRequired
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
      */
     public function downloadPdfA(): DataDownloadResponse | JSONResponse
     {
         try {
+            if ($this->userSession->getUser() === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
             $resolved = $this->resolveTemplate();
             $filename = $this->request->getParam('filename', 'document.pdf');
 
@@ -250,6 +273,4 @@ class PrintController extends Controller
         }//end try
 
     }//end downloadPdfA()
-
-
 }//end class

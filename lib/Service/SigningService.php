@@ -12,17 +12,25 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use Exception;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\IAppConfig;
+use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Service for managing signing request lifecycle
@@ -54,7 +62,6 @@ class SigningService
         'CANCELLED'   => [],
     ];
 
-
     /**
      * Constructor
      *
@@ -65,6 +72,7 @@ class SigningService
      * @param IUserSession           $userSession         User session
      * @param INotificationManager   $notificationManager Notification manager
      * @param LoggerInterface        $logger              Logger
+     * @param IRequest               $request             HTTP request
      *
      * @return void
      */
@@ -75,11 +83,11 @@ class SigningService
         private readonly IAppConfig $config,
         private readonly IUserSession $userSession,
         private readonly INotificationManager $notificationManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IRequest $request
     ) {
 
     }//end __construct()
-
 
     /**
      * Create a new signing request
@@ -88,18 +96,20 @@ class SigningService
      *
      * @return array<string, mixed> The created signing request
      *
-     * @throws \RuntimeException If creation fails
+     * @throws RuntimeException If creation fails
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function createRequest(array $data): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
         $expiryDays    = (int) $this->config->getValueString('docudesk', 'signing_request_expiry_days', '30');
-        $deadline      = (new \DateTimeImmutable())->modify('+'.$expiryDays.' days');
+        $deadline      = (new DateTimeImmutable())->modify('+'.$expiryDays.' days');
         $defaultLevel  = $this->config->getValueString('docudesk', 'signing_default_level', 'SES');
         $defaultProv   = $this->config->getValueString('docudesk', 'signing_provider', 'native');
 
@@ -111,7 +121,7 @@ class SigningService
             'signingMode'     => $data['signingMode'] ?? 'sequential',
             'status'          => 'PENDING',
             'provider'        => $data['provider'] ?? $defaultProv,
-            'deadline'        => $data['deadline'] ?? $deadline->format(\DateTimeInterface::ATOM),
+            'deadline'        => $data['deadline'] ?? $deadline->format(DateTimeInterface::ATOM),
             'signerIds'       => [],
         ];
 
@@ -119,7 +129,7 @@ class SigningService
 
         $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $createdRequest = $objectService->saveObject($register, $schema, $request);
+        $createdRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $signers        = $data['signers'] ?? [];
         $signerIds      = [];
@@ -136,13 +146,13 @@ class SigningService
                 'status'           => 'PENDING',
             ];
 
-            $created     = $objectService->saveObject($signerRegister, $signerSchema, $signerRecord);
+            $created     = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
             $signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
         }//end foreach
 
         $requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
         $createdRequest['signerIds'] = $signerIds;
-        $objectService->saveObject($register, $schema, $createdRequest);
+        $objectService->saveObject(object: $createdRequest, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -158,7 +168,6 @@ class SigningService
 
     }//end createRequest()
 
-
     /**
      * Get a signing request by ID
      *
@@ -166,7 +175,9 @@ class SigningService
      *
      * @return array<string, mixed> The signing request
      *
-     * @throws \RuntimeException If not found
+     * @throws RuntimeException If not found
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
     public function getRequest(string $requestId): array
     {
@@ -174,20 +185,25 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        $request = $objectService->getObject($register, $schema, $requestId);
-        if (empty($request) === true) {
-            throw new \RuntimeException('Signing request not found: '.$requestId);
+        $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($object === null) {
+            throw new RuntimeException('Signing request not found: '.$requestId);
         }
 
-        return $request;
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            return $object->jsonSerialize();
+        }
+
+        return (array) $object;
 
     }//end getRequest()
-
 
     /**
      * List signing requests
      *
      * @return array<int, array<string, mixed>> List of signing requests
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
     public function listRequests(): array
     {
@@ -195,10 +211,28 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        return $objectService->getObjects($register, $schema);
+        $results = $objectService->findAll(
+            [
+                'filters' => [
+                    'register' => $register,
+                    'schema'   => $schema,
+                ],
+            ]
+        );
+
+        $requests = [];
+        foreach ($results as $result) {
+            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                $requests[] = $result->jsonSerialize();
+                continue;
+            }
+
+            $requests[] = (array) $result;
+        }
+
+        return $requests;
 
     }//end listRequests()
-
 
     /**
      * Sign a document within a signing request
@@ -208,13 +242,15 @@ class SigningService
      *
      * @return array<string, mixed> The updated signer record
      *
-     * @throws \RuntimeException If signing fails
+     * @throws RuntimeException If signing fails
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
      */
     public function sign(string $requestId, string $signerId): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
@@ -222,26 +258,46 @@ class SigningService
         $status        = $request['status'] ?? '';
 
         if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
-            throw new \RuntimeException('Signing request is not in a signable state: '.$status);
+            throw new RuntimeException('Signing request is not in a signable state: '.$status);
         }
 
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if (empty($signer) === true) {
-            throw new \RuntimeException('Signer record not found: '.$signerId);
+        if ($signerObject === null) {
+            throw new RuntimeException('Signer record not found: '.$signerId);
+        }
+
+        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
+            $signer = $signerObject->jsonSerialize();
+        } else {
+            $signer = (array) $signerObject;
+        }
+
+        // C4 security fix: verify the signer record belongs to this signing
+        // request. Without this check, an attacker who knows any valid
+        // signerId can sign under an arbitrary requestId they do not own.
+        if (($signer['signingRequestId'] ?? '') !== $requestId) {
+            throw new RuntimeException('Signer record does not belong to this signing request');
+        }
+
+        // Security finding #282: ensure the authenticated user is the signer
+        // they claim to be. Without this check any authenticated user could
+        // sign on behalf of another signer by supplying their signer ID.
+        if (($signer['userId'] ?? '') !== $user->getUID()) {
+            throw new RuntimeException('Not authorized to sign as this signer');
         }
 
         if (($signer['status'] ?? '') !== 'PENDING') {
-            throw new \RuntimeException('Signer has already responded to this request');
+            throw new RuntimeException('Signer has already responded to this request');
         }
 
-        $now = new \DateTimeImmutable();
+        $now = new DateTimeImmutable();
         $signer['status']    = 'SIGNED';
-        $signer['signedAt']  = $now->format(\DateTimeInterface::ATOM);
+        $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
-        $objectService->saveObject($signerRegister, $signerSchema, $signer);
+        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -259,7 +315,6 @@ class SigningService
 
     }//end sign()
 
-
     /**
      * Decline a signing request
      *
@@ -268,36 +323,62 @@ class SigningService
      * @param string $reason    The decline reason
      *
      * @return array<string, mixed> The updated signer record
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function decline(string $requestId, string $signerId, string $reason): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService  = $this->settingsService->getObjectService();
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signer         = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if (empty($signer) === true) {
-            throw new \RuntimeException('Signer record not found: '.$signerId);
+        if ($signerObject === null) {
+            throw new RuntimeException('Signer record not found: '.$signerId);
+        }
+
+        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
+            $signer = $signerObject->jsonSerialize();
+        } else {
+            $signer = (array) $signerObject;
+        }
+
+        // C4 security fix: verify the signer record belongs to this signing
+        // request. Without this check, an attacker who knows any valid
+        // signerId can decline under an arbitrary requestId they do not own.
+        if (($signer['signingRequestId'] ?? '') !== $requestId) {
+            throw new RuntimeException('Signer record does not belong to this signing request');
+        }
+
+        // Security finding #282: ensure the authenticated user is the signer
+        // they claim to be before allowing them to decline on its behalf.
+        if (($signer['userId'] ?? '') !== $user->getUID()) {
+            throw new RuntimeException('Not authorized to decline as this signer');
         }
 
         $signer['status']        = 'DECLINED';
         $signer['declineReason'] = $reason;
-        $objectService->saveObject($signerRegister, $signerSchema, $signer);
+        $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
-        $register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema   = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $request  = $objectService->getObject($register, $schema, $requestId);
+        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
+            $request = $requestObject->jsonSerialize();
+        } else {
+            $request = (array) $requestObject;
+        }
 
         $signatureLevel = $request['signatureLevel'] ?? 'SES';
         $provider       = $request['provider'] ?? 'native';
 
         $request['status'] = 'DECLINED';
-        $objectService->saveObject($register, $schema, $request);
+        $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -314,32 +395,38 @@ class SigningService
 
     }//end decline()
 
-
     /**
      * Cancel a signing request
      *
      * @param string $requestId The signing request ID
      *
      * @return array<string, mixed> The cancelled request
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function cancelRequest(string $requestId): array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new \RuntimeException('No authenticated user');
+            throw new RuntimeException('No authenticated user');
         }
 
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $request       = $objectService->getObject($register, $schema, $requestId);
+        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
+            $request = $requestObject->jsonSerialize();
+        } else {
+            $request = (array) $requestObject;
+        }
 
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
-            throw new \RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
+            throw new RuntimeException('Cannot cancel request in status: '.($request['status'] ?? 'unknown'));
         }
 
         $request['status'] = 'CANCELLED';
-        $objectService->saveObject($register, $schema, $request);
+        $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -353,22 +440,22 @@ class SigningService
 
     }//end cancelRequest()
 
-
     /**
      * Bulk sign multiple signing requests
      *
      * @param array<string> $requestIds Array of request IDs to sign
      *
      * @return array<string, array<string, mixed>> Results keyed by request ID
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-4
      */
     public function bulkSign(array $requestIds): array
     {
         $results = [];
         $user    = $this->userSession->getUser();
+        $userId  = '';
         if ($user !== null) {
             $userId = $user->getUID();
-        } else {
-            $userId = '';
         }
 
         foreach ($requestIds as $requestId) {
@@ -377,18 +464,17 @@ class SigningService
                 $signerIds      = $request['signerIds'] ?? [];
                 $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
 
+                $results[$requestId] = [
+                    'success' => false,
+                    'error'   => 'No pending signer record found for current user',
+                ];
                 if ($targetSignerId !== null) {
                     $results[$requestId] = [
                         'success' => true,
                         'signer'  => $this->sign(requestId: $requestId, signerId: $targetSignerId),
                     ];
-                } else {
-                    $results[$requestId] = [
-                        'success' => false,
-                        'error'   => 'No pending signer record found for current user',
-                    ];
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $results[$requestId] = [
                     'success' => false,
                     'error'   => $e->getMessage(),
@@ -400,7 +486,6 @@ class SigningService
 
     }//end bulkSign()
 
-
     /**
      * Validate a status transition
      *
@@ -408,6 +493,8 @@ class SigningService
      * @param string $newStatus     The proposed new status
      *
      * @return bool True if transition is valid
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
     public function isValidTransition(string $currentStatus, string $newStatus): bool
     {
@@ -416,7 +503,6 @@ class SigningService
 
     }//end isValidTransition()
 
-
     /**
      * Validate signing request data
      *
@@ -424,28 +510,27 @@ class SigningService
      *
      * @return void
      *
-     * @throws \RuntimeException If validation fails
+     * @throws RuntimeException If validation fails
      */
     private function validateRequestData(array $data): void
     {
         if (empty($data['documentFileId']) === true) {
-            throw new \RuntimeException('Document file ID is required');
+            throw new RuntimeException('Document file ID is required');
         }
 
         if (empty($data['documentName']) === true) {
-            throw new \RuntimeException('Document name is required');
+            throw new RuntimeException('Document name is required');
         }
 
         if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new \RuntimeException('Invalid signature level');
+            throw new RuntimeException('Invalid signature level');
         }
 
         if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new \RuntimeException('Invalid signing mode');
+            throw new RuntimeException('Invalid signing mode');
         }
 
     }//end validateRequestData()
-
 
     /**
      * Update the signing request status based on signer progress
@@ -466,25 +551,34 @@ class SigningService
         $allSigned      = true;
 
         foreach ($signerIds as $signerId) {
-            $signer = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
+                $signer = $signerObj->jsonSerialize();
+            } else {
+                $signer = (array) $signerObj;
+            }
+
             if (($signer['status'] ?? '') !== 'SIGNED') {
                 $allSigned = false;
                 break;
             }
         }//end foreach
 
-        $freshRequest = $objectService->getObject($register, $schema, $requestId);
-
-        if ($allSigned === true) {
-            $freshRequest['status'] = 'COMPLETED';
+        $freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($freshObj !== null && is_object($freshObj) === true && method_exists($freshObj, 'jsonSerialize') === true) {
+            $freshRequest = $freshObj->jsonSerialize();
         } else {
-            $freshRequest['status'] = 'IN_PROGRESS';
+            $freshRequest = (array) $freshObj;
         }
 
-        $objectService->saveObject($register, $schema, $freshRequest);
+        $freshRequest['status'] = 'IN_PROGRESS';
+        if ($allSigned === true) {
+            $freshRequest['status'] = 'COMPLETED';
+        }
+
+        $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
 
     }//end updateRequestStatus()
-
 
     /**
      * Find the signer record ID for a given user
@@ -501,7 +595,13 @@ class SigningService
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
 
         foreach ($signerIds as $signerId) {
-            $signer = $objectService->getObject($signerRegister, $signerSchema, $signerId);
+            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
+            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
+                $signer = $signerObj->jsonSerialize();
+            } else {
+                $signer = (array) $signerObj;
+            }
+
             if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
                 return $signerId;
             }
@@ -511,7 +611,6 @@ class SigningService
 
     }//end findSignerForUser()
 
-
     /**
      * Get the client IP address
      *
@@ -519,9 +618,7 @@ class SigningService
      */
     private function getClientIp(): string
     {
-        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        return $this->request->getRemoteAddress();
 
     }//end getClientIp()
-
-
 }//end class
