@@ -1,9 +1,77 @@
+---
+status: implementing
+or_adoption_change: docudesk-adopt-or-abstractions
+---
+
+# Batch Anonymization
+
 ## Purpose
 
-@e2e exclude batch anonymization API not yet exposed in the DocuDesk UI — batch upload/extraction/review flow is API-only (ICache-backed); covered by PHPUnit and API contract tests
+@e2e exclude batch anonymization API not yet exposed in the DocuDesk UI — batch upload/extraction/review flow is API-only; covered by PHPUnit and API contract tests
+
+Provides batch anonymization of multiple files in a single operation. Per-file state is tracked as **child OR objects** with `x-openregister-lifecycle` annotations (`pending → processing → success | error`). The previous `ICache`-backed status tracking is replaced by OR Background Jobs and child-object lifecycle. Maximum batch size is admin-configurable via `IAppConfig` key `docudesk.batch.max_files_per_run` (default: 100).
+
+## OR Adoption decisions (from docudesk-adopt-or-abstractions)
+
+- **Task 8** — `ICache`-backed per-file status tracking is replaced by per-file child OR objects. Each file in a batch is a child object of the `batchAnonymizationJob` schema with lifecycle states `pending → processing → success | error`. OR Background Jobs schedule and execute the batch; no custom cache TTL machinery is needed.
+- **Task 11** — `BatchStateService::CACHE_TTL` (7200) and `DEFAULT_MAX_FILES` (100) are promoted to admin-config keys `docudesk.batch.cache_ttl_seconds` and `docudesk.batch.max_files_per_run`. `CACHE_PREFIX` is dropped after the ICache state machine is removed. Default values are preserved.
+- **Decision 5** — Status strings on the wire stay the same (`pending`, `processing`, `success`, `error`). Lifecycle annotation maps these values; no renaming.
+
 ## Requirements
+
+### Requirement: Batch Job Schema Backed by OR Lifecycle (REQ-BANON-00)
+
+**Priority:** Must
+
+A `batchAnonymizationJob` schema is declared with `x-openregister-lifecycle` (states: `pending → extracting → review → anonymizing → completed | error`). Each batch job is an OR object in the `dossier` register; per-file child objects carry their own lifecycle.
+
+#### Scenario: Batch job creates an OR object on upload
+
+- **GIVEN** a user uploads 5 files to `POST /api/anonymization/batch/upload`
+- **WHEN** the batch is created
+- **THEN** a `batchAnonymizationJob` OR object SHALL be created with status `pending`
+- **AND** each file SHALL produce a child `batchAnonymizationFile` OR object with status `pending`
+- **AND** no batch state SHALL be stored in `ICache`
+
+#### Scenario: Per-file lifecycle transitions replace cache writes
+
+- **GIVEN** `BatchStateService::updateFileStatus()` previously wrote to ICache
+- **WHEN** a file is extracted
+- **THEN** the child object's lifecycle SHALL transition to `extracted` via `lifecycleService->transitionTo()`
+- **AND** `BatchStateService::CACHE_PREFIX` SHALL no longer be read or written
+
+#### Scenario: Batch status endpoint reads from OR
+
+- **GIVEN** `GET /api/anonymization/batch/{batchId}/status` is called
+- **WHEN** the batch job OR object is fetched
+- **THEN** the response includes `batchStatus` and per-file `status` from the OR child objects
+- **AND** no ICache lookup is performed
+
+#### Scenario: Max batch size from admin-config
+
+- **GIVEN** admin has set `docudesk.batch.max_files_per_run = 50`
+- **WHEN** a user uploads 51 files
+- **THEN** the system returns HTTP 400 "Batch size exceeds maximum of 50 files"
+- **AND** the limit is read from `IAppConfig`, not from `BatchStateService::DEFAULT_MAX_FILES`
+
+#### Scenario: Batch scheduling via OR Background Jobs
+
+- **GIVEN** a batch job object is created with status `pending`
+- **WHEN** OR's Background Jobs scheduler runs
+- **THEN** OR SHALL dispatch the batch anonymization job without docudesk managing its own scheduling
+- **AND** the job progress SHALL update the child object lifecycles
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| BANON-000 | `batchAnonymizationJob` schema declared with `x-openregister-lifecycle` | MUST | Implementing |
+| BANON-001 | Per-file child objects carry `pending → processing → success | error` lifecycle | MUST | Implementing |
+| BANON-002 | `BatchStateService` ICache reads/writes replaced by OR child-object lifecycle | MUST | Apply-phase |
+| BANON-003 | `CACHE_PREFIX` constant removed after apply phase | MUST | Apply-phase |
+| BANON-004 | `max_files_per_run` read from `IAppConfig docudesk.batch.max_files_per_run` (default: 100) | MUST | Apply-phase |
+| BANON-005 | OR Background Jobs schedule batch execution; docudesk does not manage its own scheduler | MUST | Apply-phase |
+
 ### Requirement: Batch creation via multi-file upload
-The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored in the user's DocuDesk/ folder. Batch state SHALL be persisted in Nextcloud ICache with a 2-hour TTL. The batch SHALL track each file's processing status independently. Maximum batch size SHALL be 100 files (admin-configurable via IAppConfig key `docudesk_batch_max_files`).
+The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored as an OR File Attachment. Batch state SHALL be persisted as OR child objects. The batch SHALL track each file's processing status via per-file lifecycle. Maximum batch size is admin-configurable via `docudesk.batch.max_files_per_run` (default: 100).
 
 #### Scenario: Upload multiple files as a batch
 - **WHEN** an authenticated user uploads 5 PDF files to `POST /api/anonymization/batch/upload`

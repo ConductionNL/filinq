@@ -14,8 +14,11 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+<<<<<<< HEAD
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
+=======
+>>>>>>> 820e564291fed1f82a1ac1cf5099f64044a7b298
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

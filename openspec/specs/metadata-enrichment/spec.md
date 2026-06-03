@@ -1,5 +1,6 @@
 ---
-status: implemented
+status: implementing
+or_adoption_change: docudesk-adopt-or-abstractions
 retrofit_extensions:
   - REQ-META-11
 ---
@@ -10,7 +11,54 @@ retrofit_extensions:
 
 @e2e exclude pure backend event-driven processing service — no dedicated UI surface; enrichment logic covered by PHPUnit unit tests
 
-Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment runs both on-demand via the API and automatically via the OpenRegister event listener. All processing is performed locally using heuristic algorithms -- no external NLP services are required.
+Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment outputs are declared as **`x-openregister-calculations`** annotations on the relevant schemas; the custom service is retained as the computation backend but MUST NOT write derived fields directly — OR's calculation engine invokes the service and stores the result. All processing is performed locally using heuristic algorithms — no external NLP services are required.
+
+## OR Adoption decisions (from docudesk-adopt-or-abstractions)
+
+- **Task 9** — Metadata enrichment is declared as a `x-openregister-calculations` annotation rather than a custom service that writes fields ad-hoc. Each enrichment output (language, keywords, documentType, topicCategory, dates) is a declared calculation whose expression calls the relevant `MetadataEnrichmentService` method. The service remains in docudesk as the domain algorithm; OR's calculation engine dispatches it and persists the result.
+- **Rationale** — This follows ADR-031 (schema-declarative business logic). The enrichment outputs are derived/virtual fields that fit `x-openregister-calculations` exactly. The service is NOT removed — it is the computation backend. Only the wiring changes: instead of the event listener writing `$object['language'] = $lang` directly, it declares `language` as a calculation and OR invokes the service.
+
+### Requirement: Enrichment Outputs as OR Calculations (REQ-META-CAL)
+
+**Priority:** Must (Phase 2 — gated on OR shipping ADR-031 calculation runtime)
+
+Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and normalised date fields SHALL be declared as `x-openregister-calculations` on the file-attachment schema (or the enriched object's schema). The `MetadataEnrichmentService` methods become calculation expressions.
+
+#### Scenario: Language is a calculation
+
+- **GIVEN** `x-openregister-calculations.language` is declared on the enriched object schema
+- **WHEN** a new object is created
+- **THEN** OR SHALL invoke `MetadataEnrichmentService::detectLanguage($object['text'])`
+- **AND** the result SHALL be stored as `language` on the object
+- **AND** the event listener SHALL NOT contain a `$object['language'] = ...` write
+
+#### Scenario: Keyword extraction is a calculation
+
+- **GIVEN** `x-openregister-calculations.keywords` is declared
+- **WHEN** OR's calculation engine runs after object creation
+- **THEN** `MetadataEnrichmentService::extractKeywords($object['text'])` SHALL be called
+- **AND** the keywords array SHALL be stored by OR, not by the event listener directly
+
+#### Scenario: Skip-if-populated preserved
+
+- **GIVEN** an object already has `language: "nl"` set
+- **WHEN** OR evaluates the `language` calculation
+- **THEN** the calculation SHOULD be a no-op (OR calculation engine respects pre-populated fields)
+- **AND** the existing value is preserved
+
+#### Scenario: Feature toggle respected
+
+- **GIVEN** `enable_language_detection` is `0` in admin settings
+- **WHEN** OR's calculation engine would invoke the language calculation
+- **THEN** the calculation expression SHALL call `IAppConfig::getValueBool('docudesk', 'enable_language_detection', true)` before proceeding
+- **AND** if disabled, the calculation returns `null` (no write)
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| META-CAL-001 | `x-openregister-calculations` declared for: language, keywords, documentType, topicCategory, normalised dates | MUST | Implementing |
+| META-CAL-002 | MetadataEnrichmentService methods called as calculation expressions, not ad-hoc event-listener writes | MUST | Apply-phase |
+| META-CAL-003 | Feature toggles (`enable_*`) checked inside the calculation expression | MUST | Apply-phase |
+| META-CAL-004 | Skip-if-populated logic preserved via OR calculation semantics | MUST | Apply-phase |
 
 ## Requirements
 

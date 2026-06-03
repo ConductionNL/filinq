@@ -76,5 +76,11 @@
     "title": "Template Management",
     "summary": "Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a `namespace` field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service. Consumer apps access templates via the `TemplateService` (DI container) or the REST API.",
     "docsUrl": "openspec/specs/template-management/spec.md"
+  },
+  {
+    "slug": "dossier-register",
+    "title": "Dossier Register",
+    "summary": "Introduces the dossier register — a structured object per anonymisation folder carrying four fields (name, description, bases[], checkedOn) plus a base register with the six canonical Woo Art. 5 grondslagen. Dossiers are bound to Nextcloud folders via OpenRegister's @self.folder mechanism. No new PHP code; all CRUD rides on the generic /api/objects/{register} routes. Seed data covers the three ADR-016 personas (municipality, consultancy, travel agency).",
+    "docsUrl": "openspec/changes/add-dossier-schema/specs/dossier-register/spec.md"
   }
 ]
