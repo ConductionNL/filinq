@@ -227,25 +227,7 @@ export const useAnonymizationStore = defineStore(
                  * @spec openspec/specs/anonymization/spec.md#requirement-frontend-file-processing-queue-req-anon-10
                  */
 			async addFiles(fileList) {
-				const newEntries = Array.from(fileList).map(
-					(file) => ({
-						id: `file - ${++fileCounter}`,
-						name: file.name,
-						status: 'queued',
-						error: null,
-						fileId: null,
-						filePath: null,
-						entities: [],
-						entityCount: 0,
-						replacementCount: 0,
-						anonymizedFileId: null,
-						anonymizedFileName: null,
-						anonymizedFilePath: null,
-						_file: file,
-						// Keep reference for upload.
-					}),
-				)
-
+				const newEntries = Array.from(fileList).map((file) => makeEntry(file, null))
 				this.files.push(...newEntries)
 				await this.processQueue()
 			},
@@ -303,12 +285,12 @@ export const useAnonymizationStore = defineStore(
 						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
 					)
 
-					const entities = extractResponse.data.entities || []
-					entry.entities = entities
-					entry.entityCount = entities.length
+					const raw = extractResponse.data.entities || []
+					entry.entities = decorateEntities(raw)
+					entry.entityCount = entry.entities.length
 
 					// No entities? Mark complete.
-					if (entities.length === 0) {
+					if (raw.length === 0) {
 						entry.status = 'completed'
 						return
 					}
@@ -317,7 +299,7 @@ export const useAnonymizationStore = defineStore(
 					entry.status = 'anonymizing'
 					const anonymizeResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),
-						{ entities },
+						{ entities: raw },
 					)
 
 					entry.anonymizedFileId = anonymizeResponse.data.anonymizedFileId
@@ -604,6 +586,24 @@ export const useAnonymizationStore = defineStore(
 					return
 				}
 				entry.entities[idx]._decisionSkip = !!skip
+			},
+
+			/**
+			 * Add a synthetic queue entry for a file that was opened from the
+			 * navigation (not uploaded this session). Starts in `extracting`
+			 * state so the sidebar can render a skeleton until the backend
+			 * returns its cached entities.
+			 *
+			 * @param {object} fileMeta File descriptor from the viewer store.
+			 * @param {number} fileMeta.fileId Nextcloud file id.
+			 * @param {string} fileMeta.fileName File name with extension.
+			 * @param {string} fileMeta.path Absolute path inside the user's storage.
+			 * @return {object} The created queue entry.
+			 */
+			ensureExtracted(fileMeta) {
+				const entry = makeSyntheticEntry(fileMeta)
+				this.files.push(entry)
+				return entry
 			},
 
 			/**

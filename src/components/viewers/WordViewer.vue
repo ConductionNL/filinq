@@ -31,6 +31,7 @@ let mammothPromise = null
  */
 async function loadMammoth() {
 	if (!mammothPromise) {
+		// eslint-disable-next-line import/no-unresolved
 		mammothPromise = import('mammoth/mammoth.browser.js')
 	}
 	return mammothPromise
@@ -131,36 +132,5 @@ export default {
 	font-family: 'Calibri', 'Arial', sans-serif;
 	font-size: 14px;
 	line-height: 1.6;
-}
-</style>
-
-<style>
-/* Unscoped: mammoth writes raw HTML so we cannot rely on our scope hash. */
-.word-viewer__content h1,
-.word-viewer__content h2,
-.word-viewer__content h3 {
-	margin-top: 1.2em;
-	margin-bottom: 0.4em;
-	color: #000;
-}
-
-.word-viewer__content p {
-	margin: 0 0 1em 0;
-}
-
-.word-viewer__content table {
-	border-collapse: collapse;
-	margin: 1em 0;
-}
-
-.word-viewer__content table td,
-.word-viewer__content table th {
-	border: 1px solid #ddd;
-	padding: 6px 10px;
-}
-
-.word-viewer__content img {
-	max-width: 100%;
-	height: auto;
 }
 </style>
