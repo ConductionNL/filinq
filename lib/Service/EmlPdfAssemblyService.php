@@ -699,6 +699,26 @@ class EmlPdfAssemblyService
                 '<img$1',
                 $resolvedBody
             );
+            // Strip srcset with external http(s) URLs (alternate SSRF vector on <img>).
+            $resolvedBody = (string) preg_replace(
+                '/(\s)srcset=(["\'])[^"\']+\2/i',
+                '$1',
+                $resolvedBody
+            );
+            // Strip CSS url() referencing external http(s) resources (backgrounds,
+            // @font-face src, etc.) — mPDF fetches these during rendering.
+            $resolvedBody = (string) preg_replace(
+                '/\burl\(\s*(["\']?)https?:\/\/[^\)\'"]+\1\s*\)/i',
+                'url()',
+                $resolvedBody
+            );
+            // Strip <link> tags pointing to external http(s) resources (remote
+            // stylesheets, icon links, etc.) — mPDF follows href on <link> tags.
+            $resolvedBody = (string) preg_replace(
+                '/<link\b[^>]*\bhref=(["\'])https?:\/\/[^"\']+\1[^>]*\/?>/i',
+                '',
+                $resolvedBody
+            );
             $bodySection  = $resolvedBody;
         } else if ($plainBody !== null && $plainBody !== '') {
             $escaped     = htmlspecialchars($plainBody, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
