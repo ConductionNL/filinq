@@ -135,6 +135,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase
             $this->createMock(WooProfileService::class),
             $this->mockFolderService,
             $this->mockL10n,
+            $this->createMock(\OCP\IAppConfig::class),
             $mockUserSession
         );
 

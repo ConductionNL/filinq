@@ -116,7 +116,8 @@ class AnonymizationServiceProhibitionTest extends TestCase
             consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
             consentService: $this->createMock(originalClassName: ConsentService::class),
             grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
-            fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class)
+            fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class),
+            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class)
         );
 
     }//end makeService()

@@ -157,45 +157,54 @@ class SettingsService
     private function loadFeatureToggles(): array
     {
         return [
-            'publication_objection_period_days' => (int) $this->config->getValueString(
+            'publication_objection_period_days'            => (int) $this->config->getValueString(
                 $this->appName,
                 'publication_objection_period_days',
                 '28'
             ),
-            'enable_language_detection'         => $this->config->getValueString(
+            'enable_language_detection'                    => $this->config->getValueString(
                 $this->appName,
                 'enable_language_detection',
                 '1'
             ) === '1',
-            'enable_keyword_extraction'         => $this->config->getValueString(
+            'enable_keyword_extraction'                    => $this->config->getValueString(
                 $this->appName,
                 'enable_keyword_extraction',
                 '1'
             ) === '1',
-            'enable_topic_classification'       => $this->config->getValueString(
+            'enable_topic_classification'                  => $this->config->getValueString(
                 $this->appName,
                 'enable_topic_classification',
                 '1'
             ) === '1',
-            'signing_enabled'                   => $this->config->getValueString(
+            'signing_enabled'                              => $this->config->getValueString(
                 $this->appName,
                 'signing_enabled',
                 '0'
             ) === '1',
-            'signing_provider'                  => $this->config->getValueString(
+            'signing_provider'                             => $this->config->getValueString(
                 $this->appName,
                 'signing_provider',
                 'native'
             ),
-            'signing_default_level'             => $this->config->getValueString(
+            'signing_default_level'                        => $this->config->getValueString(
                 $this->appName,
                 'signing_default_level',
                 'SES'
             ),
-            'signing_request_expiry_days'       => (int) $this->config->getValueString(
+            'signing_request_expiry_days'                  => (int) $this->config->getValueString(
                 $this->appName,
                 'signing_request_expiry_days',
                 '30'
+            ),
+            // Anonymise-output-as-pdf-by-default — tenant-wide default
+            // for the anonymise endpoint's `outputFormat` request param.
+            // 'pdf' converts the anonymised output via the cascade;
+            // 'preserve' returns it in the native input format.
+            'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
+                $this->appName,
+                'docudesk.anonymisation.default_output_format',
+                'pdf'
             ),
         ];
 
