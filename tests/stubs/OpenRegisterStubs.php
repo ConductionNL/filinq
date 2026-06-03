@@ -699,6 +699,20 @@ interface Node
     public function getPermissions(): int;
 
     public function getMimeType(): string;
+
+    /**
+     * Get the parent folder.
+     *
+     * @return \OCP\Files\Folder
+     */
+    public function getParent(): \OCP\Files\Folder;
+
+    /**
+     * Delete this node.
+     *
+     * @return void
+     */
+    public function delete(): void;
 }//end interface
 
 
@@ -739,4 +753,3 @@ interface IRootFolder
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
-

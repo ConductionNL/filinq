@@ -27,6 +27,7 @@ use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
+use OCA\DocuDesk\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\DocuDesk\Service\Conversion\MpdfBackend;
 use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
 use OCA\DocuDesk\Service\Conversion\PhpWordBackend;
@@ -94,17 +95,17 @@ class Application extends App implements IBootstrap
         // Order matters: PdfConversionService walks the list left-to-
         // right, returning the first success and aggregating failures
         // into a ConversionFailedException. See
-        // openspec/changes/anonymise-output-as-pdf-by-default/design.md (D2).
+        // openspec/changes/pdf-conversion-service/design.md (D1).
         //
         // Cascade:
-        // 1. OfficeAppBackend  — Collabora / OnlyOffice / Euro Office
-        // via Nextcloud's IConversionManager
-        // (NC 31+ providers register here).
-        // 2. PhpWordBackend    — DOC / DOCX / ODT / RTF / HTML via
+        // 1. OfficeAppBackend            — Collabora / OnlyOffice / Euro Office
+        // via Nextcloud's IConversionManager (NC 31+).
+        // 2. LibreOfficeHeadlessBackend  — soffice --headless with lock + timeout.
+        // 3. PhpWordBackend              — DOC / DOCX / ODT / RTF / HTML via
         // PhpOffice\PhpWord + mPDF.
-        // 3. MpdfBackend       — HTML / TXT direct via mPDF (reuses
+        // 4. MpdfBackend                 — HTML / TXT direct via mPDF (reuses
         // PdfService's PDF/A-3b config).
-        // 4. EmlBackend        — stub; activates when OR ships its
+        // 5. EmlBackend                  — stub; activates when OR ships its
         // message/rfc822 text extractor.
         $context->registerService(
             PdfConversionService::class,
@@ -129,6 +130,11 @@ class Application extends App implements IBootstrap
                             rootFolder: $c->get(\OCP\Files\IRootFolder::class),
                             userSession: $c->get(\OCP\IUserSession::class),
                             appConfig: $c->get(\OCP\IAppConfig::class),
+                            logger: $c->get(LoggerInterface::class),
+                        ),
+                        new LibreOfficeHeadlessBackend(
+                            appConfig: $c->get(\OCP\IAppConfig::class),
+                            lockingProvider: $c->get(\OCP\Lock\ILockingProvider::class),
                             logger: $c->get(LoggerInterface::class),
                         ),
                         new PhpWordBackend(

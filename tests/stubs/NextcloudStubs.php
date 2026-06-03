@@ -965,3 +965,180 @@ interface IConfig
      */
     public function deleteUserValue(string $userId, string $appName, string $key): void;
 }//end interface
+
+namespace OCP;
+
+/**
+ * Stub for OCP\ITempManager
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ITempManager
+{
+    /**
+     * Create a temporary file with optional suffix.
+     *
+     * @param string $postFix File suffix including dot (e.g. ".docx").
+     *
+     * @return string|false Absolute path to the temporary file.
+     */
+    public function getTemporaryFile(string $postFix='');
+
+    /**
+     * Create a temporary directory.
+     *
+     * @param string $postFix Directory name suffix.
+     *
+     * @return string|false Absolute path to the temporary directory.
+     */
+    public function getTemporaryFolder(string $postFix='');
+}//end interface
+
+namespace OCP\Lock;
+
+/**
+ * Stub for OCP\Lock\LockedException
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class LockedException extends \RuntimeException
+{
+    /**
+     * Constructor.
+     *
+     * @param string          $path     The path that is locked.
+     * @param \Throwable|null $previous Previous exception if any.
+     * @param string          $lockType Lock type identifier.
+     */
+    public function __construct(string $path, ?\Throwable $previous=null, string $lockType='')
+    {
+        parent::__construct(
+            message: 'The path "'.$path.'" is currently locked, please try again later.',
+            code: 0,
+            previous: $previous
+        );
+
+    }//end __construct()
+}//end class
+
+/**
+ * Stub for OCP\Lock\ILockingProvider
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ILockingProvider
+{
+
+    public const LOCK_SHARED    = 1;
+    public const LOCK_EXCLUSIVE = 2;
+
+    /**
+     * Acquire a lock on the given path.
+     *
+     * @param string $path         Path to lock.
+     * @param int    $type         Lock type (LOCK_SHARED or LOCK_EXCLUSIVE).
+     * @param string $readablePath Human-readable path (optional).
+     *
+     * @return void
+     *
+     * @throws LockedException When the lock cannot be acquired.
+     */
+    public function acquireLock(string $path, int $type, string $readablePath='');
+
+    /**
+     * Release a lock on the given path.
+     *
+     * @param string $path Path to unlock.
+     * @param int    $type Lock type.
+     *
+     * @return void
+     */
+    public function releaseLock(string $path, int $type): void;
+
+    /**
+     * Change the lock type on the given path.
+     *
+     * @param string $path Path to change lock on.
+     * @param int    $type New lock type.
+     *
+     * @return void
+     */
+    public function changeLock(string $path, int $type): void;
+}//end interface
+
+namespace OCP\Files\Conversion;
+
+/**
+ * Stub for OCP\Files\Conversion\ConversionMimeProvider
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ConversionMimeProvider
+{
+    /**
+     * Return the source MIME type.
+     *
+     * @return string
+     */
+    public function getFrom(): string;
+
+    /**
+     * Return the target MIME type.
+     *
+     * @return string
+     */
+    public function getTo(): string;
+}//end interface
+
+/**
+ * Stub for OCP\Files\Conversion\IConversionManager
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IConversionManager
+{
+    /**
+     * Check whether any conversion providers are registered.
+     *
+     * @return bool
+     */
+    public function hasProviders(): bool;
+
+    /**
+     * Return all registered MIME-provider pairs.
+     *
+     * @return ConversionMimeProvider[]
+     */
+    public function getProviders(): array;
+
+    /**
+     * Convert a file to the target MIME type.
+     *
+     * @param \OCP\Files\File $file        Source file.
+     * @param string          $targetMime  Target MIME type.
+     * @param string          $destination Destination path.
+     *
+     * @return string Path to the converted file.
+     */
+    public function convert(\OCP\Files\File $file, string $targetMime, string $destination): string;
+}//end interface
