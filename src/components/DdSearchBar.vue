@@ -1,6 +1,6 @@
 <template>
 	<div class="dd-search-bar" :class="{ 'dd-search-bar--has-value': hasValue }">
-		<DdIcon name="search" :size="18" class="dd-search-bar__icon" />
+		<DdIcon name="search" :size="24" class="dd-search-bar__icon" />
 		<input
 			ref="input"
 			v-model="localValue"
@@ -159,10 +159,14 @@ export default {
 .dd-search-bar__input {
 	width: 100%;
 	padding: 10px 40px 10px 40px;
-	border: 1px solid var(--color-border);
+	border: 1px solid var(--dd-search-bar-border, #D9D9D9);
 	border-radius: 999px;
-	background: var(--color-main-background);
+	background: var(--color-main-background, #FFF);
 	font-size: 14px;
+	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	min-width: 392px;
+	max-width: 100%;
+	min-height: 40px;
 }
 
 .dd-search-bar__input:focus {

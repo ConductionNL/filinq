@@ -81,8 +81,10 @@ export default {
 .dd-page-header__text {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: 2px;
 	min-width: 0;
+	min-height: 40px;
 	flex: 1;
 }
 

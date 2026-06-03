@@ -421,6 +421,18 @@ export default {
 	display: none !important;
 }
 
+/* Solid white header to match the viewer's FileViewerHeader. The sidebar
+ * body keeps the translucent card background (set above); only the header
+ * band is opaque white so the two headers read as one toolbar row. */
+:deep(.app-sidebar-header) {
+	/* `.app-sidebar` re-points --color-main-background to white-54, so a var
+	 * reference here would stay translucent. The card design is white-on-white
+	 * regardless of theme, so use opaque white for the header band. */
+	background: #fff;
+	border-top-left-radius: 20px;
+	border-top-right-radius: 20px;
+}
+
 .file-viewer-sidebar {
 	padding: 12px 16px;
 }
