@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Behavior changes
+- **Folder-analysis anonymisation outputs now land in a subfolder.** Redacted files are written to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<base>_anonymized.<ext>`. The subfolder name is tenant-configurable via `docudesk.anonymisation.output_subfolder_name` (default `anonymised`). Single-file anonymisation is unchanged. (`anonymisation-folder-output-folder-layout`)
+- **Folder source-discovery excludes `_anonymized`-suffixed files.** Legacy redacted outputs from pre-layout runs are no longer included as sources for re-anonymisation; they are left as-is for operator cleanup. (`anonymisation-folder-output-folder-layout`)
+- **Response field `anonymizedFilePath` reflects the subfolder location.** After a successful post-process move, `anonymizedFilePath` in the batch file entry points into the `anonymised/` subfolder. On move failure (permissions, disk error), the path is the legacy location and a `warning` field with `code: "MOVE_FAILED"` is attached to the file entry. (`anonymisation-folder-output-folder-layout`)
+
 ### Added
 - **`prohibitionMatch` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
   Each consolidated entity now carries a `prohibitionMatch` field: `null` when no publication-prohibition rule matches, or `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when the entity's `highestConfidence` is at or above the configured threshold (`docudesk.prohibition.high_confidence_threshold`, default 0.85). The frontend review UI uses this to render prohibition-locked entities without re-running the matcher client-side. (`anonymisation-entity-review-prohibition-hints`)

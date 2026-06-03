@@ -138,17 +138,32 @@ POST /api/anonymization/batch/{batchId}/anonymize
 
 ## Anonymized Output
 
-Anonymized files are saved **in the same folder** as the originals with the `_anonymized` suffix:
+Anonymized files are saved in a **dedicated subfolder** under the source folder with their original filename (no `_anonymized` suffix):
 
 ```
 /Documents/WOB-2024/
-  report.pdf              (original)
-  report_anonymized.pdf   (anonymized copy)
-  letter.docx             (original)
-  letter_anonymized.docx  (anonymized copy)
+  report.pdf              (original, unchanged)
+  letter.docx             (original, unchanged)
+  anonymised/
+    report.pdf            (anonymized copy)
+    letter.docx           (anonymized copy)
 ```
 
+The subfolder name defaults to `anonymised` and is tenant-configurable via the admin settings (config key `docudesk.anonymisation.output_subfolder_name`). See the [batch anonymization docs](batch-anonymization.md) for shared configuration details.
+
 Original files are never modified.
+
+### Source-discovery filter
+
+Files whose base name ends with `_anonymized` (legacy outputs from pre-layout runs) are **excluded** from folder source discovery. This prevents re-anonymising legacy redacted files in a re-run. Legacy files are left as-is; operators may delete or rename them manually.
+
+### Move-failure fallback
+
+When the post-anonymisation move to the subfolder fails (permissions, disk error), the anonymised file is preserved at its legacy path (`<source>/<base>_anonymized.<ext>`) and the per-file response includes a `warning` field with `code: "MOVE_FAILED"`. The anonymisation itself is still counted as successful.
+
+### Background job behaviour
+
+The background `FolderExtractionJob` applies the same source-discovery filter: `_anonymized`-suffixed files in the source folder are skipped during the extraction phase. Per-job retry is idempotent — if a file is already extracted, the retry skips it without re-processing.
 
 ## Batch State
 

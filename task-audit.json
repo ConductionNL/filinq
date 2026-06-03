@@ -1,20 +1,79 @@
 {
-  "spec": "openspec/changes/anonymisation-entity-review-prohibition-hints",
+  "spec": "openspec/changes/anonymisation-folder-output-folder-layout",
   "verified": [
-    {"task": "1", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "1", "file": "lib/Service/PolicyMatchService.php", "ok": true},
-    {"task": "2", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "3", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "4", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "5", "file": "tests/unit/Service/BasesResolverServiceTest.php", "ok": true},
-    {"task": "6", "file": "tests/unit/Service/EntityConsolidationProhibitionTest.php", "ok": true},
-    {"task": "8", "file": "docs/features/anonymization-entity-review.md", "ok": true},
-    {"task": "8", "file": "CHANGELOG.md", "ok": true},
-    {"task": "9", "file": "lib/", "ok": true, "note": "398 tests pass; 14 hydra gates green"}
+    {
+      "task": "1",
+      "file": "lib/Service/BatchAnonymizeService.php",
+      "ok": true,
+      "note": "postProcessMove() added to BatchAnonymizeService — covers folder-origin batches because folder batches go through BatchAnonymizeService.anonymizeBatch(). OutputLayoutResolver dependency injected."
+    },
+    {
+      "task": "2",
+      "file": "lib/BackgroundJob/FolderExtractionJob.php",
+      "ok": true,
+      "note": "Source-discovery filter added to FolderExtractionJob.run(). Idempotency preserved: files with status != 'uploaded' are skipped; retry can re-process files still at legacy status."
+    },
+    {
+      "task": "3",
+      "file": "lib/Service/FolderBatchService.php",
+      "ok": true,
+      "note": "Source-discovery filter in enumerateFiles() uses OutputLayoutResolver.hasAnonymizedSuffix(). Same helper used in FolderExtractionJob — single source of truth, no drift."
+    },
+    {
+      "task": "3",
+      "file": "lib/BackgroundJob/FolderExtractionJob.php",
+      "ok": true,
+      "note": "Source-discovery filter applied via OutputLayoutResolver.hasAnonymizedSuffix() in run() loop."
+    },
+    {
+      "task": "3",
+      "file": "lib/Service/Conversion/OutputLayoutResolver.php",
+      "ok": true,
+      "note": "hasAnonymizedSuffix() shared filter method — single implementation, used by both FolderBatchService and FolderExtractionJob."
+    },
+    {
+      "task": "4",
+      "file": "lib/Service/BatchAnonymizeService.php",
+      "ok": true,
+      "note": "anonymizedFilePath in batch state is updated to the subfolder path after move. On move failure, legacy path is recorded with warning."
+    },
+    {
+      "task": "5",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "Verified by inspection — AnonymizationService.anonymizeDocument() is NOT modified. Single-file endpoint unchanged."
+    },
+    {
+      "task": "6",
+      "file": "tests/unit/Service/FolderBatchServiceTest.php",
+      "ok": true,
+      "note": "Added testSourceDiscoveryExcludesAnonymizedSuffixedFiles and testSourceDiscoveryAllFilteredThrowsNoFiles. Updated constructor to include OutputLayoutResolver."
+    },
+    {
+      "task": "6",
+      "file": "tests/unit/Service/BatchAnonymizeServiceTest.php",
+      "ok": true,
+      "note": "Added testPostProcessMoveReturnsLegacyPathWhenNoUser and testPostProcessMoveSetsLegacyPathWhenAnonymizedFileIdIsNull covering move-failure and fallback paths."
+    },
+    {
+      "task": "7",
+      "file": "tests/unit/BackgroundJob/FolderExtractionJobTest.php",
+      "ok": true,
+      "note": "Added testSkipsLegacyAnonymizedSuffixedFiles and testRetryIsIdempotentForAlreadyExtractedFiles."
+    },
+    {
+      "task": "9",
+      "file": "docs/features/folder-analysis-anonymization.md",
+      "ok": true,
+      "note": "Updated Anonymized Output section with subfolder layout, source-discovery filter, move-failure fallback, and background job behaviour."
+    },
+    {
+      "task": "9",
+      "file": "CHANGELOG.md",
+      "ok": true,
+      "note": "Added Behavior changes entries for folder-analysis output layout, source-discovery filter, and anonymizedFilePath recording."
+    }
   ],
   "stubs": [],
-  "missing_routes": [],
-  "skipped": [
-    {"task": "7", "reason": "Newman integration tests require live Nextcloud+OpenRegister; marked pending in tasks.md"}
-  ]
+  "missing_routes": []
 }
