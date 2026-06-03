@@ -44,6 +44,8 @@ use Throwable;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
  */
 class NativeSigningProvider implements SigningProviderInterface
 {
@@ -68,6 +70,8 @@ class NativeSigningProvider implements SigningProviderInterface
      * Get provider identifier
      *
      * @return string The provider identifier
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
      */
     public function getIdentifier(): string
     {

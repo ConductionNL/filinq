@@ -32,6 +32,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
  */
 class ValidSignProvider implements SigningProviderInterface
 {
@@ -52,6 +54,8 @@ class ValidSignProvider implements SigningProviderInterface
      * Get provider identifier
      *
      * @return string The provider identifier
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function getIdentifier(): string
     {

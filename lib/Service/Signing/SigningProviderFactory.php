@@ -32,6 +32,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
  */
 class SigningProviderFactory
 {
@@ -106,6 +108,8 @@ class SigningProviderFactory
      * Get all available provider identifiers
      *
      * @return array<string> List of provider identifiers
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getAvailableProviders(): array
     {

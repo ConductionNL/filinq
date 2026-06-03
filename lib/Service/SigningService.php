@@ -40,6 +40,8 @@ use RuntimeException;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
  */
 class SigningService
 {
