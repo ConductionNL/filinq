@@ -1,20 +1,17 @@
 {
-  "spec": "openspec/changes/anonymisation-entity-review-prohibition-hints",
+  "spec": "openspec/changes/consent-create-idempotency-and-notes",
   "verified": [
-    {"task": "1", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "1", "file": "lib/Service/PolicyMatchService.php", "ok": true},
-    {"task": "2", "file": "lib/Service/EntityConsolidationService.php", "ok": true},
-    {"task": "3", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "4", "file": "lib/Service/BasesResolverService.php", "ok": true},
-    {"task": "5", "file": "tests/unit/Service/BasesResolverServiceTest.php", "ok": true},
-    {"task": "6", "file": "tests/unit/Service/EntityConsolidationProhibitionTest.php", "ok": true},
-    {"task": "8", "file": "docs/features/anonymization-entity-review.md", "ok": true},
-    {"task": "8", "file": "CHANGELOG.md", "ok": true},
-    {"task": "9", "file": "lib/", "ok": true, "note": "398 tests pass; 14 hydra gates green"}
+    {"task": "1", "file": "lib/Service/ConsentService.php", "ok": true, "note": "findExistingConsent() + update/create routing implemented"},
+    {"task": "2", "file": "lib/Service/ConsentService.php", "ok": true, "note": "PRESERVED_FIELDS constant guards workflow state; updateExistingConsent() re-evaluates policyMatch"},
+    {"task": "3", "file": "lib/Service/ConsentNotesHelper.php", "ok": true, "note": "updateSentinelRegion() + stripSentinelRegion() with DOTALL PCRE; buildSentinelBlock() for write"},
+    {"task": "4", "file": "lib/Service/ConsentService.php", "ok": true, "note": "publicationBases[0] → legalBasis via truncateAtWordBoundary(); [1..N] → sentinel via ConsentNotesHelper"},
+    {"task": "5", "file": "lib/Service/ConsentService.php", "ok": true, "note": "New records get notificationStatus=pending; no sendMail/dispatch call added"},
+    {"task": "6", "file": "tests/unit/Service/ConsentServiceTest.php", "ok": true, "note": "20 new idempotency tests covering create/update/workflow-preserve/policyMatch/prohibition/scope-entity-exclusion"},
+    {"task": "7", "file": "tests/unit/Service/ConsentNotesHelperTest.php", "ok": true, "note": "10 unit tests covering all sentinel scenarios from tasks.md#task-7"},
+    {"task": "8", "file": "tests/newman/docudesk-api.postman_collection.json", "ok": true, "note": "3 Newman tests: first-call-creates, second-call-updates, single-basis-no-sentinel"},
+    {"task": "9", "file": "docs/features/publication-consent-process.md", "ok": true, "note": "Idempotency contract + sentinel format documented; CHANGELOG updated"},
+    {"task": "10", "file": "lib/Service/ConsentService.php", "ok": true, "note": "417 unit tests passing; 14 hydra gates green; phpcs clean; Psalm/PHPStan fixed (removed unused UPDATABLE_FIELDS, buildConsentData(), ?? on known keys)"}
   ],
   "stubs": [],
-  "missing_routes": [],
-  "skipped": [
-    {"task": "7", "reason": "Newman integration tests require live Nextcloud+OpenRegister; marked pending in tasks.md"}
-  ]
+  "missing_routes": []
 }
