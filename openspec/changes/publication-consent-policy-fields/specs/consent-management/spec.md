@@ -6,7 +6,7 @@ status: draft
 
 This delta extends the existing `consent-management` capability so the `publicationConsent` schema can model both per-document workflow records (today's behavior) and entity-level standing consents (new). It also adds a polymorphic `policyMatch` reference that, together with `notificationStatus`, discriminates "this record was pre-empted by a policy" from "this record went through the WOO workflow" — without introducing any new `consentStatus` enum values.
 
-All requirements in this delta apply within publication-clearance flows. Generic anonymisation flows do not invoke `ConsentService::createConsentRequest()`, do not create `publicationConsent` records, and therefore do not interact with this policy layer.
+All requirements in this delta apply within publication-clearance flows. Generic anonymisation flows do not invoke `ConsentService::createConsentRequest()`, do not create `publicationConsent` records, and therefore do not participate in the publication-clearance workflow. Generic anonymisation flows MAY read `publicationProhibition` records from the consent register as a data source for safety checks (e.g. the prohibition gate specced in `anonymisation-prohibition-gate`); read access to a register is not workflow integration and does not trigger any of the requirements in this delta.
 
 ## ADDED Requirements
 

@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\ProhibitionGateException;
 use OCA\DocuDesk\Service\BatchAnonymizeService;
 use OCA\DocuDesk\Service\BatchExtractionService;
 use OCA\DocuDesk\Service\BatchReportService;
@@ -121,7 +122,6 @@ class BatchAnonymizationController extends Controller
      * Supported values for the `outputFormat` request param.
      */
     private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
-
 
     /**
      * Accept a multipart upload and create a new anonymization batch.
@@ -356,11 +356,13 @@ class BatchAnonymizationController extends Controller
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
 
@@ -394,6 +396,15 @@ class BatchAnonymizationController extends Controller
                 );
             }
 
+            // Parse and validate acknowledgedOverrides.
+            $acknowledgedOverrides = $params['acknowledgedOverrides'] ?? [];
+            if (is_array($acknowledgedOverrides) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides must be an array')],
+                    400
+                );
+            }
+
             // Anonymise-output-as-pdf-by-default: per-batch outputFormat.
             // Per-call value overrides tenant default; missing/invalid
             // values mirror AnonymizationController semantics.
@@ -422,7 +433,9 @@ class BatchAnonymizationController extends Controller
                 entities: $entities,
                 appendBasisSummary: $appendBasisSummary,
                 unredactedEntities: $unredactedEntities,
-                outputFormat: $outputFormat
+                outputFormat: $outputFormat,
+                acknowledgedOverrides: $acknowledgedOverrides,
+                userId: $user->getUID()
             );
 
             $httpStatus = $this->resolveBatchHttpStatus(result: $batchResult);
@@ -501,7 +514,6 @@ class BatchAnonymizationController extends Controller
         return $tenantDefault;
 
     }//end resolveOutputFormat()
-
 
     /**
      * Produce the CSV anonymization report for a batch as a file download.

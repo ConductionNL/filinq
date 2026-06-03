@@ -11,7 +11,7 @@ Defines a policy layer that pre-empts the publication-clearance workflow at dete
 1. A new `publicationProhibition` schema for entity-level deny rules.
 2. A new `scope: "entity"` flavor of the existing `publicationConsent` schema for entity-level standing consents (specified in the `consent-management` delta of this change).
 
-The policy layer is consulted only inside publication-clearance flows — specifically by `ConsentService::createConsentRequest()` and its caller. Generic anonymisation flows (file sanitisation, redaction-on-share) do not invoke this entry point and therefore do not consult these policies. This capability defines: the prohibition schema, the detection-time matching contract, the deterministic conflict-resolution rule (prohibition wins), the asymmetric retroactive-application semantics, the UI toggle behavior, and the three separate admin surfaces.
+The policy layer is consulted only inside publication-clearance flows — specifically by `ConsentService::createConsentRequest()` and its caller. Generic anonymisation flows (file sanitisation, redaction-on-share) do not invoke `createConsentRequest()` and therefore do not create `publicationConsent` records or pre-empt any workflow. They MAY read `publicationProhibition` records as a data source for safety checks (e.g. the prohibition gate specced in `anonymisation-prohibition-gate`); read access to a register is not workflow integration. This capability defines: the prohibition schema, the detection-time matching contract, the deterministic conflict-resolution rule (prohibition wins), the asymmetric retroactive-application semantics, the UI toggle behavior, and the three separate admin surfaces.
 
 ## Current State
 
@@ -325,7 +325,7 @@ This change MUST NOT modify:
 - Retroactive sweep of already-published documents — never touched.
 - The OpenRegister codebase — the polymorphic-reference pattern via `items.oneOf` + `$ref` already exists.
 - The publication-prep flow that calls `createConsentRequest()` — separate change. This capability assumes the entry point and specifies what it does when called.
-- Generic anonymisation flows (file sanitisation not destined for publication) — these do not invoke `createConsentRequest()` and therefore do not consult this policy layer.
+- Generic anonymisation flows (file sanitisation not destined for publication) — these do not invoke `createConsentRequest()` and therefore do not create `publicationConsent` records or pre-empt any workflow. They MAY read the `publicationProhibition` list as a data source for safety checks (e.g. the prohibition gate specced in `anonymisation-prohibition-gate`); read access to a register is not workflow integration.
 - The WOO workflow for entities that match no policy — runs unchanged for `scope: "document"` records with `policyMatch: null`.
 
 #### Scenario: Existing WOO flow is unaffected for unmatched entities

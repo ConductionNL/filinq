@@ -3,6 +3,13 @@
 ## Unreleased
 
 ### Added
+- **Prohibition gate on the anonymise endpoint.** High-confidence (≥ 0.85 by default) `publicationProhibition` matches that are missing from the to-be-anonymised `entities[]` are now blocked with HTTP 422. The 422 body lists `missingProhibitionMatches` (by OpenRegister Entity canonical name, not literal document text) and any `rejectedOverrides`. Threshold configurable via `docudesk.prohibition.high_confidence_threshold`. (`anonymisation-prohibition-gate`)
+- **`acknowledgedOverrides[]` on the anonymise endpoint.** Operators can release low-confidence prohibition matches by passing `{ruleId, entityId, reason?}` entries. Each valid override writes a DocuDesk-side audit entry (`prohibitionOverrideAudit` schema in the consent register) and PATCHes OR's EntityRelation with `skipAnonymization: true`. May be sent on the first request without a prior 422. (`anonymisation-prohibition-gate`)
+- **`prohibitionOverrideAudit` schema** in the `consent` register, with 10-year archival retention. Captures `{ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}` per override. (`anonymisation-prohibition-gate`)
+
+### Behavior changes
+- **The anonymise endpoints may now return HTTP 422** when `publicationProhibition`-listed entities are missing from `entities[]` at high confidence. Existing callers with no prohibition records configured see no change. (`anonymisation-prohibition-gate`)
+
 - **`prohibitionMatch` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
   Each consolidated entity now carries a `prohibitionMatch` field: `null` when no publication-prohibition rule matches, or `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when the entity's `highestConfidence` is at or above the configured threshold (`docudesk.prohibition.high_confidence_threshold`, default 0.85). The frontend review UI uses this to render prohibition-locked entities without re-running the matcher client-side. (`anonymisation-entity-review-prohibition-hints`)
 - **`suggestedBases` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\ProhibitionGateException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -72,19 +73,23 @@ class BatchAnonymizeService
      * per file. Files with prohibition violations are recorded with a
      * `prohibitionViolation` status and counted in prohibitionSkippedFiles.
      *
-     * @param string                           $batchId            Identifier of the batch to anonymize.
-     * @param array<int, array<string, mixed>> $entities           User-approved entities to anonymize.
-     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary per file.
-     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation.
-     * @param string                           $outputFormat       Per-batch output format gate
-     *                                                             ('pdf'|'preserve'). Passed
-     *                                                             through to each per-file
-     *                                                             anonymise call. Per-file
-     *                                                             ConversionFailedException is
-     *                                                             recorded as an error on that
-     *                                                             file's batch entry and the
-     *                                                             batch continues with the
-     *                                                             next file.
+     * @param string                           $batchId               Identifier of the batch to anonymize.
+     * @param array<int, array<string, mixed>> $entities              User-approved entities to anonymize.
+     * @param bool                             $appendBasisSummary    Whether to append a grondslagen summary per file.
+     * @param array<int, array<string, mixed>> $unredactedEntities    Entities to publish unredacted with consent creation.
+     * @param string                           $outputFormat          Per-batch output format gate
+     *                                                                ('pdf'|'preserve'). Passed
+     *                                                                through to each per-file
+     *                                                                anonymise call. Per-file
+     *                                                                ConversionFailedException is
+     *                                                                recorded as an error on that
+     *                                                                file's batch entry and the
+     *                                                                batch continues with the
+     *                                                                next file.
+     * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?}
+     *                                                                that release low-confidence prohibition matches.
+     *                                                                Applied per-file independently.
+     * @param string                           $userId                UID of the acting user (for override audit).
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -101,13 +106,16 @@ class BatchAnonymizeService
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
      */
     public function anonymizeBatch(
         string $batchId,
         array $entities,
         bool $appendBasisSummary=false,
         array $unredactedEntities=[],
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        array $acknowledgedOverrides=[],
+        string $userId=''
     ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -153,7 +161,9 @@ class BatchAnonymizeService
                     entities: $entities,
                     appendBasisSummary: $appendBasisSummary,
                     unredactedEntities: $unredactedEntities,
-                    outputFormat: $outputFormat
+                    outputFormat: $outputFormat,
+                    acknowledgedOverrides: $acknowledgedOverrides,
+                    userId: $userId
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;
@@ -172,6 +182,17 @@ class BatchAnonymizeService
                 }
 
                 $processed++;
+            } catch (ProhibitionGateException $e) {
+                // Prohibition gate fired for this file — count as skipped with prohibition violation.
+                $batch['files'][$i]['status'] = 'prohibitionViolation';
+                $batch['files'][$i]['missingProhibitionMatches'] = $e->getMissingProhibitionMatches();
+                $batch['files'][$i]['rejectedOverrides']         = $e->getRejectedOverrides();
+                $skipped[] = [
+                    'fileId'     => $file['fileId'],
+                    'reason'     => 'Prohibition gate blocked the anonymise call',
+                    'httpStatus' => 422,
+                ];
+                $prohibitionSkipped++;
             } catch (\OCA\DocuDesk\Exception\ConversionFailedException $e) {
                 // PDF conversion exhausted the cascade for this file —
                 // mark this file as error, attach the attempts surface

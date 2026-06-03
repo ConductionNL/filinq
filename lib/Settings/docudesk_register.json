@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.2.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
-        "version": "5.2.0"
+        "description": "DocuDesk register v5.3.0 — adds prohibitionOverrideAudit schema (anonymisation-prohibition-gate). Each acknowledged-override on an anonymise call writes one audit entry capturing ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt. Gate context: the prohibition gate (ADR-031) blocks anonymise calls where high-confidence prohibition-matched entities are missing from the to-be-anonymised set.",
+        "version": "5.3.0"
     },
     "x-openregister": {
         "type": "application",
@@ -22,10 +22,11 @@
             "consent": {
                 "slug": "consent",
                 "title": "Consent Register",
-                "version": "2.0.0",
-                "description": "Register voor GDPR publicatie toestemmingen",
+                "version": "2.1.0",
+                "description": "Register voor GDPR publicatie toestemmingen en anonimisatie-override audit-entries",
                 "schemas": [
-                    "publicationConsent"
+                    "publicationConsent",
+                    "prohibitionOverrideAudit"
                 ]
             },
             "signing": {
@@ -1998,6 +1999,50 @@
                         "description": "Ratio of successfully generated letters over total recipients",
                         "readOnly": true
                     }
+                }
+            },
+            "prohibitionOverrideAudit": {
+                "type": "object",
+                "title": "Prohibition Override Audit",
+                "description": "Audit-entry voor een operator-beslissing om een laag-betrouwbaarheids publicatieverbod te overrulen bij het anonimiseren van een document. Vastgelegd per override-actie op het anonymise-endpoint. Bevat reden, handtekening van de operator en het tijdstip van beslissing.",
+                "version": "1.0.0",
+                "required": [
+                    "ruleId",
+                    "entityRelationId",
+                    "fileId",
+                    "acknowledgedBy",
+                    "acknowledgedAt"
+                ],
+                "properties": {
+                    "ruleId": {
+                        "type": "string",
+                        "description": "UUID van de publicationProhibition-regel die door de operator is overruled."
+                    },
+                    "entityRelationId": {
+                        "type": "integer",
+                        "description": "ID van de EntityRelation-rij (OpenRegister) waarop skipAnonymization=true is gezet."
+                    },
+                    "fileId": {
+                        "type": "integer",
+                        "description": "Nextcloud file-ID van het document waarop de anonimisering is uitgevoerd."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Optionele toelichting van de operator waarom het verbod niet van toepassing is (bijv. 'publieke figuur — geen bescherming vereist')."
+                    },
+                    "acknowledgedBy": {
+                        "type": "string",
+                        "description": "Nextcloud UID van de operator die de override heeft bevestigd."
+                    },
+                    "acknowledgedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO-8601 tijdstip waarop de override is bevestigd."
+                    }
+                },
+                "x-openregister-archival": {
+                    "retentionPeriod": "P10Y",
+                    "description": "Audit-entries worden 10 jaar bewaard conform de archiefplicht voor verwerkingsregistratie (AVG Art. 30)."
                 }
             }
         },

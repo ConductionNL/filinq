@@ -389,6 +389,18 @@ class EntityRelationMapper
         return [];
 
     }//end findEntitiesForFile()
+
+    /**
+     * Update decision metadata on an EntityRelation row.
+     *
+     * @param int                  $relationId ID of the EntityRelation row.
+     * @param array<string, mixed> $metadata   Decision metadata fields to patch.
+     *
+     * @return void
+     */
+    public function updateDecisionMetadata(int $relationId, array $metadata): void
+    {
+    }//end updateDecisionMetadata()
 }//end class
 
 /**
