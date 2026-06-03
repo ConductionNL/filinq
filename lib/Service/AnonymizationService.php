@@ -23,6 +23,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+ * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
  */
 
 declare(strict_types=1);
@@ -76,6 +77,7 @@ class AnonymizationService
      * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
      *                                                      summary page (Wave 4a — opt-in via
      *                                                      `appendBasisSummary: true` on the request).
+     * @param FileEntityStatsService    $fileEntityStats    Service for entity statistics and risk levels.
      *
      * @return void
      */
@@ -87,7 +89,8 @@ class AnonymizationService
         private readonly IAppConfig $appConfig,
         private readonly ConsentCrudService $consentCrud,
         private readonly ConsentService $consentService,
-        private readonly GrondslagenSummaryService $grondslagenSummary
+        private readonly GrondslagenSummaryService $grondslagenSummary,
+        private readonly FileEntityStatsService $fileEntityStats
     ) {
 
     }//end __construct()
@@ -120,14 +123,18 @@ class AnonymizationService
      * no publication-prohibition rule matches, or an object with ruleId, ruleName,
      * and highConfidence (score >= configured threshold, inclusive).
      *
+     * The response also includes a `riskLevel` field derived from OpenRegister's
+     * RiskLevelService, or 'none' when that service is unavailable.
+     *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount
+     * @return array<string, mixed> Extraction result with entities, entityCount, riskLevel
      *
      * @throws Exception If extraction or detection fails
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
      */
     public function extractAndDetectEntities(int $fileId): array
     {
@@ -146,9 +153,16 @@ class AnonymizationService
             $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
             $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
+            $riskLevelService = $this->fileEntityStats->tryGetRiskLevelService();
+            $riskLevel        = $this->fileEntityStats->getFileRiskLevel(
+                fileId: $fileId,
+                riskLevelService: $riskLevelService
+            );
+
             return [
                 'entities'    => $normalized,
                 'entityCount' => count($entities),
+                'riskLevel'   => $riskLevel,
             ];
         } catch (Exception $e) {
             $this->logger->error(
