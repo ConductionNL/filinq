@@ -691,6 +691,14 @@ class EmlPdfAssemblyService
                 html: $htmlBody,
                 attachments: $structure['attachments'] ?? []
             );
+            // Strip remaining external http(s) img src attributes to prevent SSRF
+            // when mPDF fetches URLs during PDF rendering. CID-resolved images
+            // (now data: URIs) are unaffected by this pattern.
+            $resolvedBody = (string) preg_replace(
+                '/<img(\s[^>]*)?\ssrc=(["\'])https?:\/\/[^"\']+\2/i',
+                '<img$1',
+                $resolvedBody
+            );
             $bodySection  = $resolvedBody;
         } else if ($plainBody !== null && $plainBody !== '') {
             $escaped     = htmlspecialchars($plainBody, (ENT_QUOTES | ENT_SUBSTITUTE), 'UTF-8');
