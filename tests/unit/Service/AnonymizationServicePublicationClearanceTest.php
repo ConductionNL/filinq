@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\FileEntityStatsService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -72,6 +73,7 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
         $consentService  = $consentService ?? $this->createMock(originalClassName: ConsentService::class);
 
         $grondslagenSummary = $this->createMock(originalClassName: GrondslagenSummaryService::class);
+        $fileEntityStats    = $this->createMock(originalClassName: FileEntityStatsService::class);
 
         return new AnonymizationService(
             logger: $logger,
@@ -81,7 +83,8 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
             appConfig: $appConfig,
             consentCrud: $consentCrud,
             consentService: $consentService,
-            grondslagenSummary: $grondslagenSummary
+            grondslagenSummary: $grondslagenSummary,
+            fileEntityStats: $fileEntityStats
         );
 
     }//end buildService()
