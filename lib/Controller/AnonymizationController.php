@@ -102,7 +102,6 @@ class AnonymizationController extends Controller
      */
     private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
 
-
     /**
      * List all processed files with entity counts and status
      *
@@ -643,7 +642,6 @@ class AnonymizationController extends Controller
         return $tenantDefault;
 
     }//end resolveOutputFormat()
-
 
     /**
      * Filter entities by excluded types

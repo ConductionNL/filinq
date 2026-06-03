@@ -53,8 +53,6 @@ use Throwable;
  */
 class PdfConversionService
 {
-
-
     /**
      * Constructor.
      *
@@ -67,7 +65,6 @@ class PdfConversionService
     ) {
 
     }//end __construct()
-
 
     /**
      * Convert the source file to PDF via the backend cascade.
@@ -172,6 +169,4 @@ class PdfConversionService
         );
 
     }//end convertToPdf()
-
-
 }//end class

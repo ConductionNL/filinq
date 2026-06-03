@@ -61,7 +61,6 @@ class MpdfBackend implements ConversionBackendInterface
      */
     private const APP_ID = 'docudesk';
 
-
     /**
      * Constructor.
      *
@@ -77,7 +76,6 @@ class MpdfBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Identifier surfaced in the 422 body's `conversionAttempts[].backend`.
      *
@@ -88,7 +86,6 @@ class MpdfBackend implements ConversionBackendInterface
         return 'mpdf';
 
     }//end name()
-
 
     /**
      * Whether the backend is enabled in tenant config. mPDF is in-process
@@ -103,7 +100,6 @@ class MpdfBackend implements ConversionBackendInterface
         return $value !== 'false';
 
     }//end isAvailable()
-
 
     /**
      * HTML and plain-text inputs only. Spreadsheet/presentation/Word
@@ -144,7 +140,6 @@ class MpdfBackend implements ConversionBackendInterface
         return false;
 
     }//end canHandle()
-
 
     /**
      * Convert the source. For TXT inputs, wrap the body in a minimal
@@ -239,7 +234,6 @@ class MpdfBackend implements ConversionBackendInterface
 
     }//end convert()
 
-
     /**
      * Wrap a plain-text body in a minimal HTML envelope so mPDF emits
      * the text with monospace formatting and preserved whitespace.
@@ -261,7 +255,6 @@ class MpdfBackend implements ConversionBackendInterface
 
     }//end wrapPlainTextAsHtml()
 
-
     /**
      * Return $name without its trailing `.ext` suffix, for use as a
      * title and PDF filename base.
@@ -280,6 +273,4 @@ class MpdfBackend implements ConversionBackendInterface
         return substr($name, 0, $dotPos);
 
     }//end stripExtension()
-
-
 }//end class

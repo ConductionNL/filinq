@@ -65,7 +65,6 @@ class EmlBackend implements ConversionBackendInterface
      */
     private const APP_ID = 'docudesk';
 
-
     /**
      * Constructor.
      *
@@ -79,7 +78,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
      *
@@ -90,7 +88,6 @@ class EmlBackend implements ConversionBackendInterface
         return 'eml';
 
     }//end name()
-
 
     /**
      * Permanently false until OR ships EML text extraction. The tenant
@@ -114,7 +111,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end isAvailable()
 
-
     /**
      * Declare the input formats this backend claims for cascade routing.
      *
@@ -131,7 +127,6 @@ class EmlBackend implements ConversionBackendInterface
         return $mimeType === 'message/rfc822' || $extension === 'eml';
 
     }//end canHandle()
-
 
     /**
      * Defensive backstop. The cascade calls isAvailable first, which
@@ -163,6 +158,4 @@ class EmlBackend implements ConversionBackendInterface
         );
 
     }//end convert()
-
-
 }//end class
