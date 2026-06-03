@@ -11,7 +11,7 @@ on:
 
 jobs:
   docs:
-    uses: https://codeberg.org/Conduction/.github/.forgejo/workflows/documentation.yml@main
+    uses: Conduction/.github/.forgejo/workflows/documentation.yml@main
     with:
       cf-project-name: docudesk-docs
       source-folder: docs
