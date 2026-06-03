@@ -33,6 +33,7 @@ use OCA\DocuDesk\Service\WooProfileService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -68,6 +69,8 @@ class BatchAnonymizationController extends Controller
      * @param WooProfileService          $profileService     Service that stores the WOO entity profile.
      * @param FolderBatchService         $folderBatchService Service that turns an existing folder into a batch.
      * @param IL10N                      $l10n               Translator for user-facing error messages.
+     * @param IAppConfig                 $appConfig          Tenant configuration provider (reads
+     *                                                       docudesk.anonymisation.default_output_format).
      *
      * @return void
      */
@@ -84,10 +87,25 @@ class BatchAnonymizationController extends Controller
         private readonly WooProfileService $profileService,
         private readonly FolderBatchService $folderBatchService,
         private readonly IL10N $l10n,
+        private readonly IAppConfig $appConfig,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
+
+    /**
+     * Tenant config key for default outputFormat. Mirrors the constant
+     * used by AnonymizationController; defined here so both controllers
+     * stay aligned on the lookup key.
+     */
+    private const DEFAULT_OUTPUT_FORMAT_KEY = 'docudesk.anonymisation.default_output_format';
+
+
+    /**
+     * Supported values for the `outputFormat` request param.
+     */
+    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
 
 
     /**
@@ -315,14 +333,74 @@ class BatchAnonymizationController extends Controller
                 $appendBasisSummary = $params['appendBasisSummary'];
             }
 
+            // Anonymise-output-as-pdf-by-default: per-batch outputFormat.
+            // Per-call value overrides tenant default; missing/invalid
+            // values mirror AnonymizationController semantics.
+            $outputFormat = $this->resolveOutputFormat(params: $params);
+            if ($outputFormat === null) {
+                return new JSONResponse(
+                    [
+                        'error' => sprintf(
+                            'Invalid outputFormat: must be one of %s',
+                            implode(', ', self::VALID_OUTPUT_FORMATS)
+                        ),
+                    ],
+                    400
+                );
+            }
+
             return new JSONResponse(
-                $this->anonService->anonymizeBatch($batchId, $entities, $appendBasisSummary)
+                $this->anonService->anonymizeBatch(
+                    $batchId,
+                    $entities,
+                    $appendBasisSummary,
+                    $outputFormat
+                )
             );
         } catch (Exception $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
         }//end try
 
     }//end batchAnonymize()
+
+
+    /**
+     * Resolve the effective `outputFormat` for this batch call.
+     *
+     * Per-batch value overrides tenant default; tenant default defaults
+     * to `"pdf"`. Returns null when an invalid per-call value was
+     * supplied; the caller maps that to HTTP 400.
+     *
+     * @param array<string,mixed> $params Request params.
+     *
+     * @return string|null Resolved outputFormat or null on invalid input.
+     */
+    private function resolveOutputFormat(array $params): ?string
+    {
+        if (array_key_exists('outputFormat', $params) === true) {
+            $value = $params['outputFormat'];
+            if (is_string($value) === false
+                || in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
+            ) {
+                return null;
+            }
+
+            return $value;
+        }
+
+        $tenantDefault = $this->appConfig->getValueString(
+            'docudesk',
+            self::DEFAULT_OUTPUT_FORMAT_KEY,
+            'pdf'
+        );
+
+        if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
+            return 'pdf';
+        }
+
+        return $tenantDefault;
+
+    }//end resolveOutputFormat()
 
 
     /**

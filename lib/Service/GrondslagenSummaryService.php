@@ -252,7 +252,7 @@ class GrondslagenSummaryService
 
         $perFile = $this->walkDossierFiles(folder: $folder);
 
-        // loadAnonymisedEntitiesForFile already resolves base labels per
+        // The loadAnonymisedEntitiesForFile call already resolves base labels per
         // file. aggregateForDossier just unfolds those rows across files
         // and sorts. No second label-resolution pass needed here.
         $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
@@ -1136,7 +1136,7 @@ class GrondslagenSummaryService
             }
 
             // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
-            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis)
+            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis).
             return (string) $pdf->Output('S');
         } catch (Exception $e) {
             throw new RuntimeException(
