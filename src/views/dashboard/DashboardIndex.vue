@@ -5,6 +5,14 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 </script>
 
 <template>
+	<div>
+		<!-- Anonymiser backend warning banner — admin-only, sits above the dashboard grid -->
+		<AnonymiserBackendWarning
+			v-if="isAdmin"
+			:show-warning="anonymiserBackend.showWarning"
+			:app-api-installed="anonymiserBackend.appApiInstalled"
+			@dismissed="onAnonymiserWarningDismissed" />
+
 	<CnDashboardPage
 		:title="t('docudesk', 'Dashboard')"
 		:widgets="widgetDefs"
@@ -73,11 +81,13 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 			<AnonymizationWidget />
 		</template>
 	</CnDashboardPage>
+	</div>
 </template>
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { CnDashboardPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 
 export default {
 	name: 'DashboardIndex',
@@ -87,9 +97,17 @@ export default {
 		CnStatusBadge,
 		NcLoadingIcon,
 		AnonymizationWidget,
+		AnonymiserBackendWarning,
 	},
 	data() {
 		return {
+			isAdmin: false,
+			anonymiserBackend: {
+				method: 'regex',
+				appApiInstalled: false,
+				warningDismissed: false,
+				showWarning: false,
+			},
 			dashboardLayout: [
 				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, showTitle: false },
 				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, showTitle: false },
@@ -134,6 +152,7 @@ export default {
 	},
 	mounted() {
 		consentStore.fetchConsents()
+		this.fetchAnonymiserBackendState()
 	},
 	methods: {
 		/**
@@ -150,6 +169,42 @@ export default {
 				anonymized: t('docudesk', 'Anonymized'),
 			}
 			return map[status] || status || t('docudesk', 'Unknown')
+		},
+
+		/**
+		 * Fetch anonymiser backend state to decide whether to show the warning banner.
+		 * Admin flag and backend state come from the settings API response.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-7
+		 */
+		async fetchAnonymiserBackendState() {
+			try {
+				const response = await fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
+				if (response.ok === false) {
+					return
+				}
+				const data = await response.json()
+				this.isAdmin = data.isAdmin ?? false
+				if (data.anonymiserBackend) {
+					this.anonymiserBackend = {
+						method: data.anonymiserBackend.method ?? 'regex',
+						appApiInstalled: data.anonymiserBackend.appApiInstalled ?? false,
+						warningDismissed: data.anonymiserBackend.warningDismissed ?? false,
+						showWarning: data.anonymiserBackend.showWarning ?? false,
+					}
+				}
+			} catch (_err) {
+				// Non-critical — dashboard still works without the warning.
+			}
+		},
+
+		/**
+		 * Handle the anonymiser backend warning being dismissed on the dashboard.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
+		 */
+		onAnonymiserWarningDismissed() {
+			this.anonymiserBackend = { ...this.anonymiserBackend, showWarning: false, warningDismissed: true }
 		},
 	},
 }

@@ -239,7 +239,6 @@ class DocuDeskEventHandler
 
     }//end maybeRegenerateGrondslagenSummary()
 
-
     /**
      * Shape-detect whether an object looks like a `dossier` register record.
      *
@@ -262,7 +261,6 @@ class DocuDeskEventHandler
                 || array_key_exists('configuration', $objectData) === true);
 
     }//end looksLikeDossier()
-
 
     /**
      * Handles object deletion events
@@ -376,7 +374,6 @@ class DocuDeskEventHandler
 
     }//end dispatchPolicyRetroactive()
 
-
     /**
      * Classify a payload as a policy record by structural signature.
      *
@@ -414,7 +411,6 @@ class DocuDeskEventHandler
         return null;
 
     }//end detectPolicyShape()
-
 
     /**
      * Check if content fields have changed between old and new object data

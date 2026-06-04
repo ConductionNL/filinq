@@ -1,23 +1,17 @@
 {
-  "spec": "openspec/changes/add-dossier-schema",
+  "spec": "openspec/changes/consent-create-idempotency-and-notes",
   "verified": [
-    {"task": "1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier register entry present under components.registers"},
-    {"task": "2", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "base schema present under components.schemas.base with required name+description"},
-    {"task": "3", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "dossier schema present under components.schemas.dossier with required name, optional bases+checkedOn"},
-    {"task": "4", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "jq valid + composer check:strict ALL CHECKS PASSED"},
-    {"task": "5", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "6 canonical base seed objects present: persoonsgegevens, bijzondere-persoonsgegevens, strafrechtelijk, bedrijfs-fabricagegegevens, onevenredige-benadeling, nationale-veiligheid"},
-    {"task": "6", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "5 dossier seed objects present; zonnestraal-incident-2026-03 has bases=[] and checkedOn=null"},
-    {"task": "10", "file": "tests/unit/Settings/DossierRegisterConfigTest.php", "ok": true, "note": "6/6 tests pass via phpunit -c phpunit-unit.xml --filter DossierRegisterConfigTest"},
-    {"task": "11", "file": "l10n/en.json + l10n/nl.json + l10n/en.js + l10n/nl.js", "ok": true, "note": "Dutch and English translations added for schema titles, property titles, and 6 grondslag names"},
-    {"task": "12", "file": "docs/features/dossier-register.md", "ok": true, "note": "Feature doc present; dossier-register added to docs/features.json"},
-    {"task": "14", "file": "docs/features/dossier-register.md", "ok": true, "note": "@self.folder trust model documented + validate-self-folder-access follow-up referenced"}
+    {"task": "1", "file": "lib/Service/ConsentService.php", "ok": true, "note": "findExistingConsent() + update/create routing implemented"},
+    {"task": "2", "file": "lib/Service/ConsentService.php", "ok": true, "note": "PRESERVED_FIELDS constant guards workflow state; updateExistingConsent() re-evaluates policyMatch"},
+    {"task": "3", "file": "lib/Service/ConsentNotesHelper.php", "ok": true, "note": "updateSentinelRegion() + stripSentinelRegion() with DOTALL PCRE; buildSentinelBlock() for write"},
+    {"task": "4", "file": "lib/Service/ConsentService.php", "ok": true, "note": "publicationBases[0] → legalBasis via truncateAtWordBoundary(); [1..N] → sentinel via ConsentNotesHelper"},
+    {"task": "5", "file": "lib/Service/ConsentService.php", "ok": true, "note": "New records get notificationStatus=pending; no sendMail/dispatch call added"},
+    {"task": "6", "file": "tests/unit/Service/ConsentServiceTest.php", "ok": true, "note": "20 new idempotency tests covering create/update/workflow-preserve/policyMatch/prohibition/scope-entity-exclusion"},
+    {"task": "7", "file": "tests/unit/Service/ConsentNotesHelperTest.php", "ok": true, "note": "10 unit tests covering all sentinel scenarios from tasks.md#task-7"},
+    {"task": "8", "file": "tests/newman/docudesk-api.postman_collection.json", "ok": true, "note": "3 Newman tests: first-call-creates, second-call-updates, single-basis-no-sentinel"},
+    {"task": "9", "file": "docs/features/publication-consent-process.md", "ok": true, "note": "Idempotency contract + sentinel format documented; CHANGELOG updated"},
+    {"task": "10", "file": "lib/Service/ConsentService.php", "ok": true, "note": "417 unit tests passing; 14 hydra gates green; phpcs clean; Psalm/PHPStan fixed (removed unused UPDATABLE_FIELDS, buildConsentData(), ?? on known keys)"}
   ],
   "stubs": [],
-  "missing_routes": [],
-  "deferred": [
-    {"task": "7", "reason": "Runtime verification requires occ access (permission denied in container); register JSON is correct per static analysis and PHPUnit"},
-    {"task": "8", "reason": "Referential integrity requires a live Nextcloud + OpenRegister instance; design confirms OR handles via existing @self.folder pipeline"},
-    {"task": "9", "reason": "Audit trail verification requires two live user sessions; design confirms OR's AuditTrailMapper handles this natively"},
-    {"task": "13", "reason": "Playwright screenshots require browser-1 MCP which is not available in this headless container"}
-  ]
+  "missing_routes": []
 }

@@ -53,8 +53,6 @@ use Psr\Log\LoggerInterface;
  */
 class DossierController extends Controller
 {
-
-
     /**
      * Constructor for DossierController.
      *
@@ -76,7 +74,6 @@ class DossierController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Regenerate the per-dossier grondslagen summary PDF.
@@ -134,6 +131,4 @@ class DossierController extends Controller
         }//end try
 
     }//end generateGrondslagenSummary()
-
-
 }//end class

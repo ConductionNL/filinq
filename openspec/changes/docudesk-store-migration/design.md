@@ -1,5 +1,7 @@
 # Design — docudesk store migration (side-by-side)
 
+status: pr-created
+
 ## Context
 
 `docudesk` ships **eight** hand-rolled Pinia stores under
