@@ -16,6 +16,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -54,6 +55,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
+ * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
  */
 class FolderBatchService
@@ -67,7 +69,7 @@ class FolderBatchService
      * @param BatchStateService    $stateService   Batch state management
      * @param IJobList             $jobList        Background job list
      * @param AnonymizationService $anonService    Anonymization/extraction service
-     * @param OutputLayoutResolver $layoutResolver Output layout resolver for source-discovery filter
+     * @param OutputLayoutResolver $layoutResolver Resolver that computes the output subfolder destination
      *
      * @return void
      */
@@ -159,7 +161,7 @@ class FolderBatchService
         // The IJobList entry serves as a fallback if the shutdown handler is
         // interrupted (e.g. process kill, memory limit).
         $this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
-        $this->scheduleExtraction(batchId: $batch['batchId']);
+        $this->scheduleExtraction(batchId: $batch['batchId'], userId: $userId);
 
         $this->logger->info(
             'Folder batch created, extraction job fired',
@@ -252,29 +254,33 @@ class FolderBatchService
     }//end pickPreferredNode()
 
     /**
-     * Schedule extraction to run after the HTTP response is flushed
+     * Schedule extraction + anonymization to run after the HTTP response is flushed
      *
      * Registers a shutdown function that flushes the response to the client
-     * (via fastcgi_finish_request on PHP-FPM) and then runs extraction
-     * inline. If the extraction completes, the queued background job is
-     * removed since it is no longer needed.
+     * (via fastcgi_finish_request on PHP-FPM) and then runs extraction,
+     * anonymization, and the output-layout post-process inline per file.
+     * If all files complete, the queued background job is removed.
      *
-     * @param string $batchId The batch ID to extract
+     * @param string $batchId The batch ID to process
+     * @param string $userId  The user ID owning the batch
      *
      * @return void
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
      * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
      */
-    private function scheduleExtraction(string $batchId): void
+    private function scheduleExtraction(string $batchId, string $userId): void
     {
-        $stateService = $this->stateService;
-        $anonService  = $this->anonService;
-        $jobList      = $this->jobList;
-        $logger       = $this->logger;
+        $stateService   = $this->stateService;
+        $anonService    = $this->anonService;
+        $jobList        = $this->jobList;
+        $logger         = $this->logger;
+        $rootFolder     = $this->rootFolder;
+        $layoutResolver = $this->layoutResolver;
 
         register_shutdown_function(
-            static function () use ($batchId, $stateService, $anonService, $jobList, $logger): void {
+            static function () use ($batchId, $userId, $stateService, $anonService, $jobList, $logger, $rootFolder, $layoutResolver): void {
                 // Flush the response to the client before doing heavy work.
                 if (function_exists('fastcgi_finish_request') === true) {
                     fastcgi_finish_request();
@@ -293,31 +299,226 @@ class FolderBatchService
                         continue;
                     }
 
+                    $fileId = (int) $file['fileId'];
+
                     try {
-                        $result = $anonService->extractAndDetectEntities((int) $file['fileId']);
-                        $batch['files'][$i]['status']      = 'extracted';
-                        $batch['files'][$i]['entityCount'] = $result['entityCount'];
+                        $extractResult = $anonService->extractAndDetectEntities($fileId);
+                        $batch['files'][$i]['entityCount'] = $extractResult['entityCount'];
                     } catch (\Exception $e) {
                         $logger->warning(
                             'Shutdown extraction failed for file',
-                            ['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
+                            ['batchId' => $batchId, 'fileId' => $fileId, 'error' => $e->getMessage()]
                         );
                         $batch['files'][$i]['status'] = 'error';
                         $batch['files'][$i]['error']  = $e->getMessage();
+                        $stateService->updateBatch($batchId, $batch);
+                        continue;
                     }
+
+                    try {
+                        $anonResult = $anonService->anonymizeDocument(
+                            fileId: $fileId,
+                            entities: $extractResult['entities']
+                        );
+                        $batch['files'][$i]['replacementCount'] = $anonResult['replacementCount'] ?? 0;
+                        $batch['files'][$i]['anonymizedFileId'] = $anonResult['anonymizedFileId'] ?? null;
+
+                        $moveResult = self::applyOutputLayout(
+                            sourceFileId: $fileId,
+                            anonymizationResult: $anonResult,
+                            userId: $userId,
+                            rootFolder: $rootFolder,
+                            layoutResolver: $layoutResolver,
+                            logger: $logger
+                        );
+                        $batch['files'][$i]['anonymizedFilePath'] = $moveResult['anonymizedFilePath'];
+                        if (isset($moveResult['warning']) === true) {
+                            $batch['files'][$i]['warning'] = $moveResult['warning'];
+                        }
+
+                        $batch['files'][$i]['status'] = 'anonymized';
+                    } catch (\Exception $e) {
+                        $logger->warning(
+                            'Shutdown anonymization failed for file',
+                            ['batchId' => $batchId, 'fileId' => $fileId, 'error' => $e->getMessage()]
+                        );
+                        $batch['files'][$i]['status'] = 'error';
+                        $batch['files'][$i]['error']  = $e->getMessage();
+                    }//end try
 
                     $stateService->updateBatch($batchId, $batch);
                 }//end foreach
 
-                $batch['status'] = 'review';
+                $batch['status'] = 'completed';
                 $stateService->updateBatch($batchId, $batch);
 
-                // Extraction completed — remove the fallback background job.
+                // Processing completed — remove the fallback background job.
                 $jobList->remove(FolderExtractionJob::class, ['batchId' => $batchId]);
             }
         );
 
     }//end scheduleExtraction()
+
+    /**
+     * Apply the output layout: move the anonymised file from OR's legacy path
+     * into the configured subfolder under the source folder.
+     *
+     * On success returns an array with `anonymizedFilePath` set to the new
+     * location. On failure returns the legacy path and a `warning` field; the
+     * file is preserved at its original location.
+     *
+     * Public static so it can be called from static closures (the shutdown
+     * handler) and from FolderExtractionJob without capturing $this.
+     *
+     * @param int                  $sourceFileId        NC file ID of the original source file.
+     * @param array<string, mixed> $anonymizationResult Result array from anonymizeDocument.
+     * @param string               $userId              User ID for rootFolder lookup.
+     * @param IRootFolder          $rootFolder          Root folder service.
+     * @param OutputLayoutResolver $layoutResolver      Resolver for subfolder name + path.
+     * @param LoggerInterface      $logger              Logger for warnings.
+     *
+     * @return array{anonymizedFilePath: string|null, warning?: array<string, string>}
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-4
+     */
+    public static function applyOutputLayout(
+        int $sourceFileId,
+        array $anonymizationResult,
+        string $userId,
+        IRootFolder $rootFolder,
+        OutputLayoutResolver $layoutResolver,
+        LoggerInterface $logger
+    ): array {
+        $anonymizedFileId = $anonymizationResult['anonymizedFileId'] ?? null;
+        $legacyPath       = $anonymizationResult['anonymizedFilePath'] ?? null;
+
+        if ($anonymizedFileId === null) {
+            return ['anonymizedFilePath' => $legacyPath];
+        }
+
+        $userFolder = $rootFolder->getUserFolder($userId);
+        $anonNodes  = $userFolder->getById((int) $anonymizedFileId);
+        if (empty($anonNodes) === true) {
+            return ['anonymizedFilePath' => $legacyPath];
+        }
+
+        $anonNode = $anonNodes[0];
+        if (($anonNode instanceof File) === false) {
+            return ['anonymizedFilePath' => $legacyPath];
+        }
+
+        $sourceFolder = self::resolveSourceFolder(
+            sourceFileId: $sourceFileId,
+            anonNode: $anonNode,
+            userId: $userId,
+            rootFolder: $rootFolder
+        );
+        if ($sourceFolder === null) {
+            return ['anonymizedFilePath' => $legacyPath];
+        }
+
+        $anonName   = $anonNode->getName();
+        $extension  = '.'.pathinfo($anonName, PATHINFO_EXTENSION);
+        $baseName   = pathinfo($anonName, PATHINFO_FILENAME);
+        $targetPath = $layoutResolver->resolveBatchDestination(
+            sourceFolder: $sourceFolder,
+            sourceBaseName: $baseName,
+            extension: $extension
+        );
+
+        try {
+            $subfolderName = $layoutResolver->readSubfolderName();
+            if ($sourceFolder->nodeExists($subfolderName) === true) {
+                $subfolder = $sourceFolder->get($subfolderName);
+                if (($subfolder instanceof Folder) === false) {
+                    $subfolder = $sourceFolder->newFolder($subfolderName);
+                }
+            } else {
+                $subfolder = $sourceFolder->newFolder($subfolderName);
+            }
+
+            $targetName = pathinfo($targetPath, PATHINFO_BASENAME);
+            if ($subfolder->nodeExists($targetName) === true) {
+                $existing = $subfolder->get($targetName);
+                $existing->delete();
+            }
+
+            $anonNode->move(targetPath: $targetPath);
+            return ['anonymizedFilePath' => $targetPath];
+        } catch (\Throwable $e) {
+            $logger->warning(
+                'FolderBatchService: post-process move failed; file preserved at legacy path.',
+                [
+                    'sourcePath' => $legacyPath,
+                    'targetPath' => $targetPath,
+                    'error'      => $e->getMessage(),
+                ]
+            );
+            return [
+                'anonymizedFilePath' => $legacyPath,
+                'warning'            => [
+                    'code'    => 'MOVE_FAILED',
+                    'message' => 'Output file could not be moved to the subfolder; '
+                        .'file is preserved at the legacy path.',
+                ],
+            ];
+        }//end try
+
+    }//end applyOutputLayout()
+
+    /**
+     * Determine the source folder for the output-layout move.
+     *
+     * Prefers the parent of the anonymised file node (as written by OR).
+     * Falls back to the parent of the source file when the anonymised node
+     * is not accessible.
+     *
+     * @param int         $sourceFileId NC file ID of the original source file.
+     * @param File        $anonNode     The anonymised file node returned by OR.
+     * @param string      $userId       User ID for rootFolder lookup.
+     * @param IRootFolder $rootFolder   Root folder service.
+     *
+     * @return Folder|null The source folder, or null when it cannot be determined.
+     */
+    private static function resolveSourceFolder(
+        int $sourceFileId,
+        File $anonNode,
+        string $userId,
+        IRootFolder $rootFolder
+    ): ?Folder {
+        try {
+            $parent = $anonNode->getParent();
+            if ($parent instanceof Folder === true) {
+                return $parent;
+            }
+        } catch (\Throwable) {
+            // Fall through to source-file lookup.
+        }
+
+        $userFolder  = $rootFolder->getUserFolder($userId);
+        $sourceNodes = $userFolder->getById($sourceFileId);
+        if (empty($sourceNodes) === true) {
+            return null;
+        }
+
+        $sourceNode = $sourceNodes[0];
+        if (($sourceNode instanceof File) === false) {
+            return null;
+        }
+
+        try {
+            $parent = $sourceNode->getParent();
+            if ($parent instanceof Folder === true) {
+                return $parent;
+            }
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return null;
+
+    }//end resolveSourceFolder()
 
     /**
      * Enumerate direct file children of a folder (flat, no recursion).

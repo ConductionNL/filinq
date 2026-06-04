@@ -677,4 +677,295 @@ class FolderBatchServiceTest extends TestCase
         $this->service->createFolderBatch(null, '/Documents/WOB');
 
     }//end testSourceDiscoveryAllFilteredThrowsNoFiles()
+
+    // ----------------------------------------------------------------
+    // applyOutputLayout() static helper — post-process move tests
+    // ----------------------------------------------------------------
+
+    /**
+     * Build a mock File for use in applyOutputLayout tests.
+     *
+     * @param string $name       File name returned by getName().
+     * @param string $parentPath Absolute path of the parent folder.
+     *
+     * @return File|MockObject
+     */
+    private function buildAnonFileNode(string $name, string $parentPath): File|MockObject
+    {
+        $parentFolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $parentFolder->method('getPath')->willReturn($parentPath);
+        $parentFolder->method('nodeExists')->willReturn(false);
+        $parentFolder->method('newFolder')->willReturn($this->createMock(Folder::class));
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $file = $this->createMock(File::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $file->method('getName')->willReturn($name);
+        $file->method('getParent')->willReturn($parentFolder);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        return $file;
+
+    }//end buildAnonFileNode()
+
+    /**
+     * Build a minimal IRootFolder stub for applyOutputLayout lookups.
+     *
+     * @param int       $anonFileId ID returned from getById when queried.
+     * @param File|null $anonFile   File node to return, or null for empty.
+     *
+     * @return IRootFolder|MockObject
+     */
+    private function buildRootFolderStub(int $anonFileId, ?File $anonFile): IRootFolder|MockObject
+    {
+        $userFolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $userFolder->method('getById')->willReturnCallback(
+            function (int $id) use ($anonFileId, $anonFile) {
+                if ($id === $anonFileId) {
+                    return $anonFile !== null ? [$anonFile] : [];
+                }
+
+                return [];
+            }
+        );
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $rootFolder = $this->createMock(IRootFolder::class);
+        $rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        return $rootFolder;
+
+    }//end buildRootFolderStub()
+
+    /**
+     * applyOutputLayout: moves the anonymized file to the configured subfolder
+     * and returns the target path.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
+     */
+    public function testApplyOutputLayoutMovesFileToSubfolder(): void
+    {
+        $anonFileId = 500;
+        $legacyPath = '/testuser/files/Dossier/report_anonymized.pdf';
+        $targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
+
+        $anonFile = $this->buildAnonFileNode('report_anonymized.pdf', '/testuser/files/Dossier');
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $anonFile->expects($this->once())->method('move')->with($targetPath);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $rootFolder = $this->buildRootFolderStub(anonFileId: $anonFileId, anonFile: $anonFile);
+
+        $layoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $layoutResolver->method('readSubfolderName')->willReturn('anonymised');
+        $layoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        $result = FolderBatchService::applyOutputLayout(
+            sourceFileId: 10,
+            anonymizationResult: ['anonymizedFileId' => $anonFileId, 'anonymizedFilePath' => $legacyPath],
+            userId: 'testuser',
+            rootFolder: $rootFolder,
+            layoutResolver: $layoutResolver,
+            logger: $logger
+        );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->assertEquals($targetPath, $result['anonymizedFilePath']);
+        $this->assertArrayNotHasKey('warning', $result);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+    }//end testApplyOutputLayoutMovesFileToSubfolder()
+
+    /**
+     * applyOutputLayout: when the subfolder already exists it is reused.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
+     */
+    public function testApplyOutputLayoutReusesExistingSubfolder(): void
+    {
+        $anonFileId = 501;
+        $targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
+
+        // Parent folder with an existing 'anonymised' subfolder node.
+        $existingSubfolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $existingSubfolder->method('nodeExists')->willReturn(false);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $parentFolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $parentFolder->method('getPath')->willReturn('/testuser/files/Dossier');
+        $parentFolder->method('nodeExists')->willReturn(true);
+        $parentFolder->method('get')->willReturn($existingSubfolder);
+        $parentFolder->expects($this->never())->method('newFolder');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $anonFile = $this->createMock(File::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $anonFile->method('getName')->willReturn('report_anonymized.pdf');
+        $anonFile->method('getParent')->willReturn($parentFolder);
+        $anonFile->expects($this->once())->method('move')->with($targetPath);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $rootFolder = $this->buildRootFolderStub(anonFileId: $anonFileId, anonFile: $anonFile);
+
+        $layoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $layoutResolver->method('readSubfolderName')->willReturn('anonymised');
+        $layoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        $result = FolderBatchService::applyOutputLayout(
+            sourceFileId: 11,
+            anonymizationResult: ['anonymizedFileId' => $anonFileId, 'anonymizedFilePath' => '/legacy.pdf'],
+            userId: 'testuser',
+            rootFolder: $rootFolder,
+            layoutResolver: $layoutResolver,
+            logger: $logger
+        );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->assertEquals($targetPath, $result['anonymizedFilePath']);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+    }//end testApplyOutputLayoutReusesExistingSubfolder()
+
+    /**
+     * applyOutputLayout: when a collision exists at the target, it is overwritten.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
+     */
+    public function testApplyOutputLayoutOverwritesCollision(): void
+    {
+        $anonFileId = 502;
+        $targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
+
+        $existingTarget = $this->createMock(File::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $existingTarget->expects($this->once())->method('delete');
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $subfolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $subfolder->method('nodeExists')->willReturn(true);
+        $subfolder->method('get')->willReturn($existingTarget);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $parentFolder = $this->createMock(Folder::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $parentFolder->method('getPath')->willReturn('/testuser/files/Dossier');
+        $parentFolder->method('nodeExists')->willReturn(true);
+        $parentFolder->method('get')->willReturn($subfolder);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $anonFile = $this->createMock(File::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $anonFile->method('getName')->willReturn('report_anonymized.pdf');
+        $anonFile->method('getParent')->willReturn($parentFolder);
+        $anonFile->expects($this->once())->method('move')->with($targetPath);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $rootFolder = $this->buildRootFolderStub(anonFileId: $anonFileId, anonFile: $anonFile);
+
+        $layoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $layoutResolver->method('readSubfolderName')->willReturn('anonymised');
+        $layoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        $result = FolderBatchService::applyOutputLayout(
+            sourceFileId: 12,
+            anonymizationResult: ['anonymizedFileId' => $anonFileId, 'anonymizedFilePath' => '/legacy.pdf'],
+            userId: 'testuser',
+            rootFolder: $rootFolder,
+            layoutResolver: $layoutResolver,
+            logger: $logger
+        );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->assertEquals($targetPath, $result['anonymizedFilePath']);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+    }//end testApplyOutputLayoutOverwritesCollision()
+
+    /**
+     * applyOutputLayout: when the move throws, the legacy path is returned with a warning.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
+     */
+    public function testApplyOutputLayoutMoveFailurePreservesLegacyPath(): void
+    {
+        $anonFileId = 503;
+        $legacyPath = '/testuser/files/Dossier/report_anonymized.pdf';
+        $targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
+
+        $anonFile = $this->buildAnonFileNode('report_anonymized.pdf', '/testuser/files/Dossier');
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $anonFile->method('move')->willThrowException(new \Exception('Filesystem error'));
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $rootFolder = $this->buildRootFolderStub(anonFileId: $anonFileId, anonFile: $anonFile);
+
+        $layoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $layoutResolver->method('readSubfolderName')->willReturn('anonymised');
+        $layoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
+        $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+        $logger->expects($this->once())->method('warning');
+
+        $result = FolderBatchService::applyOutputLayout(
+            sourceFileId: 13,
+            anonymizationResult: ['anonymizedFileId' => $anonFileId, 'anonymizedFilePath' => $legacyPath],
+            userId: 'testuser',
+            rootFolder: $rootFolder,
+            layoutResolver: $layoutResolver,
+            logger: $logger
+        );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->assertEquals($legacyPath, $result['anonymizedFilePath']);
+        $this->assertArrayHasKey('warning', $result);
+        $this->assertEquals('MOVE_FAILED', $result['warning']['code']);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+    }//end testApplyOutputLayoutMoveFailurePreservesLegacyPath()
+
+    /**
+     * applyOutputLayout: when anonymizedFileId is null (no output file), returns legacy path as-is.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-6
+     */
+    public function testApplyOutputLayoutReturnsLegacyWhenNoFileId(): void
+    {
+        $legacyPath = '/testuser/files/Dossier/report_anonymized.pdf';
+
+        $rootFolder     = $this->createMock(IRootFolder::class);
+        $layoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $logger         = $this->createMock(\Psr\Log\LoggerInterface::class);
+
+        $result = FolderBatchService::applyOutputLayout(
+            sourceFileId: 99,
+            anonymizationResult: ['anonymizedFileId' => null, 'anonymizedFilePath' => $legacyPath],
+            userId: 'testuser',
+            rootFolder: $rootFolder,
+            layoutResolver: $layoutResolver,
+            logger: $logger
+        );
+
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->assertEquals($legacyPath, $result['anonymizedFilePath']);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+    }//end testApplyOutputLayoutReturnsLegacyWhenNoFileId()
 }//end class
