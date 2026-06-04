@@ -208,7 +208,7 @@ OC.L10N.register(
     "Drag and drop one or more documents" : "Sleep 1 of meerdere documenten",
     "Only Word (.docx) or TXT files are supported. Maximum file size 500 MB." : "Alleen Word (.docx) of TXT bestanden zijn ondersteund. Maximale bestandsgrootte 500 MB.",
     "Only Word (.docx) and TXT files are supported. Skipped: {names}" : "Alleen Word (.docx) en TXT bestanden zijn ondersteund. Overgeslagen: {names}",
-    "+ Select files" : "+ Selecteer bestanden",
+    "Select files" : "Selecteer bestanden",
     "Review entities for {name}" : "Beoordeel entiteiten voor {name}",
     "Review needed" : "Beoordeling nodig",
     "Moving..." : "Verplaatsen...",
