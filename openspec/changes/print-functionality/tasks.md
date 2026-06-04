@@ -43,4 +43,4 @@
 
 ## Task 8: Documentation
 
-- [ ] **8.1 Update README.md / docs** — Document new print API endpoints and print configuration options
+- [x] **8.1 Update README.md / docs** — Document new print API endpoints and print configuration options

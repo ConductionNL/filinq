@@ -1,8 +1,9 @@
 ---
-status: in-progress
+status: pr-created
 kind: code
 change: print-functionality
 issue: 33
+pr: https://codeberg.org/Conduction/docudesk/pulls/96
 ---
 
 # Design: Print Functionality
