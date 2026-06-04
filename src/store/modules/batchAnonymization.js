@@ -10,6 +10,7 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 		/**
 		 * Derive the wizard step index from the current batch status.
 		 *
+		 * @param state
 		 * @spec openspec/specs/batch-anonymization/spec.md
 		 */
 		stepNumber(state) { return { uploading: 0, extracting: 1, review: 2, anonymizing: 3, completed: 4, error: 0 }[state.batchStatus] || 0 },
@@ -18,6 +19,7 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 		/**
 		 * Upload a multi-file batch and start sequential extraction.
 		 *
+		 * @param fileList
 		 * @spec openspec/specs/batch-anonymization/spec.md
 		 */
 		async uploadBatch(fileList) {
@@ -59,6 +61,7 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 		/**
 		 * Toggle whether a reviewed entity is included in anonymization.
 		 *
+		 * @param i
 		 * @spec openspec/specs/anonymization-entity-review/spec.md
 		 */
 		toggleEntity(i) { if (this.entities[i]) this.entities[i].included = !this.entities[i].included },

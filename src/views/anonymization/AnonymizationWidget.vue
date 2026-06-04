@@ -215,6 +215,7 @@ export default {
 		/**
 		 * Queue files dropped onto the pipeline drop zone.
 		 *
+		 * @param event
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		handleDrop(event) {
@@ -227,6 +228,7 @@ export default {
 		/**
 		 * Queue files chosen via the file picker into the pipeline.
 		 *
+		 * @param event
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		handleFileSelect(event) {
@@ -240,6 +242,7 @@ export default {
 		/**
 		 * Map a file's status to its pipeline step index.
 		 *
+		 * @param file
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		stepIndex(file) {
@@ -248,6 +251,8 @@ export default {
 		/**
 		 * Compute the CSS state classes for a pipeline step.
 		 *
+		 * @param file
+		 * @param index
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		stepClass(file, index) {
@@ -266,6 +271,7 @@ export default {
 		/**
 		 * Human-readable label for a file processing status.
 		 *
+		 * @param status
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		statusLabel(status) {
@@ -282,6 +288,7 @@ export default {
 		/**
 		 * Progress message describing the current processing stage of a file.
 		 *
+		 * @param file
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		processingText(file) {
@@ -299,6 +306,7 @@ export default {
 		/**
 		 * Format a detection confidence score as a percentage.
 		 *
+		 * @param confidence
 		 * @spec openspec/specs/anonymization/spec.md#requirement-anonymization-pipeline-ui-req-anon-08
 		 */
 		formatConfidence(confidence) {
