@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "spec_slug": "anonymiser-backend-warning",
+  "repo": "https://codeberg.org/Conduction/docudesk",
+  "issue": 39,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-04T00:42:32Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
+    }
+  ]
+}
