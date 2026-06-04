@@ -81,7 +81,7 @@ class BatchCorrespondenceJob extends QueuedJob
         $options      = $argument['options'] ?? [];
         // SB1 fix: carry the ownerUserId stored at dispatch time so every
         // mid-job progress update retains it (otherwise ownership check reads null).
-        $ownerUserId  = (string) ($options['userId'] ?? '');
+        $ownerUserId = (string) ($options['userId'] ?? '');
 
         if (empty($jobId) === true || empty($templateId) === true) {
             $this->logger->error(

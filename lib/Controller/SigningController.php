@@ -228,7 +228,7 @@ class SigningController extends Controller
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to cancel signing request: ', exception: $e);
-        }
+        }//end try
 
     }//end cancelRequest()
 

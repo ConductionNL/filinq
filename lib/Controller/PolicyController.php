@@ -45,8 +45,6 @@ use RuntimeException;
  */
 class PolicyController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -69,7 +67,6 @@ class PolicyController extends Controller
 
     }//end __construct()
 
-
     /**
      * List all prohibitions.
      *
@@ -91,7 +88,6 @@ class PolicyController extends Controller
         }
 
     }//end indexProhibitions()
-
 
     /**
      * Show a single prohibition.
@@ -124,7 +120,6 @@ class PolicyController extends Controller
 
     }//end showProhibition()
 
-
     /**
      * Create a prohibition.
      *
@@ -149,7 +144,6 @@ class PolicyController extends Controller
         }
 
     }//end createProhibition()
-
 
     /**
      * Update a prohibition.
@@ -180,7 +174,6 @@ class PolicyController extends Controller
 
     }//end updateProhibition()
 
-
     /**
      * Delete a prohibition.
      *
@@ -208,7 +201,6 @@ class PolicyController extends Controller
 
     }//end deleteProhibition()
 
-
     /**
      * List standing consents.
      *
@@ -230,7 +222,6 @@ class PolicyController extends Controller
         }
 
     }//end indexStandingConsents()
-
 
     /**
      * Show a single standing consent.
@@ -263,7 +254,6 @@ class PolicyController extends Controller
 
     }//end showStandingConsent()
 
-
     /**
      * Create a standing consent.
      *
@@ -290,7 +280,6 @@ class PolicyController extends Controller
         }
 
     }//end createStandingConsent()
-
 
     /**
      * Update a standing consent.
@@ -325,7 +314,6 @@ class PolicyController extends Controller
 
     }//end updateStandingConsent()
 
-
     /**
      * Delete a standing consent.
      *
@@ -355,7 +343,6 @@ class PolicyController extends Controller
 
     }//end deleteStandingConsent()
 
-
     /**
      * Wrap an exception into a 500 JSON response and log it.
      *
@@ -376,6 +363,4 @@ class PolicyController extends Controller
         );
 
     }//end error()
-
-
 }//end class

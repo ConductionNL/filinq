@@ -122,7 +122,6 @@ class BatchAnonymizationController extends Controller
      */
     private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
 
-
     /**
      * Accept a multipart upload and create a new anonymization batch.
      *
@@ -501,7 +500,6 @@ class BatchAnonymizationController extends Controller
         return $tenantDefault;
 
     }//end resolveOutputFormat()
-
 
     /**
      * Produce the CSV anonymization report for a batch as a file download.
