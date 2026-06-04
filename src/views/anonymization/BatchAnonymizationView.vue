@@ -81,7 +81,7 @@ export default {
 }
 
 .drop-zone {
-	border: 2px dashed var(--color-border); border-radius: 12px; padding: 48px; text-align: center
+	border: 2px dashed var(--color-border); border-radius: var(--border-radius-large); padding: 48px; text-align: center
 }
 
 .file-item {

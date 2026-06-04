@@ -160,14 +160,15 @@ export default {
 	width: 100%;
 	padding: 10px 40px 10px 48px;
 	border: 1px solid var(--dd-search-bar-border, #D9D9D9);
-	border-radius: 999px;
+	border-radius: var(--dd-radius-pill-full);
 	background: var(--color-main-background, #FFF);
 	font-size: 14px;
 	font-weight: 300;
-	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	box-shadow: var(--dd-shadow-panel);
 	min-width: 392px;
 	max-width: 100%;
 	min-height: 40px;
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .dd-search-bar__input::placeholder {

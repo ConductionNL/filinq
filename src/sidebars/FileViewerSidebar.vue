@@ -408,8 +408,8 @@ export default {
  * so override directly. */
 .app-sidebar {
 	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: 20px;
-	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+	border-radius: var(--dd-radius-panel);
+	box-shadow: var(--dd-shadow-panel);
 	margin-left: 8px;
 }
 
@@ -481,7 +481,7 @@ export default {
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
 	padding: 2px 8px;
-	border-radius: 12px;
+	border-radius: var(--border-radius-large);
 	background-color: var(--color-primary-element-light);
 	color: var(--color-primary-element);
 	display: inline-block;

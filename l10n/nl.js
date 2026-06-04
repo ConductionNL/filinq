@@ -2,6 +2,8 @@ OC.L10N.register(
     "docudesk",
     {
     "Dashboard" : "Dashboard",
+    "Tiles" : "Tegels",
+    "List" : "Lijst",
     "Anonymization" : "Anonimisering",
     "Create dossier" : "Dossier aanmaken",
     "Create and upload" : "Aanmaken en uploaden",

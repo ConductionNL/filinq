@@ -431,6 +431,7 @@ export default {
 
 <style scoped>
 .anonymization-widget {
+	--dd-color-dark-grey: #61616c;
 	display: flex;
 	flex-direction: column;
 	padding: 20px;
@@ -452,18 +453,22 @@ export default {
 	display: flex;
 	align-items: center;
 	gap: 24px;
-	border: 2px dashed var(--color-border);
-	border-radius: var(--border-radius-large);
+	border: 1px dashed var(--dd-color-dark-grey);
+	border-radius: var(--dd-radius-panel);
 	padding: 32px;
 	background-color: #fff;
+	box-shadow: var(--dd-shadow-panel);
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
 }
 
-.drop-zone:hover,
+.drop-zone:hover {
+	border-color: var(--color-primary);
+}
+
 .drop-zone.dragging {
 	border-color: var(--color-primary);
-	background-color: #fff;
+	background-image: linear-gradient(180deg, var(--color-primary-element-light) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .upload-icon {

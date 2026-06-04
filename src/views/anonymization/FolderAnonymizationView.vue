@@ -270,7 +270,7 @@ export default {
 
 .status-badge {
 	padding: 2px 10px;
-	border-radius: 12px;
+	border-radius: var(--border-radius-large);
 	font-size: 0.8rem;
 }
 
@@ -320,7 +320,7 @@ export default {
 /* Wave 4a additions: dossier-creation card, flag toggle, report block. */
 .dossier-card {
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	padding: 16px;
 	margin: 16px 0;
 	background-color: var(--color-main-background);

@@ -159,8 +159,8 @@ export default {
    the lib; radius and shadow have no NC variable, so override directly. */
 :deep(.app-content) {
 	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: 20px;
-	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+	border-radius: var(--dd-radius-panel);
+	box-shadow: var(--dd-shadow-panel);
 }
 
 /* Centre the NcEmptyContent when OpenRegister is not installed.
