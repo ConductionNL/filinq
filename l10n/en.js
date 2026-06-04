@@ -180,7 +180,20 @@ OC.L10N.register(
     "Strafrechtelijke gegevens" : "Criminal-law data (Art. 5.1 Woo / GDPR Art. 10)",
     "Bedrijfs- en fabricagegegevens" : "Business and manufacturing data (Art. 5.1 sub c Woo)",
     "Onevenredige benadeling" : "Disproportionate disadvantage (Art. 5.2 Woo)",
-    "Nationale veiligheid" : "National security (Art. 5.1 sub a/b Woo)"
+    "Nationale veiligheid" : "National security (Art. 5.1 sub a/b Woo)",
+    "AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser." : "AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser.",
+    "Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:" : "Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:",
+    "OpenAnonymiser Light (CPU)" : "OpenAnonymiser Light (CPU)",
+    "— lightweight, no GPU required" : "— lightweight, no GPU required",
+    "OpenAnonymiser (GPU)" : "OpenAnonymiser (GPU)",
+    "— high accuracy, requires a GPU" : "— high accuracy, requires a GPU",
+    "Configure a custom anonymisation endpoint" : "Configure a custom anonymisation endpoint",
+    "— via OpenRegister settings" : "— via OpenRegister settings",
+    "Dismiss" : "Dismiss",
+    "Failed to dismiss the anonymiser backend warning" : "Failed to dismiss the anonymiser backend warning",
+    "Show anonymiser backend warning" : "Show anonymiser backend warning",
+    "Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load." : "Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.",
+    "Failed to reset the anonymiser backend warning" : "Failed to reset the anonymiser backend warning"
 },
 "nplurals=2; plural=(n != 1);"
 );

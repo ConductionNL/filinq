@@ -231,7 +231,20 @@ OC.L10N.register(
     "%n entity detected" : ["%n entiteit gedetecteerd", "%n entiteiten gedetecteerd"],
     "%n entity replaced" : ["%n entiteit vervangen", "%n entiteiten vervangen"],
     "%n occurrence" : ["%n keer", "%n keer"],
-    "%n item anonymised" : ["%n item geanonimiseerd", "%n items geanonimiseerd"]
+    "%n item anonymised" : ["%n item geanonimiseerd", "%n items geanonimiseerd"],
+    "AppAPI is not installed. Install AppAPI from the App Store before installing OpenAnonymiser." : "AppAPI is niet geïnstalleerd. Installeer AppAPI vanuit de App Store voordat u OpenAnonymiser installeert.",
+    "Entity recognition is running in regex-only mode. For higher-quality anonymisation, install one of the supported backends:" : "Entiteitsherkenning werkt momenteel alleen met reguliere expressies. Installeer een van de ondersteunde backends voor betere anonimisering:",
+    "OpenAnonymiser Light (CPU)" : "OpenAnonymiser Light (CPU)",
+    "— lightweight, no GPU required" : "— lichtgewicht, geen GPU vereist",
+    "OpenAnonymiser (GPU)" : "OpenAnonymiser (GPU)",
+    "— high accuracy, requires a GPU" : "— hoge nauwkeurigheid, GPU vereist",
+    "Configure a custom anonymisation endpoint" : "Configureer een aangepast anonimiseringseindpunt",
+    "— via OpenRegister settings" : "— via OpenRegister-instellingen",
+    "Dismiss" : "Sluiten",
+    "Failed to dismiss the anonymiser backend warning" : "Sluiten van de anonimiseringsmelding mislukt",
+    "Show anonymiser backend warning" : "Anonimiseringsmelding weergeven",
+    "Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load." : "Schakel de anonimiseringsmelding opnieuw in. Deze was eerder gesloten en verschijnt opnieuw bij de volgende paginalading.",
+    "Failed to reset the anonymiser backend warning" : "Herstellen van de anonimiseringsmelding mislukt"
 },
 "nplurals=2; plural=(n != 1);"
 );

@@ -1,5 +1,12 @@
 <template>
 	<div>
+		<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->
+		<AnonymiserBackendWarning
+			v-if="isAdmin"
+			:show-warning="anonymiserBackend.showWarning"
+			:app-api-installed="anonymiserBackend.appApiInstalled"
+			@dismissed="onAnonymiserWarningDismissed" />
+
 		<!-- Version Information -->
 		<CnVersionInfoCard
 			:app-name="'DocuDesk'"
@@ -51,6 +58,19 @@
 		<NcSettingsSection
 			:name="t('docudesk', 'Anonymisation')"
 			:description="t('docudesk', 'Configure how anonymised documents are written back to Nextcloud')">
+			<div v-if="isAdmin && anonymiserBackend.warningDismissed" class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'Show anonymiser backend warning') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:checked="false"
+					type="switch"
+					@update:checked="resetAnonymiserWarning" />
+				<div class="setting-description">
+					{{ t('docudesk', 'Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.') }}
+				</div>
+			</div>
+
 			<div class="setting-item">
 				<div class="setting-label">
 					{{ t('docudesk', 'Always export anonymised documents as PDF') }}
@@ -268,6 +288,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
+import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 
 export default {
 	name: 'Settings',
@@ -279,6 +300,7 @@ export default {
 		NcLoadingIcon,
 		NcCheckboxRadioSwitch,
 		CnVersionInfoCard,
+		AnonymiserBackendWarning,
 		Plus,
 		Restart,
 	},
@@ -287,7 +309,14 @@ export default {
 			appVersion: loadState('docudesk', 'version', 'Unknown'),
 			loading: false,
 			saving: false,
+			isAdmin: false,
 			openRegisterInstalled: false,
+			anonymiserBackend: {
+				method: 'regex',
+				appApiInstalled: false,
+				warningDismissed: false,
+				showWarning: false,
+			},
 			settingsData: {},
 			availableRegisters: [],
 			availableRegistersOptions: { options: [] },
@@ -344,8 +373,19 @@ export default {
 				.then((response) => response.json())
 				.then((data) => {
 					this.openRegisterInstalled = data.openRegisters
+					this.isAdmin = data.isAdmin ?? false
 					this.settingsData = data
 					this.availableRegisters = data.availableRegisters
+
+					// Backend warning state.
+					if (data.anonymiserBackend) {
+						this.anonymiserBackend = {
+							method: data.anonymiserBackend.method ?? 'regex',
+							appApiInstalled: data.anonymiserBackend.appApiInstalled ?? false,
+							warningDismissed: data.anonymiserBackend.warningDismissed ?? false,
+							showWarning: data.anonymiserBackend.showWarning ?? false,
+						}
+					}
 
 					// Update local settings
 					this.settings.publication_objection_period_days = data.publication_objection_period_days ?? 28
@@ -505,6 +545,37 @@ export default {
 					this.saving = false
 				})
 		},
+		/**
+		 * Handle the anonymiser backend warning being dismissed.
+		 * Hides the banner immediately without a page reload.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
+		 */
+		onAnonymiserWarningDismissed() {
+			this.anonymiserBackend = { ...this.anonymiserBackend, showWarning: false, warningDismissed: true }
+		},
+
+		/**
+		 * Re-enable the anonymiser backend warning by calling the reset endpoint.
+		 * Clears the per-admin dismissal flag; the banner appears on the next load.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
+		 */
+		async resetAnonymiserWarning() {
+			try {
+				const response = await fetch(
+					'/index.php/apps/docudesk/api/admin/anonymiser-warning/reset',
+					{ method: 'POST' },
+				)
+				if (response.ok === false) {
+					throw new Error('HTTP ' + response.status)
+				}
+				this.anonymiserBackend = { ...this.anonymiserBackend, warningDismissed: false, showWarning: true }
+			} catch (err) {
+				showError(t('docudesk', 'Failed to reset the anonymiser backend warning'))
+			}
+		},
+
 		/**
 		 * Open an external documentation/configuration link.
 		 *
