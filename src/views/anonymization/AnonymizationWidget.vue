@@ -26,9 +26,9 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					<p class="drop-subtitle">
 						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
-					<span class="fake-button">
-						{{ t('docudesk', '+ Select files') }}
-					</span>
+					<DdButton
+						icon="add"
+						:label="t('docudesk', 'Select files')" />
 				</div>
 				<input
 					ref="fileInput"
@@ -98,6 +98,7 @@ import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nex
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import DdButton from '../../components/DdButton.vue'
 import uploadIcon from '../../assets/upload.png'
 
 // Anonymisation only produces real redactions for formats the backend can
@@ -151,6 +152,7 @@ export default {
 		NcNoteCard,
 		NcTextField,
 		DdDocumentCard,
+		DdButton,
 	},
 	data() {
 		return {
@@ -499,17 +501,6 @@ export default {
 	margin: 0;
 	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
-}
-
-.fake-button {
-	margin-top: 4px;
-	padding: 8px 16px;
-	border-radius: var(--border-radius);
-	background-color: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-	font-size: 0.9rem;
-	font-weight: 500;
-	white-space: nowrap;
 }
 
 .file-input {

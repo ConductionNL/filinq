@@ -18,6 +18,10 @@
    app only and does not leak into other Nextcloud apps. */
 :root {
 	--dd-color-dark-blue: #02162E;
+	--dd-color-blue: #2874D1;
+	--dd-color-white: #FFF;
+	--dd-color-white-70: rgba(255, 255, 255, 0.70);
+	--dd-color-light-grey: rgba(247, 247, 247, 0.70);
 
 	/* Remap Nextcloud's `--color-main-text` token so all components that
 	   honour it — including @nextcloud/vue internals — pick up the brand
