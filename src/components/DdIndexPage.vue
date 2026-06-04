@@ -6,32 +6,13 @@
 				<slot name="header-actions" />
 			</div>
 
-			<div
+			<DdViewToggle
 				v-if="showViewToggle"
-				class="dd-index-page__view-toggle"
-				role="group"
-				:aria-label="viewToggleLabel">
-				<button
-					type="button"
-					class="dd-index-page__view-btn"
-					:class="{ 'dd-index-page__view-btn--active': currentViewMode === 'table' }"
-					:aria-pressed="currentViewMode === 'table'"
-					:title="tableLabel"
-					@click="setViewMode('table')">
-					<FormatListBulleted :size="20" />
-					<span class="dd-index-page__view-btn-label">{{ tableLabel }}</span>
-				</button>
-				<button
-					type="button"
-					class="dd-index-page__view-btn"
-					:class="{ 'dd-index-page__view-btn--active': currentViewMode === 'cards' }"
-					:aria-pressed="currentViewMode === 'cards'"
-					:title="cardsLabel"
-					@click="setViewMode('cards')">
-					<ViewGridOutline :size="20" />
-					<span class="dd-index-page__view-btn-label">{{ cardsLabel }}</span>
-				</button>
-			</div>
+				:value="toggleValue"
+				:tiles-label="cardsLabel"
+				:list-label="tableLabel"
+				:aria-label="viewToggleLabel"
+				@input="onToggle" />
 		</div>
 
 		<!-- Body: table or cards -->
@@ -87,8 +68,7 @@
 </template>
 
 <script>
-import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
-import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
+import DdViewToggle from './DdViewToggle.vue'
 import DdDataTable from './DdDataTable.vue'
 import DdCardGrid from './DdCardGrid.vue'
 import DdPagination from './DdPagination.vue'
@@ -110,8 +90,7 @@ import DdPagination from './DdPagination.vue'
 export default {
 	name: 'DdIndexPage',
 	components: {
-		FormatListBulleted,
-		ViewGridOutline,
+		DdViewToggle,
 		DdDataTable,
 		DdCardGrid,
 		DdPagination,
@@ -174,6 +153,10 @@ export default {
 		}
 	},
 	computed: {
+		/** Map the internal `table`/`cards` mode to DdViewToggle's `list`/`tiles`. */
+		toggleValue() {
+			return this.currentViewMode === 'cards' ? 'tiles' : 'list'
+		},
 		/** Names of `column-*` slots provided by the parent, for pass-through. */
 		slotColumns() {
 			return Object.keys(this.$scopedSlots)
@@ -187,6 +170,14 @@ export default {
 		},
 	},
 	methods: {
+		/**
+		 * Translate a DdViewToggle selection back to the internal mode.
+		 *
+		 * @param {string} mode `'tiles'` or `'list'`.
+		 */
+		onToggle(mode) {
+			this.setViewMode(mode === 'tiles' ? 'cards' : 'table')
+		},
 		/**
 		 * Switch the active view mode and notify the parent so it can persist
 		 * the choice (e.g. via `:view-mode.sync` or `@update:view-mode`).
@@ -225,46 +216,4 @@ export default {
 	min-width: 0;
 }
 
-.dd-index-page__view-toggle {
-	display: inline-flex;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	background: var(--color-main-background);
-	flex-shrink: 0;
-}
-
-.dd-index-page__view-btn {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	border: none;
-	background: transparent;
-	color: var(--color-main-text);
-	cursor: pointer;
-	font-size: 0.9rem;
-	transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.dd-index-page__view-btn:not(:last-child) {
-	border-right: 1px solid var(--color-border);
-}
-
-.dd-index-page__view-btn:hover {
-	background: var(--color-background-hover);
-}
-
-.dd-index-page__view-btn--active {
-	background: var(--color-primary-element);
-	color: var(--color-primary-element-text);
-}
-
-.dd-index-page__view-btn--active:hover {
-	background: var(--color-primary-element);
-}
-
-.dd-index-page__view-btn-label {
-	white-space: nowrap;
-}
 </style>
