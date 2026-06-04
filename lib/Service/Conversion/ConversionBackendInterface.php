@@ -42,8 +42,6 @@ use OCP\Files\File;
  */
 interface ConversionBackendInterface
 {
-
-
     /**
      * Short identifier used in diagnostic surfaces and the 422 body's
      * `conversionAttempts[].backend` field.
@@ -55,7 +53,6 @@ interface ConversionBackendInterface
      */
     public function name(): string;
 
-
     /**
      * Whether this backend is usable in the current install. Cheap check:
      * tenant config flag, binary on PATH, app installed and configured.
@@ -65,7 +62,6 @@ interface ConversionBackendInterface
      * @return bool True when the backend can be invoked.
      */
     public function isAvailable(): bool;
-
 
     /**
      * Whether this backend can process the given MIME type / extension.
@@ -77,7 +73,6 @@ interface ConversionBackendInterface
      * @return bool True when this backend claims the input format.
      */
     public function canHandle(string $mimeType, string $extension): bool;
-
 
     /**
      * Convert the source file to a PDF (PDF/A-3b when feasible) and
@@ -97,6 +92,4 @@ interface ConversionBackendInterface
      *                                    attempts cleanly).
      */
     public function convert(File $source): File;
-
-
 }//end interface

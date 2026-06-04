@@ -116,7 +116,6 @@ class PdfService
 
     }//end generatePdfFromHtml()
 
-
     /**
      * Render HTML from a Twig template string and data context (for print preview)
      *

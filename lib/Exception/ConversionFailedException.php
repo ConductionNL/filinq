@@ -49,7 +49,6 @@ class ConversionFailedException extends RuntimeException
      */
     private array $attempts;
 
-
     /**
      * Constructor.
      *
@@ -64,7 +63,6 @@ class ConversionFailedException extends RuntimeException
 
     }//end __construct()
 
-
     /**
      * Get the per-backend attempt records. Shape per D5: each entry
      * carries the backend name, whether it was available, whether it
@@ -77,6 +75,4 @@ class ConversionFailedException extends RuntimeException
         return $this->attempts;
 
     }//end getAttempts()
-
-
 }//end class
