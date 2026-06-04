@@ -3,75 +3,57 @@
   "verified": [
     {
       "task": "1",
-      "file": "lib/Service/BatchAnonymizeService.php",
+      "file": "lib/Service/FolderBatchService.php",
       "ok": true,
-      "note": "postProcessMove() added to BatchAnonymizeService — covers folder-origin batches because folder batches go through BatchAnonymizeService.anonymizeBatch(). OutputLayoutResolver dependency injected."
+      "note": "scheduleExtraction shutdown handler now calls anonymizeDocument + applyOutputLayout; subfolder created/reused; move failure preserves legacy path with MOVE_FAILED warning"
     },
     {
       "task": "2",
       "file": "lib/BackgroundJob/FolderExtractionJob.php",
       "ok": true,
-      "note": "Source-discovery filter added to FolderExtractionJob.run(). Idempotency preserved: files with status != 'uploaded' are skipped; retry can re-process files still at legacy status."
-    },
-    {
-      "task": "3",
-      "file": "lib/Service/FolderBatchService.php",
-      "ok": true,
-      "note": "Source-discovery filter in enumerateFiles() uses OutputLayoutResolver.hasAnonymizedSuffix(). Same helper used in FolderExtractionJob — single source of truth, no drift."
-    },
-    {
-      "task": "3",
-      "file": "lib/BackgroundJob/FolderExtractionJob.php",
-      "ok": true,
-      "note": "Source-discovery filter applied via OutputLayoutResolver.hasAnonymizedSuffix() in run() loop."
+      "note": "run() calls anonymizeDocument + FolderBatchService::applyOutputLayout after extraction; skips non-'uploaded' files (retry-safe); IRootFolder dependency added"
     },
     {
       "task": "3",
       "file": "lib/Service/Conversion/OutputLayoutResolver.php",
       "ok": true,
-      "note": "hasAnonymizedSuffix() shared filter method — single implementation, used by both FolderBatchService and FolderExtractionJob."
+      "note": "hasAnonymizedSuffix() shared filter method used by both FolderBatchService.enumerateFiles() and FolderExtractionJob.run()"
     },
     {
       "task": "4",
-      "file": "lib/Service/BatchAnonymizeService.php",
+      "file": "lib/Service/FolderBatchService.php",
       "ok": true,
-      "note": "anonymizedFilePath in batch state is updated to the subfolder path after move. On move failure, legacy path is recorded with warning."
+      "note": "batch file entries record anonymizedFilePath from applyOutputLayout result; move failure records legacy path + warning"
     },
     {
       "task": "5",
-      "file": "lib/Service/AnonymizationService.php",
+      "file": "lib/Controller/AnonymizationController.php",
       "ok": true,
-      "note": "Verified by inspection — AnonymizationService.anonymizeDocument() is NOT modified. Single-file endpoint unchanged."
+      "note": "Not touched — single-file anonymize endpoint unchanged; verified by inspection"
     },
     {
       "task": "6",
       "file": "tests/unit/Service/FolderBatchServiceTest.php",
       "ok": true,
-      "note": "Added testSourceDiscoveryExcludesAnonymizedSuffixedFiles and testSourceDiscoveryAllFilteredThrowsNoFiles. Updated constructor to include OutputLayoutResolver."
-    },
-    {
-      "task": "6",
-      "file": "tests/unit/Service/BatchAnonymizeServiceTest.php",
-      "ok": true,
-      "note": "Added testPostProcessMoveReturnsLegacyPathWhenNoUser and testPostProcessMoveSetsLegacyPathWhenAnonymizedFileIdIsNull covering move-failure and fallback paths."
+      "note": "testApplyOutputLayoutMovesFileToSubfolder, testApplyOutputLayoutReusesExistingSubfolder, testApplyOutputLayoutOverwritesCollision, testApplyOutputLayoutMoveFailurePreservesLegacyPath, testApplyOutputLayoutReturnsLegacyWhenNoFileId, testSourceDiscoveryExcludesAnonymizedSuffixedFiles all pass"
     },
     {
       "task": "7",
       "file": "tests/unit/BackgroundJob/FolderExtractionJobTest.php",
       "ok": true,
-      "note": "Added testSkipsLegacyAnonymizedSuffixedFiles and testRetryIsIdempotentForAlreadyExtractedFiles."
+      "note": "testJobAppliesOutputLayoutAndRecordsTargetPath, testMoveFailurePreservesLegacyPathWithWarning, testRetryIsIdempotentForAlreadyAnonymizedFiles, testAnonymizationFailureMarksFileAsError, testStatusTransitionsExtractingToCompleted all pass"
     },
     {
       "task": "9",
       "file": "docs/features/folder-analysis-anonymization.md",
       "ok": true,
-      "note": "Updated Anonymized Output section with subfolder layout, source-discovery filter, move-failure fallback, and background job behaviour."
+      "note": "Updated by previous builder: subfolder layout, source-discovery filter, move-failure, and retry-idempotency documented"
     },
     {
-      "task": "9",
-      "file": "CHANGELOG.md",
+      "task": "10",
+      "file": "lib/Service/FolderBatchService.php",
       "ok": true,
-      "note": "Added Behavior changes entries for folder-analysis output layout, source-discovery filter, and anonymizedFilePath recording."
+      "note": "phpcs 0 errors on changed lib/ files; phpunit 425/425 tests pass; hydra-gates --scope-to-diff: ALL 14 GATES GREEN"
     }
   ],
   "stubs": [],
