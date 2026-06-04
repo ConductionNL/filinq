@@ -281,18 +281,21 @@ export default {
 	margin-bottom: 16px;
 	flex-wrap: wrap;
 }
+
 .prohibition-form {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
 	padding: 8px;
 }
+
 .match-rule-row {
 	display: grid;
 	grid-template-columns: 180px 1fr 40px;
 	gap: 8px;
 	align-items: center;
 }
+
 .form-warning {
 	background: var(--color-warning, #fff3cd);
 	color: var(--color-text-maxcontrast, #333);
@@ -300,6 +303,7 @@ export default {
 	border-radius: 4px;
 	font-size: 13px;
 }
+
 .form-error {
 	background: var(--color-error, #ffd1d1);
 	color: var(--color-text-maxcontrast, #333);
