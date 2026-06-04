@@ -66,6 +66,14 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:active="isActive('Correspondence')"
+				:name="t('docudesk', 'Brieven & correspondentie')"
+				:to="{ name: 'Correspondence' }">
+				<template #icon>
+					<EmailOutline :size="24" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:active="isActive('StandingConsents')"
 				:name="t('docudesk', 'Standing Consents')"
 				:to="{ name: 'StandingConsents' }">
@@ -103,12 +111,14 @@ import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import TestTube from 'vue-material-design-icons/TestTube.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
 	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
 	Anonymization: ['Anonymization', 'BatchAnonymization'],
 	AnonymizationPoc: ['AnonymizationPoc'],
+	Correspondence: ['Correspondence'],
 }
 
 export default {
@@ -127,6 +137,7 @@ export default {
 		AccountStar,
 		AlertOctagon,
 		TestTube,
+		EmailOutline,
 	},
 	methods: {
 		/**

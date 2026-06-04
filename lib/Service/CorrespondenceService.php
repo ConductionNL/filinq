@@ -49,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
+ * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2
  */
 class CorrespondenceService
 {

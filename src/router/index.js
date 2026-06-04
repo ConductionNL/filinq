@@ -14,6 +14,7 @@ import MyDocumentsIndex from '../views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from '../components/PrintPreview.vue'
 import ProhibitionIndex from '../views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from '../views/policy/StandingConsentIndex.vue'
+import CorrespondenceIndex from '../views/correspondence/CorrespondenceIndex.vue'
 
 Vue.use(Router)
 
@@ -36,6 +37,7 @@ export default new Router(
 			{ path: '/templates/:id', name: 'TemplateDetail', component: TemplateDetail, props: route => ({ templateId: route.params.id }) },
 			{ path: '/my-documents', name: 'MyDocuments', component: MyDocumentsIndex },
 			{ path: '/print-preview/:templateId?', name: 'PrintPreview', component: PrintPreview, props: route => ({ templateId: route.params.templateId || '' }) },
+			{ path: '/correspondence', name: 'Correspondence', component: CorrespondenceIndex },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],
 	},
