@@ -36,6 +36,7 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
 
+
 /**
  * Event listener that auto-regenerates the dossier grondslagen summary on checkedOn update
  *
@@ -67,12 +68,19 @@ class DossierCheckedOnListener implements IEventListener
     private const DOSSIER_SCHEMA = 'dossier';
 
     /**
-     * Constructor is intentionally empty; services are resolved lazily in handle().
+     * Constructor for DossierCheckedOnListener.
+     *
+     * @param LoggerInterface           $logger                    Logger for diagnostics
+     * @param GrondslagenSummaryService $grondslagenSummaryService Dossier summary renderer
      *
      * @return void
+     *
+     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly LoggerInterface $logger,
+        private readonly GrondslagenSummaryService $grondslagenSummaryService,
+    ) {
 
     }//end __construct()
 
@@ -150,15 +158,12 @@ class DossierCheckedOnListener implements IEventListener
 
         // Run synchronously; catch any failure to preserve the review result.
         try {
-            $logger         = \OC::$server->get(LoggerInterface::class);
-            $summaryService = \OC::$server->get(GrondslagenSummaryService::class);
-
-            $logger->info(
+            $this->logger->info(
                 message: 'DocuDesk: Auto-regenerating dossier grondslagen summary on checkedOn update',
                 context: ['dossierId' => $dossierId]
             );
 
-            $summaryService->renderDossierSummary(dossierId: (int) $dossierId);
+            $this->grondslagenSummaryService->renderDossierSummary(dossierId: (string) $dossierId);
         } catch (\Throwable $e) {
             // Log but do NOT rethrow — the dossier update must succeed.
             $this->logError(
@@ -268,22 +273,17 @@ class DossierCheckedOnListener implements IEventListener
      */
     private function logError(\Throwable $exception, string $context, array $extra=[]): void
     {
-        try {
-            $logger = \OC::$server->get(LoggerInterface::class);
-            $logger->error(
-                message: 'DocuDesk: '.$context.' failed: '.$exception->getMessage(),
-                context: array_merge(
-                    $extra,
-                    [
-                        'exception' => $exception->getMessage(),
-                        'file'      => $exception->getFile(),
-                        'line'      => $exception->getLine(),
-                    ]
-                )
-            );
-        } catch (\Throwable) {
-            // Silently fail if logging is unavailable.
-        }
+        $this->logger->error(
+            message: 'DocuDesk: '.$context.' failed: '.$exception->getMessage(),
+            context: array_merge(
+                $extra,
+                [
+                    'exception' => $exception->getMessage(),
+                    'file'      => $exception->getFile(),
+                    'line'      => $exception->getLine(),
+                ]
+            )
+        );
 
     }//end logError()
 }//end class

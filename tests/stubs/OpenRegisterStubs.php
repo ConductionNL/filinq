@@ -541,6 +541,7 @@ interface IAppConfig
     public function getAppInstalledVersions(bool $onlyEnabled=false): array;
 }//end interface
 
+
 namespace OCP\App;
 
 /**
@@ -587,9 +588,9 @@ class Http
     public const STATUS_UNAUTHORIZED = 401;
     public const STATUS_FORBIDDEN    = 403;
     public const STATUS_NOT_FOUND    = 404;
+    public const STATUS_CONFLICT     = 409;
     public const STATUS_INTERNAL_SERVER_ERROR = 500;
 }//end class
-
 
 namespace Psr\Log;
 
@@ -761,3 +762,6 @@ interface IRootFolder
      */
     public function getUserFolder(string $userId): \OCP\Files\Folder;
 }//end interface
+
+// ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
+

@@ -110,7 +110,7 @@ class DossierController extends Controller
             }
 
             $dossier = $this->grondslagenSummaryService->renderDossierSummary(
-                dossierId: (int) $dossierId
+                dossierId: $dossierId
             );
 
             if ($dossier === null) {
@@ -146,16 +146,18 @@ class DossierController extends Controller
     }//end generateGrondslagenPdf()
 
     /**
-     * Authorise the current user to access a specific dossier.
+     * Validate the current user and dossier ID before allowing access.
      *
-     * Returns null when access is granted. Returns a 403/404 JSONResponse
-     * when the user should not be allowed to access this dossier.
-     * Per-object guard: only the dossier's owner or an admin may trigger
-     * regen (OWASP A01 — IDOR prevention).
+     * Returns null when validation passes (authenticated user, non-empty ID).
+     * Returns a JSONResponse when validation fails (unauthenticated, empty ID).
+     *
+     * Note: all authenticated users may invoke this endpoint. Per-object
+     * access control is enforced downstream by OpenRegister's RBAC — an
+     * inaccessible dossier returns null from find(), surfacing as 404.
      *
      * @param string $dossierId Dossier UUID
      *
-     * @return JSONResponse|null Error response or null when access is granted
+     * @return JSONResponse|null Error response or null when validation passes
      *
      * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-5
      */
@@ -177,10 +179,6 @@ class DossierController extends Controller
             );
         }
 
-        // For now, any authenticated user can trigger regen on any accessible
-        // dossier. The ObjectService apply RBAC by itself when it resolves the
-        // dossier — an inaccessible dossier returns null from find() which is
-        // caught upstream and surfaces as 404.
         return null;
 
     }//end authoriseDossierAccess()

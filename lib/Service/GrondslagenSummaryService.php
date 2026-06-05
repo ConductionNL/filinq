@@ -233,7 +233,7 @@ class GrondslagenSummaryService
      *
      * An empty dossier (no anonymised files) produces a valid near-empty PDF.
      *
-     * @param int $dossierId Dossier UUID or numeric ID
+     * @param string $dossierId Dossier UUID
      *
      * @return \OCA\OpenRegister\Db\ObjectEntity|null Saved dossier object
      *
@@ -241,7 +241,7 @@ class GrondslagenSummaryService
      *
      * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
      */
-    public function renderDossierSummary(int $dossierId): mixed
+    public function renderDossierSummary(string $dossierId): mixed
     {
         $objectService = $this->getObjectService();
         $dossier       = $objectService->find(
@@ -654,6 +654,12 @@ class GrondslagenSummaryService
         $nodes = $folder->getDirectoryListing();
         foreach ($nodes as $node) {
             if ($node instanceof \OCP\Files\Folder) {
+                // Skip the anonymised output subfolder to avoid double-counting
+                // redacted entity data (the output files are scanned separately).
+                if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
+                    continue;
+                }
+
                 $this->collectFromFolder(folder: $node, result: $result);
                 continue;
             }

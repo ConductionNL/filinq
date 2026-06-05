@@ -148,6 +148,7 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
             anonymizationService: $this->mockAnonService,
             fileListingService: $this->mockFileService,
             l10n: $this->mockL10n,
+            appConfig: $this->createMock(\OCP\IAppConfig::class),
             userSession: $this->mockUserSession,
             rootFolder: $this->mockRootFolder
         );

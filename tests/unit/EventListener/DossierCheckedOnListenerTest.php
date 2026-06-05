@@ -23,9 +23,11 @@
 namespace OCA\DocuDesk\Tests\Unit\EventListener;
 
 use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * Unit tests for DossierCheckedOnListener
@@ -47,6 +49,16 @@ class DossierCheckedOnListenerTest extends TestCase
     private DossierCheckedOnListener $listener;
 
     /**
+     * @var MockObject&LoggerInterface
+     */
+    private MockObject $logger;
+
+    /**
+     * @var MockObject&GrondslagenSummaryService
+     */
+    private MockObject $grondslagenSummaryService;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -54,9 +66,29 @@ class DossierCheckedOnListenerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->listener = new DossierCheckedOnListener();
+
+        $this->logger = $this->createMock(LoggerInterface::class);
+        // phpcs:disable CustomSn.Functions.NamedParameters
+        $this->grondslagenSummaryService = $this->createMock(GrondslagenSummaryService::class);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+
+        $this->listener = new DossierCheckedOnListener(
+            logger: $this->logger,
+            grondslagenSummaryService: $this->grondslagenSummaryService,
+        );
 
     }//end setUp()
+
+    /**
+     * Test that listener can be instantiated with injected dependencies
+     *
+     * @return void
+     */
+    public function testListenerCanBeInstantiated(): void
+    {
+        $this->assertInstanceOf(DossierCheckedOnListener::class, $this->listener);
+
+    }//end testListenerCanBeInstantiated()
 
     /**
      * Test that non-ObjectUpdatedEvent is silently ignored
@@ -73,15 +105,4 @@ class DossierCheckedOnListenerTest extends TestCase
         $this->addToAssertionCount(1);
 
     }//end testHandleIgnoresNonObjectUpdatedEvent()
-
-    /**
-     * Test that listener can be instantiated
-     *
-     * @return void
-     */
-    public function testListenerCanBeInstantiated(): void
-    {
-        $this->assertInstanceOf(DossierCheckedOnListener::class, $this->listener);
-
-    }//end testListenerCanBeInstantiated()
 }//end class

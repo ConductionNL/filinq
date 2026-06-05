@@ -1,66 +1,16 @@
 {
-  "spec": "openspec/changes/publication-clearance-anonymise-payload",
+  "spec": "openspec/changes/consent-create-idempotency-and-notes",
   "verified": [
-    {
-      "task": "1",
-      "file": "lib/Controller/AnonymizationController.php",
-      "ok": true,
-      "note": "validateUnredactedEntities() added; entityId/entityText/entityType/publicationBases validated; 400 on malformed"
-    },
-    {
-      "task": "2",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "checkUnredactedProhibitions() calls PolicyMatchService at any-confidence; controller returns 422 on violations"
-    },
-    {
-      "task": "3",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "createConsentsForUnredactedEntities() called after anonymise pipeline; skips on pipeline failure"
-    },
-    {
-      "task": "4",
-      "file": "lib/Service/AnonymizationService.php",
-      "ok": true,
-      "note": "createdConsents[] field added to resultInfo; absent when unredactedEntities not supplied"
-    },
-    {
-      "task": "5a",
-      "file": "lib/Controller/BatchAnonymizationController.php",
-      "ok": true,
-      "note": "batchAnonymize accepts unredactedEntities[]; resolveBatchHttpStatus() handles 200/207/422"
-    },
-    {
-      "task": "5b",
-      "file": "lib/Service/BatchAnonymizeService.php",
-      "ok": true,
-      "note": "per-file prohibition gate; prohibitionViolation status; prohibitionSkippedFiles counter"
-    },
-    {
-      "task": "6",
-      "file": "tests/unit/Controller/AnonymizationControllerPublicationClearanceTest.php",
-      "ok": true,
-      "note": "9 tests: validation, prohibition 422, success with createdConsents, backward-compat"
-    },
-    {
-      "task": "7",
-      "file": "tests/unit/Service/AnonymizationServicePublicationClearanceTest.php",
-      "ok": true,
-      "note": "7 tests: prohibition gate, consent creation calls, order, config null case"
-    },
-    {
-      "task": "9a",
-      "file": "docs/features/publication-consent-process.md",
-      "ok": true,
-      "note": "Publication-clearance-via-anonymise section added with payload shape, gate semantics, response, batch semantics"
-    },
-    {
-      "task": "9b",
-      "file": "CHANGELOG.md",
-      "ok": true,
-      "note": "Added and Behavior-changes sections with all three new behaviors"
-    }
+    {"task": "1", "file": "lib/Service/ConsentService.php", "ok": true, "note": "findExistingConsent() + update/create routing implemented"},
+    {"task": "2", "file": "lib/Service/ConsentService.php", "ok": true, "note": "PRESERVED_FIELDS constant guards workflow state; updateExistingConsent() re-evaluates policyMatch"},
+    {"task": "3", "file": "lib/Service/ConsentNotesHelper.php", "ok": true, "note": "updateSentinelRegion() + stripSentinelRegion() with DOTALL PCRE; buildSentinelBlock() for write"},
+    {"task": "4", "file": "lib/Service/ConsentService.php", "ok": true, "note": "publicationBases[0] → legalBasis via truncateAtWordBoundary(); [1..N] → sentinel via ConsentNotesHelper"},
+    {"task": "5", "file": "lib/Service/ConsentService.php", "ok": true, "note": "New records get notificationStatus=pending; no sendMail/dispatch call added"},
+    {"task": "6", "file": "tests/unit/Service/ConsentServiceTest.php", "ok": true, "note": "20 new idempotency tests covering create/update/workflow-preserve/policyMatch/prohibition/scope-entity-exclusion"},
+    {"task": "7", "file": "tests/unit/Service/ConsentNotesHelperTest.php", "ok": true, "note": "10 unit tests covering all sentinel scenarios from tasks.md#task-7"},
+    {"task": "8", "file": "tests/newman/docudesk-api.postman_collection.json", "ok": true, "note": "3 Newman tests: first-call-creates, second-call-updates, single-basis-no-sentinel"},
+    {"task": "9", "file": "docs/features/publication-consent-process.md", "ok": true, "note": "Idempotency contract + sentinel format documented; CHANGELOG updated"},
+    {"task": "10", "file": "lib/Service/ConsentService.php", "ok": true, "note": "417 unit tests passing; 14 hydra gates green; phpcs clean; Psalm/PHPStan fixed (removed unused UPDATABLE_FIELDS, buildConsentData(), ?? on known keys)"}
   ],
   "stubs": [],
   "missing_routes": []
