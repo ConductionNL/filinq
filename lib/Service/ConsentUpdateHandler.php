@@ -13,8 +13,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  */
 
 declare(strict_types=1);
@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use InvalidArgumentException;
 use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -39,8 +38,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentUpdateHandler
 {
-
-
     /**
      * Constructor for ConsentUpdateHandler
      *
@@ -57,7 +54,6 @@ class ConsentUpdateHandler
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -76,7 +72,6 @@ class ConsentUpdateHandler
 
     }//end getObjectService()
 
-
     /**
      * Update consent status for a consent record
      *
@@ -88,6 +83,8 @@ class ConsentUpdateHandler
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
      */
     public function updateConsentStatus(
         string $consentId,
@@ -98,37 +95,45 @@ class ConsentUpdateHandler
         try {
             $objectService = $this->getObjectService();
 
+            // Let OpenRegister enforce per-object RBAC and multitenancy
+            // access. Bypassing these (security finding #283) allowed any
+            // authenticated user to overwrite consent records owned by
+            // other users.
             $object = $objectService->find(
                 id: $consentId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {
                 throw new Exception('Consent record not found: '.$consentId);
             }
 
-            $existing = $object->getObject();
+            // Whitelist the fields a consent update may mutate so callers
+            // cannot rewrite arbitrary consent attributes (e.g. documentId,
+            // entityText) or inject extra keys (security finding #283).
+            $mutableFields = [
+                'notificationStatus',
+                'consentStatus',
+                'publicationDecision',
+                'objectionReason',
+                'objectionDeadline',
+            ];
+            $allowedData   = array_intersect_key($data, array_flip($mutableFields));
 
-            $this->guardPolicyPreemptedTransition(existing: $existing, data: $data);
-
-            $consentData = array_merge($existing, $data);
+            $consentData = array_merge($object->getObject(), $allowedData);
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info(
                 'Consent status updated',
                 [
                     'consentId'   => $consentId,
-                    'updatedKeys' => array_keys($data),
+                    'updatedKeys' => array_keys($allowedData),
                 ]
             );
 
@@ -150,94 +155,41 @@ class ConsentUpdateHandler
 
     }//end updateConsentStatus()
 
-
-    /**
-     * Reject `consentStatus` changes on records pre-empted by a policy.
-     *
-     * When an existing consent record has a non-null `policyMatch`, its
-     * `consentStatus` is bound to the matched rule (prohibition → anonymized,
-     * standing consent → consent_given). Only updates that do NOT change
-     * `consentStatus` are permitted — including overrides like setting
-     * `publicationDecision: "anonymize"` on a standing-consent-matched record
-     * while leaving `consentStatus: "consent_given"` in place.
-     *
-     * @param array<string, mixed> $existing The record's current data.
-     * @param array<string, mixed> $data     The proposed update.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
-     */
-    private function guardPolicyPreemptedTransition(array $existing, array $data): void
-    {
-        $existingMatch = ($existing['policyMatch'] ?? null);
-        if ($existingMatch === null || $existingMatch === '') {
-            return;
-        }
-
-        // Guard the two operator-controlled transition fields. The
-        // prohibition lock applies to BOTH `consentStatus` AND
-        // `publicationDecision` — a record that's been pre-empted by a
-        // policy match must not be coaxed into "publish" via either
-        // field. Without this both-fields check, a PATCH carrying only
-        // `publicationDecision: "publish"` would bypass the lock.
-        $consentStatusChanged       = (
-            array_key_exists('consentStatus', $data) === true
-            && (string) $data['consentStatus'] !== (string) ($existing['consentStatus'] ?? '')
-        );
-        $publicationDecisionChanged = (
-            array_key_exists('publicationDecision', $data) === true
-            && (string) $data['publicationDecision'] !== (string) ($existing['publicationDecision'] ?? '')
-        );
-
-        if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
-            return;
-        }
-
-        if ($consentStatusChanged === true) {
-            $rejectedField = 'consentStatus';
-        } else {
-            $rejectedField = 'publicationDecision';
-        }
-
-        $rejectedValue = (string) $data[$rejectedField];
-        $currentValue  = (string) ($existing[$rejectedField] ?? '');
-
-        throw new InvalidArgumentException(
-            message: sprintf(
-                '%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
-                $rejectedField,
-                $rejectedValue,
-                (string) $existingMatch,
-                $currentValue
-            )
-        );
-
-    }//end guardPolicyPreemptedTransition()
-
-
     /**
      * Get all consent records for a specific document
      *
-     * @param string $documentId The document UUID
-     * @param string $register   The register ID
-     * @param string $schema     The schema ID
+     * @param string      $documentId The document UUID
+     * @param string      $register   The register ID
+     * @param string      $schema     The schema ID
+     * @param string|null $ownerUid   UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If query fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
         try {
             $objectService = $this->getObjectService();
 
+            $selfScope = ['register' => $register, 'schema' => $schema];
+
+            // Security (H1): scope the query to the caller's own records when
+            // a non-admin UID is provided, so users cannot enumerate consent
+            // records that belong to other users via the byDocument endpoint.
+            if ($ownerUid !== null) {
+                $selfScope['owner'] = $ownerUid;
+            }
+
             $results = $objectService->searchObjects(
                 [
-                    '@self'      => ['register' => $register, 'schema' => $schema],
+                    '@self'      => $selfScope,
                     'documentId' => $documentId,
                 ]
             );
@@ -271,6 +223,4 @@ class ConsentUpdateHandler
         }//end try
 
     }//end getConsentsByDocument()
-
-
 }//end class

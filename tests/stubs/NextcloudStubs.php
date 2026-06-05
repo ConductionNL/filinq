@@ -532,6 +532,24 @@ class TemplateResponse
 }//end class
 
 
+/**
+ * Stub for OCP\AppFramework\Http\OCSForbiddenException
+ *
+ * Note: the real class lives at OCP\AppFramework\OCS\OCSForbiddenException.
+ * This stub exists because PrintJobController references the Http namespace FQCN.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class OCSForbiddenException extends \RuntimeException
+{
+
+}//end class
+
+
 namespace OCP\AppFramework\Bootstrap;
 
 /**
@@ -634,6 +652,18 @@ abstract class QueuedJob
     {
 
     }//end __construct()
+
+    /**
+     * Set job argument for testing.
+     *
+     * @param mixed $argument Job argument.
+     *
+     * @return void
+     */
+    public function setArgument(mixed $argument): void
+    {
+
+    }//end setArgument()
 
     /**
      * Execute the job

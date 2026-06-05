@@ -227,7 +227,7 @@ class PolicyCrudService
      */
     public function createProhibition(array $data): array
     {
-        $this->requireProhibitionPermission(action: 'create');
+        $this->assertProhibitionPermission(action: 'create');
 
         $payload = $this->stripFrameworkParams(data: $data);
 
@@ -254,7 +254,7 @@ class PolicyCrudService
      */
     public function updateProhibition(string $uuid, array $data): array
     {
-        $this->requireProhibitionPermission(action: 'update');
+        $this->assertProhibitionPermission(action: 'update');
 
         $payload = $this->stripFrameworkParams(data: $data);
         return $this->saveObject(
@@ -277,7 +277,7 @@ class PolicyCrudService
      */
     public function deleteProhibition(string $uuid): void
     {
-        $this->requireProhibitionPermission(action: 'delete');
+        $this->assertProhibitionPermission(action: 'delete');
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
@@ -304,7 +304,7 @@ class PolicyCrudService
      */
     public function createStandingConsent(array $data): array
     {
-        $this->requireStandingConsentPermission(action: 'create');
+        $this->assertStandingConsentPermission(action: 'create');
 
         $payload           = $this->stripFrameworkParams(data: $data);
         $payload['scope']  = 'entity';
@@ -332,7 +332,7 @@ class PolicyCrudService
      */
     public function updateStandingConsent(string $uuid, array $data): array
     {
-        $this->requireStandingConsentPermission(action: 'update');
+        $this->assertStandingConsentPermission(action: 'update');
 
         $existing = $this->getStandingConsent(uuid: $uuid);
         if ($existing === null) {
@@ -364,7 +364,7 @@ class PolicyCrudService
      */
     public function deleteStandingConsent(string $uuid): void
     {
-        $this->requireStandingConsentPermission(action: 'delete');
+        $this->assertStandingConsentPermission(action: 'delete');
 
         $existing = $this->getStandingConsent(uuid: $uuid);
         if ($existing === null) {
@@ -394,13 +394,13 @@ class PolicyCrudService
      * Admin users bypass this gate (NC convention — they implicitly belong to
      * every privileged group).
      *
-     * @param string $action 'read', 'create', 'update', or 'delete' (used in error msg only).
+     * @param string $action 'create', 'update', or 'delete' (used in error msg only).
      *
      * @return void
      *
      * @throws RuntimeException When the current user is not authorised. Mapped to 403 by the controller.
      */
-    public function requireStandingConsentPermission(string $action): void
+    private function assertStandingConsentPermission(string $action): void
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -425,21 +425,21 @@ class PolicyCrudService
             )
         );
 
-    }//end requireStandingConsentPermission()
+    }//end assertStandingConsentPermission()
 
     /**
-     * Assert the current user can read/create/update/delete a prohibition record.
+     * Assert the current user can create/update/delete a prohibition record.
      *
      * Prohibitions are tenant-wide blocking rules; write authorisation requires
      * admin role or membership in `PROHIBITION_GROUP`. Throws otherwise.
      *
-     * @param string $action The operator action being authorised (`read`, `create`, `update`, `delete`).
+     * @param string $action The operator action being authorised (`create`, `update`, `delete`).
      *
      * @return void
      *
      * @throws RuntimeException When the current user is not authorised. Mapped to 403 by the controller.
      */
-    public function requireProhibitionPermission(string $action): void
+    private function assertProhibitionPermission(string $action): void
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -464,7 +464,7 @@ class PolicyCrudService
             )
         );
 
-    }//end requireProhibitionPermission()
+    }//end assertProhibitionPermission()
 
     /**
      * Strip framework-injected request params before persistence.

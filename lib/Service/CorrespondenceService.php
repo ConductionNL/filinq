@@ -21,6 +21,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-40
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-41
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-42
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -344,14 +347,18 @@ class CorrespondenceService
         );
 
         // Store initial job status in app config via container.
+        // SB1 fix: persist ownerUserId at the top level so the controller's
+        // ownership check can actually read it (options.userId is never stored
+        // in mid-job progress updates, so the old check always read null).
         $this->storeJobStatus(
             jobId: $jobId,
             data: [
-                'status'    => 'queued',
-                'total'     => count($recipientIds),
-                'completed' => 0,
-                'errors'    => 0,
-                'results'   => [],
+                'status'      => 'queued',
+                'total'       => count($recipientIds),
+                'completed'   => 0,
+                'errors'      => 0,
+                'results'     => [],
+                'ownerUserId' => (string) ($options['userId'] ?? ''),
             ]
         );
 

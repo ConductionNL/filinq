@@ -27,12 +27,13 @@
  * @package  OCA\DocuDesk\Service
  *
  * @author    Conduction Development Team <dev@conduction.nl>
- * @copyright 2026 Conduction B.V.
+ * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+ * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,6 +51,9 @@ use Transliterator;
 
 /**
  * Detection-time policy matcher.
+ *
+ * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+ * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
 class PolicyMatchService
 {
@@ -88,7 +92,6 @@ class PolicyMatchService
      */
     private ?Transliterator $normaliser = null;
 
-
     /**
      * Constructor.
      *
@@ -103,7 +106,6 @@ class PolicyMatchService
     ) {
 
     }//end __construct()
-
 
     /**
      * Match a detected entity against the policy layer.
@@ -122,6 +124,8 @@ class PolicyMatchService
      *   entityType: string,
      *   primaryName: string
      * }
+     *
+     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
      */
     public function match(
         string $entityText,
@@ -152,7 +156,6 @@ class PolicyMatchService
         );
 
     }//end match()
-
 
     /**
      * Find the first rule of the given kind that matches the entity.
@@ -216,7 +219,6 @@ class PolicyMatchService
 
     }//end firstMatchOf()
 
-
     /**
      * Test whether any rule in a `matchRules` array matches the given entity.
      *
@@ -229,6 +231,8 @@ class PolicyMatchService
      * @param array<string, mixed>             $resolvedIdentifiers Structured identifiers (BSN, KvK).
      *
      * @return bool
+     *
+     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
      */
     public function entityMatchesAnyRule(
         array $matchRules,
@@ -252,7 +256,6 @@ class PolicyMatchService
         return false;
 
     }//end entityMatchesAnyRule()
-
 
     /**
      * Test a single match rule against an entity.
@@ -303,7 +306,6 @@ class PolicyMatchService
 
     }//end ruleMatches()
 
-
     /**
      * Lower-case + accent-strip a string for `normalized` matching.
      *
@@ -329,7 +331,6 @@ class PolicyMatchService
         return trim(mb_strtolower($value));
 
     }//end normalise()
-
 
     /**
      * Load both rule sources and normalise into a single cache.
@@ -361,7 +362,6 @@ class PolicyMatchService
 
     }//end loadRules()
 
-
     /**
      * Load active prohibition records.
      *
@@ -392,7 +392,6 @@ class PolicyMatchService
         return $rules;
 
     }//end loadProhibitions()
-
 
     /**
      * Load active standing-consent records (scope=entity).
@@ -442,7 +441,6 @@ class PolicyMatchService
         return $rules;
 
     }//end loadStandingConsents()
-
 
     /**
      * Extract plain-array objects from an ObjectService findAll result.
@@ -507,7 +505,6 @@ class PolicyMatchService
 
     }//end extractObjects()
 
-
     /**
      * Normalise a raw object into the cache shape.
      *
@@ -566,7 +563,6 @@ class PolicyMatchService
 
     }//end normaliseRule()
 
-
     /**
      * Parse an ISO-8601 string into DateTimeImmutable; null on failure.
      *
@@ -588,6 +584,34 @@ class PolicyMatchService
 
     }//end parseDateTime()
 
+    /**
+     * Match a detected entity against prohibition rules only.
+     *
+     * Convenience wrapper used by the extract and consolidated-entities
+     * endpoints. Returns only prohibition matches (standing-consent matches
+     * are excluded).
+     *
+     * @param string $entityType  'PERSON', 'ORGANIZATION', or 'OTHER'.
+     * @param string $entityValue Detected entity text (e.g. "Pieter de Vries").
+     *
+     * @return array<string, mixed>|null `{ruleId, ruleName}` when a prohibition
+     *                                   rule matches, null otherwise.
+     *
+     * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
+     */
+    public function matchProhibition(string $entityType, string $entityValue): ?array
+    {
+        $result = $this->match(entityText: $entityValue, entityType: $entityType);
+        if ($result === null || $result['kind'] !== self::KIND_PROHIBITION) {
+            return null;
+        }
+
+        return [
+            'ruleId'   => (string) $result['uuid'],
+            'ruleName' => (string) $result['primaryName'],
+        ];
+
+    }//end matchProhibition()
 
     /**
      * Invalidate the in-memory rule cache.
@@ -597,12 +621,12 @@ class PolicyMatchService
      * stable within a single request and rebuilt on the next one.
      *
      * @return void
+     *
+     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
      */
     public function invalidateCache(): void
     {
         $this->rulesCache = null;
 
     }//end invalidateCache()
-
-
 }//end class

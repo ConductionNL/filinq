@@ -252,7 +252,7 @@ class GrondslagenSummaryService
         $perFile = $this->walkDossierFiles(folder: $folder);
 
         // LoadAnonymisedEntitiesForFile already resolves base labels per
-        // file. aggregateForDossier just unfolds those rows across files
+        // file. AggregateForDossier just unfolds those rows across files
         // and sorts. No second label-resolution pass needed here.
         $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
 
@@ -302,30 +302,6 @@ class GrondslagenSummaryService
         return $summaryFile;
 
     }//end renderDossierSummary()
-
-    /**
-     * Verify the current session user is authenticated before allowing dossier operations.
-     *
-     * Called explicitly by DossierController to satisfy gate-7 (no-admin-idor).
-     * Dossier-level RBAC is enforced by OpenRegister inside renderDossierSummary;
-     * this guard ensures the controller body has a visible authorization check.
-     *
-     * @param string $dossierId Dossier UUID — must be non-empty.
-     *
-     * @return void
-     *
-     * @throws \OCP\AppFramework\OCS\OCSForbiddenException When the session user is missing.
-     */
-    public function authorizeAccess(string $dossierId): void
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null || $dossierId === '') {
-            throw new \OCP\AppFramework\OCS\OCSForbiddenException(
-                'Dossier access requires an authenticated session.'
-            );
-        }
-
-    }//end authorizeAccess()
 
     /**
      * Load the minimum dossier context the renderer needs.
@@ -540,16 +516,18 @@ class GrondslagenSummaryService
         $distinctEntityKeys = [];
         $distinctBasisRefs  = [];
 
-        // Per-document and per-basis aggregations for the test/template surfaces.
+        // Per-document aggregation: entityCount per file.
         $perDocument = [];
-        $basisMap    = [];
+
+        // Per-basis aggregation: documentCount + entityCount per basis ref.
+        $perBasisData = [];
 
         foreach ($perFile as $fileRow) {
             $fileId   = ($fileRow['fileId'] ?? 0);
             $filename = (string) ($fileRow['filename'] ?? '');
 
             $fileEntityCount = 0;
-            $fileBasesSet    = [];
+            $fileBasisRefs   = [];
 
             foreach (($fileRow['entities'] ?? []) as $entity) {
                 $placeholder = (string) ($entity['placeholder'] ?? '');
@@ -567,24 +545,15 @@ class GrondslagenSummaryService
                 $distinctEntityKeys[$entityKey] = true;
 
                 foreach (($entity['bases'] ?? []) as $ref) {
-                    $refStr = (string) $ref;
-                    $distinctBasisRefs[$refStr] = true;
-                    $fileBasesSet[$refStr]      = true;
+                    $refString = (string) $ref;
+                    $distinctBasisRefs[$refString] = true;
+                    $fileBasisRefs[$refString]     = true;
 
-                    if (isset($basisMap[$refStr]) === false) {
-                        // Resolve name: prefer per-entity baseLabels, then caller-supplied
-                        // labelMap (for backwards-compat with callers that pass a global map),
-                        // then fall back to the raw ref string.
-                        $resolvedName      = ($baseLabels[$refStr] ?? ($labelMap[$refStr] ?? $refStr));
-                        $basisMap[$refStr] = [
-                            'ref'           => $refStr,
-                            'name'          => $resolvedName,
-                            'documentCount' => 0,
-                            'entityCount'   => 0,
-                        ];
+                    if (isset($perBasisData[$refString]) === false) {
+                        $perBasisData[$refString] = ['entityCount' => 0, 'documentRefs' => []];
                     }
 
-                    $basisMap[$refStr]['entityCount'] += $count;
+                    $perBasisData[$refString]['entityCount'] += $count;
                 }
 
                 $rows[] = [
@@ -599,17 +568,19 @@ class GrondslagenSummaryService
                 ];
             }//end foreach
 
-            foreach (array_keys($fileBasesSet) as $ref) {
-                if (isset($basisMap[$ref]) === true) {
-                    $basisMap[$ref]['documentCount']++;
-                }
-            }
-
             $perDocument[] = [
                 'fileId'      => $fileId,
                 'filename'    => $filename,
                 'entityCount' => $fileEntityCount,
             ];
+
+            // Mark each basis as present for this document.
+            foreach ($fileBasisRefs as $refString => $unused) {
+                unset($unused);
+                if (isset($perBasisData[$refString]) === true) {
+                    $perBasisData[$refString]['documentRefs'][$fileId] = true;
+                }
+            }
         }//end foreach
 
         usort(
@@ -624,16 +595,27 @@ class GrondslagenSummaryService
             }
         );
 
+        // Build perBasis array with labels from labelMap.
+        $perBasis = [];
+        foreach ($perBasisData as $ref => $data) {
+            $perBasis[] = [
+                'ref'           => $ref,
+                'name'          => ($labelMap[$ref] ?? $ref),
+                'documentCount' => count($data['documentRefs']),
+                'entityCount'   => $data['entityCount'],
+            ];
+        }
+
         return [
             'rows'        => $rows,
+            'perDocument' => $perDocument,
+            'perBasis'    => $perBasis,
             'totals'      => [
                 'documentCount'       => count($perFile),
                 'entityCount'         => $totalOccurrences,
                 'distinctEntityCount' => count($distinctEntityKeys),
                 'distinctBasesCount'  => count($distinctBasisRefs),
             ],
-            'perDocument' => $perDocument,
-            'perBasis'    => array_values($basisMap),
         ];
 
     }//end aggregateForDossier()
@@ -823,6 +805,8 @@ class GrondslagenSummaryService
 
         $objectService = $this->getObjectService();
         if ($objectService === null) {
+            // ObjectService unavailable — show a placeholder so the operator
+            // can distinguish a failed lookup from an actual label value.
             foreach ($baseRefs as $ref) {
                 $labels[(string) $ref] = '⟨grondslag verwijderd: '.(string) $ref.'⟩';
             }
@@ -889,7 +873,7 @@ class GrondslagenSummaryService
             } else if (isset($uuidToName[$refString]) === true) {
                 $labels[$refString] = $uuidToName[$refString];
             } else {
-                $labels[$refString] = '⟨grondslag verwijderd: '.$refString.'⟩';
+                $labels[$refString] = $refString;
             }
         }
 
@@ -1181,7 +1165,7 @@ class GrondslagenSummaryService
                 $pdf->useTemplate($tplId);
             }
 
-            // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
+            // FPDI inherits Output() from FPDF; calling 'S' returns the PDF bytes.
             // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis).
             return (string) $pdf->Output('S');
         } catch (Exception $e) {

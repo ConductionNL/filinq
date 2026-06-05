@@ -18,6 +18,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -175,6 +178,11 @@ class ConsentCrudService
         'documentId',
         'entityType',
         'entityText',
+        'entityKey',
+        'publicationBases',
+        'legalBasis',
+        'contactEmail',
+        'contactAddress',
     ];
 
     /**
@@ -200,12 +208,21 @@ class ConsentCrudService
         // Only forward the explicitly allowed fields; drop everything else.
         $filtered = array_intersect_key($data, array_flip(self::ALLOWED_CREATE_FIELDS));
 
+        // Build the $extra array with idempotency and notes fields.
+        $extra = [];
+        foreach (['entityKey', 'publicationBases', 'legalBasis', 'contactEmail', 'contactAddress'] as $key) {
+            if (isset($filtered[$key]) === true) {
+                $extra[$key] = $filtered[$key];
+            }
+        }
+
         return $this->consentService->createConsentRequest(
-            (string) ($filtered['documentId'] ?? ''),
-            (string) ($filtered['entityType'] ?? ''),
-            (string) ($filtered['entityText'] ?? ''),
-            $register,
-            $schema
+            documentId: (string) ($filtered['documentId'] ?? ''),
+            entityType: (string) ($filtered['entityType'] ?? ''),
+            entityText: (string) ($filtered['entityText'] ?? ''),
+            register: $register,
+            schema: $schema,
+            extra: $extra
         );
 
     }//end createFromRequest()

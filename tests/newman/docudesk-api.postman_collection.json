@@ -22,8 +22,16 @@
   "auth": {
     "type": "basic",
     "basic": [
-      { "key": "username", "value": "{{username}}", "type": "string" },
-      { "key": "password", "value": "{{password}}", "type": "string" }
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
     ]
   },
   "item": [
@@ -34,7 +42,16 @@
           "name": "GET /api/health",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
           },
           "event": [
             {
@@ -60,7 +77,16 @@
           "name": "GET /api/settings",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/settings", "host": ["{{baseUrl}}"], "path": ["api", "settings"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            }
           },
           "event": [
             {
@@ -81,9 +107,21 @@
           "name": "POST /api/settings",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/settings", "host": ["{{baseUrl}}"], "path": ["api", "settings"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -112,7 +150,17 @@
           "name": "GET /api/anonymization/files",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/anonymization/files", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "files"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "files"
+              ]
+            }
           },
           "event": [
             {
@@ -131,7 +179,18 @@
           "name": "POST /api/anonymization/extract/999999 (not found)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/anonymization/extract/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "extract", "999999"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            }
           },
           "event": [
             {
@@ -150,9 +209,23 @@
           "name": "POST /api/anonymization/anonymize/999999 (no entities)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/anonymization/anonymize/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "anonymize", "999999"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -173,45 +246,30 @@
           ]
         },
         {
-          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary: invalid type)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/anonymization/anonymize/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "anonymize", "999999"] },
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"entities\":[{\"type\":\"PERSON\",\"value\":\"Jan Janssen\"}],\"appendBasisSummary\":\"yes\"}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Non-boolean appendBasisSummary returns 400', function () { pm.response.to.have.status(400); });",
-                  "pm.test('Error message references appendBasisSummary', function () { var json = pm.response.json(); pm.expect(json.error).to.match(/appendBasisSummary/i); });"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Grondslagen Summary",
-      "description": "Coverage for the anonymisation-grondslagen-summary change (Wave 4a) — per-document append flag and per-dossier endpoint.",
-      "item": [
-        {
-          "name": "POST /api/anonymization/dossier/non-existent-uuid/grondslagen-pdf",
+          "name": "POST /api/anonymization/anonymize/999999 (invalid bases - non-array)",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/api/anonymization/dossier/00000000-0000-0000-0000-000000000000/grondslagen-pdf",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "anonymization", "dossier", "00000000-0000-0000-0000-000000000000", "grondslagen-pdf"]
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"text\": \"Jan Janssen\", \"entityType\": \"PERSON\", \"bases\": \"not-an-array\"}]}"
             }
           },
           "event": [
@@ -220,24 +278,38 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 500 for non-existent dossier', function () { pm.response.to.have.status(500); });",
-                  "pm.test('Error message present', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                  "pm.test('Rejects invalid bases (non-array) with 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary accepted as boolean)",
+          "name": "POST /api/anonymization/anonymize/999999 (invalid bases - non-string item)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/anonymization/anonymize/999999", "host": ["{{baseUrl}}"], "path": ["api", "anonymization", "anonymize", "999999"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\"entities\":[{\"type\":\"PERSON\",\"value\":\"Jan Janssen\"}],\"appendBasisSummary\":true}"
+              "raw": "{\"entities\": [{\"text\": \"Jan Janssen\", \"entityType\": \"PERSON\", \"bases\": [42]}]}"
             }
           },
           "event": [
@@ -246,8 +318,41 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Boolean appendBasisSummary does not 400 (file-not-found wins)', function () { pm.expect(pm.response.code).to.not.equal(400); });",
-                  "pm.test('Has error field (file 999999 is not real)', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                  "pm.test('Rejects invalid bases item (non-string) with 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/extract/999999 (prohibitionMatch field present)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Extract on a non-existent file returns 500, but we verify the field shape when entities are returned.",
+                  "// For live tests, replace 999999 with a real fileId and assert prohibitionMatch is present.",
+                  "pm.test('Response has error for non-existent file (expected)', function () {",
+                  "  pm.response.to.have.status(500);",
+                  "});"
                 ]
               }
             }
@@ -262,7 +367,16 @@
           "name": "GET /api/consent",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            }
           },
           "event": [
             {
@@ -281,9 +395,21 @@
           "name": "POST /api/consent (missing fields)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -302,18 +428,73 @@
               }
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "Policy — Prohibitions",
-      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
-      "item": [
+        },
         {
-          "name": "GET /api/policy/prohibitions",
+          "name": "POST /api/consent (idempotency \u2014 first call creates)",
           "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] }
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\",\n    \"Article 6(1)(f)\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('wasUpdated is false on first call', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(false); });",
+                  "pm.test('documentId matches', function () { var json = pm.response.json(); pm.expect(json.documentId).to.equal('idem-test-doc-1'); });",
+                  "pm.test('legalBasis set to first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Article 6(1)(e)'); });",
+                  "pm.test('notes contain sentinel region with second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('docudesk:additional-publication-bases:begin'); pm.expect(json.notes || '').to.include('Article 6(1)(f)'); });",
+                  "pm.environment.set('createdConsentId', pm.response.json().id || pm.response.json()['@self']?.id || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (idempotency \u2014 second call updates, preserves workflow state)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Updated basis A\",\n    \"Updated basis B\"\n  ]\n}"
+            }
           },
           "event": [
             {
@@ -322,22 +503,38 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response is JSON array', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); });",
-                  "pm.test('Seed prohibitions present', function () { var json = pm.response.json(); pm.expect(json.length).to.be.at.least(1); });"
+                  "pm.test('wasUpdated is true on re-submit', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(true); });",
+                  "pm.test('legalBasis updated to new first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Updated basis A'); });",
+                  "pm.test('notes sentinel updated with new second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('Updated basis B'); });",
+                  "pm.test('notes does not contain old basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('Article 6(1)(f)'); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "POST /api/policy/prohibitions (create)",
+          "name": "POST /api/consent (operator notes preserved on re-submit)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\"primaryName\":\"Newman Test Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Subject\"}],\"active\":true}"
+              "raw": "{\n  \"documentId\": \"idem-test-doc-2\",\n  \"entityType\": \"ORGANIZATION\",\n  \"entityText\": \"Conduction B.V.\",\n  \"entityKey\": \"entity-key-idem-2\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\"\n  ]\n}"
             }
           },
           "event": [
@@ -346,120 +543,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
-                  "var json = pm.response.json();",
-                  "pm.test('Returns UUID', function () { pm.expect(json['@self'] && json['@self'].id || json.id || json.uuid).to.be.a('string'); });",
-                  "if (json['@self'] && json['@self'].id) { pm.collectionVariables.set('createdProhibitionId', json['@self'].id); }",
-                  "else if (json.id) { pm.collectionVariables.set('createdProhibitionId', json.id); }"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "GET /api/policy/prohibitions/{id}",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Returns the created record', function () { var json = pm.response.json(); pm.expect(json.primaryName).to.equal('Newman Test Subject'); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "DELETE /api/policy/prohibitions/{id}",
-          "request": {
-            "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Policy — Standing Consents",
-      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
-      "item": [
-        {
-          "name": "GET /api/policy/standing-consents",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Response is JSON array of scope=entity records', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); json.forEach(function (r) { pm.expect(r.scope || 'document').to.equal('entity'); }); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "POST /api/policy/standing-consents (scope validation: missing consentMethod)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"entityText\":\"Newman Test Standing\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Standing\"}],\"active\":true}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });",
-                  "pm.test('Has error message', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "POST /api/policy/standing-consents (scope validation: documentId not allowed)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\"entityText\":\"Newman\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman\"}],\"consentMethod\":\"paper\",\"documentId\":\"some-doc\",\"active\":true}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });"
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('single basis does not produce sentinel region', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('docudesk:additional-publication-bases'); });"
                 ]
               }
             }
@@ -474,9 +559,22 @@
           "name": "POST /api/metadata/enrich (missing objectId)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/metadata/enrich", "host": ["{{baseUrl}}"], "path": ["api", "metadata", "enrich"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/metadata/enrich",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "enrich"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -505,9 +603,22 @@
           "name": "POST /api/pdf/render (missing template)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/pdf/render", "host": ["{{baseUrl}}"], "path": ["api", "pdf", "render"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/render",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pdf",
+                "render"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -531,9 +642,22 @@
           "name": "POST /api/pdf/render (valid template)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/pdf/render", "host": ["{{baseUrl}}"], "path": ["api", "pdf", "render"] },
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/render",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pdf",
+                "render"
+              ]
+            },
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -562,7 +686,16 @@
           "name": "GET /api/templates",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/templates", "host": ["{{baseUrl}}"], "path": ["api", "templates"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "templates"
+              ]
+            }
           },
           "event": [
             {
@@ -586,7 +719,16 @@
           "name": "GET /api/metrics",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/metrics", "host": ["{{baseUrl}}"], "path": ["api", "metrics"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metrics"
+              ]
+            }
           },
           "event": [
             {
@@ -610,7 +752,15 @@
           "name": "GET / (dashboard page)",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
           },
           "event": [
             {

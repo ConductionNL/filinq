@@ -17,6 +17,13 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+ * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
  */
 
 declare(strict_types=1);
@@ -24,10 +31,14 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use RuntimeException;
 use OCP\App\IAppManager;
+use OCP\Files\File;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Service for orchestrating the document anonymization pipeline
@@ -37,14 +48,24 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
  */
 class AnonymizationService
 {
+    /**
+     * Default prohibition high-confidence threshold (inclusive)
+     *
+     * @var float
+     */
+    private const DEFAULT_HIGH_CONFIDENCE_THRESHOLD = 0.85;
 
     /**
-     * Result key used when the grondslagen-summary step fails but anonymisation succeeded.
+     * App config key for the high-confidence threshold
+     *
+     * @var string
      */
-    private const SUMMARY_APPEND_FAILED = 'grondslagen_summary_failed';
+    private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
 
     /**
      * Constructor for AnonymizationService
@@ -53,9 +74,16 @@ class AnonymizationService
      * @param ContainerInterface        $container          Container for dependency injection
      * @param IAppManager               $appManager         App manager interface
      * @param EntityDetectionService    $entityDetection    Entity detection and mapping service
+     * @param IAppConfig                $appConfig          App configuration for threshold settings
+     * @param ConsentCrudService        $consentCrud        Consent CRUD service for register/schema config
+     * @param ConsentService            $consentService     Consent service for creating publication consents
      * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
      *                                                      summary page (Wave 4a — opt-in via
      *                                                      `appendBasisSummary: true` on the request).
+     * @param FileEntityStatsService    $fileEntityStats    Service for entity statistics and risk levels.
+     * @param PdfConversionService      $pdfConversion      Cascade orchestrator that converts the
+     *                                                      anonymised intermediate to PDF when
+     *                                                      `outputFormat: "pdf"` is in effect.
      *
      * @return void
      */
@@ -64,7 +92,12 @@ class AnonymizationService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
-        private readonly GrondslagenSummaryService $grondslagenSummary
+        private readonly IAppConfig $appConfig,
+        private readonly ConsentCrudService $consentCrud,
+        private readonly ConsentService $consentService,
+        private readonly GrondslagenSummaryService $grondslagenSummary,
+        private readonly FileEntityStatsService $fileEntityStats,
+        private readonly PdfConversionService $pdfConversion
     ) {
 
     }//end __construct()
@@ -77,6 +110,8 @@ class AnonymizationService
      * @return mixed The service instance
      *
      * @throws \RuntimeException If OpenRegister is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
      */
     private function getOpenRegisterService(string $className): mixed
     {
@@ -91,11 +126,22 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
+     * Each entity in the response includes a `prohibitionMatch` field: null when
+     * no publication-prohibition rule matches, or an object with ruleId, ruleName,
+     * and highConfidence (score >= configured threshold, inclusive).
+     *
+     * The response also includes a `riskLevel` field derived from OpenRegister's
+     * RiskLevelService, or 'none' when that service is unavailable.
+     *
      * @param int $fileId The Nextcloud file ID
      *
-     * @return array<string, mixed> Extraction result with entities, entityCount
+     * @return array<string, mixed> Extraction result with entities, entityCount, riskLevel
      *
      * @throws Exception If extraction or detection fails
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
      */
     public function extractAndDetectEntities(int $fileId): array
     {
@@ -110,11 +156,20 @@ class AnonymizationService
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
-            $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+            $entities   = $entityRelationMapper->findEntitiesForFile($fileId);
+            $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
+            $normalized = $this->attachProhibitionMatches(entities: $normalized);
+
+            $riskLevelService = $this->fileEntityStats->tryGetRiskLevelService();
+            $riskLevel        = $this->fileEntityStats->getFileRiskLevel(
+                fileId: $fileId,
+                riskLevelService: $riskLevelService
+            );
 
             return [
-                'entities'    => $this->entityDetection->normalizeEntities($entities),
+                'entities'    => $normalized,
                 'entityCount' => count($entities),
+                'riskLevel'   => $riskLevel,
             ];
         } catch (Exception $e) {
             $this->logger->error(
@@ -131,72 +186,299 @@ class AnonymizationService
     }//end extractAndDetectEntities()
 
     /**
+     * Attach a `prohibitionMatch` field to each normalized entity
+     *
+     * Calls PolicyMatchService when available; returns null for every entity when
+     * the service is not yet installed (before anonymisation-prohibition-gate lands).
+     *
+     * @param array<int, array<string, mixed>> $entities Normalized entity list
+     *
+     * @return array<int, array<string, mixed>> Entities with prohibitionMatch added
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
+     */
+    private function attachProhibitionMatches(array $entities): array
+    {
+        $policyService = $this->tryGetPolicyMatchService();
+        $threshold     = $this->getHighConfidenceThreshold();
+
+        foreach ($entities as &$entity) {
+            $entity['prohibitionMatch'] = $this->computeProhibitionMatch(
+                entity: $entity,
+                policyService: $policyService,
+                threshold: $threshold
+            );
+        }
+
+        return $entities;
+
+    }//end attachProhibitionMatches()
+
+    /**
+     * Compute the prohibitionMatch value for a single entity
+     *
+     * @param array<string, mixed> $entity        Normalized entity
+     * @param mixed                $policyService PolicyMatchService instance or null
+     * @param float                $threshold     High-confidence threshold (inclusive)
+     *
+     * @return array<string, mixed>|null Match object or null
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-6
+     */
+    private function computeProhibitionMatch(array $entity, mixed $policyService, float $threshold): ?array
+    {
+        if ($policyService === null) {
+            return null;
+        }
+
+        try {
+            $match = $policyService->matchProhibition(
+                entityType: (string) ($entity['type'] ?? ''),
+                entityValue: (string) ($entity['value'] ?? '')
+            );
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                'PolicyMatchService::matchProhibition threw; returning null',
+                ['exception' => $e->getMessage()]
+            );
+            return null;
+        }
+
+        if ($match === null) {
+            return null;
+        }
+
+        $confidence = (float) ($entity['confidence'] ?? 0.0);
+
+        return [
+            'ruleId'         => $match['ruleId'] ?? null,
+            'ruleName'       => $match['ruleName'] ?? null,
+            'highConfidence' => $confidence >= $threshold,
+        ];
+
+    }//end computeProhibitionMatch()
+
+    /**
+     * Try to get PolicyMatchService from the container without throwing
+     *
+     * Returns null when the service is not registered (before anonymisation-prohibition-gate lands).
+     *
+     * @return mixed PolicyMatchService instance or null
+     */
+    private function tryGetPolicyMatchService(): mixed
+    {
+        try {
+            return $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (\Throwable) {
+            return null;
+        }
+
+    }//end tryGetPolicyMatchService()
+
+    /**
+     * Read the high-confidence threshold from app config
+     *
+     * Default 0.85; configurable via docudesk.prohibition.high_confidence_threshold.
+     *
+     * @return float Threshold value (inclusive boundary)
+     *
+     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-7
+     */
+    private function getHighConfidenceThreshold(): float
+    {
+        return $this->appConfig->getValueFloat(
+            app: 'docudesk',
+            key: self::HIGH_CONFIDENCE_THRESHOLD_KEY,
+            default: self::DEFAULT_HIGH_CONFIDENCE_THRESHOLD
+        );
+
+    }//end getHighConfidenceThreshold()
+
+    /**
      * Anonymize entities in a document
      *
-     * @param int                         $fileId             The Nextcloud file ID
-     * @param array<array<string, mixed>> $entities           The entities to anonymize
-     * @param bool                        $appendBasisSummary When true, after the anonymise pipeline
-     *                                                        completes the per-document grondslagen
-     *                                                        summary is rendered and either appended
-     *                                                        to the resulting PDF (when the output
-     *                                                        is a PDF) or saved as a separate
-     *                                                        `<base>_grondslagen.pdf` file beside
-     *                                                        it. Summary-step failure does NOT fail
-     *                                                        the anonymise — a structured
-     *                                                        `warning` is attached to the result
-     *                                                        instead.
-     * @param string                      $outputFormat       Requested output format: 'pdf' (default)
-     *                                                        appends the summary to the output PDF;
-     *                                                        'preserve' saves the summary as a
-     *                                                        separate file regardless of MIME type.
+     * When appendBasisSummary is true, invokes GrondslagenSummaryService after
+     * the anonymised file has been written. For PDF output the summary is
+     * appended as an extra page; for non-PDF output a separate
+     * `<base>_grondslagen.pdf` is written alongside. Summary failure
+     * is non-fatal: the anonymised file is always preserved and a `warning`
+     * field is added to the response instead (HTTP 200).
      *
-     * @return array<string, mixed> Anonymization result. Adds the optional `warning` field when
-     *                              the grondslagen-summary step failed but the anonymise itself
-     *                              succeeded; adds `summaryFileId` when a separate summary PDF
-     *                              was written (preserve-mode fallback).
+     * When outputFormat is "pdf" (default), the anonymised intermediate is run
+     * through the PdfConversionService cascade and replaced with the PDF; on
+     * cascade failure the intermediate is rolled back (best-effort) and a
+     * ConversionFailedException is thrown for the controller to surface as
+     * HTTP 422. "preserve" skips conversion and keeps the native format.
      *
-     * @throws Exception If anonymization fails
+     * When unredactedEntities is non-empty, a publicationConsent record is
+     * created for each entry AFTER the anonymise pipeline succeeds. The
+     * createdConsents[] field in the response aggregates the resulting records.
+     *
+     * @param int                              $fileId             The Nextcloud file ID
+     * @param array<array<string, mixed>>      $entities           The entities to anonymize
+     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary (default false)
+     * @param string                           $outputFormat       Output format: 'pdf' (default) or 'preserve'
+     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation
+     *
+     * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
+     *
+     * @throws Exception                  If anonymization fails.
+     * @throws ConversionFailedException  When `$outputFormat === "pdf"` and the cascade could not
+     *                                    convert the anonymised intermediate. The intermediate
+     *                                    is deleted (best-effort) before the exception propagates.
+     *
+     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
      */
     public function anonymizeDocument(
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        array $unredactedEntities=[]
     ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
-            $result         = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Capture a textual projection of the ORIGINAL document BEFORE
+            // anonymization so we can compute which mapped entity values
+            // were actually present (and therefore eligible to be
+            // replaced by str_ireplace inside OpenRegister's
+            // DocumentProcessingHandler). Closes #286.
+            $originalText = $this->readNodeTextSafely(node: $node);
+
+            $result = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Derive the REAL replacement-stats from the original text:
+            // an entity counts as "applied" iff its literal value
+            // (case-insensitive, matching str_ireplace semantics in
+            // OR's DocumentProcessingHandler) was present in the
+            // source. Entities that weren't present cannot have been
+            // replaced and are surfaced as `unmatchedEntities` so a
+            // reviewer sees the truth instead of a fabricated count.
+            $verification = $this->verifyReplacements(
+                mappedEntities: $mappedEntities,
+                originalText: $originalText
+            );
 
             $this->logger->info(
                 'Document anonymized',
-                ['fileId' => $fileId, 'entityCount' => count($mappedEntities)]
+                [
+                    'fileId'                => $fileId,
+                    'replacementsAttempted' => $verification['replacementsAttempted'],
+                    'replacementsApplied'   => $verification['replacementsApplied'],
+                    'replacementsVerified'  => $verification['replacementsVerified'],
+                    'unmatchedCount'        => count($verification['unmatchedEntities']),
+                ]
             );
+
+            if ($verification['replacementsVerified'] === true
+                && $verification['replacementsAttempted'] !== $verification['replacementsApplied']
+            ) {
+                $this->logger->warning(
+                    'Anonymization replacement-count discrepancy: not all sent entities were '
+                    .'found literally in the source text',
+                    [
+                        'fileId'                => $fileId,
+                        'replacementsAttempted' => $verification['replacementsAttempted'],
+                        'replacementsApplied'   => $verification['replacementsApplied'],
+                        'unmatchedEntities'     => $verification['unmatchedEntities'],
+                    ]
+                );
+            }
+
+            // PDF conversion gate: when outputFormat is 'pdf' AND the
+            // anonymised result is not already a PDF, run the cascade.
+            // On failure: delete the un-converted intermediate (the
+            // operator must NOT see a half-finished native-format
+            // output when they asked for PDF) and re-throw the typed
+            // exception so the controller maps it to 422.
+            if ($outputFormat === 'pdf' && $result instanceof File === true) {
+                $resultMime = (string) $result->getMimeType();
+                if ($resultMime !== 'application/pdf') {
+                    try {
+                        $result = $this->pdfConversion->convertToPdf($result);
+                    } catch (ConversionFailedException $e) {
+                        $this->logger->warning(
+                            'PDF conversion failed; rolling back anonymised intermediate.',
+                            [
+                                'fileId'   => $fileId,
+                                'attempts' => $e->getAttempts(),
+                            ]
+                        );
+                        // Best-effort rollback. If delete fails, log
+                        // and continue — re-throwing is more important
+                        // than leaving the operator in a partial state
+                        // that they CAN inspect (they sent
+                        // outputFormat: "pdf" and got 422, so the
+                        // expectation is "no file written").
+                        try {
+                            $result->delete();
+                        } catch (Throwable $deleteError) {
+                            $this->logger->warning(
+                                'Rollback delete failed; orphaned anonymised file remains.',
+                                [
+                                    'fileId'    => $fileId,
+                                    'exception' => get_class($deleteError),
+                                    'message'   => $deleteError->getMessage(),
+                                ]
+                            );
+                        }
+
+                        throw $e;
+                    }//end try
+                }//end if
+            }//end if
 
             $resultInfo = $this->entityDetection->parseAnonymizationResult($result);
 
-            // Derive replacement stats from the actual result, not from count($mappedEntities).
-            $sourceText   = $this->readNodeTextSafely(node: $node);
-            $verifyResult = $this->verifyReplacements(
-                mappedEntities: $mappedEntities,
-                originalText: $sourceText
-            );
-            $resultInfo['replacementsAttempted'] = $verifyResult['replacementsAttempted'];
-            $resultInfo['replacementsApplied']   = $verifyResult['replacementsApplied'];
-            $resultInfo['replacementsVerified']  = $verifyResult['replacementsVerified'];
-            $resultInfo['unmatchedEntities']     = $verifyResult['unmatchedEntities'];
+            // Surface the truth: `replacementsAttempted` is how many
+            // entities we forwarded to OR; `replacementsApplied` is
+            // how many of those actually appeared (and were therefore
+            // replaced) in the source text. `replacementsVerified`
+            // signals whether we could read the source as text at all
+            // (binary formats like PDF/DOCX cannot be verified at
+            // this layer — see readNodeTextSafely()). When verified
+            // is false, `replacementsApplied` is null and callers
+            // MUST NOT treat the older `replacementCount` field as
+            // ground truth.
+            $resultInfo['replacementsAttempted'] = $verification['replacementsAttempted'];
+            $resultInfo['replacementsApplied']   = $verification['replacementsApplied'];
+            $resultInfo['replacementsVerified']  = $verification['replacementsVerified'];
+            $resultInfo['unmatchedEntities']     = $verification['unmatchedEntities'];
+
+            // Legacy field for backwards compatibility. When we
+            // could verify, this now reflects what was ACTUALLY
+            // replaced (no longer the fabricated `count($mappedEntities)`
+            // that #286 flagged). When we couldn't verify (binary
+            // format), we fall back to the attempted count and the
+            // `replacementsVerified=false` flag tells callers it's
+            // unconfirmed.
+            $resultInfo['replacementCount'] = $verification['replacementsApplied'] ?? $verification['replacementsAttempted'];
+
+            if (empty($unredactedEntities) === false) {
+                $resultInfo = $this->createConsentsForUnredactedEntities(
+                    resultInfo: $resultInfo,
+                    unredactedEntities: $unredactedEntities
+                );
+            }
 
             if ($appendBasisSummary === true) {
-                $resultInfo = $this->tryAppendBasisSummary(
+                $resultInfo = $this->attachGrondslagenSummary(
                     anonymisedNode: $result,
                     sourceFileId: $fileId,
-                    outputFormat: $outputFormat,
                     resultInfo: $resultInfo
                 );
             }
 
             return $resultInfo;
+        } catch (ConversionFailedException $e) {
+            // Surface unchanged so the controller can build the 422 body.
+            throw $e;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
@@ -206,6 +488,277 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Check unredacted entities against publication-prohibition rules.
+     *
+     * Returns an array of violation records (one per matching entity).
+     * An empty array means no violations — all entries may proceed to consent creation.
+     * Uses PolicyMatchService at any confidence (operator made an explicit decision;
+     * the 0.85-threshold logic of the regular gate does NOT apply here — D2).
+     *
+     * @param array<int, array<string, mixed>> $unredactedEntities Entries from the unredactedEntities[] payload field
+     *
+     * @return array<int, array<string, mixed>> Violation records: [{entityId, entityText, ruleId, ruleName}]
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+     */
+    public function checkUnredactedProhibitions(array $unredactedEntities): array
+    {
+        $policyService = $this->tryGetPolicyMatchService();
+        if ($policyService === null) {
+            return [];
+        }
+
+        $violations = [];
+        foreach ($unredactedEntities as $entry) {
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $entityText = (string) ($entry['entityText'] ?? '');
+
+            try {
+                $match = $policyService->matchProhibition(
+                    entityType: $entityType,
+                    entityValue: $entityText
+                );
+            } catch (\Throwable $e) {
+                $this->logger->debug(
+                    'PolicyMatchService::matchProhibition threw during unredacted check; skipping',
+                    ['exception' => $e->getMessage()]
+                );
+                continue;
+            }
+
+            if ($match !== null) {
+                $violations[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'ruleId'     => $match['ruleId'] ?? null,
+                    'ruleName'   => $match['ruleName'] ?? null,
+                ];
+            }
+        }//end foreach
+
+        return $violations;
+
+    }//end checkUnredactedProhibitions()
+
+    /**
+     * Create publicationConsent records for each unredacted entity after a successful anonymise run.
+     *
+     * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
+     * failure is logged but does NOT abort the response — the consent failure is surfaced as
+     * a structured error entry in createdConsents[].
+     *
+     * @param array<string, mixed>             $resultInfo         Current anonymization result
+     * @param array<int, array<string, mixed>> $unredactedEntities Validated unredacted-entity entries
+     *
+     * @return array<string, mixed> Result enriched with createdConsents[] field
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+     */
+    private function createConsentsForUnredactedEntities(
+        array $resultInfo,
+        array $unredactedEntities
+    ): array {
+        $config = $this->consentCrud->getConsentConfig();
+        if ($config === null) {
+            $this->logger->warning(
+                'Publication consent register/schema not configured; skipping consent creation for unredacted entities.'
+            );
+            $resultInfo['createdConsents'] = [];
+            return $resultInfo;
+        }
+
+        $documentId      = (string) ($resultInfo['anonymizedFileId'] ?? '');
+        $createdConsents = [];
+
+        foreach ($unredactedEntities as $entry) {
+            $entityText = (string) ($entry['entityText'] ?? '');
+            $entityType = (string) ($entry['entityType'] ?? '');
+            $extra      = [
+                'publicationBases' => $entry['publicationBases'] ?? [],
+            ];
+
+            if (empty($entry['contactEmail']) === false) {
+                $extra['contactEmail'] = (string) $entry['contactEmail'];
+            }
+
+            if (empty($entry['contactAddress']) === false) {
+                $extra['contactAddress'] = (string) $entry['contactAddress'];
+            }
+
+            try {
+                $consent = $this->consentService->createConsentRequest(
+                    documentId: $documentId,
+                    entityType: $entityType,
+                    entityText: $entityText,
+                    register: $config['register'],
+                    schema: $config['schema'],
+                    extra: $extra
+                );
+
+                $createdConsents[] = [
+                    'entityId'      => $entry['entityId'] ?? null,
+                    'entityText'    => $entityText,
+                    'consentId'     => $consent['id'] ?? $consent['uuid'] ?? null,
+                    'consentStatus' => $consent['consentStatus'] ?? 'pending',
+                    'action'        => 'created',
+                ];
+            } catch (Exception $e) {
+                $this->logger->error(
+                    'Failed to create consent for unredacted entity: '.$e->getMessage(),
+                    ['entityText' => $entityText, 'exception' => $e]
+                );
+                $createdConsents[] = [
+                    'entityId'   => $entry['entityId'] ?? null,
+                    'entityText' => $entityText,
+                    'action'     => 'failed',
+                    'error'      => 'Consent creation failed.',
+                ];
+            }//end try
+        }//end foreach
+
+        $resultInfo['createdConsents'] = $createdConsents;
+        return $resultInfo;
+
+    }//end createConsentsForUnredactedEntities()
+
+    /**
+     * Read a Nextcloud file node's content as text, safely.
+     *
+     * Returns the raw content for text-like MIME types (text/*,
+     * application/json, application/xml, text/csv, …). Returns null for
+     * binary formats (PDF, DOCX, XLSX, …) where the file content is a
+     * compressed/encoded container and entity values are NOT findable
+     * literally with str_ipos. Callers MUST treat a null return as
+     * "verification not possible" and surface a `replacementsVerified=false`
+     * flag rather than silently reporting zero or all replacements.
+     *
+     * @param mixed $node Nextcloud file node (OCP\Files\File or compatible)
+     *
+     * @return string|null Text content, or null when the node is binary /
+     *                     unreadable / not a file.
+     *
+     * @spec issue #286 — derive replacementCount from real result
+     */
+    private function readNodeTextSafely(mixed $node): ?string
+    {
+        if (is_object($node) === false) {
+            return null;
+        }
+
+        try {
+            // We need both a content reader AND a MIME-type oracle to
+            // know whether the bytes will be findable as literal text.
+            if (method_exists($node, 'getMimeType') === false
+                || method_exists($node, 'getContent') === false
+            ) {
+                return null;
+            }
+
+            $mimeType = (string) $node->getMimeType();
+
+            $textLike = (str_starts_with($mimeType, 'text/') === true
+                || $mimeType === 'application/json'
+                || $mimeType === 'application/xml'
+                || $mimeType === 'application/x-yaml'
+                || $mimeType === 'application/x-ndjson'
+            );
+
+            if ($textLike === false) {
+                return null;
+            }
+
+            $content = $node->getContent();
+            if (is_string($content) === false || $content === '') {
+                return null;
+            }
+
+            return $content;
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                'Could not read node content for replacement verification; falling back to '
+                .'unverified count: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return null;
+        }//end try
+
+    }//end readNodeTextSafely()
+
+    /**
+     * Compute real replacement statistics for an anonymization run.
+     *
+     * For each mapped entity, check whether its literal text is present
+     * (case-insensitive, mirroring OR's str_ireplace semantics) in the
+     * original source text. Entities that are not present cannot have
+     * been replaced — they are surfaced as `unmatchedEntities`. When the
+     * source text could not be read at all (binary format such as PDF /
+     * DOCX — see readNodeTextSafely()), verification is reported as
+     * impossible (`replacementsVerified=false`, `replacementsApplied=null`).
+     *
+     * @param array<int, array<string, mixed>> $mappedEntities Entities sent to OR
+     * @param string|null                      $originalText   Textual projection of the
+     *                                                         original source, or null
+     *                                                         when the file is binary.
+     *
+     * @return array{
+     *     replacementsAttempted: int,
+     *     replacementsApplied: int|null,
+     *     replacementsVerified: bool,
+     *     unmatchedEntities: array<int, array{text: string, entityType: string}>
+     * }
+     *
+     * @spec issue #286 — surface attempted vs applied + unmatched list
+     */
+    private function verifyReplacements(array $mappedEntities, ?string $originalText): array
+    {
+        $attempted = count($mappedEntities);
+
+        if ($originalText === null) {
+            return [
+                'replacementsAttempted' => $attempted,
+                'replacementsApplied'   => null,
+                'replacementsVerified'  => false,
+                'unmatchedEntities'     => [],
+            ];
+        }
+
+        $applied   = 0;
+        $unmatched = [];
+
+        foreach ($mappedEntities as $entity) {
+            $text = (string) ($entity['text'] ?? '');
+            if ($text === '') {
+                continue;
+            }
+
+            // Case-insensitive search via mb_stripos with explicit UTF-8
+            // encoding mirrors the str_ireplace semantics used in OR's
+            // DocumentProcessingHandler::replaceWordsInTextDocument while
+            // being safe for multibyte content.
+            $found = mb_stripos($originalText, $text, 0, 'UTF-8');
+
+            if ($found !== false) {
+                $applied++;
+                continue;
+            }
+
+            $unmatched[] = [
+                'text'       => $text,
+                'entityType' => (string) ($entity['entityType'] ?? 'UNKNOWN'),
+            ];
+        }//end foreach
+
+        return [
+            'replacementsAttempted' => $attempted,
+            'replacementsApplied'   => $applied,
+            'replacementsVerified'  => true,
+            'unmatchedEntities'     => $unmatched,
+        ];
+
+    }//end verifyReplacements()
 
     /**
      * Render and attach the grondslagen summary to a freshly-anonymised file.
@@ -228,124 +781,18 @@ class AnonymizationService
      *
      * @return array<string, mixed> The (possibly-extended) result info.
      */
-
-    /**
-     * Verify that anonymised entities are actually present in the source text.
-     *
-     * Uses case-insensitive matching to mirror OpenRegister's str_ireplace semantics.
-     *
-     * @param array<int, array<string, mixed>> $mappedEntities Entities submitted for anonymisation.
-     * @param string                           $originalText   Full source-document text (empty when unreadable).
-     *
-     * @return array<string, mixed> Stats: replacementsAttempted, replacementsApplied, replacementsVerified, unmatchedEntities.
-     */
-    private function verifyReplacements(array $mappedEntities, ?string $originalText): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
     {
-        $attempted = count($mappedEntities);
-
-        if ($originalText === null) {
-            // Binary source — verification not possible; callers see the truth.
-            return [
-                'replacementsAttempted' => $attempted,
-                'replacementsApplied'   => null,
-                'replacementsVerified'  => false,
-                'unmatchedEntities'     => [],
-            ];
-        }
-
-        $applied   = 0;
-        $unmatched = [];
-
-        foreach ($mappedEntities as $entity) {
-            $text = (string) ($entity['text'] ?? '');
-            if ($text !== '' && stripos($originalText, $text) !== false) {
-                $applied++;
-            } else {
-                $unmatched[] = $entity;
-            }
-        }
-
-        return [
-            'replacementsAttempted' => $attempted,
-            'replacementsApplied'   => $applied,
-            'replacementsVerified'  => ($applied > 0),
-            'unmatchedEntities'     => $unmatched,
-        ];
-
-    }//end verifyReplacements()
-
-    /**
-     * Read a file node's text content without throwing on binary formats.
-     *
-     * Returns null for non-File nodes and for binary MIME types (anything that
-     * is not text/*). Callers should treat null as "text unavailable" and skip
-     * verification rather than failing.
-     *
-     * @param mixed $node The file node returned by OpenRegister's FileService.
-     *
-     * @return string|null The raw text content, or null when the file is binary/unreadable.
-     */
-    private function readNodeTextSafely(mixed $node): ?string
-    {
-        if (is_object($node) === false) {
-            return null;
-        }
-
-        if (method_exists($node, 'getMimeType') === false || method_exists($node, 'getContent') === false) {
-            return null;
-        }
-
-        $mime = $node->getMimeType();
-        if (str_starts_with($mime, 'text/') === false) {
-            return null;
-        }
-
-        try {
-            return $node->getContent();
-        } catch (Exception $e) {
-            $this->logger->debug(
-                'AnonymizationService: could not read node text for verification',
-                ['error' => $e->getMessage()]
-            );
-            return null;
-        }
-
-    }//end readNodeTextSafely()
-
-    /**
-     * Render and attach the grondslagen summary to a freshly-anonymised file.
-     *
-     * When `$outputFormat === 'preserve'` the caller explicitly opted out of
-     * PDF conversion; the summary is always saved as a separate file in that
-     * case regardless of the anonymised file's MIME type.
-     *
-     * Summary-step failure is non-fatal: the anonymise call still returns
-     * success; the result gets a structured `warning` field.
-     *
-     * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
-     * @param int                  $sourceFileId   Pre-anonymisation source file id.
-     * @param string               $outputFormat   Caller's requested output format ('pdf' or 'preserve').
-     * @param array<string, mixed> $resultInfo     Current result info — extended and returned.
-     *
-     * @return array<string, mixed> The (possibly-extended) result info.
-     */
-    private function tryAppendBasisSummary(
-        mixed $anonymisedNode,
-        int $sourceFileId,
-        string $outputFormat,
-        array $resultInfo
-    ): array {
         if (($anonymisedNode instanceof \OCP\Files\File) === false) {
-            $resultInfo['warning'] = self::SUMMARY_APPEND_FAILED.': anonymised result is not a File node';
+            $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
             return $resultInfo;
         }
 
-        $mime     = $anonymisedNode->getMimeType();
-        $isPdf    = ($mime === 'application/pdf');
-        $preserve = ($outputFormat === 'preserve');
+        $mime  = $anonymisedNode->getMimeType();
+        $isPdf = ($mime === 'application/pdf');
 
         try {
-            if ($isPdf === true && $preserve === false) {
+            if ($isPdf === true) {
                 $this->grondslagenSummary->appendSummaryToPdf(
                     anonymisedFile: $anonymisedNode,
                     sourceFileId: $sourceFileId
@@ -367,14 +814,13 @@ class AnonymizationService
                     'fileId'       => $anonymisedNode->getId(),
                     'sourceFileId' => $sourceFileId,
                     'isPdf'        => $isPdf,
-                    'outputFormat' => $outputFormat,
                     'error'        => $e->getMessage(),
                 ]
             );
-            $resultInfo['warning'] = self::SUMMARY_APPEND_FAILED.': '.$e->getMessage();
+            $resultInfo['warning'] = 'grondslagen_summary_failed: '.$e->getMessage();
         }//end try
 
         return $resultInfo;
 
-    }//end tryAppendBasisSummary()
+    }//end attachGrondslagenSummary()
 }//end class

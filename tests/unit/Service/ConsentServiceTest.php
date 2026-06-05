@@ -20,6 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\ConsentNotesHelper;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\ConsentUpdateHandler;
 use OCA\DocuDesk\Service\ObjectionDeadlineChecker;
@@ -93,6 +94,12 @@ class ConsentServiceTest extends TestCase
      */
     private PolicyMatchService|MockObject $mockPolicyMatcher;
 
+    /**
+     * Mock notes helper.
+     *
+     * @var ConsentNotesHelper|MockObject
+     */
+    private ConsentNotesHelper|MockObject $mockNotesHelper;
 
     /**
      * Set up test environment
@@ -109,6 +116,7 @@ class ConsentServiceTest extends TestCase
         $this->mockDeadlineChecker = $this->createMock(originalClassName: ObjectionDeadlineChecker::class);
         $this->mockUpdateHandler   = $this->createMock(originalClassName: ConsentUpdateHandler::class);
         $this->mockPolicyMatcher   = $this->createMock(originalClassName: PolicyMatchService::class);
+        $this->mockNotesHelper     = $this->createMock(originalClassName: ConsentNotesHelper::class);
 
         $this->service = new ConsentService(
             logger: $this->mockLogger,
@@ -116,11 +124,11 @@ class ConsentServiceTest extends TestCase
             appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
-            policyMatcher: $this->mockPolicyMatcher
+            policyMatcher: $this->mockPolicyMatcher,
+            notesHelper: $this->mockNotesHelper
         );
 
     }//end setUp()
-
 
     /**
      * Test updateConsentStatus delegates to handler
@@ -139,7 +147,6 @@ class ConsentServiceTest extends TestCase
 
     }//end testUpdateConsentStatusDelegates()
 
-
     /**
      * Test checkObjectionDeadline delegates to checker
      *
@@ -155,7 +162,6 @@ class ConsentServiceTest extends TestCase
         $this->assertTrue(condition: $result);
 
     }//end testCheckObjectionDeadlineDelegates()
-
 
     /**
      * Test getConsentsByDocument delegates to handler
@@ -174,7 +180,6 @@ class ConsentServiceTest extends TestCase
 
     }//end testGetConsentsByDocumentDelegates()
 
-
     /**
      * Test createConsentRequest throws when OpenRegister not installed
      *
@@ -191,7 +196,6 @@ class ConsentServiceTest extends TestCase
         $this->service->createConsentRequest('doc-1', 'PERSON', 'John', 'reg-1', 'sch-1');
 
     }//end testCreateConsentRequestThrowsWhenNotInstalled()
-
 
     /**
      * Task 4.5 — scope=document must include a documentId
@@ -212,7 +216,6 @@ class ConsentServiceTest extends TestCase
                 );
 
     }//end testValidateRejectsScopeDocumentWithoutDocumentId()
-
 
     /**
      * Task 4.5 — scope=entity rejects documentId
@@ -237,7 +240,6 @@ class ConsentServiceTest extends TestCase
 
     }//end testValidateRejectsScopeEntityWithDocumentId()
 
-
     /**
      * Task 4.5 — scope=entity requires matchRules
      *
@@ -259,7 +261,6 @@ class ConsentServiceTest extends TestCase
 
     }//end testValidateRejectsScopeEntityWithoutMatchRules()
 
-
     /**
      * Task 4.5 — scope=entity requires consentMethod
      *
@@ -280,7 +281,6 @@ class ConsentServiceTest extends TestCase
                 );
 
     }//end testValidateRejectsScopeEntityWithoutConsentMethod()
-
 
     /**
      * Task 4.5 — scope=entity must not set policyMatch
@@ -305,7 +305,6 @@ class ConsentServiceTest extends TestCase
 
     }//end testValidateRejectsPolicyMatchOnScopeEntity()
 
-
     /**
      * Task 4.5 — a fully-valid scope=document record passes
      *
@@ -313,6 +312,8 @@ class ConsentServiceTest extends TestCase
      */
     public function testValidateAcceptsValidScopeDocument(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $this->service->validatePublicationConsentData(
                 data: [
                     'scope'      => 'document',
@@ -322,10 +323,7 @@ class ConsentServiceTest extends TestCase
                 ]
                 );
 
-        $this->expectNotToPerformAssertions();
-
     }//end testValidateAcceptsValidScopeDocument()
-
 
     /**
      * Task 4.5 — a fully-valid scope=entity record passes
@@ -334,6 +332,8 @@ class ConsentServiceTest extends TestCase
      */
     public function testValidateAcceptsValidScopeEntity(): void
     {
+        $this->expectNotToPerformAssertions();
+
         $this->service->validatePublicationConsentData(
                 data: [
                     'scope'         => 'entity',
@@ -344,9 +344,5 @@ class ConsentServiceTest extends TestCase
                 ]
                 );
 
-        $this->expectNotToPerformAssertions();
-
     }//end testValidateAcceptsValidScopeEntity()
-
-
 }//end class

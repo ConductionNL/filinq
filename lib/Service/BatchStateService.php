@@ -16,6 +16,9 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -138,9 +141,12 @@ class BatchStateService
             return null;
         }
 
-        // C2 security fix: enforce batch ownership so an authenticated user
+        // C2 / WF3 security fix: enforce batch ownership so an authenticated user
         // cannot read or drive another user's batch by guessing its ID.
         // Admins may access any batch for support/audit purposes.
+        // WF3 fix: return null (not throw RuntimeException) on access-denied so
+        // callers return 404 for both "not found" and "found-but-denied" — the
+        // previous throw produced a distinct 500 body that confirmed existence.
         $currentUser = $this->userSession->getUser();
         if ($currentUser !== null) {
             $currentUid  = $currentUser->getUID();
@@ -148,7 +154,11 @@ class BatchStateService
             $isAdmin     = $this->groupManager->isAdmin($currentUid);
 
             if ($isAdmin === false && $batchUserId !== $currentUid) {
-                throw new RuntimeException('Access denied: batch belongs to another user');
+                $this->logger->info(
+                    'Batch access denied: batchId belongs to another user',
+                    ['batchId' => $batchId, 'requestingUid' => $currentUid]
+                );
+                return null;
             }
         }
 
@@ -157,48 +167,6 @@ class BatchStateService
         return $batch;
 
     }//end getBatch()
-
-    /**
-     * Assert the calling user owns the batch, throwing OCSForbiddenException when not.
-     *
-     * Called explicitly by BatchAnonymizationController to satisfy gate-7 (no-admin-idor).
-     * The full ownership check also runs inside getBatch() for defence-in-depth.
-     *
-     * @param string $batchId Batch identifier to verify.
-     *
-     * @return void
-     *
-     * @throws \OCP\AppFramework\OCS\OCSForbiddenException When the calling user is not the owner.
-     * @throws \RuntimeException                           When the batch does not exist in cache.
-     */
-    public function requireBatchOwnership(string $batchId): void
-    {
-        $data = $this->cache->get(self::CACHE_PREFIX.$batchId);
-        if ($data === null) {
-            throw new RuntimeException('Batch not found: '.$batchId);
-        }
-
-        $batch = json_decode($data, true);
-        if (is_array($batch) === false) {
-            throw new RuntimeException('Batch record is corrupt: '.$batchId);
-        }
-
-        $currentUser = $this->userSession->getUser();
-        if ($currentUser === null) {
-            throw new \OCP\AppFramework\OCS\OCSForbiddenException('Not authenticated.');
-        }
-
-        $currentUid  = $currentUser->getUID();
-        $batchUserId = (string) ($batch['userId'] ?? '');
-        $isAdmin     = $this->groupManager->isAdmin($currentUid);
-
-        if ($isAdmin === false && $batchUserId !== $currentUid) {
-            throw new \OCP\AppFramework\OCS\OCSForbiddenException(
-                'Access denied: batch belongs to another user.'
-            );
-        }
-
-    }//end requireBatchOwnership()
 
     /**
      * Persist an updated batch record.
