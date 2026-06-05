@@ -160,8 +160,8 @@ export default {
 .app-navigation {
 	--app-navigation-padding: 16px;
 	--color-main-background-blur: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: 20px;
-	box-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+	border-radius: var(--dd-radius-panel);
+	box-shadow: var(--dd-shadow-panel);
 	margin-right: 8px;
 }
 
@@ -177,6 +177,6 @@ export default {
 	--color-primary-element: #fff;
 	--color-primary-element-hover: #fff;
 	--color-primary-element-text: var(--color-main-text);
-	box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24);
+	box-shadow: var(--dd-shadow-popout);
 }
 </style>

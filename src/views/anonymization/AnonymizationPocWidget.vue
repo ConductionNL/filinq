@@ -388,7 +388,7 @@ export default {
 
 .drop-zone {
 	border: 2px dashed var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	padding: 32px;
 	text-align: center;
 	display: flex;
@@ -436,7 +436,7 @@ export default {
 
 .file-card {
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	padding: 16px;
 	margin-bottom: 16px;
 	background-color: var(--color-main-background);

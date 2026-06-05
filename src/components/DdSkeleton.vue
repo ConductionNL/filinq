@@ -142,7 +142,7 @@ export default {
 	width: 100%;
 	height: 1em;
 	margin: 4px 0;
-	border-radius: 4px;
+	border-radius: var(--border-radius);
 	/* Shimmer using NC tokens. Fall back to neutral greys in case the
 	 * variables are missing in some themes. */
 	background: linear-gradient(
