@@ -144,8 +144,7 @@ class GrondslagenSummaryService
         $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
         $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
 
-        $tempInput  = tempnam(dir: '/tmp/mpdf', prefix: 'grondsl_in_');
-        $tempOutput = tempnam(dir: '/tmp/mpdf', prefix: 'grondsl_out_');
+        $tempInput = tempnam(dir: '/tmp/mpdf', prefix: 'grondsl_in_');
 
         try {
             // Write current file content to a temp file for FPDI to read.
@@ -162,10 +161,6 @@ class GrondslagenSummaryService
         } finally {
             if (file_exists(filename: $tempInput) === true) {
                 unlink(filename: $tempInput);
-            }
-
-            if (file_exists(filename: $tempOutput) === true) {
-                unlink(filename: $tempOutput);
             }
         }//end try
 
