@@ -50,21 +50,45 @@
       "outcome": "in-flight",
       "outcome_reason": null,
       "pattern_tags": [],
-      "stages": []
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-05T03:54:43Z",
+          "ended_at": "2026-06-05T04:46:31Z",
+          "exit_code": 0,
+          "turns_used": 229,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 3108
+        }
+      ]
     }
   ],
   "totals": {
-    "runs": 1,
-    "turns_used": 0,
+    "runs": 2,
+    "turns_used": 229,
     "cost_usd": 0.0,
-    "duration_seconds": 2949,
-    "cycles": 1,
+    "duration_seconds": 6057,
+    "cycles": 2,
     "by_stage": {
       "build": {
         "runs": 1,
         "turns_used": 0,
         "cost_usd": 0.0,
         "duration_seconds": 2949
+      },
+      "fix": {
+        "runs": 1,
+        "turns_used": 229,
+        "cost_usd": 0.0,
+        "duration_seconds": 3108
       }
     }
   }
