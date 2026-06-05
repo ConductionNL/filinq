@@ -1,6 +1,6 @@
 <template>
 	<div class="file-viewer-page">
-		<DdPageHeader :title="pageTitle">
+		<FileViewerHeader :title="pageTitle">
 			<template #icon>
 				<component :is="fileTypeIcon" :size="28" />
 			</template>
@@ -26,7 +26,7 @@
 					{{ fileViewerStore.showAnonymized ? t('docudesk', 'Show original') : t('docudesk', 'Show anonymised') }}
 				</NcButton>
 			</template>
-		</DdPageHeader>
+		</FileViewerHeader>
 
 		<div class="file-viewer-page__body">
 			<component
@@ -60,7 +60,7 @@ import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
 import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
-import DdPageHeader from '../../components/DdPageHeader.vue'
+import FileViewerHeader from '../../components/FileViewerHeader.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
@@ -96,7 +96,7 @@ export default {
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
-		DdPageHeader,
+		FileViewerHeader,
 		PdfViewer,
 		WordViewer,
 		TextViewer,

@@ -81,18 +81,19 @@ export default {
 .dd-page-header__text {
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
 	gap: 2px;
 	min-width: 0;
+	min-height: 40px;
 	flex: 1;
 }
 
 .dd-page-header__title {
-	font-size: 1.5rem;
+	font-size: 1.34rem;
 	font-weight: 600;
-	line-height: 1.2;
+	line-height: 110%;
 	margin: 0;
 	color: var(--color-main-text);
-	word-break: break-word;
 }
 
 .dd-page-header__description {
