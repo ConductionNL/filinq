@@ -117,10 +117,10 @@ export default {
 
 <style scoped>
 .dd-data-table {
-	border-radius: var(--dd-data-table-border-radius, 20px);
+	border-radius: var(--dd-data-table-border-radius, var(--dd-radius-panel));
 	border: 1px solid var(--dd-data-table-border-color, #E9E9E9);
 	overflow-x: auto;
-	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	box-shadow: var(--dd-shadow-panel);
 }
 
 .dd-data-table__loading {

@@ -220,7 +220,7 @@ export default {
 
 .pdf-viewer__page {
 	background: white;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	box-shadow: var(--dd-shadow-doc);
 	max-width: 100%;
 }
 
