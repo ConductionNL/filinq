@@ -226,6 +226,30 @@ class Controller
 namespace OCP\AppFramework\Http;
 
 /**
+ * Stub for OCP\AppFramework\Http\OCSForbiddenException
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class OCSForbiddenException extends \RuntimeException
+{
+    /**
+     * Constructor
+     *
+     * @param string $message Exception message
+     *
+     * @return void
+     */
+    public function __construct(string $message='')
+    {
+        parent::__construct(message: $message, code: 403);
+    }//end __construct()
+}//end class
+
+/**
  * Stub for OCP\AppFramework\Http\JSONResponse
  *
  * @category Tests

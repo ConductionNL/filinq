@@ -16,6 +16,9 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -138,9 +141,12 @@ class BatchStateService
             return null;
         }
 
-        // C2 security fix: enforce batch ownership so an authenticated user
+        // C2 / WF3 security fix: enforce batch ownership so an authenticated user
         // cannot read or drive another user's batch by guessing its ID.
         // Admins may access any batch for support/audit purposes.
+        // WF3 fix: return null (not throw RuntimeException) on access-denied so
+        // callers return 404 for both "not found" and "found-but-denied" — the
+        // previous throw produced a distinct 500 body that confirmed existence.
         $currentUser = $this->userSession->getUser();
         if ($currentUser !== null) {
             $currentUid  = $currentUser->getUID();
@@ -148,7 +154,11 @@ class BatchStateService
             $isAdmin     = $this->groupManager->isAdmin($currentUid);
 
             if ($isAdmin === false && $batchUserId !== $currentUid) {
-                throw new RuntimeException('Access denied: batch belongs to another user');
+                $this->logger->info(
+                    'Batch access denied: batchId belongs to another user',
+                    ['batchId' => $batchId, 'requestingUid' => $currentUid]
+                );
+                return null;
             }
         }
 

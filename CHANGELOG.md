@@ -3,6 +3,31 @@
 ## Unreleased
 
 ### Added
+- **Idempotent `ConsentService::createConsentRequest()`** — keyed on `(documentId, entityKey, scope: "document")`. A second call for the same key updates the existing record rather than creating a duplicate; the caller receives `wasUpdated: true` in the response. Falls back to `entityText` matching when `entityKey` is null (legacy records). `scope: "entity"` standing-consent records are never matched as duplicates. (`consent-create-idempotency-and-notes`)
+- **Sentinel-tagged additional-bases serialisation in `publicationConsent.notes`** — `publicationBases[0]` writes to the existing `legalBasis` field (truncated at 500 chars at word boundary); elements `[1..N]` are rendered inside an HTML-comment sentinel region (`<!-- docudesk:additional-publication-bases:begin/end -->`). The sentinel is markdown-invisible, re-submittable (idempotent re-render), and operator-authored content outside the brackets is preserved across re-submits. (`consent-create-idempotency-and-notes`)
+- **`PolicyRejectedException`** — new typed exception thrown when `PolicyMatchService` returns a prohibition match during `createConsentRequest`. Carries `ruleUuid` and `ruleName` for operator-facing notification. (`consent-create-idempotency-and-notes`)
+- **`ConsentNotesHelper`** — new service encapsulating sentinel region write/strip/truncate logic. (`consent-create-idempotency-and-notes`)
+
+### Behavior changes
+- **`createConsentRequest()` is now idempotent**: re-submitting a duplicate `(documentId, entityKey)` pair now updates the existing record (previously would have created a duplicate or raised a 409-style error). Existing operator-authored notes content is preserved across re-submits. The bracketed `<!-- docudesk:additional-publication-bases:* -->` region is auto-managed by the service.
+- **`createConsentRequest()` signature** now accepts `extra['publicationBases']`, `extra['entityKey']`, `extra['contactEmail']`, `extra['contactAddress']` in addition to the existing fields. The `ALLOWED_CREATE_FIELDS` whitelist in `ConsentCrudService` is updated accordingly.
+
+
+- **`prohibitionMatch` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
+  Each consolidated entity now carries a `prohibitionMatch` field: `null` when no publication-prohibition rule matches, or `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when the entity's `highestConfidence` is at or above the configured threshold (`docudesk.prohibition.high_confidence_threshold`, default 0.85). The frontend review UI uses this to render prohibition-locked entities without re-running the matcher client-side. (`anonymisation-entity-review-prohibition-hints`)
+- **`suggestedBases` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
+  Each consolidated entity now carries a `suggestedBases` field: a deduplicated union of `bases[]` from the dossier(s) the batch's files belong to. Empty array when files are not in any dossier or the dossier has no bases configured. Used to pre-fill the grondslag picker in the review UI. (`anonymisation-entity-review-prohibition-hints`)
+- **`BasesResolverService`** — new service that resolves the union of Woo Art. 5 grondslagen bases from dossier(s) for a batch's files, supporting folder-based batches, upload batches, multi-dossier batches, and orphan files. (`anonymisation-entity-review-prohibition-hints`)
+- **`PolicyMatchService::matchProhibition()`** — new convenience method that wraps the existing `match()` call and returns only prohibition matches in the shape expected by the entity-review and extract surfaces. (`anonymisation-entity-review-prohibition-hints`)
+- **PDF-by-default output on the anonymise endpoints.** After OpenRegister returns an anonymised file in its native format, DocuDesk now converts the result to PDF (PDF/A-3b where feasible) before writing back to Nextcloud Files. The conversion is driven by a new `PdfConversionService` cascade:
+  1. `OfficeAppBackend` — Collabora, OnlyOffice, or Euro Office via Nextcloud's `OCP\Files\Conversion\IConversionManager` (NC 31+). Single API for all three Office app integrations.
+  2. `PhpWordBackend` — DOC, DOCX, ODT, RTF, HTML via PhpOffice\PhpWord + mPDF. Spreadsheet and presentation formats are explicitly out of scope.
+  3. `MpdfBackend` — HTML and TXT direct via mPDF, reusing the print-preview PDF/A-3b configuration.
+  4. `EmlBackend` — stubbed; activates once OpenRegister ships `message/rfc822` text extraction.
+  First success wins; total failure throws `ConversionFailedException` whose attempt records surface in the HTTP 422 response body. (`anonymise-output-as-pdf-by-default`)
+- **Per-call `outputFormat` request field** on `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batchAnonymize/{batchId}`. Accepts `"pdf"` (default) or `"preserve"`. Per-call value overrides the tenant default. (`anonymise-output-as-pdf-by-default`)
+- **Admin setting "Always export anonymised documents as PDF"** in the new Anonymisation section of the DocuDesk settings panel. Backed by the `docudesk.anonymisation.default_output_format` `IAppConfig` key. Switching off flips the tenant default to `"preserve"`; callers can still override per-request. (`anonymise-output-as-pdf-by-default`)
+- **`phpoffice/phpword ^1.2`** added to `composer.json` as the engine for the in-process PhpWord conversion backend. Reuses the existing `mpdf/mpdf` dependency for PDF/A-3b emission. (`anonymise-output-as-pdf-by-default`)
 - **`unredactedEntities[]` on per-document and batch anonymise endpoints.**
   Operators can now pass entities they intend to publish unredacted alongside
   the usual `entities[]`. Each entry requires `entityId`, `entityText`,
@@ -33,9 +58,10 @@
   matches an active `publicationProhibition` rule (any confidence — hard gate).
 - **Batch anonymise may now respond HTTP 207** on per-file prohibition
   violations; per-file details in `prohibitedEntries[]` on the file entry.
+- **The anonymise endpoint now returns PDF/A-3b output by default.** Callers that need the legacy native-format behaviour must send `outputFormat: "preserve"` on the request body. Conversion failures return HTTP 422 with a structured `conversionAttempts` array — operators that previously got native-format output for unsupported types may need to install a supported Office app integration (Collabora, OnlyOffice, or Euro Office) or send `outputFormat: "preserve"`. The un-converted anonymised intermediate is best-effort rolled back on conversion failure so the operator never sees a half-finished mixed-format result. Spreadsheet and presentation formats (XLSX, ODS, PPTX, ODP) are NOT supported by the no-Office-app fallback tier — they will return 422 unless an Office app is configured. (`anonymise-output-as-pdf-by-default`)
+- **Batch anonymise responses now carry per-file `conversionAttempts`** on the file's batch entry when conversion fails for that file. The batch continues with the next file rather than aborting. (`anonymise-output-as-pdf-by-default`)
 - Inside publication-clearance flows, the consent service consults the policy layer **before** defaulting to the WOO workflow. Existing `consentStatus` enum is unchanged; the policy-pre-empted distinction lives in `policyMatch` + `notificationStatus: "skipped"`. (`entity-publication-policies`)
 - Generic anonymisation flows (file sanitisation prior to email/storage) are unaffected — they do not call `ConsentService::createConsentRequest` and therefore do not consult the policy layer. (`entity-publication-policies`)
-
 ### Security / Fixed
 - **NativeSigningProvider sessions now persist via OpenRegister** (fixes #287).
   The previous implementation held sessions in a per-request `$sessions` PHP

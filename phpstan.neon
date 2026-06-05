@@ -57,3 +57,23 @@ parameters:
         - '#Call to an undefined method OCP\\IRequest::setParameter\(\)#'
         - '#Call to an undefined method OCP\\Mail\\IMessage::attachFile\(\)#'
         - '#Call to an undefined method OCP\\AppFramework\\Db\\Entity::jsonSerialize#'
+        # TesseractOCR uses __call magic methods for lang(), dpi() etc.
+        - '#Call to an undefined method .+TesseractOCR::#'
+        # DI-injected properties in scaffold classes not yet using them
+        - '#Property .+ is never read, only written#'
+        # PhpOffice\PhpWord — declared in composer.json as a require but
+        # the package is only loaded after `composer install` resolves
+        # it; in CI / fresh-checkout phpstan runs without the package
+        # vendored. The PhpWordBackend usages are guarded by
+        # class_exists() in isAvailable(), so the runtime behaviour is
+        # safe. Same exemption pattern as the OpenRegister one above.
+        - '#unknown class PhpOffice\\PhpWord\\#'
+        - '#static method [^ ]+ on an unknown class PhpOffice\\PhpWord\\#'
+        - '#Access to constant [^ ]+ on an unknown class PhpOffice\\PhpWord\\#'
+        # Defensive runtime guards (`is_string(...) === false`) on file-
+        # content reads. The docblock for File::getContent() promises
+        # `string`, so phpstan treats the negated check as unreachable.
+        # The guards stay — Nextcloud's File implementation can fail
+        # under quota / locked-file conditions and we'd rather emit a
+        # typed ConversionFailedException than crash the cascade.
+        - '#Strict comparison using === between true and false will always evaluate to false#'

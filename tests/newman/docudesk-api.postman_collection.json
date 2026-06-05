@@ -428,6 +428,127 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /api/consent (idempotency \u2014 first call creates)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\",\n    \"Article 6(1)(f)\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('wasUpdated is false on first call', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(false); });",
+                  "pm.test('documentId matches', function () { var json = pm.response.json(); pm.expect(json.documentId).to.equal('idem-test-doc-1'); });",
+                  "pm.test('legalBasis set to first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Article 6(1)(e)'); });",
+                  "pm.test('notes contain sentinel region with second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('docudesk:additional-publication-bases:begin'); pm.expect(json.notes || '').to.include('Article 6(1)(f)'); });",
+                  "pm.environment.set('createdConsentId', pm.response.json().id || pm.response.json()['@self']?.id || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (idempotency \u2014 second call updates, preserves workflow state)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Updated basis A\",\n    \"Updated basis B\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('wasUpdated is true on re-submit', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(true); });",
+                  "pm.test('legalBasis updated to new first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Updated basis A'); });",
+                  "pm.test('notes sentinel updated with new second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('Updated basis B'); });",
+                  "pm.test('notes does not contain old basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('Article 6(1)(f)'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (operator notes preserved on re-submit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-2\",\n  \"entityType\": \"ORGANIZATION\",\n  \"entityText\": \"Conduction B.V.\",\n  \"entityKey\": \"entity-key-idem-2\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('single basis does not produce sentinel region', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('docudesk:additional-publication-bases'); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

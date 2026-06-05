@@ -13,6 +13,11 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
@@ -132,6 +137,7 @@ class BatchAnonymizationControllerFolderTest extends TestCase
             $this->createMock(WooProfileService::class),
             $this->mockFolderService,
             $this->mockL10n,
+            $this->createMock(\OCP\IAppConfig::class),
             $mockUserSession
         );
 
