@@ -153,7 +153,6 @@ export default {
 .dd-entity-card {
 	padding: 10px 12px;
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large, 12px);
 	background-color: var(--color-main-background);
 	display: flex;
 	flex-direction: column;
