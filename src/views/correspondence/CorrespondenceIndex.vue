@@ -42,7 +42,7 @@ SPDX-License-Identifier: EUPL-1.2
 						class="correspondence-index__radio-label">
 						<input v-model="store.format"
 							type="radio"
-							:value="fmt.value" />
+							:value="fmt.value">
 						{{ fmt.label }}
 					</label>
 				</div>
@@ -183,7 +183,9 @@ SPDX-License-Identifier: EUPL-1.2
 			<div v-if="store.warnings.length" class="correspondence-index__warnings">
 				<NcNoteCard type="warning">
 					<ul>
-						<li v-for="(w, i) in store.warnings" :key="i">{{ w }}</li>
+						<li v-for="(w, i) in store.warnings" :key="i">
+							{{ w }}
+						</li>
 					</ul>
 				</NcNoteCard>
 			</div>

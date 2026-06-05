@@ -41,6 +41,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		/**
 		 * Parse recipient IDs from textarea (one UUID per line).
 		 *
+		 * @param {object} state The Vuex state.
 		 * @return {string[]}
 		 */
 		recipientIds(state) {
@@ -53,6 +54,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		/**
 		 * True when a batch job is running.
 		 *
+		 * @param {object} state The Vuex state.
 		 * @return {boolean}
 		 */
 		isBatchMode(state) {
