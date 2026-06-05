@@ -2,9 +2,12 @@ import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
+import { WOO_BASES } from '../../constants/grondslagen.js'
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
 		folderPath: '',
+		folderId: null,
 		batchId: null,
 		batchStatus: null,
 		files: [],
@@ -16,19 +19,34 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		processing: false,
 		pollTimer: null,
 		minConfidence: 0.0,
+
+		// Wave 4a (anonymisation-grondslagen-summary) state.
+		// Operator can optionally create a dossier for the chosen folder so
+		// the per-dossier grondslagen report has something to operate on.
+		dossier: {
+			uuid: null,
+			name: '',
+			description: '',
+			bases: ['persoonsgegevens'],
+			creating: false,
+			error: null,
+		},
+		appendBasisSummary: true,
+		report: {
+			generating: false,
+			result: null,
+			error: null,
+		},
 	}),
 	getters: {
 		isActive: (state) => state.batchId !== null,
 		selectedEntityCount: (state) => state.entities.filter((e) => e.included).length,
 		filesWithEntities: (state) => state.files.filter((f) => (f.entityCount || 0) > 0).length,
 		extractedCount: (state) => state.files.filter((f) => f.status === 'extracted' || f.status === 'error').length,
+		basesOptions: () => WOO_BASES,
+		hasDossier: (state) => state.dossier.uuid !== null,
 	},
 	actions: {
-		/**
-		 * Start a folder anonymization batch and begin polling for progress.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
-		 */
 		async startFolderBatch(folderPath) {
 			this.processing = true
 			this.error = null
@@ -39,9 +57,17 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					{ folderPath },
 				)
 				this.batchId = r.data.batchId
+				this.folderId = r.data.folderId || null
 				this.files = r.data.files || []
 				this.totalFiles = r.data.fileCount || this.files.length
 				this.batchStatus = 'extracting'
+
+				// Default the dossier name to the folder's basename so the
+				// operator just hits "Create" if they're happy with defaults.
+				if (!this.dossier.name) {
+					this.dossier.name = this.folderPath.split('/').filter(Boolean).pop() || this.folderPath
+				}
+
 				this.startPolling()
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
@@ -52,20 +78,49 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		},
 
 		/**
-		 * Begin polling the batch status endpoint every 3 seconds.
+		 * Create a dossier bound to the current folder.
 		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-1
+		 * Issues a POST to OR's generic object-create endpoint, with
+		 * `@self.folder` set to the folder's node id so subsequent
+		 * `renderDossierSummary` calls find the right files. Bases are
+		 * defaulted to ['persoonsgegevens'] but the operator can multi-select
+		 * from the six canonical Woo Art. 5 grondslagen.
 		 */
+		async createDossier() {
+			if (!this.folderId) {
+				this.dossier.error = 'No folder bound yet — start the folder batch first.'
+				return
+			}
+			this.dossier.creating = true
+			this.dossier.error = null
+			try {
+				const payload = {
+					name: this.dossier.name || this.folderPath || 'Dossier',
+					description: this.dossier.description || '',
+					bases: this.dossier.bases || [],
+					'@self': { folder: String(this.folderId) },
+				}
+				const r = await axios.post(
+					generateUrl('/apps/openregister/api/objects/dossier/dossier'),
+					payload,
+				)
+				const data = r.data
+				this.dossier.uuid = data?.['@self']?.id || data?.id || data?.uuid || null
+				if (!this.dossier.uuid) {
+					this.dossier.error = 'Dossier created but UUID not found in response.'
+				}
+			} catch (e) {
+				this.dossier.error = e.response?.data?.error || e.message
+			} finally {
+				this.dossier.creating = false
+			}
+		},
+
 		startPolling() {
 			this.stopPolling()
 			this.pollTimer = setInterval(() => this.pollStatus(), 3000)
 		},
 
-		/**
-		 * Stop the active status polling timer.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-1
-		 */
 		stopPolling() {
 			if (this.pollTimer) {
 				clearInterval(this.pollTimer)
@@ -73,11 +128,6 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
-		/**
-		 * Poll the batch status, update progress, and load entities once ready for review.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#5-2
-		 */
 		async pollStatus() {
 			if (!this.batchId) return
 			try {
@@ -98,11 +148,6 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
-		/**
-		 * Fetch consolidated entities for the folder batch, applying the confidence filter.
-		 *
-		 * @spec openspec/specs/anonymization-entity-review/spec.md
-		 */
 		async fetchEntities() {
 			try {
 				let url = '/apps/docudesk/api/anonymization/batch/' + this.batchId + '/entities'
@@ -110,51 +155,109 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					url += '?minConfidence=' + this.minConfidence
 				}
 				const r = await axios.get(generateUrl(url))
-				this.entities = (r.data.entities || []).map((e) => ({ ...e, included: true }))
+				this.entities = (r.data.entities || []).map((e) => ({
+					...e,
+					included: true,
+					// Per-entity review state — mirrors AnonymizationWidget's
+					// single-file flow but operates on the consolidated
+					// (multi-file) view. _decisionBases applies to every
+					// underlying relationId on submit.
+					_decisionBases: [],
+					_decisionSkip: false,
+					_patchError: null,
+				}))
 				this.totalEntities = r.data.entityCount || 0
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
 			}
 		},
 
-		/**
-		 * Toggle whether a reviewed entity is included in anonymization.
-		 *
-		 * @spec openspec/specs/anonymization-entity-review/spec.md
-		 */
 		toggleEntity(index) {
 			if (this.entities[index]) {
 				this.entities[index].included = !this.entities[index].included
 			}
 		},
 
-		/**
-		 * Set the inclusion flag for a set of currently visible entities.
-		 *
-		 * @spec openspec/specs/anonymization-entity-review/spec.md
-		 */
 		setVisibleEntities(indices, included) {
 			indices.forEach((i) => {
 				if (this.entities[i]) this.entities[i].included = included
 			})
 		},
 
-		/**
-		 * Anonymize the folder batch using the reviewed/included entities.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
-		 */
+		setEntityBases(index, bases) {
+			if (this.entities[index]) {
+				this.entities[index]._decisionBases = Array.isArray(bases) ? [...bases] : []
+				this.entities[index]._patchError = null
+			}
+		},
+
+		setEntitySkip(index, skip) {
+			if (this.entities[index]) {
+				this.entities[index]._decisionSkip = !!skip
+				this.entities[index]._patchError = null
+			}
+		},
+
 		async anonymizeBatch() {
 			this.processing = true
 			this.error = null
 			this.batchStatus = 'anonymizing'
 			try {
+				// Step 1 — PATCH per-entity grondslagen / skip decisions onto
+				// every underlying EntityRelation row. Each consolidated entity
+				// may span many files; the relationIds array carries one id
+				// per occurrence. Decisions are applied to every relation so a
+				// single picker selection covers all instances of the value.
+				// Failures are surfaced per-entity but do not abort the batch.
+				for (const entity of this.entities) {
+					if (!entity.included) {
+						continue
+					}
+
+					const hasBases = Array.isArray(entity._decisionBases) && entity._decisionBases.length > 0
+					const hasSkip = !!entity._decisionSkip
+					if (!hasBases && !hasSkip) {
+						continue
+					}
+
+					const relationIds = Array.isArray(entity.relationIds) ? entity.relationIds : []
+					if (relationIds.length === 0) {
+						entity._patchError = 'No relation ids — decisions cannot persist.'
+						continue
+					}
+
+					const payload = {
+						bases: hasBases ? [...entity._decisionBases] : [],
+						skipAnonymization: hasSkip,
+					}
+					for (const relationId of relationIds) {
+						try {
+							await axios.patch(
+								generateUrl(`/apps/openregister/api/entity-relations/${relationId}`),
+								payload,
+							)
+						} catch (err) {
+							entity._patchError = err.response?.data?.error || err.message
+							// Continue with other relations + entities — partial
+							// application beats all-or-nothing in a review flow.
+						}
+					}
+				}
+
+				// Step 2 — trigger the batch anonymise. OR honours the
+				// skipAnonymization flag we just PATCHed, so skipped entities
+				// stay unredacted in the output.
 				const selected = this.entities
 					.filter((e) => e.included)
 					.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence }))
 				await axios.post(
 					generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/anonymize'),
-					{ entities: selected },
+					{
+						entities: selected,
+						// Wave 4a flag — when true, each per-file anonymise call
+						// gets a grondslagen-summary page appended to its output.
+						appendBasisSummary: this.appendBasisSummary,
+					},
 				)
 				this.batchStatus = 'completed'
 			} catch (e) {
@@ -165,19 +268,42 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			}
 		},
 
+		/**
+		 * Trigger the per-dossier grondslagen report regeneration.
+		 *
+		 * Only meaningful when a dossier has been created via
+		 * {@link createDossier}; without a dossier UUID the button stays
+		 * disabled on the view side.
+		 */
+		async generateDossierReport() {
+			if (!this.dossier.uuid) {
+				this.report.error = 'No dossier UUID — create a dossier first.'
+				return
+			}
+			this.report.generating = true
+			this.report.error = null
+			this.report.result = null
+			try {
+				const r = await axios.post(
+					generateUrl('/apps/docudesk/api/anonymization/dossier/' + this.dossier.uuid + '/grondslagen-pdf'),
+				)
+				this.report.result = r.data
+			} catch (e) {
+				this.report.error = e.response?.data?.error || e.message
+			} finally {
+				this.report.generating = false
+			}
+		},
+
 		getReportUrl() {
 			return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
 		},
 
-		/**
-		 * Reset the folder batch state and stop any active polling.
-		 *
-		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
-		 */
 		reset() {
 			this.stopPolling()
 			Object.assign(this, {
 				folderPath: '',
+				folderId: null,
 				batchId: null,
 				batchStatus: null,
 				files: [],
@@ -188,6 +314,20 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 				error: null,
 				processing: false,
 				minConfidence: 0.0,
+				dossier: {
+					uuid: null,
+					name: '',
+					description: '',
+					bases: ['persoonsgegevens'],
+					creating: false,
+					error: null,
+				},
+				appendBasisSummary: true,
+				report: {
+					generating: false,
+					result: null,
+					error: null,
+				},
 			})
 		},
 	},
