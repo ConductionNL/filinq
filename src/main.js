@@ -3,6 +3,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
+/* eslint-disable camelcase, no-undef */
+// Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
+// any CSS or asset/resource (font) URL is evaluated. See setPublicPath.js.
+import './setPublicPath.js'
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { PiniaVuePlugin } from 'pinia'
@@ -22,6 +26,7 @@ import { initializeStores } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
+import './assets/fonts.css'
 import './assets/app.css'
 
 Vue.mixin({ methods: { t, n } })

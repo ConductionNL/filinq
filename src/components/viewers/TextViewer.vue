@@ -98,8 +98,8 @@ export default {
 	max-width: 1000px;
 	width: 100%;
 	padding: 32px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	border-radius: 4px;
+	box-shadow: var(--dd-shadow-doc);
+	border-radius: var(--border-radius);
 	font-family: var(--font-face-monospace, monospace);
 	font-size: 13px;
 	line-height: 1.5;
