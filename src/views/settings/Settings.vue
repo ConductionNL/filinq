@@ -351,6 +351,7 @@ export default {
 		/**
 		 * Reset the selected schema when the register for a type changes.
 		 *
+		 * @param type
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-openregister-integration-configuration-req-set-02
 		 */
 		onRegisterChange(type) {
@@ -466,6 +467,7 @@ export default {
 		/**
 		 * Save the register/schema configuration for a single object type.
 		 *
+		 * @param type
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-openregister-integration-configuration-req-set-02
 		 */
 		saveConfig(type) {
@@ -579,6 +581,8 @@ export default {
 		/**
 		 * Open an external documentation/configuration link.
 		 *
+		 * @param url
+		 * @param target
 		 * @spec openspec/specs/admin-settings/spec.md#requirement-external-documentation-urls-req-set-09
 		 */
 		openLink(url, target = '') {

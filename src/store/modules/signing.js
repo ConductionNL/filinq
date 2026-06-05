@@ -40,6 +40,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Fetch a single signing request by ID.
 			 *
+			 * @param id
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async fetchSigningRequest(id) {
@@ -60,6 +61,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Create a new signing request.
 			 *
+			 * @param data
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async createSigningRequest(data) {
@@ -80,6 +82,8 @@ export const useSigningStore = defineStore(
 			/**
 			 * Sign a document for a given signer in a signing request.
 			 *
+			 * @param requestId
+			 * @param signerId
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async signDocument(requestId, signerId) {
@@ -102,6 +106,9 @@ export const useSigningStore = defineStore(
 			/**
 			 * Decline a signing request for a given signer with a reason.
 			 *
+			 * @param requestId
+			 * @param signerId
+			 * @param reason
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async declineRequest(requestId, signerId, reason) {
@@ -124,6 +131,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Cancel a signing request.
 			 *
+			 * @param requestId
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async cancelRequest(requestId) {
@@ -140,6 +148,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Bulk-sign multiple signing requests at once.
 			 *
+			 * @param requestIds
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async bulkSign(requestIds) {
@@ -161,6 +170,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Verify the signatures embedded in a document file.
 			 *
+			 * @param fileId
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async verifyDocument(fileId) {
@@ -180,6 +190,7 @@ export const useSigningStore = defineStore(
 			/**
 			 * Fetch the immutable audit trail for a signing request.
 			 *
+			 * @param requestId
 			 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
 			 */
 			async fetchAuditTrail(requestId) {

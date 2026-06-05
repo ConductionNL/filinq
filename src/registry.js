@@ -48,6 +48,7 @@ import TemplateIndex from './views/templates/TemplateIndex.vue'
 import TemplateDetail from './views/templates/TemplateDetail.vue'
 import SigningRequestList from './views/signing/SigningRequestList.vue'
 import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
+import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from './components/PrintPreview.vue'
 
 export default {
@@ -68,5 +69,6 @@ export default {
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
 	SigningRequestList: { kind: 'page', component: SigningRequestList },
 	SigningRequestDetail: { kind: 'page', component: SigningRequestDetail },
+	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
 	PrintPreview: { kind: 'page', component: PrintPreview },
 }

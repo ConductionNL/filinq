@@ -152,6 +152,7 @@ export default {
 		/**
 		 * Build a Files-app link to a processed file.
 		 *
+		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		fileLink(filePath) {
@@ -168,6 +169,7 @@ export default {
 		/**
 		 * Localized label for a file's personal-data risk level.
 		 *
+		 * @param level
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		riskLevelLabel(level) {
@@ -183,6 +185,7 @@ export default {
 		/**
 		 * Localized label for a file's processing status.
 		 *
+		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		statusLabel(status) {

@@ -3,6 +3,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
+// Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
+// any CSS or asset/resource URL or lazy chunk URL is evaluated. See
+// setPublicPath.js — docudesk lives under apps-extra, not the baked-in /apps/.
+import './setPublicPath.js'
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { PiniaVuePlugin } from 'pinia'
