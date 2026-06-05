@@ -41,6 +41,16 @@
           "duration_seconds": 2949
         }
       ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "retry:queued",
+      "started_at": "2026-06-05T03:54:41Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": []
     }
   ],
   "totals": {
