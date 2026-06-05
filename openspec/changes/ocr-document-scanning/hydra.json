@@ -117,9 +117,9 @@
       "cycle": 4,
       "trigger": "build:queued",
       "started_at": "2026-06-02T07:51:06Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-06-05T04:29:45Z",
+      "outcome": "needs-input",
+      "outcome_reason": "retry builder exited non-zero",
       "pattern_tags": [
         "browser-test-nc-setup-failed"
       ],
