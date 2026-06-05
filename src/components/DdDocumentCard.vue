@@ -14,23 +14,21 @@ import singleFileIcon from '../assets/single-file.png'
 		@click="$emit('click', item)"
 		@keyup.enter="$emit('click', item)"
 		@keyup.space.prevent="$emit('click', item)">
-		<div class="dd-document-card__icon">
+		<figure class="dd-document-card__icon">
 			<img
 				:src="iconSrc"
 				:alt="''"
 				class="dd-document-card__icon-img">
-		</div>
+		</figure>
 		<div class="dd-document-card__title" :title="displayName">
 			{{ displayName }}
 		</div>
 		<div class="dd-document-card__date">
 			{{ formattedDate }}
 		</div>
-		<div class="dd-document-card__pill">
-			<CnStatusBadge
-				:label="pillLabel"
-				:color-map="pillColorMap" />
-		</div>
+		<CnStatusBadge
+			:label="pillLabel"
+			:color-map="pillColorMap" />
 	</article>
 </template>
 
@@ -141,11 +139,11 @@ export default {
 	--dd-card-padding-block-start: 32px;
 	--dd-card-padding-block-end: 16px;
 	--dd-card-padding-inline: 16px;
-	--dd-card-radius: 20px;
+	--dd-card-radius: var(--dd-radius-panel);
 	--dd-card-gap: 16px;
 	--dd-card-border: 1px solid #d9d9d9;
 	--dd-card-bg: #fff;
-	--dd-card-shadow: 0 4px 22px -3px rgba(0, 0, 0, 0.08);
+	--dd-card-shadow: var(--dd-shadow-panel);
 	--dd-card-shadow-hover: 0 6px 26px -3px rgba(0, 0, 0, 0.12);
 	--dd-card-focus-ring: 0 0 0 2px var(--color-primary-element, #0a5eaf);
 	display: grid;
@@ -161,6 +159,10 @@ export default {
 	inline-size: 100%;
 	block-size: 100%;
 	transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+	> * {
+		cursor: pointer;
+	}
 }
 
 .dd-document-card:hover {
@@ -176,19 +178,19 @@ export default {
 }
 
 .dd-document-card__icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	display: block;
 	inline-size: 162px;
-	aspect-ratio: 162 / 144;
 	max-inline-size: 100%;
+	aspect-ratio: 162 / 144;
 	margin-inline: auto;
 }
 
 .dd-document-card__icon-img {
+	display: block;
 	inline-size: 100%;
 	block-size: 100%;
-	object-fit: contain;
+	object-fit: cover;
+	pointer-events: none;
 }
 
 .dd-document-card__title {
@@ -207,9 +209,5 @@ export default {
 .dd-document-card__date {
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast, #6b7280);
-}
-
-.dd-document-card__pill {
-	display: flex;
 }
 </style>
