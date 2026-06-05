@@ -137,6 +137,61 @@ export const useMyDocumentsStore = defineStore(
 			},
 
 			/**
+			 * Delete a file or dossier from the current folder via WebDAV.
+			 *
+			 * A WebDAV DELETE on a collection (folder/dossier) removes the folder
+			 * and everything inside it recursively, so deleting a dossier wipes its
+			 * documents too. After a successful delete the current folder is
+			 * re-fetched so the list reflects the removal.
+			 *
+			 * @param {string} fileName Name of the file/folder inside currentPath.
+			 * @return {Promise<void>}
+			 */
+			async deleteDocument(fileName) {
+				const user = getCurrentUser()
+				if (!user) {
+					throw new Error('User not authenticated')
+				}
+
+				const targetPath = `${this.currentPath}/${fileName}`
+				const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${targetPath}`)
+
+				await axios({
+					method: 'DELETE',
+					url: webdavUrl,
+				})
+
+				await this.fetchDocuments()
+			},
+
+			/**
+			 * Delete several files/dossiers from the current folder in one go
+			 * (bulk delete). Each WebDAV DELETE on a dossier removes it and its
+			 * contents recursively. The folder is re-fetched once after all
+			 * deletes settle, regardless of individual failures.
+			 *
+			 * @param {string[]} fileNames Names of files/folders inside currentPath.
+			 * @return {Promise<string[]>} Names that failed to delete (empty on full success).
+			 */
+			async deleteDocuments(fileNames) {
+				const user = getCurrentUser()
+				if (!user) {
+					throw new Error('User not authenticated')
+				}
+
+				const results = await Promise.allSettled(
+					fileNames.map((fileName) => axios({
+						method: 'DELETE',
+						url: generateRemoteUrl(`dav/files/${user.uid}${this.currentPath}/${fileName}`),
+					})),
+				)
+
+				await this.fetchDocuments()
+
+				return fileNames.filter((_, i) => results[i].status === 'rejected')
+			},
+
+			/**
 			 * Navigate to a specific folder path.
 			 *
 			 * @param {string} path The folder path to navigate to.
