@@ -50,31 +50,43 @@ class DossierControllerTest extends TestCase
 {
 
     /**
+     * The controller under test.
+     *
      * @var DossierController
      */
     private DossierController $controller;
 
     /**
+     * Mock grondslagen summary service.
+     *
      * @var GrondslagenSummaryService|MockObject
      */
     private GrondslagenSummaryService|MockObject $mockSummaryService;
 
     /**
+     * Mock HTTP request.
+     *
      * @var IRequest|MockObject
      */
     private IRequest|MockObject $mockRequest;
 
     /**
+     * Mock user session.
+     *
      * @var IUserSession|MockObject
      */
     private IUserSession|MockObject $mockUserSession;
 
     /**
+     * Mock localisation service.
+     *
      * @var IL10N|MockObject
      */
     private IL10N|MockObject $mockL10n;
 
     /**
+     * Mock logger.
+     *
      * @var LoggerInterface|MockObject
      */
     private LoggerInterface|MockObject $mockLogger;
@@ -88,12 +100,12 @@ class DossierControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockSummaryService = $this->createMock(GrondslagenSummaryService::class);
-        $this->mockRequest        = $this->createMock(IRequest::class);
-        $this->mockUserSession    = $this->createMock(IUserSession::class);
-        $this->mockLogger         = $this->createMock(LoggerInterface::class);
+        $this->mockSummaryService = $this->createMock(originalClassName: GrondslagenSummaryService::class);
+        $this->mockRequest        = $this->createMock(originalClassName: IRequest::class);
+        $this->mockUserSession    = $this->createMock(originalClassName: IUserSession::class);
+        $this->mockLogger         = $this->createMock(originalClassName: LoggerInterface::class);
 
-        $this->mockL10n = $this->createMock(IL10N::class);
+        $this->mockL10n = $this->createMock(originalClassName: IL10N::class);
         $this->mockL10n->method('t')
             ->willReturnCallback(
                     static function (string $text, array $params=[]) {
@@ -123,8 +135,8 @@ class DossierControllerTest extends TestCase
 
         $response = $this->controller->generateGrondslagenPdf(dossierId: 'uuid-1');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: Http::STATUS_UNAUTHORIZED, actual: $response->getStatus());
 
     }//end testGenerateGrondslagenPdfReturns401WhenNotAuthenticated()
 
@@ -135,7 +147,7 @@ class DossierControllerTest extends TestCase
      */
     public function testGenerateGrondslagenPdfReturns404WhenDossierNotFound(): void
     {
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->mockSummaryService->method('renderDossierSummary')
@@ -143,8 +155,8 @@ class DossierControllerTest extends TestCase
 
         $response = $this->controller->generateGrondslagenPdf(dossierId: 'uuid-missing');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
 
     }//end testGenerateGrondslagenPdfReturns404WhenDossierNotFound()
 
@@ -155,13 +167,13 @@ class DossierControllerTest extends TestCase
      */
     public function testGenerateGrondslagenPdfReturns400ForEmptyDossierId(): void
     {
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $response = $this->controller->generateGrondslagenPdf(dossierId: '   ');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: Http::STATUS_BAD_REQUEST, actual: $response->getStatus());
 
     }//end testGenerateGrondslagenPdfReturns400ForEmptyDossierId()
 
@@ -172,10 +184,10 @@ class DossierControllerTest extends TestCase
      */
     public function testGenerateGrondslagenPdfReturns200OnSuccess(): void
     {
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $mockDossier = $this->getMockBuilder(\stdClass::class)
+        $mockDossier = $this->getMockBuilder(className: \stdClass::class)
             ->addMethods(['getObject'])
             ->getMock();
         $mockDossier->method('getObject')->willReturn(
@@ -196,12 +208,12 @@ class DossierControllerTest extends TestCase
 
         $response = $this->controller->generateGrondslagenPdf(dossierId: 'uuid-dossier');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 
         $data = $response->getData();
-        $this->assertArrayHasKey('configuration', $data);
-        $this->assertSame(42, $data['configuration']['grondslagen']['fileId']);
+        $this->assertArrayHasKey(key: 'configuration', array: $data);
+        $this->assertSame(expected: 42, actual: $data['configuration']['grondslagen']['fileId']);
 
     }//end testGenerateGrondslagenPdfReturns200OnSuccess()
 
@@ -212,7 +224,7 @@ class DossierControllerTest extends TestCase
      */
     public function testGenerateGrondslagenPdfReturns500WhenServiceThrows(): void
     {
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->mockSummaryService->method('renderDossierSummary')
@@ -220,8 +232,8 @@ class DossierControllerTest extends TestCase
 
         $response = $this->controller->generateGrondslagenPdf(dossierId: 'uuid-1');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(500, $response->getStatus());
+        $this->assertInstanceOf(expected: JSONResponse::class, actual: $response);
+        $this->assertSame(expected: 500, actual: $response->getStatus());
 
     }//end testGenerateGrondslagenPdfReturns500WhenServiceThrows()
 
@@ -232,10 +244,10 @@ class DossierControllerTest extends TestCase
      */
     public function testGenerateGrondslagenPdfConfigurationFieldsUpdated(): void
     {
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
-        $mockDossier = $this->getMockBuilder(\stdClass::class)
+        $mockDossier = $this->getMockBuilder(className: \stdClass::class)
             ->addMethods(['getObject'])
             ->getMock();
         $mockDossier->method('getObject')->willReturn(
@@ -257,10 +269,10 @@ class DossierControllerTest extends TestCase
         $response = $this->controller->generateGrondslagenPdf(dossierId: 'uuid-2');
         $data     = $response->getData();
 
-        $this->assertArrayHasKey('configuration', $data);
-        $this->assertArrayHasKey('grondslagen', $data['configuration']);
-        $this->assertArrayHasKey('fileId', $data['configuration']['grondslagen']);
-        $this->assertArrayHasKey('lastGeneratedAt', $data['configuration']['grondslagen']);
+        $this->assertArrayHasKey(key: 'configuration', array: $data);
+        $this->assertArrayHasKey(key: 'grondslagen', array: $data['configuration']);
+        $this->assertArrayHasKey(key: 'fileId', array: $data['configuration']['grondslagen']);
+        $this->assertArrayHasKey(key: 'lastGeneratedAt', array: $data['configuration']['grondslagen']);
 
     }//end testGenerateGrondslagenPdfConfigurationFieldsUpdated()
 }//end class

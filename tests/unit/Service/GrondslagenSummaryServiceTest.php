@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  *
- * @psalm-suppress PropertyNotSetInConstructor
+ * @psalm-suppress                                 PropertyNotSetInConstructor
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -97,7 +97,6 @@ class GrondslagenSummaryServiceTest extends TestCase
      */
     private IUserSession|MockObject $mockUserSession;
 
-
     /**
      * Set up test environment
      *
@@ -107,24 +106,23 @@ class GrondslagenSummaryServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockPdfService  = $this->createMock(PdfService::class);
-        $this->mockContainer   = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager  = $this->createMock(IAppManager::class);
-        $this->mockLogger      = $this->createMock(LoggerInterface::class);
-        $this->mockRootFolder  = $this->createMock(IRootFolder::class);
-        $this->mockUserSession = $this->createMock(IUserSession::class);
+        $this->mockPdfService  = $this->createMock(originalClassName: PdfService::class);
+        $this->mockContainer   = $this->createMock(originalClassName: ContainerInterface::class);
+        $this->mockAppManager  = $this->createMock(originalClassName: IAppManager::class);
+        $this->mockLogger      = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockRootFolder  = $this->createMock(originalClassName: IRootFolder::class);
+        $this->mockUserSession = $this->createMock(originalClassName: IUserSession::class);
 
         $this->service = new GrondslagenSummaryService(
-            $this->mockPdfService,
-            $this->mockContainer,
-            $this->mockAppManager,
-            $this->mockLogger,
-            $this->mockRootFolder,
-            $this->mockUserSession
+            pdfService: $this->mockPdfService,
+            container: $this->mockContainer,
+            appManager: $this->mockAppManager,
+            logger: $this->mockLogger,
+            rootFolder: $this->mockRootFolder,
+            userSession: $this->mockUserSession
         );
 
     }//end setUp()
-
 
     /**
      * Test resolveBaseLabels returns placeholder for null input
@@ -135,11 +133,10 @@ class GrondslagenSummaryServiceTest extends TestCase
     {
         $result = $this->service->resolveBaseLabels(baseUuids: null);
 
-        $this->assertCount(1, $result);
-        $this->assertStringContainsString('geen grondslag vastgelegd', $result[0]);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertStringContainsString(needle: 'geen grondslag vastgelegd', haystack: $result[0]);
 
     }//end testResolveBaseLabelsNullReturnsPlaceholder()
-
 
     /**
      * Test resolveBaseLabels returns placeholder for empty array
@@ -150,11 +147,10 @@ class GrondslagenSummaryServiceTest extends TestCase
     {
         $result = $this->service->resolveBaseLabels(baseUuids: []);
 
-        $this->assertCount(1, $result);
-        $this->assertStringContainsString('geen grondslag vastgelegd', $result[0]);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertStringContainsString(needle: 'geen grondslag vastgelegd', haystack: $result[0]);
 
     }//end testResolveBaseLabelsEmptyArrayReturnsPlaceholder()
-
 
     /**
      * Test resolveBaseLabels resolves UUID to name via ObjectService
@@ -166,10 +162,10 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn(['openregister']);
 
-        $mockBase = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+        $mockBase = $this->createMock(originalClassName: \OCA\OpenRegister\Db\ObjectEntity::class);
         $mockBase->method('getObject')->willReturn(['name' => 'persoonsgegevens']);
 
-        $mockObjectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mockObjectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
         $mockObjectService->method('find')->willReturn($mockBase);
 
         $this->mockContainer->method('get')
@@ -177,11 +173,10 @@ class GrondslagenSummaryServiceTest extends TestCase
 
         $result = $this->service->resolveBaseLabels(baseUuids: ['uuid-persoonsgegevens']);
 
-        $this->assertCount(1, $result);
-        $this->assertSame('persoonsgegevens', $result[0]);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertSame(expected: 'persoonsgegevens', actual: $result[0]);
 
     }//end testResolveBaseLabelsResolvesUuid()
-
 
     /**
      * Test resolveBaseLabels returns unresolved placeholder when UUID not found
@@ -193,7 +188,7 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn(['openregister']);
 
-        $mockObjectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mockObjectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
         $mockObjectService->method('find')->willReturn(null);
 
         $this->mockContainer->method('get')
@@ -203,12 +198,11 @@ class GrondslagenSummaryServiceTest extends TestCase
 
         $result = $this->service->resolveBaseLabels(baseUuids: ['uuid-deleted-base-aaaa']);
 
-        $this->assertCount(1, $result);
-        $this->assertStringContainsString('grondslag verwijderd', $result[0]);
-        $this->assertStringContainsString('uuid-del', $result[0]);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertStringContainsString(needle: 'grondslag verwijderd', haystack: $result[0]);
+        $this->assertStringContainsString(needle: 'uuid-del', haystack: $result[0]);
 
     }//end testResolveBaseLabelsUnresolvableUuidUsesPlaceholder()
-
 
     /**
      * Test loadAnonymisedEntitiesForFile filters for anonymized = true
@@ -231,26 +225,27 @@ class GrondslagenSummaryServiceTest extends TestCase
             anonymizedValue: '[PERSOON]'
         );
 
-        $mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+        $mockMapper = $this->createMock(originalClassName: \OCA\OpenRegister\Db\EntityRelationMapper::class);
         $mockMapper->method('findByFileId')
             ->willReturn([$mockRelationNotAnonymized, $mockRelationAnonymized]);
         $mockMapper->method('findEntitiesForFile')
-            ->willReturn([
-                ['entity_id' => 1, 'entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen'],
-                ['entity_id' => 2, 'entity_type' => 'PERSON', 'entity_value' => 'Piet Pietersen'],
-            ]);
+            ->willReturn(
+                    [
+                        ['entity_id' => 1, 'entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen'],
+                        ['entity_id' => 2, 'entity_type' => 'PERSON', 'entity_value' => 'Piet Pietersen'],
+                    ]
+                    );
 
         $this->mockContainer->method('get')
             ->willReturnMap([['OCA\OpenRegister\Db\EntityRelationMapper', $mockMapper]]);
 
         $result = $this->service->loadAnonymisedEntitiesForFile(fileId: 42);
 
-        $this->assertCount(1, $result);
-        $this->assertSame('Piet Pietersen', $result[0]['entityText']);
-        $this->assertSame('[PERSOON]', $result[0]['anonymizedValue']);
+        $this->assertCount(expectedCount: 1, haystack: $result);
+        $this->assertSame(expected: 'Piet Pietersen', actual: $result[0]['entityText']);
+        $this->assertSame(expected: '[PERSOON]', actual: $result[0]['anonymizedValue']);
 
     }//end testLoadAnonymisedEntitiesForFileFiltersAnonymized()
-
 
     /**
      * Test loadAnonymisedEntitiesForFile returns empty array when no entities
@@ -262,7 +257,7 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn(['openregister']);
 
-        $mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+        $mockMapper = $this->createMock(originalClassName: \OCA\OpenRegister\Db\EntityRelationMapper::class);
         $mockMapper->method('findByFileId')->willReturn([]);
         $mockMapper->method('findEntitiesForFile')->willReturn([]);
 
@@ -271,10 +266,9 @@ class GrondslagenSummaryServiceTest extends TestCase
 
         $result = $this->service->loadAnonymisedEntitiesForFile(fileId: 99);
 
-        $this->assertSame([], $result);
+        $this->assertSame(expected: [], actual: $result);
 
     }//end testLoadAnonymisedEntitiesForFileEmptyResult()
-
 
     /**
      * Test renderDossierSummary throws when dossier not found
@@ -283,21 +277,20 @@ class GrondslagenSummaryServiceTest extends TestCase
      */
     public function testRenderDossierSummaryThrowsWhenDossierNotFound(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(exception: \RuntimeException::class);
 
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn(['openregister']);
 
-        $mockObjectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+        $mockObjectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
         $mockObjectService->method('find')->willReturn(null);
 
         $this->mockContainer->method('get')
             ->willReturnMap([['OCA\OpenRegister\Service\ObjectService', $mockObjectService]]);
 
-        $this->service->renderDossierSummary(dossierId: 999);
+        $this->service->renderDossierSummary(dossierId: '999');
 
     }//end testRenderDossierSummaryThrowsWhenDossierNotFound()
-
 
     /**
      * Test appendSummaryAsSeparatePdf saves a separate PDF alongside the anonymised file
@@ -309,42 +302,41 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager->method('getInstalledApps')
             ->willReturn(['openregister']);
 
-        $mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+        $mockMapper = $this->createMock(originalClassName: \OCA\OpenRegister\Db\EntityRelationMapper::class);
         $mockMapper->method('findByFileId')->willReturn([]);
         $mockMapper->method('findEntitiesForFile')->willReturn([]);
 
         $this->mockContainer->method('get')
             ->willReturnMap([['OCA\OpenRegister\Db\EntityRelationMapper', $mockMapper]]);
 
-        $mockUser = $this->createMock(IUser::class);
+        $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('alice');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->mockPdfService->method('renderHtmlPreview')->willReturn('<html></html>');
         $this->mockPdfService->method('renderPdf')->willReturn('%PDF-1.4 fake content');
 
-        $mockSavedFile = $this->createMock(File::class);
+        $mockSavedFile = $this->createMock(originalClassName: File::class);
         $mockSavedFile->method('getId')->willReturn(123);
         $mockSavedFile->method('getPath')->willReturn('/admin/files/anonymised/doc_grondslagen.pdf');
 
-        $mockParentFolder = $this->createMock(Folder::class);
+        $mockParentFolder = $this->createMock(originalClassName: Folder::class);
         $mockParentFolder->method('nodeExists')->willReturn(false);
         $mockParentFolder->method('newFile')->willReturn($mockSavedFile);
 
-        $mockNode = $this->createMock(File::class);
+        $mockNode = $this->createMock(originalClassName: File::class);
         $mockNode->method('getId')->willReturn(42);
         $mockNode->method('getName')->willReturn('doc_anonymized.docx');
         $mockNode->method('getParent')->willReturn($mockParentFolder);
 
         $result = $this->service->appendSummaryAsSeparatePdf(node: $mockNode);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('fileId', $result);
-        $this->assertArrayHasKey('filePath', $result);
-        $this->assertSame(123, $result['fileId']);
+        $this->assertIsArray(actual: $result);
+        $this->assertArrayHasKey(key: 'fileId', array: $result);
+        $this->assertArrayHasKey(key: 'filePath', array: $result);
+        $this->assertSame(expected: 123, actual: $result['fileId']);
 
     }//end testAppendSummaryAsSeparatePdfSavesSeparateFile()
-
 
     /**
      * Helper: create a mock EntityRelation with the given properties.
@@ -360,7 +352,7 @@ class GrondslagenSummaryServiceTest extends TestCase
         bool $anonymized,
         string $anonymizedValue
     ): object {
-        $mock = $this->getMockBuilder(\stdClass::class)
+        $mock = $this->getMockBuilder(className: \stdClass::class)
             ->addMethods(['getEntityId', 'getAnonymized', 'getAnonymizedValue'])
             ->getMock();
 

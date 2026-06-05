@@ -144,6 +144,18 @@ class RegisterService
      *
      * @return array
      */
+    /**
+     * Find all registers.
+     *
+     * @param int|null $limit            Maximum number of results
+     * @param int|null $offset           Result offset
+     * @param array    $filters          Filter criteria
+     * @param array    $searchConditions Search conditions
+     * @param array    $searchParams     Search parameters
+     * @param array    $_extend          Fields to extend
+     *
+     * @return array
+     */
     public function findAll($limit=null, $offset=null, $filters=[], $searchConditions=[], $searchParams=[], $_extend=[])
     {
         return [];
@@ -184,6 +196,14 @@ class ConfigurationService
  */
 class TextExtractionService
 {
+    /**
+     * Extract text from a file.
+     *
+     * @param int  $fileId File identifier
+     * @param bool $force  Force re-extraction
+     *
+     * @return void
+     */
     public function extractFile(int $fileId, bool $force=false): void
     {
     }//end extractFile()
@@ -352,21 +372,33 @@ class ObjectEntity
 
     }//end jsonSerialize()
 
-
+    /**
+     * Get the object data as an array.
+     *
+     * @return array
+     */
     public function getObject(): array
     {
         return [];
 
     }//end getObject()
 
-
+    /**
+     * Get the object ID.
+     *
+     * @return int|null
+     */
     public function getId(): ?int
     {
         return null;
 
     }//end getId()
 
-
+    /**
+     * Get the folder associated with this object.
+     *
+     * @return string|null
+     */
     public function getFolder(): ?string
     {
         return null;
@@ -498,12 +530,52 @@ interface IUserSession
  */
 interface IAppConfig
 {
+    /**
+     * Get a float configuration value.
+     *
+     * @param string $app     Application ID
+     * @param string $key     Configuration key
+     * @param float  $default Default value
+     * @param bool   $lazy    Lazy-load flag
+     *
+     * @return float
+     */
     public function getValueFloat(string $app, string $key, float $default=0, bool $lazy=false): float;
 
+    /**
+     * Get a string configuration value.
+     *
+     * @param string $app     Application ID
+     * @param string $key     Configuration key
+     * @param string $default Default value
+     * @param bool   $lazy    Lazy-load flag
+     *
+     * @return string
+     */
     public function getValueString(string $app, string $key, string $default='', bool $lazy=false): string;
 
+    /**
+     * Get an integer configuration value.
+     *
+     * @param string $app     Application ID
+     * @param string $key     Configuration key
+     * @param int    $default Default value
+     * @param bool   $lazy    Lazy-load flag
+     *
+     * @return int
+     */
     public function getValueInt(string $app, string $key, int $default=0, bool $lazy=false): int;
 
+    /**
+     * Get a boolean configuration value.
+     *
+     * @param string $app     Application ID
+     * @param string $key     Configuration key
+     * @param bool   $default Default value
+     * @param bool   $lazy    Lazy-load flag
+     *
+     * @return bool
+     */
     public function getValueBool(string $app, string $key, bool $default=false, bool $lazy=false): bool;
 
     public function getValueArray(string $app, string $key, array $default=[], bool $lazy=false): array;
@@ -737,7 +809,9 @@ interface Node
 interface File extends Node
 {
     public function getContent(): string;
+
     public function putContent(mixed $data): void;
+
     public function getParent(): \OCP\Files\Folder;
 }//end interface
 
@@ -764,4 +838,3 @@ interface IRootFolder
 }//end interface
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
-

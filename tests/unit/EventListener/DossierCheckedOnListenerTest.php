@@ -44,16 +44,22 @@ class DossierCheckedOnListenerTest extends TestCase
 {
 
     /**
+     * The listener under test.
+     *
      * @var DossierCheckedOnListener
      */
     private DossierCheckedOnListener $listener;
 
     /**
+     * Mock logger.
+     *
      * @var MockObject&LoggerInterface
      */
     private MockObject $logger;
 
     /**
+     * Mock grondslagen summary service.
+     *
      * @var MockObject&GrondslagenSummaryService
      */
     private MockObject $grondslagenSummaryService;
@@ -67,10 +73,8 @@ class DossierCheckedOnListenerTest extends TestCase
     {
         parent::setUp();
 
-        $this->logger = $this->createMock(LoggerInterface::class);
-        // phpcs:disable CustomSn.Functions.NamedParameters
-        $this->grondslagenSummaryService = $this->createMock(GrondslagenSummaryService::class);
-        // phpcs:enable CustomSn.Functions.NamedParameters
+        $this->logger                    = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->grondslagenSummaryService = $this->createMock(originalClassName: GrondslagenSummaryService::class);
 
         $this->listener = new DossierCheckedOnListener(
             logger: $this->logger,
@@ -86,7 +90,7 @@ class DossierCheckedOnListenerTest extends TestCase
      */
     public function testListenerCanBeInstantiated(): void
     {
-        $this->assertInstanceOf(DossierCheckedOnListener::class, $this->listener);
+        $this->assertInstanceOf(expected: DossierCheckedOnListener::class, actual: $this->listener);
 
     }//end testListenerCanBeInstantiated()
 
@@ -97,12 +101,12 @@ class DossierCheckedOnListenerTest extends TestCase
      */
     public function testHandleIgnoresNonObjectUpdatedEvent(): void
     {
-        $genericEvent = $this->createMock(Event::class);
+        $genericEvent = $this->createMock(originalClassName: Event::class);
 
         // Should not throw.
         $this->listener->handle(event: $genericEvent);
 
-        $this->addToAssertionCount(1);
+        $this->addToAssertionCount(count: 1);
 
     }//end testHandleIgnoresNonObjectUpdatedEvent()
 }//end class

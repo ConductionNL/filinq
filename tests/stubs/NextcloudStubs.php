@@ -1018,7 +1018,12 @@ class Event
  */
 interface IEventListener
 {
-
+    /**
+     * Handle an event.
+     *
+     * @param Event $event The event to handle
+     *
+     * @return void
+     */
     public function handle(Event $event): void;
-
 }//end interface
