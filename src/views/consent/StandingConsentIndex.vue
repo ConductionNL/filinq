@@ -1,132 +1,134 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { consentStore, navigationStore } from '../../store/store.js'
+import { consentStore } from '../../store/store.js'
 </script>
 
 <template>
-	<CnIndexPage
-		ref="indexPage"
-		:title="t('docudesk', 'Standing Publication Consents')"
-		:description="t('docudesk', 'Manage entity-level standing publication consent records')"
-		:show-title="true"
-		:objects="entityConsents"
-		:columns="tableColumns"
-		:pagination="paginationData"
-		:loading="consentStore.loading"
-		:selectable="false"
-		:show-edit-action="false"
-		:show-copy-action="false"
-		:show-delete-action="false"
-		:show-mass-import="false"
-		:show-mass-export="false"
-		:show-mass-copy="false"
-		:show-mass-delete="false"
-		:show-view-toggle="false"
-		:show-add="true"
-		row-key="id"
-		:empty-text="emptyContentName"
-		:refreshing="isRefreshing"
-		@refresh="handleRefresh"
-		@page-changed="onPageChanged"
-		@page-size-changed="onPageSizeChanged"
-		@add="openCreateModal">
-		<!-- Stats above the table -->
-		<template #above-table>
-			<div class="consent-stats">
-				<CnStatsBlock
-					:title="t('docudesk', 'Total')"
-					:count="entityConsents.length"
-					:count-label="t('docudesk', 'records')"
-					variant="default"
-					horizontal
-					show-zero-count />
-				<CnStatsBlock
-					:title="t('docudesk', 'Active')"
-					:count="activeCount"
-					:count-label="t('docudesk', 'active')"
-					variant="success"
-					horizontal
-					show-zero-count />
-				<CnStatsBlock
-					:title="t('docudesk', 'Inactive')"
-					:count="inactiveCount"
-					:count-label="t('docudesk', 'inactive')"
-					variant="warning"
-					horizontal
-					show-zero-count />
-			</div>
-		</template>
+	<div>
+		<CnIndexPage
+			ref="indexPage"
+			:title="t('docudesk', 'Standing Publication Consents')"
+			:description="t('docudesk', 'Manage entity-level standing publication consent records')"
+			:show-title="true"
+			:objects="entityConsents"
+			:columns="tableColumns"
+			:pagination="paginationData"
+			:loading="consentStore.loading"
+			:selectable="false"
+			:show-edit-action="false"
+			:show-copy-action="false"
+			:show-delete-action="false"
+			:show-mass-import="false"
+			:show-mass-export="false"
+			:show-mass-copy="false"
+			:show-mass-delete="false"
+			:show-view-toggle="false"
+			:show-add="true"
+			row-key="id"
+			:empty-text="emptyContentName"
+			:refreshing="isRefreshing"
+			@refresh="handleRefresh"
+			@page-changed="onPageChanged"
+			@page-size-changed="onPageSizeChanged"
+			@add="openCreateModal">
+			<!-- Stats above the table -->
+			<template #above-table>
+				<div class="consent-stats">
+					<CnStatsBlock
+						:title="t('docudesk', 'Total')"
+						:count="entityConsents.length"
+						:count-label="t('docudesk', 'records')"
+						variant="default"
+						horizontal
+						show-zero-count />
+					<CnStatsBlock
+						:title="t('docudesk', 'Active')"
+						:count="activeCount"
+						:count-label="t('docudesk', 'active')"
+						variant="success"
+						horizontal
+						show-zero-count />
+					<CnStatsBlock
+						:title="t('docudesk', 'Inactive')"
+						:count="inactiveCount"
+						:count-label="t('docudesk', 'inactive')"
+						variant="warning"
+						horizontal
+						show-zero-count />
+				</div>
+			</template>
 
-		<!-- Entity type badge -->
-		<template #column-entityType="{ row }">
-			<CnStatusBadge
-				:label="row.entityType || t('docudesk', 'Unknown')"
-				:color-map="entityTypeColorMap" />
-		</template>
+			<!-- Entity type badge -->
+			<template #column-entityType="{ row }">
+				<CnStatusBadge
+					:label="row.entityType || t('docudesk', 'Unknown')"
+					:color-map="entityTypeColorMap" />
+			</template>
 
-		<!-- Consent method badge -->
-		<template #column-consentMethod="{ row }">
-			<CnStatusBadge
-				:label="formatConsentMethod(row.consentMethod)"
-				:color-map="consentMethodColorMap" />
-		</template>
+			<!-- Consent method badge -->
+			<template #column-consentMethod="{ row }">
+				<CnStatusBadge
+					:label="formatConsentMethod(row.consentMethod)"
+					:color-map="consentMethodColorMap" />
+			</template>
 
-		<!-- Valid From column -->
-		<template #column-validFrom="{ row }">
-			{{ formatDate(row.validFrom) }}
-		</template>
+			<!-- Valid From column -->
+			<template #column-validFrom="{ row }">
+				{{ formatDate(row.validFrom) }}
+			</template>
 
-		<!-- Valid Until column -->
-		<template #column-validUntil="{ row }">
-			{{ formatDate(row.validUntil) }}
-		</template>
+			<!-- Valid Until column -->
+			<template #column-validUntil="{ row }">
+				{{ formatDate(row.validUntil) }}
+			</template>
 
-		<!-- Active column -->
-		<template #column-active="{ row }">
-			<CnStatusBadge
-				:label="row.active ? t('docudesk', 'Yes') : t('docudesk', 'No')"
-				:color-map="activeColorMap" />
-		</template>
+			<!-- Active column -->
+			<template #column-active="{ row }">
+				<CnStatusBadge
+					:label="row.active ? t('docudesk', 'Yes') : t('docudesk', 'No')"
+					:color-map="activeColorMap" />
+			</template>
 
-		<!-- Consent status badge -->
-		<template #column-consentStatus="{ row }">
-			<CnStatusBadge
-				:label="formatStatus(row.consentStatus)"
-				:color-map="consentStatusColorMap" />
-		</template>
+			<!-- Consent status badge -->
+			<template #column-consentStatus="{ row }">
+				<CnStatusBadge
+					:label="formatStatus(row.consentStatus)"
+					:color-map="consentStatusColorMap" />
+			</template>
 
-		<!-- Row actions -->
-		<template #row-actions="{ row }">
-			<NcActions>
-				<template #icon>
-					<DotsHorizontal :size="20" />
-				</template>
-				<NcActionButton
-					close-after-click
-					:disabled="row.active === false"
-					@click="expireConsent(row)">
+			<!-- Row actions -->
+			<template #row-actions="{ row }">
+				<NcActions>
 					<template #icon>
-						<ClockRemove :size="20" />
+						<DotsHorizontal :size="20" />
 					</template>
-					{{ t('docudesk', 'Expire') }}
-				</NcActionButton>
-				<NcActionButton
-					close-after-click
-					@click="revokeConsent(row)">
-					<template #icon>
-						<Cancel :size="20" />
-					</template>
-					{{ t('docudesk', 'Revoke') }}
-				</NcActionButton>
-			</NcActions>
-		</template>
-	</CnIndexPage>
+					<NcActionButton
+						close-after-click
+						:disabled="row.active === false"
+						@click="expireConsent(row)">
+						<template #icon>
+							<ClockRemove :size="20" />
+						</template>
+						{{ t('docudesk', 'Expire') }}
+					</NcActionButton>
+					<NcActionButton
+						close-after-click
+						@click="revokeConsent(row)">
+						<template #icon>
+							<Cancel :size="20" />
+						</template>
+						{{ t('docudesk', 'Revoke') }}
+					</NcActionButton>
+				</NcActions>
+			</template>
+		</CnIndexPage>
 
-	<!-- Create standing consent modal -->
-	<CreateStandingConsentModal
-		:show="showCreateModal"
-		@close="closeCreateModal"
-		@created="handleCreate" />
+		<!-- Create standing consent modal -->
+		<CreateStandingConsentModal
+			:show="showCreateModal"
+			@close="closeCreateModal"
+			@created="handleCreate" />
+	</div>
 </template>
 
 <script>
@@ -266,6 +268,7 @@ export default {
 		/**
 		 * Persist a new standing consent record returned by the create modal.
 		 *
+		 * @param payload
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		async handleCreate(payload) {
@@ -280,6 +283,7 @@ export default {
 		/**
 		 * Set the consent's active flag to false (expire it).
 		 *
+		 * @param consent
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		async expireConsent(consent) {
@@ -289,6 +293,7 @@ export default {
 		/**
 		 * Set the consent status to anonymized (revoke it).
 		 *
+		 * @param consent
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		async revokeConsent(consent) {
@@ -311,6 +316,7 @@ export default {
 		/**
 		 * Update the current page index of the consent table.
 		 *
+		 * @param page
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		onPageChanged(page) {
@@ -319,6 +325,7 @@ export default {
 		/**
 		 * Update the page size and reset to the first page.
 		 *
+		 * @param size
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		onPageSizeChanged(size) {
@@ -328,6 +335,7 @@ export default {
 		/**
 		 * Map a consent method code to a localized label.
 		 *
+		 * @param method
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		formatConsentMethod(method) {
@@ -342,6 +350,7 @@ export default {
 		/**
 		 * Map a consent status code to a localized label.
 		 *
+		 * @param status
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		formatStatus(status) {
@@ -357,6 +366,7 @@ export default {
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
+		 * @param dateStr
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		formatDate(dateStr) {

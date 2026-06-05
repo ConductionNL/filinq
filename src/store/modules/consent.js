@@ -48,6 +48,7 @@ export const useConsentStore = defineStore(
 			/**
 			 * Fetch a single consent record by ID.
 			 *
+			 * @param id
 			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 			 */
 			async fetchConsent(id) {
@@ -68,6 +69,8 @@ export const useConsentStore = defineStore(
 			/**
 			 * Update a consent record and sync it in the local list.
 			 *
+			 * @param id
+			 * @param data
 			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-status-lifecycle-req-cons-02
 			 */
 			async updateConsent(id, data) {
@@ -94,6 +97,7 @@ export const useConsentStore = defineStore(
 			/**
 			 * Fetch all consent records linked to a specific document.
 			 *
+			 * @param documentId
 			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 			 */
 			async fetchConsentsByDocument(documentId) {
@@ -113,6 +117,7 @@ export const useConsentStore = defineStore(
 			/**
 			 * Create a new consent record.
 			 *
+			 * @param data
 			 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 			 */
 			async createConsent(data) {
