@@ -26,6 +26,7 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use RuntimeException;
+use OCA\DocuDesk\Service\AnonymiserBackendStateClient;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Settings\DocuDeskAdmin;
 use OCP\App\IAppManager;
@@ -33,6 +34,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -47,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
 class SettingsController extends Controller
 {
@@ -61,14 +65,16 @@ class SettingsController extends Controller
     /**
      * SettingsController constructor
      *
-     * @param string             $appName         The name of the app
-     * @param IRequest           $request         The request object
-     * @param ContainerInterface $container       The container
-     * @param IAppManager        $appManager      The app manager
-     * @param IGroupManager      $groupManager    The group manager
-     * @param IUserSession       $userSession     The user session
-     * @param LoggerInterface    $logger          Logger for error reporting
-     * @param SettingsService    $settingsService Service for settings operations
+     * @param string                       $appName          The name of the app
+     * @param IRequest                     $request          The request object
+     * @param ContainerInterface           $container        The container
+     * @param IAppManager                  $appManager       The app manager
+     * @param IGroupManager                $groupManager     The group manager
+     * @param IUserSession                 $userSession      The user session
+     * @param LoggerInterface              $logger           Logger for error reporting
+     * @param SettingsService              $settingsService  Service for settings operations
+     * @param AnonymiserBackendStateClient $anonymiserClient Backend state client
+     * @param IConfig                      $config           Nextcloud config for user values
      *
      * @return void
      */
@@ -80,7 +86,9 @@ class SettingsController extends Controller
         private readonly IGroupManager $groupManager,
         private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
-        private readonly SettingsService $settingsService
+        private readonly SettingsService $settingsService,
+        private readonly AnonymiserBackendStateClient $anonymiserClient,
+        private readonly IConfig $config,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -140,13 +148,31 @@ class SettingsController extends Controller
             $user    = $this->userSession->getUser();
             $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
 
+            $backendState = $this->anonymiserClient->getState();
+            $dismissed    = false;
+            if ($user !== null) {
+                $dismissed = $this->config->getUserValue(
+                    userId: $user->getUID(),
+                    appName: 'docudesk',
+                    key: \OCA\DocuDesk\Controller\AnonymiserWarningController::DISMISSED_KEY,
+                    default: ''
+                ) === '1';
+            }
+
             $data = $this->settingsService->getAllSettings();
             return new JSONResponse(
                 array_merge(
                     $data,
                     [
-                        'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
-                        'isAdmin'       => $isAdmin,
+                        'openRegisters'     => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+                        'isAdmin'           => $isAdmin,
+                        'anonymiserBackend' => array_merge(
+                            $backendState,
+                            [
+                                'warningDismissed' => $dismissed,
+                                'showWarning'      => ($backendState['method'] ?? 'regex') === 'regex' && $dismissed === false,
+                            ]
+                        ),
                     ]
                 )
             );

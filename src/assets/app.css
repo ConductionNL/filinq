@@ -63,3 +63,55 @@
 	--dd-badge-border-color: #8ABCE0;
 	--color-info-light: var(--dd-bg-info-light, #A0D7FF);
 }
+
+/* PdfViewer: pdfjs-dist writes text-layer spans directly into the DOM
+   without Vue's scope hash, so these rules must be global. */
+.pdf-viewer__text-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	opacity: 0.25;
+	line-height: 1;
+}
+
+.pdf-viewer__text-layer > span {
+	color: transparent;
+	position: absolute;
+	white-space: pre;
+	cursor: text;
+	transform-origin: 0% 0%;
+}
+
+.pdf-viewer__text-layer ::selection {
+	background: rgba(0, 100, 255, 0.4);
+}
+
+/* WordViewer: mammoth writes raw HTML without Vue's scope hash. */
+.word-viewer__content h1,
+.word-viewer__content h2,
+.word-viewer__content h3 {
+	margin-top: 1.2em;
+	margin-bottom: 0.4em;
+	color: #000;
+}
+
+.word-viewer__content p {
+	margin: 0 0 1em 0;
+}
+
+.word-viewer__content table {
+	border-collapse: collapse;
+	margin: 1em 0;
+}
+
+.word-viewer__content table td,
+.word-viewer__content table th {
+	border: 1px solid #ddd;
+	padding: 6px 10px;
+}
+
+.word-viewer__content img {
+	max-width: 100%;
+	height: auto;
+}
