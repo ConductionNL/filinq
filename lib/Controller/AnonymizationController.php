@@ -727,7 +727,6 @@ class AnonymizationController extends Controller
 
     }//end validateAcknowledgedOverrides()
 
-
     /**
      * Filter entities by excluded types
      *
