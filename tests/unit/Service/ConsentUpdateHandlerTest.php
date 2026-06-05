@@ -140,4 +140,108 @@ class ConsentUpdateHandlerTest extends TestCase
     }//end testCanBeInstantiated()
 
 
+    /**
+     * Invoke the private guardPolicyPreemptedTransition method.
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     *
+     * @return void
+     */
+    private function invokeGuard(array $existing, array $data): void
+    {
+        $method = new \ReflectionMethod(ConsentUpdateHandler::class, 'guardPolicyPreemptedTransition');
+        $method->invoke($this->handler, $existing, $data);
+
+    }//end invokeGuard()
+
+
+    /**
+     * Guard passes when the record has no policyMatch.
+     *
+     * @return void
+     */
+    public function testGuardAllowsUpdateWithoutPolicyMatch(): void
+    {
+        $this->invokeGuard(
+            existing: ['consentStatus' => 'pending'],
+            data: ['consentStatus' => 'consent_given']
+        );
+
+        // No exception means the guard passed.
+        $this->addToAssertionCount(1);
+
+    }//end testGuardAllowsUpdateWithoutPolicyMatch()
+
+
+    /**
+     * Guard passes when a policy-pre-empted record changes neither
+     * consentStatus nor publicationDecision.
+     *
+     * @return void
+     */
+    public function testGuardAllowsNonTransitionUpdateOnPreemptedRecord(): void
+    {
+        $this->invokeGuard(
+            existing: [
+                'policyMatch'         => 'rule-uuid-1',
+                'consentStatus'       => 'anonymized',
+                'publicationDecision' => 'anonymize',
+            ],
+            data: [
+                'consentStatus'       => 'anonymized',
+                'publicationDecision' => 'anonymize',
+                'objectionReason'     => 'updated note',
+            ]
+        );
+
+        $this->addToAssertionCount(1);
+
+    }//end testGuardAllowsNonTransitionUpdateOnPreemptedRecord()
+
+
+    /**
+     * Guard rejects a consentStatus change on a policy-pre-empted record.
+     *
+     * @return void
+     */
+    public function testGuardRejectsConsentStatusChangeOnPreemptedRecord(): void
+    {
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessage(message: 'consentStatus "consent_given" rejected on policy-pre-empted record');
+
+        $this->invokeGuard(
+            existing: [
+                'policyMatch'   => 'rule-uuid-1',
+                'consentStatus' => 'anonymized',
+            ],
+            data: ['consentStatus' => 'consent_given']
+        );
+
+    }//end testGuardRejectsConsentStatusChangeOnPreemptedRecord()
+
+
+    /**
+     * Guard rejects a publicationDecision-only change on a policy-pre-empted
+     * record — the bypass route the both-fields check exists to close.
+     *
+     * @return void
+     */
+    public function testGuardRejectsPublicationDecisionChangeOnPreemptedRecord(): void
+    {
+        $this->expectException(exception: \InvalidArgumentException::class);
+        $this->expectExceptionMessage(message: 'publicationDecision "publish_with_consent" rejected on policy-pre-empted record');
+
+        $this->invokeGuard(
+            existing: [
+                'policyMatch'         => 'rule-uuid-1',
+                'consentStatus'       => 'anonymized',
+                'publicationDecision' => 'anonymize',
+            ],
+            data: ['publicationDecision' => 'publish_with_consent']
+        );
+
+    }//end testGuardRejectsPublicationDecisionChangeOnPreemptedRecord()
+
+
 }//end class

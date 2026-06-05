@@ -22,10 +22,11 @@
             "consent": {
                 "slug": "consent",
                 "title": "Consent Register",
-                "version": "2.0.0",
-                "description": "Register voor GDPR publicatie toestemmingen",
+                "version": "3.0.0",
+                "description": "Register voor GDPR publicatie-toestemmingen en bijbehorende policy-laag (standing consents + prohibitions).",
                 "schemas": [
-                    "publicationConsent"
+                    "publicationConsent",
+                    "publicationProhibition"
                 ]
             },
             "signing": {
@@ -113,15 +114,13 @@
                 "summary": "",
                 "icon": "AccountCheck",
                 "required": [
-                    "documentId",
                     "entityType",
                     "entityText"
                 ],
                 "properties": {
                     "documentId": {
-                        "description": "Verwijzing naar het document dat gepubliceerd moet worden",
+                        "description": "Verwijzing naar het document dat gepubliceerd moet worden. Verplicht voor scope=document; MOET ontbreken voor scope=entity (standing-consent records hebben geen specifiek document). De service-laag valideert dit per-scope.",
                         "type": "string",
-                        "required": true,
                         "visible": true,
                         "order": 1,
                         "facetable": false,
@@ -285,6 +284,91 @@
                         "facetable": false,
                         "title": "Notities",
                         "maxLength": 2000
+                    },
+                    "scope": {
+                        "description": "Discriminator tussen workflow-records (per document) en standing-consent records (per entity). Bestaande records worden geladen met scope='document'.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 16,
+                        "facetable": true,
+                        "title": "Scope",
+                        "enum": ["document", "entity"],
+                        "default": "document"
+                    },
+                    "matchRules": {
+                        "description": "Alleen voor scope=entity. Array van match-regels {type, value} waarmee deze standing-consent gedetecteerde entiteiten matcht. Match-types: exact, normalized, bsn, kvk.",
+                        "type": "array",
+                        "visible": true,
+                        "order": 17,
+                        "facetable": false,
+                        "title": "Match-regels",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "validFrom": {
+                        "description": "Alleen voor scope=entity. Begin van de geldigheidsperiode (ISO-8601). Records vóór dit moment matchen niet.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 18,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Alleen voor scope=entity. Eind van de geldigheidsperiode (ISO-8601). Null = onbepaalde duur.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 19,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Alleen voor scope=entity. Wanneer false matcht de regel niet meer (handmatig ingetrokken zonder validUntil te zetten).",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 20,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "consentMethod": {
+                        "description": "Alleen voor scope=entity. Hoe is de standing-consent verkregen? paper / digital_signature / verbal_recorded / opt_in_form.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 21,
+                        "facetable": true,
+                        "title": "Consent-methode",
+                        "enum": ["paper", "digital_signature", "verbal_recorded", "opt_in_form"]
+                    },
+                    "consentDocument": {
+                        "description": "Alleen voor scope=entity. Referentie naar het ondertekende document (Nextcloud file id of URI). Audit-bewijs.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 22,
+                        "facetable": false,
+                        "title": "Consent-document",
+                        "maxLength": 500
+                    },
+                    "consentScope": {
+                        "description": "Alleen voor scope=entity. Vrije tekst die afbakent waar de standing-consent voor geldt (bijv. 'gemeentelijke besluiten 2024-2025').",
+                        "type": "string",
+                        "visible": true,
+                        "order": 23,
+                        "facetable": false,
+                        "title": "Toepassingsgebied",
+                        "maxLength": 500
+                    },
+                    "policyMatch": {
+                        "description": "Alleen voor scope=document. UUID van de publicationProhibition of standing-consent (publicationConsent met scope=entity) die deze record heeft vooraf-bepaald. Null = workflow heeft normaal gelopen. De referentie wordt op service-niveau gevalideerd; v1 gebruikt een string i.p.v. polymorf $ref om de OR-import-time JSON-schema-validator niet vast te lopen.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 24,
+                        "facetable": true,
+                        "title": "Policy-match referentie",
+                        "maxLength": 64
                     }
                 },
                 "archive": [],
@@ -303,6 +387,167 @@
                 "configuration": {
                     "objectNameField": "entityText",
                     "objectDescriptionField": "consentStatus",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "publicationProhibition": {
+                "uri": null,
+                "slug": "publicationProhibition",
+                "title": "Publication Prohibition",
+                "description": "Schema voor entiteit-brede deny-rules in de publicatie-clearance flow. Een prohibition zegt 'deze persoon/organisatie wordt nooit gepubliceerd zonder anonimisatie'. Bij match in de publicatie-prep flow wordt het workflow vooraf-bepaald: consentStatus='anonymized', notificationStatus='skipped'.",
+                "version": "1.0.0",
+                "summary": "Entity-level deny rule for publication clearance",
+                "icon": "AlertOctagon",
+                "required": ["primaryName", "entityType", "matchRules", "reason", "active"],
+                "properties": {
+                    "primaryName": {
+                        "description": "Canonieke naam van de entiteit (zichtbaar in admin-UI, ook gebruikt in de 422-response van anonymisation-prohibition-gate).",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Naam",
+                        "maxLength": 255
+                    },
+                    "entityType": {
+                        "description": "Type entiteit (PERSON, ORGANIZATION, OTHER).",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Entiteitstype",
+                        "enum": ["PERSON", "ORGANIZATION", "OTHER"]
+                    },
+                    "matchRules": {
+                        "description": "Array van match-regels {type, value} waarmee deze prohibition gedetecteerde entiteiten matcht. Match-types: exact, normalized, bsn, kvk.",
+                        "type": "array",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Match-regels",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "reason": {
+                        "description": "Onderbouwing — waarom deze entiteit op de deny-lijst staat. Vrije tekst; geen automatische uitleg in UI.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Reden",
+                        "maxLength": 2000
+                    },
+                    "legalAuthority": {
+                        "description": "Optioneel — verwijzing naar wettelijke grondslag of beleidsregel (bijv. 'Wet bescherming minderjarigen art. X').",
+                        "type": "string",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Juridische grondslag",
+                        "maxLength": 500
+                    },
+                    "caseReference": {
+                        "description": "Optioneel — verwijzing naar zaak/rechterlijk besluit/intern dossier (bijv. 'zaak 2024-12').",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Zaakreferentie",
+                        "maxLength": 255
+                    },
+                    "severity": {
+                        "description": "Hoe streng is de prohibition? Hoog / Midden / Laag — alleen UI-hint, geen workflow-effect (alle prohibitions blokkeren).",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Severity",
+                        "enum": ["high", "medium", "low"],
+                        "default": "medium"
+                    },
+                    "jurisdiction": {
+                        "description": "Optioneel — territoriale reikwijdte (bijv. 'NL', 'EU').",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Jurisdictie",
+                        "maxLength": 64
+                    },
+                    "addedBy": {
+                        "description": "UID van de gebruiker die de prohibition heeft toegevoegd (audit).",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Toegevoegd door",
+                        "maxLength": 64
+                    },
+                    "validFrom": {
+                        "description": "Begin van de geldigheidsperiode (ISO-8601). Wanneer leeg matcht de regel direct.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Eind van de geldigheidsperiode (ISO-8601). Null = onbepaalde duur.",
+                        "type": "string",
+                        "format": "date-time",
+                        "visible": true,
+                        "order": 11,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Wanneer false matcht de regel niet meer (handmatig ingetrokken).",
+                        "type": "boolean",
+                        "required": true,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "notes": {
+                        "description": "Interne notities (markdown).",
+                        "type": "string",
+                        "format": "markdown",
+                        "visible": true,
+                        "order": 13,
+                        "facetable": false,
+                        "title": "Notities",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-05-13T12:00:00+00:00",
+                "created": "2026-05-13T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": {
+                    "create": ["docudesk-policy-admins"],
+                    "update": ["docudesk-policy-admins"],
+                    "delete": ["docudesk-policy-admins"]
+                },
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "primaryName",
+                    "objectDescriptionField": "reason",
                     "autoPublish": false
                 },
                 "searchable": true
