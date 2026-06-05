@@ -27,10 +27,15 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				:previous-label="t('docudesk', 'Previous')"
 				:next-label="t('docudesk', 'Next')"
 				:last-label="t('docudesk', 'Last')"
+				:selectable="bulkSelect"
+				:selected-keys="selectedIds"
+				:select-all-label="t('docudesk', 'Select all')"
 				@page-changed="onPageChanged"
 				@page-size-changed="onPageSizeChanged"
 				@update:view-mode="onViewModeChange"
-				@row-click="onRowClick">
+				@row-click="onRowClick"
+				@toggle-select="onToggleSelect"
+				@toggle-select-all="onToggleSelectAll">
 				<template #header-actions>
 					<DdSearchBar
 						v-model="searchQuery"
@@ -68,15 +73,42 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</template>
 
 				<template #card="{ object }">
-					<DdDocumentCard :item="object" @click="onRowClick" />
+					<DdDocumentCard
+						:item="object"
+						:selectable="bulkSelect"
+						:selected="selectedIds.includes(object.fileId)"
+						@click="onRowClick"
+						@toggle-select="onToggleSelect" />
 				</template>
 
 				<template #actions-header>
-					<FilterOutline
-						:size="20"
-						class="my-documents-filter-icon"
-						:title="t('docudesk', 'Filter')"
-						@click="onFilterClick" />
+					<NcActions
+						class="my-documents-options"
+						force-menu
+						:aria-label="t('docudesk', 'Options')">
+						<template #icon>
+							<component
+								:is="bulkSelect ? 'Cog' : 'FilterOutline'"
+								:size="20"
+								class="my-documents-filter-icon"
+								:title="bulkSelect ? t('docudesk', 'Options') : t('docudesk', 'Filter')" />
+						</template>
+						<NcActionButton close-after-click @click="toggleBulkSelect">
+							<template #icon>
+								<CheckboxMultipleMarkedOutline :size="20" />
+							</template>
+							{{ bulkSelect ? t('docudesk', 'Cancel bulk selection') : t('docudesk', 'Bulk selection') }}
+						</NcActionButton>
+						<NcActionButton
+							v-if="bulkSelect && selectedIds.length > 0"
+							close-after-click
+							@click="bulkDelete">
+							<template #icon>
+								<Delete :size="20" />
+							</template>
+							{{ t('docudesk', 'Delete selected ({count})', { count: selectedIds.length }) }}
+						</NcActionButton>
+					</NcActions>
 				</template>
 
 				<template #row-actions="{ row }">
@@ -84,23 +116,23 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						<template #icon>
 							<DotsHorizontal :size="24" />
 						</template>
-						<NcActionButton v-if="!row.isFolder" close-after-click @click="viewFile(row)">
+						<NcActionButton close-after-click @click="onRowClick(row)">
 							<template #icon>
 								<Eye :size="20" />
 							</template>
-							{{ t('docudesk', 'View') }}
+							{{ t('docudesk', 'Open') }}
 						</NcActionButton>
-						<NcActionButton close-after-click @click="openFile(row)">
-							<template #icon>
-								<OpenInNew :size="20" />
-							</template>
-							{{ t('docudesk', 'Open in Files') }}
-						</NcActionButton>
-						<NcActionButton close-after-click @click="downloadFile(row)">
+						<NcActionButton v-if="!row.isFolder" close-after-click @click="downloadFile(row)">
 							<template #icon>
 								<Download :size="20" />
 							</template>
 							{{ t('docudesk', 'Download') }}
+						</NcActionButton>
+						<NcActionButton close-after-click @click="confirmDelete(row)">
+							<template #icon>
+								<Delete :size="20" />
+							</template>
+							{{ t('docudesk', 'Delete') }}
 						</NcActionButton>
 					</NcActions>
 				</template>
@@ -111,6 +143,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 <script>
 import { generateUrl } from '@nextcloud/router'
+import { showSuccess, showError } from '@nextcloud/dialogs'
 import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
@@ -120,9 +153,11 @@ import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
-import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import Delete from 'vue-material-design-icons/Delete.vue'
+import Cog from 'vue-material-design-icons/Cog.vue'
+import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
@@ -163,9 +198,11 @@ export default {
 		FileViewerPage,
 		DotsHorizontal,
 		Eye,
-		OpenInNew,
 		EyeOffOutline,
 		Download,
+		Delete,
+		Cog,
+		CheckboxMultipleMarkedOutline,
 		FilterOutline,
 		FolderOutline,
 		FilePdfBox,
@@ -178,6 +215,8 @@ export default {
 			pageSize: 20,
 			searchQuery: '',
 			viewMode: loadPersistedViewMode(),
+			bulkSelect: false,
+			selectedIds: [],
 			kindColorMap: {
 				[t('docudesk', 'Dossier')]: 'info',
 				[t('docudesk', 'Concept')]: 'warning',
@@ -220,14 +259,97 @@ export default {
 	},
 	mounted() {
 		myDocumentsStore.fetchDocuments()
+		window.addEventListener('keydown', this.onKeydown)
+	},
+	beforeDestroy() {
+		window.removeEventListener('keydown', this.onKeydown)
 	},
 	methods: {
 		/**
-		 * Click handler for the filter icon in the table header.
-		 * Placeholder until a filter panel is wired up.
+		 * Global keydown handler. Escape cancels bulk-selection mode so the
+		 * user can bail out of a bulk action without reaching for the menu.
+		 *
+		 * @param {KeyboardEvent} e Keyboard event.
 		 */
-		onFilterClick() {
-			// TODO: open filter panel
+		onKeydown(e) {
+			if (e.key === 'Escape' && this.bulkSelect) {
+				this.cancelBulkSelect()
+			}
+		},
+		/**
+		 * Leave bulk-selection mode and clear any pending selection.
+		 */
+		cancelBulkSelect() {
+			this.bulkSelect = false
+			this.selectedIds = []
+		},
+		/**
+		 * Toggle bulk-selection mode on/off. Turning it off clears any
+		 * existing selection so the checkboxes don't linger as hidden state.
+		 */
+		toggleBulkSelect() {
+			if (this.bulkSelect) {
+				this.cancelBulkSelect()
+			} else {
+				this.bulkSelect = true
+			}
+		},
+		/**
+		 * Toggle a single document's selection by fileId.
+		 *
+		 * @param {object} row Document row.
+		 */
+		onToggleSelect(row) {
+			if (!row || !row.fileId) return
+			const idx = this.selectedIds.indexOf(row.fileId)
+			if (idx === -1) {
+				this.selectedIds = [...this.selectedIds, row.fileId]
+			} else {
+				this.selectedIds = this.selectedIds.filter((id) => id !== row.fileId)
+			}
+		},
+		/**
+		 * Select-all toggle for the table header checkbox. Operates on the
+		 * documents visible on the current page: if all are already selected
+		 * it clears them, otherwise it adds them to the selection.
+		 */
+		onToggleSelectAll() {
+			const pageIds = this.paginatedDocuments.map((d) => d.fileId)
+			const allSelected = pageIds.length > 0 && pageIds.every((id) => this.selectedIds.includes(id))
+			if (allSelected) {
+				this.selectedIds = this.selectedIds.filter((id) => !pageIds.includes(id))
+			} else {
+				this.selectedIds = [...new Set([...this.selectedIds, ...pageIds])]
+			}
+		},
+		/**
+		 * Confirm and delete every selected document/dossier in one bulk
+		 * operation. Dossiers and their contents are removed recursively.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async bulkDelete() {
+			const names = myDocumentsStore.documents
+				.filter((d) => this.selectedIds.includes(d.fileId))
+				.map((d) => d.fileName)
+			if (names.length === 0) return
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(t('docudesk', 'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.', { count: names.length }))) {
+				return
+			}
+			try {
+				const failed = await myDocumentsStore.deleteDocuments(names)
+				if (failed.length > 0) {
+					showError(t('docudesk', 'Failed to delete {count} item(s)', { count: failed.length }))
+				} else {
+					showSuccess(t('docudesk', 'Deleted {count} item(s)', { count: names.length }))
+				}
+			} catch (err) {
+				console.error('Bulk delete failed:', err)
+				showError(t('docudesk', 'Failed to delete the selected items'))
+			} finally {
+				this.selectedIds = []
+			}
 		},
 		/**
 		 * Click handler for the entire table row / card.
@@ -282,14 +404,29 @@ export default {
 			}
 		},
 		/**
-		 * Open the file in the Nextcloud Files app in a new tab.
-		 * Triggered only from the kebab-menu action — row clicks do nothing.
+		 * Confirm and delete a file or dossier. Deleting a dossier (folder)
+		 * removes the folder and all documents inside it. After a successful
+		 * delete the list is refreshed by the store.
 		 *
 		 * @param {object} row Document row.
+		 * @return {Promise<void>}
 		 */
-		openFile(row) {
-			if (!row || !row.fileId) return
-			window.open(generateUrl(`/f/${row.fileId}`), '_blank')
+		async confirmDelete(row) {
+			if (!row || !row.fileName) return
+			const message = row.isFolder
+				? t('docudesk', 'Delete dossier "{name}" and all documents inside it? This cannot be undone.', { name: row.fileName })
+				: t('docudesk', 'Delete "{name}"? This cannot be undone.', { name: this.displayName(row) })
+			// eslint-disable-next-line no-alert
+			if (!window.confirm(message)) {
+				return
+			}
+			try {
+				await myDocumentsStore.deleteDocument(row.fileName)
+				showSuccess(t('docudesk', 'Deleted "{name}"', { name: this.displayName(row) }))
+			} catch (err) {
+				console.error('Failed to delete document:', err)
+				showError(t('docudesk', 'Failed to delete "{name}"', { name: this.displayName(row) }))
+			}
 		},
 		/**
 		 * Preview the file inline using DocuDesk's own file viewer modal
@@ -423,6 +560,11 @@ export default {
 }
 
 .my-documents-status__icon {
+	color: var(--color-text-maxcontrast);
+}
+
+/* Options menu in the actions-column header (bulk-selection / bulk actions). */
+.my-documents-options {
 	color: var(--color-text-maxcontrast);
 }
 

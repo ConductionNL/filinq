@@ -23,7 +23,12 @@
 			:loading="loading"
 			:row-key="rowKey"
 			:empty-text="emptyText"
-			@row-click="$emit('row-click', $event)">
+			:selectable="selectable"
+			:selected-keys="selectedKeys"
+			:select-all-label="selectAllLabel"
+			@row-click="$emit('row-click', $event)"
+			@toggle-select="$emit('toggle-select', $event)"
+			@toggle-select-all="$emit('toggle-select-all')">
 			<template
 				v-for="col in slotColumns"
 				#[`column-${col}`]="{ row, value }">
@@ -136,6 +141,21 @@ export default {
 		showViewToggle: {
 			type: Boolean,
 			default: true,
+		},
+		/** Enable bulk-selection checkboxes (leading column in the table view). */
+		selectable: {
+			type: Boolean,
+			default: false,
+		},
+		/** Row keys (`row[rowKey]`) currently selected. */
+		selectedKeys: {
+			type: Array,
+			default: () => [],
+		},
+		/** Accessible label for the table's select-all checkbox. */
+		selectAllLabel: {
+			type: String,
+			default: 'Select all',
 		},
 		tableLabel: { type: String, default: 'List' },
 		cardsLabel: { type: String, default: 'Tiles' },

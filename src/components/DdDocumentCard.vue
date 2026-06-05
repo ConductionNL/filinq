@@ -1,6 +1,7 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import dossierIcon from '../assets/dossier.png'
 import singleFileIcon from '../assets/single-file.png'
 </script>
@@ -8,12 +9,20 @@ import singleFileIcon from '../assets/single-file.png'
 <template>
 	<article
 		class="dd-document-card"
+		:class="{ 'dd-document-card--selected': selected }"
 		tabindex="0"
 		role="button"
 		:aria-label="ariaLabel"
 		@click="$emit('click', item)"
 		@keyup.enter="$emit('click', item)"
 		@keyup.space.prevent="$emit('click', item)">
+		<NcCheckboxRadioSwitch
+			v-if="selectable"
+			class="dd-document-card__select"
+			:checked="selected"
+			:aria-label="t('docudesk', 'Select')"
+			@update:checked="$emit('toggle-select', item)"
+			@click.native.stop />
 		<figure class="dd-document-card__icon">
 			<img
 				:src="iconSrc"
@@ -53,8 +62,18 @@ export default {
 			type: Object,
 			required: true,
 		},
+		/** Show the bulk-selection checkbox in the top-left corner. */
+		selectable: {
+			type: Boolean,
+			default: false,
+		},
+		/** Whether this card's item is currently selected. */
+		selected: {
+			type: Boolean,
+			default: false,
+		},
 	},
-	emits: ['click'],
+	emits: ['click', 'toggle-select'],
 	data() {
 		return {
 			dossierIconSrc: dossierIcon,
@@ -146,6 +165,7 @@ export default {
 	--dd-card-shadow: var(--dd-shadow-panel);
 	--dd-card-shadow-hover: 0 6px 26px -3px rgba(0, 0, 0, 0.12);
 	--dd-card-focus-ring: 0 0 0 2px var(--color-primary-element, #0a5eaf);
+	position: relative;
 
 	display: flex;
 	flex-direction: column;
@@ -177,6 +197,17 @@ export default {
 
 .dd-document-card:focus-visible {
 	box-shadow: var(--dd-card-focus-ring);
+}
+
+.dd-document-card--selected {
+	box-shadow: var(--dd-card-focus-ring);
+}
+
+.dd-document-card__select {
+	position: absolute;
+	inset-block-start: 8px;
+	inset-inline-start: 8px;
+	z-index: 1;
 }
 
 .dd-document-card__icon {
