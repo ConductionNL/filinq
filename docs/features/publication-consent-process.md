@@ -585,6 +585,63 @@ The Vue UI surfaces these in three separate admin pages — they are **not** con
 
 Admin users implicitly belong to both groups (NC convention). Adjust group memberships via the OpenRegister authorization UI.
 
+## Idempotency Contract
+
+### createConsentRequest() is Idempotent on (documentId, entityKey)
+
+`ConsentService::createConsentRequest()` is idempotent on the composite key `(documentId, entityKey, scope: "document")`.
+
+**Behaviour:**
+- First call with a fresh `(documentId, entityKey)` → creates a new `publicationConsent` record, returns `wasUpdated: false`.
+- Subsequent call with the same `(documentId, entityKey)` → updates the existing record, returns `wasUpdated: true`.
+- When `entityKey` is `null`, the fallback key is `(documentId, entityText, scope: "document")`.
+- `scope: "entity"` standing-consent records are **never** matched as duplicates of a per-document call.
+
+**Preserved on update (workflow state — NOT overwritten):**
+
+| Field | Reason |
+|---|---|
+| `notificationStatus` | Prevents resetting already-sent notifications |
+| `notificationSentAt` | WOO audit trail timestamp |
+| `objectionDeadline` | Timer must not be reset after the fact |
+| `objectionReceivedAt` | Legal record |
+| `objectionReason` | Legal record |
+| `consentStatus` | In-flight workflow state |
+| `publicationDecision` | Operator decision |
+
+**Updated on re-submit (operator-set fields):**
+`entityType`, `legalBasis`, `notes` (sentinel region only — see below), `contactEmail`, `contactAddress`.
+
+**policyMatch re-evaluation:** If `policyMatch` was previously `null` and `PolicyMatchService::match()` now returns a standing-consent match, `policyMatch` is set. If it was previously set and the rule no longer matches, it is **not** cleared (the prior decision stands).
+
+**Prohibition rejection:** If `PolicyMatchService::match()` returns a prohibition match, `createConsentRequest()` throws `OCA\DocuDesk\Exception\PolicyRejectedException` carrying the rule UUID and name. No record is created or updated.
+
+### Sentinel-Tagged Additional-Bases Serialisation in notes
+
+When `publicationBases[]` contains more than one element:
+- `publicationBases[0]` → written to the `legalBasis` field (truncated at 500 chars at the last word boundary before the limit).
+- `publicationBases[1..N]` → rendered inside a sentinel-tagged region in `notes`.
+
+**Sentinel format:**
+
+```markdown
+<existing operator-authored notes content, if any>
+
+<!-- docudesk:additional-publication-bases:begin -->
+**Aanvullende publicatiegrondslagen:**
+- <basis 2>
+- <basis 3>
+<!-- docudesk:additional-publication-bases:end -->
+```
+
+**Guarantees:**
+- Sentinel comments are HTML-comment syntax — they are **markdown-invisible** and do not render in Nextcloud's markdown viewers.
+- Operator-authored content outside the sentinel brackets is **never modified**.
+- Re-submitting with the same `publicationBases[]` is a no-op on `notes` (idempotent render).
+- Shrinking to a single basis (or zero) removes the bracketed region and its preceding blank line entirely.
+
+**Sentinel collision risk:** The sentinel string `docudesk:additional-publication-bases` is highly specific. If an operator types it verbatim in their own notes, behaviour is undefined (documented trade-off).
+
 ## Related Documentation
 
 - [Architecture Overview](../architecture.md)

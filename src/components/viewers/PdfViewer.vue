@@ -34,6 +34,7 @@ let pdfjsLibPromise = null
 async function loadPdfjs() {
 	if (!pdfjsLibPromise) {
 		pdfjsLibPromise = (async () => {
+			// eslint-disable-next-line import/no-unresolved
 			const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs')
 			const workerUrl = new URL(
 				'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -225,29 +226,5 @@ export default {
 
 .pdf-viewer__canvas {
 	display: block;
-}
-</style>
-
-<style>
-/* Unscoped: pdfjs writes its text-layer spans into our container without our scope hash. */
-.pdf-viewer__text-layer {
-	position: absolute;
-	left: 0;
-	top: 0;
-	overflow: hidden;
-	opacity: 0.25;
-	line-height: 1;
-}
-
-.pdf-viewer__text-layer > span {
-	color: transparent;
-	position: absolute;
-	white-space: pre;
-	cursor: text;
-	transform-origin: 0% 0%;
-}
-
-.pdf-viewer__text-layer ::selection {
-	background: rgba(0, 100, 255, 0.4);
 }
 </style>

@@ -8,6 +8,16 @@
 - **Response field `anonymizedFilePath` reflects the subfolder location.** After a successful post-process move, `anonymizedFilePath` in the batch file entry points into the `anonymised/` subfolder. On move failure (permissions, disk error), the path is the legacy location and a `warning` field with `code: "MOVE_FAILED"` is attached to the file entry. (`anonymisation-folder-output-folder-layout`)
 
 ### Added
+- **Idempotent `ConsentService::createConsentRequest()`** — keyed on `(documentId, entityKey, scope: "document")`. A second call for the same key updates the existing record rather than creating a duplicate; the caller receives `wasUpdated: true` in the response. Falls back to `entityText` matching when `entityKey` is null (legacy records). `scope: "entity"` standing-consent records are never matched as duplicates. (`consent-create-idempotency-and-notes`)
+- **Sentinel-tagged additional-bases serialisation in `publicationConsent.notes`** — `publicationBases[0]` writes to the existing `legalBasis` field (truncated at 500 chars at word boundary); elements `[1..N]` are rendered inside an HTML-comment sentinel region (`<!-- docudesk:additional-publication-bases:begin/end -->`). The sentinel is markdown-invisible, re-submittable (idempotent re-render), and operator-authored content outside the brackets is preserved across re-submits. (`consent-create-idempotency-and-notes`)
+- **`PolicyRejectedException`** — new typed exception thrown when `PolicyMatchService` returns a prohibition match during `createConsentRequest`. Carries `ruleUuid` and `ruleName` for operator-facing notification. (`consent-create-idempotency-and-notes`)
+- **`ConsentNotesHelper`** — new service encapsulating sentinel region write/strip/truncate logic. (`consent-create-idempotency-and-notes`)
+
+### Behavior changes
+- **`createConsentRequest()` is now idempotent**: re-submitting a duplicate `(documentId, entityKey)` pair now updates the existing record (previously would have created a duplicate or raised a 409-style error). Existing operator-authored notes content is preserved across re-submits. The bracketed `<!-- docudesk:additional-publication-bases:* -->` region is auto-managed by the service.
+- **`createConsentRequest()` signature** now accepts `extra['publicationBases']`, `extra['entityKey']`, `extra['contactEmail']`, `extra['contactAddress']` in addition to the existing fields. The `ALLOWED_CREATE_FIELDS` whitelist in `ConsentCrudService` is updated accordingly.
+
+
 - **`prohibitionMatch` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**
   Each consolidated entity now carries a `prohibitionMatch` field: `null` when no publication-prohibition rule matches, or `{ruleId, ruleName, highConfidence}` when a `publicationProhibition` rule matches. `highConfidence` is `true` when the entity's `highestConfidence` is at or above the configured threshold (`docudesk.prohibition.high_confidence_threshold`, default 0.85). The frontend review UI uses this to render prohibition-locked entities without re-running the matcher client-side. (`anonymisation-entity-review-prohibition-hints`)
 - **`suggestedBases` per entity on `GET /api/anonymization/batch/{batchId}/entities`.**

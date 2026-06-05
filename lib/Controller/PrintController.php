@@ -17,6 +17,7 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
+ * @spec openspec/changes/print-functionality/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -92,6 +93,29 @@ class PrintController extends Controller
     }//end getRequestOptions()
 
     /**
+     * Extract print configuration from request options
+     *
+     * Reads duplex, color, paperTray, and stapling from options array.
+     * These are returned alongside generated content for external print services.
+     *
+     * @param array $options Request options array
+     *
+     * @return array{duplex: bool, color: bool, paperTray: string, stapling: bool}
+     *
+     * @spec openspec/changes/print-functionality/tasks.md#task-2
+     */
+    private function extractPrintConfig(array $options): array
+    {
+        return [
+            'duplex'    => (bool) ($options['duplex'] ?? false),
+            'color'     => (bool) ($options['color'] ?? true),
+            'paperTray' => (string) ($options['paperTray'] ?? 'default'),
+            'stapling'  => (bool) ($options['stapling'] ?? false),
+        ];
+
+    }//end extractPrintConfig()
+
+    /**
      * Resolve template content and options from request parameters
      *
      * Supports two modes:
@@ -103,6 +127,7 @@ class PrintController extends Controller
      * @throws Exception If neither templateId nor template content is provided
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
+     * @spec openspec/changes/print-functionality/tasks.md#task-2
      */
     private function resolveTemplate(): array
     {
@@ -123,6 +148,10 @@ class PrintController extends Controller
                 'options' => [
                     'format'      => $templateRecord['format'] ?? 'A4',
                     'orientation' => $templateRecord['orientation'] ?? 'P',
+                    'duplex'      => $templateRecord['duplex'] ?? false,
+                    'color'       => $templateRecord['color'] ?? true,
+                    'paperTray'   => $templateRecord['paperTray'] ?? 'default',
+                    'stapling'    => $templateRecord['stapling'] ?? false,
                 ],
             ];
         }
@@ -176,16 +205,18 @@ class PrintController extends Controller
 
             $options = $resolved['options'];
 
-            $html = $this->pdfService->renderHtmlPreview(
+            $html        = $this->pdfService->renderHtmlPreview(
                 templateContent: $resolved['content'],
                 data: $resolved['data'],
                 options: $options
             );
+            $printConfig = $this->extractPrintConfig(options: $options);
 
             return new JSONResponse(
                 data: [
-                    'html'  => $html,
-                    'title' => $resolved['title'],
+                    'html'        => $html,
+                    'title'       => $resolved['title'],
+                    'printConfig' => $printConfig,
                 ]
             );
         } catch (Exception $e) {
