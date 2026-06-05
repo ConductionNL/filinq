@@ -369,10 +369,6 @@ export default {
 	border-top-right-radius: 20px;
 }
 
-.file-viewer-sidebar {
-	padding: 12px 16px;
-}
-
 .entities-summary {
 	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
@@ -382,7 +378,6 @@ export default {
 .entities-list {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
 }
 
 .reveal-note .reveal-toggle {
