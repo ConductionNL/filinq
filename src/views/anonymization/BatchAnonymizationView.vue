@@ -78,12 +78,14 @@ export default {
 		/**
 		 * Upload files dropped onto the batch wizard drop zone.
 		 *
+		 * @param e
 		 * @spec openspec/specs/batch-anonymization/spec.md
 		 */
 		handleDrop(e) { const f = e.dataTransfer?.files; if (f?.length) batchAnonymizationStore.uploadBatch(f) },
 		/**
 		 * Upload files chosen via the batch wizard file picker.
 		 *
+		 * @param e
 		 * @spec openspec/specs/batch-anonymization/spec.md
 		 */
 		handleFileSelect(e) { const f = e.target?.files; if (f?.length) batchAnonymizationStore.uploadBatch(f) },

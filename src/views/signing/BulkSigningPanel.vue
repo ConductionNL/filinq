@@ -58,6 +58,7 @@ export default {
 		/**
 		 * Toggle selection of a request in the bulk-signing batch.
 		 *
+		 * @param id
 		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-5
 		 */
 		toggle(id) {

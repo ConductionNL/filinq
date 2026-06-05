@@ -75,6 +75,7 @@ export const useSettingsStore = defineStore(
 			/**
 			 * Persist DocuDesk settings via the settings REST API.
 			 *
+			 * @param settingsData
 			 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
 			 */
 			async saveSettings(settingsData) {

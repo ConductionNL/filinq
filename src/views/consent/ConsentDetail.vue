@@ -205,6 +205,7 @@ export default {
 			/**
 			 * Sync the editable form fields when the selected consent record changes.
 			 *
+			 * @param item
 			 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 			 */
 			handler(item) {
@@ -229,6 +230,7 @@ export default {
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
+		 * @param dateStr
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 		 */
 		formatDate(dateStr) {
