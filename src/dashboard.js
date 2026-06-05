@@ -1,9 +1,13 @@
+// Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
+// any CSS or asset/resource (font) URL is evaluated. See setPublicPath.js.
+import './setPublicPath.js'
 import Vue from 'vue'
 import { PiniaVuePlugin } from 'pinia'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
 import AnonymizationDashboardWidget from './views/widgets/AnonymizationDashboardWidget.vue'
 import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWidget.vue'
+import './assets/fonts.css'
 
 Vue.use(PiniaVuePlugin)
 

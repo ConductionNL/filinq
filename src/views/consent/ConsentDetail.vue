@@ -277,7 +277,7 @@ export default {
 	margin-bottom: 24px;
 	padding: 16px;
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	background-color: var(--color-main-background);
 }
 
