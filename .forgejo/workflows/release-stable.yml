@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    uses: Conduction/.github/.forgejo/workflows/release-stable.yml@main
+    uses: Conduction/.github/.forgejo/workflows/release-semrel.yml@main
     with:
       app-name: docudesk
     secrets: inherit
