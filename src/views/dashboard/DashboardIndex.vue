@@ -13,74 +13,74 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 			:app-api-installed="anonymiserBackend.appApiInstalled"
 			@dismissed="onAnonymiserWarningDismissed" />
 
-	<CnDashboardPage
-		:title="t('docudesk', 'Dashboard')"
-		:widgets="widgetDefs"
-		:layout="dashboardLayout"
-		:loading="consentStore.loading">
-		<!-- KPI: Total Consents -->
-		<template #widget-total-consents>
-			<CnStatsBlock
-				:title="t('docudesk', 'Total Consents')"
-				:count="consentStore.consentStats.total"
-				:count-label="t('docudesk', 'records')"
-				variant="default"
-				show-zero-count />
-		</template>
+		<CnDashboardPage
+			:title="t('docudesk', 'Dashboard')"
+			:widgets="widgetDefs"
+			:layout="dashboardLayout"
+			:loading="consentStore.loading">
+			<!-- KPI: Total Consents -->
+			<template #widget-total-consents>
+				<CnStatsBlock
+					:title="t('docudesk', 'Total Consents')"
+					:count="consentStore.consentStats.total"
+					:count-label="t('docudesk', 'records')"
+					variant="default"
+					show-zero-count />
+			</template>
 
-		<!-- KPI: Pending -->
-		<template #widget-pending>
-			<CnStatsBlock
-				:title="t('docudesk', 'Pending')"
-				:count="consentStore.consentStats.pending"
-				:count-label="t('docudesk', 'pending')"
-				variant="warning"
-				show-zero-count />
-		</template>
+			<!-- KPI: Pending -->
+			<template #widget-pending>
+				<CnStatsBlock
+					:title="t('docudesk', 'Pending')"
+					:count="consentStore.consentStats.pending"
+					:count-label="t('docudesk', 'pending')"
+					variant="warning"
+					show-zero-count />
+			</template>
 
-		<!-- KPI: Approved -->
-		<template #widget-approved>
-			<CnStatsBlock
-				:title="t('docudesk', 'Approved')"
-				:count="consentStore.consentStats.approved"
-				:count-label="t('docudesk', 'approved')"
-				variant="success"
-				show-zero-count />
-		</template>
+			<!-- KPI: Approved -->
+			<template #widget-approved>
+				<CnStatsBlock
+					:title="t('docudesk', 'Approved')"
+					:count="consentStore.consentStats.approved"
+					:count-label="t('docudesk', 'approved')"
+					variant="success"
+					show-zero-count />
+			</template>
 
-		<!-- KPI: Objected -->
-		<template #widget-objected>
-			<CnStatsBlock
-				:title="t('docudesk', 'Objected')"
-				:count="consentStore.consentStats.objected"
-				:count-label="t('docudesk', 'objected')"
-				variant="error"
-				show-zero-count />
-		</template>
+			<!-- KPI: Objected -->
+			<template #widget-objected>
+				<CnStatsBlock
+					:title="t('docudesk', 'Objected')"
+					:count="consentStore.consentStats.objected"
+					:count-label="t('docudesk', 'objected')"
+					variant="error"
+					show-zero-count />
+			</template>
 
-		<!-- Recent Consent Activity -->
-		<template #widget-recent-activity>
-			<div v-if="consentStore.loading" class="loading-state">
-				<NcLoadingIcon :size="32" />
-			</div>
-			<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-				<p>{{ t('docudesk', 'No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.') }}</p>
-			</div>
-			<ul v-else class="recent-list">
-				<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
-					<span class="entity-text">{{ consent.entityText }}</span>
-					<CnStatusBadge
-						:label="formatStatus(consent.consentStatus)"
-						:color-map="consentStatusColorMap" />
-				</li>
-			</ul>
-		</template>
+			<!-- Recent Consent Activity -->
+			<template #widget-recent-activity>
+				<div v-if="consentStore.loading" class="loading-state">
+					<NcLoadingIcon :size="32" />
+				</div>
+				<div v-else-if="consentStore.consents.length === 0" class="empty-state">
+					<p>{{ t('docudesk', 'No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.') }}</p>
+				</div>
+				<ul v-else class="recent-list">
+					<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
+						<span class="entity-text">{{ consent.entityText }}</span>
+						<CnStatusBadge
+							:label="formatStatus(consent.consentStatus)"
+							:color-map="consentStatusColorMap" />
+					</li>
+				</ul>
+			</template>
 
-		<!-- Quick Anonymization -->
-		<template #widget-anonymization>
-			<AnonymizationWidget />
-		</template>
-	</CnDashboardPage>
+			<!-- Quick Anonymization -->
+			<template #widget-anonymization>
+				<AnonymizationWidget />
+			</template>
+		</CnDashboardPage>
 	</div>
 </template>
 
@@ -158,6 +158,7 @@ export default {
 		/**
 		 * Map a consent status code to a localized label for the dashboard.
 		 *
+		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
 		formatStatus(status) {

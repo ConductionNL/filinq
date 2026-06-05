@@ -45,6 +45,7 @@ export default {
 	/**
 	 * Load the signing request and its audit trail on mount.
 	 *
+	 * @param props
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#8-3
 	 */
 	setup(props) {

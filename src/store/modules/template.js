@@ -16,6 +16,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Fetch templates with optional category/tag/search filters.
 		 *
+		 * @param filters
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
 		async fetchTemplates(filters = {}) {
@@ -41,6 +42,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Fetch a single template by ID.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
 		async fetchTemplate(id) {
@@ -61,6 +63,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Create a new template.
 		 *
+		 * @param data
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async createTemplate(data) {
@@ -81,6 +84,8 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Update an existing template.
 		 *
+		 * @param id
+		 * @param data
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async updateTemplate(id, data) {
@@ -101,6 +106,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Delete a template by ID.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async deleteTemplate(id) {
@@ -121,6 +127,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Duplicate an existing template into a new draft.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async duplicateTemplate(id) {
@@ -140,6 +147,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Fetch the version history for a template.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
 		 */
 		async fetchVersions(id) {
@@ -160,6 +168,8 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Restore a template to a prior version.
 		 *
+		 * @param templateId
+		 * @param versionId
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-4
 		 */
 		async restoreVersion(templateId, versionId) {
@@ -180,6 +190,8 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Render a live preview of template content with sample data.
 		 *
+		 * @param content
+		 * @param data
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-5
 		 */
 		async previewTemplate(content, data = {}) {
@@ -196,6 +208,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Acquire an edit lock on a template.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async acquireLock(id) {
@@ -212,6 +225,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Release the edit lock on a template.
 		 *
+		 * @param id
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async releaseLock(id) {
