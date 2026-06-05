@@ -16,13 +16,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
 			<div v-if="isLoading" class="entities-list">
-				<div v-for="i in 4" :key="'skeleton-' + i" class="entity-card skeleton-card">
-					<DdSkeleton variant="text" :rows="2" />
-					<div class="skeleton-row">
-						<DdSkeleton variant="row" width="40%" height="24px" />
-						<DdSkeleton variant="row" width="32px" height="24px" />
-					</div>
-				</div>
+				<DdEntityCard v-for="i in 4" :key="'skeleton-' + i" loading />
 			</div>
 
 			<!-- Error state. -->
@@ -54,32 +48,12 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 							: t('docudesk', 'Reveal original values') }}
 					</NcButton>
 				</NcNoteCard>
-				<div
+				<DdEntityCard
 					v-for="(item, idx) in entry.entities"
 					:key="'anon-' + idx"
-					class="entity-card">
-					<div class="entity-card__header">
-						<span class="entity-card__type">{{ item.type }}</span>
-						<span class="entity-card__confidence">
-							{{ n('docudesk', '%n occurrence', '%n occurrences', item.count) }}
-						</span>
-					</div>
-					<div
-						v-if="revealValues"
-						class="entity-card__value"
-						:title="item.value || ''">
-						{{ item.value || t('docudesk', 'Unknown value') }}
-					</div>
-					<div v-else class="entity-card__value entity-card__value--hidden">
-						{{ item.placeholder }}
-					</div>
-					<div v-if="item.bases && item.bases.length" class="entity-card__bases-tags">
-						<span v-for="b in item.bases" :key="b" class="basis-tag">{{ b }}</span>
-					</div>
-					<div v-if="item._resolveError" class="entity-card__error" :title="item._resolveError">
-						{{ item._resolveError }}
-					</div>
-				</div>
+					:item="item"
+					mode="anonymized"
+					:reveal-values="revealValues" />
 			</div>
 
 			<!-- Empty state. -->
@@ -89,41 +63,14 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 
 			<!-- Entity list — one card per detected entity. -->
 			<div v-else-if="entry" class="entities-list">
-				<div
+				<DdEntityCard
 					v-for="(item, idx) in entry.entities"
 					:key="'entity-' + idx"
-					class="entity-card"
-					:class="{ 'entity-card--excluded': !item.included }">
-					<div class="entity-card__header">
-						<input
-							type="checkbox"
-							class="entity-card__checkbox"
-							:checked="item.included"
-							:aria-label="t('docudesk', 'Include in anonymisation')"
-							@change="anonymizationStore.toggleEntity(entry, idx)">
-						<span class="entity-card__type">{{ item.type }}</span>
-						<span class="entity-card__confidence">
-							{{ ((item.confidence || 0) * 100).toFixed(0) }}%
-						</span>
-					</div>
-					<div class="entity-card__value" :title="item.value">
-						{{ item.value }}
-					</div>
-					<div class="entity-card__controls">
-						<NcSelect
-							class="entity-card__bases"
-							:value="item._decisionBases || []"
-							:options="basesOptions"
-							:multiple="true"
-							:input-label="t('docudesk', 'Grondslagen')"
-							:placeholder="t('docudesk', 'Pick grondslagen…')"
-							:disabled="!hasRelation(item)"
-							@input="anonymizationStore.setEntityBases(entry, idx, $event)" />
-					</div>
-					<div v-if="item._patchError" class="entity-card__error" :title="item._patchError">
-						{{ item._patchError }}
-					</div>
-				</div>
+					:item="item"
+					mode="review"
+					:bases-options="basesOptions"
+					@toggle="anonymizationStore.toggleEntity(entry, idx)"
+					@set-bases="anonymizationStore.setEntityBases(entry, idx, $event)" />
 			</div>
 		</div>
 
@@ -145,9 +92,9 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
-import DdSkeleton from '../components/DdSkeleton.vue'
+import DdEntityCard from '../components/DdEntityCard.vue'
 
 // Woo Art. 5 grondslagen — duplicated from EntityReviewTable so we don't
 // reach into a sibling component's internals. Both lists must stay in
@@ -169,8 +116,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcSelect,
-		DdSkeleton,
+		DdEntityCard,
 	},
 	data() {
 		return {
@@ -330,16 +276,6 @@ export default {
 	},
 	methods: {
 		/**
-		 * Whether an entity has any relation id — bases control only
-		 * persists when the entity is backed by an OR relation.
-		 *
-		 * @param {object} item Entity row.
-		 * @return {boolean}
-		 */
-		hasRelation(item) {
-			return Array.isArray(item.relationIds) && item.relationIds.length > 0
-		},
-		/**
 		 * Ensure the store has entities for the currently open file.
 		 * Skips when the entry is already loaded or being loaded.
 		 *
@@ -449,107 +385,8 @@ export default {
 	gap: 10px;
 }
 
-.entity-card {
-	padding: 10px 12px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large, 12px);
-	background-color: var(--color-main-background);
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	transition: opacity 0.15s ease;
-
-	&--excluded {
-		opacity: 0.55;
-	}
-}
-
-.entity-card__header {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.entity-card__checkbox {
-	flex: 0 0 auto;
-}
-
-.entity-card__type {
-	flex: 1 1 auto;
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	padding: 2px 8px;
-	border-radius: var(--border-radius-large);
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element);
-	display: inline-block;
-	max-width: max-content;
-}
-
-.entity-card__confidence {
-	flex: 0 0 auto;
-	font-size: 0.8rem;
-	color: var(--color-text-maxcontrast);
-}
-
-.entity-card__value {
-	font-size: 0.95rem;
-	font-weight: 500;
-	overflow-wrap: anywhere;
-}
-
-.entity-card__controls {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-}
-
-.entity-card__bases {
-	width: 100%;
-}
-
-.entity-card__error {
-	color: var(--color-error);
-	font-size: 0.75rem;
-}
-
-/* Anonymised-document view — placeholder shown until the user reveals the
- * original value, plus the read-only grondslagen tags. */
-.entity-card__value--hidden {
-	font-family: var(--font-face-monospace, monospace);
-	color: var(--color-text-maxcontrast);
-	font-weight: 400;
-}
-
-.entity-card__bases-tags {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-}
-
-.basis-tag {
-	font-size: 0.7rem;
-	padding: 1px 6px;
-	border-radius: 10px;
-	background-color: var(--color-background-dark);
-	color: var(--color-text-maxcontrast);
-}
-
 .reveal-note .reveal-toggle {
 	margin-top: 6px;
-}
-
-.skeleton-card {
-	padding: 12px;
-}
-
-.skeleton-row {
-	display: flex;
-	gap: 8px;
-	align-items: center;
-	margin-top: 8px;
 }
 
 .empty-state {
