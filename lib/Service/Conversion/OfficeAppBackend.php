@@ -87,7 +87,6 @@ class OfficeAppBackend implements ConversionBackendInterface
      */
     private ?array $providersCache = null;
 
-
     /**
      * Constructor.
      *
@@ -112,7 +111,6 @@ class OfficeAppBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
      *
@@ -123,7 +121,6 @@ class OfficeAppBackend implements ConversionBackendInterface
         return 'office_app';
 
     }//end name()
-
 
     /**
      * Available iff:
@@ -161,7 +158,6 @@ class OfficeAppBackend implements ConversionBackendInterface
 
     }//end isAvailable()
 
-
     /**
      * Declare whether any registered conversion provider can map this source MIME to PDF.
      *
@@ -188,7 +184,6 @@ class OfficeAppBackend implements ConversionBackendInterface
         return false;
 
     }//end canHandle()
-
 
     /**
      * Delegate to IConversionManager. The provider writes the converted
@@ -314,7 +309,6 @@ class OfficeAppBackend implements ConversionBackendInterface
 
     }//end convert()
 
-
     /**
      * Cached accessor for the provider list. Memoised per request to
      * avoid hitting the manager's `getProviders()` repeatedly during
@@ -347,7 +341,6 @@ class OfficeAppBackend implements ConversionBackendInterface
 
     }//end getProvidersCached()
 
-
     /**
      * Return $name without its trailing `.ext`.
      *
@@ -365,6 +358,4 @@ class OfficeAppBackend implements ConversionBackendInterface
         return substr($name, 0, $dotPos);
 
     }//end stripExtension()
-
-
 }//end class

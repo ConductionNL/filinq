@@ -607,8 +607,8 @@ class PolicyMatchService
         }
 
         return [
-            'ruleId'   => (string) ($result['uuid'] ?? ''),
-            'ruleName' => (string) ($result['primaryName'] ?? ''),
+            'ruleId'   => (string) $result['uuid'],
+            'ruleName' => (string) $result['primaryName'],
         ];
 
     }//end matchProhibition()

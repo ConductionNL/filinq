@@ -92,7 +92,6 @@ class PhpWordBackend implements ConversionBackendInterface
         'htm'  => 'HTML',
     ];
 
-
     /**
      * Constructor.
      *
@@ -110,7 +109,6 @@ class PhpWordBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
      *
@@ -121,7 +119,6 @@ class PhpWordBackend implements ConversionBackendInterface
         return 'phpword';
 
     }//end name()
-
 
     /**
      * Available iff the tenant flag is set AND the PhpWord library is
@@ -140,7 +137,6 @@ class PhpWordBackend implements ConversionBackendInterface
         return class_exists(IOFactory::class);
 
     }//end isAvailable()
-
 
     /**
      * Declare whether PhpWord can read the source format.
@@ -169,7 +165,6 @@ class PhpWordBackend implements ConversionBackendInterface
         return isset($mimeMap[$mimeType]);
 
     }//end canHandle()
-
 
     /**
      * Convert via PhpWord-HTML + PdfService. PhpWord reads the source
@@ -247,8 +242,8 @@ class PhpWordBackend implements ConversionBackendInterface
         try {
             $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
             // @phpstan-ignore-next-line method.notFound (createWriter() is typed WriterInterface, but the concrete HTML writer exposes getContent()).
-            $html       = $htmlWriter->getContent();
-            $html       = $this->stripAtPageRules(html: $html);
+            $html = $htmlWriter->getContent();
+            $html = $this->stripAtPageRules(html: $html);
         } catch (Throwable $e) {
             throw new ConversionFailedException(
                 message: 'PhpWord HTML writer failed: '.$e->getMessage(),
@@ -319,7 +314,6 @@ class PhpWordBackend implements ConversionBackendInterface
 
     }//end convert()
 
-
     /**
      * Strip CSS `@page` rules emitted by PhpWord's HTML writer.
      *
@@ -341,7 +335,6 @@ class PhpWordBackend implements ConversionBackendInterface
 
     }//end stripAtPageRules()
 
-
     /**
      * Return $name without its trailing `.ext`.
      *
@@ -359,6 +352,4 @@ class PhpWordBackend implements ConversionBackendInterface
         return substr($name, 0, $dotPos);
 
     }//end stripExtension()
-
-
 }//end class

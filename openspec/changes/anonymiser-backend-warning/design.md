@@ -1,3 +1,5 @@
+## Status: pr-created — PR #94 https://codeberg.org/Conduction/docudesk/pulls/94
+
 ## Context
 
 DocuDesk's anonymisation pipeline delegates entity recognition to OpenRegister's `EntityRecognitionHandler`, which selects a method from `regex | presidio | openanonymiser | llm`. When `openanonymiser` is configured but the endpoint is unreachable (or no method other than `regex` is selected at all), the handler silently falls back to regex. Admins discover the degradation only by inspecting logs or noticing low-quality output.
