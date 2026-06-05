@@ -24,6 +24,9 @@
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-4
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-5
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -251,7 +254,7 @@ class GrondslagenSummaryService
         );
 
         if ($dossier === null) {
-            throw new RuntimeException('Dossier not found: '.$dossierId);
+            throw new RuntimeException('Dossier not found: '.$dossierId, 404);
         }
 
         $dossierData   = $dossier->getObject();

@@ -17,6 +17,9 @@
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-5
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
