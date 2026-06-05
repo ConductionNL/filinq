@@ -65,9 +65,9 @@
       "cycle": 2,
       "trigger": "retry:queued",
       "started_at": "2026-06-05T04:01:10Z",
-      "ended_at": null,
-      "outcome": "in-flight",
-      "outcome_reason": null,
+      "ended_at": "2026-06-05T04:10:20Z",
+      "outcome": "needs-input",
+      "outcome_reason": "retry builder exited non-zero",
       "pattern_tags": [],
       "stages": [
         {
