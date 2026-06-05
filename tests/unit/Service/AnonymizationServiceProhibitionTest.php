@@ -22,7 +22,10 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -109,7 +112,12 @@ class AnonymizationServiceProhibitionTest extends TestCase
             container: $this->mockContainer,
             appManager: $this->mockAppManager,
             entityDetection: $this->entityDetection,
-            appConfig: $this->mockAppConfig
+            appConfig: $this->mockAppConfig,
+            consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
+            consentService: $this->createMock(originalClassName: ConsentService::class),
+            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
+            fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class),
+            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class)
         );
 
     }//end makeService()

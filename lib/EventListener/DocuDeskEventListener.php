@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -19,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\EventListener;
 
 use OCA\DocuDesk\Service\MetadataService;
+use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -59,6 +63,7 @@ class DocuDeskEventListener implements IEventListener
             $logger          = \OC::$server->get(LoggerInterface::class);
             $metadataService = \OC::$server->get(MetadataService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
+            $retroactive     = \OC::$server->get(PolicyRetroactiveService::class);
             $eventHandler    = new DocuDeskEventHandler();
             $enrichRunner    = new EnrichmentRunner();
 
@@ -76,7 +81,8 @@ class DocuDeskEventListener implements IEventListener
                 settingsService: $settingsService,
                 logger: $logger,
                 eventHandler: $eventHandler,
-                enrichRunner: $enrichRunner
+                enrichRunner: $enrichRunner,
+                retroactive: $retroactive
             );
         } catch (\Exception $e) {
             $this->logHandlerError(exception: $e, event: $event);
@@ -87,12 +93,13 @@ class DocuDeskEventListener implements IEventListener
     /**
      * Dispatch the event to the appropriate handler
      *
-     * @param Event                $event           The event to dispatch
-     * @param MetadataService      $metadataService The metadata service
-     * @param SettingsService      $settingsService The settings service
-     * @param LoggerInterface      $logger          The logger instance
-     * @param DocuDeskEventHandler $eventHandler    The event handler
-     * @param EnrichmentRunner     $enrichRunner    The enrichment runner
+     * @param Event                    $event           The event to dispatch
+     * @param MetadataService          $metadataService The metadata service
+     * @param SettingsService          $settingsService The settings service
+     * @param LoggerInterface          $logger          The logger instance
+     * @param DocuDeskEventHandler     $eventHandler    The event handler
+     * @param EnrichmentRunner         $enrichRunner    The enrichment runner
+     * @param PolicyRetroactiveService $retroactive     Retroactive policy applicator.
      *
      * @return void
      *
@@ -104,7 +111,8 @@ class DocuDeskEventListener implements IEventListener
         SettingsService $settingsService,
         LoggerInterface $logger,
         DocuDeskEventHandler $eventHandler,
-        EnrichmentRunner $enrichRunner
+        EnrichmentRunner $enrichRunner,
+        PolicyRetroactiveService $retroactive
     ): void {
         if ($event instanceof ObjectCreatedEvent) {
             $eventHandler->handleObjectCreated(
@@ -112,7 +120,8 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner
+                $enrichRunner,
+                $retroactive
             );
             return;
         }
@@ -123,13 +132,14 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner
+                $enrichRunner,
+                $retroactive
             );
             return;
         }
 
         if ($event instanceof ObjectDeletedEvent) {
-            $eventHandler->handleObjectDeleted($event, $logger);
+            $eventHandler->handleObjectDeleted($event, $logger, $retroactive);
             return;
         }
 

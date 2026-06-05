@@ -16,6 +16,9 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -332,9 +335,12 @@ class CorrespondenceController extends Controller
                 );
             }
 
-            // C3 security fix: enforce job ownership so an authenticated user
+            // C3 / SB1 security fix: enforce job ownership so an authenticated user
             // cannot poll another user's job by guessing or brute-forcing the jobId.
-            $jobUserId = (string) ($status['options']['userId'] ?? '');
+            // ownerUserId is stored at the top level of the status payload (persisted
+            // by dispatchBatchJob and every storeJobStatus call in the background job).
+            // The old check read options.userId which was NEVER persisted — SB1 fix.
+            $jobUserId = (string) ($status['ownerUserId'] ?? '');
             if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
                 return new JSONResponse(
                     data: ['error' => $this->l10n->t('Access denied')],

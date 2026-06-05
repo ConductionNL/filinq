@@ -19,6 +19,10 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+ * @spec openspec/changes/print-functionality/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -71,12 +75,16 @@ class PdfService
      *                                - margin: Array with top, right, bottom, left in mm. Default: 15
      *                                - title: PDF document title metadata. Default: empty
      *                                - pdfa: Enable PDF/A-3b compliance. Default: false
+     *                                - cropMarks: Add 3mm bleed and crop marks. Default: false
+     *                                - author: Author name for XMP metadata. Default: DocuDesk
+     *                                - caseReference: Case reference for XMP keywords. Default: empty
      *
      * @return string PDF binary content
      *
      * @throws Exception If Twig rendering or PDF generation fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
+     * @spec openspec/changes/print-functionality/tasks.md#task-1
      */
     public function renderPdf(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -88,6 +96,30 @@ class PdfService
         return $this->generatePdf(html: $html, options: $options);
 
     }//end renderPdf()
+
+    /**
+     * Generate a PDF from a raw HTML string (no Twig pre-processing).
+     *
+     * Public wrapper around the private generatePdf path for callers
+     * that already have rendered HTML — used by
+     * `Service\Conversion\MpdfBackend` (and any future conversion
+     * backend that wants the same PDF/A-3b configuration as
+     * print-preview without re-implementing it).
+     *
+     * @param string              $html    Pre-rendered HTML document body.
+     * @param array<string,mixed> $options PDF configuration options; same shape as
+     *                                     {@see renderPdf} (`format`, `orientation`,
+     *                                     `margin`, `title`, `pdfa`).
+     *
+     * @return string PDF binary content.
+     *
+     * @throws Exception When mPDF rendering fails.
+     */
+    public function generatePdfFromHtml(string $html, array $options=[]): string
+    {
+        return $this->generatePdf(html: $html, options: $options);
+
+    }//end generatePdfFromHtml()
 
     /**
      * Render HTML from a Twig template string and data context (for print preview)
@@ -116,6 +148,67 @@ class PdfService
         return $printCss.$html;
 
     }//end renderHtmlPreview()
+
+    /**
+     * Build HTML with 3mm bleed area and crop marks injected around the content
+     *
+     * Wraps the content in a bleed container and adds SVG crop marks at all four
+     * corners. The bleed margin is 3mm on each side, making the effective printable
+     * area 6mm wider and taller than the nominal page size.
+     *
+     * @param string $html Rendered HTML document content
+     *
+     * @return string HTML with bleed CSS and crop mark SVGs prepended
+     *
+     * @spec openspec/changes/print-functionality/tasks.md#task-1
+     */
+    public function buildCropMarksHtml(string $html): string
+    {
+        $cropCss = '<style>
+@media print {
+    body { margin: 3mm; padding: 0; }
+    .crop-mark-container {
+        position: relative;
+        margin: 3mm;
+    }
+    .crop-mark {
+        position: absolute;
+        width: 8mm;
+        height: 8mm;
+        overflow: visible;
+    }
+    .crop-mark-tl { top: -5mm; left: -5mm; }
+    .crop-mark-tr { top: -5mm; right: -5mm; }
+    .crop-mark-bl { bottom: -5mm; left: -5mm; }
+    .crop-mark-br { bottom: -5mm; right: -5mm; }
+}
+</style>';
+
+        $cropMarkSvgTl = '<svg class="crop-mark crop-mark-tl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+            .'<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+            .'<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+            .'</svg>';
+        $cropMarkSvgTr = '<svg class="crop-mark crop-mark-tr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+            .'<line x1="12" y1="0" x2="12" y2="8" stroke="black" stroke-width="0.5"/>'
+            .'<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+            .'</svg>';
+        $cropMarkSvgBl = '<svg class="crop-mark crop-mark-bl" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+            .'<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+            .'<line x1="0" y1="12" x2="8" y2="12" stroke="black" stroke-width="0.5"/>'
+            .'</svg>';
+        $cropMarkSvgBr = '<svg class="crop-mark crop-mark-br" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">'
+            .'<line x1="12" y1="16" x2="12" y2="24" stroke="black" stroke-width="0.5"/>'
+            .'<line x1="16" y1="12" x2="24" y2="12" stroke="black" stroke-width="0.5"/>'
+            .'</svg>';
+
+        $wrapper = '<div class="crop-mark-container">'
+            .$cropMarkSvgTl.$cropMarkSvgTr.$cropMarkSvgBl.$cropMarkSvgBr
+            .$html
+            .'</div>';
+
+        return $cropCss.$wrapper;
+
+    }//end buildCropMarksHtml()
 
     /**
      * Ensure the mPDF temp directory exists and is writable
@@ -220,17 +313,24 @@ class PdfService
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
-        $orientationName = 'portrait';
-        if ($orientation === 'L') {
-            $orientationName = 'landscape';
-        }
+        // Note on `@page`: this stylesheet intentionally omits the
+        // `@page { size: ...; margin: ...; }` rule. mPDF's CSS parser
+        // produced a degenerate page size (one character per page) when
+        // `@page` was nested inside `@media print`, regardless of
+        // whether `size: A4`, `size: A4 portrait`, or `size: A4
+        // landscape` was emitted. Page dimensions are driven by the
+        // mPDF config (`format` / `orientation` / `margin_*` in
+        // `buildMpdfConfig`) instead, which mPDF interprets reliably.
+        // The remaining rules are layout hints that don't touch page
+        // dimensions.
+        //
+        // `$format` / `$orientation` remain part of the public contract
+        // for callers that may key off them later; not consumed locally
+        // since page sizing is delegated to the config path.
+        unset($format, $orientation);
 
         return '<style>
 @media print {
-    @page {
-        size: '.$format.' '.$orientationName.';
-        margin: 15mm;
-    }
     body {
         margin: 0;
         padding: 0;
@@ -283,6 +383,14 @@ class PdfService
             $html        = $printCss.$html;
         }
 
+        $author        = (string) ($options['author'] ?? 'DocuDesk');
+        $caseReference = (string) ($options['caseReference'] ?? '');
+        $hasCropMarks  = ($options['cropMarks'] ?? false) === true;
+
+        if ($hasCropMarks === true) {
+            $html = $this->buildCropMarksHtml(html: $html);
+        }
+
         try {
             $mpdf = new Mpdf(config: $config);
 
@@ -290,9 +398,18 @@ class PdfService
                 $mpdf->SetTitle($title);
             }
 
+            $mpdf->SetAuthor($author);
+
             if ($isPdfA === true) {
-                $mpdf->SetAuthor('DocuDesk');
                 $mpdf->SetCreator('DocuDesk PDF/A Generator');
+
+                $keywords = 'DocuDesk';
+                if ($caseReference !== '') {
+                    $keywords .= ' '.$caseReference;
+                }
+
+                $mpdf->SetKeywords($keywords);
+                $mpdf->SetSubject($title);
             }
 
             $mpdf->WriteHTML(html: $html);

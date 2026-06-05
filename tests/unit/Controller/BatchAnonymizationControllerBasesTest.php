@@ -111,6 +111,7 @@ class BatchAnonymizationControllerBasesTest extends TestCase
             profileService: $this->createMock(WooProfileService::class),
             folderBatchService: $this->createMock(FolderBatchService::class),
             l10n: $this->mockL10n,
+            appConfig: $this->createMock(\OCP\IAppConfig::class),
             userSession: $this->mockUserSession
         );
 

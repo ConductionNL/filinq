@@ -21,6 +21,8 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
  */
 
 declare(strict_types=1);
@@ -28,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
@@ -35,6 +38,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IAppConfig;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -48,6 +52,9 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
  */
 class AnonymizationController extends Controller
 {
@@ -60,6 +67,8 @@ class AnonymizationController extends Controller
      * @param AnonymizationService $anonymizationService Service for anonymization operations
      * @param FileListingService   $fileListingService   Service for file listing operations
      * @param IL10N                $l10n                 The localization service
+     * @param IAppConfig           $appConfig            Tenant configuration provider (reads
+     *                                                   docudesk.anonymisation.default_output_format)
      * @param IUserSession         $userSession          User session for authentication
      * @param IRootFolder          $rootFolder           Root folder for file access checks
      *
@@ -72,12 +81,26 @@ class AnonymizationController extends Controller
         private readonly AnonymizationService $anonymizationService,
         private readonly FileListingService $fileListingService,
         private readonly IL10N $l10n,
+        private readonly IAppConfig $appConfig,
         private readonly IUserSession $userSession,
         private readonly IRootFolder $rootFolder,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
+
+    /**
+     * Default-output-format tenant config key. The per-call
+     * `outputFormat` request param overrides this when supplied.
+     */
+    private const DEFAULT_OUTPUT_FORMAT_KEY = 'docudesk.anonymisation.default_output_format';
+
+
+    /**
+     * Supported values for the `outputFormat` request param + tenant
+     * config. Anything else from the request results in HTTP 400.
+     */
+    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
 
     /**
      * List all processed files with entity counts and status
@@ -314,25 +337,95 @@ class AnonymizationController extends Controller
                 return $appendBasisSummary;
             }
 
+            $unredactedEntities = $params['unredactedEntities'] ?? [];
+            if (is_array($unredactedEntities) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities must be an array')],
+                    400
+                );
+            }
+
+            if (empty($unredactedEntities) === false) {
+                $validationError = $this->validateUnredactedEntities(entries: $unredactedEntities);
+                if ($validationError !== null) {
+                    return $validationError;
+                }
+            }//end if
+
+            // File access check MUST precede the prohibition oracle so that unauthenticated
+            // or unauthorized callers cannot probe prohibition rules by supplying arbitrary
+            // entity names without holding access to the target file (OWASP A01:2021).
             $accessError = $this->verifyFileAccess(fileId: $fileId);
             if ($accessError !== null) {
                 return $accessError;
             }
 
-            $outputFormat = 'pdf';
-            if (isset($params['outputFormat']) === true) {
-                $outputFormat = (string) $params['outputFormat'];
+            if (empty($unredactedEntities) === false) {
+                $violations = $this->anonymizationService->checkUnredactedProhibitions(
+                    unredactedEntities: $unredactedEntities
+                );
+                if (empty($violations) === false) {
+                    return new JSONResponse(
+                        [
+                            'error'             => $this->l10n->t(
+                                'One or more unredacted entities match a publication-prohibition rule. '
+                                .'Move those entities to entities[] to anonymize them instead.'
+                            ),
+                            'prohibitedEntries' => $violations,
+                        ],
+                        422
+                    );
+                }
+            }//end if
+
+            // Anonymise-output-as-pdf-by-default: optional `outputFormat`
+            // selects PDF conversion vs native-format preservation.
+            // Per-call value overrides the tenant default; missing
+            // value falls back to the tenant default which itself
+            // defaults to 'pdf'.
+            $outputFormat = $this->resolveOutputFormat(params: $params);
+            if ($outputFormat === null) {
+                return new JSONResponse(
+                    [
+                        'error' => $this->l10n->t(
+                            'Invalid outputFormat: must be one of %s',
+                            [implode(', ', self::VALID_OUTPUT_FORMATS)]
+                        ),
+                    ],
+                    400
+                );
             }
 
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
-            $result = $this->anonymizationService->anonymizeDocument(
-                fileId: $fileId,
-                entities: $entities,
-                appendBasisSummary: $appendBasisSummary,
-                outputFormat: $outputFormat
-            );
+            try {
+                $result = $this->anonymizationService->anonymizeDocument(
+                    fileId: $fileId,
+                    entities: $entities,
+                    appendBasisSummary: $appendBasisSummary,
+                    outputFormat: $outputFormat,
+                    unredactedEntities: $unredactedEntities
+                );
+            } catch (ConversionFailedException $e) {
+                $this->logger->warning(
+                    'PDF conversion cascade exhausted; returning 422.',
+                    ['attempts' => $e->getAttempts()]
+                );
+                return new JSONResponse(
+                    [
+                        'error'              => $this->l10n->t(
+                            'Conversion to PDF failed; anonymisation rolled back.'
+                        ),
+                        'conversionAttempts' => $e->getAttempts(),
+                        'outputFormat'       => $outputFormat,
+                        'fallback'           => $this->l10n->t(
+                            'Set outputFormat to "preserve" to bypass conversion if you must keep the native format.'
+                        ),
+                    ],
+                    422
+                );
+            }//end try
 
             return new JSONResponse($result);
         } catch (Exception $e) {
@@ -415,6 +508,140 @@ class AnonymizationController extends Controller
         return null;
 
     }//end validateEntityBases()
+
+    /**
+     * Validate the unredactedEntities[] payload entries.
+     *
+     * Each entry must have:
+     *   - entityId   (int, required)
+     *   - entityText (string, required)
+     *   - entityType (string, required)
+     *   - publicationBases (array of strings, required, non-empty)
+     * Optional:
+     *   - contactEmail   (string)
+     *   - contactAddress (string)
+     *
+     * @param array<int, mixed> $entries The unredactedEntities array from the request
+     *
+     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid
+     *
+     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
+     */
+    private function validateUnredactedEntities(array $entries): ?JSONResponse
+    {
+        foreach ($entries as $idx => $entry) {
+            if (is_array($entry) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each unredactedEntities entry must be an object (index %s)', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['entityId']) === false || is_int($entry['entityId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityId is required and must be an integer', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['entityText']) === true || is_string($entry['entityText']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityText is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['entityType']) === true || is_string($entry['entityType']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].entityType is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['publicationBases']) === false || is_array($entry['publicationBases']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases is required and must be an array', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($entry['publicationBases']) === true) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases must contain at least one basis', [$idx])],
+                    400
+                );
+            }
+
+            foreach ($entry['publicationBases'] as $base) {
+                if (is_string($base) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Each entry in unredactedEntities[%s].publicationBases must be a string', [$idx])],
+                        400
+                    );
+                }
+            }
+
+            if (isset($entry['contactEmail']) === true && is_string($entry['contactEmail']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].contactEmail must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($entry['contactAddress']) === true && is_string($entry['contactAddress']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('unredactedEntities[%s].contactAddress must be a string', [$idx])],
+                    400
+                );
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateUnredactedEntities()
+
+    /**
+     * Resolve the effective `outputFormat` for this request.
+     *
+     * Order: per-call value (when supplied and valid) → tenant default
+     * from IAppConfig → hard-coded `"pdf"` fallback.
+     *
+     * Returns `null` when the per-call value is supplied but invalid;
+     * the caller maps that to HTTP 400.
+     *
+     * @param array<string,mixed> $params Request params.
+     *
+     * @return string|null Resolved outputFormat ('pdf'|'preserve'), or
+     *                     null when an invalid value was supplied.
+     */
+    private function resolveOutputFormat(array $params): ?string
+    {
+        if (array_key_exists('outputFormat', $params) === true) {
+            $value = $params['outputFormat'];
+            if (is_string($value) === false
+                || in_array($value, self::VALID_OUTPUT_FORMATS, true) === false
+            ) {
+                return null;
+            }
+
+            return $value;
+        }
+
+        $tenantDefault = $this->appConfig->getValueString(
+            'docudesk',
+            self::DEFAULT_OUTPUT_FORMAT_KEY,
+            'pdf'
+        );
+
+        if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
+            // Malformed tenant setting falls back to spec default
+            // rather than rejecting the call.
+            return 'pdf';
+        }
+
+        return $tenantDefault;
+
+    }//end resolveOutputFormat()
 
     /**
      * Filter entities by excluded types

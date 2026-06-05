@@ -462,6 +462,238 @@ The **Standing Publication Consents** admin page (`/standing-consents`) shows on
 
 Creating a standing consent requires membership in the `docudesk-standing-consent-admins` group.
 
+## Publication-Clearance via the Anonymise Endpoint
+
+> **Added:** `unredactedEntities[]` on the per-document and batch anonymise endpoints.
+
+### Overview
+
+Operators can trigger `publicationConsent` record creation directly from the anonymise call.
+Rather than submitting entities separately via `POST /api/consents`, include them in the
+`unredactedEntities[]` array of the same anonymise request:
+
+```json
+POST /index.php/apps/docudesk/api/v1/anonymize/{fileId}
+{
+  "entities": [
+    { "entityId": 1, "text": "Amsterdam", "type": "LOCATION" }
+  ],
+  "unredactedEntities": [
+    {
+      "entityId": 7,
+      "entityText": "Jan Jansen",
+      "entityType": "PERSON",
+      "publicationBases": ["woo-artikel-3.1"],
+      "contactEmail": "j.jansen@example.nl",
+      "contactAddress": "Dorpsstraat 1, 1234 AB"
+    }
+  ]
+}
+```
+
+### Required fields per `unredactedEntities[]` entry
+
+| Field              | Type     | Required | Description                                   |
+|--------------------|----------|----------|-----------------------------------------------|
+| `entityId`         | integer  | yes      | Nextcloud entity relation ID                  |
+| `entityText`       | string   | yes      | Literal text of the entity                    |
+| `entityType`       | string   | yes      | Entity type (e.g. `PERSON`, `ORGANIZATION`)   |
+| `publicationBases` | string[] | yes      | One or more legal publication bases; non-empty |
+| `contactEmail`     | string   | no       | Optional contact e-mail for the data subject  |
+| `contactAddress`   | string   | no       | Optional postal address for the data subject  |
+
+### Prohibition gate (any-confidence, hard 422)
+
+Before creating consents, every `unredactedEntities[]` entry is checked against
+active `publicationProhibition` rules (via `PolicyMatchService`). Unlike the regular
+prohibition gate (which only blocks at ≥ 0.85 confidence), the publication-clearance
+gate is **any-confidence** — the operator made an explicit decision to publish unredacted,
+so any prohibition match is a contradiction.
+
+If any entry matches, the request fails with **HTTP 422** and no file mutation occurs:
+
+```json
+{
+  "error": "One or more unredacted entities match a publication-prohibition rule. ...",
+  "prohibitedEntries": [
+    { "entityId": 7, "entityText": "Jan Jansen", "ruleId": "rule-1", "ruleName": "..." }
+  ]
+}
+```
+
+The operator must either move the prohibited entity to `entities[]` (to anonymise it)
+and re-submit, or remove it entirely.
+
+### `createdConsents[]` response field
+
+On success the response gains a `createdConsents[]` field (absent when
+`unredactedEntities` was not supplied):
+
+```json
+{
+  "replacementCount": 1,
+  "anonymizedFileId": "...",
+  "createdConsents": [
+    {
+      "entityId": 7,
+      "entityText": "Jan Jansen",
+      "consentId": "<uuid>",
+      "consentStatus": "pending",
+      "action": "created"
+    }
+  ]
+}
+```
+
+### Batch endpoint multi-status semantics
+
+The batch `POST /api/v1/batch/{batchId}/anonymize` accepts the same
+`unredactedEntities[]` (applied to every file in the batch). Per-file prohibition
+violations are recorded but do not abort the batch:
+
+| Outcome              | HTTP status |
+|----------------------|-------------|
+| All files processed  | **200**     |
+| Some files violated  | **207**     |
+| All files violated   | **422**     |
+
+Files that violated the prohibition gate get status `prohibitionViolation` in the
+batch response; successfully processed files carry `createdConsents[]` alongside the
+usual `replacementCount` and `anonymizedFileId`.
+
+## Entity-Level Policy Layer
+
+Beyond the per-document workflow, DocuDesk supports two **entity-level** policy surfaces that pre-empt the workflow at detection time:
+
+### Publication Prohibitions (`publicationProhibition` schema)
+
+Deny-list rules. A matched entity is **always anonymised**, regardless of any per-document workflow or standing consent. Use cases:
+
+- Court order to anonymise a witness ("witness A in case 2024/01")
+- Statutory minor protection
+- Undercover officers
+- Categorical AVG exemptions decided by the Autoriteit Persoonsgegevens
+
+A prohibition stores a real-world identity (preferably a stable identifier — BSN/KvK) plus a `reason`, `legalAuthority`, `severity`, `validFrom`/`validUntil`, and `active` flag.
+
+### Standing Publication Consents (`publicationConsent` with `scope: "entity"`)
+
+Allow-list rules. A matched entity may be published **without** running the 28-day objection workflow, because explicit consent was already obtained out-of-band. Use cases:
+
+- Mayor signs a blanket consent for municipal decisions
+- Organisation files an opt-in form for press releases
+- Council member's standing consent for committee minutes
+
+A standing consent stores a `consentMethod` (paper / digital_signature / verbal_recorded / opt_in_form), an optional `consentDocument` reference (audit-trail file), `consentScope` (textual scope description), and `validFrom`/`validUntil`/`active`.
+
+### Three-layer evaluation order
+
+For every detected entity in a publication-clearance flow, the consent service evaluates rules in this order:
+
+1. **Publication prohibitions** — deny-list. If matched: `consentStatus: "anonymized"`, `notificationStatus: "skipped"`, `publicationDecision: "anonymize"`, `policyMatch` references the rule. Workflow ends.
+2. **Standing publication consents** — allow-list. If matched (and no prohibition matches): `consentStatus: "consent_given"`, `notificationStatus: "skipped"`, `publicationDecision: "publish_with_consent"`, `policyMatch` references the rule. Workflow ends.
+3. **Existing WOO workflow** — only reached when neither policy surface matches. Notification is sent, 28-day deadline starts, decision drives publication.
+
+**Conflict resolution is deterministic and non-configurable**: prohibition wins. Multi-prohibition match is broken by lowest UUID (lexicographic).
+
+### UI toggle semantics (per-document publication-prep screen)
+
+The per-entity anonymisation toggle is keyed off the **referent type** of `policyMatch`, not the `consentStatus` enum:
+
+| `policyMatch` referent | Toggle default | Overridable? |
+|---|---|---|
+| `null` | per existing UX based on `consentStatus` | yes |
+| `publicationProhibition` | **ON, locked** | no |
+| `publicationConsent` (scope=entity) | **OFF, defaulted** | yes — flipping ON anonymises anyway |
+
+Overriding a standing-consent match is captured as a `publicationDecision: "anonymize"` change while `consentStatus` stays `"consent_given"` and `policyMatch` is preserved. The override is audit-logged via OpenRegister's mapper-level history.
+
+### Retroactive behaviour
+
+| Trigger | Effect on in-flight `scope: "document"` records |
+|---|---|
+| New prohibition created / activated / matchRules widened / validUntil extended | All matching in-flight records (status in `{pending, consent_given, objection_received, no_response}`) are **force-resolved to anonymised**. `notificationSentAt` and `objectionReceivedAt` are preserved for audit; `objectionDeadline` is cleared. |
+| New standing consent created / activated | **No retroactive effect**. Standing consent applies to future detections only — past decisions are respected (privacy default wins on retroactive sweep). |
+| Rule deletion / deactivation / expiry | **No retroactive effect**. Past records keep their final state with `policyMatch` intact (the reference becomes dangling; OpenRegister's referential-integrity surface governs how this is exposed). |
+| Already-published documents | **Never modified**. Audit reports MAY surface "documents containing now-prohibited entities" for human review; the system does not initiate automatic redaction or republication. |
+
+### Three admin surfaces
+
+The Vue UI surfaces these in three separate admin pages — they are **not** consolidated:
+
+| Page | Filter | Purpose |
+|---|---|---|
+| **Consent Workflow** | `publicationConsent` where `scope: "document"` | Per-document workflow records (the existing surface), now with a "policy pre-empted" indicator on rows whose `policyMatch` is non-null. |
+| **Standing Publication Consents** | `publicationConsent` where `scope: "entity"` | List, edit, expire, revoke standing consents. The create-form requires `consentMethod` and warns when `validUntil` is left blank. |
+| **Publication Prohibitions** | all `publicationProhibition` records | CRUD for prohibitions. The create-form encourages stable identifiers (BSN/KvK) and warns when only name-based rules are present. |
+
+### RBAC defaults
+
+| Surface | Read | Write |
+|---|---|---|
+| `publicationProhibition` | Authenticated users (no restriction by default) | `docudesk-policy-admins` group |
+| `publicationConsent` (scope=document) | Existing consent-officer role | Existing consent-officer role |
+| `publicationConsent` (scope=entity, "standing consent") | Existing consent-officer role can read | Service-level gate: `docudesk-standing-consent-admins` group is required. A consent-officer without this membership can still write `scope: "document"` records, but writes to `scope: "entity"` return 403. |
+
+Admin users implicitly belong to both groups (NC convention). Adjust group memberships via the OpenRegister authorization UI.
+
+## Idempotency Contract
+
+### createConsentRequest() is Idempotent on (documentId, entityKey)
+
+`ConsentService::createConsentRequest()` is idempotent on the composite key `(documentId, entityKey, scope: "document")`.
+
+**Behaviour:**
+- First call with a fresh `(documentId, entityKey)` → creates a new `publicationConsent` record, returns `wasUpdated: false`.
+- Subsequent call with the same `(documentId, entityKey)` → updates the existing record, returns `wasUpdated: true`.
+- When `entityKey` is `null`, the fallback key is `(documentId, entityText, scope: "document")`.
+- `scope: "entity"` standing-consent records are **never** matched as duplicates of a per-document call.
+
+**Preserved on update (workflow state — NOT overwritten):**
+
+| Field | Reason |
+|---|---|
+| `notificationStatus` | Prevents resetting already-sent notifications |
+| `notificationSentAt` | WOO audit trail timestamp |
+| `objectionDeadline` | Timer must not be reset after the fact |
+| `objectionReceivedAt` | Legal record |
+| `objectionReason` | Legal record |
+| `consentStatus` | In-flight workflow state |
+| `publicationDecision` | Operator decision |
+
+**Updated on re-submit (operator-set fields):**
+`entityType`, `legalBasis`, `notes` (sentinel region only — see below), `contactEmail`, `contactAddress`.
+
+**policyMatch re-evaluation:** If `policyMatch` was previously `null` and `PolicyMatchService::match()` now returns a standing-consent match, `policyMatch` is set. If it was previously set and the rule no longer matches, it is **not** cleared (the prior decision stands).
+
+**Prohibition rejection:** If `PolicyMatchService::match()` returns a prohibition match, `createConsentRequest()` throws `OCA\DocuDesk\Exception\PolicyRejectedException` carrying the rule UUID and name. No record is created or updated.
+
+### Sentinel-Tagged Additional-Bases Serialisation in notes
+
+When `publicationBases[]` contains more than one element:
+- `publicationBases[0]` → written to the `legalBasis` field (truncated at 500 chars at the last word boundary before the limit).
+- `publicationBases[1..N]` → rendered inside a sentinel-tagged region in `notes`.
+
+**Sentinel format:**
+
+```markdown
+<existing operator-authored notes content, if any>
+
+<!-- docudesk:additional-publication-bases:begin -->
+**Aanvullende publicatiegrondslagen:**
+- <basis 2>
+- <basis 3>
+<!-- docudesk:additional-publication-bases:end -->
+```
+
+**Guarantees:**
+- Sentinel comments are HTML-comment syntax — they are **markdown-invisible** and do not render in Nextcloud's markdown viewers.
+- Operator-authored content outside the sentinel brackets is **never modified**.
+- Re-submitting with the same `publicationBases[]` is a no-op on `notes` (idempotent render).
+- Shrinking to a single basis (or zero) removes the bracketed region and its preceding blank line entirely.
+
+**Sentinel collision risk:** The sentinel string `docudesk:additional-publication-bases` is highly specific. If an operator types it verbatim in their own notes, behaviour is undefined (documented trade-off).
+
 ## Related Documentation
 
 - [Architecture Overview](../architecture.md)

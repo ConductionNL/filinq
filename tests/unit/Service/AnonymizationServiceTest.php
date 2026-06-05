@@ -37,8 +37,6 @@ use PHPUnit\Framework\TestCase;
  */
 class AnonymizationServiceTest extends TestCase
 {
-
-
     /**
      * Check if the class can be loaded without parse errors
      *
@@ -58,7 +56,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end requireClassOrSkip()
 
-
     /**
      * Test that the source file exists
      *
@@ -72,7 +69,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testSourceFileExists()
 
-
     /**
      * Test file contains expected class declaration
      *
@@ -84,7 +80,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('class AnonymizationService', $content);
 
     }//end testFileContainsClassDeclaration()
-
 
     /**
      * Test file contains expected methods
@@ -98,7 +93,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function anonymizeDocument', $content);
 
     }//end testFileContainsExpectedMethods()
-
 
     /**
      * Test anonymizeDocument signature accepts appendBasisSummary and outputFormat.
@@ -117,6 +111,59 @@ class AnonymizationServiceTest extends TestCase
 
 
     /**
+     * anonymise-output-as-pdf-by-default: AnonymizationService must
+     * accept an `$outputFormat` argument on anonymizeDocument so the
+     * controller can pass through the per-call gate.
+     *
+     * @return void
+     */
+    public function testAnonymizeDocumentAcceptsOutputFormatArgument(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+
+        // Signature must include the outputFormat parameter with a
+        // default of 'pdf' (per design D6 / proposal "default pdf").
+        $this->assertMatchesRegularExpression(
+            '/function anonymizeDocument\([^)]*\$outputFormat\s*=\s*\'pdf\'[^)]*\)/s',
+            $content,
+            'anonymizeDocument must accept $outputFormat with a default of \'pdf\''
+        );
+
+    }//end testAnonymizeDocumentAcceptsOutputFormatArgument()
+
+
+    /**
+     * anonymise-output-as-pdf-by-default: AnonymizationService must
+     * depend on PdfConversionService and catch ConversionFailedException
+     * for the rollback path. Shape-level check; the actual cascade
+     * behaviour is covered by PdfConversionServiceTest.
+     *
+     * @return void
+     */
+    public function testServiceWiresPdfConversionAndRollback(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+
+        $this->assertStringContainsString(
+            'PdfConversionService',
+            $content,
+            'AnonymizationService must wire PdfConversionService for the pdf-output path'
+        );
+        $this->assertStringContainsString(
+            'ConversionFailedException',
+            $content,
+            'AnonymizationService must catch ConversionFailedException for the rollback path'
+        );
+        $this->assertStringContainsString(
+            '$result->delete()',
+            $content,
+            'AnonymizationService must delete the un-converted intermediate when conversion fails'
+        );
+
+    }//end testServiceWiresPdfConversionAndRollback()
+
+
+    /**
      * Test that tryAppendBasisSummary is defined as a private method.
      *
      * @return void
@@ -126,10 +173,9 @@ class AnonymizationServiceTest extends TestCase
     public function testTryAppendBasisSummaryMethodExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function tryAppendBasisSummary', $content);
+        $this->assertStringContainsString(needle: 'function attachGrondslagenSummary', haystack: $content);
 
     }//end testTryAppendBasisSummaryMethodExists()
-
 
     /**
      * Test the service records a structured warning field on summary failure.
@@ -141,11 +187,10 @@ class AnonymizationServiceTest extends TestCase
     public function testWarningFieldDefinedOnSummaryFailure(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('SUMMARY_APPEND_FAILED', $content);
-        $this->assertStringContainsString("'warning'", $content);
+        $this->assertStringContainsString(needle: 'grondslagen_summary_failed', haystack: $content);
+        $this->assertStringContainsString(needle: "'warning'", haystack: $content);
 
     }//end testWarningFieldDefinedOnSummaryFailure()
-
 
     /**
      * Test that preserve mode path sets summaryFileId and summaryFilePath fields.
@@ -162,7 +207,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString("'preserve'", $content);
 
     }//end testPreserveModeSetsSummaryFields()
-
 
     /**
      * Test #286: source code no longer derives replacementCount from
@@ -191,7 +235,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testReplacementCountIsNoLongerFabricatedFromMappedEntities()
 
-
     /**
      * Test #286: a helper that verifies replacements + a helper that
      * safely reads node text are both present in the implementation.
@@ -207,7 +250,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertStringContainsString('function readNodeTextSafely', $content);
 
     }//end testVerificationHelpersExist()
-
 
     /**
      * Test #286 (behavioural): verifyReplacements correctly identifies
@@ -250,7 +292,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testVerifyReplacementsDistinguishesAppliedFromUnmatched()
 
-
     /**
      * Test #286: verifyReplacements is case-insensitive (mirrors OR's
      * str_ireplace semantics in DocumentProcessingHandler).
@@ -277,7 +318,6 @@ class AnonymizationServiceTest extends TestCase
         $this->assertCount(0, $result['unmatchedEntities']);
 
     }//end testVerifyReplacementsIsCaseInsensitive()
-
 
     /**
      * Test #286: when source text is null (binary format), verification
@@ -313,7 +353,6 @@ class AnonymizationServiceTest extends TestCase
 
     }//end testVerifyReplacementsReportsUnverifiedForBinaryFormats()
 
-
     /**
      * Test #286: readNodeTextSafely returns null for binary mime types
      * (PDF, DOCX, …) so verifyReplacements correctly degrades to
@@ -337,18 +376,17 @@ class AnonymizationServiceTest extends TestCase
             public function getMimeType(): string
             {
                 return 'application/pdf';
-            }
+            }//end getMimeType()
 
             public function getContent(): string
             {
                 return "%PDF-1.4\n...binary...";
-            }
+            }//end getContent()
         };
 
         $this->assertNull($reflection->invoke($service, $binaryNode));
 
     }//end testReadNodeTextSafelyReturnsNullForBinaryMime()
-
 
     /**
      * Test #286: readNodeTextSafely returns content for text-like mime
@@ -370,18 +408,17 @@ class AnonymizationServiceTest extends TestCase
             public function getMimeType(): string
             {
                 return 'text/plain';
-            }
+            }//end getMimeType()
 
             public function getContent(): string
             {
                 return 'Hello John Doe.';
-            }
+            }//end getContent()
         };
 
         $this->assertSame('Hello John Doe.', $reflection->invoke($service, $textNode));
 
     }//end testReadNodeTextSafelyReturnsContentForTextMime()
-
 
     /**
      * Build an AnonymizationService with all constructor deps stubbed so
@@ -400,16 +437,63 @@ class AnonymizationServiceTest extends TestCase
         $appManager      = $this->createMock(\OCP\App\IAppManager::class);
         $entityDetection = $this->createMock(\OCA\DocuDesk\Service\EntityDetectionService::class);
         $appConfig       = $this->createMock(\OCP\IAppConfig::class);
+        $consentCrud     = $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConsentCrudService::class);
+        $consentService  = $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConsentService::class);
+
+        $grondslagenSummary = $this->createMock(originalClassName: \OCA\DocuDesk\Service\GrondslagenSummaryService::class);
+        $fileEntityStats    = $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class);
+        $pdfConversion      = $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class);
 
         return new \OCA\DocuDesk\Service\AnonymizationService(
-            $logger,
-            $container,
-            $appManager,
-            $entityDetection,
-            $appConfig
+            logger: $logger,
+            container: $container,
+            appManager: $appManager,
+            entityDetection: $entityDetection,
+            appConfig: $appConfig,
+            consentCrud: $consentCrud,
+            consentService: $consentService,
+            grondslagenSummary: $grondslagenSummary,
+            fileEntityStats: $fileEntityStats,
+            pdfConversion: $pdfConversion
         );
 
     }//end buildServiceWithoutDependencies()
+
+    /**
+     * GIVEN an entity extraction, WHEN extractAndDetectEntities succeeds,
+     * THEN the response includes a riskLevel field.
+     *
+     * Verifies that the riskLevel field is present in the method's return
+     * structure (spec requirement: Entity Extraction includes riskLevel).
+     *
+     * @return void
+     *
+     * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
+     */
+    public function testExtractAndDetectEntitiesIncludesRiskLevelInResponse(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('riskLevel', $content);
+        $this->assertStringContainsString("'riskLevel'", $content);
+        $this->assertStringContainsString('getFileRiskLevel', $content);
+        $this->assertStringContainsString('tryGetRiskLevelService', $content);
+
+    }//end testExtractAndDetectEntitiesIncludesRiskLevelInResponse()
+
+    /**
+     * WHEN the FileEntityStatsService is injected, THEN AnonymizationService
+     * accepts it in its constructor.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
+     */
+    public function testAnonymizationServiceAcceptsFileEntityStatsService(): void
+    {
+        $service = $this->buildServiceWithoutDependencies();
+        $this->assertInstanceOf(\OCA\DocuDesk\Service\AnonymizationService::class, $service);
+
+    }//end testAnonymizationServiceAcceptsFileEntityStatsService()
 
 
 }//end class

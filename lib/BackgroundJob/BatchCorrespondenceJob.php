@@ -15,6 +15,9 @@
  * @link      https://www.DocuDesk.app
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -76,6 +79,9 @@ class BatchCorrespondenceJob extends QueuedJob
         $templateId   = $argument['templateId'] ?? '';
         $recipientIds = $argument['recipientIds'] ?? [];
         $options      = $argument['options'] ?? [];
+        // SB1 fix: carry the ownerUserId stored at dispatch time so every
+        // mid-job progress update retains it (otherwise ownership check reads null).
+        $ownerUserId = (string) ($options['userId'] ?? '');
 
         if (empty($jobId) === true || empty($templateId) === true) {
             $this->logger->error(
@@ -85,12 +91,13 @@ class BatchCorrespondenceJob extends QueuedJob
             return;
         }
 
-        $this->initializeJobStatus(jobId: $jobId, total: count($recipientIds));
+        $this->initializeJobStatus(jobId: $jobId, total: count($recipientIds), ownerUserId: $ownerUserId);
         $this->processRecipients(
             jobId: $jobId,
             templateId: $templateId,
             recipientIds: $recipientIds,
-            options: $options
+            options: $options,
+            ownerUserId: $ownerUserId
         );
 
     }//end run()
@@ -98,23 +105,25 @@ class BatchCorrespondenceJob extends QueuedJob
     /**
      * Initialize job status to processing
      *
-     * @param string $jobId The job UUID
-     * @param int    $total Total number of recipients
+     * @param string $jobId       The job UUID
+     * @param int    $total       Total number of recipients
+     * @param string $ownerUserId UID of the user who dispatched the job (SB1 fix)
      *
      * @return void
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
      */
-    private function initializeJobStatus(string $jobId, int $total): void
+    private function initializeJobStatus(string $jobId, int $total, string $ownerUserId=''): void
     {
         $this->corrSvc->storeJobStatus(
             jobId: $jobId,
             data: [
-                'status'    => 'processing',
-                'total'     => $total,
-                'completed' => 0,
-                'errors'    => 0,
-                'results'   => [],
+                'status'      => 'processing',
+                'total'       => $total,
+                'completed'   => 0,
+                'errors'      => 0,
+                'results'     => [],
+                'ownerUserId' => $ownerUserId,
             ]
         );
 
@@ -127,6 +136,7 @@ class BatchCorrespondenceJob extends QueuedJob
      * @param string $templateId   The template UUID
      * @param array  $recipientIds Array of recipient UUIDs
      * @param array  $options      Generation options
+     * @param string $ownerUserId  UID of the user who dispatched the job (SB1 fix)
      *
      * @return void
      *
@@ -136,7 +146,8 @@ class BatchCorrespondenceJob extends QueuedJob
         string $jobId,
         string $templateId,
         array $recipientIds,
-        array $options
+        array $options,
+        string $ownerUserId=''
     ): void {
         $total     = count($recipientIds);
         $completed = 0;
@@ -182,28 +193,30 @@ class BatchCorrespondenceJob extends QueuedJob
                 );
             }//end try
 
-            // Update progress after each recipient.
+            // Update progress after each recipient (retain ownerUserId so ownership check holds).
             $this->corrSvc->storeJobStatus(
                 jobId: $jobId,
                 data: [
-                    'status'    => 'processing',
-                    'total'     => $total,
-                    'completed' => $completed,
-                    'errors'    => $errors,
-                    'results'   => $results,
+                    'status'      => 'processing',
+                    'total'       => $total,
+                    'completed'   => $completed,
+                    'errors'      => $errors,
+                    'results'     => $results,
+                    'ownerUserId' => $ownerUserId,
                 ]
             );
         }//end foreach
 
-        // Mark job as complete.
+        // Mark job as complete (retain ownerUserId so ownership check holds).
         $this->corrSvc->storeJobStatus(
             jobId: $jobId,
             data: [
-                'status'    => 'completed',
-                'total'     => $total,
-                'completed' => $completed,
-                'errors'    => $errors,
-                'results'   => $results,
+                'status'      => 'completed',
+                'total'       => $total,
+                'completed'   => $completed,
+                'errors'      => $errors,
+                'results'     => $results,
+                'ownerUserId' => $ownerUserId,
             ]
         );
 
