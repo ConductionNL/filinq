@@ -18,6 +18,9 @@
  *
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-1
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
