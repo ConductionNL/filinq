@@ -144,15 +144,42 @@
           "decisions": [],
           "verdict": "pass",
           "duration_seconds": 1863
+        },
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-05T04:02:35Z",
+          "ended_at": "2026-06-05T04:29:28Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "fix-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "retry builder container exited non-zero",
+              "status": "open",
+              "note": "Fixer container failed to complete \u2014 see builder-fix.jsonl.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 1613
         }
       ]
     }
   ],
   "totals": {
-    "runs": 4,
+    "runs": 5,
     "turns_used": 816,
     "cost_usd": 0.0,
-    "duration_seconds": 11345,
+    "duration_seconds": 12958,
     "cycles": 4,
     "by_stage": {
       "build": {
@@ -160,6 +187,12 @@
         "turns_used": 816,
         "cost_usd": 0.0,
         "duration_seconds": 11345
+      },
+      "fix": {
+        "runs": 1,
+        "turns_used": 0,
+        "cost_usd": 0.0,
+        "duration_seconds": 1613
       }
     }
   }
