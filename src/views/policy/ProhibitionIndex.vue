@@ -300,7 +300,7 @@ export default {
 	background: var(--color-warning, #fff3cd);
 	color: var(--color-text-maxcontrast, #333);
 	padding: 8px 12px;
-	border-radius: 4px;
+	border-radius: var(--border-radius);
 	font-size: 13px;
 }
 
@@ -308,7 +308,7 @@ export default {
 	background: var(--color-error, #ffd1d1);
 	color: var(--color-text-maxcontrast, #333);
 	padding: 8px 12px;
-	border-radius: 4px;
+	border-radius: var(--border-radius);
 	font-size: 13px;
 }
 </style>

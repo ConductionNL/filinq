@@ -163,7 +163,7 @@ export default {
 .summary-bar {
 	padding: 12px;
 	background: var(--color-primary-element-light);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	margin-bottom: 16px;
 }
 
@@ -203,7 +203,7 @@ export default {
 
 .badge {
 	padding: 2px 8px;
-	border-radius: 12px;
+	border-radius: var(--border-radius-large);
 	font-size: 0.8rem;
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element);

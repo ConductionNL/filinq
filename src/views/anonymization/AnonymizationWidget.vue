@@ -331,7 +331,10 @@ export default {
 	transition: border-color 0.2s, background-color 0.2s;
 }
 
-.drop-zone:hover,
+.drop-zone:hover {
+	border-color: var(--color-primary);
+}
+
 .drop-zone.dragging {
 	border-color: var(--color-primary);
 	background-color: var(--color-primary-element-light);
