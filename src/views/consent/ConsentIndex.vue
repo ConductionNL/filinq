@@ -208,6 +208,7 @@ export default {
 		/**
 		 * Open the selected consent record in the detail view.
 		 *
+		 * @param consent
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 		 */
 		viewConsent(consent) {
@@ -230,6 +231,7 @@ export default {
 		/**
 		 * Update the current page index of the consent table.
 		 *
+		 * @param page
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 		 */
 		onPageChanged(page) {
@@ -238,6 +240,7 @@ export default {
 		/**
 		 * Update the page size and reset to the first page.
 		 *
+		 * @param size
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-listing-and-querying-req-cons-03
 		 */
 		onPageSizeChanged(size) {
@@ -247,6 +250,7 @@ export default {
 		/**
 		 * Map a consent/notification status code to a localized label.
 		 *
+		 * @param status
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 		 */
 		formatStatus(status) {
@@ -266,6 +270,7 @@ export default {
 		/**
 		 * Map a publication-decision code to a localized label.
 		 *
+		 * @param decision
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 		 */
 		formatDecision(decision) {
@@ -281,6 +286,7 @@ export default {
 		/**
 		 * Format a date string for display, falling back gracefully.
 		 *
+		 * @param dateStr
 		 * @spec openspec/specs/consent-management/spec.md#requirement-consent-ui-req-cons-10
 		 */
 		formatDate(dateStr) {

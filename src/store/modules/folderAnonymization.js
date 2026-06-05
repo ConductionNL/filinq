@@ -27,6 +27,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		/**
 		 * Start a folder anonymization batch and begin polling for progress.
 		 *
+		 * @param folderPath
 		 * @spec openspec/changes/folder-analysis-anonymization/tasks.md#3-1
 		 */
 		async startFolderBatch(folderPath) {
@@ -120,6 +121,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		/**
 		 * Toggle whether a reviewed entity is included in anonymization.
 		 *
+		 * @param index
 		 * @spec openspec/specs/anonymization-entity-review/spec.md
 		 */
 		toggleEntity(index) {
@@ -131,6 +133,8 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		/**
 		 * Set the inclusion flag for a set of currently visible entities.
 		 *
+		 * @param indices
+		 * @param included
 		 * @spec openspec/specs/anonymization-entity-review/spec.md
 		 */
 		setVisibleEntities(indices, included) {
