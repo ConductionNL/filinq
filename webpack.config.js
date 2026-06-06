@@ -1,5 +1,6 @@
 const path = require('path')
 const fs = require('fs')
+const TerserPlugin = require('terser-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 
 const buildMode = process.env.NODE_ENV
@@ -72,6 +73,13 @@ webpackConfig.resolve.alias = {
 // per-widget delta on top of the shared baseline.
 webpackConfig.optimization = {
 	...(webpackConfig.optimization || {}),
+	// Webpack's default TerserPlugin spawns `cpus - 1` worker processes
+	// (15 on a 16-core machine), which OOM-kills the build inside the
+	// memory-capped WSL VM. Two workers keep peak memory bounded while
+	// still parallelizing minification.
+	minimizer: [
+		new TerserPlugin({ parallel: 2 }),
+	],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
 		chunks: 'all',
