@@ -179,13 +179,25 @@ class SigningService
      * @param string $callerUserId UID of the calling user ('' = skip check)
      * @param bool   $isAdmin      True when the caller is an NC admin
      *
-     * @return array<string, mixed> The signing request
-     *
-     * @throws RuntimeException If not found or access is denied (WF2 fix)
+     * @return array<string, mixed>|null The signing request, or null when
+     *                                   not-found OR caller access is denied.
+     *                                   Callers MUST treat the two cases
+     *                                   identically (single 404 — never split
+     *                                   into 404-vs-403, which would be an
+     *                                   existence-probing oracle).
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
+     *
+     * Wilco #6 blocker fix (docudesk#100, 2026-06-06): mirrors the
+     * BatchStateService::getBatch() null-return pattern. The previous
+     * implementation threw RuntimeException with distinct messages on
+     * not-found ("Signing request not found: …") vs access-denied
+     * ("Access denied: signing request belongs to another user"), which
+     * SigningController::errorResponse() then surfaced verbatim in a 500
+     * body. The 500-vs-403 split plus the body-text split together
+     * confirmed request-ID existence to any authenticated user.
      */
-    public function getRequest(string $requestId, string $callerUserId='', bool $isAdmin=false): array
+    public function getRequest(string $requestId, string $callerUserId='', bool $isAdmin=false): ?array
     {
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -193,7 +205,7 @@ class SigningService
 
         $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
         if ($object === null) {
-            throw new RuntimeException('Signing request not found: '.$requestId);
+            return null;
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
@@ -202,13 +214,15 @@ class SigningService
             $request = (array) $object;
         }
 
-        // WF2 security fix: scope single-record access to initiator, signer, or admin.
+        // WF2 + Wilco #6 fix: scope single-record access to initiator,
+        // signer, or admin. Access denied collapses to null (same shape as
+        // not-found), so the controller can emit one 404 regardless.
         if ($callerUserId !== '' && $isAdmin === false) {
             $isInitiator    = ($request['initiatorUserId'] ?? '') === $callerUserId;
             $isSignerInList = in_array($callerUserId, (array) ($request['signerIds'] ?? []), true);
 
             if ($isInitiator === false && $isSignerInList === false) {
-                throw new RuntimeException('Access denied: signing request belongs to another user');
+                return null;
             }
         }
 
@@ -292,7 +306,15 @@ class SigningService
 
         $objectService = $this->settingsService->getObjectService();
         $request       = $this->getRequest(requestId: $requestId);
-        $status        = $request['status'] ?? '';
+        if ($request === null) {
+            // getRequest() returns null on not-found and access-denied
+            // (Wilco #6 fix, docudesk#100). Internal sign() doesn't pass a
+            // callerUserId so access-denied is impossible from here — null
+            // means truly not-found. Throw to keep callers' existing
+            // exception contract.
+            throw new RuntimeException('Signing request not found: '.$requestId);
+        }
+        $status = $request['status'] ?? '';
 
         if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
             throw new RuntimeException('Signing request is not in a signable state: '.$status);
@@ -437,11 +459,18 @@ class SigningService
      *
      * @param string $requestId The signing request ID
      *
-     * @return array<string, mixed> The cancelled request
+     * @return array<string, mixed>|null The cancelled request, or null
+     *                                   when the request is not found (or
+     *                                   not accessible to a non-admin
+     *                                   caller). Wilco #6 fix (docudesk#100,
+     *                                   2026-06-06): callers must collapse
+     *                                   null to a single 404 — never split
+     *                                   into 404-vs-403, which would be an
+     *                                   existence-probing oracle.
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
      */
-    public function cancelRequest(string $requestId): array
+    public function cancelRequest(string $requestId): ?array
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
@@ -451,11 +480,14 @@ class SigningService
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
+
+        // Use getRequest() so not-found / access-denied collapse to the
+        // same null shape. The controller already gated on initiator/admin
+        // before calling us; a null here means truly not-found from the
+        // service's perspective (Wilco #6 fix).
+        $request = $this->getRequest(requestId: $requestId);
+        if ($request === null) {
+            return null;
         }
 
         if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'CANCELLED') === false) {
@@ -497,7 +529,16 @@ class SigningService
 
         foreach ($requestIds as $requestId) {
             try {
-                $request        = $this->getRequest(requestId: $requestId);
+                $request = $this->getRequest(requestId: $requestId);
+                if ($request === null) {
+                    // Treat null as not-found in bulk context (Wilco #6
+                    // fix) — generic error, no existence leak.
+                    $results[$requestId] = [
+                        'success' => false,
+                        'error'   => 'Request not accessible',
+                    ];
+                    continue;
+                }
                 $signerIds      = $request['signerIds'] ?? [];
                 $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
 
