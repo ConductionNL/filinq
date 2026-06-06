@@ -11,6 +11,7 @@ Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister
 ## Requirements
 
 ### REQ-TMPL-01: Template Data Model (Priority: Must)
+<!-- @e2e exclude OpenRegister schema/data-model definition (template properties, required-field validation, page-format defaults); schema-level concern verified by PHPUnit + Newman template schema contract — no browser flow. -->
 
 Templates are stored as OpenRegister objects with defined properties for name, content, namespace, and page configuration.
 
@@ -48,6 +49,7 @@ Full CRUD operations for templates via REST API with pagination and filtering su
 - AND the response includes results array and total count
 
 #### Scenario: Create a template
+<!-- @e2e exclude REST CRUD endpoint (POST /api/templates); verified by Newman docudesk-api template create contract + PHPUnit TemplateControllerTest. -->
 - GIVEN an authenticated user
 - WHEN POST /api/templates is called with name, content, and namespace
 - THEN the template is created with a generated UUID
@@ -59,12 +61,14 @@ Full CRUD operations for templates via REST API with pagination and filtering su
 - THEN the template object is returned with all fields
 
 #### Scenario: Update a template
+<!-- @e2e exclude REST CRUD endpoint (PUT /api/templates/{id}); verified by Newman docudesk-api template update contract + PHPUnit TemplateControllerTest. -->
 - GIVEN a template with UUID "abc-123" exists
 - WHEN PUT /api/templates/abc-123 is called with updated content
 - THEN the template content is updated
 - AND the namespace remains unchanged (immutable)
 
 #### Scenario: Delete a template
+<!-- @e2e exclude REST CRUD endpoint (DELETE /api/templates/{id}); verified by Newman docudesk-api template delete contract + PHPUnit TemplateControllerTest. -->
 - GIVEN a template with UUID "abc-123" exists
 - WHEN DELETE /api/templates/abc-123 is called
 - THEN the template is deleted from OpenRegister
@@ -80,6 +84,7 @@ Full CRUD operations for templates via REST API with pagination and filtering su
 | TMPL-015 | All endpoints require authentication (@NoAdminRequired @NoCSRFRequired) | MUST | Implemented |
 
 ### REQ-TMPL-03: Namespace Enforcement (Priority: Must)
+<!-- @e2e exclude Server-side namespace validation rules (valid/invalid charset, immutability on update, required-on-create); enforced in TemplateService, verified by PHPUnit TemplateServiceTest + Newman template namespace contract. -->
 
 Templates are scoped to app namespaces with strict validation and immutability after creation.
 
@@ -112,6 +117,7 @@ Templates are scoped to app namespaces with strict validation and immutability a
 | TMPL-023 | Invalid namespace returns 400 error | MUST | Implemented |
 
 ### REQ-TMPL-04: TemplateService Programmatic Access (Priority: Must)
+<!-- @e2e exclude Injectable service API for consumer apps (DI-based fetch/get/create/update with not-found handling and data preservation); programmatic PHP surface, verified by PHPUnit TemplateServiceTest — no browser flow. -->
 
 TemplateService is injectable via DI, enabling other Nextcloud apps to manage templates programmatically.
 
@@ -148,6 +154,7 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 | TMPL-036 | Injectable via DI: `OCA\DocuDesk\Service\TemplateService::class` | MUST | Implemented |
 
 ### REQ-TMPL-05: OpenRegister Integration (Priority: Must)
+<!-- @e2e exclude OpenRegister wiring (register/schema resolution, ObjectService data ops, OR-unavailable handling, namespace-validation delegation); internal integration verified by PHPUnit TemplateServiceTest — no browser flow. -->
 
 TemplateService resolves register and schema configuration via OpenRegisterResolver and uses ObjectService for all data operations.
 
@@ -176,6 +183,7 @@ TemplateService resolves register and schema configuration via OpenRegisterResol
 | TMPL-042 | Namespace validation delegated to OpenRegisterResolver | MUST | Implemented |
 
 ### REQ-TMPL-06: Search and Pagination (Priority: Must)
+<!-- @e2e exclude Query-builder behaviour (paginated listing, text search, combined filter+search); API/data-layer concern verified by Newman template list/search collection + PHPUnit — the list view's rendered surface is covered by the templates UI test. -->
 
 Template listing supports search, filtering, and pagination via OpenRegister's query builder.
 
@@ -202,6 +210,7 @@ Template listing supports search, filtering, and pagination via OpenRegister's q
 | TMPL-052 | Combined namespace filter and search | MUST | Implemented |
 
 ### REQ-TMPL-07: Object Serialization (Priority: Must)
+<!-- @e2e exclude Server-side JSON serialization of OpenRegister objects (object/non-object/search-result shaping); API response-formatting concern verified by PHPUnit + Newman template contract — no browser flow. -->
 
 Template objects from OpenRegister are consistently serialized for API responses.
 
