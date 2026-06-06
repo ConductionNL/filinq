@@ -18,6 +18,8 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 
 ### Requirement: File Input via OR File Attachments (REQ-ANON-00)
 
+@e2e exclude Backend FileUploadService persistence as OR file attachment and OR virus-scan-hook rejection (HTTP 422) — service/contract behaviour, no UI assertion. Covered by PHPUnit (FileUploadService) and Newman (upload endpoint).
+
 **Priority:** Must
 
 Users upload files and they are stored as OR File Attachments, not by docudesk-specific storage code. Virus-scan and MIME-validation hooks are inherited from OR.
@@ -44,6 +46,8 @@ Users upload files and they are stored as OR File Attachments, not by docudesk-s
 | ANON-000b | Upload response uses OR attachment fileId as lookup key | MUST | Apply-phase |
 
 ### Requirement: Anonymization Confidence is a Calculation (REQ-ANON-CAL)
+
+@e2e exclude Backend x-openregister-calculations derivation (riskLevel/redactionCoverage computed by OR, not written by AnonymizationService) — no browser surface. Covered by PHPUnit (calculation expressions) and OR calculation integration tests.
 
 **Priority:** Must
 
@@ -120,6 +124,8 @@ Users upload files via multipart form data, and files are stored in a per-user D
 
 ### Requirement: Text Extraction and Entity Detection (REQ-ANON-02)
 
+@e2e exclude Backend OR NER extraction via POST /api/anonymization/extract/{fileId} with derived riskLevel — service/API contract, no browser surface. Covered by Newman (extract endpoint) and PHPUnit (AnonymizationService).
+
 Text is extracted from uploaded documents and entities are detected via the OpenRegister NER pipeline. The extraction response SHALL include a `riskLevel` field summarising the privacy risk of the detected entities.
 
 #### Scenario: Extract with risk level
@@ -127,6 +133,8 @@ Text is extracted from uploaded documents and entities are detected via the Open
 - **THEN** the response includes a `riskLevel` field derived from the detected entities
 
 ### Requirement: Document Anonymization with Entity Replacement (REQ-ANON-03)
+
+@e2e exclude Backend anonymize endpoint excludeTypes/minConfidence parameter handling (POST /api/anonymization/anonymize/{fileId}) — entity-replacement service logic, no browser surface. Covered by Newman (anonymize endpoint params) and PHPUnit (AnonymizationService).
 
 Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy. The anonymization endpoint SHALL additionally accept optional `excludeTypes` and `minConfidence` parameters so callers can narrow which detected entities are replaced.
 

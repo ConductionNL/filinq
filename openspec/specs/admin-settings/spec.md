@@ -422,6 +422,8 @@ Settings retrieval gracefully handles TypeErrors from OpenRegister internals to 
 ### Requirement: Signing provider configuration
 The admin settings page SHALL include a "Digital Signing" section that allows administrators to configure the signing provider, provider-specific settings, default signature level, and request expiry period.
 
+@e2e exclude Scenarios assert IAppConfig persistence of signing settings, not UI rendering (the admin settings page render is covered by the "Settings page renders Vue component" UI scenario). Persistence covered by PHPUnit (SettingsService / IAppConfig) and Newman (/api/settings).
+
 #### Scenario: Configure native signing provider
 - **WHEN** an administrator selects "Native (built-in)" as the signing provider
 - **THEN** no additional configuration fields are shown
@@ -446,6 +448,8 @@ The admin settings page SHALL include a "Digital Signing" section that allows ad
 ### Requirement: Signing settings API
 The existing settings API SHALL include signing configuration in its response and accept signing settings in updates.
 
+@e2e exclude HTTP contract for GET/POST /api/settings signing fields — no browser surface. Covered by Newman (/api/settings) and PHPUnit (SettingsController).
+
 #### Scenario: Settings response includes signing configuration
 - **WHEN** a GET request is made to `/api/settings`
 - **THEN** the response includes: `signing_provider`, `signing_default_level`, `signing_request_expiry_days`, and `signing_enabled` (boolean)
@@ -457,6 +461,8 @@ The existing settings API SHALL include signing configuration in its response an
 
 ### Requirement: Signing settings data model
 The system SHALL store signing configuration using the following IAppConfig keys.
+
+@e2e exclude IAppConfig key/default data-model contract — no browser surface. Covered by PHPUnit (settings defaults) and Newman (/api/settings response shape).
 
 #### Scenario: Signing configuration keys
 - **WHEN** signing settings are saved
