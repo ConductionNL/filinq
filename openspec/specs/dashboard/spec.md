@@ -52,9 +52,8 @@ The dashboard serves as the default landing page displaying consent statistics, 
 | DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
 
 ### REQ-DASH-02: Nextcloud Dashboard Widgets (Priority: Must)
-<!-- @e2e exclude NC Dashboard widget registration + script-loading wiring (IWidget registration, deep-link target, dashboard.js entry); rendered by the Nextcloud Dashboard framework on a separate app page, not the DocuDesk manifest shell. Verified by PHPUnit widget-registration test. -->
 
-DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
+DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information. The widgets render on the core Nextcloud Dashboard page (`/apps/dashboard`) via `OCA.Dashboard.register` in `src/dashboard.js`, which mounts `AnonymizationDashboardWidget.vue` (`.docudesk-dashboard-widget`) and `FileEntitiesDashboardWidget.vue` (`.file-entities-widget`). This is a real browser surface; the rendered widget frame, title, link target and empty/loading state are covered by `tests/e2e/ui-dashboard-widgets.spec.ts`.
 
 #### Scenario: Widgets available on Nextcloud Dashboard
 - GIVEN DocuDesk is installed and enabled
