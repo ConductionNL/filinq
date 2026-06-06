@@ -1,6 +1,8 @@
+## Status: pr-created
+
 ## Context
 
-The anonymise call accepts an `entities[]` array; each entry has `text`, `entityType`, `score`. There is no place for a per-entity legal basis. After the OpenRegister paired change `entity-relation-grondslagen` lands, OR's `EntityRelation` row accepts an optional `bases` JSON column and the anonymise endpoint persists + strips it before forwarding to OpenAnonymiser. DocuDesk's job is to forward operator-picked bases verbatim.
+The anonymise call accepts an `entities[]` array; each entry has `text`, `entityType`, `score`. After the 2026-05-12 explore-mode rework, DocuDesk does NOT forward `bases[]` to OpenRegister. Any `bases` field on incoming entity entries is silently ignored, and the 200 response includes `ignoredFields: ["bases"]` when any entity carried the field. Legal bases are set per-relation via OR's `PATCH /api/entity-relations/{id}` endpoint — the single source of truth for `EntityRelation.bases`.
 
 The extract endpoint currently returns detected entities without any indication of prohibition status. Re-running the matcher in the frontend duplicates work and forces the frontend to know the high-confidence threshold. Embedding the match result in the extract response keeps the frontend a thin renderer.
 
@@ -8,7 +10,7 @@ The extract endpoint currently returns detected entities without any indication 
 
 **Goals:**
 
-- Forward per-entity `bases[]` from the operator's picker into OpenRegister's anonymise call. DocuDesk does not persist bases itself.
+- Silently ignore any `bases[]` field on incoming entity entries; return `ignoredFields: ["bases"]` in the 200 response so callers receive explicit feedback (GDPR accountability).
 - Surface per-entity `prohibitionMatch` on the extract response so the frontend can render prohibition state without re-running the matcher.
 - Stay additive and non-breaking: pre-change clients that don't send `bases` and don't read `prohibitionMatch` keep working unchanged.
 
@@ -23,7 +25,7 @@ The extract endpoint currently returns detected entities without any indication 
 
 ### D1. Forward bases verbatim — no validation, no local persistence
 
-DocuDesk's controller treats `bases[]` as opaque pass-through. Two storage locations means two writes that can disagree. Reading bases for an `EntityRelation` goes through OR.
+DocuDesk's controller silently ignores `bases[]` on incoming entity entries (per 2026-05-12 explore-mode rework). The response includes `ignoredFields: ['bases']` when any entity carried the field, satisfying GDPR accountability without a breaking 400.
 
 ### D2. `prohibitionMatch` shape matches the consolidated-entities endpoint
 
