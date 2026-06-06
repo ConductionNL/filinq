@@ -53,8 +53,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
- * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
+ * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
  */
 class AnonymizationController extends Controller
 {
@@ -295,8 +294,9 @@ class AnonymizationController extends Controller
      *
      * Replaces detected entities in the document with anonymized placeholders.
      * Supports optional excludeTypes, minConfidence, appendBasisSummary, and
-     * outputFormat parameters. Each entity may carry an optional `bases[]` array
-     * (array of strings) that is forwarded verbatim to OpenRegister.
+     * outputFormat parameters. Stray `bases[]` fields on entity entries are
+     * silently ignored (per 2026-05-12 explore-mode rework); bases are set via
+     * OR's PATCH /api/entity-relations/{id}.
      *
      * @param int $fileId The Nextcloud file ID
      *
@@ -327,9 +327,13 @@ class AnonymizationController extends Controller
                 );
             }
 
-            $basesError = $this->validateEntityBases(entities: $entities);
-            if ($basesError !== null) {
-                return $basesError;
+            // Detect stray bases fields for ignoredFields hint (GDPR accountability).
+            $hasStrayBases = false;
+            foreach ($entities as $entity) {
+                if (is_array($entity) === true && array_key_exists('bases', $entity) === true) {
+                    $hasStrayBases = true;
+                    break;
+                }
             }
 
             $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
@@ -427,6 +431,10 @@ class AnonymizationController extends Controller
                 );
             }//end try
 
+            if ($hasStrayBases === true) {
+                $result['ignoredFields'] = ['bases'];
+            }
+
             return new JSONResponse($result);
         } catch (Exception $e) {
             $this->logger->error(
@@ -469,45 +477,6 @@ class AnonymizationController extends Controller
         return $value;
 
     }//end extractAppendBasisSummary()
-
-    /**
-     * Validate that each entity's optional `bases` field is an array of strings
-     *
-     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
-     *
-     * @param array<int, array<string, mixed>> $entities The entities to validate
-     *
-     * @return JSONResponse|null Error response or null when all bases are valid
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
-     */
-    private function validateEntityBases(array $entities): ?JSONResponse
-    {
-        foreach ($entities as $entity) {
-            if (isset($entity['bases']) === false) {
-                continue;
-            }
-
-            if (is_array($entity['bases']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
-                    400
-                );
-            }
-
-            foreach ($entity['bases'] as $base) {
-                if (is_string($base) === false) {
-                    return new JSONResponse(
-                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
-                        400
-                    );
-                }
-            }
-        }//end foreach
-
-        return null;
-
-    }//end validateEntityBases()
 
     /**
      * Validate the unredactedEntities[] payload entries.

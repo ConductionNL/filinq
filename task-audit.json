@@ -1,16 +1,72 @@
 {
-  "spec": "openspec/changes/migrate-signing-audit-to-or-audit",
+  "spec": "openspec/changes/anonymisation-bases-passthrough",
   "verified": [
-    {"task": "D-1.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "Constructor updated to inject AuditTrailMapper + LoggerInterface"},
-    {"task": "D-2.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "logEvent() calls createAuditTrailEntry() with docudesk.signing.{ACTION}"},
-    {"task": "D-2.2", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "No signingAuditEntry_register/schema refs in active code path"},
-    {"task": "D-3.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "getAuditTrail() queries AuditTrailMapper, filters by objectUuid"},
-    {"task": "D-4.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "rejectUpdate/rejectDelete absent (already removed in prior release)"},
-    {"task": "D-5.1", "file": "docs/features/digital-signing.md", "ok": true, "note": "Archiefwet 1995 retention section added with 3650-day requirement"},
-    {"task": "D-6.1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "signingAuditEntry marked deprecated with x-deprecated-since"},
-    {"task": "D-6.2", "file": "CHANGELOG.md", "ok": true, "note": "CHANGELOG entry added with migration info and Archiefwet notice"},
-    {"task": "D-7.1", "file": "tests/unit/Service/SigningAuditServiceTest.php", "ok": true, "note": "Unit tests cover all 7 VALID_ACTIONS, logEvent, getAuditTrail"},
-    {"task": "D-7.2", "file": "tests/unit/Service/SigningAuditServiceTest.php", "ok": true, "note": "Test verifies no signingAuditEntry write path via mock assertions"}
+    {
+      "task": "1",
+      "file": "lib/Controller/AnonymizationController.php",
+      "ok": true,
+      "note": "validateEntityBases() removed; stray bases fields silently ignored (no 400). anonymize() succeeds regardless of bases field format."
+    },
+    {
+      "task": "1",
+      "file": "lib/Controller/BatchAnonymizationController.php",
+      "ok": true,
+      "note": "validateEntityBases() removed from batchAnonymize(); stray bases silently ignored."
+    },
+    {
+      "task": "2",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "Per spec.md: DocuDesk does NOT forward bases to OR. Service correctly ignores any bases field (mapEntitiesForAnonymization does not pass it through). No changes needed."
+    },
+    {
+      "task": "3",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "Confirmed: no local persistence of bases. Single source of truth is OR's EntityRelation row written via PATCH endpoint."
+    },
+    {
+      "task": "4",
+      "file": "tests/unit/Controller/AnonymizationControllerTest.php",
+      "ok": true,
+      "note": "Tests updated: stray non-array/non-string bases are silently ignored (200 returned, not 400)."
+    },
+    {
+      "task": "4",
+      "file": "tests/unit/Controller/BatchAnonymizationControllerBasesTest.php",
+      "ok": true,
+      "note": "Tests updated: stray non-array/non-string bases are silently ignored (200 returned, not 400)."
+    },
+    {
+      "task": "5",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "extractAndDetectEntities() calls attachProhibitionMatches() -> computeProhibitionMatch() -> PolicyMatchService::matchProhibition per entity. prohibitionMatch field present in response."
+    },
+    {
+      "task": "6",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "prohibitionMatch shape: null or {ruleId, ruleName, highConfidence}. highConfidence = confidence >= threshold (inclusive). Already implemented."
+    },
+    {
+      "task": "7",
+      "file": "lib/Service/AnonymizationService.php",
+      "ok": true,
+      "note": "Reads docudesk.prohibition.high_confidence_threshold (default 0.85) via IAppConfig::getValueFloat. Already implemented."
+    },
+    {
+      "task": "8",
+      "file": "tests/unit/Service/AnonymizationServiceProhibitionTest.php",
+      "ok": true,
+      "note": "Covers: null when service unavailable; null when no rule matches; high confidence above threshold; low confidence below threshold; threshold boundary inclusive; threshold read from AppConfig."
+    },
+    {
+      "task": "10",
+      "file": "docs/features/anonymization.md",
+      "ok": true,
+      "note": "Updated: bases section now documents OR PATCH pattern; CHANGELOG reflects prohibitionMatch and silent-ignore of stray bases."
+    }
   ],
   "stubs": [],
   "missing_routes": []
