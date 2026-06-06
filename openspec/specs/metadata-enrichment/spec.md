@@ -8,6 +8,8 @@ status: implemented
 
 Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment runs both on-demand via the API and automatically via the OpenRegister event listener. All processing is performed locally using heuristic algorithms -- no external NLP services are required.
 
+> @e2e exclude Pure backend metadata-enrichment engine — local NLP heuristics (language detection, keyword extraction, topic classification, type/date normalization), the OpenRegister event listener, lazy service resolution, and the on-demand REST enrichment endpoint. No browser-driven UI surface. Verified by PHPUnit MetadataServiceTest/EnrichmentListenerTest and the Newman docudesk-api enrichment collection.
+
 ## Requirements
 
 ### REQ-META-01: Language Detection (Priority: Must)
