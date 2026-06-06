@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change folder-analysis-anonymization. Update Purpose after archive.
+
+@e2e exclude Backend folder-batch API + FolderExtractionJob (QueuedJob) + EntityConsolidationService + file-system output placement; every scenario asserts an HTTP contract or background-job/service behaviour, not UI rendering. Covered by Newman (/api/anonymization/batch/* contracts) and PHPUnit (job + consolidation).
+
 ## Requirements
 ### Requirement: Folder batch initiation from existing Nextcloud folder
 The system SHALL accept a folder path via `POST /api/anonymization/batch/folder` and create a batch from the files already present in that Nextcloud folder. The system SHALL enumerate only direct children of the folder (flat scan, no recursion). Only file nodes SHALL be included; subdirectories SHALL be skipped. The batch SHALL be created with the same state structure as upload-based batches, with each file starting at status "uploaded". The endpoint SHALL return the batchId, file count, and file list. Maximum batch size limits (admin-configurable via `docudesk_batch_max_files`) SHALL apply.

@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change docudesk-notifications. Update Purpose after archive.
+
+@e2e exclude Backend schema notification-rule declarations (x-openregister-notifications dialect) with no browser surface. Covered by PHPUnit schema-validation tests and the OR notification-engine integration suite.
+
 ## Requirements
 ### Requirement: Signing and document schemas MUST declare notifications in the verified engine dialect
 

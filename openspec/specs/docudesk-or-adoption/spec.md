@@ -1,5 +1,7 @@
 # Capability — docudesk-or-adoption
 
+@e2e exclude Backend OR-abstraction adoption: lifecycle/archival/calculation/notification schema annotations, OR object persistence, manifest version pin, OCR admin-config, Accept-Language and tenant-scope composable wiring — no navigable UI assertion. Covered by PHPUnit (schema validation, lifecycle/retention) and Vitest (composable wiring).
+
 ## ADDED Requirements
 
 ### Requirement: Lifecycle annotation backs all docudesk status fields

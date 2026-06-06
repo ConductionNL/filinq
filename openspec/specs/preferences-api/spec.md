@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change retrofit-2026-05-26-preferences-api. Update Purpose after archive.
+
+@e2e exclude Backend per-user preference API: auth enforcement, key sanitization within pref_ namespace, and empty-value clearing — pure HTTP contract with no browser surface. Covered by Newman (/api preference endpoints) and PHPUnit.
+
 ## Requirements
 ### Requirement: Get user preference (REQ-PREF-001)
 The system SHALL return a stored per-user preference value for a given key (scoped to the current user), or a default when unset. The get-preference endpoint MUST require an authenticated user, MUST sanitize the requested key to a safe charset within the `pref_` namespace, and MUST return the stored value (or null when unset). An unauthenticated request MUST be rejected and an invalid key MUST yield a bad-request response.
