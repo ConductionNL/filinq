@@ -183,16 +183,31 @@ class BatchAnonymizeService
 
                 $processed++;
             } catch (ProhibitionGateException $e) {
-                // Prohibition gate fired for this file — count as skipped with prohibition violation.
-                $batch['files'][$i]['status'] = 'prohibitionViolation';
-                $batch['files'][$i]['missingProhibitionMatches'] = $e->getMissingProhibitionMatches();
-                $batch['files'][$i]['rejectedOverrides']         = $e->getRejectedOverrides();
-                $skipped[] = [
-                    'fileId'     => $file['fileId'],
-                    'reason'     => 'Prohibition gate blocked the anonymise call',
-                    'httpStatus' => 422,
-                ];
-                $prohibitionSkipped++;
+                // Distinguish rule-match block (422) from backend-outage
+                // fail-closed (503) — the batch operator needs to know
+                // whether to fix overrides or retry later.
+                $backendReason = $e->getBackendUnavailable();
+                if ($backendReason !== null) {
+                    $batch['files'][$i]['status']              = 'error';
+                    $batch['files'][$i]['error']               = 'ProhibitionGate failed closed: '.$backendReason;
+                    $batch['files'][$i]['backendUnavailable']  = $backendReason;
+                    $skipped[] = [
+                        'fileId'     => $file['fileId'],
+                        'reason'     => 'ProhibitionGate failed closed: '.$backendReason,
+                        'httpStatus' => 503,
+                    ];
+                } else {
+                    // Prohibition gate fired for this file — count as skipped with prohibition violation.
+                    $batch['files'][$i]['status'] = 'prohibitionViolation';
+                    $batch['files'][$i]['missingProhibitionMatches'] = $e->getMissingProhibitionMatches();
+                    $batch['files'][$i]['rejectedOverrides']         = $e->getRejectedOverrides();
+                    $skipped[] = [
+                        'fileId'     => $file['fileId'],
+                        'reason'     => 'Prohibition gate blocked the anonymise call',
+                        'httpStatus' => 422,
+                    ];
+                    $prohibitionSkipped++;
+                }
             } catch (\OCA\DocuDesk\Exception\ConversionFailedException $e) {
                 // PDF conversion exhausted the cascade for this file —
                 // mark this file as error, attach the attempts surface

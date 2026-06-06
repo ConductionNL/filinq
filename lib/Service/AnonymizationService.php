@@ -89,6 +89,31 @@ class AnonymizationService
     private const OVERRIDE_AUDIT_SCHEMA = 'prohibitionOverrideAudit';
 
     /**
+     * App config key controlling the gate's fail-mode for backend errors.
+     *
+     * When `true` (default) any backend error inside the prohibition gate
+     * (PolicyMatchService unavailable, EntityRelationMapper lookup throws,
+     * per-entity matchProhibition throws) is treated as gate-firing: the
+     * call is rejected via ProhibitionGateException. This is the safety-
+     * critical default for a gate protecting witness/undercover-officer
+     * identities — silent fail-open would let any service outage disable
+     * the gate.
+     *
+     * Set to `false` to opt into the legacy fail-open behaviour for non-
+     * production environments.
+     *
+     * @var string
+     */
+    private const FAIL_CLOSED_KEY = 'prohibition.fail_closed';
+
+    /**
+     * Default for the fail-closed flag.
+     *
+     * @var bool
+     */
+    private const DEFAULT_FAIL_CLOSED = true;
+
+    /**
      * Constructor for AnonymizationService
      *
      * @param LoggerInterface           $logger             Logger for error reporting
@@ -557,9 +582,32 @@ class AnonymizationService
         array $acknowledgedOverrides=[],
         string $userId=''
     ): void {
+        $failClosed = $this->getFailClosed();
+
         $policyService = $this->tryGetPolicyMatchService();
         if ($policyService === null) {
-            // PolicyMatchService not available — gate is a no-op.
+            // PolicyMatchService not available — fail-CLOSED by default for
+            // a privacy-critical safety gate. Silent fail-open would let
+            // any service outage disable witness/undercover-officer
+            // protection. Operators can opt into legacy fail-open via
+            // docudesk.prohibition.fail_closed=false in non-production
+            // environments.
+            if ($failClosed === true) {
+                $this->logger->warning(
+                    'ProhibitionGate: PolicyMatchService unavailable — failing closed',
+                    ['fileId' => $fileId]
+                );
+                throw new ProhibitionGateException(
+                    missingProhibitionMatches: [],
+                    rejectedOverrides: [],
+                    backendUnavailable: 'PolicyMatchService unavailable'
+                );
+            }
+
+            $this->logger->warning(
+                'ProhibitionGate: PolicyMatchService unavailable — fail-open (legacy mode)',
+                ['fileId' => $fileId]
+            );
             return;
         }
 
@@ -572,8 +620,20 @@ class AnonymizationService
             );
             $rawEntities          = $entityRelationMapper->findEntitiesForFile($fileId);
         } catch (\Throwable $e) {
+            if ($failClosed === true) {
+                $this->logger->warning(
+                    'ProhibitionGate: failed to load entities for file — failing closed',
+                    ['fileId' => $fileId, 'error' => $e->getMessage()]
+                );
+                throw new ProhibitionGateException(
+                    missingProhibitionMatches: [],
+                    rejectedOverrides: [],
+                    backendUnavailable: 'EntityRelationMapper unavailable: '.$e->getMessage()
+                );
+            }
+
             $this->logger->warning(
-                'ProhibitionGate: failed to load entities for file — gate is a no-op',
+                'ProhibitionGate: failed to load entities for file — fail-open (legacy mode)',
                 ['fileId' => $fileId, 'error' => $e->getMessage()]
             );
             return;
@@ -723,7 +783,8 @@ class AnonymizationService
      */
     private function buildProhibitionMatches(array $rawEntities, mixed $policyService): array
     {
-        $matches = [];
+        $matches    = [];
+        $failClosed = $this->getFailClosed();
 
         foreach ($rawEntities as $raw) {
             if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
@@ -748,8 +809,28 @@ class AnonymizationService
                     entityValue: $entityValue
                 );
             } catch (\Throwable $e) {
+                // Per-entity match failure: when fail-closed, escalate so
+                // runProhibitionGate can surface a 422/503 rather than
+                // silently skipping the entity (which would allow the
+                // anonymise call to proceed without a check).
+                if ($failClosed === true) {
+                    $this->logger->warning(
+                        'ProhibitionGate: matchProhibition threw — failing closed',
+                        [
+                            'entityId'   => $entityId,
+                            'entityType' => $entityType,
+                            'exception'  => $e->getMessage(),
+                        ]
+                    );
+                    throw new ProhibitionGateException(
+                        missingProhibitionMatches: [],
+                        rejectedOverrides: [],
+                        backendUnavailable: 'PolicyMatchService::matchProhibition threw: '.$e->getMessage()
+                    );
+                }
+
                 $this->logger->debug(
-                    'ProhibitionGate: matchProhibition threw; skipping entity',
+                    'ProhibitionGate: matchProhibition threw; skipping entity (legacy fail-open)',
                     ['exception' => $e->getMessage()]
                 );
                 continue;
@@ -772,6 +853,25 @@ class AnonymizationService
         return $matches;
 
     }//end buildProhibitionMatches()
+
+    /**
+     * Read the fail-closed flag from app config.
+     *
+     * Defaults to TRUE — the gate fails closed by default for any backend
+     * outage path. Operators can flip to false for non-production via
+     * docudesk.prohibition.fail_closed.
+     *
+     * @return bool
+     */
+    private function getFailClosed(): bool
+    {
+        return $this->appConfig->getValueBool(
+            app: 'docudesk',
+            key: self::FAIL_CLOSED_KEY,
+            default: self::DEFAULT_FAIL_CLOSED
+        );
+
+    }//end getFailClosed()
 
     /**
      * Commit validated override entries: write audit + PATCH OR skip flag.
@@ -832,13 +932,22 @@ class AnonymizationService
                 );
             } catch (\Throwable $e) {
                 $this->logger->error(
-                    'ProhibitionGate: failed to write audit entry',
+                    'ProhibitionGate: failed to write audit entry — aborting override commit',
                     [
                         'ruleId'     => $match['ruleId'],
                         'relationId' => $relationId,
                         'fileId'     => $fileId,
                         'error'      => $e->getMessage(),
                     ]
+                );
+                // AVG Art. 30 / 10-year archival: an override permanently
+                // released into OpenRegister with no DocuDesk audit record
+                // is a compliance violation. If the audit write fails we
+                // MUST NOT proceed to the OR PATCH — fail-closed.
+                throw new RuntimeException(
+                    'ProhibitionGate: refusing to commit override without audit entry: '.$e->getMessage(),
+                    500,
+                    $e
                 );
             }
 

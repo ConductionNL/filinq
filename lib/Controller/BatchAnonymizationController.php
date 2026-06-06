@@ -405,6 +405,14 @@ class BatchAnonymizationController extends Controller
                 );
             }
 
+            // Per-entry validation — mirror the single-file controller so
+            // malformed entries return HTTP 400 here too rather than
+            // silently failing at gate level.
+            $overridesError = $this->validateAcknowledgedOverrides(overrides: $acknowledgedOverrides);
+            if ($overridesError !== null) {
+                return $overridesError;
+            }
+
             // Anonymise-output-as-pdf-by-default: per-batch outputFormat.
             // Per-call value overrides tenant default; missing/invalid
             // values mirror AnonymizationController semantics.
@@ -739,6 +747,62 @@ class BatchAnonymizationController extends Controller
         return new JSONResponse(['error' => $msg.': '.$e->getMessage()], $code);
 
     }//end err()
+
+
+    /**
+     * Validate the acknowledgedOverrides[] payload entries.
+     *
+     * Mirrors AnonymizationController::validateAcknowledgedOverrides — kept
+     * locally so both controllers return the same 400 body shape for
+     * malformed entries.
+     *
+     * Each entry must have:
+     *   - ruleId   (string, required)
+     *   - entityId (int, required)
+     * Optional:
+     *   - reason (string)
+     *
+     * @param array<int, mixed> $overrides The acknowledgedOverrides array from the request.
+     *
+     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     */
+    private function validateAcknowledgedOverrides(array $overrides): ?JSONResponse
+    {
+        foreach ($overrides as $idx => $override) {
+            if (is_array($override) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($override['ruleId']) === true || is_string($override['ruleId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($override['entityId']) === false || is_int($override['entityId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($override['reason']) === true && is_string($override['reason']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx])],
+                    400
+                );
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateAcknowledgedOverrides()
 
     /**
      * Coerce the raw folderId request param to an int, or null when absent/empty.

@@ -429,6 +429,27 @@ class AnonymizationController extends Controller
                     userId: $user->getUID()
                 );
             } catch (ProhibitionGateException $e) {
+                // Fail-closed (backend outage) → 503 so clients can retry;
+                // rule-match block → 422 with structured missing/rejected
+                // body so the UI can prompt for overrides.
+                $backendReason = $e->getBackendUnavailable();
+                if ($backendReason !== null) {
+                    $this->logger->warning(
+                        'ProhibitionGate failed closed: '.$backendReason,
+                        ['fileId' => $fileId]
+                    );
+                    return new JSONResponse(
+                        [
+                            'error'              => $this->l10n->t(
+                                'Anonymisation temporarily unavailable: the prohibition gate could not '
+                                .'verify the document. Please retry shortly.'
+                            ),
+                            'backendUnavailable' => $backendReason,
+                        ],
+                        503
+                    );
+                }
+
                 return new JSONResponse(
                     [
                         'error'                     => $this->l10n->t(

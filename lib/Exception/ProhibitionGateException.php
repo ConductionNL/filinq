@@ -61,24 +61,51 @@ class ProhibitionGateException extends RuntimeException
     private array $rejectedOverrides;
 
     /**
+     * Optional backend-unavailability reason. Set when the gate fires
+     * because a required dependency (PolicyMatchService, EntityRelationMapper,
+     * matchProhibition()) was unavailable / threw. Lets callers distinguish
+     * "rule fired" from "fail-closed due to outage".
+     *
+     * @var string|null
+     */
+    private ?string $backendUnavailable;
+
+    /**
      * Constructor.
      *
      * @param array<int, array<string, mixed>> $missingProhibitionMatches High-confidence matches missing from entities[].
      * @param array<int, array<string, mixed>> $rejectedOverrides         Overrides rejected for being above threshold.
+     * @param string|null                      $backendUnavailable        Optional fail-closed reason.
      */
     public function __construct(
         array $missingProhibitionMatches=[],
-        array $rejectedOverrides=[]
+        array $rejectedOverrides=[],
+        ?string $backendUnavailable=null
     ) {
         parent::__construct(
-            message: 'Prohibition gate blocked the anonymise call.',
-            code: 422
+            message: $backendUnavailable !== null
+                ? 'Prohibition gate failed closed: '.$backendUnavailable
+                : 'Prohibition gate blocked the anonymise call.',
+            code: $backendUnavailable !== null ? 503 : 422
         );
 
         $this->missingProhibitionMatches = $missingProhibitionMatches;
         $this->rejectedOverrides         = $rejectedOverrides;
+        $this->backendUnavailable        = $backendUnavailable;
 
     }//end __construct()
+
+    /**
+     * Whether the gate fired because a backend dependency was unavailable.
+     *
+     * @return string|null Reason text, or null when the gate fired for a
+     *                     normal rule-match.
+     */
+    public function getBackendUnavailable(): ?string
+    {
+        return $this->backendUnavailable;
+
+    }//end getBackendUnavailable()
 
     /**
      * Get the missing high-confidence prohibition matches.
