@@ -11,6 +11,7 @@ Provides a complete document anonymization pipeline: upload files to a user-scop
 ## Requirements
 
 ### REQ-ANON-01: File Upload to User-Scoped Folder (Priority: Must)
+<!-- @e2e exclude Server-side upload endpoint behaviour (multipart storage in per-user folder, auto-folder creation, duplicate-name handling, no-file / PHP-error responses); the interactive upload affordance is covered by REQ-ANON-08's pipeline UI test, while these contract cases are verified by Newman docudesk-api upload collection + PHPUnit. -->
 
 Users upload files via multipart form data, and files are stored in a per-user DocuDesk folder within Nextcloud Files.
 
@@ -53,6 +54,7 @@ Users upload files via multipart form data, and files are stored in a per-user D
 | ANON-006 | Upload requires an authenticated user session | MUST | Implemented |
 
 ### REQ-ANON-02: Text Extraction and Entity Detection (Priority: Must)
+<!-- @e2e exclude Backend NER pipeline (OpenRegister text extraction + entity detection, normalization, OR-unavailable handling); runs server-side via the OR NER backing, verified by PHPUnit AnonymizationServiceTest + Newman extract collection. -->
 
 Text is extracted from uploaded documents and entities (persons, organizations, emails, phone numbers) are detected using OpenRegister's NER capabilities.
 
@@ -91,6 +93,7 @@ Text is extracted from uploaded documents and entities (persons, organizations, 
 | ANON-015 | Response includes `entities` array and `entityCount` | MUST | Implemented |
 
 ### REQ-ANON-03: Document Anonymization with Entity Replacement (Priority: Must)
+<!-- @e2e exclude Backend replacement algorithm (entity substitution, short/numeric-value skipping, dedup, empty-entities validation); text-transformation logic verified by PHPUnit AnonymizationServiceTest + Newman anonymize collection. -->
 
 Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy.
 
@@ -135,6 +138,7 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 | ANON-026 | Response includes anonymizedFileId, anonymizedFileName, anonymizedFilePath, and replacementCount | MUST | Implemented |
 
 ### REQ-ANON-04: Processed File Listing with Risk Assessment (Priority: Must)
+<!-- @e2e exclude Backend file-listing computation (entity counts, status, risk-level derivation, graceful degradation when OR services unavailable); the rendered listing is part of REQ-ANON-08's pipeline/folder UI, while these computed-field cases are verified by Newman file-listing collection + PHPUnit. -->
 
 List all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
 
@@ -166,6 +170,7 @@ List all files in the user's DocuDesk folder with entity counts, anonymization s
 | ANON-035 | Only actual files are listed (directories are skipped) | MUST | Implemented |
 
 ### REQ-ANON-05: Lazy OpenRegister Service Resolution (Priority: Must)
+<!-- @e2e exclude Internal service-resolution plumbing (lazy OR resolution when installed/not-installed, graceful degradation); code-structure concern verified by PHPUnit AnonymizationServiceTest — no browser flow. -->
 
 AnonymizationService lazily resolves OpenRegister services at call time to gracefully handle the case where OpenRegister is not installed.
 
@@ -196,6 +201,7 @@ AnonymizationService lazily resolves OpenRegister services at call time to grace
 | ANON-043 | `listProcessedFiles()` gracefully handles unavailable services by catching RuntimeException | MUST | Implemented |
 
 ### REQ-ANON-06: UUID v4 Generation for Anonymization Keys (Priority: Must)
+<!-- @e2e exclude Pure algorithm (UUID v4 generation, uniqueness, RFC-4122 format); deterministic library logic verified by PHPUnit unit test — no UI surface. -->
 
 Each anonymized entity is assigned a cryptographically secure UUID v4 key as its replacement identifier.
 
@@ -222,6 +228,7 @@ Each anonymized entity is assigned a cryptographically secure UUID v4 key as its
 | ANON-046 | Each entity gets a unique UUID key in the anonymization mapping | MUST | Implemented |
 
 ### REQ-ANON-07: User Session Authentication (Priority: Must)
+<!-- @e2e exclude Server-side session/auth guards (no-session responses on upload/listing, session-independence of extract/anonymize endpoints); access-control behaviour verified by PHPUnit AnonymizationControllerTest + Newman auth contract. -->
 
 File operations require an authenticated user session to scope files to the correct user's folder.
 
@@ -278,6 +285,7 @@ The frontend provides a step-by-step UI for the complete anonymization workflow 
 | ANON-053 | Return 400 with "No entities provided for anonymization" when entities array is empty | MUST | Implemented |
 
 ### REQ-ANON-09: EntityRelationMapper Method Usage (Priority: Must)
+<!-- @e2e exclude Internal mapper-method selection (findEntitiesForFile vs findByFileId for detail-vs-count contexts, getAnonymized tracking); data-layer concern verified by PHPUnit AnonymizationServiceTest — no browser flow. -->
 
 Two distinct EntityRelationMapper methods serve different purposes in the pipeline: entity detail retrieval vs. relation counting.
 
@@ -307,6 +315,7 @@ Two distinct EntityRelationMapper methods serve different purposes in the pipeli
 | ANON-056 | `findByFileId()` relations expose `getAnonymized()` for per-entity tracking | MUST | Implemented |
 
 ### REQ-ANON-10: Frontend File Processing Queue (Priority: Must)
+<!-- @e2e exclude Pinia store queue internals (sequential processing, per-file status transitions, error-state handling, hasFiles/hasCompleted/allDone/isProcessing getters); unit-level JS state machine verified by vitest store test. The queue's visible effect on the pipeline is covered by REQ-ANON-08's UI test. -->
 
 The Pinia store manages a sequential file processing queue with status tracking through the pipeline stages.
 
