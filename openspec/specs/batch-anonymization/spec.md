@@ -1,5 +1,7 @@
 ## ADDED Requirements
 
+> @e2e exclude Pure backend batch-anonymization API — multi-file batch upload, sequential extraction, ICache-backed batch status/expiry, batch anonymization with reviewed entities, batch completion report download, and admin WOO entity-profile config. Server-orchestrated endpoints with no dedicated manifest UI page (the interactive review surface is covered by the anonymization-entity-review spec's UI tests). Verified by PHPUnit BatchAnonymizationServiceTest and the Newman docudesk-api batch collection.
+
 ### Requirement: Batch creation via multi-file upload
 The system SHALL accept multiple files in a single upload request to `POST /api/anonymization/batch/upload` and return a batch ID. Each file SHALL be stored in the user's DocuDesk/ folder. Batch state SHALL be persisted in Nextcloud ICache with a 2-hour TTL. The batch SHALL track each file's processing status independently. Maximum batch size SHALL be 100 files (admin-configurable via IAppConfig key `docudesk_batch_max_files`).
 

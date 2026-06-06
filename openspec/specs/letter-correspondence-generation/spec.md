@@ -8,6 +8,8 @@ status: implemented
 
 Provides a dedicated correspondence generation workflow for government users to generate letters, beschikkingen, and other correspondence from templates with merge fields populated from case/citizen data. Supports batch generation for multiple recipients, multiple output formats (PDF, DOCX, HTML, email), huisstijl enforcement, and correspondence audit logging. Builds on the existing template-management and pdf-generation capabilities.
 
+> @e2e exclude Pure backend correspondence-generation engine — template merge-field population, single/batch (sync + async job) generation, output-format selection (PDF/DOCX/HTML/email), huisstijl application, and correspondence register logging. Exposed only via REST endpoints, no dedicated manifest UI page. Verified by PHPUnit CorrespondenceServiceTest and the Newman docudesk-api correspondence collection.
+
 ## Requirements
 
 ### Correspondence generation API

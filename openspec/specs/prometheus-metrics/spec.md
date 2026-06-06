@@ -8,6 +8,8 @@ status: implemented
 
 Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provides a health check endpoint for infrastructure monitoring.
 
+> @e2e exclude Pure backend monitoring endpoints — Prometheus text-exposition metrics (`GET /api/metrics`), HELP/TYPE annotations, app/health gauges and counters, MetricsCollector delegation, and the health-check endpoint. Machine-readable text output, not a browser UI. Verified by PHPUnit MetricsControllerTest and the Newman docudesk-api metrics collection.
+
 ## Requirements
 
 ### REQ-PROM-01: Metrics Endpoint (Priority: Must)

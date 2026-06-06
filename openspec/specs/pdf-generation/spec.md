@@ -8,6 +8,8 @@ status: implemented
 
 Provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can call. Accepts a Twig template string and data context, renders HTML, converts to PDF via mPDF, and returns the binary content. The service is stateless -- callers provide template content directly. Includes a Twig sandbox with strict security policy and an HTTP API endpoint for PDF generation.
 
+> @e2e exclude Pure backend PDF rendering service — Twig-to-HTML-to-mPDF conversion, page configuration, Twig sandbox security policy, mPDF temp-dir management, dependency wiring, and the render REST endpoint (returns binary PDF). No browser-driven UI surface. Verified by PHPUnit TemplateRendererTest/PdfServiceTest and the Newman docudesk-api pdf-render collection.
+
 ## Requirements
 
 ### REQ-PDF-01: PDF Rendering Service (Priority: Must)
