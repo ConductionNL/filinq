@@ -376,13 +376,17 @@ class AnonymizationControllerTest extends TestCase
 
 
     /**
-     * Test anonymize returns 400 when bases is not an array
+     * Stray non-array `bases` field on a payload entry is silently ignored — succeeds.
+     *
+     * Per spec.md (post-explore-mode rework 2026-05-12): DocuDesk MUST ignore any
+     * `bases` field that erroneously appears on incoming payload entries (do NOT 400).
+     * Bases are set per-relation via OR's own PATCH endpoint, not validated here.
      *
      * @return void
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
      */
-    public function testAnonymizeReturns400WhenBasesIsNotArray(): void
+    public function testAnonymizeIgnoresStrayNonArrayBases(): void
     {
         $this->mockRequest->method('getParams')->willReturn(
             [
@@ -392,22 +396,28 @@ class AnonymizationControllerTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+
         $response = $this->controller->anonymize(fileId: 1);
 
         $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(200, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('ignoredFields', $data);
+        $this->assertContains('bases', $data['ignoredFields']);
 
-    }//end testAnonymizeReturns400WhenBasesIsNotArray()
+    }//end testAnonymizeIgnoresStrayNonArrayBases()
 
 
     /**
-     * Test anonymize returns 400 when bases contains a non-string entry
+     * Stray non-string `bases` entries on a payload entry are silently ignored — succeeds.
      *
      * @return void
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
      */
-    public function testAnonymizeReturns400WhenBasesContainsNonString(): void
+    public function testAnonymizeIgnoresStrayNonStringBasesEntries(): void
     {
         $this->mockRequest->method('getParams')->willReturn(
             [
@@ -417,108 +427,18 @@ class AnonymizationControllerTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->method('anonymizeDocument')
+            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
+
         $response = $this->controller->anonymize(fileId: 1);
 
         $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
-
-    }//end testAnonymizeReturns400WhenBasesContainsNonString()
-
-
-    /**
-     * Input validation (non-array bases) must return 400 even when the file
-     * does not exist — validation runs before the file-access check.
-     *
-     * This test documents the ordering fix: previously verifyFileAccess ran
-     * first and returned 404 before validation, causing malformed input to
-     * receive 404 instead of 400 (or 500 when the file existed but the
-     * downstream service crashed on the invalid bases value).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
-     */
-    public function testAnonymizeReturns400ForInvalidBasesBeforeFileAccessCheck(): void
-    {
-        $this->mockRequest->method('getParams')->willReturn(
-            [
-                'entities' => [
-                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => 'not-an-array'],
-                ],
-            ]
-        );
-
-        // Controller whose root-folder reports no matching files (would return 404).
-        $emptyFolder = $this->createMock(Folder::class);
-        $emptyFolder->method('getById')->willReturn([]);
-        $emptyRootFolder = $this->createMock(IRootFolder::class);
-        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
-
-        $controller = new AnonymizationController(
-            appName: 'docudesk',
-            request: $this->mockRequest,
-            logger: $this->mockLogger,
-            anonymizationService: $this->mockAnonService,
-            fileListingService: $this->mockFileService,
-            l10n: $this->mockL10n,
-            appConfig: $this->createMock(\OCP\IAppConfig::class),
-            userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
-        );
-
-        $response = $controller->anonymize(fileId: 999999);
-
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(200, $response->getStatus());
         $data = $response->getData();
-        $this->assertArrayHasKey('error', $data);
+        $this->assertArrayHasKey('ignoredFields', $data);
+        $this->assertContains('bases', $data['ignoredFields']);
 
-    }//end testAnonymizeReturns400ForInvalidBasesBeforeFileAccessCheck()
-
-
-    /**
-     * Input validation (non-string bases item) must return 400 even when the
-     * file does not exist.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
-     */
-    public function testAnonymizeReturns400ForNonStringBasesItemBeforeFileAccessCheck(): void
-    {
-        $this->mockRequest->method('getParams')->willReturn(
-            [
-                'entities' => [
-                    ['text' => 'Jan Janssen', 'type' => 'PERSON', 'bases' => [42]],
-                ],
-            ]
-        );
-
-        $emptyFolder = $this->createMock(Folder::class);
-        $emptyFolder->method('getById')->willReturn([]);
-        $emptyRootFolder = $this->createMock(IRootFolder::class);
-        $emptyRootFolder->method('getUserFolder')->willReturn($emptyFolder);
-
-        $controller = new AnonymizationController(
-            appName: 'docudesk',
-            request: $this->mockRequest,
-            logger: $this->mockLogger,
-            anonymizationService: $this->mockAnonService,
-            fileListingService: $this->mockFileService,
-            l10n: $this->mockL10n,
-            appConfig: $this->createMock(\OCP\IAppConfig::class),
-            userSession: $this->mockUserSession,
-            rootFolder: $emptyRootFolder
-        );
-
-        $response = $controller->anonymize(fileId: 999999);
-
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
-        $data = $response->getData();
-        $this->assertArrayHasKey('error', $data);
-
-    }//end testAnonymizeReturns400ForNonStringBasesItemBeforeFileAccessCheck()
+    }//end testAnonymizeIgnoresStrayNonStringBasesEntries()
 
 
     /**

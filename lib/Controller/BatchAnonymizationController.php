@@ -61,6 +61,8 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  *
@@ -339,8 +341,8 @@ class BatchAnonymizationController extends Controller
     /**
      * Apply the user-approved entity list to every extracted file in a batch.
      *
-     * Each entity may carry an optional `bases[]` field (array of strings) that
-     * is forwarded verbatim to OpenRegister per the anonymisation-bases-passthrough spec.
+     * Stray `bases[]` fields on entity entries are silently ignored (per 2026-05-12
+     * explore-mode rework); bases are set via OR's PATCH /api/entity-relations/{id}.
      * Accepts an optional `appendBasisSummary` boolean flag (default false).
      * When true, invokes the grondslagen summary service after each file's
      * anonymization. Per-file summary failures surface as per-file warnings
@@ -380,9 +382,13 @@ class BatchAnonymizationController extends Controller
                 }
             }
 
-            $basesError = $this->validateEntityBases(entities: $entities);
-            if ($basesError !== null) {
-                return $basesError;
+            // Detect stray bases fields for ignoredFields hint (GDPR accountability).
+            $hasStrayBases = false;
+            foreach ($entities as $entity) {
+                if (is_array($entity) === true && array_key_exists('bases', $entity) === true) {
+                    $hasStrayBases = true;
+                    break;
+                }
             }
 
             $unredactedEntities = $params['unredactedEntities'] ?? [];
@@ -423,6 +429,10 @@ class BatchAnonymizationController extends Controller
                 unredactedEntities: $unredactedEntities,
                 outputFormat: $outputFormat
             );
+
+            if ($hasStrayBases === true) {
+                $batchResult['ignoredFields'] = ['bases'];
+            }
 
             $httpStatus = $this->resolveBatchHttpStatus(result: $batchResult);
             return new JSONResponse($batchResult, $httpStatus);
@@ -574,45 +584,6 @@ class BatchAnonymizationController extends Controller
         }
 
     }//end updateProfiles()
-
-    /**
-     * Validate that each entity's optional `bases` field is an array of strings
-     *
-     * Returns a 400 JSONResponse on the first malformed entry, null when valid.
-     *
-     * @param array<int, array<string, mixed>> $entities The entities to validate
-     *
-     * @return JSONResponse|null Error response or null when all bases are valid
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
-     */
-    private function validateEntityBases(array $entities): ?JSONResponse
-    {
-        foreach ($entities as $entity) {
-            if (isset($entity['bases']) === false) {
-                continue;
-            }
-
-            if (is_array($entity['bases']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Each entity bases field must be an array of strings')],
-                    400
-                );
-            }
-
-            foreach ($entity['bases'] as $base) {
-                if (is_string($base) === false) {
-                    return new JSONResponse(
-                        ['error' => $this->l10n->t('Each entry in entity bases must be a string')],
-                        400
-                    );
-                }
-            }
-        }//end foreach
-
-        return null;
-
-    }//end validateEntityBases()
 
     /**
      * Validate the structure of each unredactedEntities[] entry.

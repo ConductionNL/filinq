@@ -26,23 +26,20 @@ DocuDesk provides a 4-step document anonymization pipeline for GDPR-compliant pr
 
 ## Per-Entity Legal Bases (grondslagen)
 
-The anonymize endpoint accepts an optional `bases[]` field per entity in the request payload. When present, it is forwarded verbatim to OpenRegister's anonymise endpoint, which persists it on the `EntityRelation` row (paired `entity-relation-grondslagen` change in OpenRegister). DocuDesk does not persist bases locally.
+Legal bases for detected entities are set per-relation via OpenRegister's own
+`PATCH /api/entity-relations/{id}` endpoint, **not** via DocuDesk's anonymise
+payload. DocuDesk does not accept, forward, or persist a `bases[]` field on
+anonymise requests.
 
-```json
-{
-  "entities": [
-    {
-      "text": "Jan Janssen",
-      "entityType": "PERSON",
-      "bases": ["uuid-of-woo-art5-grondslag"]
-    }
-  ]
-}
-```
+Any stray `bases` field that appears on an incoming entity entry is silently
+ignored — DocuDesk returns HTTP 200 and the field is dropped. This preserves
+backwards-compatibility with any caller that was built against an older contract.
 
-- `bases[]` is optional per entity; absent/null entries are forwarded without the field.
-- An empty array (`bases: []`) is forwarded as `[]`, not omitted.
-- DocuDesk does not validate that UUID values resolve; OpenRegister also does not.
+To attach bases to a detected entity:
+1. Call DocuDesk's extract endpoint to obtain the entity key.
+2. PATCH the corresponding `EntityRelation` row on OpenRegister with
+   `{bases: ["uuid-of-woo-art5-grondslag", ...]}`.
+3. Call DocuDesk's anonymise endpoint as normal (no `bases` field needed).
 
 ## Prohibition Match on Extract Response
 
@@ -73,8 +70,8 @@ The extract endpoint now includes a `prohibitionMatch` field per detected entity
 
 ### Added
 
-- Per-entity `bases[]` field accepted on the anonymise request payload and forwarded verbatim to OpenRegister (stored on `EntityRelation`).
 - `prohibitionMatch` field on each entity in the extract endpoint response: `null` when no rule matches, or `{ ruleId, ruleName, highConfidence }` when matched.
+- Stray `bases[]` field on anonymise payload entities is now silently ignored (do NOT 400) to preserve backwards-compatibility with older callers. Bases are set via OR's PATCH endpoint instead.
 
 ## appendBasisSummary flag
 

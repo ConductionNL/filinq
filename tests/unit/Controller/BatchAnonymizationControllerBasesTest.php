@@ -119,13 +119,17 @@ class BatchAnonymizationControllerBasesTest extends TestCase
 
 
     /**
-     * Test batchAnonymize returns 400 when bases is not an array
+     * Stray non-array `bases` field on a payload entry is silently ignored — succeeds.
+     *
+     * Per spec.md (post-explore-mode rework 2026-05-12): DocuDesk MUST ignore any
+     * `bases` field that erroneously appears on incoming payload entries (do NOT 400).
+     * Bases are set per-relation via OR's own PATCH endpoint, not validated here.
      *
      * @return void
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
      */
-    public function testBatchAnonymizeReturns400WhenBasesIsNotArray(): void
+    public function testBatchAnonymizeIgnoresStrayNonArrayBases(): void
     {
         $this->mockRequest->method('getParams')->willReturn(
             [
@@ -135,22 +139,36 @@ class BatchAnonymizationControllerBasesTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->method('anonymizeBatch')
+            ->willReturn(
+                [
+                    'batchId'        => 'batch-1',
+                    'batchStatus'    => 'completed',
+                    'processedFiles' => 1,
+                    'skippedFiles'   => [],
+                    'totalFiles'     => 1,
+                ]
+            );
+
         $response = $this->controller->batchAnonymize(batchId: 'batch-1');
 
         $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(200, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('ignoredFields', $data);
+        $this->assertContains('bases', $data['ignoredFields']);
 
-    }//end testBatchAnonymizeReturns400WhenBasesIsNotArray()
+    }//end testBatchAnonymizeIgnoresStrayNonArrayBases()
 
 
     /**
-     * Test batchAnonymize returns 400 when bases contains a non-string
+     * Stray non-string `bases` entries on a payload entry are silently ignored — succeeds.
      *
      * @return void
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-4
      */
-    public function testBatchAnonymizeReturns400WhenBasesContainsNonString(): void
+    public function testBatchAnonymizeIgnoresStrayNonStringBasesEntries(): void
     {
         $this->mockRequest->method('getParams')->willReturn(
             [
@@ -160,12 +178,26 @@ class BatchAnonymizationControllerBasesTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->method('anonymizeBatch')
+            ->willReturn(
+                [
+                    'batchId'        => 'batch-1',
+                    'batchStatus'    => 'completed',
+                    'processedFiles' => 1,
+                    'skippedFiles'   => [],
+                    'totalFiles'     => 1,
+                ]
+            );
+
         $response = $this->controller->batchAnonymize(batchId: 'batch-1');
 
         $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(400, $response->getStatus());
+        $this->assertSame(200, $response->getStatus());
+        $data = $response->getData();
+        $this->assertArrayHasKey('ignoredFields', $data);
+        $this->assertContains('bases', $data['ignoredFields']);
 
-    }//end testBatchAnonymizeReturns400WhenBasesContainsNonString()
+    }//end testBatchAnonymizeIgnoresStrayNonStringBasesEntries()
 
 
     /**
