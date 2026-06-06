@@ -12,6 +12,6 @@ Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-main');
 Util::addStyle($appId, 'main');
 ?>
-<div id="docudesk"></div>
+<div id="content"></div>
 
 
