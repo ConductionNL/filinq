@@ -293,11 +293,24 @@ export default {
 		/**
 		 * Set the consent status to anonymized (revoke it).
 		 *
+		 * Revoke is destructive — Art. 7(3) consent withdrawal flips
+		 * `consentStatus` to `anonymized` and `active` to false; the
+		 * record cannot be re-activated. Confirm before submitting so
+		 * a single mis-click in the row-action menu can't silently
+		 * destroy a standing consent.
+		 *
 		 * @param consent
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
 		async revokeConsent(consent) {
 			const id = consent.id || consent.uuid
+			const ok = window.confirm(t(
+				'docudesk',
+				'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
+			))
+			if (!ok) {
+				return
+			}
 			await consentStore.updateConsent(id, { ...consent, consentStatus: 'anonymized', active: false })
 		},
 		/**

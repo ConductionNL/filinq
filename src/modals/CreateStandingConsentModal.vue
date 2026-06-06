@@ -59,13 +59,16 @@
 				</NcNoteCard>
 
 				<!-- Match Rules -->
+				<!-- NcTextArea (instead of a raw <textarea>) so the
+				     component participates in the NC theme + a11y wiring;
+				     `label` plus `aria-describedby` ship the screen-reader
+				     hooks the raw element silently lacked. -->
 				<div class="form-field">
-					<label class="form-label">{{ t('docudesk', 'Match Rules (one per line)') }}</label>
-					<textarea
+					<NcTextArea
 						v-model="matchRulesText"
-						class="match-rules-input"
+						:label="t('docudesk', 'Match Rules (one per line)')"
 						:placeholder="t('docudesk', 'e.g. acme.nl')"
-						rows="3" />
+						:rows="3" />
 				</div>
 
 				<!-- Actions -->
@@ -87,13 +90,14 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcModal, NcTextField, NcSelect, NcNoteCard, NcButton } from '@nextcloud/vue'
+import { NcModal, NcTextField, NcTextArea, NcSelect, NcNoteCard, NcButton } from '@nextcloud/vue'
 
 export default {
 	name: 'CreateStandingConsentModal',
 	components: {
 		NcModal,
 		NcTextField,
+		NcTextArea,
 		NcSelect,
 		NcNoteCard,
 		NcButton,
@@ -119,15 +123,21 @@ export default {
 			errors: {
 				consentMethod: '',
 			},
+			// Match the publicationConsent schema enum exactly. The legacy
+			// lowercase / synonym values (`person`, `written`, `verbal`,
+			// `digital`, `implicit`) silently passed storage validation
+			// but produced records that no audit/reporting code could
+			// recognise. The schema enums are uppercase entity types and
+			// the four canonical consent-method values.
 			entityTypeOptions: [
-				{ label: t('docudesk', 'Person'), value: 'person' },
-				{ label: t('docudesk', 'Organization'), value: 'organization' },
+				{ label: t('docudesk', 'Person'), value: 'PERSON' },
+				{ label: t('docudesk', 'Organization'), value: 'ORGANIZATION' },
 			],
 			consentMethodOptions: [
-				{ label: t('docudesk', 'Written'), value: 'written' },
-				{ label: t('docudesk', 'Verbal'), value: 'verbal' },
-				{ label: t('docudesk', 'Digital'), value: 'digital' },
-				{ label: t('docudesk', 'Implicit'), value: 'implicit' },
+				{ label: t('docudesk', 'Paper'), value: 'paper' },
+				{ label: t('docudesk', 'Digital signature'), value: 'digital_signature' },
+				{ label: t('docudesk', 'Verbal (recorded)'), value: 'verbal_recorded' },
+				{ label: t('docudesk', 'Opt-in form'), value: 'opt_in_form' },
 			],
 		}
 	},

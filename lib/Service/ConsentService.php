@@ -317,7 +317,8 @@ class ConsentService
         string $consentId,
         string $register,
         string $schema,
-        array $data
+        array $data,
+        ?IUser $user=null
     ): array {
         $objectService = $this->getObjectService();
 
@@ -332,6 +333,19 @@ class ConsentService
         }
 
         $existing = $object->getObject();
+
+        // Standing-consent (scope=entity) records carry policy-level
+        // authority for whole classes of documents — revoke/expire on
+        // such a record MUST be gated on the same admin group as the
+        // create path (createEntityConsent above). Without this check
+        // a regular consent officer could revoke a standing consent
+        // directly via the update API. Backwards-compat: skip the
+        // check when no user was plumbed through (existing callers
+        // for scope=document keep working unchanged).
+        $existingScope = (string) ($existing['scope'] ?? 'document');
+        if ($existingScope === 'entity' && $user !== null) {
+            $this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
+        }
 
         $this->scopeValidator->validateTransition(existing: $existing, update: $data);
 

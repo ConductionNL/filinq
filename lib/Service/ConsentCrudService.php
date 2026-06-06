@@ -271,9 +271,10 @@ class ConsentCrudService
         string $consentId,
         string $register,
         string $schema,
-        array $data
+        array $data,
+        ?\OCP\IUser $user=null
     ): array {
-        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data);
+        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
 
     }//end updateConsentStatus()
 }//end class

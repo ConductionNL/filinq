@@ -87,7 +87,12 @@ class ConsentScopeValidator
      */
     public function validateWrite(array $data): void
     {
-        $scope         = $data['scope'] ?? null;
+        // Default to 'document' when scope is omitted — otherwise a caller
+        // omitting `scope` skipped BOTH the document and entity branches
+        // entirely, letting a scope:document record without documentId
+        // pass validation silently. Backwards-compat: every pre-existing
+        // record was scope:document so the default is the intent.
+        $scope         = $data['scope'] ?? 'document';
         $documentId    = $data['documentId'] ?? null;
         $matchRules    = $data['matchRules'] ?? null;
         $consentMethod = $data['consentMethod'] ?? null;
