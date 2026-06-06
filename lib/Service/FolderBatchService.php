@@ -397,6 +397,17 @@ class FolderBatchService
             return ['anonymizedFilePath' => $legacyPath];
         }
 
+        // Guard against empty userId reaching getUserFolder('') (older batch state
+        // formats may lack the userId field). Keep the file at its legacy path so
+        // the batch can complete; the move can be re-attempted on retry.
+        if ($userId === '') {
+            $logger->warning(
+                'FolderBatchService: applyOutputLayout skipped — empty userId in batch state.',
+                ['sourceFileId' => $sourceFileId]
+            );
+            return ['anonymizedFilePath' => $legacyPath];
+        }
+
         $userFolder = $rootFolder->getUserFolder($userId);
         $anonNodes  = $userFolder->getById((int) $anonymizedFileId);
         if (empty($anonNodes) === true) {
@@ -419,7 +430,10 @@ class FolderBatchService
         }
 
         $anonName   = $anonNode->getName();
-        $extension  = '.'.pathinfo($anonName, PATHINFO_EXTENSION);
+        $rawExtension = pathinfo($anonName, PATHINFO_EXTENSION);
+        // Only prefix the dot when there is an actual extension — extensionless
+        // files would otherwise produce paths like ".../anonymised/report.".
+        $extension  = $rawExtension !== '' ? '.'.$rawExtension : '';
         $baseName   = pathinfo($anonName, PATHINFO_FILENAME);
         $targetPath = $layoutResolver->resolveBatchDestination(
             sourceFolder: $sourceFolder,

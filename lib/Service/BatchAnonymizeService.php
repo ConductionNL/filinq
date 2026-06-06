@@ -261,8 +261,11 @@ class BatchAnonymizeService
             return ['anonymizedFilePath' => $legacyPath];
         }
 
-        $anonName  = $anonNode->getName();
-        $extension = '.'.pathinfo($anonName, PATHINFO_EXTENSION);
+        $anonName     = $anonNode->getName();
+        $rawExtension = pathinfo($anonName, PATHINFO_EXTENSION);
+        // Only prefix the dot when there is an actual extension — extensionless
+        // files would otherwise produce paths like ".../anonymised/report.".
+        $extension = $rawExtension !== '' ? '.'.$rawExtension : '';
         $baseName  = pathinfo($anonName, PATHINFO_FILENAME);
 
         $targetPath = $this->layoutResolver->resolveBatchDestination(
