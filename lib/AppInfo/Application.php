@@ -23,6 +23,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCA\DocuDesk\BackgroundJob\SigningExpirationJob;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
@@ -90,67 +91,8 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
 
-        // Register the PDF-conversion service with its cascade backends.
-        // Order matters: PdfConversionService walks the list left-to-
-        // right, returning the first success and aggregating failures
-        // into a ConversionFailedException. See
-        // openspec/changes/anonymise-output-as-pdf-by-default/design.md (D2).
-        //
-        // Cascade:
-        // 1. OfficeAppBackend  — Collabora / OnlyOffice / Euro Office
-        // via Nextcloud's IConversionManager
-        // (NC 31+ providers register here).
-        // 2. PhpWordBackend    — DOC / DOCX / ODT / RTF / HTML via
-        // PhpOffice\PhpWord + mPDF.
-        // 3. MpdfBackend       — HTML / TXT direct via mPDF (reuses
-        // PdfService's PDF/A-3b config).
-        // 4. EmlBackend        — stub; activates when OR ships its
-        // message/rfc822 text extractor.
-        $context->registerService(
-            PdfConversionService::class,
-            static function (ContainerInterface $c): PdfConversionService {
-                // IConversionManager is NC 31+ only — autowire as null
-                // on older releases so OfficeAppBackend can degrade
-                // gracefully via its own isAvailable=false path
-                // rather than blowing up the DI graph.
-                $conversionManager = null;
-                if (interface_exists(IConversionManager::class) === true) {
-                    try {
-                        $conversionManager = $c->get(IConversionManager::class);
-                    } catch (\Throwable $e) {
-                        $conversionManager = null;
-                    }
-                }
-
-                return new PdfConversionService(
-                    backends: [
-                        new OfficeAppBackend(
-                            conversionManager: $conversionManager,
-                            rootFolder: $c->get(\OCP\Files\IRootFolder::class),
-                            userSession: $c->get(\OCP\IUserSession::class),
-                            appConfig: $c->get(\OCP\IAppConfig::class),
-                            logger: $c->get(LoggerInterface::class),
-                        ),
-                        new PhpWordBackend(
-                            appConfig: $c->get(\OCP\IAppConfig::class),
-                            tempManager: $c->get(\OCP\ITempManager::class),
-                            pdfService: $c->get(\OCA\DocuDesk\Service\PdfService::class),
-                            logger: $c->get(LoggerInterface::class),
-                        ),
-                        new MpdfBackend(
-                            pdfService: $c->get(\OCA\DocuDesk\Service\PdfService::class),
-                            appConfig: $c->get(\OCP\IAppConfig::class),
-                            logger: $c->get(LoggerInterface::class),
-                        ),
-                        new EmlBackend(
-                            appConfig: $c->get(\OCP\IAppConfig::class),
-                            logger: $c->get(LoggerInterface::class),
-                        ),
-                    ],
-                    logger: $c->get(LoggerInterface::class),
-                );
-            }
-        );
+        // Register background jobs.
+        $context->registerBackgroundJob(SigningExpirationJob::class);
 
     }//end register()
 
