@@ -155,6 +155,7 @@ export default {
 		/**
 		 * Queue files dropped onto the dashboard widget for anonymization.
 		 *
+		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		handleDrop(event) {
@@ -167,6 +168,7 @@ export default {
 		/**
 		 * Queue files chosen via the dashboard widget picker for anonymization.
 		 *
+		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		handleFileSelect(event) {
@@ -180,6 +182,7 @@ export default {
 		/**
 		 * Build a Files-app link to the original processed file.
 		 *
+		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		fileLink(filePath) {
@@ -200,6 +203,7 @@ export default {
 		/**
 		 * Build a WebDAV download URL for the anonymized output file.
 		 *
+		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		downloadUrl(filePath) {
@@ -216,6 +220,7 @@ export default {
 		/**
 		 * Localized label for a file's processing status in the widget.
 		 *
+		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		statusLabel(status) {
