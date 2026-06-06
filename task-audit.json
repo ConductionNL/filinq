@@ -1,16 +1,16 @@
 {
-  "spec": "openspec/changes/consent-create-idempotency-and-notes",
+  "spec": "openspec/changes/migrate-signing-audit-to-or-audit",
   "verified": [
-    {"task": "1", "file": "lib/Service/ConsentService.php", "ok": true, "note": "findExistingConsent() + update/create routing implemented"},
-    {"task": "2", "file": "lib/Service/ConsentService.php", "ok": true, "note": "PRESERVED_FIELDS constant guards workflow state; updateExistingConsent() re-evaluates policyMatch"},
-    {"task": "3", "file": "lib/Service/ConsentNotesHelper.php", "ok": true, "note": "updateSentinelRegion() + stripSentinelRegion() with DOTALL PCRE; buildSentinelBlock() for write"},
-    {"task": "4", "file": "lib/Service/ConsentService.php", "ok": true, "note": "publicationBases[0] → legalBasis via truncateAtWordBoundary(); [1..N] → sentinel via ConsentNotesHelper"},
-    {"task": "5", "file": "lib/Service/ConsentService.php", "ok": true, "note": "New records get notificationStatus=pending; no sendMail/dispatch call added"},
-    {"task": "6", "file": "tests/unit/Service/ConsentServiceTest.php", "ok": true, "note": "20 new idempotency tests covering create/update/workflow-preserve/policyMatch/prohibition/scope-entity-exclusion"},
-    {"task": "7", "file": "tests/unit/Service/ConsentNotesHelperTest.php", "ok": true, "note": "10 unit tests covering all sentinel scenarios from tasks.md#task-7"},
-    {"task": "8", "file": "tests/newman/docudesk-api.postman_collection.json", "ok": true, "note": "3 Newman tests: first-call-creates, second-call-updates, single-basis-no-sentinel"},
-    {"task": "9", "file": "docs/features/publication-consent-process.md", "ok": true, "note": "Idempotency contract + sentinel format documented; CHANGELOG updated"},
-    {"task": "10", "file": "lib/Service/ConsentService.php", "ok": true, "note": "417 unit tests passing; 14 hydra gates green; phpcs clean; Psalm/PHPStan fixed (removed unused UPDATABLE_FIELDS, buildConsentData(), ?? on known keys)"}
+    {"task": "D-1.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "Constructor updated to inject AuditTrailMapper + LoggerInterface"},
+    {"task": "D-2.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "logEvent() calls createAuditTrailEntry() with docudesk.signing.{ACTION}"},
+    {"task": "D-2.2", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "No signingAuditEntry_register/schema refs in active code path"},
+    {"task": "D-3.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "getAuditTrail() queries AuditTrailMapper, filters by objectUuid"},
+    {"task": "D-4.1", "file": "lib/Service/SigningAuditService.php", "ok": true, "note": "rejectUpdate/rejectDelete absent (already removed in prior release)"},
+    {"task": "D-5.1", "file": "docs/features/digital-signing.md", "ok": true, "note": "Archiefwet 1995 retention section added with 3650-day requirement"},
+    {"task": "D-6.1", "file": "lib/Settings/docudesk_register.json", "ok": true, "note": "signingAuditEntry marked deprecated with x-deprecated-since"},
+    {"task": "D-6.2", "file": "CHANGELOG.md", "ok": true, "note": "CHANGELOG entry added with migration info and Archiefwet notice"},
+    {"task": "D-7.1", "file": "tests/unit/Service/SigningAuditServiceTest.php", "ok": true, "note": "Unit tests cover all 7 VALID_ACTIONS, logEvent, getAuditTrail"},
+    {"task": "D-7.2", "file": "tests/unit/Service/SigningAuditServiceTest.php", "ok": true, "note": "Test verifies no signingAuditEntry write path via mock assertions"}
   ],
   "stubs": [],
   "missing_routes": []

@@ -239,8 +239,59 @@ pending → in-progress → completed
 ## Audit Trail
 
 `SigningAuditService` records every lifecycle event (created, signed, declined, cancelled,
-verified) as an immutable object in OpenRegister. Audit entries cannot be updated or deleted
-through the public API.
+verified) as an immutable entry in OpenRegister's native audit trail
+(`openregister_audit_trails`). Events are stored with action types of the form
+`docudesk.signing.{ACTION}` (e.g. `docudesk.signing.SIGNED`). The audit trail is
+hash-chained and natively immutable — update and delete operations are rejected by OR with
+HTTP 405.
+
+Signing audit events are discoverable via:
+
+```
+GET /api/audit-trails?objectUuid={signRequestId}
+```
+
+### Supported action types
+
+| Action type                      | Triggered when                    |
+|----------------------------------|-----------------------------------|
+| `docudesk.signing.CREATED`       | Signing request is created        |
+| `docudesk.signing.START`         | Signer starts a signing session   |
+| `docudesk.signing.SIGNED`        | Signer signs the document         |
+| `docudesk.signing.DECLINED`      | Signer declines to sign           |
+| `docudesk.signing.CANCELLED`     | Initiator cancels the request     |
+| `docudesk.signing.EXPIRED`       | Request expires before completion |
+| `docudesk.signing.COMPLETED`     | All signers have signed           |
+| `docudesk.signing.VIEWED`        | Signer views the document         |
+
+Each entry's `changed` JSON field carries: `signRequestId`, `actorUserId`,
+`actorDisplayName`, `ipAddress`, `signatureLevel`, `provider`.
+
+### Archiefwet 1995 retention configuration (required)
+
+> **Administrators MUST configure OR's retention for the signing register to ≥ 3650 days
+> (10 years) to comply with Archiefwet 1995.**
+
+This is a **deploy-time configuration** in OpenRegister — not enforced by DocuDesk
+application code. Configure via:
+
+- **OR Admin UI**: Navigate to Settings → OpenRegister → Registers → signing register →
+  set retention period to `3650` days or higher.
+- **occ command** (if available in your OR version):
+  ```bash
+  php occ openregister:register:set-retention <registerId> --days 3650
+  ```
+
+The legal basis is **Archiefwet 1995**, which requires a minimum 10-year retention period
+for signing audit records relating to official documents. Failure to configure this setting
+may result in audit entries being purged before the mandatory retention period expires.
+
+### Legacy signingAuditEntry records
+
+Prior to the `migrate-signing-audit-to-or-audit` release, signing events were stored in the
+`signingAuditEntry` OR schema. These records remain readable (read-only) for one major
+release. No new events are written to `signingAuditEntry`; all new events go to OR's native
+audit trail.
 
 ---
 

@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Changed
+
+- **`SigningAuditService` now emits via OR audit trail.**
+  `SigningAuditService::logEvent()` no longer writes to the private `signingAuditEntry`
+  OR schema. All signing events are now routed through
+  `AuditTrailMapper::createAuditTrailEntry()` with action types of the form
+  `docudesk.signing.{ACTION}` (e.g. `docudesk.signing.SIGNED`). OR's native hash-chained
+  audit trail enforces immutability and Archiefwet 1995 compliance natively; the in-app
+  `rejectUpdate()` / `rejectDelete()` guards were already removed in a prior release.
+  (`migrate-signing-audit-to-or-audit`)
+
+### Deprecated
+
+- **`signingAuditEntry` schema.** The `signingAuditEntry_register` and
+  `signingAuditEntry_schema` IAppConfig keys are deprecated as of this release.
+  Existing records remain readable (read-only) for one major release. No new events are
+  written to the `signingAuditEntry` schema. (`migrate-signing-audit-to-or-audit`)
+
+### Important: Archiefwet 1995 retention configuration required
+
+Deployments MUST configure OR retention for the signing-related register to **≥ 3650 days**
+(10 years) to comply with Archiefwet 1995. This is an OR admin UI / `occ` command
+configuration — not enforced in application code. See the administration guide for details.
+(`migrate-signing-audit-to-or-audit`)
+
 ### Added
 - **Idempotent `ConsentService::createConsentRequest()`** — keyed on `(documentId, entityKey, scope: "document")`. A second call for the same key updates the existing record rather than creating a duplicate; the caller receives `wasUpdated: true` in the response. Falls back to `entityText` matching when `entityKey` is null (legacy records). `scope: "entity"` standing-consent records are never matched as duplicates. (`consent-create-idempotency-and-notes`)
 - **Sentinel-tagged additional-bases serialisation in `publicationConsent.notes`** — `publicationBases[0]` writes to the existing `legalBasis` field (truncated at 500 chars at word boundary); elements `[1..N]` are rendered inside an HTML-comment sentinel region (`<!-- docudesk:additional-publication-bases:begin/end -->`). The sentinel is markdown-invisible, re-submittable (idempotent re-render), and operator-authored content outside the brackets is preserved across re-submits. (`consent-create-idempotency-and-notes`)
