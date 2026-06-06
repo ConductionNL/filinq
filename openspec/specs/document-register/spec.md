@@ -5,6 +5,8 @@ or_adoption_change: docudesk-adopt-or-abstractions
 
 # Document Register
 
+@e2e exclude Backend data-model spec for the document register: schema strict-validation, archival retention (P7Y/P1Y), BatchCorrespondenceJob OR-object lifecycle + notifications, derived calculations (risk/error-count), OR file-attachment report storage, tenant-scope/i18n reads — no browser surface. Covered by PHPUnit (schema/lifecycle/calculation) and Newman (correspondence API).
+
 ## Purpose
 
 Defines the data model for the `document` register used by DocuDesk to store correspondence audit logs and huisstijl configuration. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; template management lives in the `templates` register. Three schemas remain active in the document register: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.

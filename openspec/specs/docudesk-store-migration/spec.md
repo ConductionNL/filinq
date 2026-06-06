@@ -1,5 +1,7 @@
 # Specification — `docudesk-store-migration` (Phase 1, side-by-side)
 
+@e2e exclude Frontend store-wiring internals: pinia store id/exports, useObjectStore barrel adoption, type registration, configure() base URL, boot-fetch and no-collision invariants — module-level concerns with no browser-rendered surface. Covered by Vitest unit tests on the store module.
+
 ## ADDED Requirements
 
 ### REQ-DSM-1 lib `useObjectStore` is the canonical OR-CRUD store

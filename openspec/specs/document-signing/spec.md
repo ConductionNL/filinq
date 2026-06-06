@@ -2,6 +2,9 @@
 
 ## Purpose
 TBD - created by archiving change digital-signing-integration. Update Purpose after archive.
+
+@e2e exclude Backend signing API + eIDAS crypto + status machine + OR schema/audit contracts; no navigable UI surface. Covered by PHPUnit (SignatureService, status transitions, audit immutability) and Newman (/api/signing/* contracts).
+
 ## Requirements
 ### Requirement: Signing request creation
 The system SHALL allow authenticated users to create a signing request for a document. A signing request specifies the document (Nextcloud file ID), the signature level (SES, AdES, or QES), the signing mode (sequential or parallel), and an ordered list of signers. The signing request SHALL be stored as an OpenRegister object via ObjectService using the SigningRequest schema.
