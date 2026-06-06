@@ -22,6 +22,7 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 - AND clicking it renders the DocuDesk settings page
 
 #### Scenario: Non-admin cannot access settings
+<!-- @e2e exclude Server-side access control (NC SecurityMiddleware admin gate + 403 on direct URL); verified by PHPUnit DocuDeskAdminTest and Newman admin-settings 403 contract. -->
 - GIVEN a regular user is logged into Nextcloud
 - WHEN they navigate to Admin Settings
 - THEN the DocuDesk section is not visible
@@ -60,12 +61,14 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND consent endpoints use the newly configured register/schema
 
 #### Scenario: OpenRegister version check fails
+<!-- @e2e exclude SettingsService version-gate logic (isOpenRegisterInstalled minimum-version check); verified by PHPUnit SettingsServiceTest. -->
 - GIVEN OpenRegister is installed but version is 0.2.9 (below minimum 0.2.10)
 - WHEN the settings service checks OpenRegister availability
 - THEN `isOpenRegisterInstalled()` returns false
 - AND the settings page shows register configuration as unavailable
 
 #### Scenario: OpenRegister not installed
+<!-- @e2e exclude OpenRegister-absent conditional rendering depends on a server without OR installed (cannot be staged on the OR-required dev instance); availability flag verified by PHPUnit SettingsServiceTest + Newman settings contract. -->
 - GIVEN OpenRegister is not installed
 - WHEN an administrator opens DocuDesk admin settings
 - THEN a warning NcNoteCard is displayed: "Open Registers is not installed"
@@ -73,6 +76,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 - AND register/schema selectors are not displayed
 
 #### Scenario: Schema listing excludes properties
+<!-- @e2e exclude API response shaping (schema listing strips the properties field); verified by PHPUnit SettingsServiceTest + Newman settings register-listing contract. -->
 - GIVEN OpenRegister is installed with multiple registers containing schemas
 - WHEN the settings page fetches available registers
 - THEN each schema in the response excludes the `properties` field for cleaner display
@@ -89,6 +93,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 | SET-016 | Schema listing excludes the `properties` field for cleaner API responses | MUST | Implemented |
 
 ### REQ-SET-03: Auto-Initialization on Boot (Priority: Must)
+<!-- @e2e exclude Boot-time register/schema import + version-gated re-import logic (no UI surface); verified by PHPUnit InitializeRegister repair-step + SettingsServiceTest. -->
 
 On application boot, DocuDesk automatically imports its register/schema definitions from a versioned JSON file, ensuring the required data structures exist in OpenRegister.
 
@@ -197,6 +202,7 @@ Administrators can independently toggle language detection, keyword extraction, 
 | SET-043 | Toggles use NcCheckboxRadioSwitch components with descriptive labels | MUST | Implemented |
 
 ### REQ-SET-06: Settings REST API (Priority: Must)
+<!-- @e2e exclude REST API contract (GET/PUT settings, JSON encoding, empty-key skipping); verified by Newman docudesk-api settings collection + PHPUnit SettingsControllerTest. -->
 
 Settings can be retrieved and updated programmatically via REST API endpoints.
 
@@ -234,6 +240,7 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 | SET-054 | Empty keys are skipped with a warning log during update | MUST | Implemented |
 
 ### REQ-SET-07: SettingsService Public Helper Methods (Priority: Must)
+<!-- @e2e exclude Internal service helper methods (getObjectService resolution, availability checks); verified by PHPUnit SettingsServiceTest — no browser surface. -->
 
 SettingsService exposes reusable public methods for OpenRegister service resolution and availability checking, used by other DocuDesk services and controllers.
 
@@ -265,6 +272,7 @@ SettingsService exposes reusable public methods for OpenRegister service resolut
 | SET-064 | Both service getters throw `\RuntimeException` when OpenRegister is not available | MUST | Implemented |
 
 ### REQ-SET-08: App Metadata and Compatibility (Priority: Must)
+<!-- @e2e exclude Static appinfo/info.xml metadata + platform version constraints (DB/PHP/NC compatibility); verified by PHPUnit app-bootstrap test + CI app-store validation — no UI surface. -->
 
 DocuDesk declares platform compatibility and app identity in its `appinfo/info.xml`.
 
@@ -292,6 +300,7 @@ DocuDesk declares platform compatibility and app identity in its `appinfo/info.x
 | SET-072 | App is compatible with Nextcloud versions 28 through 32 | MUST | Implemented |
 
 ### REQ-SET-09: External Documentation URLs (Priority: Must)
+<!-- @e2e exclude Static external documentation/roadmap URLs in info.xml + settings header (off-instance links); presence verified by PHPUnit info.xml test — driving to external GitBook/GitHub is out of e2e scope. -->
 
 DocuDesk references external documentation for users, administrators, and developers.
 
@@ -314,6 +323,7 @@ DocuDesk references external documentation for users, administrators, and develo
 | SET-075 | Roadmap is tracked at GitHub Projects | MUST | Implemented |
 
 ### REQ-SET-10: Configuration File Resolution and Validation (Priority: Must)
+<!-- @e2e exclude Server-side config-file resolution + JSON validation chain (file load, missing-file, invalid-JSON handling); verified by PHPUnit SettingsServiceTest — no UI surface. -->
 
 SettingsService resolves and validates the configuration JSON file with a strict validation chain.
 
@@ -341,6 +351,7 @@ SettingsService resolves and validates the configuration JSON file with a strict
 | SET-077 | File existence, readability, JSON validity, and version presence are all validated with descriptive RuntimeException messages | MUST | Implemented |
 
 ### REQ-SET-11: TypeError Catch Fallback for OpenRegister (Priority: Must)
+<!-- @e2e exclude Server-side defensive error-handling (TypeError/Exception catch fallback during register listing); requires fault-injection into OR internals, verified by PHPUnit SettingsServiceTest. -->
 
 Settings retrieval gracefully handles TypeErrors from OpenRegister internals to prevent crashes.
 
