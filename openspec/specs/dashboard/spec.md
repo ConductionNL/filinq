@@ -52,6 +52,7 @@ The dashboard serves as the default landing page displaying consent statistics, 
 | DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
 
 ### REQ-DASH-02: Nextcloud Dashboard Widgets (Priority: Must)
+<!-- @e2e exclude NC Dashboard widget registration + script-loading wiring (IWidget registration, deep-link target, dashboard.js entry); rendered by the Nextcloud Dashboard framework on a separate app page, not the DocuDesk manifest shell. Verified by PHPUnit widget-registration test. -->
 
 DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
 
@@ -123,6 +124,7 @@ The main navigation provides three items with Material Design icons for switchin
 | DASH-025 | Consent Management item active for both list and detail views | MUST | Implemented |
 
 ### REQ-DASH-04: Dashboard Controller (Priority: Must)
+<!-- @e2e exclude PHP controller behaviour (TemplateResponse serving, error handling, unused-parameter signature); the rendered page is covered by the shell-navigation UI test. Controller logic verified by PHPUnit DashboardControllerTest. -->
 
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
@@ -152,6 +154,8 @@ The DashboardController serves the main app page as a Nextcloud TemplateResponse
 
 ### REQ-DASH-05: Status Badge Display (Priority: Must)
 
+<!-- @e2e exclude Presentation-logic unit concern (status→colour mapping helper, badge consistency across views); pure JS mapping function with no standalone interactive flow. Verified by vitest unit test on the badge helper. -->
+
 Consent status values are displayed with consistent color-coded badges throughout the dashboard and consent views.
 
 #### Scenario: Status badge color mapping
@@ -175,6 +179,7 @@ Consent status values are displayed with consistent color-coded badges throughou
 | DASH-041 | Five status values mapped: pending, consent_given, objection_received, no_response, anonymized | MUST | Implemented |
 
 ### REQ-DASH-06: Icon File Differentiation (Priority: Must)
+<!-- @e2e exclude Static icon-asset file existence (navigation vs widget vs admin-section SVGs); presence verified by PHPUnit asset test — no interactive browser flow. -->
 
 DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
 
@@ -201,6 +206,7 @@ DocuDesk uses different icon files for navigation vs. dashboard widgets, followi
 | DASH-045 | Two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
 
 ### REQ-DASH-07: Dead Code and Removed Features (Priority: Must)
+<!-- @e2e exclude Negative/code-hygiene assertions (DashboardController::index removed, permissive CSP removed, unused parameter documented) — verify absence of code/config, not a browser flow. Verified by PHPUnit + static analysis. -->
 
 Previously identified issues have been resolved through removal.
 
