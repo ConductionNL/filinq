@@ -1,6 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Consolidated entity list endpoint
+<!-- @e2e exclude REST endpoint behaviour (GET batch entities — dedup, confidence sort, WOO-profile inclusion flag, 409 on incomplete batch); data-layer contract verified by Newman docudesk-api batch-entities collection + PHPUnit. The interactive review surface it feeds is covered by this spec's UI tests. -->
 The system SHALL provide `GET /api/anonymization/batch/{batchId}/entities` that returns all unique entities detected across all files in the batch. Entities SHALL be deduplicated by value (case-insensitive). Each entity SHALL include: type, value, highestConfidence (maximum confidence across all files), fileCount (number of files containing this entity), and included (boolean, pre-set based on active WOO profile). Uses OpenRegister's EntityRelationMapper for entity data.
 
 #### Scenario: Retrieve consolidated entities for review
