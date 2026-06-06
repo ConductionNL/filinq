@@ -25,6 +25,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/pdf-conversion-service/tasks.md#task-6
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -273,7 +276,12 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
      */
     private function runConversion(File $source, string $binary, int $timeout): File
     {
-        $name   = $source->getName();
+        // Defensive: strip any path components from the file name before
+        // using it to build temp paths. NC nodes shouldn't surface '../'
+        // in getName(), but some external storage / DAV mounts have been
+        // observed returning trailing path segments. basename() makes us
+        // robust to that source of path traversal.
+        $name   = basename($source->getName());
         $dotPos = strrpos($name, '.');
         if ($dotPos === false) {
             $ext = '';
@@ -312,15 +320,23 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
 
             // PDF/A-3b via writer_pdf_Export filter options.
             $filterArgs = 'pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2';
-            $cmd        = sprintf(
-                '%s --headless --convert-to %s --outdir %s %s',
-                escapeshellarg($binary),
-                escapeshellarg($filterArgs),
-                escapeshellarg($tmpDir),
-                escapeshellarg($srcPath)
-            );
+            // Array-form proc_open avoids the /bin/sh -c layer entirely —
+            // strictly safer than the string form even with escapeshellarg().
+            // Also add --norestore + --nofirststartwizard so soffice never
+            // tries to bring up its on-disk profile UI under headless.
+            $argv = [
+                $binary,
+                '--headless',
+                '--norestore',
+                '--nofirststartwizard',
+                '--convert-to',
+                $filterArgs,
+                '--outdir',
+                $tmpDir,
+                $srcPath,
+            ];
 
-            $exitCode = $this->runWithTimeout(cmd: $cmd, timeout: $timeout, tmpDir: $tmpDir);
+            $exitCode = $this->runWithTimeout(argv: $argv, timeout: $timeout, tmpDir: $tmpDir);
 
             if ($exitCode !== 0) {
                 throw new ConversionFailedException(
@@ -353,6 +369,29 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
                             'available' => true,
                             'supports'  => true,
                             'reason'    => 'expected output at '.$outputTmp.' but file is missing',
+                        ],
+                    ]
+                );
+            }
+
+            // Defensive containment check — even though $baseName was
+            // derived from basename($source->getName()) above, realpath
+            // the result and ensure it stays inside $tmpDir before we
+            // read it. Closes any remaining TOCTOU / symlink window.
+            $realTmpDir    = realpath($tmpDir);
+            $realOutputTmp = realpath($outputTmp);
+            if ($realTmpDir === false
+                || $realOutputTmp === false
+                || str_starts_with($realOutputTmp, $realTmpDir . '/') === false
+            ) {
+                throw new ConversionFailedException(
+                    message: 'soffice output path escaped the conversion sandbox.',
+                    attempts: [
+                        [
+                            'name'      => $this->name(),
+                            'available' => true,
+                            'supports'  => true,
+                            'reason'    => 'output path not contained in tmp dir',
                         ],
                     ]
                 );
@@ -391,15 +430,19 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
      * Invoke the command in a subprocess via `proc_open`, draining stdout/
      * stderr and enforcing the timeout via `stream_select`.
      *
-     * @param string $cmd     Shell command to run.
-     * @param int    $timeout Timeout in seconds.
-     * @param string $tmpDir  Temp directory (for logging only).
+     * Uses the array form of proc_open so PHP execs the binary directly
+     * without going through `/bin/sh -c` — eliminates the shell layer
+     * and the associated quoting/injection surface.
+     *
+     * @param array<int, string> $argv    Process argv (argv[0] = binary).
+     * @param int                $timeout Timeout in seconds.
+     * @param string             $tmpDir  Temp directory (for logging only).
      *
      * @return int Process exit code (or 1 on timeout).
      *
      * @throws ConversionFailedException On timeout or if proc_open fails.
      */
-    private function runWithTimeout(string $cmd, int $timeout, string $tmpDir): int
+    private function runWithTimeout(array $argv, int $timeout, string $tmpDir): int
     {
         $descriptors = [
             0 => ['pipe', 'r'],
@@ -407,7 +450,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
             2 => ['pipe', 'w'],
         ];
 
-        $proc = proc_open($cmd, $descriptors, $pipes);
+        $proc = proc_open($argv, $descriptors, $pipes);
         if (is_resource($proc) === false) {
             throw new ConversionFailedException(
                 message: 'proc_open failed to launch soffice.',
@@ -558,15 +601,31 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
      */
     private function isBinaryExecutable(string $binary): bool
     {
-        if ($binary === 'soffice') {
-            // PATH-based resolution: try `which soffice`.
-            // phpcs:disable CustomSn.Functions.NamedParameters
-            $which = shell_exec('which soffice 2>/dev/null');
-            // phpcs:enable
-            return $which !== null && trim($which) !== '';
+        // When given an unqualified binary name (e.g. "soffice"), walk
+        // $PATH ourselves rather than shelling out to `which` — `which`
+        // is absent on minimal container images, and a PHP-native walk
+        // avoids any shell layer regardless of input.
+        if (str_contains($binary, '/') === false) {
+            $pathEnv = getenv('PATH');
+            if ($pathEnv === false || $pathEnv === '') {
+                return false;
+            }
+
+            foreach (explode(PATH_SEPARATOR, $pathEnv) as $dir) {
+                if ($dir === '') {
+                    continue;
+                }
+
+                $candidate = rtrim($dir, '/') . '/' . $binary;
+                if (is_file($candidate) === true && is_executable($candidate) === true) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
-        return is_file($binary) && is_executable($binary);
+        return is_file($binary) === true && is_executable($binary) === true;
 
     }//end isBinaryExecutable()
 
