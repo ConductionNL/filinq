@@ -27,6 +27,13 @@
 			"order": 30
 		},
 		{
+			"id": "MyDocuments",
+			"label": "My Documents",
+			"icon": "icon-file",
+			"route": "MyDocuments",
+			"order": 35
+		},
+		{
 			"id": "FolderAnonymization",
 			"label": "Folder Analysis",
 			"icon": "icon-folder",
@@ -145,6 +152,14 @@
 			"title": "Signing Request Detail",
 			"component": "SigningRequestDetail",
 			"_note": "Signing request detail view driven by signingStore."
+		},
+		{
+			"id": "MyDocuments",
+			"route": "/my-documents",
+			"type": "custom",
+			"title": "My Documents",
+			"component": "MyDocumentsIndex",
+			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
 		},
 		{
 			"id": "PrintPreview",

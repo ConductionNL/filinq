@@ -7,6 +7,8 @@ module.exports = {
 	},
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
+	// Playwright e2e specs have their own runner (npm run test:e2e)
+	testPathIgnorePatterns: ['/node_modules/', '<rootDir>/tests/e2e/'],
 	moduleNameMapper: {
 		'^@/(.*)$': '<rootDir>/src/$1',
 	},

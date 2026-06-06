@@ -5,7 +5,8 @@
 
 /* eslint-disable camelcase, no-undef */
 // Must stay first: sets __webpack_public_path__ / __webpack_nonce__ before
-// any CSS or asset/resource (font) URL is evaluated. See setPublicPath.js.
+// any CSS or asset/resource URL or lazy chunk URL is evaluated. See
+// setPublicPath.js — docudesk lives under apps-extra, not the baked-in /apps/.
 import './setPublicPath.js'
 import Vue from 'vue'
 import VueRouter from 'vue-router'

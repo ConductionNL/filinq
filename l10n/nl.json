@@ -245,6 +245,9 @@
         "Failed to dismiss the anonymiser backend warning": "Sluiten van de anonimiseringsmelding mislukt",
         "Show anonymiser backend warning": "Anonimiseringsmelding weergeven",
         "Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.": "Schakel de anonimiseringsmelding opnieuw in. Deze was eerder gesloten en verschijnt opnieuw bij de volgende paginalading.",
-        "Failed to reset the anonymiser backend warning": "Herstellen van de anonimiseringsmelding mislukt"
+        "Failed to reset the anonymiser backend warning": "Herstellen van de anonimiseringsmelding mislukt",
+        "app-availability.title": "Vereiste applicatie niet beschikbaar",
+        "app-availability.description": "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
+        "app-availability.action": "OpenRegister installeren"
     }
 }
