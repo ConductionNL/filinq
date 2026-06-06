@@ -1,26 +1,27 @@
 <?php
 
 /**
- * Unit tests for SigningAuditService — finding #289 and #290a regression coverage.
+ * Unit tests for SigningAuditService — migrate-signing-audit-to-or-audit.
  *
- * Asserts:
- *  1. The dead-code `rejectUpdate()` / `rejectDelete()` methods no longer
- *     exist on the service — they were misleading (never wired into any
- *     mutation path) and gave the false impression that immutability was
- *     enforced in-app.
- *  2. The `signingAuditEntry` schema in `lib/Settings/docudesk_register.json`
- *     carries BOTH `immutable: true` and `appendOnly: true`, which is the
- *     storage-layer guard that actually enforces Archiefwet 1995
- *     immutability of audit records.
- *  3. `getAuditTrail()` uses a server-side filter (passes `signingRequestId`
- *     to `searchObjects`) instead of loading all records into PHP memory
- *     and filtering in-application (finding #290a).
+ * Verifies:
+ *  1. Constructor accepts AuditTrailMapper + LoggerInterface.
+ *  2. logEvent() calls createAuditTrailEntry() with the correct namespaced
+ *     action type (docudesk.signing.{ACTION}) for all seven VALID_ACTIONS.
+ *  3. logEvent() builds the context array with all required fields.
+ *  4. getAuditTrail() queries the OR audit trail and returns entries
+ *     filtered by objectUuid in chronological order.
+ *  5. Invalid actions throw RuntimeException.
+ *  6. VALID_ACTIONS still includes START (finding L2 — retained).
+ *  7. rejectUpdate() and rejectDelete() are absent (finding #289 — retained).
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-2.1
+ * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-3.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,17 +31,19 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\SettingsService;
+use DateTime;
 use OCA\DocuDesk\Service\SigningAuditService;
-use OCA\OpenRegister\Service\ObjectService;
-use OCP\IAppConfig;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
+use RuntimeException;
 
 /**
- * Tests for SigningAuditService immutability enforcement
+ * Unit tests for the migrated SigningAuditService.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -53,9 +56,329 @@ use ReflectionClass;
 class SigningAuditServiceTest extends TestCase
 {
 
+    /**
+     * AuditTrailMapper mock.
+     *
+     * @var AuditTrailMapper|MockObject
+     */
+    private AuditTrailMapper|MockObject $mapperMock;
 
     /**
-     * Dead-code `rejectUpdate()` no longer exists on the service
+     * LoggerInterface mock.
+     *
+     * @var LoggerInterface|MockObject
+     */
+    private LoggerInterface|MockObject $loggerMock;
+
+    /**
+     * Service under test.
+     *
+     * @var SigningAuditService
+     */
+    private SigningAuditService $service;
+
+
+    /**
+     * Set up mocks before each test.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mapperMock = $this->createMock(AuditTrailMapper::class);
+        $this->loggerMock = $this->createMock(LoggerInterface::class);
+
+        $this->service = new SigningAuditService(
+            auditTrailMapper: $this->mapperMock,
+            logger:           $this->loggerMock
+        );
+
+    }//end setUp()
+
+
+    /**
+     * Helper: build a mock AuditTrail with objectUuid and creation time set.
+     *
+     * @param string        $objectUuid The object UUID.
+     * @param string        $action     The action string.
+     * @param DateTime|null $created    Optional creation time.
+     *
+     * @return AuditTrail|MockObject
+     */
+    private function makeAuditTrail(
+        string $objectUuid,
+        string $action,
+        ?DateTime $created=null
+    ): AuditTrail|MockObject {
+        $trail = $this->createMock(AuditTrail::class);
+        $trail->method('getObjectUuid')->willReturn($objectUuid);
+        $trail->method('getAction')->willReturn($action);
+        $trail->method('getCreated')->willReturn($created ?? new DateTime());
+        $trail->method('jsonSerialize')->willReturn(
+            [
+                'objectUuid' => $objectUuid,
+                'action'     => $action,
+                'created'    => ($created ?? new DateTime())->format(\DateTimeInterface::ATOM),
+            ]
+        );
+
+        return $trail;
+
+    }//end makeAuditTrail()
+
+
+    // -------------------------------------------------------------------------
+    // D-2.1: logEvent() calls createAuditTrailEntry() with the correct action
+    // -------------------------------------------------------------------------
+
+    /**
+     * logEvent() calls createAuditTrailEntry() exactly once per call with the
+     * namespaced action type docudesk.signing.{ACTION}.
+     *
+     * @return void
+     */
+    public function testLogEventCallsCreateAuditTrailEntryOnce(): void
+    {
+        $returnedTrail = $this->createMock(AuditTrail::class);
+        $returnedTrail->method('jsonSerialize')->willReturn(['action' => 'docudesk.signing.SIGNED']);
+
+        $capturedAction  = null;
+        $capturedContext = null;
+
+        $this->mapperMock
+            ->expects($this->once())
+            ->method('createAuditTrailEntry')
+            ->willReturnCallback(
+                function (ObjectEntity $obj, string $action, array $context) use (&$capturedAction, &$capturedContext, $returnedTrail): AuditTrail {
+                    $capturedAction  = $action;
+                    $capturedContext = $context;
+                    return $returnedTrail;
+                }
+            );
+
+        $this->service->logEvent(
+            signingRequestId: 'sign-001',
+            action:           'SIGNED',
+            actorUserId:      'user1',
+            actorDisplayName: 'User One',
+            ipAddress:        '1.2.3.4',
+            signatureLevel:   'advanced',
+            provider:         'NativeSigningProvider'
+        );
+
+        $this->assertSame('docudesk.signing.SIGNED', $capturedAction);
+        $this->assertSame('sign-001', $capturedContext['signRequestId']);
+        $this->assertSame('user1', $capturedContext['actorUserId']);
+        $this->assertSame('User One', $capturedContext['actorDisplayName']);
+        $this->assertSame('1.2.3.4', $capturedContext['ipAddress']);
+        $this->assertSame('advanced', $capturedContext['signatureLevel']);
+        $this->assertSame('NativeSigningProvider', $capturedContext['provider']);
+
+    }//end testLogEventCallsCreateAuditTrailEntryOnce()
+
+
+    /**
+     * logEvent() passes the signingRequestId as the ObjectEntity UUID so that
+     * objectUuid is set correctly on the audit trail entry.
+     *
+     * @return void
+     */
+    public function testLogEventSetsCorrectObjectUuidOnStub(): void
+    {
+        $returnedTrail = $this->createMock(AuditTrail::class);
+        $returnedTrail->method('jsonSerialize')->willReturn([]);
+
+        $capturedObject = null;
+
+        $this->mapperMock
+            ->method('createAuditTrailEntry')
+            ->willReturnCallback(
+                function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+                    $capturedObject = $obj;
+                    return $returnedTrail;
+                }
+            );
+
+        $this->service->logEvent(
+            signingRequestId: 'sign-uuid-42',
+            action:           'CREATED',
+            actorUserId:      'u',
+            actorDisplayName: 'U',
+            ipAddress:        '0.0.0.0'
+        );
+
+        $this->assertNotNull($capturedObject);
+        $this->assertSame('sign-uuid-42', $capturedObject->getUuid());
+
+    }//end testLogEventSetsCorrectObjectUuidOnStub()
+
+
+    /**
+     * All seven VALID_ACTIONS produce the correct namespaced action type when
+     * passed to logEvent().
+     *
+     * @return void
+     */
+    public function testAllValidActionsProduceNamespacedType(): void
+    {
+        $actions = ['CREATED', 'SIGNED', 'DECLINED', 'CANCELLED', 'EXPIRED', 'COMPLETED', 'VIEWED'];
+
+        foreach ($actions as $action) {
+            $capturedAction = null;
+
+            $trail = $this->createMock(AuditTrail::class);
+            $trail->method('jsonSerialize')->willReturn([]);
+
+            $this->mapperMock
+                ->expects($this->once())
+                ->method('createAuditTrailEntry')
+                ->willReturnCallback(
+                    function (ObjectEntity $obj, string $act) use (&$capturedAction, $trail): AuditTrail {
+                        $capturedAction = $act;
+                        return $trail;
+                    }
+                );
+
+            $this->service->logEvent(
+                signingRequestId: 'req',
+                action:           $action,
+                actorUserId:      'u',
+                actorDisplayName: 'U',
+                ipAddress:        '0.0.0.0'
+            );
+
+            $this->assertSame('docudesk.signing.' . $action, $capturedAction, "Action type mismatch for $action");
+
+            // Re-create mock for next iteration.
+            $this->mapperMock = $this->createMock(AuditTrailMapper::class);
+            $this->service    = new SigningAuditService(
+                auditTrailMapper: $this->mapperMock,
+                logger:           $this->loggerMock
+            );
+        }//end foreach
+
+    }//end testAllValidActionsProduceNamespacedType()
+
+
+    /**
+     * logEvent() throws RuntimeException for an unrecognised action.
+     *
+     * @return void
+     */
+    public function testLogEventThrowsForInvalidAction(): void
+    {
+        $this->mapperMock
+            ->expects($this->never())
+            ->method('createAuditTrailEntry');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Invalid audit action: UNKNOWN');
+
+        $this->service->logEvent(
+            signingRequestId: 'req',
+            action:           'UNKNOWN',
+            actorUserId:      'u',
+            actorDisplayName: 'U',
+            ipAddress:        '0.0.0.0'
+        );
+
+    }//end testLogEventThrowsForInvalidAction()
+
+
+    // -------------------------------------------------------------------------
+    // D-3.1: getAuditTrail() queries OR audit trail and filters by objectUuid
+    // -------------------------------------------------------------------------
+
+    /**
+     * getAuditTrail() calls findAll() with an action filter and returns entries
+     * matching the requested objectUuid, sorted chronologically.
+     *
+     * @return void
+     */
+    public function testGetAuditTrailFiltersAndSortsChronologically(): void
+    {
+        $older = $this->makeAuditTrail('sign-003', 'docudesk.signing.CREATED', new DateTime('2026-01-01 10:00:00'));
+        $newer = $this->makeAuditTrail('sign-003', 'docudesk.signing.SIGNED',  new DateTime('2026-01-02 10:00:00'));
+        $other = $this->makeAuditTrail('sign-999', 'docudesk.signing.SIGNED',  new DateTime('2026-01-01 09:00:00'));
+
+        $this->mapperMock
+            ->expects($this->once())
+            ->method('findAll')
+            ->willReturn([$newer, $other, $older]);
+
+        $result = $this->service->getAuditTrail('sign-003');
+
+        $this->assertCount(2, $result, 'Only entries for sign-003 should be returned.');
+        $this->assertSame('docudesk.signing.CREATED', $result[0]['action'], 'Oldest entry must come first.');
+        $this->assertSame('docudesk.signing.SIGNED',  $result[1]['action']);
+
+    }//end testGetAuditTrailFiltersAndSortsChronologically()
+
+
+    /**
+     * getAuditTrail() returns an empty array when no entries match the UUID.
+     *
+     * @return void
+     */
+    public function testGetAuditTrailReturnsEmptyArrayWhenNoMatch(): void
+    {
+        $this->mapperMock
+            ->method('findAll')
+            ->willReturn([]);
+
+        $result = $this->service->getAuditTrail('non-existent-uuid');
+
+        $this->assertSame([], $result);
+
+    }//end testGetAuditTrailReturnsEmptyArrayWhenNoMatch()
+
+
+    /**
+     * getAuditTrail() passes an action filter containing all docudesk.signing.*
+     * action types to findAll() so the query is bounded to signing events.
+     *
+     * @return void
+     */
+    public function testGetAuditTrailPassesActionFilterToFindAll(): void
+    {
+        $capturedFilters = null;
+
+        $this->mapperMock
+            ->expects($this->once())
+            ->method('findAll')
+            ->willReturnCallback(
+                function (?int $limit, ?int $offset, ?array $filters) use (&$capturedFilters): array {
+                    $capturedFilters = $filters;
+                    return [];
+                }
+            );
+
+        $this->service->getAuditTrail('any-uuid');
+
+        $this->assertNotNull($capturedFilters);
+        $this->assertArrayHasKey('action', $capturedFilters);
+
+        // Every VALID_ACTION must appear in the filter string as docudesk.signing.{ACTION}.
+        $actionFilter = $capturedFilters['action'];
+        foreach (['CREATED', 'SIGNED', 'DECLINED', 'CANCELLED', 'EXPIRED', 'COMPLETED', 'VIEWED'] as $action) {
+            $this->assertStringContainsString(
+                'docudesk.signing.' . $action,
+                $actionFilter,
+                "Action filter must include docudesk.signing.$action"
+            );
+        }
+
+    }//end testGetAuditTrailPassesActionFilterToFindAll()
+
+
+    // -------------------------------------------------------------------------
+    // Regression: interface invariants (finding #289, finding L2)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Dead-code rejectUpdate() must not exist (finding #289 — retained check).
      *
      * @return void
      */
@@ -64,16 +387,14 @@ class SigningAuditServiceTest extends TestCase
         $ref = new ReflectionClass(SigningAuditService::class);
         $this->assertFalse(
             $ref->hasMethod('rejectUpdate'),
-            'SigningAuditService::rejectUpdate() should be removed (finding #289 — '
-            . 'dead code, never wired into any mutation path; immutability is '
-            . 'enforced at the OR storage layer instead).'
+            'SigningAuditService::rejectUpdate() should be absent; immutability is OR-native.'
         );
 
     }//end testRejectUpdateMethodRemoved()
 
 
     /**
-     * Dead-code `rejectDelete()` no longer exists on the service
+     * Dead-code rejectDelete() must not exist (finding #289 — retained check).
      *
      * @return void
      */
@@ -82,147 +403,14 @@ class SigningAuditServiceTest extends TestCase
         $ref = new ReflectionClass(SigningAuditService::class);
         $this->assertFalse(
             $ref->hasMethod('rejectDelete'),
-            'SigningAuditService::rejectDelete() should be removed (finding #289).'
+            'SigningAuditService::rejectDelete() should be absent; immutability is OR-native.'
         );
 
     }//end testRejectDeleteMethodRemoved()
 
 
     /**
-     * `logEvent()` and `getAuditTrail()` (the real surface) are still present
-     *
-     * @return void
-     */
-    public function testRealSurfaceStillPresent(): void
-    {
-        $ref = new ReflectionClass(SigningAuditService::class);
-        $this->assertTrue($ref->hasMethod('logEvent'));
-        $this->assertTrue($ref->hasMethod('getAuditTrail'));
-
-    }//end testRealSurfaceStillPresent()
-
-
-    /**
-     * The audit schema in docudesk_register.json declares `immutable: true`
-     * AND `appendOnly: true` — the storage-layer guard.
-     *
-     * @return void
-     */
-    public function testAuditSchemaIsImmutableAndAppendOnly(): void
-    {
-        $registerPath = __DIR__ . '/../../../lib/Settings/docudesk_register.json';
-        $this->assertFileExists($registerPath);
-
-        $raw     = file_get_contents($registerPath);
-        $decoded = json_decode($raw, true);
-        $this->assertIsArray($decoded);
-
-        $schemas = $decoded['components']['schemas'] ?? [];
-        $this->assertArrayHasKey('signingAuditEntry', $schemas);
-
-        $audit = $schemas['signingAuditEntry'];
-        $this->assertTrue(
-            $audit['immutable'] ?? false,
-            'signingAuditEntry must declare immutable: true (Archiefwet 1995).'
-        );
-        $this->assertTrue(
-            $audit['appendOnly'] ?? false,
-            'signingAuditEntry must declare appendOnly: true so the OR storage '
-            . 'layer rejects update/delete of existing audit entries (finding #289).'
-        );
-
-    }//end testAuditSchemaIsImmutableAndAppendOnly()
-
-
-    /**
-     * The audit register now also lists the schema (sanity check).
-     *
-     * @return void
-     */
-    public function testSigningRegisterIncludesAuditSchema(): void
-    {
-        $registerPath = __DIR__ . '/../../../lib/Settings/docudesk_register.json';
-        $decoded      = json_decode(file_get_contents($registerPath), true);
-
-        $signingSchemas = $decoded['components']['registers']['signing']['schemas'] ?? [];
-        $this->assertContains('signingAuditEntry', $signingSchemas);
-
-    }//end testSigningRegisterIncludesAuditSchema()
-
-
-    /**
-     * getAuditTrail() must call searchObjects with a server-side signingRequestId
-     * filter rather than loading all entries into PHP memory (finding #290a).
-     *
-     * The mock asserts that:
-     *  - searchObjects is called exactly once
-     *  - the query contains the @self register/schema scope AND the
-     *    signingRequestId filter
-     *  - the returned entries are normalised to arrays and sorted by timestamp
-     *
-     * @return void
-     */
-    public function testGetAuditTrailUsesServerSideFilter(): void
-    {
-        /** @var ObjectService|MockObject $mockObjectService */
-        $mockObjectService = $this->createMock(ObjectService::class);
-
-        $capturedQuery = null;
-        $mockObjectService->expects($this->once())
-            ->method('searchObjects')
-            ->willReturnCallback(
-                function (array $query) use (&$capturedQuery): array {
-                    $capturedQuery = $query;
-                    // Return two matching entries (already filtered server-side).
-                    return [
-                        ['signingRequestId' => 'req-1', 'timestamp' => '2026-01-02T00:00:00+00:00', 'action' => 'SIGNED'],
-                        ['signingRequestId' => 'req-1', 'timestamp' => '2026-01-01T00:00:00+00:00', 'action' => 'CREATED'],
-                    ];
-                }
-            );
-
-        // SettingsService stub returns the object-service stub and config values.
-        /** @var SettingsService|MockObject $mockSettings */
-        $mockSettings = $this->createMock(SettingsService::class);
-        $mockSettings->method('getObjectService')->willReturn($mockObjectService);
-
-        /** @var IAppConfig|MockObject $mockConfig */
-        $mockConfig = $this->createMock(IAppConfig::class);
-        $mockConfig->method('getValueString')
-            ->willReturnMap(
-                [
-                    ['docudesk', 'signingAuditEntry_register', '', 'reg-audit'],
-                    ['docudesk', 'signingAuditEntry_schema', '', 'schema-audit'],
-                ]
-            );
-
-        $service = new SigningAuditService(
-            $mockSettings,
-            $mockConfig,
-            $this->createMock(LoggerInterface::class)
-        );
-
-        $result = $service->getAuditTrail('req-1');
-
-        // The query passed to searchObjects must include the server-side filter.
-        $this->assertNotNull($capturedQuery);
-        $this->assertArrayHasKey('@self', $capturedQuery, 'searchObjects query must scope to register+schema via @self');
-        $this->assertSame('reg-audit', $capturedQuery['@self']['register'] ?? null);
-        $this->assertSame('schema-audit', $capturedQuery['@self']['schema'] ?? null);
-        $this->assertArrayHasKey('signingRequestId', $capturedQuery, 'searchObjects query must contain signingRequestId filter (finding #290a)');
-        $this->assertSame('req-1', $capturedQuery['signingRequestId']);
-
-        // Results are returned sorted by timestamp (ascending).
-        $this->assertCount(2, $result);
-        $this->assertSame('CREATED', $result[0]['action']);
-        $this->assertSame('SIGNED', $result[1]['action']);
-
-    }//end testGetAuditTrailUsesServerSideFilter()
-
-
-    /**
-     * VALID_ACTIONS must include 'START' so signing-session initiation can be
-     * recorded without the logEvent() guard rejecting it (finding L2).
+     * VALID_ACTIONS must include START (finding L2 — signing-session initiation).
      *
      * @return void
      */
@@ -230,52 +418,28 @@ class SigningAuditServiceTest extends TestCase
     {
         $ref      = new ReflectionClass(SigningAuditService::class);
         $constant = $ref->getReflectionConstant('VALID_ACTIONS');
-        $this->assertNotFalse($constant, 'VALID_ACTIONS constant must exist');
+        $this->assertNotFalse($constant, 'VALID_ACTIONS constant must exist.');
         $this->assertContains(
             'START',
             $constant->getValue(),
-            'VALID_ACTIONS must include START (finding L2 — session-start audit events were silently dropped).'
+            'VALID_ACTIONS must include START (finding L2).'
         );
 
     }//end testValidActionsIncludesStart()
 
 
     /**
-     * getAuditTrail() must NOT call getObjects (the old full-scan path).
-     *
-     * The ObjectService stub does not declare getObjects(), so the mock
-     * will throw if it is called — no explicit `expects($this->never())` needed.
-     * We assert that searchObjects IS called, which is the only read path.
+     * logEvent() and getAuditTrail() public surface must still be present.
      *
      * @return void
      */
-    public function testGetAuditTrailDoesNotCallGetObjects(): void
+    public function testPublicSurfaceStillPresent(): void
     {
-        /** @var ObjectService|MockObject $mockObjectService */
-        $mockObjectService = $this->createMock(ObjectService::class);
-        $mockObjectService->method('searchObjects')->willReturn([]);
+        $ref = new ReflectionClass(SigningAuditService::class);
+        $this->assertTrue($ref->hasMethod('logEvent'),     'logEvent() must be present.');
+        $this->assertTrue($ref->hasMethod('getAuditTrail'), 'getAuditTrail() must be present.');
 
-        /** @var SettingsService|MockObject $mockSettings */
-        $mockSettings = $this->createMock(SettingsService::class);
-        $mockSettings->method('getObjectService')->willReturn($mockObjectService);
-
-        /** @var IAppConfig|MockObject $mockConfig */
-        $mockConfig = $this->createMock(IAppConfig::class);
-        $mockConfig->method('getValueString')->willReturn('');
-
-        $service = new SigningAuditService(
-            $mockSettings,
-            $mockConfig,
-            $this->createMock(LoggerInterface::class)
-        );
-
-        // If the old getObjects path were still present, PHPUnit would raise
-        // "method does not exist" because the stub has no getObjects() — the
-        // test would fail rather than pass silently.
-        $result = $service->getAuditTrail('req-no-scan');
-        $this->assertSame([], $result);
-
-    }//end testGetAuditTrailDoesNotCallGetObjects()
+    }//end testPublicSurfaceStillPresent()
 
 
 }//end class

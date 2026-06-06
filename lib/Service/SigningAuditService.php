@@ -3,7 +3,8 @@
 /**
  * Signing Audit Service
  *
- * Creates and retrieves immutable audit trail entries for signing events.
+ * Thin adapter that routes signing audit events through OR's native
+ * audit trail (hash-chained, natively immutable) per ADR-022.
  * Complies with Archiefwet 1995 minimum 10-year retention.
  *
  * @category  Service
@@ -11,25 +12,23 @@
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1
  */
 
 declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DateTimeImmutable;
-use DateTimeInterface;
-use OCP\IAppConfig;
+use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrailMapper;
+use OCA\OpenRegister\Db\ObjectEntity;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * Service for immutable signing audit trail
+ * Service for immutable signing audit trail via OR audit-trail-immutable.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
@@ -37,13 +36,13 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/digital-signing-integration/tasks.md#4-1
+ * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1
  */
 class SigningAuditService
 {
 
     /**
-     * Valid audit action types
+     * Valid audit action types.
      *
      * @var array<string>
      */
@@ -59,39 +58,39 @@ class SigningAuditService
     ];
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param SettingsService $settingsService Settings service
-     * @param IAppConfig      $config          App config
-     * @param LoggerInterface $logger          Logger
+     * @param AuditTrailMapper $auditTrailMapper OR audit trail mapper.
+     * @param LoggerInterface  $logger           Logger.
      *
      * @return void
+     *
+     * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-1.1
      */
     public function __construct(
-        private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config,
+        private readonly AuditTrailMapper $auditTrailMapper,
         private readonly LoggerInterface $logger
     ) {
 
     }//end __construct()
 
     /**
-     * Log a signing audit event
+     * Log a signing audit event via OR's native audit trail.
      *
-     * @param string               $signingRequestId The signing request ID
-     * @param string               $action           The action type
-     * @param string               $actorUserId      The actor user ID
-     * @param string               $actorDisplayName The actor display name
-     * @param string               $ipAddress        The actor IP address
-     * @param string               $signatureLevel   The signature level
-     * @param string               $provider         The signing provider
-     * @param array<string, mixed> $metadata         Additional metadata
+     * @param string               $signingRequestId The signing request UUID.
+     * @param string               $action           The action type (must be in VALID_ACTIONS).
+     * @param string               $actorUserId      The actor user ID.
+     * @param string               $actorDisplayName The actor display name.
+     * @param string               $ipAddress        The actor IP address.
+     * @param string               $signatureLevel   The signature level.
+     * @param string               $provider         The signing provider.
+     * @param array<string, mixed> $metadata         Additional metadata (pass-through).
      *
-     * @return array<string, mixed> The created audit entry
+     * @return array<string, mixed> The created audit entry serialised.
      *
-     * @throws RuntimeException If logging fails
+     * @throws RuntimeException If the action is not valid.
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#4-2
+     * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-2.1
      */
     public function logEvent(
         string $signingRequestId,
@@ -107,88 +106,93 @@ class SigningAuditService
             throw new RuntimeException('Invalid audit action: '.$action);
         }
 
-        $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingAuditEntry_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingAuditEntry_schema', '');
+        $actionType = 'docudesk.signing.'.$action;
 
-        $entry = [
-            'signingRequestId' => $signingRequestId,
-            'action'           => $action,
+        // Context is persisted in the `changed` JSON column on openregister_audit_trails.
+        $context = [
+            'signRequestId'    => $signingRequestId,
             'actorUserId'      => $actorUserId,
             'actorDisplayName' => $actorDisplayName,
-            'timestamp'        => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
             'ipAddress'        => $ipAddress,
             'signatureLevel'   => $signatureLevel,
             'provider'         => $provider,
-            'metadata'         => $metadata,
+            'extra'            => $metadata,
         ];
 
-        $saved = $objectService->saveObject(object: $entry, register: $register, schema: $schema);
+        // Create a minimal ObjectEntity so the mapper can populate objectUuid on the entry.
+        // Full OR object resolution (integer ID, register, schema) happens in the broader
+        // migrate-signing-to-or-approval-workflow change where ObjectEntity is available.
+        $objectStub = new ObjectEntity();
+        $objectStub->setUuid($signingRequestId);
 
-        if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
-            return $saved->jsonSerialize();
-        }
+        $entry = $this->auditTrailMapper->createAuditTrailEntry(
+            object:  $objectStub,
+            action:  $actionType,
+            context: $context
+        );
 
-        return (array) $saved;
+        return $entry->jsonSerialize();
 
     }//end logEvent()
 
     /**
-     * Get all audit entries for a signing request
+     * Get all audit entries for a signing request from OR's audit trail.
      *
-     * Uses a server-side filter on `signingRequestId` via OR's `searchObjects`
-     * so that only matching records are fetched from the database.  The
-     * previous implementation loaded the entire audit register into PHP memory
-     * and filtered in-application, causing excessive memory usage and slow
-     * response times as the audit log grows (finding #290a).
+     * Queries OR's audit trail for all docudesk.signing.* actions and filters
+     * by objectUuid in PHP. AuditTrailMapper::findAll() does not expose a
+     * direct objectUuid filter; action-scoped pre-filtering keeps the result
+     * set bounded to signing events only.
      *
-     * @param string $signingRequestId The signing request ID
+     * @param string $signingRequestId The signing request UUID.
      *
-     * @return array<int, array<string, mixed>> The audit entries
+     * @return array<int, array<string, mixed>> Audit entries in chronological order.
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#4-1
+     * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-3.1
      */
     public function getAuditTrail(string $signingRequestId): array
     {
-        $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingAuditEntry_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingAuditEntry_schema', '');
-
-        $results = $objectService->searchObjects(
-            [
-                '@self'            => ['register' => $register, 'schema' => $schema],
-                'signingRequestId' => $signingRequestId,
-            ]
+        // Pre-filter by all docudesk.signing.* action types to bound the result set.
+        $actionFilter = implode(
+            ',',
+            array_map(
+                fn(string $a): string => 'docudesk.signing.'.$a,
+                self::VALID_ACTIONS
+            )
         );
 
-        $entries = [];
-        foreach ($results as $result) {
-            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $entries[] = $result->jsonSerialize();
-                continue;
-            }
+        $allSigningEntries = $this->auditTrailMapper->findAll(
+            filters: ['action' => $actionFilter]
+        );
 
-            $entries[] = (array) $result;
-        }
+        // Filter by objectUuid because findAll() does not support objectUuid directly.
+        $entries = array_filter(
+            $allSigningEntries,
+            fn(AuditTrail $e): bool => $e->getObjectUuid() === $signingRequestId
+        );
 
         usort(
             $entries,
-            function (array $entryA, array $entryB): int {
-                return strcmp($entryA['timestamp'] ?? '', $entryB['timestamp'] ?? '');
+            function (AuditTrail $a, AuditTrail $b): int {
+                $aTs = 0;
+                if ($a->getCreated() !== null) {
+                    $aTs = $a->getCreated()->getTimestamp();
+                }
+
+                $bTs = 0;
+                if ($b->getCreated() !== null) {
+                    $bTs = $b->getCreated()->getTimestamp();
+                }
+
+                return $aTs <=> $bTs;
             }
         );
 
-        return array_values($entries);
+        return array_values(
+            array_map(
+                fn(AuditTrail $e): array => $e->jsonSerialize(),
+                $entries
+            )
+        );
 
     }//end getAuditTrail()
-
-    // Archiefwet 1995 immutability of audit entries is enforced by the
-    // OpenRegister storage layer: the `signingAuditEntry` schema is declared
-    // `immutable: true, appendOnly: true` in
-    // `lib/Settings/docudesk_register.json`, so any update or delete request
-    // against an existing audit entry is rejected at the OR mapper level
-    // regardless of which code path tries it. The previously-shipped
-    // `rejectUpdate()` / `rejectDelete()` methods on this service were never
-    // wired into any mutation path and were misleading dead code (finding
-    // #289); they have been removed in favour of the storage-layer guard.
 }//end class

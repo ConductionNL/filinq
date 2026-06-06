@@ -341,8 +341,75 @@ class Schema
  */
 class ObjectEntity
 {
+
+    /** @var string|null */
+    protected ?string $uuid = null;
+
+    /** @var string|null */
+    protected ?string $register = null;
+
+    /** @var string|null */
+    protected ?string $schema = null;
+
     /**
-     * Serialize to array
+     * Set UUID.
+     *
+     * @param string|null $uuid UUID.
+     *
+     * @return void
+     */
+    public function setUuid(?string $uuid): void
+    {
+        $this->uuid = $uuid;
+
+    }//end setUuid()
+
+    /**
+     * Get UUID.
+     *
+     * @return string|null
+     */
+    public function getUuid(): ?string
+    {
+        return $this->uuid;
+
+    }//end getUuid()
+
+    /**
+     * Get register.
+     *
+     * @return string|null
+     */
+    public function getRegister(): ?string
+    {
+        return $this->register;
+
+    }//end getRegister()
+
+    /**
+     * Get schema.
+     *
+     * @return string|null
+     */
+    public function getSchema(): ?string
+    {
+        return $this->schema;
+
+    }//end getSchema()
+
+    /**
+     * Get integer ID.
+     *
+     * @return int|null
+     */
+    public function getId(): ?int
+    {
+        return null;
+
+    }//end getId()
+
+    /**
+     * Serialize to array.
      *
      * @return array
      */
@@ -351,6 +418,203 @@ class ObjectEntity
         return [];
 
     }//end jsonSerialize()
+}//end class
+
+
+/**
+ * Stub for AuditTrail entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class AuditTrail
+{
+
+    /** @var string|null */
+    protected ?string $objectUuid = null;
+
+    /** @var string|null */
+    protected ?string $action = null;
+
+    /** @var array<string, mixed> */
+    protected array $changed = [];
+
+    /** @var \DateTime|null */
+    protected ?\DateTime $created = null;
+
+    /**
+     * Set objectUuid.
+     *
+     * @param string|null $objectUuid UUID.
+     *
+     * @return void
+     */
+    public function setObjectUuid(?string $objectUuid): void
+    {
+        $this->objectUuid = $objectUuid;
+
+    }//end setObjectUuid()
+
+    /**
+     * Get objectUuid.
+     *
+     * @return string|null
+     */
+    public function getObjectUuid(): ?string
+    {
+        return $this->objectUuid;
+
+    }//end getObjectUuid()
+
+    /**
+     * Set action.
+     *
+     * @param string|null $action Action type.
+     *
+     * @return void
+     */
+    public function setAction(?string $action): void
+    {
+        $this->action = $action;
+
+    }//end setAction()
+
+    /**
+     * Get action.
+     *
+     * @return string|null
+     */
+    public function getAction(): ?string
+    {
+        return $this->action;
+
+    }//end getAction()
+
+    /**
+     * Set changed.
+     *
+     * @param array<string, mixed> $changed Changed data.
+     *
+     * @return void
+     */
+    public function setChanged(array $changed): void
+    {
+        $this->changed = $changed;
+
+    }//end setChanged()
+
+    /**
+     * Get changed.
+     *
+     * @return array<string, mixed>
+     */
+    public function getChanged(): array
+    {
+        return $this->changed;
+
+    }//end getChanged()
+
+    /**
+     * Set created timestamp.
+     *
+     * @param \DateTime|null $created Created at.
+     *
+     * @return void
+     */
+    public function setCreated(?\DateTime $created): void
+    {
+        $this->created = $created;
+
+    }//end setCreated()
+
+    /**
+     * Get created timestamp.
+     *
+     * @return \DateTime|null
+     */
+    public function getCreated(): ?\DateTime
+    {
+        return $this->created;
+
+    }//end getCreated()
+
+    /**
+     * Serialize to array.
+     *
+     * @return array<string, mixed>
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            'objectUuid' => $this->objectUuid,
+            'action'     => $this->action,
+            'changed'    => $this->changed,
+            'created'    => $this->created !== null ? $this->created->format(\DateTimeInterface::ATOM) : null,
+        ];
+
+    }//end jsonSerialize()
+}//end class
+
+
+/**
+ * Stub for AuditTrailMapper.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class AuditTrailMapper
+{
+
+    /**
+     * Find all audit trail entries with optional filters.
+     *
+     * @param int|null   $limit   Limit.
+     * @param int|null   $offset  Offset.
+     * @param array|null $filters Filters.
+     * @param array|null $sort    Sort order.
+     * @param string|null $search Search term.
+     *
+     * @return AuditTrail[]
+     */
+    public function findAll(
+        ?int $limit=null,
+        ?int $offset=null,
+        ?array $filters=[],
+        ?array $sort=['created' => 'DESC'],
+        ?string $search=null
+    ): array {
+        return [];
+
+    }//end findAll()
+
+    /**
+     * Create an audit trail entry for a custom action.
+     *
+     * @param ObjectEntity $object  The object the entry relates to.
+     * @param string       $action  The action type.
+     * @param array        $context Additional context data.
+     *
+     * @return AuditTrail
+     */
+    public function createAuditTrailEntry(
+        ObjectEntity $object,
+        string $action,
+        array $context=[]
+    ): AuditTrail {
+        $trail = new AuditTrail();
+        $trail->setObjectUuid($object->getUuid());
+        $trail->setAction($action);
+        $trail->setChanged($context);
+        $trail->setCreated(new \DateTime());
+        return $trail;
+
+    }//end createAuditTrailEntry()
 }//end class
 
 /**
