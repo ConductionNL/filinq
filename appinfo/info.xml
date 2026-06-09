@@ -4,7 +4,9 @@
     <id>docudesk</id>
     <name>DocuDesk</name>
     <summary>GDPR publication consent management and document metadata enrichment for Nextcloud</summary>
-    <description><![CDATA[GDPR publication consent management and document metadata enrichment for Nextcloud
+    <description><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 12 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/docudesk) for release planning and what this app does.
+
+GDPR publication consent management and document metadata enrichment for Nextcloud
 
 DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid) and automatic document metadata enrichment. It integrates with Open Register via events to enrich documents as they are created and updated.
 
