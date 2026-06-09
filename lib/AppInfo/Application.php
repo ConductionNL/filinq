@@ -23,7 +23,6 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
-use OCA\DocuDesk\BackgroundJob\SigningExpirationJob;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
@@ -91,9 +90,9 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
 
-        // Register background jobs.
-        $context->registerBackgroundJob(SigningExpirationJob::class);
-
+        // Background jobs are declared in appinfo/info.xml under
+        // <background-jobs>; Nextcloud auto-registers them with the IJobList.
+        // IRegistrationContext has no registerBackgroundJob() method.
     }//end register()
 
     /**
