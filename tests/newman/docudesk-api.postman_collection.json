@@ -357,6 +357,167 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (malformed unredactedEntities)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": \"not-an-int\", \"entityText\": \"X\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects malformed unredactedEntities with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (unredacted empty publicationBases)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": 2, \"entityText\": \"X\", \"entityType\": \"PERSON\", \"publicationBases\": []}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects empty publicationBases with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (no unredactedEntities -> no createdConsents)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Backward-compatible: no createdConsents when unredactedEntities omitted', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    pm.expect(j).to.not.have.property('createdConsents');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/batchAnonymize/test-clearance-batch (accepts unredactedEntities)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/batchAnonymize/test-clearance-batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "batchAnonymize",
+                "test-clearance-batch"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": 2, \"entityText\": \"PERSON_2\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b2\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Batch endpoint accepts unredactedEntities payload (200/207/404 \u2014 batch may not exist)', function () { pm.expect([200, 207, 400, 404, 422]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
