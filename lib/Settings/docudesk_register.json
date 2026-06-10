@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "7.0.0"
+        "version": "7.1.0"
     },
     "x-openregister": {
         "type": "application",
@@ -56,7 +56,8 @@
                 "description": "Register voor correspondentie logging en huisstijl configuratie",
                 "schemas": [
                     "correspondence",
-                    "huisstijl"
+                    "huisstijl",
+                    "anonymizationLink"
                 ]
             },
             "dossier": {
@@ -1018,6 +1019,150 @@
                 "maxDepth": 1, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
                 "configuration": {"objectNameField": "name", "objectDescriptionField": "description", "autoPublish": false},
                 "searchable": true
+            },
+            "anonymizationLink": {
+                "uri": null,
+                "slug": "anonymizationLink",
+                "title": "Anonymisation Link",
+                "description": "Koppeling tussen een bronbestand (niet-geanonimiseerd) en zijn geanonimiseerde tegenhanger. Eén record per bronbestand (idempotent op sourceFileId); her-anonimisering werkt hetzelfde record bij. Zowel sourceFileId als anonymizedFileId zijn facetable zodat de OpenRegister zoek-API de koppeling in beide richtingen oplost.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileLinkOutline",
+                "required": [
+                    "sourceFileId",
+                    "anonymizedFileId"
+                ],
+                "properties": {
+                    "sourceFileId": {
+                        "description": "Nextcloud bestands-ID van het originele (niet-geanonimiseerde) document — idempotentiesleutel",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Bron bestands-ID"
+                    },
+                    "sourceFileName": {
+                        "description": "Bestandsnaam van het brondocument",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Bron bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "sourceFilePath": {
+                        "description": "Volledig pad van het brondocument binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Bron pad",
+                        "maxLength": 4096
+                    },
+                    "anonymizedFileId": {
+                        "description": "Nextcloud bestands-ID van het geanonimiseerde resultaat — sleutel voor de omgekeerde zoekopdracht",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Geanonimiseerd bestands-ID"
+                    },
+                    "anonymizedFileName": {
+                        "description": "Bestandsnaam van het geanonimiseerde resultaat",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Geanonimiseerde bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "anonymizedFilePath": {
+                        "description": "Volledig (stabiel) pad van het geanonimiseerde resultaat binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Geanonimiseerd pad",
+                        "maxLength": 4096
+                    },
+                    "outputFormat": {
+                        "description": "Uitvoerformaat van het geanonimiseerde document",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Formaat",
+                        "enum": ["pdf", "docx", "odt", "txt", "html"]
+                    },
+                    "status": {
+                        "description": "Uitkomst van de anonimiseringsrun. Alleen succesvolle runs worden vastgelegd, dus de waarde is altijd 'anonymized'.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": ["anonymized"],
+                        "default": "anonymized"
+                    },
+                    "replacementCount": {
+                        "description": "Aantal toegepaste entiteitsvervangingen in deze run",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vervangingen"
+                    },
+                    "runCount": {
+                        "description": "Hoe vaak dit bronbestand is geanonimiseerd (opgehoogd bij elke her-anonimisering)",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Aantal runs",
+                        "default": 1
+                    },
+                    "anonymizedAt": {
+                        "description": "Datum/tijd van de anonimiseringsrun (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Geanonimiseerd op"
+                    },
+                    "anonymizedBy": {
+                        "description": "Nextcloud gebruikers-ID dat de anonimisering heeft gestart",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Geanonimiseerd door",
+                        "maxLength": 64
+                    }
+                },
+                "archive": [], "source": "internal", "hardValidation": true, "immutable": false,
+                "updated": "2026-06-09T00:00:00+00:00", "created": "2026-06-09T00:00:00+00:00",
+                "maxDepth": 0, "owner": null, "application": null, "organisation": null, "groups": null, "authorization": null, "deleted": null,
+                "configuration": {"objectNameField": "sourceFileName", "objectDescriptionField": "status", "autoPublish": false},
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": {"default": "P7Y"},
+                    "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
             }
         },
         "objects": [
@@ -1250,6 +1395,66 @@
                 "consentDocument": "seed-recording-bakker-2025-02-10.mp3",
                 "consentScope": "Beperkt tot het specifieke onderwerp (subsidieaanvraag bedrijvenpark Zuid).",
                 "policyMatch": null
+            },
+            {
+                "@self": {"register": "document", "schema": "anonymizationLink", "slug": "alink-demostad-beschikking-2024-0042"},
+                "sourceFileId": 1001,
+                "sourceFileName": "beschikking_subsidie_2024-0042.docx",
+                "sourceFilePath": "/Demostad/Woo-2025-017/beschikking_subsidie_2024-0042.docx",
+                "anonymizedFileId": 1002,
+                "anonymizedFileName": "beschikking_subsidie_2024-0042_anonymized.pdf",
+                "anonymizedFilePath": "/Demostad/Woo-2025-017/beschikking_subsidie_2024-0042_anonymized.pdf",
+                "outputFormat": "pdf",
+                "status": "anonymized",
+                "replacementCount": 14,
+                "runCount": 1,
+                "anonymizedAt": "2026-03-14T10:25:00+00:00",
+                "anonymizedBy": "woo.officer@demostad.nl"
+            },
+            {
+                "@self": {"register": "document", "schema": "anonymizationLink", "slug": "alink-demostad-bezwaar-wmo-2024-0118"},
+                "sourceFileId": 1101,
+                "sourceFileName": "bezwaarschrift_wmo_2024-0118.docx",
+                "sourceFilePath": "/Demostad/WMO-bezwaren-2024/bezwaarschrift_wmo_2024-0118.docx",
+                "anonymizedFileId": 1110,
+                "anonymizedFileName": "bezwaarschrift_wmo_2024-0118_anonymized.pdf",
+                "anonymizedFilePath": "/Demostad/WMO-bezwaren-2024/bezwaarschrift_wmo_2024-0118_anonymized.pdf",
+                "outputFormat": "pdf",
+                "status": "anonymized",
+                "replacementCount": 9,
+                "runCount": 2,
+                "anonymizedAt": "2026-02-28T16:10:00+00:00",
+                "anonymizedBy": "woo.officer@demostad.nl"
+            },
+            {
+                "@self": {"register": "document", "schema": "anonymizationLink", "slug": "alink-conduction-demo-adviesrapport-2026"},
+                "sourceFileId": 2001,
+                "sourceFileName": "adviesrapport_digitale_transformatie_2026.docx",
+                "sourceFilePath": "/Conduction/Demo/adviesrapport_digitale_transformatie_2026.docx",
+                "anonymizedFileId": 2002,
+                "anonymizedFileName": "adviesrapport_digitale_transformatie_2026_anonymized.docx",
+                "anonymizedFilePath": "/Conduction/Demo/adviesrapport_digitale_transformatie_2026_anonymized.docx",
+                "outputFormat": "docx",
+                "status": "anonymized",
+                "replacementCount": 5,
+                "runCount": 1,
+                "anonymizedAt": "2026-04-01T09:15:00+00:00",
+                "anonymizedBy": "demo@conduction.nl"
+            },
+            {
+                "@self": {"register": "document", "schema": "anonymizationLink", "slug": "alink-zonnestraal-klacht-2025-0033"},
+                "sourceFileId": 3001,
+                "sourceFileName": "klachtbrief_zomerseizoen_2025-0033.odt",
+                "sourceFilePath": "/Zonnestraal/Klachten-2025/klachtbrief_zomerseizoen_2025-0033.odt",
+                "anonymizedFileId": 3002,
+                "anonymizedFileName": "klachtbrief_zomerseizoen_2025-0033_anonymized.odt",
+                "anonymizedFilePath": "/Zonnestraal/Klachten-2025/klachtbrief_zomerseizoen_2025-0033_anonymized.odt",
+                "outputFormat": "odt",
+                "status": "anonymized",
+                "replacementCount": 7,
+                "runCount": 1,
+                "anonymizedAt": "2026-05-12T11:40:00+00:00",
+                "anonymizedBy": "privacy.officer@zonnestraal.nl"
             }
         ]
     }
