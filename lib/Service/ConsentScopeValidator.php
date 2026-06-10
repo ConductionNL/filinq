@@ -61,6 +61,8 @@ final class ConsentScopeValidator
      * @throws InvalidArgumentException When the scope contract is violated.
      *
      * @return void
+     *
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md
      */
     public function assertValid(array $consent): void
     {
