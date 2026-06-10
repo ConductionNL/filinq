@@ -94,7 +94,8 @@ class ConsentService
         private readonly ObjectionDeadlineChecker $deadlineChecker,
         private readonly ConsentUpdateHandler $updateHandler,
         private readonly PolicyMatchService $policyMatcher,
-        private readonly ConsentNotesHelper $notesHelper
+        private readonly ConsentNotesHelper $notesHelper,
+        private readonly ConsentScopeValidator $scopeValidator
     ) {
 
     }//end __construct()
@@ -495,6 +496,13 @@ class ConsentService
         if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_STANDING_CONSENT) {
             $consentData['policyMatch'] = $policyResult['uuid'];
         }
+
+        // Service-level scope contract (publication-consent-policy-fields
+        // task 5): the schema cannot express "matchRules required when
+        // scope=entity but forbidden when scope=document". The validator
+        // throws InvalidArgumentException on violations, which the
+        // controller surfaces as HTTP 400.
+        $this->scopeValidator->assertValid($consentData);
 
         // Let OpenRegister enforce RBAC and multitenancy so the consent
         // record is owned by the creating user (security finding #283).

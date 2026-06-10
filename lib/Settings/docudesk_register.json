@@ -120,6 +120,20 @@
                     "entityText"
                 ],
                 "properties": {
+                    "scope": {
+                        "description": "Discriminator: `document` = per-document/per-entity consent in the WOO workflow; `entity` = standing consent for a recurring entity (mayor, council member, etc.). Default `document` preserves backward compatibility — existing rows automatically load as `document`.",
+                        "type": "string",
+                        "enum": [
+                            "document",
+                            "entity"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 0,
+                        "facetable": true,
+                        "title": "Scope",
+                        "default": "document"
+                    },
                     "documentId": {
                         "description": "Verwijzing naar het document dat gepubliceerd moet worden",
                         "type": "string",
@@ -297,6 +311,111 @@
                         "facetable": false,
                         "title": "Notities",
                         "maxLength": 2000
+                    },
+                    "matchRules": {
+                        "description": "Array of `{type, value}` entries (same enum as `publicationProhibition`: `exact` / `normalized` / `bsn` / `kvk`). Only used on `scope=entity` records; service-level validation rejects `scope=entity` writes without at least one matchRule.",
+                        "type": "array",
+                        "required": false,
+                        "visible": true,
+                        "order": 100,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "value"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "exact",
+                                        "normalized",
+                                        "bsn",
+                                        "kvk"
+                                    ]
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
+                        },
+                        "title": "Matchregels"
+                    },
+                    "validFrom": {
+                        "description": "Standing-consent validity start (inclusive). Only honoured on `scope=entity` records.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 101,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Standing-consent validity end (inclusive); `null` means open-ended. Service-level validation surfaces a non-blocking warning when blank.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 102,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Master kill-switch on standing consents (`scope=entity`). Only `active=true` records participate in matching.",
+                        "type": "boolean",
+                        "required": false,
+                        "visible": true,
+                        "order": 103,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "consentMethod": {
+                        "description": "How consent was captured. Required at service-level on `scope=entity` writes.",
+                        "type": "string",
+                        "enum": [
+                            "paper",
+                            "digital_signature",
+                            "verbal_recorded",
+                            "opt_in_form"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 104,
+                        "facetable": true,
+                        "title": "Toestemmingsmethode"
+                    },
+                    "consentDocument": {
+                        "description": "Reference to the captured consent document (signed PDF / form upload).",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 105,
+                        "facetable": true,
+                        "title": "Toestemmingsdocument"
+                    },
+                    "consentScope": {
+                        "description": "Free-text limitation describing the scope of the standing consent (e.g. 'all publications referencing the position of burgemeester').",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 106,
+                        "title": "Toestemmingsbereik",
+                        "maxLength": 1024
+                    },
+                    "policyMatch": {
+                        "description": "Polymorphic reference: when set on a `scope=document` record, points to the `publicationProhibition` UUID (prohibition pre-emption) OR to a `publicationConsent` UUID with `scope=entity` (standing-consent match). Service-level validation rejects polymorphic violations and rejects `policyMatch` on `scope=entity` records.",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 107,
+                        "facetable": true,
+                        "title": "Policy match",
+                        "x-openregister-handling": "related-object"
                     }
                 },
                 "archive": [],
