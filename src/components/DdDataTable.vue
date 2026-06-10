@@ -120,17 +120,28 @@ export default {
 		},
 	},
 	computed: {
+		/**
+		 * @spec exclude Pure presentational layout calculation; no domain or persistence semantics.
+		 */
 		totalColumns() {
 			return this.columns.length
 				+ (this.$scopedSlots['row-actions'] ? 1 : 0)
 				+ (this.selectable ? 1 : 0)
 		},
-		/** True when every visible row is selected (drives the header checkbox). */
+		/**
+		 * True when every visible row is selected (drives the header checkbox).
+		 *
+		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
+		 */
 		allSelected() {
 			return this.rows.length > 0
 				&& this.rows.every((row) => this.selectedKeys.includes(row[this.rowKey]))
 		},
-		/** True when some — but not all — visible rows are selected (indeterminate state). */
+		/**
+		 * True when some — but not all — visible rows are selected (indeterminate state).
+		 *
+		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
+		 */
 		someSelected() {
 			return this.selectedKeys.length > 0 && !this.allSelected
 		},
@@ -151,6 +162,8 @@ export default {
 		 * @param {object} row Row object.
 		 * @param {string} key Column key (e.g. `address.city`).
 		 * @return {*} Cell value.
+		 *
+		 * @spec exclude Generic dot-notation key resolver for table cell rendering; no domain semantics.
 		 */
 		getCellValue(row, key) {
 			if (key.includes('.')) {

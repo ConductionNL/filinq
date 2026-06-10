@@ -257,6 +257,9 @@ export default {
 			return t('docudesk', 'No documents found')
 		},
 	},
+	/**
+	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
+	 */
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
@@ -270,6 +273,8 @@ export default {
 		 * user can bail out of a bulk action without reaching for the menu.
 		 *
 		 * @param {KeyboardEvent} e Keyboard event.
+		 *
+		 * @spec exclude Local bulk-selection UI keyboard handler; no domain or persistence semantics.
 		 */
 		onKeydown(e) {
 			if (e.key === 'Escape' && this.bulkSelect) {
@@ -278,6 +283,8 @@ export default {
 		},
 		/**
 		 * Leave bulk-selection mode and clear any pending selection.
+		 *
+		 * @spec exclude Local bulk-selection UI state reset; no domain or persistence semantics.
 		 */
 		cancelBulkSelect() {
 			this.bulkSelect = false
@@ -286,6 +293,8 @@ export default {
 		/**
 		 * Toggle bulk-selection mode on/off. Turning it off clears any
 		 * existing selection so the checkboxes don't linger as hidden state.
+		 *
+		 * @spec exclude Local bulk-selection UI mode toggle; no domain or persistence semantics.
 		 */
 		toggleBulkSelect() {
 			if (this.bulkSelect) {
@@ -298,6 +307,8 @@ export default {
 		 * Toggle a single document's selection by fileId.
 		 *
 		 * @param {object} row Document row.
+		 *
+		 * @spec exclude Local bulk-selection UI per-row toggle; no domain or persistence semantics.
 		 */
 		onToggleSelect(row) {
 			if (!row || !row.fileId) return
@@ -312,6 +323,8 @@ export default {
 		 * Select-all toggle for the table header checkbox. Operates on the
 		 * documents visible on the current page: if all are already selected
 		 * it clears them, otherwise it adds them to the selection.
+		 *
+		 * @spec exclude Local bulk-selection UI select-all toggle; no domain or persistence semantics.
 		 */
 		onToggleSelectAll() {
 			const pageIds = this.paginatedDocuments.map((d) => d.fileId)
@@ -327,6 +340,8 @@ export default {
 		 * operation. Dossiers and their contents are removed recursively.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 		 */
 		async bulkDelete() {
 			const names = myDocumentsStore.documents
@@ -394,6 +409,8 @@ export default {
 		 * and persist the choice so it survives reloads / navigation.
 		 *
 		 * @param {string} mode New view mode ('table' or 'cards').
+		 *
+		 * @spec exclude Local view-mode display preference (localStorage); no domain or persistence semantics.
 		 */
 		onViewModeChange(mode) {
 			this.viewMode = mode
@@ -410,6 +427,8 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {Promise<void>}
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 		 */
 		async confirmDelete(row) {
 			if (!row || !row.fileName) return

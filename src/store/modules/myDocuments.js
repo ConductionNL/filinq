@@ -146,6 +146,8 @@ export const useMyDocumentsStore = defineStore(
 			 *
 			 * @param {string} fileName Name of the file/folder inside currentPath.
 			 * @return {Promise<void>}
+			 *
+			 * @spec exclude Thin WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 			 */
 			async deleteDocument(fileName) {
 				const user = getCurrentUser()
@@ -172,6 +174,8 @@ export const useMyDocumentsStore = defineStore(
 			 *
 			 * @param {string[]} fileNames Names of files/folders inside currentPath.
 			 * @return {Promise<string[]>} Names that failed to delete (empty on full success).
+			 *
+			 * @spec exclude Thin WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 			 */
 			async deleteDocuments(fileNames) {
 				const user = getCurrentUser()

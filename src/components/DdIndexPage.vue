@@ -173,7 +173,11 @@ export default {
 		}
 	},
 	computed: {
-		/** Map the internal `table`/`cards` mode to DdViewToggle's `list`/`tiles`. */
+		/**
+		 * Map the internal `table`/`cards` mode to DdViewToggle's `list`/`tiles`.
+		 *
+		 * @spec exclude Local view-mode display mapping; no domain or persistence semantics.
+		 */
 		toggleValue() {
 			return this.currentViewMode === 'cards' ? 'tiles' : 'list'
 		},
@@ -185,6 +189,13 @@ export default {
 		},
 	},
 	watch: {
+		/**
+		 * Sync external `viewMode` prop changes into the local mirror.
+		 *
+		 * @param {string} val New view mode from parent.
+		 *
+		 * @spec exclude Local view-mode display sync; no domain or persistence semantics.
+		 */
 		viewMode(val) {
 			this.currentViewMode = val
 		},
@@ -194,6 +205,8 @@ export default {
 		 * Translate a DdViewToggle selection back to the internal mode.
 		 *
 		 * @param {string} mode `'tiles'` or `'list'`.
+		 *
+		 * @spec exclude Local view-mode display mapping; no domain or persistence semantics.
 		 */
 		onToggle(mode) {
 			this.setViewMode(mode === 'tiles' ? 'cards' : 'table')
@@ -203,6 +216,8 @@ export default {
 		 * the choice (e.g. via `:view-mode.sync` or `@update:view-mode`).
 		 *
 		 * @param {string} mode `'table'` or `'cards'`.
+		 *
+		 * @spec exclude Local view-mode display state; no domain or persistence semantics (caller may persist).
 		 */
 		setViewMode(mode) {
 			if (mode === this.currentViewMode) return

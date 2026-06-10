@@ -81,6 +81,8 @@ export default {
 		 * Emit the chosen mode unless it is already active.
 		 *
 		 * @param {string} mode `'tiles'` or `'list'`.
+		 *
+		 * @spec exclude Local view-toggle UI control; no domain or persistence semantics.
 		 */
 		select(mode) {
 			if (mode === this.value) return
