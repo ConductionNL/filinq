@@ -219,6 +219,12 @@ class SettingsInitializer
             );
             $settings       = $this->loadSettings();
 
+            // Idempotently ensure the templateVersion register/schema config
+            // keys exist. Run before the version gate so existing installs
+            // (already at the current config version) get back-filled without
+            // requiring a config-version bump.
+            $this->provisionTemplateVersionConfig();
+
             if (version_compare(
                 $settings['info']['version'],
                 $currentVersion,
@@ -251,4 +257,125 @@ class SettingsInitializer
         return $results;
 
     }//end initialize()
+
+    /**
+     * Provision the templateVersion register/schema app-config keys
+     *
+     * Template editing writes a version-history snapshot before saving, which
+     * needs the `templateVersion_register` and `templateVersion_schema` app
+     * config keys. Unlike `template_*`, these were never provisioned, so every
+     * template update threw RegisterNotConfiguredException and surfaced a 500.
+     *
+     * The `templateVersion` schema lives in the same register(s) as
+     * `template`. This method resolves the schema ID from OpenRegister by slug
+     * and prefers to co-locate version objects in the same register the
+     * templates themselves use (`template_register`), falling back to whichever
+     * register holds the `templateVersion` schema. It is idempotent: keys that
+     * are already populated are left untouched, and any resolution failure is
+     * logged without aborting initialization.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     */
+    private function provisionTemplateVersionConfig(): void
+    {
+        $existingRegister = $this->config->getValueString($this->appName, 'templateVersion_register', '');
+        $existingSchema   = $this->config->getValueString($this->appName, 'templateVersion_schema', '');
+
+        if (empty($existingRegister) === false && empty($existingSchema) === false) {
+            // Already provisioned — nothing to do.
+            return;
+        }
+
+        try {
+            $registerService = $this->container->get('OCA\OpenRegister\Service\RegisterService');
+            $schemaMapper    = $this->container->get('OCA\OpenRegister\Db\SchemaMapper');
+
+            $registers = $registerService->findAll(
+                limit: null,
+                offset: null,
+                filters: [],
+                searchConditions: [],
+                searchParams: []
+            );
+
+            // Prefer the register the templates themselves live in so version
+            // snapshots are co-located; fall back to any register that holds
+            // the templateVersion schema.
+            $templateRegister   = $this->config->getValueString($this->appName, 'template_register', '');
+            $fallbackRegisterId = '';
+            $schemaId           = '';
+
+            foreach ($registers as $register) {
+                $registerArr = $register->jsonSerialize();
+                $registerId  = (string) ($registerArr['id'] ?? '');
+
+                foreach (($registerArr['schemas'] ?? []) as $candidateSchemaId) {
+                    try {
+                        $schema    = $schemaMapper->find(id: $candidateSchemaId);
+                        $schemaArr = $schema->jsonSerialize();
+                    } catch (Exception $schemaError) {
+                        continue;
+                    }
+
+                    if (($schemaArr['slug'] ?? '') !== 'templateVersion') {
+                        continue;
+                    }
+
+                    $schemaId = (string) ($schemaArr['id'] ?? '');
+
+                    if ($registerId === $templateRegister) {
+                        // Exact co-location with the templates register.
+                        $this->writeTemplateVersionConfig(registerId: $registerId, schemaId: $schemaId);
+                        return;
+                    }
+
+                    if ($fallbackRegisterId === '') {
+                        $fallbackRegisterId = $registerId;
+                    }
+                }//end foreach
+            }//end foreach
+
+            if ($fallbackRegisterId !== '' && $schemaId !== '') {
+                $this->writeTemplateVersionConfig(registerId: $fallbackRegisterId, schemaId: $schemaId);
+                return;
+            }
+
+            $this->logger->warning(
+                'templateVersion schema not found in any register; '
+                .'template version history will be unavailable'
+            );
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to provision templateVersion config: '.$e->getMessage(),
+                ['app' => $this->appName]
+            );
+        }//end try
+
+    }//end provisionTemplateVersionConfig()
+
+    /**
+     * Write the resolved templateVersion register/schema config keys
+     *
+     * @param string $registerId The OpenRegister register ID to store.
+     * @param string $schemaId   The templateVersion schema ID to store.
+     *
+     * @return void
+     */
+    private function writeTemplateVersionConfig(string $registerId, string $schemaId): void
+    {
+        $this->config->setValueString($this->appName, 'templateVersion_register', $registerId);
+        $this->config->setValueString($this->appName, 'templateVersion_schema', $schemaId);
+        $this->config->setValueString($this->appName, 'templateVersion_source', 'openregister');
+
+        $this->logger->info(
+            'Provisioned templateVersion register/schema config',
+            [
+                'register' => $registerId,
+                'schema'   => $schemaId,
+            ]
+        );
+
+    }//end writeTemplateVersionConfig()
 }//end class

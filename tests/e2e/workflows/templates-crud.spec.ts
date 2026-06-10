@@ -106,17 +106,16 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 	).toBe(0)
 })
 
-// BUG (real, data-dependent): updating a template 500s with
+// FIXED (was a 500): updating a template used to 500 with
 //   {"error":"Template version register/schema not configured"}
 // because `TemplateService::updateTemplate` always writes a version-history
 // entry via OpenRegisterResolver, which requires `templateVersion_register`
-// + `templateVersion_schema` in app config — keys that are NOT provisioned
-// on this instance (only `template_register` / `template_schema` are).
-// The version-history write should be optional / degrade gracefully, or the
-// version register+schema must be provisioned by the app's repair step.
-// Once fixed (config provisioned or graceful skip), this becomes a real
-// update-persistence + UI-rename assertion.
-test.fixme('Template update persists new name + content and the renamed row shows in the UI', async ({ page }) => {
+// + `templateVersion_schema` in app config — keys that were NOT provisioned
+// (only `template_register` / `template_schema` were). SettingsInitializer now
+// idempotently provisions the templateVersion register/schema keys (resolving
+// the templateVersion schema from OpenRegister, co-located with the templates
+// register), and getAllSettings() loads them. Template edit now persists.
+test('Template update persists new name + content and the renamed row shows in the UI', async ({ page }) => {
 	const token = await harvestToken(page)
 	const req = page.request
 

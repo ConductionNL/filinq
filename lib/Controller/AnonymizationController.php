@@ -29,7 +29,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
 
-use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
@@ -124,7 +123,7 @@ class AnonymizationController extends Controller
             $result = $this->fileListingService->listProcessedFiles();
 
             return new JSONResponse($result);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $statusCode = 500;
             if ($e->getCode() >= 400 && $e->getCode() < 600) {
                 $statusCode = $e->getCode();
@@ -190,7 +189,7 @@ class AnonymizationController extends Controller
             $result = $this->fileListingService->uploadFile($fileName, $fileContent);
 
             return new JSONResponse($result);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $statusCode = 500;
             if ($e->getCode() >= 400 && $e->getCode() < 600) {
                 $statusCode = $e->getCode();
@@ -276,7 +275,7 @@ class AnonymizationController extends Controller
             $result = $this->anonymizationService->extractAndDetectEntities($fileId);
 
             return new JSONResponse($result);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 'Failed to extract and detect entities: '.$e->getMessage(),
                 ['exception' => $e]
@@ -436,7 +435,7 @@ class AnonymizationController extends Controller
             }
 
             return new JSONResponse($result);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
                 ['exception' => $e]

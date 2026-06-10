@@ -222,7 +222,7 @@ class SettingsService
     public function getAllSettings(): array
     {
         $data = [
-            'objectTypes'        => ['publicationConsent', 'template'],
+            'objectTypes'        => ['publicationConsent', 'template', 'templateVersion'],
             'openRegisters'      => false,
             'availableRegisters' => [],
         ];

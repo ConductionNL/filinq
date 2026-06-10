@@ -129,7 +129,8 @@ class SigningService
 
         $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $createdRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema);
+        $savedRequest   = $objectService->saveObject(object: $request, register: $register, schema: $schema);
+        $createdRequest = $this->toArray(object: $savedRequest);
 
         $signers        = $data['signers'] ?? [];
         $signerIds      = [];
@@ -146,7 +147,8 @@ class SigningService
                 'status'           => 'PENDING',
             ];
 
-            $created     = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
+            $savedSigner = $objectService->saveObject(object: $signerRecord, register: $signerRegister, schema: $signerSchema);
+            $created     = $this->toArray(object: $savedSigner);
             $signerIds[] = $created['id'] ?? $created['uuid'] ?? '';
         }//end foreach
 
@@ -236,14 +238,19 @@ class SigningService
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
 
-        $results = $objectService->findAll(
-            [
-                'filters' => [
-                    'register' => $register,
-                    'schema'   => $schema,
-                ],
-            ]
+        // OpenRegister's findAll() resolves the register/schema from its own
+        // context, not from a filters array — passing them as filters yields an
+        // empty result ("called without register/schema context"). Use the
+        // canonical buildSearchQuery()+searchObjectsPaginated() surface, which
+        // takes register/schema explicitly, exactly as TemplateService does.
+        $query = $objectService->buildSearchQuery(
+            requestParams: ['_limit' => 1000],
+            register: $register,
+            schema: $schema
         );
+
+        $paginated = $objectService->searchObjectsPaginated(query: $query);
+        $results   = ($paginated['results'] ?? []);
 
         $requests = [];
         foreach ($results as $result) {
@@ -647,6 +654,27 @@ class SigningService
         return null;
 
     }//end findSignerForUser()
+
+    /**
+     * Normalise an ObjectService result to an array
+     *
+     * OpenRegister's ObjectService::saveObject()/find() return an ObjectEntity
+     * instance, not a plain array. Callers that need array access must serialize
+     * it first. This helper mirrors the pattern TemplateService already uses.
+     *
+     * @param mixed $object The ObjectEntity (or array) to normalise
+     *
+     * @return array<string, mixed> The serialized object
+     */
+    private function toArray(mixed $object): array
+    {
+        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+            return $object->jsonSerialize();
+        }
+
+        return (array) $object;
+
+    }//end toArray()
 
     /**
      * Get the client IP address

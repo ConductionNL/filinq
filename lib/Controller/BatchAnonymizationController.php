@@ -33,7 +33,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
 
-use Exception;
 use OCA\DocuDesk\Service\BatchAnonymizeService;
 use OCA\DocuDesk\Service\BatchExtractionService;
 use OCA\DocuDesk\Service\BatchReportService;
@@ -62,11 +61,10 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
+ * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
- *
- * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 class BatchAnonymizationController extends Controller
 {
@@ -157,7 +155,7 @@ class BatchAnonymizationController extends Controller
                     'files'     => $batch['files'],
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Batch upload failed', e: $e);
         }//end try
 
@@ -201,7 +199,7 @@ class BatchAnonymizationController extends Controller
                 'files'      => $batch['files'],
             ]
             );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Folder batch failed', e: $e);
         }//end try
 
@@ -226,7 +224,7 @@ class BatchAnonymizationController extends Controller
             }
 
             return new JSONResponse($this->extractService->extractNext($batchId));
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Extraction failed', e: $e);
         }
 
@@ -332,7 +330,7 @@ class BatchAnonymizationController extends Controller
                         'filesProcessed' => $filesProcessed,
                     ]
                     );
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Failed to get entities', e: $e);
         }//end try
 
@@ -436,7 +434,7 @@ class BatchAnonymizationController extends Controller
 
             $httpStatus = $this->resolveBatchHttpStatus(result: $batchResult);
             return new JSONResponse($batchResult, $httpStatus);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Anonymization failed', e: $e);
         }//end try
 
@@ -532,7 +530,7 @@ class BatchAnonymizationController extends Controller
 
             $csv = $this->reportService->generateReport($batchId);
             return new DataDownloadResponse($csv, 'anonymization-report-'.$batchId.'.csv', 'text/csv');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: $e->getMessage(), e: $e);
         }
 
@@ -579,7 +577,7 @@ class BatchAnonymizationController extends Controller
 
             $this->profileService->saveProfile(['anonymize' => $params['anonymize'], 'keep' => $params['keep']]);
             return new JSONResponse(['message' => 'Profile updated']);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return $this->err(msg: 'Failed to update profile', e: $e);
         }
 
@@ -677,14 +675,14 @@ class BatchAnonymizationController extends Controller
      * Exception codes outside the HTTP error range (400..599) are normalized
      * to 500 so the client always receives a valid status.
      *
-     * @param string    $msg Human-readable description of what failed.
-     * @param Exception $e   Exception captured at the controller boundary.
+     * @param string     $msg Human-readable description of what failed.
+     * @param \Throwable $e   Throwable captured at the controller boundary.
      *
      * @return JSONResponse Error payload with an appropriate HTTP status.
      *
      * @psalm-suppress InvalidArgument $code is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      */
-    private function err(string $msg, Exception $e): JSONResponse
+    private function err(string $msg, \Throwable $e): JSONResponse
     {
         $code = (int) $e->getCode();
         if ($code < 400 || $code >= 600) {

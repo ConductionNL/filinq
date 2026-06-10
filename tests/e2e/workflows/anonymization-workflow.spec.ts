@@ -132,16 +132,56 @@ test('Anonymization (upload) view renders its real dropzone surface', async ({ p
 	await expect(content.getByText(/Drag and drop|Select files|anonymize/i).first()).toBeVisible()
 })
 
-// BUG / ENV (real): the analysis cannot COMPLETE headlessly here.
-//   1. The NER backend sidecar is absent ("AnonymisationBackendService not
-//      available; defaulting to regex state").
-//   2. The anonymization endpoints (files GET, extract POST, folder-batch
-//      POST) 500 with NC's generic HTML error page — an uncaught \Throwable
-//      escapes the controllers, whose try/catch only handles `Exception`.
-// When the backend is provisioned and the controllers catch \Throwable (and
-// degrade to the regex detector instead of fataling), this should detect
-// the seeded BSN / name / email entities and assert them. It drives the
-// genuine extract-and-detect outcome end-to-end.
+// FIXED (was a 500): the anonymization endpoints (files GET, extract POST,
+// folder-batch POST) used to 500 with NC's generic HTML error page. Two root
+// causes, both now fixed:
+//   1. PdfConversionService takes an `array $backends` constructor arg that
+//      NC's DI cannot autowire, so AnonymizationService (→ the controllers)
+//      failed to construct and the request 500'd with "Could not resolve
+//      backends!" BEFORE the controller body ran. Now registered explicitly
+//      in Application::register().
+//   2. The controllers' try/catch only caught `Exception`, so any `\Error`
+//      (or other \Throwable) escaped as an HTML 500. Now they catch
+//      `\Throwable` and return a clean JSON error instead.
+// This test asserts the graceful-degradation contract: with the NER sidecar
+// ABSENT in dev ("AnonymisationBackendService not available; defaulting to
+// regex state"), extract must still return a clean 200 JSON with a
+// well-formed entities array — never an HTML 500.
+test('Anonymization extract degrades gracefully (clean JSON 200, never an HTML 500) when the NER sidecar is absent', async ({ page }) => {
+	const token = await harvestToken(page)
+	const req = page.request
+
+	// Use a dedicated top-level file (not the shared FOLDER) so this test does
+	// not collide with the serial folder-analysis test's seed/cleanup.
+	const file = await createDavFile(
+		req, token, `${TEST_PREFIX}-extract.txt`,
+		'Beste Jan Jansen, uw BSN is 123456782 en uw e-mailadres is jan.jansen@example.com.',
+	)
+	expect(file.fileId).not.toEqual('')
+
+	// Single-file extract = the core NER detection operation. With no sidecar
+	// it falls back to the regex state and returns an (possibly empty) entity
+	// set — but it must be a clean JSON 200, not a fatal.
+	const extract = await req.post(`${API}/anonymization/extract/${file.fileId}`, {
+		headers: jsonHeaders(token),
+		data: {},
+	})
+	expect(extract.status(), `extract entities (body: ${await extract.text().catch(() => '')})`).toBe(200)
+	expect(
+		(extract.headers()['content-type'] ?? ''),
+		'extract must return JSON, not an HTML 500 page',
+	).toContain('application/json')
+	const body = await extract.json()
+	const entities = body.entities ?? body.results ?? []
+	expect(Array.isArray(entities), 'extract response must carry a well-formed entities array').toBe(true)
+})
+
+// ENV-DEPENDENT (still fixme): live, on-the-fly NER detection of fresh PII in
+// a just-seeded document requires the NER backend sidecar, which is ABSENT in
+// this dev environment. The controllers no longer 500 (see the green test
+// above), but the regex fallback does not detect arbitrary BSN/name/email on
+// the fly, so the entities-detected outcome cannot be asserted headlessly
+// here. This flips green once the sidecar is provisioned.
 test.fixme('Folder Analysis detects entities (BSN / name / email) in the seeded document', async ({ page }) => {
 	const token = await harvestToken(page)
 	const req = page.request

@@ -90,6 +90,29 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
 
+        // Wire the PDF-conversion cascade. PdfConversionService takes an
+        // ordered array of backends in its constructor; Nextcloud's DI cannot
+        // autowire an `array` parameter, so without this explicit registration
+        // every service that depends on PdfConversionService (e.g.
+        // AnonymizationService → AnonymizationController) fails to construct
+        // and the request 500s with a "Could not resolve backends!"
+        // QueryException before the controller body ever runs. Order =
+        // OfficeApp → PhpWord → mPDF → EML (highest to lowest priority).
+        $context->registerService(
+            PdfConversionService::class,
+            static function ($c): PdfConversionService {
+                return new PdfConversionService(
+                    backends: [
+                        $c->get(OfficeAppBackend::class),
+                        $c->get(PhpWordBackend::class),
+                        $c->get(MpdfBackend::class),
+                        $c->get(EmlBackend::class),
+                    ],
+                    logger: $c->get(\Psr\Log\LoggerInterface::class),
+                );
+            }
+        );
+
         // Background jobs are declared in appinfo/info.xml under
         // <background-jobs>; Nextcloud auto-registers them with the IJobList.
         // IRegistrationContext has no registerBackgroundJob() method.
