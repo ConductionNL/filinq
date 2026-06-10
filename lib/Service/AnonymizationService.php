@@ -331,6 +331,7 @@ class AnonymizationService
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+     * @spec openspec/changes/anonymization-link-schema/tasks.md#task-2
      */
     public function anonymizeDocument(
         int $fileId,
@@ -475,6 +476,20 @@ class AnonymizationService
                 );
             }
 
+            // Persist / update the source↔anonymised file mapping so the
+            // relationship is queryable via OR's search API in both
+            // directions and re-anonymisation overwrites a single record.
+            // Success path only: guard on a known anonymised file id so a
+            // failure-status result (no anonymised file) is never recorded.
+            if (empty($resultInfo['anonymizedFileId']) === false) {
+                $resultInfo = $this->recordAnonymizationLink(
+                    fileId: $fileId,
+                    sourceNode: $node,
+                    resultInfo: $resultInfo,
+                    outputFormat: $outputFormat
+                );
+            }
+
             return $resultInfo;
         } catch (ConversionFailedException $e) {
             // Surface unchanged so the controller can build the 422 body.
@@ -488,6 +503,250 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Persist or update the mapping between a source file and its anonymised counterpart.
+     *
+     * Idempotent UPSERT keyed on `sourceFileId`: the first successful
+     * anonymisation of a file creates an `anonymizationLink` object in the
+     * `document` register; every subsequent re-anonymisation of the same
+     * source file updates that same record (preserving its `@self`, which
+     * triggers OpenRegister's update path) and increments `runCount`. Both
+     * `sourceFileId` and `anonymizedFileId` are facetable on the schema so
+     * OR's search API resolves the link in both directions.
+     *
+     * Best-effort: the anonymised file already exists and the run has
+     * succeeded, so a persistence failure here MUST NOT abort or alter the
+     * response. Failures are caught, logged at warning level, and the
+     * unmodified `$resultInfo` is returned (without an `anonymizationLinkId`
+     * key). This mirrors createConsentsForUnredactedEntities() and
+     * attachGrondslagenSummary().
+     *
+     * @param int                  $fileId       The source (unanonymised) Nextcloud file ID.
+     * @param mixed                $sourceNode   The source file node (used for name/path/owner metadata).
+     * @param array<string, mixed> $resultInfo   Current result; carries anonymizedFileId/Name/Path + replacementCount.
+     * @param string               $outputFormat The output format used for the anonymised file.
+     *
+     * @return array<string, mixed> The `$resultInfo`, enriched with `anonymizationLinkId` on success.
+     *
+     * @spec openspec/changes/anonymization-link-schema/tasks.md#task-2
+     */
+    private function recordAnonymizationLink(
+        int $fileId,
+        mixed $sourceNode,
+        array $resultInfo,
+        string $outputFormat
+    ): array {
+        try {
+            $objectService = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Service\ObjectService'
+            );
+
+            $results = $objectService->searchObjects(
+                query: [
+                    '@self'        => [
+                        'register' => 'document',
+                        'schema'   => 'anonymizationLink',
+                    ],
+                    'sourceFileId' => $fileId,
+                ]
+            );
+
+            $existing = [];
+            if (is_array($results) === true && empty($results) === false) {
+                $existing = $this->extractLinkObjectData(candidate: $results[0]);
+            }
+
+            if (empty($existing) === false) {
+                // Update path — start from the existing record so its `@self`
+                // survives (triggers OR's update path) and bump runCount.
+                $object = $existing;
+                $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
+            } else {
+                $object = [
+                    '@self'        => [
+                        'register' => 'document',
+                        'schema'   => 'anonymizationLink',
+                    ],
+                    'sourceFileId' => $fileId,
+                    'runCount'     => 1,
+                ];
+            }
+
+            $object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
+
+            // Anonymised-side metadata + run stats. Only successful runs
+            // reach this method, so status is always 'anonymized'.
+            $object['anonymizedFileId']   = (int) $resultInfo['anonymizedFileId'];
+            $object['anonymizedFileName'] = (string) ($resultInfo['anonymizedFileName'] ?? '');
+            $object['anonymizedFilePath'] = (string) ($resultInfo['anonymizedFilePath'] ?? '');
+            $object['outputFormat']       = $outputFormat;
+            $object['status']           = 'anonymized';
+            $object['replacementCount'] = (int) ($resultInfo['replacementCount'] ?? 0);
+            $object['anonymizedAt']     = date(format: 'c');
+
+            $saved  = $objectService->saveObject(
+                object: $object,
+                register: 'document',
+                schema: 'anonymizationLink'
+            );
+            $linkId = $this->extractSavedObjectId(saved: $saved);
+            if ($linkId !== null) {
+                $resultInfo['anonymizationLinkId'] = $linkId;
+            }
+
+            $this->logger->info(
+                'Anonymisation link recorded',
+                [
+                    'sourceFileId'     => $fileId,
+                    'anonymizedFileId' => $object['anonymizedFileId'],
+                    'runCount'         => $object['runCount'],
+                ]
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'recordAnonymizationLink failed; anonymisation result is unaffected: '.$e->getMessage(),
+                ['fileId' => $fileId, 'exception' => $e]
+            );
+        }//end try
+
+        return $resultInfo;
+
+    }//end recordAnonymizationLink()
+
+    /**
+     * Apply best-effort source-node metadata (name, path, owner) to a link object.
+     *
+     * Each accessor is guarded with method_exists so the method tolerates any
+     * file-node-like object (and mocks in unit tests) without fataling.
+     *
+     * @param array<string, mixed> $object     The link object being built.
+     * @param mixed                $sourceNode The source file node.
+     *
+     * @return array<string, mixed> The object with any resolvable source metadata applied.
+     *
+     * @spec openspec/changes/anonymization-link-schema/tasks.md#task-2
+     */
+    private function applySourceNodeMetadata(array $object, mixed $sourceNode): array
+    {
+        if (is_object($sourceNode) === false) {
+            return $object;
+        }
+
+        if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
+            $object['sourceFileName'] = (string) $sourceNode->getName();
+        }
+
+        if (method_exists(object_or_class: $sourceNode, method: 'getPath') === true) {
+            $object['sourceFilePath'] = (string) $sourceNode->getPath();
+        }
+
+        $owner = null;
+        if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
+            $owner = $sourceNode->getOwner();
+        }
+
+        if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
+            $object['anonymizedBy'] = (string) $owner->getUID();
+        }
+
+        return $object;
+
+    }//end applySourceNodeMetadata()
+
+    /**
+     * Normalise a searchObjects() candidate to a plain array including its `@self`.
+     *
+     * Mirrors ConsentService::extractObjectData so the existing record's
+     * `@self` (and its id) is preserved into the saveObject update path.
+     *
+     * @param mixed $candidate A search result entry (array, or an OR entity object).
+     *
+     * @return array<string, mixed> The object data, or an empty array if it could not be read.
+     *
+     * @spec openspec/changes/anonymization-link-schema/tasks.md#task-2
+     */
+    private function extractLinkObjectData(mixed $candidate): array
+    {
+        if (is_array($candidate) === true) {
+            return $candidate;
+        }
+
+        if (is_object($candidate) === true) {
+            if (method_exists(object_or_class: $candidate, method: 'getObject') === true) {
+                $payload = $candidate->getObject();
+                if (is_array($payload) === true) {
+                    if (isset($payload['@self']) === false
+                        && method_exists(object_or_class: $candidate, method: 'getUuid') === true
+                    ) {
+                        $uuid = $candidate->getUuid();
+                        if ($uuid !== null) {
+                            $payload['@self'] = ['id' => $uuid];
+                        }
+                    }
+
+                    return $payload;
+                }
+            }
+
+            if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === true) {
+                $payload = $candidate->jsonSerialize();
+                if (is_array($payload) === true) {
+                    return $payload;
+                }
+            }
+        }//end if
+
+        return [];
+
+    }//end extractLinkObjectData()
+
+    /**
+     * Extract the persisted object's identifier from a saveObject() return value.
+     *
+     * Tries the common OR accessors in order (getUuid, getId) and finally the
+     * serialised `@self` envelope, so the link id can be surfaced in the
+     * response regardless of the concrete return type.
+     *
+     * @param mixed $saved The value returned by ObjectService::saveObject.
+     *
+     * @return string|null The object id/uuid, or null when it cannot be determined.
+     *
+     * @spec openspec/changes/anonymization-link-schema/tasks.md#task-2
+     */
+    private function extractSavedObjectId(mixed $saved): ?string
+    {
+        if (is_object($saved) === true) {
+            if (method_exists(object_or_class: $saved, method: 'getUuid') === true) {
+                $uuid = $saved->getUuid();
+                if (empty($uuid) === false) {
+                    return (string) $uuid;
+                }
+            }
+
+            if (method_exists(object_or_class: $saved, method: 'getId') === true) {
+                $id = $saved->getId();
+                if (empty($id) === false) {
+                    return (string) $id;
+                }
+            }
+
+            if (method_exists(object_or_class: $saved, method: 'jsonSerialize') === true) {
+                $saved = $saved->jsonSerialize();
+            }
+        }
+
+        if (is_array($saved) === true) {
+            $self = ($saved['@self'] ?? []);
+            $id   = ($self['id'] ?? ($self['uuid'] ?? ($saved['id'] ?? null)));
+            if (empty($id) === false) {
+                return (string) $id;
+            }
+        }
+
+        return null;
+
+    }//end extractSavedObjectId()
 
     /**
      * Check unredacted entities against publication-prohibition rules.

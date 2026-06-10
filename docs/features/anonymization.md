@@ -179,3 +179,53 @@ The un-converted anonymised intermediate is best-effort deleted before the 422 r
 |--------|-----|-------------|
 | POST | `/api/anonymization/anonymize/{fileId}` | Anonymise a single file. Body supports `entities`, `outputFormat`, `appendBasisSummary`, `excludeTypes`, `minConfidence`. |
 | POST | `/api/anonymization/batchAnonymize/{batchId}` | Anonymise every file in a batch. Body supports `entities`, `outputFormat`, `appendBasisSummary`. |
+
+## Source ↔ anonymised file link (anonymizationLink)
+
+Every **successful** anonymisation run records a durable mapping between the
+original (source) file and its anonymised counterpart as an `anonymizationLink`
+object in the `document` register (`lib/Settings/docudesk_register.json`). This
+lets operators and downstream systems resolve the relationship in both
+directions via OpenRegister's search API, without re-running analysis.
+
+- **Idempotent on `sourceFileId`**: the first run creates one record; every
+  re-anonymisation of the same source file updates that same record (preserving
+  its `@self`) and increments `runCount`. There is at most one link per source
+  file.
+- **Success only**: failed runs are not recorded, so a link always points at a
+  real anonymised file (`status` is always `anonymized`).
+- **Best-effort**: a persistence failure is logged at `warning` level and never
+  aborts or alters the anonymisation response. On success the response carries
+  an `anonymizationLinkId`.
+
+### Fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `sourceFileId` | integer | NC file ID of the original — idempotency key (facetable) |
+| `sourceFileName` / `sourceFilePath` | string | Source metadata |
+| `anonymizedFileId` | integer | NC file ID of the anonymised output — reverse-lookup key (facetable) |
+| `anonymizedFileName` / `anonymizedFilePath` | string | Anonymised metadata (stable path) |
+| `outputFormat` | enum | `pdf` / `docx` / `odt` / `txt` / `html` |
+| `status` | enum | always `anonymized` |
+| `replacementCount` | integer | Entity replacements applied this run |
+| `runCount` | integer | Times this source file has been anonymised |
+| `anonymizedAt` | date-time | ISO 8601 timestamp |
+| `anonymizedBy` | string | NC user ID of the operator |
+
+### Bidirectional lookup via the OpenRegister search API
+
+```
+# Forward — anonymised file for a given source
+GET /apps/openregister/api/objects?register=document&schema=anonymizationLink&sourceFileId=<NC_FILE_ID>
+
+# Reverse — source file for a given anonymised file
+GET /apps/openregister/api/objects?register=document&schema=anonymizationLink&anonymizedFileId=<NC_FILE_ID>
+```
+
+> **Note:** because OpenRegister currently writes the anonymised output to the
+> source's parent folder as `<basename>_anonymized.<ext>` and re-creates it on
+> each run, the anonymised file's NC file ID can change between runs. The link
+> record always reflects the latest run. Reconciling an orphaned anonymised file
+> when the source is moved/renamed is deferred future work (depends on an
+> OpenRegister feature to choose the anonymised output location/name).
