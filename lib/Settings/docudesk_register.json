@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.2.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
-        "version": "5.2.0"
+        "description": "DocuDesk register v5.3.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Adds anonymizationLink schema for source↔anonymised file mapping. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
+        "version": "5.3.0"
     },
     "x-openregister": {
         "type": "application",
@@ -58,7 +58,8 @@
                 "schemas": [
                     "correspondence",
                     "huisstijl",
-                    "batchCorrespondenceJob"
+                    "batchCorrespondenceJob",
+                    "anonymizationLink"
                 ]
             },
             "dossier": {
@@ -2001,6 +2002,174 @@
                         "description": "Ratio of successfully generated letters over total recipients",
                         "readOnly": true
                     }
+                }
+            },
+            "anonymizationLink": {
+                "uri": null,
+                "slug": "anonymizationLink",
+                "title": "Anonymisation Link",
+                "description": "Koppeling tussen een bronbestand (niet-geanonimiseerd) en zijn geanonimiseerde tegenhanger. Eén record per bronbestand (idempotent op sourceFileId); her-anonimisering werkt hetzelfde record bij. Zowel sourceFileId als anonymizedFileId zijn facetable zodat de OpenRegister zoek-API de koppeling in beide richtingen oplost.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileLinkOutline",
+                "required": [
+                    "sourceFileId",
+                    "anonymizedFileId"
+                ],
+                "properties": {
+                    "sourceFileId": {
+                        "description": "Nextcloud bestands-ID van het originele (niet-geanonimiseerde) document — idempotentiesleutel",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Bron bestands-ID"
+                    },
+                    "sourceFileName": {
+                        "description": "Bestandsnaam van het brondocument",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Bron bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "sourceFilePath": {
+                        "description": "Volledig pad van het brondocument binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Bron pad",
+                        "maxLength": 4096
+                    },
+                    "anonymizedFileId": {
+                        "description": "Nextcloud bestands-ID van het geanonimiseerde resultaat — sleutel voor de omgekeerde zoekopdracht",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Geanonimiseerd bestands-ID"
+                    },
+                    "anonymizedFileName": {
+                        "description": "Bestandsnaam van het geanonimiseerde resultaat",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Geanonimiseerde bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "anonymizedFilePath": {
+                        "description": "Volledig (stabiel) pad van het geanonimiseerde resultaat binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Geanonimiseerd pad",
+                        "maxLength": 4096
+                    },
+                    "outputFormat": {
+                        "description": "Uitvoerformaat van het geanonimiseerde document",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Formaat",
+                        "enum": [
+                            "pdf",
+                            "docx",
+                            "odt",
+                            "txt",
+                            "html"
+                        ]
+                    },
+                    "status": {
+                        "description": "Uitkomst van de anonimiseringsrun. Alleen succesvolle runs worden vastgelegd, dus de waarde is altijd 'anonymized'.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "anonymized"
+                        ],
+                        "default": "anonymized"
+                    },
+                    "replacementCount": {
+                        "description": "Aantal toegepaste entiteitsvervangingen in deze run",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vervangingen"
+                    },
+                    "runCount": {
+                        "description": "Hoe vaak dit bronbestand is geanonimiseerd (opgehoogd bij elke her-anonimisering)",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Aantal runs",
+                        "default": 1
+                    },
+                    "anonymizedAt": {
+                        "description": "Datum/tijd van de anonimiseringsrun (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Geanonimiseerd op"
+                    },
+                    "anonymizedBy": {
+                        "description": "Nextcloud gebruikers-ID dat de anonimisering heeft gestart",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Geanonimiseerd door",
+                        "maxLength": 64
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-06-09T00:00:00+00:00",
+                "created": "2026-06-09T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "sourceFileName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": {
+                        "default": "P7Y"
+                    },
+                    "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
                 }
             }
         },
