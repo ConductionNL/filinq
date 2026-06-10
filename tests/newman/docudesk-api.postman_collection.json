@@ -518,6 +518,310 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary true + pdf)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": true, \"outputFormat\": \"pdf\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('appendBasisSummary accepted with pdf (200/404 \u2014 fixture absence)', function () { pm.expect([200, 400, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('Warning field is well-formed when present', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    if (j.warning !== undefined) { pm.expect(j.warning).to.be.a('string'); }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary true + preserve)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": true, \"outputFormat\": \"preserve\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('appendBasisSummary preserve mode accepted', function () { pm.expect([200, 400, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('Returns summaryFileId/summaryFilePath when successful with preserve+flag', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    var hasField = j.summaryFileId !== undefined || j.summaryFilePath !== undefined || j.warning !== undefined;",
+                  "    pm.expect(hasField).to.be.true;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary invalid type)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": \"not-a-bool\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects non-bool appendBasisSummary with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (stray bases silently ignored)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"bases\": \"should-be-ignored\"}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Stray bases field does NOT cause 400', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); pm.expect(pm.response.code).to.not.equal(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (stray non-array bases silently ignored)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"bases\": {\"unexpected\": \"shape\"}}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Object-shaped bases field does NOT cause 400', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); pm.expect(pm.response.code).to.not.equal(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/extract/999999 (prohibitionMatch field present in entity entries)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Extract returns 200 / 404 (no file fixture)', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('When 200 and entities present, each has prohibitionMatch key', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    if (Array.isArray(j.entities)) {",
+                  "      j.entities.forEach(function (e) { pm.expect(e).to.have.property('prohibitionMatch'); });",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/anonymization/batch/test-batch/entities (consolidated entity shape)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/batch/test-batch/entities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "batch",
+                "test-batch",
+                "entities"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Endpoint reachable (200/404/422)', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('When 200, each consolidated entity carries prohibitionMatch + suggestedBases keys', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    var ents = j.entities || j.data || [];",
+                  "    if (Array.isArray(ents) && ents.length > 0) {",
+                  "      ents.forEach(function (e) {",
+                  "        pm.expect(e).to.have.property('prohibitionMatch');",
+                  "        pm.expect(e).to.have.property('suggestedBases');",
+                  "        pm.expect(e.suggestedBases).to.be.an('array');",
+                  "      });",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },

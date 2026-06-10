@@ -46,4 +46,4 @@
 ## Task 3: Documentation
 
 - [x] API endpoints documented in openapi.json
-- [ ] Admin guide for signing configuration
+- [x] Admin guide for signing configuration (`docs/admin/document-signing.md` — covers provider selection, default eIDAS level, expiry, register/schema bindings, ValidSign credentials, operational concerns, troubleshooting, ADR cross-references).
