@@ -7,7 +7,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-1. Render contacts / activity / shares leaf tabs via the registry (M)
 
-- [ ] D-1.1 On the document/report detail page (ADR-001), mount the integration registry's
+- [~] D-1.1 On the document/report detail page (ADR-001), mount the integration registry's
   enabled leaf tabs/widgets for the document object — contacts (role-grouped person chips),
   activity (stream), shares (current NC shares) — sourced from
   `IntegrationRegistry::getEnabled()` via the shared `@conduction/nextcloud-vue` registry tab
@@ -15,12 +15,20 @@ NO apply in this change — implementation runs through Hydra later.
   - **Acceptance:** With Contacts + activity + sharing available, the three leaf tabs render on
     the document detail page; with an app absent, its tab is hidden and the page renders without
     error. App-owned `Anonimisatie` / `Redactie` / `Handtekeningen` tabs remain present.
+  - DEFERRED: cross-repo handoff — the registry tab host and `IntegrationRegistry` API are not
+    yet shipped in `@conduction/nextcloud-vue`. Tracked in the universal-shared-integration-registry
+    Hydra change. Local FileViewerSidebar already exposes the app-owned Anonimisatie tab; once the
+    registry lands, this task wires contacts/activity/shares through the host without touching the
+    Anonimisatie surface.
 
 ### D-2. i18n + tests (S)
 
-- [ ] D-2.1 Provide nl + en translations for any new UI strings (tab labels) per ADR-007 /
+- [~] D-2.1 Provide nl + en translations for any new UI strings (tab labels) per ADR-007 /
   ADR-025.
   - **Acceptance:** Both `l10n/en.json` and `l10n/nl.json` carry the new keys.
-- [ ] D-2.2 Component/integration test asserting the registry tabs render on the document detail
+  - DEFERRED with D-1.1: tab labels can only be added once the registry-host API is finalised
+    (so the labels match the leaf-app-supplied display strings rather than being hard-coded here).
+- [~] D-2.2 Component/integration test asserting the registry tabs render on the document detail
   page when their leaves are enabled and are hidden when absent.
   - **Acceptance:** Tests pass; no duplicate sidebar-tab system introduced.
+  - DEFERRED with D-1.1: no host component to test against until the registry lands.
