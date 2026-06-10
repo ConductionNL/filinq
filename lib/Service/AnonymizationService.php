@@ -39,7 +39,6 @@ use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Throwable;
 
 /**
  * Service for orchestrating the document anonymization pipeline
