@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { consentStore, navigationStore } from '../../store/store.js'
+import { consentStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -191,6 +191,12 @@ export default {
 		ArrowLeft,
 		ContentSave,
 	},
+	props: {
+		consentId: {
+			type: String,
+			default: '',
+		},
+	},
 	data() {
 		return {
 			editData: {
@@ -245,10 +251,15 @@ export default {
 			},
 		},
 	},
+	created() {
+		if (this.consentId && !consentStore.consentItem) {
+			consentStore.fetchConsent(this.consentId)
+		}
+	},
 	methods: {
 		goBack() {
 			consentStore.clearConsentItem()
-			navigationStore.setSelected('consent')
+			this.$router.push({ name: 'Consent' })
 		},
 		/**
 		 * Resolve the policyMatch UUID into a kind for toggle behaviour.
@@ -357,7 +368,7 @@ export default {
 	margin-bottom: 24px;
 	padding: 16px;
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	background-color: var(--color-main-background);
 }
 

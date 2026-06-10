@@ -52,3 +52,64 @@ GET /apps/openregister/api/objects/document/anonymizationLink?sourceFileId=<NC_F
 # Reverse — source file for a given anonymised file
 GET /apps/openregister/api/objects/document/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
 ```
+
+## Output format (PDF by default)
+
+Since the `anonymise-output-as-pdf-by-default` change, the anonymise endpoints produce **PDF/A-3b** output by default. PDF flattens the redaction into a glyph stream and strips most metadata channels that would otherwise still name the original entities — making the anonymisation harder to revert by editing the file.
+
+### Per-call override: `outputFormat`
+
+The `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batchAnonymize/{batchId}` endpoints accept an optional top-level `outputFormat` field:
+
+| Value | Behaviour |
+|---|---|
+| `"pdf"` (default) | The anonymised intermediate is converted to PDF via the conversion cascade (see below) before being written to Nextcloud Files. |
+| `"preserve"` | The anonymised file is written in its native input format (DOCX in → DOCX out, etc.). Legacy behaviour. |
+
+If `outputFormat` is supplied but is not `"pdf"` or `"preserve"`, the endpoint returns `HTTP 400`.
+
+### Tenant default
+
+The tenant-wide default is configurable via the **Anonymisation → Always export anonymised documents as PDF** switch in the admin settings panel. The underlying `IAppConfig` key is `docudesk.anonymisation.default_output_format` (values: `"pdf"` | `"preserve"`, default `"pdf"`). A per-call `outputFormat` always overrides the tenant default.
+
+### Conversion cascade
+
+When `outputFormat === "pdf"` and the anonymised file isn't already a PDF, the `PdfConversionService` walks an ordered list of backends. First success wins; total failure aggregates into an `HTTP 422` response with the per-backend attempt records.
+
+1. **`OfficeAppBackend`** — uses Nextcloud's `OCP\Files\Conversion\IConversionManager` (NC 31+). Collabora, OnlyOffice, and Euro Office integrations register as conversion providers under this single API; the backend dispatches to whichever app is installed and configured. Highest fidelity for Word-family documents.
+2. **`PhpWordBackend`** — in-process. Reads DOC (MsDoc), DOCX (Word2007), ODT (ODText), RTF, and HTML via `PhpOffice\PhpWord`; emits PDF/A-3b via the PdfWriter (mPDF-backed). Lower fidelity than a real Office engine but covers all Word-family formats without external dependencies.
+3. **`MpdfBackend`** — in-process. Handles HTML and plain-text directly via mPDF, reusing the print-preview PDF/A-3b configuration. TXT inputs are wrapped in a minimal `<pre>` envelope to preserve whitespace.
+4. **`EmlBackend`** — currently stubbed. Activates once OpenRegister adds `message/rfc822` text extraction; until then, EML inputs in `pdf` mode fall through to 422.
+
+Spreadsheet (XLSX, ODS, CSV with layout) and presentation (PPTX, ODP) formats are **out of scope** for the in-process tiers. They rely on the `OfficeAppBackend` route only — without a configured Office app, those inputs return 422.
+
+### `HTTP 422` body shape
+
+When conversion fails for every backend, the response body documents which were tried and why:
+
+```json
+{
+  "error": "Conversion to PDF failed; anonymisation rolled back.",
+  "conversionAttempts": [
+    {"name": "office_app", "available": false, "supports": false, "reason": "backend disabled or prerequisites not present"},
+    {"name": "phpword",    "available": true,  "supports": false, "reason": "backend does not support MIME application/vnd.ms-excel / extension xls"},
+    {"name": "mpdf",       "available": true,  "supports": false, "reason": "backend does not support MIME application/vnd.ms-excel / extension xls"},
+    {"name": "eml",        "available": false, "supports": false, "reason": "backend disabled or prerequisites not present"}
+  ],
+  "outputFormat": "pdf",
+  "fallback": "Set outputFormat to \"preserve\" to bypass conversion if you must keep the native format."
+}
+```
+
+The un-converted anonymised intermediate is best-effort deleted before the 422 response is returned. The operator never sees a half-finished mixed-format result.
+
+### Batch path
+
+`batchAnonymize` accepts the same `outputFormat`. Per-file conversion failure is recorded as an `error` on that file's batch entry (with a `conversionAttempts` array) and the batch continues with the next file rather than aborting.
+
+## API Endpoints (extended)
+
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST | `/api/anonymization/anonymize/{fileId}` | Anonymise a single file. Body supports `entities`, `outputFormat`, `appendBasisSummary`, `excludeTypes`, `minConfidence`. |
+| POST | `/api/anonymization/batchAnonymize/{batchId}` | Anonymise every file in a batch. Body supports `entities`, `outputFormat`, `appendBasisSummary`. |

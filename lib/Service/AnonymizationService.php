@@ -21,9 +21,11 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCA\DocuDesk\Exception\ConversionFailedException;
 use RuntimeException;
 use Throwable;
 use OCP\App\IAppManager;
+use OCP\Files\File;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -50,6 +52,9 @@ class AnonymizationService
      * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
      *                                                      summary page (Wave 4a — opt-in via
      *                                                      `appendBasisSummary: true` on the request).
+     * @param PdfConversionService      $pdfConversion      Cascade orchestrator that converts the
+     *                                                      anonymised intermediate to PDF when
+     *                                                      `outputFormat: "pdf"` is in effect.
      *
      * @return void
      */
@@ -58,7 +63,8 @@ class AnonymizationService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
-        private readonly GrondslagenSummaryService $grondslagenSummary
+        private readonly GrondslagenSummaryService $grondslagenSummary,
+        private readonly PdfConversionService $pdfConversion
     ) {
 
     }//end __construct()
@@ -142,16 +148,32 @@ class AnonymizationService
      *                                                        the anonymise — a structured
      *                                                        `warning` is attached to the result
      *                                                        instead.
+     * @param string                      $outputFormat       Output format gate. `"pdf"` (default)
+     *                                                        runs the post-anonymise PDF conversion
+     *                                                        cascade and rolls back the intermediate
+     *                                                        if conversion fails (re-throws
+     *                                                        ConversionFailedException for the
+     *                                                        controller to surface as HTTP 422).
+     *                                                        `"preserve"` skips conversion and
+     *                                                        returns the anonymised file in its
+     *                                                        native format.
      *
      * @return array<string, mixed> Anonymization result. Adds the optional `warning` field when
      *                              the grondslagen-summary step failed but the anonymise itself
      *                              succeeded; adds `summaryFileId` when a separate summary PDF
      *                              was written (preserve-mode fallback).
      *
-     * @throws Exception If anonymization fails
+     * @throws Exception                  If anonymization fails.
+     * @throws ConversionFailedException  When `$outputFormat === "pdf"` and the cascade could not
+     *                                    convert the anonymised intermediate. The intermediate
+     *                                    is deleted (best-effort) before the exception propagates.
      */
-    public function anonymizeDocument(int $fileId, array $entities, bool $appendBasisSummary=false): array
-    {
+    public function anonymizeDocument(
+        int $fileId,
+        array $entities,
+        bool $appendBasisSummary=false,
+        string $outputFormat='pdf'
+    ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
@@ -162,6 +184,49 @@ class AnonymizationService
                 'Document anonymized',
                 ['fileId' => $fileId, 'entityCount' => count($mappedEntities)]
             );
+
+            // PDF conversion gate: when outputFormat is 'pdf' AND the
+            // anonymised result is not already a PDF, run the cascade.
+            // On failure: delete the un-converted intermediate (the
+            // operator must NOT see a half-finished native-format
+            // output when they asked for PDF) and re-throw the typed
+            // exception so the controller maps it to 422.
+            if ($outputFormat === 'pdf' && $result instanceof File === true) {
+                $resultMime = (string) $result->getMimeType();
+                if ($resultMime !== 'application/pdf') {
+                    try {
+                        $result = $this->pdfConversion->convertToPdf($result);
+                    } catch (ConversionFailedException $e) {
+                        $this->logger->warning(
+                            'PDF conversion failed; rolling back anonymised intermediate.',
+                            [
+                                'fileId'   => $fileId,
+                                'attempts' => $e->getAttempts(),
+                            ]
+                        );
+                        // Best-effort rollback. If delete fails, log
+                        // and continue — re-throwing is more important
+                        // than leaving the operator in a partial state
+                        // that they CAN inspect (they sent
+                        // outputFormat: "pdf" and got 422, so the
+                        // expectation is "no file written").
+                        try {
+                            $result->delete();
+                        } catch (Throwable $deleteError) {
+                            $this->logger->warning(
+                                'Rollback delete failed; orphaned anonymised file remains.',
+                                [
+                                    'fileId'    => $fileId,
+                                    'exception' => get_class($deleteError),
+                                    'message'   => $deleteError->getMessage(),
+                                ]
+                            );
+                        }
+
+                        throw $e;
+                    }//end try
+                }//end if
+            }//end if
 
             $resultInfo = $this->entityDetection->parseAnonymizationResult($result);
             $resultInfo['replacementCount'] = count($mappedEntities);
@@ -187,6 +252,9 @@ class AnonymizationService
             }
 
             return $resultInfo;
+        } catch (ConversionFailedException $e) {
+            // Surface unchanged so the controller can build the 422 body.
+            throw $e;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),

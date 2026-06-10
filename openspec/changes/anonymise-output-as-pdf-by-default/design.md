@@ -40,27 +40,26 @@ The cascade has to handle all four gracefully. Failure means a clear 422; never 
 
 Already settled via Option β earlier in exploration: privacy-domain enforcement belongs in the privacy-domain app. OR remains a generic anonymise primitive; if a future caller of OR's anonymise wants the same default, they implement the same wrapper. Cross-app coupling stays minimal.
 
-### D2. Backend cascade order: Office app → LibreOffice → PhpWord → mPDF → OR-EML-extractor
+### D2. Backend cascade order: OfficeApp → PhpWord → mPDF → OR-EML-extractor
 
-The order reflects fidelity (Office apps render Word docs best), availability (LibreOffice is the most common universal fallback), and dependency footprint (PhpWord + mPDF are in-process, no host dependency).
+The order reflects fidelity (Office apps render Word docs best), then dependency footprint (PhpWord + mPDF are in-process, no host dependency).
 
 ```
-   try Collabora/OnlyOffice via NC convert API
+   try OfficeAppBackend (Collabora / OnlyOffice / Euro Office — whichever is installed + configured)
    ├── on success → done
-   └── on no-such-backend / convert-error
-       try LibreOffice headless (soffice --convert-to pdf)
-       ├── on success → done
-       └── on missing-binary / non-zero-exit
-           does PhpWord support this MIME?  (DOCX/ODT/RTF/HTML)
-             ├── yes → PhpWord + mPDF
-             └── no → does mPDF support directly?  (HTML/TXT)
-                       ├── yes → mPDF
-                       └── no → is it EML and OR.extractor available?
-                                 ├── yes → OR.extractText → wrap as TXT → mPDF
-                                 └── no → 422 ConversionFailedException
+   └── on no-app / convert-error
+       does PhpWord support this MIME?  (DOC/DOCX/ODT/RTF/HTML)
+         ├── yes → PhpWord + mPDF
+         └── no → does mPDF support directly?  (HTML/TXT)
+                   ├── yes → mPDF
+                   └── no → is it EML and OR.extractor available?
+                             ├── yes → OR.extractText → wrap as TXT → mPDF
+                             └── no → 422 ConversionFailedException
 ```
 
-Tenants can disable individual backends via config (`docudesk.conversion.backends.office_app_enabled` etc.) — useful for: (a) Office-app-only installs that don't want host calls, (b) air-gapped installs that need to skip Office-app HTTP probing, (c) testing.
+Tenants can disable individual backends via config (`docudesk.conversion.backends.office_app_enabled` etc.) — useful for: (a) air-gapped installs that need to skip Office-app HTTP probing, (b) testing, (c) installs that want to force the PhpWord fallback for consistency reasons.
+
+**Revision (2026-06-01) — `LibreOfficeHeadlessBackend` dropped.** The original cascade included a standalone shell-out to `soffice --headless --convert-to pdf`. Removed: real-world Nextcloud installs almost never have a host-side `soffice` on PATH (`isAvailable()` always returned false), so the backend was dead weight. Where LibreOffice IS the underlying engine (Collabora is LibreOffice-backed; Euro Office similar) it's reached via the `OfficeAppBackend` integration route — no standalone path needed.
 
 **Alternative considered:** Run all backends in parallel and pick the first to succeed. Rejected — wastes resources, harder to reason about errors, and Office apps may consume HTTP quotas / billed seats unnecessarily.
 
@@ -90,7 +89,7 @@ PDF/A-3b is the archival profile already used by `print-preview`. It guarantees:
 - Deterministic rendering across viewers.
 - Retention-compatible per Wet open overheid archival standards.
 
-mPDF supports PDF/A via the `'PDFA' => true` config option. PhpWord's PdfWriter delegates to mPDF when configured. Office app and LibreOffice can both produce PDF/A on request (Collabora: `format=pdf,Selection=true,PDFVersion=PDF/A-3b`; OnlyOffice: similar config; LibreOffice: `--convert-to "pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2"`).
+mPDF supports PDF/A via the `'PDFA' => true` config option. PhpWord's PdfWriter delegates to mPDF when configured. Office app integrations (Collabora, OnlyOffice, Euro Office) can produce PDF/A on request — each app exposes its own configuration knob; the `OfficeAppBackend` requests PDF/A-3b where the underlying converter supports it and falls through to the next cascade step where it doesn't.
 
 If a backend can't reliably produce PDF/A-3b at conversion time, it MUST fall through to the next backend rather than emit plain PDF. A successful `convert()` always returns PDF/A-3b. In v1 we don't expose plain PDF; if a real use case appears, follow-up.
 
@@ -129,11 +128,13 @@ Tenant default is configurable via `docudesk.anonymisation.default_output_format
 
 **Rationale:** Most flows benefit from PDF default. The opt-out exists for the legitimate cases — e.g. a downstream pipeline that re-edits the anonymised DOCX, or a tenant that does its own format conversion in a custom flow. Forcing PDF universally would break those.
 
-### D7. PhpWord supports DOCX/ODT/RTF/HTML — not just DOCX
+### D7. PhpWord supports DOC, DOCX, ODT, RTF, HTML
 
-Verified against PhpWord's IOFactory: readers exist for `Word2007` (DOCX), `MsDoc` (DOC, limited), `ODText` (ODT), `RTF`, and `HTML`. Combined with the PdfWriter (mPDF backend), PhpWord covers a broader format range than DOCX alone — meaningful for installs without LibreOffice.
+Verified against PhpWord's IOFactory: readers exist for `Word2007` (DOCX), `MsDoc` (DOC, limited fidelity but usable for plain-prose content), `ODText` (ODT), `RTF`, and `HTML`. Combined with the PdfWriter (mPDF backend), PhpWord covers all the Word-family formats DocuDesk needs to redact in the no-Office-app tier.
 
-**Trade-off:** PhpWord's rendering fidelity is lower than LibreOffice's (especially for complex layouts, tables with merged cells, embedded images). Acceptable for the fallback tier — if an install really cares about rendering quality, they install LibreOffice or an Office app and PhpWord is never reached.
+**Trade-off:** PhpWord's rendering fidelity is lower than a real Office engine's (especially for complex layouts, tables with merged cells, embedded images, and pre-Word-2007 binary DOC files). Acceptable for the fallback tier — if an install really cares about rendering quality, they install a supported Office app integration (Collabora, OnlyOffice, or Euro Office) and the PhpWord branch is never reached.
+
+**Out of scope:** spreadsheet formats (XLSX, ODS, CSV with table layout) and presentation formats (PPTX, ODP) — these require `phpoffice/phpspreadsheet` / `phpoffice/phppresentation` which we deliberately do NOT add. Their conversion relies entirely on an `OfficeAppBackend` route; without one configured, those inputs return HTTP 422.
 
 ### D8. EML inputs depend on a future OpenRegister change
 
@@ -149,7 +150,7 @@ Conversion is synchronous in v1. Most documents anonymised through DocuDesk are 
 
 **Asynchronous conversion** (queue + callback) is a follow-up if/when batch sizes grow large enough to make synchronous convert infeasible. v1 keeps the simpler synchronous model.
 
-**Backend timeout:** each backend has a per-call timeout (Office app: 30s, LibreOffice: 60s, PhpWord+mPDF: 120s for large docs). Exceeding the timeout is treated as a conversion failure for that backend; the cascade moves on. Tenant-configurable.
+**Backend timeout:** each backend has a per-call timeout (Office app: 30s, PhpWord+mPDF: 120s for large docs, mPDF direct: 30s). Exceeding the timeout is treated as a conversion failure for that backend; the cascade moves on. Tenant-configurable.
 
 ### D10. Tenant configuration surface
 
@@ -158,13 +159,13 @@ Admin settings exposed:
 | Key | Default | Purpose |
 |---|---|---|
 | `docudesk.anonymisation.default_output_format` | `pdf` | Tenant-wide default for `outputFormat` when not specified per call |
-| `docudesk.conversion.backends.office_app_enabled` | `true` | Whether to attempt Collabora / OnlyOffice |
-| `docudesk.conversion.backends.libreoffice_enabled` | `true` | Whether to attempt LibreOffice headless |
-| `docudesk.conversion.backends.phpword_enabled` | `true` | Whether to attempt PhpWord + mPDF |
-| `docudesk.conversion.backends.mpdf_enabled` | `true` | Whether to attempt mPDF directly (for HTML/TXT) |
+| `docudesk.conversion.backends.office_app_enabled` | `true` | Whether to attempt the OfficeAppBackend (Collabora / OnlyOffice / Euro Office, whichever is installed) |
+| `docudesk.conversion.backends.phpword_enabled` | `true` | Whether to attempt PhpWord + mPDF (DOC/DOCX/ODT/RTF/HTML) |
+| `docudesk.conversion.backends.mpdf_enabled` | `true` | Whether to attempt mPDF directly (HTML/TXT) |
 | `docudesk.conversion.backends.eml_enabled` | `true` | Whether to attempt OR-EML-extract + mPDF (no-op until OR change lands) |
-| `docudesk.conversion.libreoffice_binary_path` | `soffice` | Path to LibreOffice binary; `soffice` if on PATH |
 | `docudesk.conversion.timeout_seconds` | `60` | Per-backend timeout |
+
+Note: there is no `libreoffice_enabled` or `libreoffice_binary_path` key. The original cascade included a standalone `LibreOfficeHeadlessBackend` driven by a host-side `soffice` binary; removed in the 2026-06-01 revision because almost no Nextcloud install carries that binary. LibreOffice-backed conversion still happens implicitly when Collabora or Euro Office (both LibreOffice-derived) is the configured Office app — routed through the `OfficeAppBackend` flag above.
 
 Use the existing `IAppConfig` pattern, consistent with how other DocuDesk settings (objection period, threshold) are stored.
 
@@ -176,7 +177,7 @@ Use the existing `IAppConfig` pattern, consistent with how other DocuDesk settin
 - **[Behaviour change is silent for callers that don't pass `outputFormat`]** → Mitigation: CHANGELOG entry under "Behavior changes" is explicit. The new default is privacy-positive, so the worst case for a confused caller is "they got a PDF when they expected a DOCX" — easy to spot and remediate by sending `outputFormat: "preserve"`.
 - **[PDF/A-3b not produced by all backends]** → Mitigation: backends that can't reliably emit PDF/A-3b fall through. We don't quietly degrade to plain PDF — a backend that produces plain PDF instead of PDF/A is treated as "not available for this conversion" and the cascade moves on.
 - **[EML inputs blocked until OR change lands]** → Mitigation: documented; operators use `outputFormat: "preserve"` for EML in the meantime; when OR's extractor lands, the EML branch activates with a small follow-up.
-- **[LibreOffice headless concurrent invocation]** → Mitigation: LibreOffice has issues with concurrent `soffice --headless` processes (user profile lock). The backend serialises invocations via a Nextcloud lock primitive (`ILockingProvider`), keyed by `soffice:headless:convert`. Only relevant under heavy load; acceptable for v1.
+- **[LibreOffice headless concurrent invocation]** → No longer relevant (standalone backend dropped in 2026-06-01 revision). Any concurrency concerns for LibreOffice-backed Office apps (Collabora, Euro Office) are handled inside the Office app's own server-side scheduling.
 
 ## Migration Plan
 

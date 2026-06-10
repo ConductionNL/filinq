@@ -138,7 +138,7 @@
 			<div v-if="store.hasDossier" class="dossier-report-block">
 				<h4>{{ t('docudesk', 'Dossier grondslagen report') }}</h4>
 				<p class="muted">
-					{{ t('docudesk', 'Regenerates `<dossier-folder>/grondslagen.pdf` aggregating every anonymised file under this dossier.') }}
+					{{ t('docudesk', 'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.') }}
 				</p>
 				<div class="action-bar">
 					<NcButton type="secondary"
@@ -270,7 +270,7 @@ export default {
 
 .status-badge {
 	padding: 2px 10px;
-	border-radius: 12px;
+	border-radius: var(--border-radius-large);
 	font-size: 0.8rem;
 }
 
@@ -320,7 +320,7 @@ export default {
 /* Wave 4a additions: dossier-creation card, flag toggle, report block. */
 .dossier-card {
 	border: 1px solid var(--color-border);
-	border-radius: 8px;
+	border-radius: var(--dd-radius-md);
 	padding: 16px;
 	margin: 16px 0;
 	background-color: var(--color-main-background);

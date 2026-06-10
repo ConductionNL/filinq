@@ -24,9 +24,13 @@
 
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
-			<MainMenu />
+			<FolderFilesNavigation v-if="inDossier" />
+			<MainMenu v-else />
 			<Views />
-			<SideBars />
+			<!-- Sidebar lives at App level (NcContent demands a direct child)
+			     but is mounted strictly with the FileViewerPage host route, so
+			     viewer + sidebar always appear/disappear as one unit. -->
+			<FileViewerSidebar v-if="showFileViewerSidebar" />
 			<Modals />
 			<Dialogs />
 		</template>
@@ -44,11 +48,12 @@
 import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
+import FolderFilesNavigation from './navigation/FolderFilesNavigation.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
-import SideBars from './sidebars/SideBars.vue'
-import { initializeStores, useSettingsStore } from './store/store.js'
+import FileViewerSidebar from './sidebars/FileViewerSidebar.vue'
+import { initializeStores, useSettingsStore, myDocumentsStore, fileViewerStore } from './store/store.js'
 
 export default {
 	name: 'App',
@@ -59,10 +64,11 @@ export default {
 		NcEmptyContent,
 		NcLoadingIcon,
 		MainMenu,
+		FolderFilesNavigation,
 		Modals,
 		Dialogs,
 		Views,
-		SideBars,
+		FileViewerSidebar,
 	},
 
 	data() {
@@ -76,6 +82,15 @@ export default {
 			const settingsStore = useSettingsStore()
 			return settingsStore.hasOpenRegisters
 		},
+		/**
+		 * True when the user is browsing inside a dossier (a subfolder of /DocuDesk).
+		 * Triggers the dossier-files navigation in place of the main menu.
+		 *
+		 * @return {boolean}
+		 */
+		inDossier() {
+			return myDocumentsStore.currentPath !== '/DocuDesk'
+		},
 		isAdmin() {
 			const settingsStore = useSettingsStore()
 			return settingsStore.getIsAdmin
@@ -85,6 +100,34 @@ export default {
 		},
 		appStoreUrl() {
 			return generateUrl('/settings/apps/integration/openregister')
+		},
+		/**
+		 * Sidebar lives at App level because NcContent demands a direct
+		 * child, but it must only render while the file-viewer host route
+		 * is active AND a file is open. This keeps the sidebar and the
+		 * viewer mounted/unmounted as a single unit.
+		 *
+		 * @return {boolean}
+		 */
+		showFileViewerSidebar() {
+			return this.$route?.name === 'MyDocuments' && !!fileViewerStore.currentFile
+		},
+	},
+
+	watch: {
+		/**
+		 * Close the file viewer whenever the user navigates away from the
+		 * MyDocuments host route. Without this guard the store's
+		 * `currentFile` would survive a route change and the sidebar
+		 * computed flag would silently flicker on the next return.
+		 *
+		 * @param {object} to   The route being navigated to.
+		 * @param {object} from The route being left.
+		 */
+		$route(to, from) {
+			if (from?.name === 'MyDocuments' && to?.name !== 'MyDocuments' && fileViewerStore.currentFile) {
+				fileViewerStore.close()
+			}
 		},
 	},
 
@@ -96,6 +139,11 @@ export default {
 </script>
 
 <style scoped>
+.content {
+	padding: 8px;
+	background-color: var(--background-color, #EAE9E6);
+}
+
 .open-register-icon {
 	width: 64px;
 	height: 64px;
@@ -105,5 +153,22 @@ export default {
 .open-register-admin-hint {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
+}
+
+/* NcAppContent main panel chrome — `--color-main-background` is honoured by
+   the lib; radius and shadow have no NC variable, so override directly. */
+:deep(.app-content) {
+	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	border-radius: var(--dd-radius-panel);
+	box-shadow: var(--dd-shadow-panel);
+}
+
+/* Centre the NcEmptyContent when OpenRegister is not installed.
+   `!important` is required because the lib sets conflicting layout rules. */
+:deep(.open-register-missing) {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100% !important;
 }
 </style>
