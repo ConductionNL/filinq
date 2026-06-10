@@ -25,7 +25,8 @@
                 "version": "2.0.0",
                 "description": "Register voor GDPR publicatie toestemmingen",
                 "schemas": [
-                    "publicationConsent"
+                    "publicationConsent",
+                    "publicationProhibition"
                 ]
             },
             "signing": {
@@ -129,7 +130,7 @@
                         "title": "Document ID"
                     },
                     "entityType": {
-                        "description": "Type entiteit (PERSON of ORGANIZATION)",
+                        "description": "Type entiteit (PERSON of ORGANIZATION) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -142,7 +143,7 @@
                         ]
                     },
                     "entityText": {
-                        "description": "Tekst van de gedetecteerde entiteit",
+                        "description": "Tekst van de gedetecteerde entiteit (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -161,7 +162,7 @@
                         "maxLength": 50
                     },
                     "contactEmail": {
-                        "description": "E-mailadres voor notificatie (indien bekend)",
+                        "description": "E-mailadres voor notificatie (indien bekend) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "format": "email",
                         "visible": true,
@@ -171,13 +172,23 @@
                         "maxLength": 255
                     },
                     "contactAddress": {
-                        "description": "Postadres voor notificatie (indien bekend)",
+                        "description": "Postadres voor notificatie (indien bekend) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "visible": true,
                         "order": 6,
                         "facetable": false,
                         "title": "Contact adres",
                         "maxLength": 500
+                    },
+                    "contactRef": {
+                        "description": "Linkage pointer to the canonical NC Contact record for this affected entity. When set, the contacts-leaf link table on the publicationConsent object is the source of truth for identity + channel; entityType/entityText/contactEmail/contactAddress are legacy/fallback denormalised copies used when no contact is linked.",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Contact reference"
                     },
                     "notificationStatus": {
                         "description": "Status van de notificatie",
@@ -2170,6 +2181,191 @@
                     "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
                     "action": "destroy",
                     "responsibleParty": "docudesk-privacy-officer"
+                }
+            },
+            "publicationProhibition": {
+                "uri": null,
+                "slug": "publicationProhibition",
+                "title": "Publication Prohibition",
+                "description": "Court order, minor-protection, undercover-officer or categorical privacy-board prohibition on publishing personally-identifying information. When an active rule matches, the WOO objection workflow is pre-empted and the affected entity is forcibly anonymised. Time-bound (validFrom / validUntil) and rule-typed (exact / normalized / bsn / kvk) so the cache can resolve a match in O(1) per entity.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ShieldLockOutline",
+                "required": [
+                    "primaryName",
+                    "entityType",
+                    "matchRules",
+                    "reason",
+                    "active"
+                ],
+                "properties": {
+                    "primaryName": {
+                        "description": "Human-readable primary identifier — the name on the court order or the categorical exemption title.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Primaire naam",
+                        "maxLength": 255
+                    },
+                    "entityType": {
+                        "description": "Entity category the rule applies to.",
+                        "type": "string",
+                        "enum": [
+                            "PERSON",
+                            "ORGANIZATION",
+                            "OTHER"
+                        ],
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Entiteittype"
+                    },
+                    "matchRules": {
+                        "description": "Array of {type, value} entries; type is one of `exact` (literal), `normalized` (case+accent strip), `bsn` (BSN identifier), `kvk` (KvK identifier).",
+                        "type": "array",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "value"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "exact",
+                                        "normalized",
+                                        "bsn",
+                                        "kvk"
+                                    ]
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
+                        },
+                        "title": "Matchregels"
+                    },
+                    "reason": {
+                        "description": "Short justification — gerechtelijk bevel, minderjarige bescherming, undercover, categorical privacy-board.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "title": "Reden",
+                        "maxLength": 1024
+                    },
+                    "legalAuthority": {
+                        "description": "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "title": "Juridische grondslag",
+                        "maxLength": 512
+                    },
+                    "caseReference": {
+                        "description": "Zaaknummer / dossiernummer voor traceability.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Zaakreferentie",
+                        "maxLength": 128
+                    },
+                    "severity": {
+                        "description": "Urgentieklasse: critical (per direct effectief), high, normal.",
+                        "type": "string",
+                        "enum": [
+                            "critical",
+                            "high",
+                            "normal"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Ernst",
+                        "default": "normal"
+                    },
+                    "jurisdiction": {
+                        "description": "Geografische/juridische scope (e.g. NL, EU, gemeente-specifiek).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Jurisdictie",
+                        "maxLength": 128
+                    },
+                    "addedBy": {
+                        "description": "Nextcloud user die de regel heeft toegevoegd (UUID/UID).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Toegevoegd door",
+                        "maxLength": 255
+                    },
+                    "validFrom": {
+                        "description": "Begindatum (inclusief) waarop de regel matched.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Einddatum (inclusief) waarop de regel matched; null = onbeperkt.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Master kill-switch; alleen `active: true` regels matchen.",
+                        "type": "boolean",
+                        "required": true,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "notes": {
+                        "description": "Markdown-vrije tekst voor extra context.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 13,
+                        "title": "Notities"
+                    }
+                },
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "reason": "Privacy-prohibitions are court-order-backed; retain at least 10 years for audit + appeal per Archiefwet selectielijst."
+                },
+                "authorization": {
+                    "read": [
+                        "consent"
+                    ],
+                    "write": [
+                        "docudesk-policy-admins"
+                    ]
                 }
             }
         },
