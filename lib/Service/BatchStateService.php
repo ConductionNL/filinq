@@ -86,6 +86,16 @@ class BatchStateService
      */
     public function getMaxFiles(): int
     {
+        // Canonical manifest-declared key (docudesk-adopt-or-abstractions task 11);
+        // legacy 'docudesk_batch_max_files' kept as a one-release fallback.
+        $value = $this->appConfig->getValueString(
+            'docudesk',
+            'batch.max_files_per_run',
+            ''
+        );
+        if ($value !== '') {
+            return (int) $value;
+        }
         return (int) $this->appConfig->getValueString(
             'docudesk',
             'docudesk_batch_max_files',
@@ -93,6 +103,30 @@ class BatchStateService
         );
 
     }//end getMaxFiles()
+
+    /**
+     * Get the cache TTL in seconds for batch records.
+     *
+     * Reads `docudesk.batch.cache_ttl_seconds` from app-config (canonical key
+     * declared in manifest.yaml under docudesk-adopt-or-abstractions task 11).
+     * Returns the in-class constant when unset so existing deployments behave
+     * identically until an admin overrides it.
+     *
+     * @return int TTL in seconds.
+     */
+    private function getCacheTtl(): int
+    {
+        $value = $this->appConfig->getValueString(
+            'docudesk',
+            'batch.cache_ttl_seconds',
+            ''
+        );
+        if ($value !== '') {
+            return (int) $value;
+        }
+        return self::CACHE_TTL;
+
+    }//end getCacheTtl()
 
     /**
      * Create and persist a new batch record for a user.
@@ -114,7 +148,7 @@ class BatchStateService
             'files'     => $files,
             'createdAt' => time(),
         ];
-        $this->cache->set(self::CACHE_PREFIX.$batchId, json_encode($batch), self::CACHE_TTL);
+        $this->cache->set(self::CACHE_PREFIX.$batchId, json_encode($batch), $this->getCacheTtl());
         $this->logger->info('Batch created', ['batchId' => $batchId, 'fileCount' => count($files)]);
         return $batch;
 
@@ -163,7 +197,7 @@ class BatchStateService
         }
 
         // Reset TTL on read (keep-alive pattern) so active batches don't expire during human review.
-        $this->cache->set(self::CACHE_PREFIX.$batchId, $data, self::CACHE_TTL);
+        $this->cache->set(self::CACHE_PREFIX.$batchId, $data, $this->getCacheTtl());
         return $batch;
 
     }//end getBatch()
@@ -180,7 +214,7 @@ class BatchStateService
      */
     public function updateBatch(string $batchId, array $batch): void
     {
-        $this->cache->set(self::CACHE_PREFIX.$batchId, json_encode($batch), self::CACHE_TTL);
+        $this->cache->set(self::CACHE_PREFIX.$batchId, json_encode($batch), $this->getCacheTtl());
 
     }//end updateBatch()
 

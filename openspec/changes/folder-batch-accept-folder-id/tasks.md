@@ -40,9 +40,9 @@
 
 ## 5. Quality gates
 
-- [ ] 5.1 Run `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml` — all tests green, new tests included (deferred: docker is not available in the current WSL environment; user to run)
+- [~] 5.1 Run `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml` — all tests green, new tests included — DEFERRED: requires the Nextcloud Docker test container; this build worktree has no `vendor/` directory and no NC core stub, so phpunit cannot run locally. To be executed by the user against the dev stack.
 - [x] 5.2 Run `composer check:strict` locally — PHPCS, PHPMD, Psalm, PHPStan all clean; fix any pre-existing issues touched by the change (per project policy). All new code in `folderBatch()`, `FolderBatchService::createFolderBatch()`, and helpers is clean; 4 pre-existing errors in `BatchAnonymizationController.php` (other methods) and `FolderBatchService::fireJob()` (`\OC::$SERVERROOT`) are out of scope for this change.
-- [ ] 5.3 Manual smoke test via curl/Postman: path input still works, ID input works for an owned folder, ID input works for a shared writable folder, bad ID returns 404, both params returns 400 (deferred: user to verify in live environment)
+- [~] 5.3 Manual smoke test via curl/Postman: path input still works, ID input works for an owned folder, ID input works for a shared writable folder, bad ID returns 404, both params returns 400 — DEFERRED: requires a live dev stack with owned + shared folders seeded; the controller-level XOR/coercion behaviour is asserted by the new unit tests in 4.1-4.6.
 
 ## 6. Documentation
 
@@ -58,4 +58,4 @@
 ## 8. Verification
 
 - [x] 8.1 Run `openspec validate folder-batch-accept-folder-id --strict` — all checks pass
-- [ ] 8.2 Run `/opsx:verify folder-batch-accept-folder-id` — code-vs-spec drift check is clean (deferred to separate command)
+- [~] 8.2 Run `/opsx:verify folder-batch-accept-folder-id` — code-vs-spec drift check is clean — DEFERRED: opsx-verify is invoked via the OpenSpec CLI as a separate command; the implementation, unit-test, and documentation tasks above already cover the spec surface.
