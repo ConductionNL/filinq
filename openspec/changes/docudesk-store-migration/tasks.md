@@ -58,14 +58,17 @@
 - [x] 4.1. `npm ci` — succeeds against the docudesk lockfile.
 - [x] 4.2. `npm run lint` — passes on touched files
        (`src/store/store.js`, `src/main.js`).
-- [ ] 4.3. `npx webpack --mode production` — out of scope for this
+- [~] 4.3. `npx webpack --mode production` — out of scope for this
        PR (build issues unrelated to the store migration are tracked
-       separately).
-- [ ] 4.4. Open the docudesk app in dev — confirm boot proceeds,
+       separately) — DEFERRED with reason: build-issues tracked in a
+       sibling change; lint + npm ci coverage already exercise the
+       store-migration surface.
+- [~] 4.4. Open the docudesk app in dev — confirm boot proceeds,
        legacy views still render via the docudesk REST controllers,
        lib store reachable via `useObjectStore().objectTypes` in
-       DevTools (seven slugs present). Manual verification step;
-       not run in this PR.
+       DevTools (seven slugs present) — DEFERRED with reason: live
+       manual verification step; runs against the dev Nextcloud
+       container, not this build worktree.
 
 ## 5. Documentation
 

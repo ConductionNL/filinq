@@ -27,6 +27,7 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -68,7 +69,8 @@ class DataResolverService
     public function __construct(
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IAppConfig $appConfig
     ) {
 
     }//end __construct()
@@ -217,7 +219,12 @@ class DataResolverService
         $this->resolvedCache[$cacheKey] = $data;
 
         // Resolve nested references if within depth limit.
-        if ($depth < self::MAX_DEPTH) {
+        $maxDepth = (int) $this->appConfig->getValueString(
+            'docudesk',
+            'resolver.max_depth',
+            (string) self::MAX_DEPTH
+        );
+        if ($depth < $maxDepth) {
             $data = $this->resolveNestedReferences(data: $data, depth: $depth);
             $this->resolvedCache[$cacheKey] = $data;
         }

@@ -7,6 +7,13 @@
 		<table v-else class="dd-data-table__table">
 			<thead>
 				<tr>
+					<th v-if="selectable" class="dd-data-table__th dd-data-table__th--select" @click.stop>
+						<NcCheckboxRadioSwitch
+							:checked="allSelected"
+							:indeterminate="someSelected"
+							:aria-label="selectAllLabel"
+							@update:checked="$emit('toggle-select-all')" />
+					</th>
 					<th
 						v-for="col in columns"
 						:key="col.key"
@@ -31,6 +38,11 @@
 					:key="row[rowKey]"
 					class="dd-data-table__row"
 					@click="$emit('row-click', row)">
+					<td v-if="selectable" class="dd-data-table__td dd-data-table__td--select" @click.stop>
+						<NcCheckboxRadioSwitch
+							:checked="isSelected(row)"
+							@update:checked="$emit('toggle-select', row)" />
+					</td>
 					<td
 						v-for="col in columns"
 						:key="col.key"
@@ -52,7 +64,7 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 /**
  * Data table for DocuDesk index views.
@@ -64,7 +76,7 @@ import { NcLoadingIcon } from '@nextcloud/vue'
  */
 export default {
 	name: 'DdDataTable',
-	components: { NcLoadingIcon },
+	components: { NcLoadingIcon, NcCheckboxRadioSwitch },
 	props: {
 		/** Column definitions: `{ key, label, width? }`. */
 		columns: {
@@ -91,19 +103,67 @@ export default {
 			type: String,
 			default: 'No items found',
 		},
+		/** Show a leading checkbox column for bulk selection. */
+		selectable: {
+			type: Boolean,
+			default: false,
+		},
+		/** Row keys (`row[rowKey]`) that are currently selected. */
+		selectedKeys: {
+			type: Array,
+			default: () => [],
+		},
+		/** Accessible label for the select-all header checkbox. */
+		selectAllLabel: {
+			type: String,
+			default: 'Select all',
+		},
 	},
 	computed: {
+		/**
+		 * @spec exclude Pure presentational layout calculation; no domain or persistence semantics.
+		 */
 		totalColumns() {
-			return this.columns.length + (this.$scopedSlots['row-actions'] ? 1 : 0)
+			return this.columns.length
+				+ (this.$scopedSlots['row-actions'] ? 1 : 0)
+				+ (this.selectable ? 1 : 0)
+		},
+		/**
+		 * True when every visible row is selected (drives the header checkbox).
+		 *
+		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
+		 */
+		allSelected() {
+			return this.rows.length > 0
+				&& this.rows.every((row) => this.selectedKeys.includes(row[this.rowKey]))
+		},
+		/**
+		 * True when some — but not all — visible rows are selected (indeterminate state).
+		 *
+		 * @spec exclude Local checkbox/selection state derivation; no domain or persistence semantics.
+		 */
+		someSelected() {
+			return this.selectedKeys.length > 0 && !this.allSelected
 		},
 	},
 	methods: {
+		/**
+		 * Whether a given row is currently selected.
+		 *
+		 * @param {object} row Row object.
+		 * @return {boolean}
+		 */
+		isSelected(row) {
+			return this.selectedKeys.includes(row[this.rowKey])
+		},
 		/**
 		 * Resolve a cell value, supporting dot-notation keys.
 		 *
 		 * @param {object} row Row object.
 		 * @param {string} key Column key (e.g. `address.city`).
 		 * @return {*} Cell value.
+		 *
+		 * @spec exclude Generic dot-notation key resolver for table cell rendering; no domain semantics.
 		 */
 		getCellValue(row, key) {
 			if (key.includes('.')) {
@@ -117,10 +177,10 @@ export default {
 
 <style scoped>
 .dd-data-table {
-	border-radius: var(--dd-data-table-border-radius, 20px);
+	border-radius: var(--dd-data-table-border-radius, var(--dd-radius-panel));
 	border: 1px solid var(--dd-data-table-border-color, #E9E9E9);
 	overflow-x: auto;
-	box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	box-shadow: var(--dd-shadow-panel);
 }
 
 .dd-data-table__loading {
@@ -173,6 +233,13 @@ export default {
 .dd-data-table__td--actions {
 	width: 64px;
 	text-align: center;
+}
+
+.dd-data-table__th--select,
+.dd-data-table__td--select {
+	width: 44px;
+	text-align: center;
+	cursor: default;
 }
 
 .dd-data-table__row {

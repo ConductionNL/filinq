@@ -221,6 +221,17 @@ class OcrService
      */
     public function getOcrLanguages(): string
     {
+        // Canonical manifest-declared key (docudesk-adopt-or-abstractions task 10);
+        // legacy 'ocr_languages' read kept as a one-release migration fallback so
+        // existing admin overrides do not regress.
+        $value = $this->config->getValueString(
+            self::APP_NAME,
+            'ocr.default_languages',
+            ''
+        );
+        if ($value !== '') {
+            return $value;
+        }
         return $this->config->getValueString(
             self::APP_NAME,
             'ocr_languages',
@@ -238,6 +249,17 @@ class OcrService
      */
     public function getOcrDpi(): int
     {
+        // Canonical manifest-declared key (docudesk-adopt-or-abstractions task 10);
+        // legacy 'ocr_dpi' read kept as a one-release migration fallback so existing
+        // admin overrides do not regress.
+        $value = $this->config->getValueString(
+            self::APP_NAME,
+            'ocr.default_dpi',
+            ''
+        );
+        if ($value !== '') {
+            return (int) $value;
+        }
         return (int) $this->config->getValueString(
             self::APP_NAME,
             'ocr_dpi',

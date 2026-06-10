@@ -32,6 +32,7 @@ use DateTime;
 use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 
@@ -64,6 +65,7 @@ class TemplateService
      * @param OpenRegisterResolver   $registerResolver Resolver for register/schema config
      * @param TemplateVersionService $versionService   Service for template version management
      * @param IUserSession           $userSession      User session for getting current user
+     * @param IAppConfig             $config           App-config reader for admin-tunable knobs
      *
      * @return void
      */
@@ -72,7 +74,8 @@ class TemplateService
         private readonly IAppManager $appManager,
         private readonly OpenRegisterResolver $registerResolver,
         private readonly TemplateVersionService $versionService,
-        private readonly IUserSession $userSession
+        private readonly IUserSession $userSession,
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
@@ -546,7 +549,12 @@ class TemplateService
             $now      = new DateTime();
             $diffMins = ($now->getTimestamp() - $lockedAt->getTimestamp()) / 60;
 
-            return $diffMins > self::LOCK_TIMEOUT_MINUTES;
+            $timeoutMinutes = (int) $this->config->getValueString(
+                'docudesk',
+                'templates.lock_timeout_minutes',
+                (string) self::LOCK_TIMEOUT_MINUTES
+            );
+            return $diffMins > $timeoutMinutes;
         } catch (Exception $exception) {
             // If we cannot parse the lock time, consider it expired.
             return true;

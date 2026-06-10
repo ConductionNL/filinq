@@ -62,11 +62,24 @@ class SettingsService
     private const OPENREGISTER_APP_ID = 'openregister';
 
     /**
-     * The minimum version of the OpenRegister application required
+     * Fallback minimum OpenRegister version if the manifest cannot be read.
      *
-     * @var string The minimum required version of OpenRegister
+     * The canonical source of truth is `openspec/manifest.yaml`
+     * (`dependencies.openregister.minVersion`) per
+     * docudesk-adopt-or-abstractions task 1. This constant is only used when
+     * the manifest is missing/unreadable so the runtime still has a defensive
+     * floor; the manifest validator enforces parity.
+     *
+     * @var string Fallback minimum required version of OpenRegister.
      */
-    private const MIN_OPENREGISTER_VERSION = '0.2.10';
+    private const FALLBACK_MIN_OPENREGISTER_VERSION = '0.2.10';
+
+    /**
+     * Cached minimum OpenRegister version resolved from the manifest.
+     *
+     * @var string|null
+     */
+    private ?string $minOpenRegisterVersion = null;
 
     /**
      * SettingsService constructor
@@ -104,9 +117,43 @@ class SettingsService
         }
 
         $currentVersion = $this->appManager->getAppVersion(self::OPENREGISTER_APP_ID);
-        return version_compare($currentVersion, self::MIN_OPENREGISTER_VERSION, '>=') === true;
+        return version_compare($currentVersion, $this->getMinOpenRegisterVersion(), '>=') === true;
 
     }//end isOpenRegisterInstalled()
+
+    /**
+     * Resolve the minimum supported OpenRegister version.
+     *
+     * Reads `dependencies.openregister.minVersion` from the project's
+     * `openspec/manifest.yaml`. Falls back to FALLBACK_MIN_OPENREGISTER_VERSION
+     * when the manifest is missing, unreadable, or shaped unexpectedly so the
+     * boot path stays defensive. The result is memoised per-instance.
+     *
+     * @return string Semantic version of the minimum supported OpenRegister.
+     */
+    private function getMinOpenRegisterVersion(): string
+    {
+        if ($this->minOpenRegisterVersion !== null) {
+            return $this->minOpenRegisterVersion;
+        }
+
+        $manifestPath = dirname(__DIR__, 2).'/openspec/manifest.yaml';
+        $minVersion   = self::FALLBACK_MIN_OPENREGISTER_VERSION;
+        if (is_file($manifestPath) === true && is_readable($manifestPath) === true) {
+            $contents = file_get_contents($manifestPath);
+            if (is_string($contents) === true && preg_match(
+                '/dependencies:\s*\n(?:\s+#[^\n]*\n)*\s+openregister:\s*\n(?:\s+#[^\n]*\n)*\s+minVersion:\s*["\']?([0-9][0-9A-Za-z\.\-+]*)["\']?/m',
+                $contents,
+                $matches
+            ) === 1) {
+                $minVersion = $matches[1];
+            }
+        }
+
+        $this->minOpenRegisterVersion = $minVersion;
+        return $minVersion;
+
+    }//end getMinOpenRegisterVersion()
 
     /**
      * Attempts to retrieve the OpenRegister service from the container

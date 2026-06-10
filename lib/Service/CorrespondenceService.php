@@ -34,6 +34,7 @@ use Exception;
 use RuntimeException;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -96,10 +97,55 @@ class CorrespondenceService
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly IJobList $jobList,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly IAppConfig $appConfig
     ) {
 
     }//end __construct()
+
+    /**
+     * Resolve the configured sync-batch limit, falling back to the constant.
+     *
+     * Reads `docudesk.correspondence.sync_batch_limit` (canonical key declared
+     * in manifest.yaml under docudesk-adopt-or-abstractions task 11).
+     *
+     * @return int
+     */
+    private function getSyncBatchLimit(): int
+    {
+        $value = $this->appConfig->getValueString(
+            'docudesk',
+            'correspondence.sync_batch_limit',
+            ''
+        );
+        if ($value !== '') {
+            return (int) $value;
+        }
+        return self::SYNC_BATCH_LIMIT;
+
+    }//end getSyncBatchLimit()
+
+    /**
+     * Resolve the configured default output format, falling back to the constant.
+     *
+     * Reads `docudesk.correspondence.default_format` (canonical key declared in
+     * manifest.yaml under docudesk-adopt-or-abstractions task 11).
+     *
+     * @return string
+     */
+    private function getDefaultFormat(): string
+    {
+        $value = $this->appConfig->getValueString(
+            'docudesk',
+            'correspondence.default_format',
+            ''
+        );
+        if ($value !== '') {
+            return $value;
+        }
+        return self::DEFAULT_FORMAT;
+
+    }//end getDefaultFormat()
 
     /**
      * Get the ObjectService from OpenRegister
@@ -142,7 +188,7 @@ class CorrespondenceService
      */
     public function generate(string $templateId, array $dataRefs, array $options=[]): array
     {
-        $format = $options['format'] ?? self::DEFAULT_FORMAT;
+        $format = $options['format'] ?? $this->getDefaultFormat();
         $this->validateFormat(format: $format);
 
         // Fetch template.
@@ -224,7 +270,7 @@ class CorrespondenceService
     ): array {
         $count = count($recipientIds);
 
-        if ($count <= self::SYNC_BATCH_LIMIT) {
+        if ($count <= $this->getSyncBatchLimit()) {
             return $this->generateBatchSync(
                 templateId: $templateId,
                 recipientIds: $recipientIds,
@@ -292,7 +338,7 @@ class CorrespondenceService
                     templateId: $templateId,
                     templateName: '',
                     dataRefs: $dataRefs,
-                    format: ($options['format'] ?? self::DEFAULT_FORMAT),
+                    format: ($options['format'] ?? $this->getDefaultFormat()),
                     status: 'failed',
                     errorMessage: $e->getMessage(),
                     options: $options

@@ -15,12 +15,22 @@ webpackConfig.stats = {
 // Inline-SVG handling for our custom icon set:
 // SVGs in src/assets/icons/ are loaded as raw source strings so DdIcon can
 // inject them with v-html and let CSS `currentColor` flow through.
-// All other assets (PNGs, fonts, SVGs elsewhere) keep the default
-// asset/inline (data URI) behavior from @nextcloud/webpack-vue-config.
+// Remaining PNGs / SVGs elsewhere keep the default asset/inline (data URI)
+// behavior from @nextcloud/webpack-vue-config.
 const iconsDir = path.resolve(__dirname, 'src/assets/icons')
+
+// Font handling: @nextcloud/webpack-vue-config's default rule matches
+// woff2?|ttf|eot with asset/inline, which would base64-bake each ~350 KB
+// woff2 (and ~900 KB ttf fallback) straight into the JS bundle on every
+// page load. Nextcloud core itself serves fonts as standalone files under
+// core/fonts/ referenced via @font-face url(); we mirror that by emitting
+// our fonts as asset/resource so the browser fetches and caches them once
+// as real files instead of inflating the bundle.
+const fontsDir = path.resolve(__dirname, 'src/assets/fonts')
+
 webpackConfig.module.rules = webpackConfig.module.rules.map((rule) => {
 	if (rule && rule.type === 'asset/inline') {
-		return { ...rule, exclude: [iconsDir] }
+		return { ...rule, exclude: [iconsDir, fontsDir] }
 	}
 	return rule
 })
@@ -28,6 +38,11 @@ webpackConfig.module.rules.push({
 	test: /\.svg$/,
 	include: [iconsDir],
 	type: 'asset/source',
+})
+webpackConfig.module.rules.push({
+	test: /\.(woff2?|ttf|eot)$/,
+	include: [fontsDir],
+	type: 'asset/resource',
 })
 
 const appId = 'docudesk'

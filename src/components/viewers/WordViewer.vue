@@ -124,8 +124,8 @@ export default {
 	max-width: 800px;
 	width: 100%;
 	padding: 48px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	border-radius: 4px;
+	box-shadow: var(--dd-shadow-doc);
+	border-radius: var(--border-radius);
 }
 
 .word-viewer__content {

@@ -18,6 +18,10 @@
    app only and does not leak into other Nextcloud apps. */
 :root {
 	--dd-color-dark-blue: #02162E;
+	--dd-color-blue: #2874D1;
+	--dd-color-white: #FFF;
+	--dd-color-white-70: rgba(255, 255, 255, 0.70);
+	--dd-color-light-grey: rgba(247, 247, 247, 0.70);
 
 	/* Remap Nextcloud's `--color-main-text` token so all components that
 	   honour it — including @nextcloud/vue internals — pick up the brand
@@ -27,6 +31,17 @@
 	/* Remap Nextcloud's `--border-radius-pill` token so all components that
 	   honour it pick up the brand radius. */
 	--border-radius-pill: var(--dd-border-radius-pill, 6px);
+
+	/* Shared elevation + radius scale. Bare 4px / 12px values map to NC's
+	   native --border-radius / --border-radius-large and are not duplicated
+	   here. These tokens cover the values NC has no native equivalent for. */
+	--dd-radius-panel: 20px;       /* large surfaces: cards, panels, sidebars */
+	--dd-radius-md: 8px;           /* mid-size cards / list rows */
+	--dd-radius-pill-full: 999px;  /* fully-round controls (search, toggles) */
+
+	--dd-shadow-panel: 0 4px 22px -3px rgba(0, 0, 0, 0.08);                            /* elevated surface */
+	--dd-shadow-doc: 0 2px 8px rgba(0, 0, 0, 0.15);                                    /* document viewers */
+	--dd-shadow-popout: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24); /* menu pop-out */
 }
 
 #content {

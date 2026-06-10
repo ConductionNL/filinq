@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.2.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
-        "version": "5.2.0"
+        "description": "DocuDesk register v5.3.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Adds anonymizationLink schema for source↔anonymised file mapping. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
+        "version": "5.3.0"
     },
     "x-openregister": {
         "type": "application",
@@ -25,7 +25,8 @@
                 "version": "2.0.0",
                 "description": "Register voor GDPR publicatie toestemmingen",
                 "schemas": [
-                    "publicationConsent"
+                    "publicationConsent",
+                    "publicationProhibition"
                 ]
             },
             "signing": {
@@ -58,7 +59,8 @@
                 "schemas": [
                     "correspondence",
                     "huisstijl",
-                    "batchCorrespondenceJob"
+                    "batchCorrespondenceJob",
+                    "anonymizationLink"
                 ]
             },
             "dossier": {
@@ -118,6 +120,20 @@
                     "entityText"
                 ],
                 "properties": {
+                    "scope": {
+                        "description": "Discriminator: `document` = per-document/per-entity consent in the WOO workflow; `entity` = standing consent for a recurring entity (mayor, council member, etc.). Default `document` preserves backward compatibility — existing rows automatically load as `document`.",
+                        "type": "string",
+                        "enum": [
+                            "document",
+                            "entity"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 0,
+                        "facetable": true,
+                        "title": "Scope",
+                        "default": "document"
+                    },
                     "documentId": {
                         "description": "Verwijzing naar het document dat gepubliceerd moet worden",
                         "type": "string",
@@ -128,7 +144,7 @@
                         "title": "Document ID"
                     },
                     "entityType": {
-                        "description": "Type entiteit (PERSON of ORGANIZATION)",
+                        "description": "Type entiteit (PERSON of ORGANIZATION) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -141,7 +157,7 @@
                         ]
                     },
                     "entityText": {
-                        "description": "Tekst van de gedetecteerde entiteit",
+                        "description": "Tekst van de gedetecteerde entiteit (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -160,7 +176,7 @@
                         "maxLength": 50
                     },
                     "contactEmail": {
-                        "description": "E-mailadres voor notificatie (indien bekend)",
+                        "description": "E-mailadres voor notificatie (indien bekend) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "format": "email",
                         "visible": true,
@@ -170,13 +186,23 @@
                         "maxLength": 255
                     },
                     "contactAddress": {
-                        "description": "Postadres voor notificatie (indien bekend)",
+                        "description": "Postadres voor notificatie (indien bekend) (Legacy/fallback: populated denormalised when no contactRef is set; once contactRef is linked, the contacts-leaf vCard is the source of truth for this field.)",
                         "type": "string",
                         "visible": true,
                         "order": 6,
                         "facetable": false,
                         "title": "Contact adres",
                         "maxLength": 500
+                    },
+                    "contactRef": {
+                        "description": "Linkage pointer to the canonical NC Contact record for this affected entity. When set, the contacts-leaf link table on the publicationConsent object is the source of truth for identity + channel; entityType/entityText/contactEmail/contactAddress are legacy/fallback denormalised copies used when no contact is linked.",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Contact reference"
                     },
                     "notificationStatus": {
                         "description": "Status van de notificatie",
@@ -285,6 +311,111 @@
                         "facetable": false,
                         "title": "Notities",
                         "maxLength": 2000
+                    },
+                    "matchRules": {
+                        "description": "Array of `{type, value}` entries (same enum as `publicationProhibition`: `exact` / `normalized` / `bsn` / `kvk`). Only used on `scope=entity` records; service-level validation rejects `scope=entity` writes without at least one matchRule.",
+                        "type": "array",
+                        "required": false,
+                        "visible": true,
+                        "order": 100,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "value"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "exact",
+                                        "normalized",
+                                        "bsn",
+                                        "kvk"
+                                    ]
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
+                        },
+                        "title": "Matchregels"
+                    },
+                    "validFrom": {
+                        "description": "Standing-consent validity start (inclusive). Only honoured on `scope=entity` records.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 101,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Standing-consent validity end (inclusive); `null` means open-ended. Service-level validation surfaces a non-blocking warning when blank.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 102,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Master kill-switch on standing consents (`scope=entity`). Only `active=true` records participate in matching.",
+                        "type": "boolean",
+                        "required": false,
+                        "visible": true,
+                        "order": 103,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "consentMethod": {
+                        "description": "How consent was captured. Required at service-level on `scope=entity` writes.",
+                        "type": "string",
+                        "enum": [
+                            "paper",
+                            "digital_signature",
+                            "verbal_recorded",
+                            "opt_in_form"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 104,
+                        "facetable": true,
+                        "title": "Toestemmingsmethode"
+                    },
+                    "consentDocument": {
+                        "description": "Reference to the captured consent document (signed PDF / form upload).",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 105,
+                        "facetable": true,
+                        "title": "Toestemmingsdocument"
+                    },
+                    "consentScope": {
+                        "description": "Free-text limitation describing the scope of the standing consent (e.g. 'all publications referencing the position of burgemeester').",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 106,
+                        "title": "Toestemmingsbereik",
+                        "maxLength": 1024
+                    },
+                    "policyMatch": {
+                        "description": "Polymorphic reference: when set on a `scope=document` record, points to the `publicationProhibition` UUID (prohibition pre-emption) OR to a `publicationConsent` UUID with `scope=entity` (standing-consent match). Service-level validation rejects polymorphic violations and rejects `policyMatch` on `scope=entity` records.",
+                        "type": "string",
+                        "format": "uri",
+                        "required": false,
+                        "visible": true,
+                        "order": 107,
+                        "facetable": true,
+                        "title": "Policy match",
+                        "x-openregister-handling": "related-object"
                     }
                 },
                 "archive": [],
@@ -2001,6 +2132,359 @@
                         "description": "Ratio of successfully generated letters over total recipients",
                         "readOnly": true
                     }
+                }
+            },
+            "anonymizationLink": {
+                "uri": null,
+                "slug": "anonymizationLink",
+                "title": "Anonymisation Link",
+                "description": "Koppeling tussen een bronbestand (niet-geanonimiseerd) en zijn geanonimiseerde tegenhanger. Eén record per bronbestand (idempotent op sourceFileId); her-anonimisering werkt hetzelfde record bij. Zowel sourceFileId als anonymizedFileId zijn facetable zodat de OpenRegister zoek-API de koppeling in beide richtingen oplost.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileLinkOutline",
+                "required": [
+                    "sourceFileId",
+                    "anonymizedFileId"
+                ],
+                "properties": {
+                    "sourceFileId": {
+                        "description": "Nextcloud bestands-ID van het originele (niet-geanonimiseerde) document — idempotentiesleutel",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Bron bestands-ID"
+                    },
+                    "sourceFileName": {
+                        "description": "Bestandsnaam van het brondocument",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Bron bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "sourceFilePath": {
+                        "description": "Volledig pad van het brondocument binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Bron pad",
+                        "maxLength": 4096
+                    },
+                    "anonymizedFileId": {
+                        "description": "Nextcloud bestands-ID van het geanonimiseerde resultaat — sleutel voor de omgekeerde zoekopdracht",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Geanonimiseerd bestands-ID"
+                    },
+                    "anonymizedFileName": {
+                        "description": "Bestandsnaam van het geanonimiseerde resultaat",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Geanonimiseerde bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "anonymizedFilePath": {
+                        "description": "Volledig (stabiel) pad van het geanonimiseerde resultaat binnen Nextcloud",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Geanonimiseerd pad",
+                        "maxLength": 4096
+                    },
+                    "outputFormat": {
+                        "description": "Uitvoerformaat van het geanonimiseerde document",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Formaat",
+                        "enum": [
+                            "pdf",
+                            "docx",
+                            "odt",
+                            "txt",
+                            "html"
+                        ]
+                    },
+                    "status": {
+                        "description": "Uitkomst van de anonimiseringsrun. Alleen succesvolle runs worden vastgelegd, dus de waarde is altijd 'anonymized'.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": [
+                            "anonymized"
+                        ],
+                        "default": "anonymized"
+                    },
+                    "replacementCount": {
+                        "description": "Aantal toegepaste entiteitsvervangingen in deze run",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Vervangingen"
+                    },
+                    "runCount": {
+                        "description": "Hoe vaak dit bronbestand is geanonimiseerd (opgehoogd bij elke her-anonimisering)",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Aantal runs",
+                        "default": 1
+                    },
+                    "anonymizedAt": {
+                        "description": "Datum/tijd van de anonimiseringsrun (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Geanonimiseerd op"
+                    },
+                    "anonymizedBy": {
+                        "description": "Nextcloud gebruikers-ID dat de anonimisering heeft gestart",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Geanonimiseerd door",
+                        "maxLength": 64
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-06-09T00:00:00+00:00",
+                "created": "2026-06-09T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "sourceFileName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": {
+                        "default": "P7Y"
+                    },
+                    "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
+            },
+            "publicationProhibition": {
+                "uri": null,
+                "slug": "publicationProhibition",
+                "title": "Publication Prohibition",
+                "description": "Court order, minor-protection, undercover-officer or categorical privacy-board prohibition on publishing personally-identifying information. When an active rule matches, the WOO objection workflow is pre-empted and the affected entity is forcibly anonymised. Time-bound (validFrom / validUntil) and rule-typed (exact / normalized / bsn / kvk) so the cache can resolve a match in O(1) per entity.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ShieldLockOutline",
+                "required": [
+                    "primaryName",
+                    "entityType",
+                    "matchRules",
+                    "reason",
+                    "active"
+                ],
+                "properties": {
+                    "primaryName": {
+                        "description": "Human-readable primary identifier — the name on the court order or the categorical exemption title.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Primaire naam",
+                        "maxLength": 255
+                    },
+                    "entityType": {
+                        "description": "Entity category the rule applies to.",
+                        "type": "string",
+                        "enum": [
+                            "PERSON",
+                            "ORGANIZATION",
+                            "OTHER"
+                        ],
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Entiteittype"
+                    },
+                    "matchRules": {
+                        "description": "Array of {type, value} entries; type is one of `exact` (literal), `normalized` (case+accent strip), `bsn` (BSN identifier), `kvk` (KvK identifier).",
+                        "type": "array",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "value"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "exact",
+                                        "normalized",
+                                        "bsn",
+                                        "kvk"
+                                    ]
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "maxLength": 255
+                                }
+                            }
+                        },
+                        "title": "Matchregels"
+                    },
+                    "reason": {
+                        "description": "Short justification — gerechtelijk bevel, minderjarige bescherming, undercover, categorical privacy-board.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "title": "Reden",
+                        "maxLength": 1024
+                    },
+                    "legalAuthority": {
+                        "description": "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 5,
+                        "title": "Juridische grondslag",
+                        "maxLength": 512
+                    },
+                    "caseReference": {
+                        "description": "Zaaknummer / dossiernummer voor traceability.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Zaakreferentie",
+                        "maxLength": 128
+                    },
+                    "severity": {
+                        "description": "Urgentieklasse: critical (per direct effectief), high, normal.",
+                        "type": "string",
+                        "enum": [
+                            "critical",
+                            "high",
+                            "normal"
+                        ],
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Ernst",
+                        "default": "normal"
+                    },
+                    "jurisdiction": {
+                        "description": "Geografische/juridische scope (e.g. NL, EU, gemeente-specifiek).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Jurisdictie",
+                        "maxLength": 128
+                    },
+                    "addedBy": {
+                        "description": "Nextcloud user die de regel heeft toegevoegd (UUID/UID).",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Toegevoegd door",
+                        "maxLength": 255
+                    },
+                    "validFrom": {
+                        "description": "Begindatum (inclusief) waarop de regel matched.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 10,
+                        "facetable": true,
+                        "title": "Geldig vanaf"
+                    },
+                    "validUntil": {
+                        "description": "Einddatum (inclusief) waarop de regel matched; null = onbeperkt.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": false,
+                        "visible": true,
+                        "order": 11,
+                        "facetable": true,
+                        "title": "Geldig tot"
+                    },
+                    "active": {
+                        "description": "Master kill-switch; alleen `active: true` regels matchen.",
+                        "type": "boolean",
+                        "required": true,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "notes": {
+                        "description": "Markdown-vrije tekst voor extra context.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 13,
+                        "title": "Notities"
+                    }
+                },
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "reason": "Privacy-prohibitions are court-order-backed; retain at least 10 years for audit + appeal per Archiefwet selectielijst."
+                },
+                "authorization": {
+                    "read": [
+                        "consent"
+                    ],
+                    "write": [
+                        "docudesk-policy-admins"
+                    ]
                 }
             }
         },
