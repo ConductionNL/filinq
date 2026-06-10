@@ -338,6 +338,65 @@ class AnonymizationControllerTest extends TestCase
 
 
     /**
+     * extract() degrades gracefully to a clean JSON error when the NER backend
+     * is unreachable, instead of letting the Throwable escape as an unhandled
+     * 500 (white-screen / stack trace).
+     *
+     * Regression lock for the anonymisation Throwable graceful-degrade fix: the
+     * controller wraps extractAndDetectEntities() in catch (\Throwable) and
+     * returns a structured JSONResponse with an 'error' payload. A plain
+     * RuntimeException (the shape thrown when the presidio/NER sidecar is
+     * absent) carries code 0, so the controller must map it to HTTP 500 — not
+     * crash and not mistakenly surface code 0 as the HTTP status.
+     *
+     * @return void
+     */
+    public function testExtractDegradesGracefullyWhenNerBackendUnavailable(): void
+    {
+        // The default controller has file access granted; make the service
+        // throw as if the NER backend is unreachable.
+        $this->mockAnonService->method('extractAndDetectEntities')
+            ->willThrowException(new \RuntimeException('Connection refused: presidio backend unavailable'));
+
+        $response = $this->controller->extract(fileId: 123);
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(500, $response->getStatus());
+
+        $data = $response->getData();
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('error', $data);
+        $this->assertStringContainsString('Failed to extract and detect entities', $data['error']);
+
+    }//end testExtractDegradesGracefullyWhenNerBackendUnavailable()
+
+
+    /**
+     * files() degrades gracefully when the underlying listing throws an
+     * HTTP-coded exception (e.g. OpenRegister unavailable, code 503): the
+     * controller must surface that exact status, not a blanket 500, and never
+     * let the Throwable escape.
+     *
+     * @return void
+     */
+    public function testFilesPropagatesHttpCodedExceptionStatus(): void
+    {
+        $this->mockFileService->method('listProcessedFiles')
+            ->willThrowException(new \RuntimeException('Register backend unavailable', 503));
+
+        $response = $this->controller->files();
+
+        $this->assertInstanceOf(JSONResponse::class, $response);
+        $this->assertSame(503, $response->getStatus());
+
+        $data = $response->getData();
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('error', $data);
+
+    }//end testFilesPropagatesHttpCodedExceptionStatus()
+
+
+    /**
      * anonymize returns 404 when the file does not belong to the calling user
      * (security finding C3 — file IDOR).
      *

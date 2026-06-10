@@ -106,7 +106,7 @@ class SigningServiceTest extends TestCase
             ->disableOriginalClone()
             ->disableArgumentCloning()
             ->disallowMockingUnknownTypes()
-            ->onlyMethods(['saveObject', 'find', 'findAll', 'searchObjects'])
+            ->onlyMethods(['saveObject', 'find', 'findAll', 'searchObjects', 'buildSearchQuery', 'searchObjectsPaginated'])
             ->getMock();
 
         $this->settingsService = $this->createMock(SettingsService::class);
@@ -297,25 +297,157 @@ class SigningServiceTest extends TestCase
     }//end testGetRequestThrowsWhenNotFound()
 
     /**
-     * listRequests() returns an array of request arrays.
+     * listRequests() returns an array of request arrays when the paginated
+     * search surface yields plain associative arrays.
+     *
+     * Locks the register/schema-context refactor: listRequests() resolves
+     * results via buildSearchQuery()+searchObjectsPaginated() (not findAll),
+     * which return a ['results' => [...]] envelope.
      *
      * @return void
      */
     public function testListRequestsReturnsArray(): void
     {
-        $this->objectService->method('findAll')->willReturn(
-                [
+        $this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
+        $this->objectService->method('searchObjectsPaginated')->willReturn(
+            [
+                'results' => [
                     ['id' => 'req-001', 'status' => 'PENDING'],
                     ['id' => 'req-002', 'status' => 'COMPLETED'],
-                ]
-                );
+                ],
+            ]
+        );
 
         $result = $this->service->listRequests();
 
         $this->assertCount(2, $result);
         $this->assertSame('req-001', $result[0]['id']);
+        $this->assertSame('COMPLETED', $result[1]['status']);
 
     }//end testListRequestsReturnsArray()
+
+    /**
+     * listRequests() serialises OpenRegister ObjectEntity results via
+     * jsonSerialize() rather than casting them to array.
+     *
+     * Regression lock for the signing Entity-vs-array bug: when
+     * searchObjectsPaginated() returns ObjectEntity instances (the real
+     * OpenRegister behaviour), listRequests() must call ->jsonSerialize()
+     * to obtain the flat record. A naive (array) cast would expose the
+     * entity's protected properties instead of the object data, dropping the
+     * 'id'/'status' fields the callers depend on.
+     *
+     * @return void
+     */
+    public function testListRequestsSerialisesObjectEntitiesViaJsonSerialize(): void
+    {
+        $entityOne = $this->makeSigningRequestEntity(['id' => 'req-001', 'status' => 'PENDING']);
+        $entityTwo = $this->makeSigningRequestEntity(['id' => 'req-002', 'status' => 'COMPLETED']);
+
+        $this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
+        $this->objectService->method('searchObjectsPaginated')->willReturn(
+            ['results' => [$entityOne, $entityTwo]]
+        );
+
+        $result = $this->service->listRequests();
+
+        $this->assertCount(2, $result);
+        // The flat record fields are present, proving jsonSerialize() was used.
+        $this->assertSame('req-001', $result[0]['id']);
+        $this->assertSame('PENDING', $result[0]['status']);
+        $this->assertSame('req-002', $result[1]['id']);
+        $this->assertSame('COMPLETED', $result[1]['status']);
+
+    }//end testListRequestsSerialisesObjectEntitiesViaJsonSerialize()
+
+    /**
+     * listRequests() applies the WF2 non-admin visibility filter so a caller
+     * only sees requests they initiated or are a signer on.
+     *
+     * @return void
+     */
+    public function testListRequestsFiltersForNonAdminCaller(): void
+    {
+        $this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
+        $this->objectService->method('searchObjectsPaginated')->willReturn(
+            [
+                'results' => [
+                    ['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
+                    ['id' => 'req-002', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['alice']],
+                    ['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['carol']],
+                ],
+            ]
+        );
+
+        $result = $this->service->listRequests(callerUserId: 'alice', isAdmin: false);
+
+        // alice initiated req-001 and signs req-002; req-003 is hidden.
+        $this->assertCount(2, $result);
+        $ids = array_column($result, 'id');
+        $this->assertContains('req-001', $ids);
+        $this->assertContains('req-002', $ids);
+        $this->assertNotContains('req-003', $ids);
+
+    }//end testListRequestsFiltersForNonAdminCaller()
+
+    /**
+     * listRequests() returns every request unfiltered for an admin caller.
+     *
+     * @return void
+     */
+    public function testListRequestsReturnsAllForAdminCaller(): void
+    {
+        $this->objectService->method('buildSearchQuery')->willReturn(['_limit' => 1000]);
+        $this->objectService->method('searchObjectsPaginated')->willReturn(
+            [
+                'results' => [
+                    ['id' => 'req-001', 'status' => 'PENDING', 'initiatorUserId' => 'alice'],
+                    ['id' => 'req-003', 'status' => 'PENDING', 'initiatorUserId' => 'bob', 'signerIds' => ['carol']],
+                ],
+            ]
+        );
+
+        $result = $this->service->listRequests(callerUserId: 'admin', isAdmin: true);
+
+        $this->assertCount(2, $result);
+
+    }//end testListRequestsReturnsAllForAdminCaller()
+
+    /**
+     * Build an ObjectEntity-like double whose jsonSerialize() returns the
+     * given flat record, mirroring OpenRegister's real return shape.
+     *
+     * @param array<string, mixed> $data The record to expose via jsonSerialize().
+     *
+     * @return \OCA\OpenRegister\Db\ObjectEntity
+     */
+    private function makeSigningRequestEntity(array $data): \OCA\OpenRegister\Db\ObjectEntity
+    {
+        return new class($data) extends \OCA\OpenRegister\Db\ObjectEntity {
+
+            /**
+             * @var array<string, mixed>
+             */
+            private array $record;
+
+            /**
+             * @param array<string, mixed> $record The flat record.
+             */
+            public function __construct(array $record)
+            {
+                $this->record = $record;
+            }
+
+            /**
+             * @return array<string, mixed>
+             */
+            public function jsonSerialize(): array
+            {
+                return $this->record;
+            }
+        };
+
+    }//end makeSigningRequestEntity()
 
     /**
      * sign() marks the signer SIGNED and logs the audit event.

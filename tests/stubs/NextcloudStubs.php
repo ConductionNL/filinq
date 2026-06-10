@@ -56,6 +56,22 @@ interface IRequest
      * @return array<string, mixed>|null
      */
     public function getUploadedFile(string $key): ?array;
+
+    /**
+     * Get the remote (client) IP address for the request.
+     *
+     * @return string
+     */
+    public function getRemoteAddress(): string;
+
+    /**
+     * Get a request header value.
+     *
+     * @param string $name Header name
+     *
+     * @return string
+     */
+    public function getHeader(string $name): string;
 }//end interface
 
 
@@ -108,6 +124,53 @@ class Controller
     ) {
 
     }//end __construct()
+}//end class
+
+namespace OCP\AppFramework;
+
+/**
+ * Stub for OCP\AppFramework\Http
+ *
+ * Provides the HTTP status code constants referenced throughout the
+ * DocuDesk controllers (e.g. Http::STATUS_OK, Http::STATUS_NOT_FOUND).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Http
+{
+    public const STATUS_OK = 200;
+
+    public const STATUS_CREATED = 201;
+
+    public const STATUS_ACCEPTED = 202;
+
+    public const STATUS_NO_CONTENT = 204;
+
+    public const STATUS_BAD_REQUEST = 400;
+
+    public const STATUS_UNAUTHORIZED = 401;
+
+    public const STATUS_FORBIDDEN = 403;
+
+    public const STATUS_NOT_FOUND = 404;
+
+    public const STATUS_METHOD_NOT_ALLOWED = 405;
+
+    public const STATUS_CONFLICT = 409;
+
+    public const STATUS_GONE = 410;
+
+    public const STATUS_UNPROCESSABLE_ENTITY = 422;
+
+    public const STATUS_INTERNAL_SERVER_ERROR = 500;
+
+    public const STATUS_NOT_IMPLEMENTED = 501;
+
+    public const STATUS_SERVICE_UNAVAILABLE = 503;
 }//end class
 
 namespace OCP\AppFramework\Http;
@@ -817,6 +880,121 @@ abstract class QueuedJob
 }//end class
 
 /**
+ * Stub for OCP\BackgroundJob\TimedJob
+ *
+ * Mirrors QueuedJob but adds the interval/last-run scheduling helpers used
+ * by DocuDesk's TimedJob subclasses (e.g. SigningExpirationJob).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+abstract class TimedJob
+{
+
+    /**
+     * Job argument data.
+     *
+     * @var mixed
+     */
+    protected mixed $argument;
+
+    /**
+     * Configured run interval in seconds.
+     *
+     * @var integer
+     */
+    protected int $interval = 0;
+
+    /**
+     * Time-sensitivity flag.
+     *
+     * @var integer
+     */
+    protected int $timeSensitivity = 0;
+
+    /**
+     * Construct the timed job.
+     *
+     * @param \OCP\AppFramework\Utility\ITimeFactory $time Time factory
+     *
+     * @return void
+     */
+    public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time)
+    {
+    }//end __construct()
+
+    /**
+     * Run the job.
+     *
+     * @param mixed $argument Job argument
+     *
+     * @return void
+     */
+    abstract protected function run(mixed $argument): void;
+
+    /**
+     * Set the run interval.
+     *
+     * @param int $seconds Interval in seconds
+     *
+     * @return void
+     */
+    public function setInterval(int $seconds): void
+    {
+        $this->interval = $seconds;
+    }//end setInterval()
+
+    /**
+     * Set the time sensitivity.
+     *
+     * @param int $sensitivity Sensitivity flag
+     *
+     * @return void
+     */
+    public function setTimeSensitivity(int $sensitivity): void
+    {
+        $this->timeSensitivity = $sensitivity;
+    }//end setTimeSensitivity()
+
+    /**
+     * Execute the job.
+     *
+     * @param \OCP\BackgroundJob\IJobList   $jobList Job list
+     * @param \Psr\Log\LoggerInterface|null $logger  Logger
+     *
+     * @return void
+     */
+    public function execute(\OCP\BackgroundJob\IJobList $jobList, ?\Psr\Log\LoggerInterface $logger=null): void
+    {
+    }//end execute()
+
+    /**
+     * Set the argument
+     *
+     * @param mixed $argument Job argument
+     *
+     * @return void
+     */
+    public function setArgument(mixed $argument): void
+    {
+        $this->argument = $argument;
+    }//end setArgument()
+
+    /**
+     * Get the argument
+     *
+     * @return mixed
+     */
+    public function getArgument(): mixed
+    {
+        return $this->argument;
+    }//end getArgument()
+}//end class
+
+/**
  * Stub for OCP\BackgroundJob\IJobList
  *
  * @category Tests
@@ -988,4 +1166,278 @@ interface IConfig
      * @return void
      */
     public function deleteUserValue(string $userId, string $appName, string $key): void;
+}//end interface
+
+/**
+ * Stub for OCP\IAppConfig
+ *
+ * The lazy/typed app-configuration API used by DocuDesk services and
+ * background jobs (getValueString/Int/Float, setValueString, etc.).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IAppConfig
+{
+    /**
+     * Get a string app-config value.
+     *
+     * @param string $app     App identifier
+     * @param string $key     Config key
+     * @param string $default Default value
+     * @param bool   $lazy    Whether the value is lazy-loaded
+     *
+     * @return string
+     */
+    public function getValueString(string $app, string $key, string $default='', bool $lazy=false): string;
+
+    /**
+     * Get an integer app-config value.
+     *
+     * @param string $app     App identifier
+     * @param string $key     Config key
+     * @param int    $default Default value
+     * @param bool   $lazy    Whether the value is lazy-loaded
+     *
+     * @return int
+     */
+    public function getValueInt(string $app, string $key, int $default=0, bool $lazy=false): int;
+
+    /**
+     * Get a float app-config value.
+     *
+     * @param string $app     App identifier
+     * @param string $key     Config key
+     * @param float  $default Default value
+     * @param bool   $lazy    Whether the value is lazy-loaded
+     *
+     * @return float
+     */
+    public function getValueFloat(string $app, string $key, float $default=0.0, bool $lazy=false): float;
+
+    /**
+     * Get a boolean app-config value.
+     *
+     * @param string $app     App identifier
+     * @param string $key     Config key
+     * @param bool   $default Default value
+     * @param bool   $lazy    Whether the value is lazy-loaded
+     *
+     * @return bool
+     */
+    public function getValueBool(string $app, string $key, bool $default=false, bool $lazy=false): bool;
+
+    /**
+     * Set a string app-config value.
+     *
+     * @param string $app       App identifier
+     * @param string $key       Config key
+     * @param string $value     Config value
+     * @param bool   $lazy      Whether the value is lazy-loaded
+     * @param bool   $sensitive Whether the value is sensitive
+     *
+     * @return bool
+     */
+    public function setValueString(string $app, string $key, string $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    /**
+     * Set an integer app-config value.
+     *
+     * @param string $app       App identifier
+     * @param string $key       Config key
+     * @param int    $value     Config value
+     * @param bool   $lazy      Whether the value is lazy-loaded
+     * @param bool   $sensitive Whether the value is sensitive
+     *
+     * @return bool
+     */
+    public function setValueInt(string $app, string $key, int $value, bool $lazy=false, bool $sensitive=false): bool;
+
+    /**
+     * Set a boolean app-config value.
+     *
+     * @param string $app   App identifier
+     * @param string $key   Config key
+     * @param bool   $value Config value
+     * @param bool   $lazy  Whether the value is lazy-loaded
+     *
+     * @return bool
+     */
+    public function setValueBool(string $app, string $key, bool $value, bool $lazy=false): bool;
+
+    /**
+     * Determine whether an app-config key exists.
+     *
+     * @param string $app  App identifier
+     * @param string $key  Config key
+     * @param bool   $lazy Whether the value is lazy-loaded
+     *
+     * @return bool
+     */
+    public function hasKey(string $app, string $key, ?bool $lazy=false): bool;
+
+    /**
+     * Delete an app-config key.
+     *
+     * @param string $app App identifier
+     * @param string $key Config key
+     *
+     * @return void
+     */
+    public function deleteKey(string $app, string $key): void;
+
+    /**
+     * Get the config keys defined for an app.
+     *
+     * @param string $app App identifier
+     *
+     * @return array<int, string>
+     */
+    public function getKeys(string $app): array;
+}//end interface
+
+namespace OCP\App;
+
+/**
+ * Stub for OCP\App\IAppManager
+ *
+ * Used by DataResolverService and SettingsInitializer to query installed
+ * apps and resolve app versions.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IAppManager
+{
+    /**
+     * Determine whether an app is installed.
+     *
+     * @param string $appId App identifier
+     *
+     * @return bool
+     */
+    public function isInstalled(string $appId): bool;
+
+    /**
+     * Determine whether an app is enabled for a user.
+     *
+     * @param string          $appId App identifier
+     * @param \OCP\IUser|null $user  The user, or null for the current user
+     *
+     * @return bool
+     */
+    public function isEnabledForUser(string $appId, $user=null): bool;
+
+    /**
+     * Get the version of an installed app.
+     *
+     * @param string $appId App identifier
+     *
+     * @return string
+     */
+    public function getAppVersion(string $appId): string;
+
+    /**
+     * Get the list of installed apps.
+     *
+     * @return array<int, string>
+     */
+    public function getInstalledApps(): array;
+}//end interface
+
+namespace OCP\Notification;
+
+/**
+ * Stub for OCP\Notification\INotification
+ *
+ * A minimal fluent builder mirror of the Nextcloud notification model.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface INotification
+{
+    /**
+     * Set the app the notification belongs to.
+     *
+     * @param string $app App identifier
+     *
+     * @return INotification
+     */
+    public function setApp(string $app): INotification;
+
+    /**
+     * Set the target user.
+     *
+     * @param string $user User identifier
+     *
+     * @return INotification
+     */
+    public function setUser(string $user): INotification;
+
+    /**
+     * Set the notification object.
+     *
+     * @param string $type Object type
+     * @param string $id   Object id
+     *
+     * @return INotification
+     */
+    public function setObject(string $type, string $id): INotification;
+
+    /**
+     * Set the notification subject.
+     *
+     * @param string       $subject    Subject key
+     * @param array<mixed> $parameters Subject parameters
+     *
+     * @return INotification
+     */
+    public function setSubject(string $subject, array $parameters=[]): INotification;
+}//end interface
+
+/**
+ * Stub for OCP\Notification\IManager
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IManager
+{
+    /**
+     * Create a fresh notification builder.
+     *
+     * @return INotification
+     */
+    public function createNotification(): INotification;
+
+    /**
+     * Dispatch a notification.
+     *
+     * @param INotification $notification The notification to send
+     *
+     * @return void
+     */
+    public function notify(INotification $notification): void;
+
+    /**
+     * Mark matching notifications as processed.
+     *
+     * @param INotification $notification The notification matcher
+     *
+     * @return void
+     */
+    public function markProcessed(INotification $notification): void;
 }//end interface

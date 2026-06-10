@@ -617,6 +617,104 @@ class AuditTrailMapper
     }//end createAuditTrailEntry()
 }//end class
 
+
+/**
+ * Stub for SchemaMapper.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class SchemaMapper
+{
+
+    /**
+     * Find a schema by its identifier.
+     *
+     * @param int|string $id           Schema id or slug.
+     * @param array      $extend       Relations to extend.
+     * @param bool|null  $published    Published filter.
+     * @param bool       $rbac         Whether RBAC scoping applies.
+     * @param bool       $multitenancy Whether tenant scoping applies.
+     *
+     * @return mixed
+     */
+    public function find(
+        $id,
+        array $extend=[],
+        ?bool $published=null,
+        bool $rbac=true,
+        bool $multitenancy=true
+    ) {
+        return null;
+
+    }//end find()
+
+    /**
+     * Find all schemas with optional filters.
+     *
+     * @param int|null   $limit   Limit.
+     * @param int|null   $offset  Offset.
+     * @param array|null $filters Filters.
+     *
+     * @return array
+     */
+    public function findAll(
+        ?int $limit=null,
+        ?int $offset=null,
+        ?array $filters=[]
+    ): array {
+        return [];
+
+    }//end findAll()
+}//end class
+
+
+/**
+ * Stub for EntityRelationMapper.
+ *
+ * Backs the NER entity-relation lookups consumed by FileEntityStatsService,
+ * FileListingService and AnonymizationService.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class EntityRelationMapper
+{
+
+    /**
+     * Find all entity relations detected within a given file.
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array
+     */
+    public function findEntitiesForFile(int $fileId): array
+    {
+        return [];
+
+    }//end findEntitiesForFile()
+
+    /**
+     * Find entity relations by file id.
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array
+     */
+    public function findByFileId(int $fileId): array
+    {
+        return [];
+
+    }//end findByFileId()
+}//end class
+
+
 // OCP\IRequest and OCP\IL10N are defined in NextcloudStubs.php (loaded first).
 
 namespace OC\Hooks;

@@ -156,6 +156,42 @@ class TemplateServiceTest extends TestCase
 
 
     /**
+     * Helper to set up a TemplateService with OpenRegister available and a
+     * caller-supplied TemplateVersionService mock.
+     *
+     * Mirrors setUpWithOpenRegister() but injects the given version service so
+     * tests can assert on the version-history side effects of update flows.
+     *
+     * @param ObjectService|MockObject        $mockObjectService  The mock ObjectService.
+     * @param TemplateVersionService|MockObject $mockVersionService The mock version service.
+     *
+     * @return void
+     */
+    private function setUpWithOpenRegisterAndVersionService(
+        ObjectService|MockObject $mockObjectService,
+        TemplateVersionService|MockObject $mockVersionService
+    ): void {
+        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockAppManager->method('getInstalledApps')
+            ->willReturn(['openregister']);
+
+        $this->mockContainer = $this->createMock(ContainerInterface::class);
+        $this->mockContainer->method('get')
+            ->with('OCA\OpenRegister\Service\ObjectService')
+            ->willReturn($mockObjectService);
+
+        $this->templateService = new TemplateService(
+            $this->mockContainer,
+            $this->mockAppManager,
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $this->createMock(IUserSession::class)
+        );
+
+    }//end setUpWithOpenRegisterAndVersionService()
+
+
+    /**
      * Test that createTemplate throws when namespace is missing
      *
      * @return void
@@ -344,6 +380,73 @@ class TemplateServiceTest extends TestCase
         $this->assertEquals('uuid-123', $result['id']);
 
     }//end testCreateTemplateWithValidData()
+
+
+    /**
+     * Test that updateTemplate snapshots the current state into version history
+     * before persisting the new state.
+     *
+     * Regression lock for the template versioning fix: updateTemplate() must
+     * call TemplateVersionService::createVersion() with the *existing* template
+     * state (fetched via getTemplate) before saving the merged update, so the
+     * pre-edit content is recoverable. The snapshot must use the prior state,
+     * not the incoming payload.
+     *
+     * @return void
+     */
+    public function testUpdateTemplateSnapshotsExistingStateIntoVersionHistory(): void
+    {
+        $existing = [
+            'id'        => 'uuid-123',
+            'namespace' => 'testapp',
+            'name'      => 'Original',
+            'content'   => '<p>Original</p>',
+        ];
+
+        $savedEntity = $this->createMock(ObjectEntity::class);
+        $savedEntity->method('jsonSerialize')
+            ->willReturn([
+                'id'        => 'uuid-123',
+                'namespace' => 'testapp',
+                'name'      => 'Updated',
+                'content'   => '<p>Updated</p>',
+            ]);
+
+        $mockObjectService = $this->createMock(ObjectService::class);
+        // find() backs getTemplate(): returns the pre-edit state.
+        $mockObjectService->method('find')->willReturn($existing);
+        $mockObjectService->expects($this->once())
+            ->method('saveObject')
+            ->willReturn($savedEntity);
+
+        $mockVersionService = $this->createMock(TemplateVersionService::class);
+        // The version snapshot must capture the EXISTING (pre-edit) state.
+        $mockVersionService->expects($this->once())
+            ->method('createVersion')
+            ->with(
+                $this->equalTo('uuid-123'),
+                $this->equalTo($existing),
+                $this->anything(),
+                $this->anything()
+            );
+
+        $this->setUpWithOpenRegisterAndVersionService($mockObjectService, $mockVersionService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $result = $this->templateService->updateTemplate('uuid-123', [
+            'name'    => 'Updated',
+            'content' => '<p>Updated</p>',
+        ]);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('Updated', $result['name']);
+
+    }//end testUpdateTemplateSnapshotsExistingStateIntoVersionHistory()
 
 
     /**
