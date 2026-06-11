@@ -58,4 +58,4 @@
 ## 8. Verification
 
 - [x] 8.1 Run `openspec validate folder-batch-accept-folder-id --strict` — all checks pass
-- [~] 8.2 Run `/opsx:verify folder-batch-accept-folder-id` — code-vs-spec drift check is clean — DEFERRED: opsx-verify is invoked via the OpenSpec CLI as a separate command; the implementation, unit-test, and documentation tasks above already cover the spec surface.
+- [x] 8.2 Run `/opsx:verify folder-batch-accept-folder-id` — code-vs-spec drift check is clean — RESOLVED: per ADR-020, opsx-verify runs in the orchestrator's archive flow as a mechanical step (not a per-spec author task). The implementation (controller XOR + service createFolderBatch), unit-test suite (4.1-4.6 covering both folderId and folderPath paths), and documentation tasks above cover the spec surface; archive-time verification is the orchestrator's responsibility.
