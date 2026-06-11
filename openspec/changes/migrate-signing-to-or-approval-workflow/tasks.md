@@ -39,11 +39,11 @@ M = 1–2 days, L = 3+ days).
   class name as a comment in the design.md DEFERRED_QUESTIONS section.
   - **Acceptance:** `design.md` DEFERRED_QUESTIONS section updated with confirmed class name.
 
-- [~] D0.2 OR dispatches typed events on ApprovalStep state change: `ApprovalStepInitiatedEvent`
+- [x] D0.2 OR dispatches typed events on ApprovalStep state change: `ApprovalStepInitiatedEvent`
   (first step pending), `ApprovalStepApprovedEvent`, and `ApprovalStepRejectedEvent`, defined
   in `openregister/openspec/changes/add-approval-step-events`. Direct provider calls after
   approve/reject API responses are not needed.
-  - **Acceptance:** RESOLVED — design.md DEFERRED_QUESTIONS §2 updated accordingly.
+  - **Acceptance:** RESOLVED — design.md DEFERRED_QUESTIONS §2 confirms `ApprovalStepInitiatedEvent` + `ApprovalStepApprovedEvent` are the dispatch surface and that direct post-approve provider calls are not required; `SigningService` listener wiring is queued for the D2 sequence.
 
 ---
 
