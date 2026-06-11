@@ -26,7 +26,9 @@ use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCA\DocuDesk\Service\FolderBatchService;
+use OCP\IAppConfig;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
 use OCP\Files\File;
@@ -99,6 +101,16 @@ class FolderBatchServiceTest extends TestCase
      */
     private IJobList|MockObject $mockJobList;
 
+    /**
+     * Real output-layout resolver wired to a stub IAppConfig that returns the
+     * default subfolder name. Final class so we can't mock it; we construct
+     * the real one and rely on its pure helpers
+     * (`isLegacyAnonymizedOutput`).
+     *
+     * @var OutputLayoutResolver
+     */
+    private OutputLayoutResolver $layout;
+
 
     /**
      * Set up test environment
@@ -119,13 +131,16 @@ class FolderBatchServiceTest extends TestCase
         $mockUser->method('getUID')->willReturn('testuser');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
+        $this->layout = $this->makeLayoutResolver();
+
         $this->service = new FolderBatchService(
             $this->mockLogger,
             $this->mockRootFolder,
             $this->mockUserSession,
             $this->mockStateService,
             $this->mockJobList,
-            $this->createMock(AnonymizationService::class)
+            $this->createMock(AnonymizationService::class),
+            $this->layout
         );
 
     }//end setUp()
@@ -208,6 +223,24 @@ class FolderBatchServiceTest extends TestCase
         return $userFolder;
 
     }//end buildUserFolder()
+
+
+    /**
+     * Construct a real OutputLayoutResolver wired to a stub IAppConfig that
+     * returns the default subfolder name. The resolver is `final`; we
+     * exercise its pure helpers (`isLegacyAnonymizedOutput`,
+     * `stripLegacyAnonymizedSuffix`) which depend on neither config nor
+     * logger state.
+     *
+     * @return OutputLayoutResolver
+     */
+    private function makeLayoutResolver(): OutputLayoutResolver
+    {
+        $config = $this->createMock(IAppConfig::class);
+        $config->method('getValueString')->willReturn(OutputLayoutResolver::DEFAULT_SUBFOLDER_NAME);
+        return new OutputLayoutResolver($config, $this->createMock(LoggerInterface::class));
+
+    }//end makeLayoutResolver()
 
 
     /**
@@ -587,7 +620,8 @@ class FolderBatchServiceTest extends TestCase
             $mockUserSession,
             $this->mockStateService,
             $this->mockJobList,
-            $this->createMock(AnonymizationService::class)
+            $this->createMock(AnonymizationService::class),
+            $this->makeLayoutResolver()
         );
 
         $this->expectException(Exception::class);
@@ -596,6 +630,103 @@ class FolderBatchServiceTest extends TestCase
         $service->createFolderBatch(null, '/any');
 
     }//end testNoUserThrows401()
+
+
+    /**
+     * Source-discovery filter: files whose base name ends with the legacy
+     * `_anonymized` suffix MUST be excluded from the batch so re-runs do not
+     * pick up redacted copies as fresh source material.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     */
+    public function testEnumerateFilesExcludesLegacyAnonymizedOutputs(): void
+    {
+        $clean       = $this->buildFile(701, 'report.pdf');
+        $anonymized  = $this->buildFile(702, 'report_anonymized.pdf');
+        $anothCl     = $this->buildFile(703, 'letter.docx');
+
+        $folder     = $this->buildFolder([$clean, $anonymized, $anothCl], 600);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        // Real resolver — the `_anonymized` suffix discrimination is the
+        // pure helper under test (no config-coupled state).
+        $service = new FolderBatchService(
+            $this->mockLogger,
+            $this->mockRootFolder,
+            $this->mockUserSession,
+            $this->mockStateService,
+            $this->mockJobList,
+            $this->createMock(AnonymizationService::class),
+            $this->makeLayoutResolver()
+        );
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+        $capturedFiles = null;
+        $this->mockStateService->method('createBatch')->willReturnCallback(
+            function (string $userId, array $files) use (&$capturedFiles): array {
+                $capturedFiles = $files;
+                return [
+                    'batchId' => 'filter-uuid',
+                    'userId'  => $userId,
+                    'status'  => 'uploading',
+                    'files'   => array_map(
+                        static fn (array $f): array => $f + ['status' => 'uploaded'],
+                        $files
+                    ),
+                ];
+            }
+        );
+
+        $result = $service->createFolderBatch(null, '/Documents/WOB');
+
+        $this->assertNotNull($capturedFiles, 'createBatch must be invoked');
+        $this->assertCount(2, $capturedFiles, 'The `_anonymized` file MUST be filtered out');
+        $names = array_map(static fn (array $f): string => (string) $f['fileName'], $capturedFiles);
+        $this->assertNotContains('report_anonymized.pdf', $names);
+        $this->assertContains('report.pdf', $names);
+        $this->assertContains('letter.docx', $names);
+        $this->assertSame('filter-uuid', $result['batchId']);
+
+    }//end testEnumerateFilesExcludesLegacyAnonymizedOutputs()
+
+
+    /**
+     * If every file in the folder is a prior anonymisation output, the batch
+     * is rejected with the standard "no files found" error — re-running on a
+     * folder full of redacted copies MUST NOT silently produce an empty batch.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     */
+    public function testEnumerateFilesAllLegacyOutputsThrows400(): void
+    {
+        $a = $this->buildFile(801, 'a_anonymized.pdf');
+        $b = $this->buildFile(802, 'b_anonymized.docx');
+
+        $folder     = $this->buildFolder([$a, $b], 610);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $service = new FolderBatchService(
+            $this->mockLogger,
+            $this->mockRootFolder,
+            $this->mockUserSession,
+            $this->mockStateService,
+            $this->mockJobList,
+            $this->createMock(AnonymizationService::class),
+            $this->makeLayoutResolver()
+        );
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $service->createFolderBatch(null, '/Documents/WOB');
+
+    }//end testEnumerateFilesAllLegacyOutputsThrows400()
 
 
 }//end class

@@ -27,6 +27,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
+use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCP\BackgroundJob\IJobList;
 use OCP\Constants;
 use OCP\Files\File;
@@ -64,6 +65,9 @@ class FolderBatchService
      * @param BatchStateService    $stateService Batch state management
      * @param IJobList             $jobList      Background job list
      * @param AnonymizationService $anonService  Anonymization/extraction service
+     * @param OutputLayoutResolver $layout       Output-layout helper (used here to
+     *                                           identify legacy `_anonymized` outputs
+     *                                           and exclude them from source discovery).
      *
      * @return void
      */
@@ -73,7 +77,8 @@ class FolderBatchService
         private readonly IUserSession $userSession,
         private readonly BatchStateService $stateService,
         private readonly IJobList $jobList,
-        private readonly AnonymizationService $anonService
+        private readonly AnonymizationService $anonService,
+        private readonly OutputLayoutResolver $layout
     ) {
 
     }//end __construct()
@@ -319,17 +324,35 @@ class FolderBatchService
      *
      * @param Folder $folder The folder to enumerate
      *
+     * Files whose base name ends with the legacy `_anonymized` suffix are
+     * excluded so a re-run of folder-analysis on a folder that already
+     * contains prior anonymisation outputs does not pick up the redacted
+     * copies as fresh source material. The discriminator lives on
+     * `OutputLayoutResolver::isLegacyAnonymizedOutput()` so the same
+     * filter is reused across `FolderBatchService` and any future
+     * folder-flow integration point.
+     *
+     * @param Folder $folder The folder to enumerate
+     *
      * @return File[] Array of file nodes
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
      */
     private function enumerateFiles(Folder $folder): array
     {
         $files = [];
         foreach ($folder->getDirectoryListing() as $node) {
-            if ($node instanceof File) {
-                $files[] = $node;
+            if ($node instanceof File === false) {
+                continue;
             }
+
+            $baseName = pathinfo($node->getName(), PATHINFO_FILENAME);
+            if ($this->layout->isLegacyAnonymizedOutput(baseName: $baseName) === true) {
+                continue;
+            }
+
+            $files[] = $node;
         }
 
         return $files;
