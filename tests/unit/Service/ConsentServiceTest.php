@@ -24,6 +24,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCA\DocuDesk\Service\ConsentNotesHelper;
+use OCA\DocuDesk\Service\ConsentScopeValidator;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\ConsentUpdateHandler;
 use OCA\DocuDesk\Service\ObjectionDeadlineChecker;
@@ -164,7 +165,8 @@ class ConsentServiceTest extends TestCase
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            notesHelper: $this->notesHelper,
+            scopeValidator: new ConsentScopeValidator()
         );
 
         return ['service' => $service, 'capturedSaveArg' => &$capturedSaveArg];
@@ -223,7 +225,8 @@ class ConsentServiceTest extends TestCase
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            notesHelper: $this->notesHelper,
+            scopeValidator: new ConsentScopeValidator()
         );
 
         $this->mockUpdateHandler->method('updateConsentStatus')
@@ -250,7 +253,8 @@ class ConsentServiceTest extends TestCase
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            notesHelper: $this->notesHelper,
+            scopeValidator: new ConsentScopeValidator()
         );
 
         $this->mockDeadlineChecker->method('checkObjectionDeadline')
@@ -278,7 +282,8 @@ class ConsentServiceTest extends TestCase
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            notesHelper: $this->notesHelper,
+            scopeValidator: new ConsentScopeValidator()
         );
 
         $this->mockUpdateHandler->method('getConsentsByDocument')
@@ -312,7 +317,8 @@ class ConsentServiceTest extends TestCase
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            notesHelper: $this->notesHelper,
+            scopeValidator: new ConsentScopeValidator()
         );
 
         $service->createConsentRequest(

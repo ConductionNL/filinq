@@ -63,6 +63,7 @@ class DataResolverService
      * @param ContainerInterface $container  Container for dependency injection
      * @param IAppManager        $appManager App manager interface
      * @param LoggerInterface    $logger     Logger for error reporting
+     * @param IAppConfig         $appConfig  App configuration accessor
      *
      * @return void
      */

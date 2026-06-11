@@ -96,6 +96,7 @@ class BatchStateService
         if ($value !== '') {
             return (int) $value;
         }
+
         return (int) $this->appConfig->getValueString(
             'docudesk',
             'docudesk_batch_max_files',
@@ -124,6 +125,7 @@ class BatchStateService
         if ($value !== '') {
             return (int) $value;
         }
+
         return self::CACHE_TTL;
 
     }//end getCacheTtl()

@@ -93,7 +93,6 @@ final class OutputLayoutResolver
 
     }//end __construct()
 
-
     /**
      * Resolve the canonical batch-output relative path for a given source.
      *
@@ -111,17 +110,19 @@ final class OutputLayoutResolver
         string $sourceBaseName,
         string $extension
     ): string {
-        $subfolder      = $this->getSubfolderName();
-        $cleanBase      = $this->stripLegacyAnonymizedSuffix($sourceBaseName);
-        $normalisedExt  = ltrim($extension, '.');
+        $subfolder     = $this->getSubfolderName();
+        $cleanBase     = $this->stripLegacyAnonymizedSuffix(baseName: $sourceBaseName);
+        $normalisedExt = ltrim($extension, '.');
 
         $folder = rtrim($sourceFolderPath, '/');
-        $tail   = $normalisedExt === '' ? $cleanBase : ($cleanBase.'.'.$normalisedExt);
+        $tail   = $cleanBase;
+        if ($normalisedExt !== '') {
+            $tail = $cleanBase.'.'.$normalisedExt;
+        }
 
         return $folder.'/'.$subfolder.'/'.$tail;
 
     }//end resolveBatchDestination()
-
 
     /**
      * Strip a trailing `_anonymized` suffix from the supplied base name.
@@ -137,10 +138,13 @@ final class OutputLayoutResolver
     public function stripLegacyAnonymizedSuffix(string $baseName): string
     {
         $stripped = preg_replace(self::LEGACY_SUFFIX_REGEX, '', $baseName);
-        return is_string($stripped) === true ? $stripped : $baseName;
+        if (is_string($stripped) === true) {
+            return $stripped;
+        }
+
+        return $baseName;
 
     }//end stripLegacyAnonymizedSuffix()
-
 
     /**
      * Indicate whether the given base name is itself a prior anonymisation
@@ -155,7 +159,6 @@ final class OutputLayoutResolver
         return preg_match(self::LEGACY_SUFFIX_REGEX, $baseName) === 1;
 
     }//end isLegacyAnonymizedOutput()
-
 
     /**
      * Resolve the configured subfolder name with validation and fallback.
@@ -189,6 +192,4 @@ final class OutputLayoutResolver
         return $value;
 
     }//end getSubfolderName()
-
-
 }//end class

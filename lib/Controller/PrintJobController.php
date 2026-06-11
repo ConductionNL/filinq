@@ -34,6 +34,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -198,7 +199,7 @@ class PrintJobController extends Controller
             $this->authorizeJobAccess(job: $job, userId: $user->getUID());
 
             return new JSONResponse(data: $job);
-        } catch (\OCP\AppFramework\Http\OCSForbiddenException $e) {
+        } catch (OCSForbiddenException $e) {
             return new JSONResponse(
                 data: ['error' => 'Not authorized'],
                 statusCode: Http::STATUS_FORBIDDEN
@@ -273,7 +274,7 @@ class PrintJobController extends Controller
                 filename: $filename,
                 contentType: 'application/pdf'
             );
-        } catch (\OCP\AppFramework\Http\OCSForbiddenException $e) {
+        } catch (OCSForbiddenException $e) {
             return new JSONResponse(
                 data: ['error' => 'Not authorized'],
                 statusCode: Http::STATUS_FORBIDDEN
@@ -347,7 +348,7 @@ class PrintJobController extends Controller
             $this->printJobSvc->storeJobStatus(jobId: $id, data: $job);
 
             return new JSONResponse(data: $job);
-        } catch (\OCP\AppFramework\Http\OCSForbiddenException $e) {
+        } catch (OCSForbiddenException $e) {
             return new JSONResponse(
                 data: ['error' => 'Not authorized'],
                 statusCode: Http::STATUS_FORBIDDEN
@@ -451,7 +452,7 @@ class PrintJobController extends Controller
      *
      * @return void
      *
-     * @throws \OCP\AppFramework\Http\OCSForbiddenException If user is not authorized
+     * @throws OCSForbiddenException If user is not authorized
      *
      * @spec openspec/changes/print-functionality/tasks.md#task-5
      */
@@ -462,7 +463,7 @@ class PrintJobController extends Controller
         $isAdmin     = $this->groupManager->isAdmin($userId);
 
         if ($isOwner === false && $isAdmin === false) {
-            throw new \OCP\AppFramework\Http\OCSForbiddenException('Not authorized');
+            throw new OCSForbiddenException('Not authorized');
         }
 
     }//end authorizeJobAccess()

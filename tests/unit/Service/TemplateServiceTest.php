@@ -23,6 +23,7 @@ use OCA\DocuDesk\Service\TemplateService;
 use OCA\DocuDesk\Service\TemplateVersionService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -104,7 +105,8 @@ class TemplateServiceTest extends TestCase
             $this->mockAppManager,
             $this->mockRegisterResolver,
             $mockVersionService,
-            $mockUserSession
+            $mockUserSession,
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUp()
@@ -149,7 +151,8 @@ class TemplateServiceTest extends TestCase
             $this->mockAppManager,
             $this->mockRegisterResolver,
             $this->createMock(TemplateVersionService::class),
-            $this->createMock(IUserSession::class)
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUpWithOpenRegister()
@@ -185,7 +188,8 @@ class TemplateServiceTest extends TestCase
             $this->mockAppManager,
             $this->mockRegisterResolver,
             $mockVersionService,
-            $this->createMock(IUserSession::class)
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUpWithOpenRegisterAndVersionService()

@@ -22,6 +22,7 @@ use OCA\DocuDesk\Service\DataResolverService;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -102,7 +103,8 @@ class DataResolverServiceTest extends TestCase
         $this->service = new DataResolverService(
             $this->container,
             $this->appManager,
-            $this->logger
+            $this->logger,
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUp()

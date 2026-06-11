@@ -147,7 +147,8 @@ class CorrespondenceServiceTest extends TestCase
             $container,
             $appManager,
             $this->jobList,
-            $logger
+            $logger,
+            $appConfig
         );
 
     }//end setUp()

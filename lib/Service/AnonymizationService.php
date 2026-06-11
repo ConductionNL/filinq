@@ -877,7 +877,6 @@ class AnonymizationService
 
     }//end recordAnonymizationLink()
 
-
     /**
      * Apply best-effort source-node metadata (name, path, owner) to a link object.
      *
@@ -915,7 +914,6 @@ class AnonymizationService
         return $object;
 
     }//end applySourceNodeMetadata()
-
 
     /**
      * Normalise a searchObjects() candidate to a plain array including its `@self`.
@@ -959,7 +957,6 @@ class AnonymizationService
 
     }//end extractLinkObjectData()
 
-
     /**
      * Extract the persisted object's identifier from a saveObject() return value.
      *
@@ -1000,7 +997,6 @@ class AnonymizationService
         return null;
 
     }//end extractSavedObjectId()
-
 
     /**
      * Render and attach the grondslagen summary to a freshly-anonymised file.

@@ -333,9 +333,15 @@ class OcrServiceTest extends TestCase
      */
     public function testGetOcrLanguagesReturnsDefault(): void
     {
+        // Canonical key returns '' (unset) -> falls back to the legacy key, which
+        // returns the DEFAULT_LANGUAGES default.
         $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'ocr_languages', 'nld+eng')
-            ->willReturn('nld+eng');
+            ->willReturnMap(
+                [
+                    ['docudesk', 'ocr.default_languages', '', false, ''],
+                    ['docudesk', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
+                ]
+            );
 
         $result = $this->ocrService->getOcrLanguages();
         $this->assertSame(expected: 'nld+eng', actual: $result);
@@ -350,9 +356,14 @@ class OcrServiceTest extends TestCase
      */
     public function testGetOcrLanguagesReturnsCustomConfig(): void
     {
+        // Canonical key carries the admin override; legacy fallback never reached.
         $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'ocr_languages', 'nld+eng')
-            ->willReturn('nld+eng+deu+fra');
+            ->willReturnMap(
+                [
+                    ['docudesk', 'ocr.default_languages', '', false, 'nld+eng+deu+fra'],
+                    ['docudesk', 'ocr_languages', 'nld+eng', false, 'nld+eng'],
+                ]
+            );
 
         $result = $this->ocrService->getOcrLanguages();
         $this->assertSame(expected: 'nld+eng+deu+fra', actual: $result);
@@ -367,9 +378,14 @@ class OcrServiceTest extends TestCase
      */
     public function testGetOcrDpiReturnsDefault(): void
     {
+        // Canonical key returns '' (unset) -> falls back to the legacy key default.
         $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'ocr_dpi', '300')
-            ->willReturn('300');
+            ->willReturnMap(
+                [
+                    ['docudesk', 'ocr.default_dpi', '', false, ''],
+                    ['docudesk', 'ocr_dpi', '300', false, '300'],
+                ]
+            );
 
         $result = $this->ocrService->getOcrDpi();
         $this->assertSame(expected: 300, actual: $result);
@@ -384,9 +400,14 @@ class OcrServiceTest extends TestCase
      */
     public function testGetOcrDpiReturnsCustomValue(): void
     {
+        // Canonical key carries the admin override; legacy fallback never reached.
         $this->mockConfig->method('getValueString')
-            ->with('docudesk', 'ocr_dpi', '300')
-            ->willReturn('400');
+            ->willReturnMap(
+                [
+                    ['docudesk', 'ocr.default_dpi', '', false, '400'],
+                    ['docudesk', 'ocr_dpi', '300', false, '300'],
+                ]
+            );
 
         $result = $this->ocrService->getOcrDpi();
         $this->assertSame(expected: 400, actual: $result);

@@ -84,6 +84,7 @@ class ConsentService
      * @param ConsentUpdateHandler     $updateHandler   Update and query handler
      * @param PolicyMatchService       $policyMatcher   Policy rule matcher
      * @param ConsentNotesHelper       $notesHelper     Sentinel-tagged notes helper
+     * @param ConsentScopeValidator    $scopeValidator  Consent scope validator
      *
      * @return void
      */

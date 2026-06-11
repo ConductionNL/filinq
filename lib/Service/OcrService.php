@@ -232,6 +232,7 @@ class OcrService
         if ($value !== '') {
             return $value;
         }
+
         return $this->config->getValueString(
             self::APP_NAME,
             'ocr_languages',
@@ -260,6 +261,7 @@ class OcrService
         if ($value !== '') {
             return (int) $value;
         }
+
         return (int) $this->config->getValueString(
             self::APP_NAME,
             'ocr_dpi',

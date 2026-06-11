@@ -130,9 +130,14 @@ class BatchStateServiceTest extends TestCase
      */
     public function testGetMaxFilesReturnsConfiguredValue(): void
     {
+        // Canonical key carries the admin override; legacy fallback never reached.
         $this->mockAppConfig->method('getValueString')
-            ->with('docudesk', 'docudesk_batch_max_files', '100')
-            ->willReturn('50');
+            ->willReturnMap(
+                [
+                    ['docudesk', 'batch.max_files_per_run', '', false, '50'],
+                    ['docudesk', 'docudesk_batch_max_files', '100', false, '100'],
+                ]
+            );
 
         $result = $this->service->getMaxFiles();
 

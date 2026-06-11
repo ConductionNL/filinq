@@ -5,11 +5,11 @@
 # run-newman) until the NC service container is wired (see tests.yml TODOs).
 # Additive — sits alongside the existing release/quality workflows.
 #
-# unit-gating: false — docudesk's tests/unit suite carries pre-existing debt on
-# baseline (~40 errors + 12 failures, mostly ConsentService / CorrespondenceService
-# / DataResolverService mock drift). The phpunit-unit job still runs (reporting
-# the failures) but does not block the PR until that debt is paid down. Flip to
-# true once `./vendor/bin/phpunit --configuration phpunit-unit.xml` is green.
+# unit-gating: true — docudesk's tests/unit suite is green
+# (`./vendor/bin/phpunit --configuration phpunit-unit.xml tests/unit` → 531 tests,
+# 0 errors / 0 failures). The prior ~40-error / 12-failure drift was stale test
+# constructor signatures + legacy config-key assertions that lagged the source;
+# both were updated to the current contract, so the unit job now HARD-GATES the PR.
 
 name: app-tests
 
@@ -36,6 +36,6 @@ jobs:
     uses: ./.forgejo/workflows/tests.yml
     with:
       app-id: docudesk
-      unit-gating: false
+      unit-gating: true
       run-e2e: ${{ github.event.inputs.run-e2e == 'true' }}
       run-newman: ${{ github.event.inputs.run-newman == 'true' }}

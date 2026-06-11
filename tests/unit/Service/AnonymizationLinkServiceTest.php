@@ -21,9 +21,14 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\FileEntityStatsService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\PdfConversionService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
@@ -163,7 +168,12 @@ class AnonymizationLinkServiceTest extends TestCase
             container: $container,
             appManager: $appManager,
             entityDetection: $this->createMock(originalClassName: EntityDetectionService::class),
-            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class)
+            appConfig: $this->createMock(originalClassName: IAppConfig::class),
+            consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
+            consentService: $this->createMock(originalClassName: ConsentService::class),
+            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
+            fileEntityStats: $this->createMock(originalClassName: FileEntityStatsService::class),
+            pdfConversion: $this->createMock(originalClassName: PdfConversionService::class)
         );
 
     }//end buildService()

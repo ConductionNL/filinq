@@ -145,7 +145,8 @@ class SettingsService
                 '/dependencies:\s*\n(?:\s+#[^\n]*\n)*\s+openregister:\s*\n(?:\s+#[^\n]*\n)*\s+minVersion:\s*["\']?([0-9][0-9A-Za-z\.\-+]*)["\']?/m',
                 $contents,
                 $matches
-            ) === 1) {
+            ) === 1
+            ) {
                 $minVersion = $matches[1];
             }
         }

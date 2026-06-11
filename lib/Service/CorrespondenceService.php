@@ -86,6 +86,7 @@ class CorrespondenceService
      * @param IAppManager         $appManager       App manager interface
      * @param IJobList            $jobList          Nextcloud job list for async
      * @param LoggerInterface     $logger           Logger for error reporting
+     * @param IAppConfig          $appConfig        App configuration accessor
      *
      * @return void
      */
@@ -121,6 +122,7 @@ class CorrespondenceService
         if ($value !== '') {
             return (int) $value;
         }
+
         return self::SYNC_BATCH_LIMIT;
 
     }//end getSyncBatchLimit()
@@ -143,6 +145,7 @@ class CorrespondenceService
         if ($value !== '') {
             return $value;
         }
+
         return self::DEFAULT_FORMAT;
 
     }//end getDefaultFormat()

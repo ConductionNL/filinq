@@ -173,10 +173,10 @@ class Http
     public const STATUS_SERVICE_UNAVAILABLE = 503;
 }//end class
 
-namespace OCP\AppFramework\Http;
+namespace OCP\AppFramework\OCS;
 
 /**
- * Stub for OCP\AppFramework\Http\OCSForbiddenException
+ * Stub for OCP\AppFramework\OCS\OCSForbiddenException
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests
@@ -198,6 +198,8 @@ class OCSForbiddenException extends \RuntimeException
         parent::__construct(message: $message, code: 403);
     }//end __construct()
 }//end class
+
+namespace OCP\AppFramework\Http;
 
 /**
  * Stub for OCP\AppFramework\Http\JSONResponse

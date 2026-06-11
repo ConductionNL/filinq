@@ -51,8 +51,6 @@ use InvalidArgumentException;
  */
 final class ConsentScopeValidator
 {
-
-
     /**
      * Validate a candidate publicationConsent write.
      *
@@ -75,14 +73,13 @@ final class ConsentScopeValidator
         }
 
         if ($scope === 'document') {
-            $this->assertDocumentScope($consent);
+            $this->assertDocumentScope(consent: $consent);
             return;
         }
 
-        $this->assertEntityScope($consent);
+        $this->assertEntityScope(consent: $consent);
 
     }//end assertValid()
-
 
     /**
      * Enforce the document-scope contract.
@@ -103,7 +100,6 @@ final class ConsentScopeValidator
         }
 
     }//end assertDocumentScope()
-
 
     /**
      * Enforce the entity-scope contract.
@@ -138,6 +134,7 @@ final class ConsentScopeValidator
                     'scope=entity publicationConsent matchRules['.(string) $idx.'] must be a {type, value} object'
                 );
             }
+
             $type = (string) $rule['type'];
             if (in_array($type, ['exact', 'normalized', 'bsn', 'kvk'], true) === false) {
                 throw new InvalidArgumentException(
@@ -151,7 +148,8 @@ final class ConsentScopeValidator
             $consentMethod,
             ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
             true
-        ) === false) {
+        ) === false
+        ) {
             throw new InvalidArgumentException(
                 'scope=entity publicationConsent records require consentMethod ∈ {paper, digital_signature, verbal_recorded, opt_in_form}'
             );
@@ -169,6 +167,4 @@ final class ConsentScopeValidator
         }
 
     }//end assertEntityScope()
-
-
 }//end class
