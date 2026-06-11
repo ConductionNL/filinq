@@ -901,6 +901,10 @@ interface Node
 interface File extends Node
 {
     public function getContent(): string;
+
+    public function getParent(): \OCP\Files\Folder;
+
+    public function delete(): void;
 }//end interface
 
 
