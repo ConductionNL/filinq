@@ -28,6 +28,19 @@ configuration — not enforced in application code. See the administration guide
 (`migrate-signing-audit-to-or-audit`)
 
 ### Added
+- **`template` + `dossier` user-facing string fields adopt
+  OpenRegister `register-i18n`.** `template.name`, `template.description`,
+  `template.content`, `template.category`, `dossier.name`, and
+  `dossier.description` are now flagged `"translatable": true` in
+  `lib/Settings/docudesk_register.json` (register v5.4.0; template
+  schema v1.1.0; dossier schema v1.1.0). OR's `TranslationHandler`
+  picks up the flag automatically — simple string values are wrapped
+  under the register's default language on save, and the API surface
+  respects `Accept-Language` / `?_lang=` via the OR language-negotiation
+  middleware. No database migration is required because translations
+  live in the existing object JSON column. Templates can now ship in
+  Dutch + English variants from the same register record. See
+  `openspec/changes/register-i18n/tasks.md`. (`register-i18n`)
 - **EML inputs now produce assembled PDF/A-3b documents.** When an `.eml`
   file enters DocuDesk and a downstream operation (anonymise, OCR, sign,
   archive) needs a PDF, the conversion cascade routes it through the new
