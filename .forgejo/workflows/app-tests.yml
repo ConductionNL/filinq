@@ -1,0 +1,41 @@
+# app-tests.yml — docudesk caller for the reusable feature-test workflow.
+#
+# Runs the PHASE-5 testing layers on every PR to the protected branches.
+# l10n-check HARD-GATES; e2e/newman are scaffolded and opt-in (run-e2e /
+# run-newman) until the NC service container is wired (see tests.yml TODOs).
+# Additive — sits alongside the existing release/quality workflows.
+#
+# unit-gating: false — docudesk's tests/unit suite carries pre-existing debt on
+# baseline (~40 errors + 12 failures, mostly ConsentService / CorrespondenceService
+# / DataResolverService mock drift). The phpunit-unit job still runs (reporting
+# the failures) but does not block the PR until that debt is paid down. Flip to
+# true once `./vendor/bin/phpunit --configuration phpunit-unit.xml` is green.
+
+name: app-tests
+
+on:
+  pull_request:
+    branches:
+      - development
+      - main
+      - beta
+  workflow_dispatch:
+    inputs:
+      run-e2e:
+        type: boolean
+        default: false
+      run-newman:
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    uses: ./.forgejo/workflows/tests.yml
+    with:
+      app-id: docudesk
+      unit-gating: false
+      run-e2e: ${{ github.event.inputs.run-e2e == 'true' }}
+      run-newman: ${{ github.event.inputs.run-newman == 'true' }}
