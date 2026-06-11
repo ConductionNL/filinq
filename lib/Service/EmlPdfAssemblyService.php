@@ -146,6 +146,8 @@ class EmlPdfAssemblyService
      * @return string PDF binary content.
      *
      * @throws ConversionFailedException When assembly fails catastrophically.
+     *
+     * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-2
      */
     public function assemble(object $structure, ?string $sourceFilename=null): string
     {
@@ -1022,6 +1024,8 @@ class EmlPdfAssemblyService
      * tested without an OR dependency on the classpath.
      *
      * @return object|null Resolved OR `TextExtractionService` or null.
+     *
+     * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-8
      */
     public function resolveTextExtractionService(): ?object
     {
