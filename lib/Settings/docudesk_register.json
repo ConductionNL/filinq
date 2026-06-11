@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.4.0 — adopts OR register-i18n by tagging user-facing string fields (template.name/description/content/category + dossier.name/description) with `translatable: true`. OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "5.4.0"
+        "description": "DocuDesk register v5.5.0 — extends OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "5.5.0"
     },
     "x-openregister": {
         "type": "application",
@@ -111,7 +111,7 @@
                 "slug": "publicationConsent",
                 "title": "Publication Consent",
                 "description": "Schema voor het beheren van publicatie toestemmingen volgens GDPR en Nederlandse Wet Open Overheid. Bevat informatie over entiteiten (personen/organisaties) die geïnformeerd moeten worden voordat een document wordt gepubliceerd, en hun reactie daarop.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "AccountCheck",
                 "required": [
@@ -273,7 +273,8 @@
                         "order": 12,
                         "facetable": false,
                         "title": "Bezwaarreden",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "publicationDecision": {
                         "description": "Beslissing over publicatie",
@@ -290,7 +291,8 @@
                             "publish_anonymized",
                             "reject"
                         ],
-                        "default": "pending"
+                        "default": "pending",
+                        "translatable": true
                     },
                     "legalBasis": {
                         "description": "Juridische grondslag voor publicatie (bijv. Wet Open Overheid, AVG artikel 6)",
@@ -310,7 +312,8 @@
                         "order": 15,
                         "facetable": false,
                         "title": "Notities",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "matchRules": {
                         "description": "Array of `{type, value}` entries (same enum as `publicationProhibition`: `exact` / `normalized` / `bsn` / `kvk`). Only used on `scope=entity` records; service-level validation rejects `scope=entity` writes without at least one matchRule.",
@@ -588,7 +591,7 @@
                 "slug": "templateVersion",
                 "title": "Template Version",
                 "description": "Historische versie van een template. Wordt aangemaakt bij elke bewerking als snapshot van de vorige staat.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "History",
                 "required": [
@@ -633,7 +636,8 @@
                         "order": 4,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "description": {
                         "description": "Beschrijving van het template op het moment van de snapshot",
@@ -642,7 +646,8 @@
                         "order": 5,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "format": {
                         "description": "Paginaformaat op het moment van de snapshot",
@@ -679,7 +684,8 @@
                         "order": 9,
                         "facetable": false,
                         "title": "Wijzigingsnotitie",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     }
                 },
                 "archive": [],
@@ -734,7 +740,7 @@
                 "slug": "correspondence",
                 "title": "Correspondence",
                 "description": "Audit log voor gegenereerde correspondentie. Bevat metadata over welk template is gebruikt, voor welke ontvanger, en het resultaat.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "EmailOutline",
                 "required": [
@@ -762,7 +768,8 @@
                         "order": 2,
                         "facetable": true,
                         "title": "Template naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "recipientId": {
                         "description": "UUID van het ontvangerobject in OpenRegister",
@@ -882,7 +889,7 @@
                 "slug": "huisstijl",
                 "title": "Huisstijl Configuration",
                 "description": "Configuratie voor organisatie huisstijl: logo, kleuren, kop-/voetteksten en standaard marges voor correspondentie.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "Palette",
                 "required": [],
@@ -894,7 +901,8 @@
                         "order": 1,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "logo": {
                         "description": "Logo als base64-gecodeerde string of bestandsreferentie",
@@ -990,7 +998,7 @@
                 "slug": "signingRequest",
                 "title": "Signing Request",
                 "description": "Ondertekeningsverzoek voor een document",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileSign",
                 "required": [
@@ -1020,7 +1028,8 @@
                         "order": 2,
                         "facetable": false,
                         "title": "Documentnaam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "initiatorUserId": {
                         "description": "Initiator gebruikers-ID",
@@ -1261,7 +1270,7 @@
                 "slug": "signerRecord",
                 "title": "Signer Record",
                 "description": "Individueel ondertekeningsrecord",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "AccountEdit",
                 "required": [
@@ -1297,7 +1306,8 @@
                         "order": 3,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "email": {
                         "description": "E-mailadres",
@@ -1351,7 +1361,8 @@
                         "order": 8,
                         "facetable": false,
                         "title": "Reden weigering",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "ipAddress": {
                         "description": "IP-adres",
@@ -1543,7 +1554,7 @@
                 "slug": "signingSession",
                 "title": "Signing Session",
                 "description": "Persistente sessie voor de native SES signing-provider. Houdt de status van een ondertekeningssessie tussen HTTP-requests bij (issue #287). Wordt geschreven door NativeSigningProvider via OpenRegister zodat checkStatus/cancel/download na een fresh request de sessie kunnen terugvinden.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileSign",
                 "required": [
@@ -1581,7 +1592,8 @@
                         "order": 3,
                         "facetable": false,
                         "title": "Documentnaam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "signers": {
                         "description": "Array van ondertekenaars die in deze sessie betrokken zijn",
@@ -1748,7 +1760,7 @@
                 "slug": "base",
                 "title": "Grondslag",
                 "description": "Een Woo Art. 5 uitzonderingsgrond waaronder gegevens geanonimiseerd worden voordat een document wordt gepubliceerd. OpenRegister bewaart de UUID's; de zes canonieke grondslagen worden meegeleverd als seed-data.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "Legal basis (grondslag) for anonymisation under Woo Art. 5",
                 "icon": "Gavel",
                 "required": [
@@ -1764,7 +1776,8 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "maxLength": 100
+                        "maxLength": 100,
+                        "translatable": true
                     },
                     "description": {
                         "title": "Omschrijving",
@@ -1774,7 +1787,8 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "maxLength": 1000
+                        "maxLength": 1000,
+                        "translatable": true
                     }
                 },
                 "archive": [],
@@ -1879,7 +1893,7 @@
                 "slug": "batchCorrespondenceJob",
                 "title": "Batch Correspondence Job",
                 "description": "Bijhouding van een batch-correspondentieopdracht. Vervangt IAppConfig-gebaseerde statusopslag. Lifecycle-transitiebeheer via x-openregister-lifecycle.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "EmailMultipleOutline",
                 "required": [
@@ -1906,7 +1920,8 @@
                         "order": 2,
                         "facetable": true,
                         "title": "Template naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "recipientCount": {
                         "description": "Totaal aantal ontvangers in de batch",
@@ -2313,7 +2328,7 @@
                 "slug": "publicationProhibition",
                 "title": "Publication Prohibition",
                 "description": "Court order, minor-protection, undercover-officer or categorical privacy-board prohibition on publishing personally-identifying information. When an active rule matches, the WOO objection workflow is pre-empted and the affected entity is forcibly anonymised. Time-bound (validFrom / validUntil) and rule-typed (exact / normalized / bsn / kvk) so the cache can resolve a match in O(1) per entity.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "ShieldLockOutline",
                 "required": [
@@ -2332,7 +2347,8 @@
                         "order": 1,
                         "facetable": true,
                         "title": "Primaire naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "entityType": {
                         "description": "Entity category the rule applies to.",
@@ -2385,7 +2401,8 @@
                         "visible": true,
                         "order": 4,
                         "title": "Reden",
-                        "maxLength": 1024
+                        "maxLength": 1024,
+                        "translatable": true
                     },
                     "legalAuthority": {
                         "description": "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).",
@@ -2477,7 +2494,8 @@
                         "required": false,
                         "visible": true,
                         "order": 13,
-                        "title": "Notities"
+                        "title": "Notities",
+                        "translatable": true
                     }
                 },
                 "x-openregister-archival": {

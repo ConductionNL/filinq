@@ -26,6 +26,7 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
 use OCA\DocuDesk\Service\Conversion\MpdfBackend;
 use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
@@ -116,6 +117,15 @@ class Application extends App implements IBootstrap
         // Background jobs are declared in appinfo/info.xml under
         // <background-jobs>; Nextcloud auto-registers them with the IJobList.
         // IRegistrationContext has no registerBackgroundJob() method.
+
+        // register-i18n adoption (Task 3.2): wire the docudesk-side
+        // language-negotiation middleware so OR's `LanguageService`
+        // sees Accept-Language / ?_lang / X-Translation-Target-Language
+        // on requests that hit docudesk routes (the OR LanguageMiddleware
+        // only fires for OR's own routes). This lets the OR
+        // TranslationHandler resolve translatable properties on docudesk
+        // objects to the right variant.
+        $context->registerMiddleware(LanguageNegotiationMiddleware::class);
     }//end register()
 
     /**
