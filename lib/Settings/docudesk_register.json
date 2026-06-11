@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.3.0 — adopts OR abstractions per docudesk-adopt-or-abstractions. Adds batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations. Adds x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y). Adds x-openregister-lifecycle to signingSession. Adds anonymizationLink schema for source↔anonymised file mapping. Replaces MIN_OPENREGISTER_VERSION constant — see openspec/manifest.yaml.",
-        "version": "5.3.0"
+        "description": "DocuDesk register v5.4.0 — adopts OR register-i18n by tagging user-facing string fields (template.name/description/content/category + dossier.name/description) with `translatable: true`. OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "5.4.0"
     },
     "x-openregister": {
         "type": "application",
@@ -443,7 +443,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -460,7 +460,8 @@
                         "order": 1,
                         "facetable": false,
                         "title": "Naam",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "translatable": true
                     },
                     "description": {
                         "description": "Beschrijving van het doel van het template",
@@ -469,7 +470,8 @@
                         "order": 2,
                         "facetable": false,
                         "title": "Beschrijving",
-                        "maxLength": 2000
+                        "maxLength": 2000,
+                        "translatable": true
                     },
                     "content": {
                         "description": "Twig/HTML template content voor PDF-rendering",
@@ -479,7 +481,8 @@
                         "order": 3,
                         "facetable": false,
                         "title": "Template inhoud",
-                        "format": "html"
+                        "format": "html",
+                        "translatable": true
                     },
                     "namespace": {
                         "description": "App-identifier die eigenaar is van dit template (bijv. larpingapp, opencatalogi)",
@@ -526,7 +529,8 @@
                         "order": 7,
                         "facetable": true,
                         "title": "Categorie",
-                        "maxLength": 128
+                        "maxLength": 128,
+                        "translatable": true
                     },
                     "tags": {
                         "description": "Vrije tags voor zoeken en filteren",
@@ -1798,7 +1802,7 @@
                 "slug": "dossier",
                 "title": "Dossier",
                 "description": "Een dossier representeert een Nextcloud-map (`@self.folder`) waarvan de inhoud onder één of meer Woo Art. 5 grondslagen geanonimiseerd wordt. Het dossier registreert wie het heeft beoordeeld (`checkedOn`) en welke grondslagen van toepassing zijn (`bases[]`).",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "Anonymisation dossier — folder + grondslagen + review timestamp",
                 "icon": "FolderAccount",
                 "required": [
@@ -1813,7 +1817,8 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "maxLength": 200
+                        "maxLength": 200,
+                        "translatable": true
                     },
                     "description": {
                         "title": "Omschrijving",
@@ -1823,7 +1828,8 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "maxLength": 1000
+                        "maxLength": 1000,
+                        "translatable": true
                     },
                     "bases": {
                         "title": "Grondslagen",

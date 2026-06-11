@@ -28,6 +28,35 @@ configuration — not enforced in application code. See the administration guide
 (`migrate-signing-audit-to-or-audit`)
 
 ### Added
+- **`template` + `dossier` user-facing string fields adopt
+  OpenRegister `register-i18n`.** `template.name`, `template.description`,
+  `template.content`, `template.category`, `dossier.name`, and
+  `dossier.description` are now flagged `"translatable": true` in
+  `lib/Settings/docudesk_register.json` (register v5.4.0; template
+  schema v1.1.0; dossier schema v1.1.0). OR's `TranslationHandler`
+  picks up the flag automatically — simple string values are wrapped
+  under the register's default language on save, and the API surface
+  respects `Accept-Language` / `?_lang=` via the OR language-negotiation
+  middleware. No database migration is required because translations
+  live in the existing object JSON column. Templates can now ship in
+  Dutch + English variants from the same register record. See
+  `openspec/changes/register-i18n/tasks.md`. (`register-i18n`)
+- **EML inputs now produce assembled PDF/A-3b documents.** When an `.eml`
+  file enters DocuDesk and a downstream operation (anonymise, OCR, sign,
+  archive) needs a PDF, the conversion cascade routes it through the new
+  `EmlBackend` + `EmlPdfAssemblyService`. The assembled output combines a
+  Dutch-language envelope page (Van/Aan/Cc/Onderwerp/Datum + body),
+  PDF/A-3 file-attachment annotations carrying every attachment's raw
+  bytes, divider pages per attachment, and rendered content pages for
+  PDF / image / plain-text / nested-EML attachments (depth-3 cap on
+  nested EML). Tenant configuration covers a kill-switch
+  (`docudesk.conversion.backends.eml_enabled`), envelope-only mode
+  (`docudesk.conversion.eml.append_attachment_pages`), a per-attachment
+  render byte cap (`docudesk.conversion.eml.max_attachment_render_size_bytes`,
+  default 25 MiB), and configurable Twig template paths. Operators no
+  longer need `outputFormat: "preserve"` for EML inputs. Templates are
+  NL-only in v1; EN follows under `register-i18n`. See
+  `docs/features/eml-pdf-assembly.md`. (`eml-pdf-assembly`)
 - **Idempotent `ConsentService::createConsentRequest()`** — keyed on `(documentId, entityKey, scope: "document")`. A second call for the same key updates the existing record rather than creating a duplicate; the caller receives `wasUpdated: true` in the response. Falls back to `entityText` matching when `entityKey` is null (legacy records). `scope: "entity"` standing-consent records are never matched as duplicates. (`consent-create-idempotency-and-notes`)
 - **Sentinel-tagged additional-bases serialisation in `publicationConsent.notes`** — `publicationBases[0]` writes to the existing `legalBasis` field (truncated at 500 chars at word boundary); elements `[1..N]` are rendered inside an HTML-comment sentinel region (`<!-- docudesk:additional-publication-bases:begin/end -->`). The sentinel is markdown-invisible, re-submittable (idempotent re-render), and operator-authored content outside the brackets is preserved across re-submits. (`consent-create-idempotency-and-notes`)
 - **`PolicyRejectedException`** — new typed exception thrown when `PolicyMatchService` returns a prohibition match during `createConsentRequest`. Carries `ruleUuid` and `ruleName` for operator-facing notification. (`consent-create-idempotency-and-notes`)
