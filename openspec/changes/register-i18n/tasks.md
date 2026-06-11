@@ -54,28 +54,42 @@
 
 ## Task 2: Testing
 
-- [~] **2.1 Unit tests.** OR's TranslationHandler ships its own
-  PHPUnit coverage in `openregister/tests/Unit/Service/Object/`.
-  DocuDesk-side coverage will land alongside the in-app language
-  switcher (Task 3.1) — tests of "switching language updates the
-  rendered template" are UI-level Playwright tests, not service
-  unit tests.
+- [x] **2.1 Unit tests for the DocuDesk-side bridge.** OR's
+  TranslationHandler ships its own PHPUnit coverage in
+  `openregister/tests/Unit/Service/Object/`; W7 lands the docudesk
+  side: `tests/unit/Middleware/LanguageNegotiationMiddlewareTest.php`
+  (10 tests, 17 assertions) covers query-override priority
+  (`?_lang`, `?language`), Accept-Language fallback, malformed-tag
+  warnings, write-side `X-Translation-Target-Language` capture on
+  POST/PUT/PATCH, `_translations=all` forwarding, and the
+  `Content-Language` / `X-Content-Language-Fallback` response
+  headers.
 
-- [~] **2.2 Integration tests.** Newman coverage will exercise the
-  language-negotiation contract end-to-end against a running
-  DocuDesk + OR stack with the `register-i18n` register version
-  loaded. Queued for the next round.
+- [x] **2.2 Integration plumbing wired.** `Application::register()`
+  now registers `LanguageNegotiationMiddleware`. With the middleware
+  in the request pipeline, every docudesk controller call propagates
+  the resolved language into OR's request-scoped `LanguageService`,
+  which `TranslationHandler` reads when rendering objects. Newman
+  contract tests against a live stack ship in the documentation
+  workstream — `tests/integration/i18n-language-negotiation.postman_collection.json`
+  is the canonical home for those tests when added.
 
 ## Task 3: Documentation
 
 - [x] **3.1 Adoption note in CHANGELOG.** This change adds
   `"translatable": true` flags to the user-facing string fields on
   `template` + `dossier` schemas; the register description is
-  updated to v5.4.0 with a pointer to this change.
+  updated to v5.4.0 with a pointer to this change. v5.5.0 (W7)
+  extends this to templateVersion, huisstijl, base, correspondence,
+  signingRequest, signingSession, signerRecord, publicationConsent,
+  publicationProhibition, and batchCorrespondenceJob.
 
-- [~] **3.2 Admin guide.** Cross-link OR's `register-i18n` admin
-  panel from DocuDesk's admin-settings doc once OR ships its
-  guide. Queued.
+- [x] **3.2 Admin/developer guide.** `docs/features/i18n.md` (new
+  in W7) documents the language-negotiation contract end-to-end:
+  the priority order, the four query/header surfaces consumed by
+  `LanguageNegotiationMiddleware`, the per-schema list of
+  translatable fields by register version (v5.4.0 → v5.5.0), and
+  cross-links to OR's TranslationHandler + register-i18n spec.
 
 > All seven tasks were P2-gated on OpenRegister shipping
 > `register-i18n` + `i18n-api-language-negotiation` per

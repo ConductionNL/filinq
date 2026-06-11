@@ -227,6 +227,169 @@ class RiskLevelService
     }//end getRiskLevel()
 }//end class
 
+/**
+ * Stub for LanguageService
+ *
+ * Mirrors the OR LanguageService API the docudesk
+ * LanguageNegotiationMiddleware consumes. Provides in-memory state so
+ * tests can assert the middleware pushed the right values into it.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class LanguageService
+{
+    /**
+     * Preferred language code resolved from the request.
+     *
+     * @var string
+     */
+    private string $preferredLanguage = 'nl';
+
+    /**
+     * Full list of accepted languages in priority order.
+     *
+     * @var string[]
+     */
+    private array $acceptedLanguages = [];
+
+    /**
+     * Whether `_translations=all` was requested.
+     *
+     * @var boolean
+     */
+    private bool $returnAllTranslations = false;
+
+    /**
+     * Whether the resolved language is a fallback (not present in object).
+     *
+     * @var boolean
+     */
+    private bool $fallbackUsed = false;
+
+    /**
+     * Source identifier (default | query | header).
+     *
+     * @var string
+     */
+    private string $requestedLanguageSource = 'default';
+
+    /**
+     * Write-side target language from X-Translation-Target-Language.
+     *
+     * @var string|null
+     */
+    private ?string $targetLanguage = null;
+
+    public function setPreferredLanguage(string $language): void
+    {
+        $this->preferredLanguage = $language;
+    }
+
+    public function getPreferredLanguage(): string
+    {
+        return $this->preferredLanguage;
+    }
+
+    public function setAcceptedLanguages(array $languages): void
+    {
+        $this->acceptedLanguages = $languages;
+    }
+
+    public function getAcceptedLanguages(): array
+    {
+        return $this->acceptedLanguages;
+    }
+
+    public function setReturnAllTranslations(bool $returnAll): void
+    {
+        $this->returnAllTranslations = $returnAll;
+    }
+
+    public function shouldReturnAllTranslations(): bool
+    {
+        return $this->returnAllTranslations;
+    }
+
+    public function setFallbackUsed(bool $fallback): void
+    {
+        $this->fallbackUsed = $fallback;
+    }
+
+    public function isFallbackUsed(): bool
+    {
+        return $this->fallbackUsed;
+    }
+
+    public function setRequestedLanguageSource(string $source): void
+    {
+        $this->requestedLanguageSource = $source;
+    }
+
+    public function getRequestedLanguageSource(): string
+    {
+        return $this->requestedLanguageSource;
+    }
+
+    public function setTargetLanguage(?string $language): void
+    {
+        $this->targetLanguage = $language;
+    }
+
+    public function getTargetLanguage(): ?string
+    {
+        return $this->targetLanguage;
+    }
+
+    /**
+     * Parse an Accept-Language header into a priority-ordered list.
+     *
+     * Mirrors the OR LanguageService::parseAcceptLanguageHeader signature
+     * just closely enough that the middleware compiles + tests pass.
+     *
+     * @param string $headerValue The raw Accept-Language header value.
+     *
+     * @return string[]
+     */
+    public static function parseAcceptLanguageHeader(string $headerValue): array
+    {
+        if (trim($headerValue) === '') {
+            return [];
+        }
+
+        $entries = [];
+        foreach (explode(',', $headerValue) as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+
+            $segments = explode(';', $part);
+            $tag = trim($segments[0]);
+            if ($tag === '' || $tag === '*') {
+                continue;
+            }
+
+            $quality = 1.0;
+            for ($i = 1, $n = count($segments); $i < $n; $i++) {
+                $seg = trim($segments[$i]);
+                if (str_starts_with($seg, 'q=') === true) {
+                    $quality = (float) substr($seg, 2);
+                }
+            }
+
+            $entries[] = ['tag' => $tag, 'q' => $quality];
+        }
+
+        usort($entries, static fn (array $a, array $b): int => $b['q'] <=> $a['q']);
+
+        return array_map(static fn (array $e): string => $e['tag'], $entries);
+    }
+}//end class
+
 namespace OCA\OpenRegister\Db;
 
 /**

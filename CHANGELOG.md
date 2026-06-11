@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+### Added
+
+- **`register-i18n` full adoption (W7).** Extended `translatable: true`
+  to user-facing string fields across the full register. Register
+  bumped to v5.5.0; ten schemas bumped from v1.0.0 → v1.1.0
+  (`templateVersion`, `huisstijl`, `base`, `correspondence`,
+  `signingRequest`, `signingSession`, `signerRecord`,
+  `publicationConsent`, `publicationProhibition`,
+  `batchCorrespondenceJob`). New
+  `LanguageNegotiationMiddleware` registered via
+  `Application::register()` so docudesk requests propagate the
+  resolved language onto OR's request-scoped `LanguageService`. New
+  `docs/features/i18n.md` documents the language-negotiation
+  contract end-to-end. (`register-i18n`)
+
 ### Changed
 
 - **`SigningAuditService` now emits via OR audit trail.**

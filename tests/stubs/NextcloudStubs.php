@@ -72,6 +72,13 @@ interface IRequest
      * @return string
      */
     public function getHeader(string $name): string;
+
+    /**
+     * Get the HTTP method of the request.
+     *
+     * @return string
+     */
+    public function getMethod(): string;
 }//end interface
 
 
@@ -210,7 +217,53 @@ namespace OCP\AppFramework\Http;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class JSONResponse
+/**
+ * Stub for the OCP\AppFramework\Http\Response base class.
+ *
+ * Tracks headers so tests can assert addHeader() calls without a full NC
+ * stack. Minimal — only the surface our middleware + tests use.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @link     https://www.DocuDesk.app
+ */
+class Response
+{
+    /**
+     * Headers keyed by name.
+     *
+     * @var array<string,string>
+     */
+    private array $headers = [];
+
+    /**
+     * Add a header.
+     *
+     * @param string $name  Header name.
+     * @param string $value Header value.
+     *
+     * @return self
+     */
+    public function addHeader(string $name, string $value): self
+    {
+        $this->headers[$name] = $value;
+        return $this;
+    }
+
+    /**
+     * Get response headers.
+     *
+     * @return array<string,string>
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+}//end class
+
+class JSONResponse extends Response
 {
 
     /**
@@ -1443,3 +1496,62 @@ interface IManager
      */
     public function markProcessed(INotification $notification): void;
 }//end interface
+
+namespace OCP\AppFramework;
+
+/**
+ * Stub for OCP\AppFramework\Middleware
+ *
+ * Minimal base class so docudesk's LanguageNegotiationMiddleware compiles
+ * in the standalone unit-test runner.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2
+ * @link     https://www.DocuDesk.app
+ */
+class Middleware
+{
+    /**
+     * Hook fired before the controller method.
+     *
+     * @param mixed  $controller The controller instance.
+     * @param string $methodName The method name being called.
+     *
+     * @return void
+     */
+    public function beforeController($controller, $methodName): void
+    {
+    }
+
+    /**
+     * Hook fired after the controller method returns.
+     *
+     * @param mixed                                  $controller The controller instance.
+     * @param string                                 $methodName The method name that was called.
+     * @param \OCP\AppFramework\Http\Response        $response   The response object.
+     *
+     * @return \OCP\AppFramework\Http\Response
+     */
+    public function afterController($controller, $methodName, \OCP\AppFramework\Http\Response $response): \OCP\AppFramework\Http\Response
+    {
+        return $response;
+    }
+
+    /**
+     * Hook fired when an exception is thrown.
+     *
+     * @param mixed      $controller The controller instance.
+     * @param string     $methodName The method name being called.
+     * @param \Throwable $exception  The exception thrown.
+     *
+     * @return mixed
+     *
+     * @throws \Throwable
+     */
+    public function afterException($controller, $methodName, \Throwable $exception)
+    {
+        throw $exception;
+    }
+}//end class
