@@ -148,6 +148,12 @@ class EmlBackend implements ConversionBackendInterface
             return false;
         }
 
+        // phpstan eliminates the OR class symbolically (OpenRegister is
+        // an external app, ignored by config), so `method_exists()` on
+        // its FQCN string constant looks like a contradiction. At
+        // runtime the class is loaded by NC's autoloader once OR is
+        // enabled, so the guard is the right defensive shape.
+        // @phpstan-ignore-next-line function.impossibleType
         if (method_exists($orClass, 'parseEmlStructured') === false) {
             return false;
         }
