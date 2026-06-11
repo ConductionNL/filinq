@@ -419,9 +419,16 @@ class SigningController extends Controller
     {
         $this->logger->error($message.$exception->getMessage(), ['exception' => $exception]);
 
+        // Honour an HTTP status carried on the exception code (e.g. 400 for invalid
+        // input) so client errors are not masked as a generic 500.
+        $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
+        if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+            $statusCode = $exception->getCode();
+        }
+
         return new JSONResponse(
             ['error' => $this->l10n->t($message.'%s', [$exception->getMessage()])],
-            Http::STATUS_INTERNAL_SERVER_ERROR
+            $statusCode
         );
 
     }//end errorResponse()

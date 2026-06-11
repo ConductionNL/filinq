@@ -460,21 +460,17 @@
      }
     },
     {
-     "name": "QUARANTINE template show non-existent -> 500 (should be 404)",
+     "name": "template show non-existent -> 404",
      "event": [
       {
        "listen": "test",
        "script": {
         "type": "text/javascript",
         "exec": [
-         "// KNOWN BUG (quarantined, non-fake-pass): a non-existent template id is not",
-         "// mapped to 404. TemplateService::getTemplate() lets OpenRegister's",
-         "// 'Object not found in magic table' exception propagate to the generic",
-         "// catch (Exception) which buildErrorResponse() emits as HTTP 500. The honest",
-         "// contract here is 404; this assertion locks the CURRENT bad behaviour so the",
-         "// suite stays green and the bug stays visible until getTemplate() maps a",
-         "// not-found to STATUS_NOT_FOUND.",
-         "pm.test('currently returns 500 (documented bug — expected 404)', () => pm.response.to.have.status(500));",
+         "// FIXED: TemplateService::getTemplate() now catches OpenRegister's",
+         "// DoesNotExistException ('Object not found in magic table') and rethrows a",
+         "// 404-coded Exception, which buildErrorResponse() emits as HTTP 404.",
+         "pm.test('returns 404 for a non-existent template id', () => pm.response.to.have.status(404));",
          "pm.test('still clean JSON, not an HTML error page', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(() => pm.response.json()).to.not.throw(); });"
         ]
        }
@@ -823,11 +819,10 @@
        "script": {
         "type": "text/javascript",
         "exec": [
-         "// KNOWN BUG (quarantined, non-fake-pass): SigningService::validateCreate()",
-         "// throws RuntimeException('Invalid signature level') which the controller's",
-         "// generic catch maps to HTTP 500. A bad enum value is client error and should",
-         "// be 400. This locks the CURRENT behaviour (500) so the bug stays visible.",
-         "pm.test('currently 500 (documented bug — expected 400)', () => pm.response.to.have.status(500));",
+         "// FIXED: SigningService::validateRequestData() now throws a 400-coded",
+         "// RuntimeException for an invalid signatureLevel and the controller's",
+         "// errorResponse() honours the exception code, returning HTTP 400.",
+         "pm.test('returns 400 for an invalid signature level', () => pm.response.to.have.status(400));",
          "pm.test('clean JSON, not HTML', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(String(pm.response.json().error)).to.match(/signature level/i); });"
         ]
        }

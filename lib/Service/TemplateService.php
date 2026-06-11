@@ -170,11 +170,17 @@ class TemplateService
         $objectService = $this->getObjectService();
         $config        = $this->registerResolver->getRegisterAndSchema();
 
-        $result = $objectService->find(
-            id: $id,
-            register: $config['register'],
-            schema: $config['schema']
-        );
+        // OpenRegister's find() raises DoesNotExistException for an unknown id; map it to a
+        // 404 so the controller returns Not Found instead of a generic 500.
+        try {
+            $result = $objectService->find(
+                id: $id,
+                register: $config['register'],
+                schema: $config['schema']
+            );
+        } catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+            throw new Exception(message: 'Template not found', code: 404);
+        }
 
         if (empty($result) === true) {
             throw new Exception(message: 'Template not found', code: 404);

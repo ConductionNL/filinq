@@ -559,19 +559,19 @@ class SigningService
     private function validateRequestData(array $data): void
     {
         if (empty($data['documentFileId']) === true) {
-            throw new RuntimeException('Document file ID is required');
+            throw new RuntimeException('Document file ID is required', 400);
         }
 
         if (empty($data['documentName']) === true) {
-            throw new RuntimeException('Document name is required');
+            throw new RuntimeException('Document name is required', 400);
         }
 
         if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new RuntimeException('Invalid signature level');
+            throw new RuntimeException('Invalid signature level', 400);
         }
 
         if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new RuntimeException('Invalid signing mode');
+            throw new RuntimeException('Invalid signing mode', 400);
         }
 
     }//end validateRequestData()
