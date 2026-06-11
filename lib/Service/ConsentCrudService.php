@@ -74,6 +74,14 @@ class ConsentCrudService
         $schema   = $settings['configuration']['publicationConsent_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
+            // Surface the configuration gap to the admin: callers treat
+            // null as "consent feature disabled" and silently skip, which
+            // hid the misconfiguration in earlier iterations.
+            $this->logger->debug(
+                'ConsentCrudService: publicationConsent register/schema not configured; '
+                .'consent CRUD is disabled until both settings are populated.',
+                ['register' => $register, 'schema' => $schema]
+            );
             return null;
         }
 

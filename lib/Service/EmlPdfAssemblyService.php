@@ -838,7 +838,17 @@ class EmlPdfAssemblyService
                 }
 
                 $att     = $byCid[$cid];
-                $dataUri = 'data:'.$att->mimeType.';base64,'.base64_encode($att->content);
+                // EmlAttachment value object owns `mimeType` + `content`
+                // public readonly props (declared in OR's
+                // `parseEmlStructured` return shape). phpstan sees the
+                // function parameter typed as `object` (we accept both
+                // OR's value object and test-double `stdClass`), so it
+                // cannot prove the props exist.
+                // @phpstan-ignore-next-line property.notFound
+                $mimeType = (string) $att->mimeType;
+                // @phpstan-ignore-next-line property.notFound
+                $content  = (string) $att->content;
+                $dataUri  = 'data:'.$mimeType.';base64,'.base64_encode($content);
                 return '<img '.$matches[1].'src='.$matches[2].$dataUri.$matches[2].$matches[4].'>';
             },
             $html
@@ -942,7 +952,11 @@ class EmlPdfAssemblyService
      */
     private function renderHeader(array $headers, string $key): ?string
     {
-        if (isset($headers[$key]) === false || $headers[$key] === null || $headers[$key] === '') {
+        // `isset()` returns false for both missing keys AND null values,
+        // so the explicit `=== null` branch is redundant (phpstan flagged
+        // it as a dead comparison). Keep the empty-string guard so
+        // headers explicitly set to '' are still treated as missing.
+        if (isset($headers[$key]) === false || $headers[$key] === '') {
             return null;
         }
 
