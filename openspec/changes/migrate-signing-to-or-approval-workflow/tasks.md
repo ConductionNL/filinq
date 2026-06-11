@@ -38,6 +38,12 @@ M = 1–2 days, L = 3+ days).
   available for injection in docudesk (from umbrella task OR-1.1). Document the confirmed
   class name as a comment in the design.md DEFERRED_QUESTIONS section.
   - **Acceptance:** `design.md` DEFERRED_QUESTIONS section updated with confirmed class name.
+  - **Status:** DEFERRED — verified 2026-06-12 against `openregister/lib/Db/`:
+    `ApprovalChainMapper.php` + `ApprovalStepMapper.php` exist (Db-layer CRUD,
+    DI-injectable). No higher-level service wrapper yet; the docudesk side
+    can inject the mappers directly OR wait for the umbrella spec to land
+    a service facade. Confirmed in design.md DEFERRED_QUESTIONS section
+    on the next umbrella iteration.
 
 - [x] D0.2 OR dispatches typed events on ApprovalStep state change: `ApprovalStepInitiatedEvent`
   (first step pending), `ApprovalStepApprovedEvent`, and `ApprovalStepRejectedEvent`, defined
@@ -57,15 +63,29 @@ M = 1–2 days, L = 3+ days).
   - **Acceptance:** Calling the initiation method results in an OR `ApprovalChain` object
     visible at `GET /api/approval-chains` with the correct steps; no deprecated schema rows
     are created.
+  - **Status:** DEFERRED — hard upstream block: OR's
+    `add-approval-step-events` change has NOT shipped (verified 2026-06-12 —
+    `grep -l 'ApprovalStepInitiatedEvent\|ApprovalStepApprovedEvent\|ApprovalStepRejectedEvent'
+    openregister/lib` returns no matches). Without the event surface, the
+    listener-based provider invocation in D2.1 cannot fire, so rewriting
+    the initiation method alone would leave a half-migrated service where
+    subsequent steps are never triggered. Ships in the cohesive PR
+    sequence once OR commits the events.
 
 - [~] D1.2 Replace signing-completion detection (e.g. "all signers have signed") with a query
   against OR: `GET /api/approval-steps?chainId={id}` — all steps `status: approved` = complete.
   - **Acceptance:** Sign request is marked complete when all OR steps are `approved`.
+  - **Status:** DEFERRED with D1.1 — same upstream block; the query
+    target is the ApprovalStepMapper which exists, but the trigger to
+    re-query is the `ApprovalStepApprovedEvent` listener which does not.
 
 - [~] D1.3 Remove bespoke step-cursor, sequential-advance, and role-enforcement logic from
   `SigningService`. OR's advance-on-approval replaces these.
   - **Acceptance:** `SigningService` contains no bespoke step-routing state machine;
     `composer check:strict` passes.
+  - **Status:** DEFERRED with D1.1 — removing the bespoke state machine
+    BEFORE the OR event surface ships would brick in-flight sign
+    requests on every dev / staging instance. Lands atomically with D1.1 + D2.1.
 
 ### D2. Update SigningProviderFactory and provider invocation (M)
 
@@ -76,11 +96,18 @@ M = 1–2 days, L = 3+ days).
   - **Acceptance:** When step `order: N` becomes `pending` in OR, the configured signing
     provider is invoked for that step's signer; the provider's result triggers OR approve
     or reject.
+  - **Status:** DEFERRED — same OR `add-approval-step-events` upstream
+    block as D1.1. The event classes do not exist yet, so the listener
+    registration would target undefined symbols.
 
 - [~] D2.2 Confirm `NativeSigningProvider` and `SigningProviderInterface` require no changes
   beyond the invocation-trigger update. Document any required interface adjustments.
   - **Acceptance:** `SigningProviderInterface` signature is unchanged (or any change is
     backwards-compatible); `NativeSigningProvider` unit tests pass.
+  - **Status:** DEFERRED with D2.1 — interface confirmation gated on
+    the listener pattern landing (the inverted invocation flow may
+    surface signature gaps that aren't visible in the current
+    SigningService-driven flow).
 
 ---
 
@@ -92,6 +119,8 @@ M = 1–2 days, L = 3+ days).
   response shapes are preserved after the service rewrite. Fix any drift between the
   controller and the rewritten service.
   - **Acceptance:** Existing docudesk signing API integration tests pass without modification.
+  - **Status:** DEFERRED with D1.1-D2.2 — controller verification is a
+    post-rewrite step; the rewrite is upstream-blocked.
 
 ---
 
@@ -104,11 +133,18 @@ M = 1–2 days, L = 3+ days).
   Add `"deprecated": true` and `"deprecatedSince": "<migration-release>"` to that schema.
   - **Acceptance:** The schema is annotated as deprecated; existing rows remain readable;
     `openspec validate --strict migrate-signing-to-or-approval-workflow` passes.
+  - **Status:** DEFERRED with D1.1 — deprecation annotation belongs in
+    the cohesive migration release so consumers of the schema (admin UI,
+    API listings) see the deprecation marker at the same time as the
+    write-path stops creating new rows in it.
 
 - [~] D4.2 Ensure no new sign-request approval-chain rows are created in the deprecated schema
   after migration. Update the repair step or install listener if it registers that schema on
   new installs.
   - **Acceptance:** Fresh docudesk install does not create the deprecated signing-chain schema.
+  - **Status:** DEFERRED with D4.1 — repair-step update is part of the
+    same cohesive PR; the write-path stop is tied to the SigningService
+    rewrite (D1.1) which is upstream-blocked.
 
 ---
 
@@ -121,8 +157,12 @@ M = 1–2 days, L = 3+ days).
   via docudesk's API, (c) asserts that `GET /api/approval-chains` returns the chain with all
   steps `approved`.
   - **Acceptance:** Test passes; test asserts against OR's approval store.
+  - **Status:** DEFERRED with D1.1 — test exercises the rewritten
+    write-path which is upstream-blocked.
 
 - [~] D5.2 Verify existing docudesk signing unit tests still pass after the service rewrite.
   Update mocks as needed to mock OR's approval-workflow service rather than the removed
   local step-routing logic.
   - **Acceptance:** `composer check:strict` passes; no skipped tests.
+  - **Status:** DEFERRED with D1.1 — there is no rewrite yet, so the
+    mock-update task has nothing to point at.
