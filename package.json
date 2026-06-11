@@ -18,6 +18,8 @@
     "test-coverage": "jest --silent --coverage",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=json-summary --coverage.reporter=text-summary --coverage.include=src/** --coverage.reportsDirectory=coverage-vitest",
+    "test:coverage-ratchet": "npm run test:coverage && bash tests/coverage-ratchet.sh vitest coverage-vitest/coverage-summary.json",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
     "stylelint": "stylelint src/**/*.vue src/**/*.scss src/**/*.css"
