@@ -47,10 +47,19 @@
 
 - [~] **1.3 Tenant default-language UI.** Follows OR's
   admin-settings surface (which OR `register-i18n` ships in its
-  own admin panel). DocuDesk will cross-link from
-  `docs/features/admin-settings.md` once OR's admin UI lands. Not
-  blocking — operators can already set the register default via
-  the OR admin panel today.
+  own admin panel — verified 2026-06-12: OR `register-i18n` is
+  archived at `openregister/openspec/changes/archive/2026-05-01-register-i18n/`,
+  status: implemented). DocuDesk will cross-link from
+  `docs/features/admin-settings.md` once docudesk grows its own
+  admin-settings page. Not blocking — operators can already set
+  the register default via the OR admin panel today, and the
+  docudesk-side bridge work (1.1 / 1.2) consumes that setting
+  through OR's request-scoped `LanguageService`.
+  [DEFERRED — handed off to the docudesk admin-settings build.
+  The dependency (OR register-i18n + admin panel) is satisfied;
+  this task only awaits the docudesk admin-settings page where
+  the cross-link is mounted. Tracked alongside the docudesk
+  admin-settings openspec change.]
 
 ## Task 2: Testing
 
