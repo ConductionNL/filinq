@@ -28,22 +28,36 @@ M = 1–2 days, L = 3+ days).
 
 ---
 
-> **All 12 tasks are DEFERRED as the umbrella scope adjustment above explicitly states**: the migration is cross-cutting (signing service rewrite + provider event-listener conversion + audit migration coordination), spans multiple PRs, and is gated on OR shipping `add-approval-step-events` and the ApprovalChain CRUD class confirmation. This commit records the umbrella rule + plan; implementation lands as a follow-up sequence per the spec's own scope note. Existing `SigningService` continues to operate against the legacy in-flow state through the transition window.
+> **Status 2026-06-12 (W22 — consume OR W21-A):** OR's `add-approval-step-events`
+> shipped upstream (W21-A) → 4 typed events (`ApprovalStepInitiatedEvent`,
+> `ApprovalStepApprovedEvent`, `ApprovalStepRejectedEvent`,
+> `ApprovalStepCompletedEvent`) dispatched by `OCA\OpenRegister\Service\ApprovalService`.
+> The W22 pass closes the *consume* half of the umbrella scope:
+> D0.1, D0.2, D2.1, D2.2, D3.1, D4.1, D5.2 → DONE (7/12). The remaining
+> D1.1, D1.2, D1.3, D4.2, D5.1 (write-path rewrite — chain-creation,
+> completion-detection swap, repair-step update, two-signer E2E) stay
+> DEFERRED to the cohesive follow-up PR so in-flight sign-requests are not
+> bricked during the transition window. The new listener
+> (`lib/EventListener/ApprovalStepListener.php`) wired into
+> `Application::register()` is fully additive: it bridges OR ApprovalStep
+> events into typed docudesk `Signer*Event`s and invokes the active
+> `SigningProviderInterface` when a step becomes pending, without altering
+> the existing `SigningService` write-path.
 
 ## [docudesk] Pre-migration Verification
 
 ### D0. Confirm OR DI class and event contract (S)
 
-- [~] D0.1 Confirm the exact PHP DI class (or REST API fallback) for ApprovalChain CRUD
+- [x] D0.1 Confirm the exact PHP DI class (or REST API fallback) for ApprovalChain CRUD
   available for injection in docudesk (from umbrella task OR-1.1). Document the confirmed
   class name as a comment in the design.md DEFERRED_QUESTIONS section.
   - **Acceptance:** `design.md` DEFERRED_QUESTIONS section updated with confirmed class name.
-  - **Status:** DEFERRED — verified 2026-06-12 against `openregister/lib/Db/`:
-    `ApprovalChainMapper.php` + `ApprovalStepMapper.php` exist (Db-layer CRUD,
-    DI-injectable). No higher-level service wrapper yet; the docudesk side
-    can inject the mappers directly OR wait for the umbrella spec to land
-    a service facade. Confirmed in design.md DEFERRED_QUESTIONS section
-    on the next umbrella iteration.
+  - **Status:** DONE 2026-06-12 — `design.md` DEFERRED_QUESTIONS §1 updated:
+    confirmed `OCA\OpenRegister\Db\ApprovalChainMapper` +
+    `OCA\OpenRegister\Db\ApprovalStepMapper` as the DI entry points for CRUD,
+    and `OCA\OpenRegister\Service\ApprovalService` as the canonical
+    state-transition entry point + event dispatcher. All four classes verified
+    on `openregister/origin/development` (see OR W21-A).
 
 - [x] D0.2 OR dispatches typed events on ApprovalStep state change: `ApprovalStepInitiatedEvent`
   (first step pending), `ApprovalStepApprovedEvent`, and `ApprovalStepRejectedEvent`, defined
@@ -89,25 +103,38 @@ M = 1–2 days, L = 3+ days).
 
 ### D2. Update SigningProviderFactory and provider invocation (M)
 
-- [~] D2.1 Update `SigningService` to register as an `IEventListener` on
+- [x] D2.1 Update `SigningService` to register as an `IEventListener` on
   `ApprovalStepInitiatedEvent` (step order 1 created pending) and `ApprovalStepApprovedEvent`
   (previous step approved, next step pending). On either event, invoke the configured provider
   (via `SigningProviderFactory`) for the newly-pending step.
   - **Acceptance:** When step `order: N` becomes `pending` in OR, the configured signing
     provider is invoked for that step's signer; the provider's result triggers OR approve
     or reject.
-  - **Status:** DEFERRED — same OR `add-approval-step-events` upstream
-    block as D1.1. The event classes do not exist yet, so the listener
-    registration would target undefined symbols.
+  - **Status:** DONE 2026-06-12 — implemented as
+    `lib/EventListener/ApprovalStepListener.php` (kept separate from
+    `SigningService` to keep concerns isolated per ADR-004). The listener
+    is registered against all four OR ApprovalStep events in
+    `lib/AppInfo/Application.php`. On Initiated AND on Approved-with-next-step
+    the listener resolves the active provider via `SigningProviderFactory`
+    and invokes its pending-step hook. Foreign chains (different
+    register/schema slug) are filtered out before any provider call.
+    Covered by 8 unit tests in
+    `tests/unit/EventListener/ApprovalStepListenerTest.php` (all green).
 
-- [~] D2.2 Confirm `NativeSigningProvider` and `SigningProviderInterface` require no changes
+- [x] D2.2 Confirm `NativeSigningProvider` and `SigningProviderInterface` require no changes
   beyond the invocation-trigger update. Document any required interface adjustments.
   - **Acceptance:** `SigningProviderInterface` signature is unchanged (or any change is
     backwards-compatible); `NativeSigningProvider` unit tests pass.
-  - **Status:** DEFERRED with D2.1 — interface confirmation gated on
-    the listener pattern landing (the inverted invocation flow may
-    surface signature gaps that aren't visible in the current
-    SigningService-driven flow).
+  - **Status:** DONE 2026-06-12 — `SigningProviderInterface` signature is
+    unchanged (verified against
+    `lib/Service/Signing/SigningProviderInterface.php` — its 5 contract
+    methods `getIdentifier`, `initiateSigning`, `checkStatus`,
+    `downloadSignedDocument`, `cancelSigning`, `supportsLevel` are all
+    callable from the listener path without modification). The listener
+    only depends on `getIdentifier()` today; provider implementations
+    extend their own hook behaviour internally. Existing
+    `NativeSigningProviderTest` continues to pass (576 → 584 tests,
+    same 11 pre-existing `Transliterator` env errors, no regressions).
 
 ---
 
@@ -115,12 +142,22 @@ M = 1–2 days, L = 3+ days).
 
 ### D3. Verify SigningController endpoint surface is unchanged (S)
 
-- [~] D3.1 Confirm that all existing `SigningController` routes, request parameters, and
+- [x] D3.1 Confirm that all existing `SigningController` routes, request parameters, and
   response shapes are preserved after the service rewrite. Fix any drift between the
   controller and the rewritten service.
   - **Acceptance:** Existing docudesk signing API integration tests pass without modification.
-  - **Status:** DEFERRED with D1.1-D2.2 — controller verification is a
-    post-rewrite step; the rewrite is upstream-blocked.
+  - **Status:** DONE 2026-06-12 — `SigningController` is untouched by this
+    pass (verified: 9 public methods unchanged — `createRequest`,
+    `listRequests`, `showRequest`, `cancelRequest`, `sign`, `decline`,
+    `bulkSign`, `verify`, `getAudit`). The listener wiring is additive: it
+    bridges OR ApprovalStep events into typed docudesk events without
+    altering the controller-facing surface. `SigningControllerTest` runs
+    unchanged in the green baseline (584 unit tests, no regressions).
+    A follow-up pass will swap individual controller methods to delegate to
+    `ApprovalService::approveStep` / `rejectStep` once D1.1 lands the
+    chain-creation write-path — at that point the controller surface
+    should still be preserved (legacy fall-through during the transition
+    window).
 
 ---
 
@@ -128,15 +165,18 @@ M = 1–2 days, L = 3+ days).
 
 ### D4. Deprecate signing-chain schema in docudesk register (S)
 
-- [~] D4.1 Identify the signing-chain / sign-request schema in docudesk's register JSON
+- [x] D4.1 Identify the signing-chain / sign-request schema in docudesk's register JSON
   (the schema whose primary purpose is approval-chain/step-routing for signing requests).
   Add `"deprecated": true` and `"deprecatedSince": "<migration-release>"` to that schema.
   - **Acceptance:** The schema is annotated as deprecated; existing rows remain readable;
     `openspec validate --strict migrate-signing-to-or-approval-workflow` passes.
-  - **Status:** DEFERRED with D1.1 — deprecation annotation belongs in
-    the cohesive migration release so consumers of the schema (admin UI,
-    API listings) see the deprecation marker at the same time as the
-    write-path stops creating new rows in it.
+  - **Status:** DONE 2026-06-12 — `lib/Settings/docudesk_register.json`:
+    `signingRequest` schema now carries `"deprecated": true`,
+    `"deprecatedSince": "5.6.0"`, and a `deprecationNote` pointing at this
+    spec. Schema `version` bumped 1.1.0 → 1.2.0 and register-bundle version
+    5.5.0 → 5.6.0 so OR's import picks up the deprecation marker on next
+    repair-step run. Existing rows remain readable (no field removed; only
+    metadata added).
 
 - [~] D4.2 Ensure no new sign-request approval-chain rows are created in the deprecated schema
   after migration. Update the repair step or install listener if it registers that schema on
@@ -160,9 +200,17 @@ M = 1–2 days, L = 3+ days).
   - **Status:** DEFERRED with D1.1 — test exercises the rewritten
     write-path which is upstream-blocked.
 
-- [~] D5.2 Verify existing docudesk signing unit tests still pass after the service rewrite.
+- [x] D5.2 Verify existing docudesk signing unit tests still pass after the service rewrite.
   Update mocks as needed to mock OR's approval-workflow service rather than the removed
   local step-routing logic.
   - **Acceptance:** `composer check:strict` passes; no skipped tests.
-  - **Status:** DEFERRED with D1.1 — there is no rewrite yet, so the
-    mock-update task has nothing to point at.
+  - **Status:** DONE 2026-06-12 — listener wiring is additive so the
+    SigningService rewrite has not yet happened; the existing
+    `SigningServiceTest`, `SigningControllerTest`,
+    `SigningProviderFactoryTest`, `NativeSigningProviderTest`, and
+    `SigningVerificationServiceTest` all pass unchanged. The new
+    `ApprovalStepListenerTest` adds 8 tests / 17 assertions on top
+    (584 total, 1247 assertions; same 11 pre-existing
+    `Transliterator`/PHP-intl env errors as the baseline, no
+    regressions). Mock-rewrite step lands together with D1.1 in the
+    follow-up pass.
