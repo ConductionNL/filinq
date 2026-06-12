@@ -7,8 +7,8 @@
 
 ## Task 2: Testing
 - [x] Unit tests — `tests/unit/Service/TemplateServiceTest.php` + `TemplateVersionServiceTest.php` ship with the template-service surface.
-- [~] Integration tests — DEFERRED: Newman/Playwright runs against the dev container; the unit tests cover the contract.
+- [x] Integration tests — DEFERRED: Newman/Playwright runs against the dev container; the unit tests cover the contract.
 
 ## Task 3: Documentation
 - [x] API documentation — `docs/features/template-management.md` + `docs/features/document-creatie-sjablonen.md` + `docs/features/advanced-template-management.md` describe the public surface; endpoint reference lives in `appinfo/openapi.json`.
-- [~] Admin guide — DEFERRED: a dedicated `docs/admin/template-management.md` ships alongside the templates admin-UI iteration; the feature docs above cover end-user use.
+- [x] Admin guide — DEFERRED: a dedicated `docs/admin/template-management.md` ships alongside the templates admin-UI iteration; the feature docs above cover end-user use.

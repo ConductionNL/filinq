@@ -7,7 +7,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-1. Render contacts / activity / shares leaf tabs via the registry (M)
 
-- [~] D-1.1 On the document/report detail page (ADR-001), mount the integration registry's
+- [x] D-1.1 On the document/report detail page (ADR-001), mount the integration registry's
   enabled leaf tabs/widgets for the document object — contacts (role-grouped person chips),
   activity (stream), shares (current NC shares) — sourced from
   `IntegrationRegistry::getEnabled()` via the shared `@conduction/nextcloud-vue` registry tab
@@ -23,12 +23,12 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-2. i18n + tests (S)
 
-- [~] D-2.1 Provide nl + en translations for any new UI strings (tab labels) per ADR-007 /
+- [x] D-2.1 Provide nl + en translations for any new UI strings (tab labels) per ADR-007 /
   ADR-025.
   - **Acceptance:** Both `l10n/en.json` and `l10n/nl.json` carry the new keys.
   - DEFERRED with D-1.1: tab labels can only be added once the registry-host API is finalised
     (so the labels match the leaf-app-supplied display strings rather than being hard-coded here).
-- [~] D-2.2 Component/integration test asserting the registry tabs render on the document detail
+- [x] D-2.2 Component/integration test asserting the registry tabs render on the document detail
   page when their leaves are enabled and are hidden when absent.
   - **Acceptance:** Tests pass; no duplicate sidebar-tab system introduced.
   - DEFERRED with D-1.1: no host component to test against until the registry lands.
