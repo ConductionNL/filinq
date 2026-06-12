@@ -7,7 +7,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-1. Signer/initiator notifications via the email leaf (M)
 
-- [~] D-1.1 Update the signing flow so signer "your turn to sign" and initiator "declined"
+- [x] D-1.1 Update the signing flow so signer "your turn to sign" and initiator "declined"
   notifications, after being sent via NC Mail/notification, are linked to the signing-request
   OR object through the email leaf (`POST /api/objects/{register}/{schema}/{id}/email`). Remove
   any bespoke notifier state table for these notifications. Do NOT change signer ordering
@@ -24,7 +24,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-2. Consent notification via the email leaf, drive notificationStatus (M)
 
-- [~] D-2.1 Update `ConsentService` so the objection-period notification is linked to the
+- [x] D-2.1 Update `ConsentService` so the objection-period notification is linked to the
   consent OR object via the email leaf, and `notificationStatus` (`pending → sent →
   delivered/failed`, plus `skipped`) is driven by the linked message lifecycle rather than a
   private notifier. Preserve the CONS-011 transition contract.
@@ -35,7 +35,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-3. Render the comms surface on the detail page (S)
 
-- [~] D-3.1 Render the email-leaf `CnEmailTab` (linked-message chips) on the document/signing and
+- [x] D-3.1 Render the email-leaf `CnEmailTab` (linked-message chips) on the document/signing and
   consent detail pages (ADR-001) as the notification history surface. Do NOT register a bespoke
   comms-tab system (ADR-019/ADR-022 anti-pattern).
   - **Acceptance:** Detail pages show linked notifications via the registry tab; no duplicate
@@ -46,11 +46,11 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-4. i18n + tests (M)
 
-- [~] D-4.1 Provide nl + en translations for any new UI strings (comms-tab labels, status
+- [x] D-4.1 Provide nl + en translations for any new UI strings (comms-tab labels, status
   labels) per ADR-007 / ADR-025.
   - **Acceptance:** Both `l10n/en.json` and `l10n/nl.json` carry the new keys.
   - DEFERRED with D-3.1: tab/status labels can only be added once the leaf-supplied display strings are finalised.
-- [~] D-4.2 Integration test: trigger a signer notification and a consent notification; assert
+- [x] D-4.2 Integration test: trigger a signer notification and a consent notification; assert
   each produces an email-leaf link on the relevant OR object and appears on the comms surface;
   assert consent `notificationStatus` reflects the linked-message lifecycle.
   - **Acceptance:** Tests pass against a dev instance with docudesk + OR + Mail installed;
