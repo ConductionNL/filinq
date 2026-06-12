@@ -1094,3 +1094,437 @@ interface IRootFolder
 
 // ICache and ICacheFactory are defined in NextcloudStubs.php — no duplicate here.
 
+
+namespace OCA\OpenRegister\Db;
+
+/**
+ * Stub for ApprovalChain entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalChain
+{
+    private ?int $id = null;
+    private ?string $uuid = null;
+    private ?string $name = null;
+    private ?string $registerSlug = null;
+    private ?string $schemaSlug = null;
+    /** @var array<int, array<string, mixed>>|null */
+    private ?array $steps = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
+    public function getUuid(): ?string
+    {
+        return $this->uuid;
+    }
+
+    public function setUuid(?string $uuid): void
+    {
+        $this->uuid = $uuid;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): void
+    {
+        $this->name = $name;
+    }
+
+    public function getRegisterSlug(): ?string
+    {
+        return $this->registerSlug;
+    }
+
+    public function setRegisterSlug(?string $slug): void
+    {
+        $this->registerSlug = $slug;
+    }
+
+    public function getSchemaSlug(): ?string
+    {
+        return $this->schemaSlug;
+    }
+
+    public function setSchemaSlug(?string $slug): void
+    {
+        $this->schemaSlug = $slug;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>|null
+     */
+    public function getSteps(): ?array
+    {
+        return $this->steps;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>>|null $steps
+     */
+    public function setSteps(?array $steps): void
+    {
+        $this->steps = $steps;
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalStep entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStep
+{
+    private ?string $uuid = null;
+    private ?int $chainId = null;
+    private ?string $objectUuid = null;
+    private int $stepOrder = 0;
+    private ?string $role = null;
+    private ?string $status = 'pending';
+    private ?string $decidedBy = null;
+    private ?string $comment = null;
+
+    public function getUuid(): ?string
+    {
+        return $this->uuid;
+    }
+
+    public function setUuid(?string $uuid): void
+    {
+        $this->uuid = $uuid;
+    }
+
+    public function getChainId(): ?int
+    {
+        return $this->chainId;
+    }
+
+    public function setChainId(?int $chainId): void
+    {
+        $this->chainId = $chainId;
+    }
+
+    public function getObjectUuid(): ?string
+    {
+        return $this->objectUuid;
+    }
+
+    public function setObjectUuid(?string $uuid): void
+    {
+        $this->objectUuid = $uuid;
+    }
+
+    public function getStepOrder(): int
+    {
+        return $this->stepOrder;
+    }
+
+    public function setStepOrder(int $order): void
+    {
+        $this->stepOrder = $order;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(?string $role): void
+    {
+        $this->role = $role;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getDecidedBy(): ?string
+    {
+        return $this->decidedBy;
+    }
+
+    public function setDecidedBy(?string $decidedBy): void
+    {
+        $this->decidedBy = $decidedBy;
+    }
+
+    public function getComment(): ?string
+    {
+        return $this->comment;
+    }
+
+    public function setComment(?string $comment): void
+    {
+        $this->comment = $comment;
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalChainMapper.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalChainMapper
+{
+    public function insert(ApprovalChain $chain): ApprovalChain
+    {
+        return $chain;
+    }
+
+    public function find(int $id): ApprovalChain
+    {
+        return new ApprovalChain();
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalStepMapper.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepMapper
+{
+    public function insert(ApprovalStep $step): ApprovalStep
+    {
+        return $step;
+    }
+
+    /**
+     * @return array<int, ApprovalStep>
+     */
+    public function findByChain(int $chainId): array
+    {
+        return [];
+    }
+}//end class
+
+
+namespace OCA\OpenRegister\Event;
+
+use OCA\OpenRegister\Db\ApprovalChain;
+use OCA\OpenRegister\Db\ApprovalStep;
+use OCP\EventDispatcher\Event;
+
+/**
+ * Stub for ApprovalStepInitiatedEvent.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepInitiatedEvent extends Event
+{
+    public function __construct(
+        private readonly ApprovalChain $chain,
+        private readonly ApprovalStep $step,
+        private readonly string $objectUuid
+    ) {
+        parent::__construct();
+    }
+
+    public function getChain(): ApprovalChain
+    {
+        return $this->chain;
+    }
+
+    public function getStep(): ApprovalStep
+    {
+        return $this->step;
+    }
+
+    public function getObjectUuid(): string
+    {
+        return $this->objectUuid;
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalStepApprovedEvent.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepApprovedEvent extends Event
+{
+    public function __construct(
+        private readonly ApprovalChain $chain,
+        private readonly ApprovalStep $step,
+        private readonly string $userId,
+        private readonly string $statusOnApprove,
+        private readonly ?ApprovalStep $nextStep
+    ) {
+        parent::__construct();
+    }
+
+    public function getChain(): ApprovalChain
+    {
+        return $this->chain;
+    }
+
+    public function getStep(): ApprovalStep
+    {
+        return $this->step;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getStatusOnApprove(): string
+    {
+        return $this->statusOnApprove;
+    }
+
+    public function getNextStep(): ?ApprovalStep
+    {
+        return $this->nextStep;
+    }
+
+    public function isFinalStep(): bool
+    {
+        return $this->nextStep === null;
+    }
+
+    public function getObjectUuid(): string
+    {
+        return $this->step->getObjectUuid() ?? '';
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalStepRejectedEvent.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepRejectedEvent extends Event
+{
+    public function __construct(
+        private readonly ApprovalChain $chain,
+        private readonly ApprovalStep $step,
+        private readonly string $userId,
+        private readonly string $statusOnReject
+    ) {
+        parent::__construct();
+    }
+
+    public function getChain(): ApprovalChain
+    {
+        return $this->chain;
+    }
+
+    public function getStep(): ApprovalStep
+    {
+        return $this->step;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getStatusOnReject(): string
+    {
+        return $this->statusOnReject;
+    }
+
+    public function getObjectUuid(): string
+    {
+        return $this->step->getObjectUuid() ?? '';
+    }
+}//end class
+
+
+/**
+ * Stub for ApprovalStepCompletedEvent.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Event
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ApprovalStepCompletedEvent extends Event
+{
+    public function __construct(
+        private readonly ApprovalChain $chain,
+        private readonly ApprovalStep $finalStep,
+        private readonly string $userId,
+        private readonly string $statusOnApprove
+    ) {
+        parent::__construct();
+    }
+
+    public function getChain(): ApprovalChain
+    {
+        return $this->chain;
+    }
+
+    public function getFinalStep(): ApprovalStep
+    {
+        return $this->finalStep;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getStatusOnApprove(): string
+    {
+        return $this->statusOnApprove;
+    }
+
+    public function getObjectUuid(): string
+    {
+        return $this->finalStep->getObjectUuid() ?? '';
+    }
+}//end class
+

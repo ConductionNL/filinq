@@ -26,5 +26,19 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // Load Nextcloud OCP stubs (no NC server required).
 require_once __DIR__ . '/stubs/NextcloudStubs.php';
 
+// Load OCP event-dispatcher contracts before OR stubs that reference them
+// (Event / IEventDispatcher / IEventListener). The OCP package ships them
+// in vendor/nextcloud/ocp but does not classmap-autoload, so we require
+// them by hand to keep the OR stubs file self-contained.
+$ocpEventDispatcherDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/EventDispatcher';
+if (is_dir($ocpEventDispatcherDir) === true) {
+    foreach (['Event.php', 'IEventListener.php', 'IEventDispatcher.php', 'ABroadcastedEvent.php', 'GenericEvent.php'] as $ocpEventFile) {
+        $ocpEventPath = $ocpEventDispatcherDir . '/' . $ocpEventFile;
+        if (is_file($ocpEventPath) === true) {
+            require_once $ocpEventPath;
+        }
+    }
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__ . '/stubs/OpenRegisterStubs.php';

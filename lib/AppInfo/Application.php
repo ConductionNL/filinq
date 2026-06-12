@@ -25,6 +25,7 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
+use OCA\DocuDesk\EventListener\ApprovalStepListener;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
@@ -32,6 +33,10 @@ use OCA\DocuDesk\Service\Conversion\MpdfBackend;
 use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
 use OCA\DocuDesk\Service\Conversion\PhpWordBackend;
 use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
+use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
+use OCA\OpenRegister\Event\ApprovalStepInitiatedEvent;
+use OCA\OpenRegister\Event\ApprovalStepRejectedEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -90,6 +95,18 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
+
+        // Bridge OR ApprovalStep events into typed docudesk Signer*Events
+        // and invoke the configured SigningProviderInterface when a step
+        // becomes pending. Per migrate-signing-to-or-approval-workflow
+        // (D2.1) — OR's `add-approval-step-events` shipped upstream as of
+        // 2026-06-12 so the four event classes referenced below resolve at
+        // runtime; if the OR app is absent (degraded install) the listener
+        // simply never receives the events.
+        $context->registerEventListener(ApprovalStepInitiatedEvent::class, ApprovalStepListener::class);
+        $context->registerEventListener(ApprovalStepApprovedEvent::class, ApprovalStepListener::class);
+        $context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
+        $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
 
         // Wire the PDF-conversion cascade. PdfConversionService takes an
         // ordered array of backends in its constructor; Nextcloud's DI cannot
