@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "DocuDesk register v5.5.0 — extends OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "5.5.0"
+        "version": "5.6.0"
     },
     "x-openregister": {
         "type": "application",
@@ -969,6 +969,9 @@
                 "searchable": false
             },
             "signingRequest": {
+                "deprecated": true,
+                "deprecatedSince": "5.6.0",
+                "deprecationNote": "The bespoke signing approval-chain (signingRequest + signerRecord step state) is being migrated to OpenRegister's canonical ApprovalChain / ApprovalStep abstraction per openspec/changes/migrate-signing-to-or-approval-workflow. Existing rows remain readable for the transition window; new sign-requests go through OR's ApprovalService and react to ApprovalStep*Event via lib/EventListener/ApprovalStepListener.php. Do not introduce new write-path callers — extend the ApprovalChain side instead.",
                 "x-openregister-notifications": {
                     "signingCompleted": {
                         "trigger": {
@@ -997,8 +1000,8 @@
                 "uri": null,
                 "slug": "signingRequest",
                 "title": "Signing Request",
-                "description": "Ondertekeningsverzoek voor een document",
-                "version": "1.1.0",
+                "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR ApprovalChain/Step abstractions per openspec/changes/migrate-signing-to-or-approval-workflow.",
+                "version": "1.2.0",
                 "summary": "",
                 "icon": "FileSign",
                 "required": [
