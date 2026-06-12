@@ -45,7 +45,7 @@
   ADR-022 (apps consume OR abstractions). Task closed as
   superseded by the OR foundation.
 
-- [~] **1.3 Tenant default-language UI.** Follows OR's
+- [x] **1.3 Tenant default-language UI.** Follows OR's
   admin-settings surface (which OR `register-i18n` ships in its
   own admin panel — verified 2026-06-12: OR `register-i18n` is
   archived at `openregister/openspec/changes/archive/2026-05-01-register-i18n/`,
