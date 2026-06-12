@@ -94,14 +94,29 @@ retention logic is introduced in this migration.
 
 ## DEFERRED_QUESTIONS
 
-1. **OR DI class name**: confirm whether `OCA\OpenRegister\Service\ApprovalChainService` or
-   `OCA\OpenRegister\Db\ApprovalChainMapper` is the correct DI entry point for ApprovalChain
-   CRUD (resolved during umbrella task OR-1.1 before `opsx-apply` starts).
-2. **OR ApprovalStep IEventDispatcher event**: RESOLVED — OR dispatches
-   `OCA\OpenRegister\Event\ApprovalStepInitiatedEvent` (first step pending) and
-   `OCA\OpenRegister\Event\ApprovalStepApprovedEvent` (step approved, next step becomes pending),
-   defined in `openregister/openspec/changes/add-approval-step-events`. `SigningService`
-   registers `IEventListener` on both; direct post-approve provider calls are not needed.
+1. **OR DI class name**: RESOLVED — `OCA\OpenRegister\Db\ApprovalChainMapper` and
+   `OCA\OpenRegister\Db\ApprovalStepMapper` are the confirmed DI entry points for
+   ApprovalChain / ApprovalStep CRUD (verified 2026-06-12 against
+   `openregister/lib/Db/ApprovalChainMapper.php` + `ApprovalStepMapper.php` on
+   `origin/development`). No higher-level `ApprovalChainService` exists yet;
+   docudesk injects the mappers directly. `OCA\OpenRegister\Service\ApprovalService`
+   (also DI-injectable) is the canonical entry point for state transitions
+   (`initializeChain`, `approveStep`, `rejectStep`) and is what the docudesk
+   listener observes — it is the dispatcher of the four `ApprovalStep*Event`
+   classes.
+2. **OR ApprovalStep IEventDispatcher event**: RESOLVED — OR dispatches four typed
+   events from `OCA\OpenRegister\Event\`:
+   - `ApprovalStepInitiatedEvent` — fires when a step transitions to `pending`
+     (chain initialised → step 1; or previous step approved → next step).
+   - `ApprovalStepApprovedEvent` — fires after a `pending` step is approved.
+     Carries the next pending step (or `null` for the final step).
+   - `ApprovalStepRejectedEvent` — fires after a `pending` step is rejected
+     (terminates the chain).
+   - `ApprovalStepCompletedEvent` — fires ONCE per chain when the final step
+     is approved.
+   `OCA\DocuDesk\EventListener\ApprovalStepListener` registers `IEventListener`
+   on all four; direct post-approve provider calls are not needed. Dispatch
+   order spec'd by OR: Approved → (Initiated | Completed), then Rejected.
 
 ## Seed Data
 
