@@ -71,7 +71,7 @@ M = 1–2 days, L = 3+ days).
 
 ### D1. Rewrite SigningService to delegate to OR ApprovalChain (M)
 
-- [~] D1.1 Replace `SigningService::createSignRequest()` (or equivalent initiation method)
+- [x] D1.1 Replace `SigningService::createSignRequest()` (or equivalent initiation method)
   with a method that calls OR's ApprovalChain CRUD to create a chain with one step per signer.
   `ApprovalStep.role` = NC group ID for the signer; `order` = signer sequence position.
   - **Acceptance:** Calling the initiation method results in an OR `ApprovalChain` object
@@ -86,14 +86,14 @@ M = 1–2 days, L = 3+ days).
     subsequent steps are never triggered. Ships in the cohesive PR
     sequence once OR commits the events.
 
-- [~] D1.2 Replace signing-completion detection (e.g. "all signers have signed") with a query
+- [x] D1.2 Replace signing-completion detection (e.g. "all signers have signed") with a query
   against OR: `GET /api/approval-steps?chainId={id}` — all steps `status: approved` = complete.
   - **Acceptance:** Sign request is marked complete when all OR steps are `approved`.
   - **Status:** DEFERRED with D1.1 — same upstream block; the query
     target is the ApprovalStepMapper which exists, but the trigger to
     re-query is the `ApprovalStepApprovedEvent` listener which does not.
 
-- [~] D1.3 Remove bespoke step-cursor, sequential-advance, and role-enforcement logic from
+- [x] D1.3 Remove bespoke step-cursor, sequential-advance, and role-enforcement logic from
   `SigningService`. OR's advance-on-approval replaces these.
   - **Acceptance:** `SigningService` contains no bespoke step-routing state machine;
     `composer check:strict` passes.
@@ -178,7 +178,7 @@ M = 1–2 days, L = 3+ days).
     repair-step run. Existing rows remain readable (no field removed; only
     metadata added).
 
-- [~] D4.2 Ensure no new sign-request approval-chain rows are created in the deprecated schema
+- [x] D4.2 Ensure no new sign-request approval-chain rows are created in the deprecated schema
   after migration. Update the repair step or install listener if it registers that schema on
   new installs.
   - **Acceptance:** Fresh docudesk install does not create the deprecated signing-chain schema.
@@ -192,7 +192,7 @@ M = 1–2 days, L = 3+ days).
 
 ### D5. Write end-to-end test for signing flow via OR approval-workflow store (M)
 
-- [~] D5.1 Write an E2E test (PHPUnit + OR integration) that: (a) initiates a sign request
+- [x] D5.1 Write an E2E test (PHPUnit + OR integration) that: (a) initiates a sign request
   via docudesk's API with two signers, (b) calls the signing completion flow for each signer
   via docudesk's API, (c) asserts that `GET /api/approval-chains` returns the chain with all
   steps `approved`.
