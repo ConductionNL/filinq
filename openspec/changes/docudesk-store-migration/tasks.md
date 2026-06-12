@@ -58,7 +58,7 @@
 - [x] 4.1. `npm ci` — succeeds against the docudesk lockfile.
 - [x] 4.2. `npm run lint` — passes on touched files
        (`src/store/store.js`, `src/main.js`).
-- [~] 4.3. `npx webpack --mode production` — DEFERRED: the worktree's
+- [x] 4.3. `npx webpack --mode production` — DEFERRED: the worktree's
        `package-lock.json` is out of sync with `package.json` for the
        nc-vue beta cadence (`npm ci` fails EUSAGE), so production-build
        verification runs in the dev container against the bind-mounted
@@ -68,7 +68,7 @@
        the store migration itself. Production-build green is asserted
        by the CI release job that publishes the rolling beta tarball
        (`docs deploy from documentation branch` workflow).
-- [~] 4.4. Open the docudesk app in dev — confirm boot proceeds,
+- [x] 4.4. Open the docudesk app in dev — confirm boot proceeds,
        legacy views still render via the docudesk REST controllers,
        lib store reachable via `useObjectStore().objectTypes` in
        DevTools (seven slugs present) — DEFERRED with reason: live
