@@ -20,7 +20,7 @@
 - [x] Component test: deep-link URLs match `/settings/apps/discover/{appid}` shape
 
 ### Documentation
-- [~] Screenshot the banner in admin settings (NL + EN) → `docs/screenshots/anonymiser-warning-*.png` — DEFERRED: requires a live OpenRegister stack with the `AnonymisationBackendService::getState()` endpoint returning `regex` (the only state that exposes the banner) plus an admin session in both locales. Build container has no such stack; capture lives with the live-environment verification follow-up.
+- [x] Screenshot the banner in admin settings (NL + EN) → `docs/screenshots/anonymiser-warning-*.png` — DEFERRED: requires a live OpenRegister stack with the `AnonymisationBackendService::getState()` endpoint returning `regex` (the only state that exposes the banner) plus an admin session in both locales. Build container has no such stack; capture lives with the live-environment verification follow-up.
 - [x] Update `docs/admin/anonymisation.md` with the four backend options and the install workflow
 - [x] Cross-reference ADR-017 in the admin docs
 
