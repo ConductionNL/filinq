@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Behavior changes
+- **Folder-analysis anonymisation outputs now land in a subfolder.** Redacted files are written to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<base>_anonymized.<ext>`. The subfolder name is tenant-configurable via `docudesk.anonymisation.output_subfolder_name` (default `anonymised`). Single-file anonymisation is unchanged. (`anonymisation-folder-output-folder-layout`)
+- **Folder source-discovery excludes `_anonymized`-suffixed files.** Legacy redacted outputs from pre-layout runs are no longer included as sources for re-anonymisation; they are left as-is for operator cleanup. (`anonymisation-folder-output-folder-layout`)
+- **Response field `anonymizedFilePath` reflects the subfolder location.** After a successful post-process move, `anonymizedFilePath` in the batch file entry points into the `anonymised/` subfolder. On move failure (permissions, disk error), the path is the legacy location and a `warning` field with `code: "MOVE_FAILED"` is attached to the file entry. (`anonymisation-folder-output-folder-layout`)
+
 ### Added
 
 - **`register-i18n` full adoption (W7).** Extended `translatable: true`

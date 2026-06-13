@@ -1,3 +1,7 @@
+## Status
+
+`status: pr-created`
+
 ## Context
 
 The folder-analysis surface (`folder-analysis-anonymization`) is the second of two batch-style flows. Same problem (operational clutter, easy misuse, cascading suffixes), same fix as `anonymisation-batch-output-folder-layout`, applied to the folder-driven path. Split for review-granularity: the batch capability delta and the folder-analysis capability delta are independent surfaces and shippable separately.

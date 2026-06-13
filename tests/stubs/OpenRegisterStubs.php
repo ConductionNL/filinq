@@ -1087,6 +1087,12 @@ interface Node
     public function getPermissions(): int;
 
     public function getMimeType(): string;
+
+    public function getParent(): \OCP\Files\Folder;
+
+    public function move(string $targetPath): \OCP\Files\Node;
+
+    public function delete(): void;
 }//end interface
 
 
