@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -33,20 +32,20 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
  */
 class ValidSignProvider implements SigningProviderInterface
 {
     /**
      * Constructor
      *
-     * @param IAppConfig      $config The app config
-     * @param LoggerInterface $logger Logger interface
+     * @param IAppConfig $config The app config
      *
      * @return void
      */
     public function __construct(
-        private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
@@ -55,6 +54,8 @@ class ValidSignProvider implements SigningProviderInterface
      * Get provider identifier
      *
      * @return string The provider identifier
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-3
      */
     public function getIdentifier(): string
     {

@@ -322,8 +322,6 @@ class FolderBatchService
     /**
      * Enumerate direct file children of a folder (flat, no recursion)
      *
-     * @param Folder $folder The folder to enumerate
-     *
      * Files whose base name ends with the legacy `_anonymized` suffix are
      * excluded so a re-run of folder-analysis on a folder that already
      * contains prior anonymisation outputs does not pick up the redacted

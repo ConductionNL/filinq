@@ -49,7 +49,7 @@ use InvalidArgumentException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  */
-final class ConsentScopeValidator
+class ConsentScopeValidator
 {
     /**
      * Validate a candidate publicationConsent write.

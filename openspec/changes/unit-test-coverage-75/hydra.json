@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "spec_slug": "unit-test-coverage-75",
+  "repo": "https://codeberg.org/Conduction/docudesk",
+  "issue": 26,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T09:17:35Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-01T08:29:26Z",
+          "ended_at": "2026-06-01T09:17:34Z",
+          "exit_code": 0,
+          "turns_used": 475,
+          "turns_budget": 200,
+          "checks_run": [
+            "composer check:strict (phpcs)",
+            "composer test:unit (phpunit)"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 2888
+        },
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-05T04:01:49Z",
+          "ended_at": "2026-06-05T04:54:02Z",
+          "exit_code": 0,
+          "turns_used": 332,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 3133
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 2,
+    "turns_used": 807,
+    "cost_usd": 0.0,
+    "duration_seconds": 6021,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 475,
+        "cost_usd": 0.0,
+        "duration_seconds": 2888
+      },
+      "fix": {
+        "runs": 1,
+        "turns_used": 332,
+        "cost_usd": 0.0,
+        "duration_seconds": 3133
+      }
+    }
+  }
+}

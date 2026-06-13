@@ -103,6 +103,7 @@ class DossierController extends Controller
         }
 
         try {
+            $this->grondslagenSummary->authorizeAccess(dossierId: $dossierId);
             $file = $this->grondslagenSummary->renderDossierSummary(dossierUuid: $dossierId);
 
             return new JSONResponse(

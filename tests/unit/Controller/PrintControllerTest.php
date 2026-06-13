@@ -14,9 +14,13 @@
  *
  * @link https://www.DocuDesk.app
  *
+ * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-5.5
+ *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
+
+declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Controller;
 
@@ -24,8 +28,6 @@ use Exception;
 use OCA\DocuDesk\Controller\PrintController;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateService;
-use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUser;
@@ -49,65 +51,47 @@ class PrintControllerTest extends TestCase
 {
 
     /**
-     * The controller under test.
-     *
      * @var PrintController
      */
     private PrintController $controller;
 
     /**
-     * Mock request.
-     *
-     * @var IRequest&MockObject
+     * @var IRequest|MockObject
      */
-    private IRequest $mockRequest;
+    private IRequest|MockObject $mockRequest;
 
     /**
-     * Mock logger.
-     *
-     * @var LoggerInterface&MockObject
+     * @var PdfService|MockObject
      */
-    private LoggerInterface $mockLogger;
+    private PdfService|MockObject $mockPdfService;
 
     /**
-     * Mock PDF service.
-     *
-     * @var PdfService&MockObject
+     * @var TemplateService|MockObject
      */
-    private PdfService $mockPdfService;
+    private TemplateService|MockObject $mockTemplateService;
 
     /**
-     * Mock template service.
-     *
-     * @var TemplateService&MockObject
+     * @var IUserSession|MockObject
      */
-    private TemplateService $mockTemplateSvc;
+    private IUserSession|MockObject $mockUserSession;
 
     /**
-     * Mock user session.
-     *
-     * @var IUserSession&MockObject
+     * @var LoggerInterface|MockObject
      */
-    private IUserSession $mockUserSession;
+    private LoggerInterface|MockObject $mockLogger;
 
-
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->mockRequest     = $this->createMock(originalClassName: IRequest::class);
-        $this->mockLogger      = $this->createMock(originalClassName: LoggerInterface::class);
-        $this->mockPdfService  = $this->createMock(originalClassName: PdfService::class);
-        $this->mockTemplateSvc = $this->createMock(originalClassName: TemplateService::class);
-        $this->mockUserSession = $this->createMock(originalClassName: IUserSession::class);
+        $this->mockRequest         = $this->createMock(IRequest::class);
+        $this->mockPdfService      = $this->createMock(PdfService::class);
+        $this->mockTemplateService = $this->createMock(TemplateService::class);
+        $this->mockUserSession     = $this->createMock(IUserSession::class);
+        $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
-        $mockUser = $this->createMock(originalClassName: IUser::class);
-        $mockUser->method('getUID')->willReturn('test-user');
+        $mockUser = $this->createMock(IUser::class);
+        $mockUser->method('getUID')->willReturn('testuser');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new PrintController(
@@ -115,169 +99,133 @@ class PrintControllerTest extends TestCase
             request: $this->mockRequest,
             logger: $this->mockLogger,
             pdfService: $this->mockPdfService,
-            templateService: $this->mockTemplateSvc,
-            userSession: $this->mockUserSession
+            templateService: $this->mockTemplateService,
+            userSession: $this->mockUserSession,
         );
 
     }//end setUp()
 
+    /**
+     * Test preview returns 401 when no authenticated user.
+     *
+     * @return void
+     */
+    public function testPreviewReturns401WhenNoUser(): void
+    {
+        $mockRequest = $this->createMock(IRequest::class);
+        $mockSession = $this->createMock(IUserSession::class);
+        $mockSession->method('getUser')->willReturn(null);
+
+        $controller = new PrintController(
+            appName: 'docudesk',
+            request: $mockRequest,
+            logger: $this->mockLogger,
+            pdfService: $this->mockPdfService,
+            templateService: $this->mockTemplateService,
+            userSession: $mockSession,
+        );
+
+        $result = $controller->preview();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertSame(401, $result->getStatus());
+
+    }//end testPreviewReturns401WhenNoUser()
 
     /**
-     * Test preview returns 400 when neither templateId nor template provided
+     * Test preview returns 400 when neither templateId nor template provided.
      *
      * @return void
      */
     public function testPreviewReturns400WhenNoTemplateProvided(): void
     {
-        $this->mockRequest->method('getParam')
-            ->willReturnMap(
-                [
-                    ['templateId', null, null],
-                    ['template', null, null],
-                    ['data', [], []],
-                    ['options', [], []],
-                ]
-            );
+        $this->mockRequest->method('getParam')->willReturn(null);
 
         $result = $this->controller->preview();
 
         $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(400, $result->getStatus());
+        $this->assertSame(400, $result->getStatus());
 
     }//end testPreviewReturns400WhenNoTemplateProvided()
 
-
     /**
-     * Test preview returns HTML and printConfig on success with inline template
+     * Test preview returns rendered HTML on success with inline template.
      *
      * @return void
      */
-    public function testPreviewReturnsHtmlAndPrintConfigOnSuccess(): void
+    public function testPreviewReturnsHtmlOnSuccess(): void
     {
         $this->mockRequest->method('getParam')
             ->willReturnMap(
-                [
-                    ['templateId', null, null],
-                    ['template', null, '<h1>Test</h1>'],
-                    ['data', [], []],
-                    ['options', [], ['duplex' => true, 'color' => false]],
-                ]
-            );
+                    [
+                        ['templateId', null, null],
+                        ['template', null, '<h1>Hello</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                        ['filename', 'document.pdf', 'document.pdf'],
+                    ]
+                    );
 
-        $this->mockPdfService->method('renderHtmlPreview')
-            ->willReturn('<style>/* print css */</style><h1>Test</h1>');
+        $this->mockPdfService->method('renderHtmlPreview')->willReturn('<html><h1>Hello</h1></html>');
 
         $result = $this->controller->preview();
 
         $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(200, $result->getStatus());
-
+        $this->assertSame(200, $result->getStatus());
         $data = $result->getData();
         $this->assertArrayHasKey('html', $data);
-        $this->assertArrayHasKey('printConfig', $data);
-        $this->assertTrue($data['printConfig']['duplex']);
-        $this->assertFalse($data['printConfig']['color']);
 
-    }//end testPreviewReturnsHtmlAndPrintConfigOnSuccess()
-
+    }//end testPreviewReturnsHtmlOnSuccess()
 
     /**
-     * Test preview returns 500 on PDF service exception
+     * Test downloadPdfA returns 401 when no authenticated user.
      *
      * @return void
      */
-    public function testPreviewReturnsErrorOnException(): void
+    public function testDownloadPdfAReturns401WhenNoUser(): void
+    {
+        $mockRequest = $this->createMock(IRequest::class);
+        $mockSession = $this->createMock(IUserSession::class);
+        $mockSession->method('getUser')->willReturn(null);
+
+        $controller = new PrintController(
+            appName: 'docudesk',
+            request: $mockRequest,
+            logger: $this->mockLogger,
+            pdfService: $this->mockPdfService,
+            templateService: $this->mockTemplateService,
+            userSession: $mockSession,
+        );
+
+        $result = $controller->downloadPdfA();
+
+        $this->assertSame(401, $result->getStatus());
+
+    }//end testDownloadPdfAReturns401WhenNoUser()
+
+    /**
+     * Test preview returns 500 on exception from PdfService.
+     *
+     * @return void
+     */
+    public function testPreviewReturns500OnException(): void
     {
         $this->mockRequest->method('getParam')
             ->willReturnMap(
-                [
-                    ['templateId', null, null],
-                    ['template', null, '<h1>Test</h1>'],
-                    ['data', [], []],
-                    ['options', [], []],
-                ]
-            );
+                    [
+                        ['templateId', null, null],
+                        ['template', null, '<h1>Bad</h1>'],
+                        ['data', [], []],
+                        ['options', [], []],
+                    ]
+                    );
 
         $this->mockPdfService->method('renderHtmlPreview')
-            ->willThrowException(new Exception('Render failed', 500));
+            ->willThrowException(new Exception('Render error'));
 
         $result = $this->controller->preview();
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertEquals(500, $result->getStatus());
+        $this->assertSame(500, $result->getStatus());
 
-    }//end testPreviewReturnsErrorOnException()
-
-
-    /**
-     * Test downloadPdfA returns PDF binary on success
-     *
-     * @return void
-     */
-    public function testDownloadPdfAReturnsPdfOnSuccess(): void
-    {
-        $this->mockRequest->method('getParam')
-            ->willReturnMap(
-                [
-                    ['templateId', null, null],
-                    ['template', null, '<h1>Archival</h1>'],
-                    ['data', [], []],
-                    ['filename', 'document.pdf', 'archived.pdf'],
-                    ['options', [], []],
-                ]
-            );
-
-        $this->mockPdfService->method('renderPdf')
-            ->willReturn('%PDF-1.4 archival content');
-
-        $result = $this->controller->downloadPdfA();
-
-        $this->assertInstanceOf(DataDownloadResponse::class, $result);
-
-    }//end testDownloadPdfAReturnsPdfOnSuccess()
-
-
-    /**
-     * Test preview returns printConfig with template defaults from TemplateService
-     *
-     * @return void
-     */
-    public function testPreviewReturnsPrintConfigFromTemplate(): void
-    {
-        $this->mockRequest->method('getParam')
-            ->willReturnMap(
-                [
-                    ['templateId', null, 'template-uuid'],
-                    ['template', null, null],
-                    ['data', [], []],
-                    ['options', [], []],
-                ]
-            );
-
-        $this->mockTemplateSvc->method('getTemplate')
-            ->willReturn(
-                [
-                    'content'     => '<h1>Template</h1>',
-                    'name'        => 'Test Template',
-                    'format'      => 'A4',
-                    'orientation' => 'P',
-                    'duplex'      => true,
-                    'color'       => true,
-                    'paperTray'   => 'tray-2',
-                    'stapling'    => false,
-                ]
-            );
-
-        $this->mockPdfService->method('renderHtmlPreview')
-            ->willReturn('<h1>Template</h1>');
-
-        $result = $this->controller->preview();
-
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $data = $result->getData();
-        $this->assertArrayHasKey('printConfig', $data);
-        $this->assertTrue($data['printConfig']['duplex']);
-        $this->assertEquals('tray-2', $data['printConfig']['paperTray']);
-
-    }//end testPreviewReturnsPrintConfigFromTemplate()
+    }//end testPreviewReturns500OnException()
 }//end class

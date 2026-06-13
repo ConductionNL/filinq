@@ -110,7 +110,6 @@ class EmlPdfAssemblyService
      */
     private const MAX_NESTING_DEPTH = 3;
 
-
     /**
      * Constructor.
      *
@@ -129,7 +128,6 @@ class EmlPdfAssemblyService
     ) {
 
     }//end __construct()
-
 
     /**
      * Assemble a parsed EML structure into a PDF/A-3b binary.
@@ -155,7 +153,6 @@ class EmlPdfAssemblyService
 
     }//end assemble()
 
-
     /**
      * Internal entry point that tracks recursion depth so nested EMLs
      * can be rendered into the same document. Depth is capped at
@@ -180,10 +177,10 @@ class EmlPdfAssemblyService
             $mpdf->WriteHTML(html: $envelopeHtml, mode: HTMLParserMode::DEFAULT_MODE);
 
             // 2. Iterate attachments — embed + (optionally) page-render.
-            $attachments       = $this->extractAttachments(structure: $structure);
-            $appendPages       = $this->resolveAppendAttachmentPages();
-            $maxRenderBytes    = $this->resolveMaxRenderBytes();
-            $total             = count($attachments);
+            $attachments    = $this->extractAttachments(structure: $structure);
+            $appendPages    = $this->resolveAppendAttachmentPages();
+            $maxRenderBytes = $this->resolveMaxRenderBytes();
+            $total          = count($attachments);
 
             foreach ($attachments as $index => $attachment) {
                 // PDF/A-3 embedded file annotation (best-effort —
@@ -279,7 +276,6 @@ class EmlPdfAssemblyService
 
     }//end assembleAtDepth()
 
-
     /**
      * Read the `append_attachment_pages` tenant config flag. Defaults to true.
      *
@@ -291,7 +287,6 @@ class EmlPdfAssemblyService
         return ($raw !== 'false' && $raw !== '0');
 
     }//end resolveAppendAttachmentPages()
-
 
     /**
      * Read the `max_attachment_render_size_bytes` cap. Defaults to 25 MiB.
@@ -310,7 +305,6 @@ class EmlPdfAssemblyService
 
     }//end resolveMaxRenderBytes()
 
-
     /**
      * Resolve the envelope template path. Defaults to `eml/email_envelope.twig`.
      *
@@ -322,7 +316,6 @@ class EmlPdfAssemblyService
 
     }//end resolveEnvelopeTemplate()
 
-
     /**
      * Resolve the divider template path. Defaults to `eml/divider.twig`.
      *
@@ -333,7 +326,6 @@ class EmlPdfAssemblyService
         return $this->appConfig->getValueString(self::APP_ID, self::CFG_DIVIDER_TEMPLATE, 'eml/divider.twig');
 
     }//end resolveDividerTemplate()
-
 
     /**
      * Construct an mPDF instance preconfigured for PDF/A-3b output.
@@ -389,7 +381,6 @@ class EmlPdfAssemblyService
 
     }//end createMpdf()
 
-
     /**
      * Locate the bundled DejaVu font directory; null when absent (the
      * assembly still works, just without explicit font embedding).
@@ -406,7 +397,6 @@ class EmlPdfAssemblyService
         return null;
 
     }//end getFontDirectory()
-
 
     /**
      * Render the envelope HTML for an EML structure.
@@ -427,10 +417,10 @@ class EmlPdfAssemblyService
      */
     private function renderEnvelope(object $structure, ?string $sourceFilename): string
     {
-        $headers    = $this->extractHeaders(structure: $structure);
-        $bodyHtml   = $this->extractBodyHtml(structure: $structure);
-        $bodyPlain  = $this->extractBodyPlain(structure: $structure);
-        $attachs    = $this->extractAttachments(structure: $structure);
+        $headers     = $this->extractHeaders(structure: $structure);
+        $bodyHtml    = $this->extractBodyHtml(structure: $structure);
+        $bodyPlain   = $this->extractBodyPlain(structure: $structure);
+        $attachs     = $this->extractAttachments(structure: $structure);
         $attachCount = count($attachs);
 
         // Inline cid: substitution before the template runs.
@@ -439,14 +429,14 @@ class EmlPdfAssemblyService
         }
 
         $data = [
-            'headers'         => [
+            'headers'          => [
                 'from'    => $this->renderHeader(headers: $headers, key: 'from'),
                 'to'      => $this->renderHeader(headers: $headers, key: 'to'),
                 'cc'      => $this->renderHeader(headers: $headers, key: 'cc'),
                 'subject' => $this->renderHeader(headers: $headers, key: 'subject'),
                 'date'    => $this->renderHeader(headers: $headers, key: 'date'),
             ],
-            'body'            => [
+            'body'             => [
                 'html'      => $bodyHtml,
                 'plainText' => $bodyPlain,
             ],
@@ -466,11 +456,9 @@ class EmlPdfAssemblyService
                 ]
             );
             return $this->renderMinimalEnvelope(headers: $headers, sourceFilename: $sourceFilename);
-
         }
 
     }//end renderEnvelope()
-
 
     /**
      * Minimal envelope fallback used when the Twig template fails.
@@ -482,32 +470,38 @@ class EmlPdfAssemblyService
      */
     private function renderMinimalEnvelope(array $headers, ?string $sourceFilename): string
     {
-        $rows = [];
+        $rows       = [];
+        $labelStyle = 'color:#555;padding-right:8mm;vertical-align:top';
         foreach (['from' => 'Van', 'to' => 'Aan', 'cc' => 'Cc', 'subject' => 'Onderwerp', 'date' => 'Datum'] as $key => $label) {
             $value = $this->renderHeader(headers: $headers, key: $key);
             if ($value !== null && $value !== '') {
-                $rows[] = '<tr><td style="color:#555;padding-right:8mm;vertical-align:top">'.htmlspecialchars($label).'</td><td>'.htmlspecialchars($value).'</td></tr>';
+                $rows[] = '<tr><td style="'.$labelStyle.'">'.htmlspecialchars($label).'</td>'
+                    .'<td>'.htmlspecialchars($value).'</td></tr>';
             }
         }
 
-        $title  = ($sourceFilename === null) ? '' : '<p style="font-size:9pt;color:#777;margin:0 0 6mm 0">'.htmlspecialchars($sourceFilename).'</p>';
-        $tableRows = implode('', $rows);
-        $notice = '<p style="color:#a04;font-size:10pt;margin-top:8mm">(template rendering failed — header-only envelope)</p>';
+        $title = '';
+        if ($sourceFilename !== null) {
+            $title = '<p style="font-size:9pt;color:#777;margin:0 0 6mm 0">'.htmlspecialchars($sourceFilename).'</p>';
+        }
 
-        return $title.'<table style="border-collapse:collapse;font-size:10pt;font-family:DejaVu Sans,sans-serif"><tbody>'.$tableRows.'</tbody></table>'.$notice;
+        $tableRows  = implode('', $rows);
+        $notice     = '<p style="color:#a04;font-size:10pt;margin-top:8mm">(template rendering failed — header-only envelope)</p>';
+        $tableStyle = 'border-collapse:collapse;font-size:10pt;font-family:DejaVu Sans,sans-serif';
+
+        return $title.'<table style="'.$tableStyle.'"><tbody>'.$tableRows.'</tbody></table>'.$notice;
 
     }//end renderMinimalEnvelope()
-
 
     /**
      * Render the divider HTML for one attachment.
      *
-     * @param object   $attachment EmlAttachment value object.
-     * @param int      $index      1-based attachment position.
-     * @param int      $total      Total attachment count for the EML.
-     * @param int      $sizeBytes  Decoded attachment byte size.
-     * @param ?string  $placeholder One of: null, 'too_large', 'not_renderable', 'render_failed'.
-     * @param int      $capBytes   The render byte cap (passed through to the template for 'too_large').
+     * @param object  $attachment  EmlAttachment value object.
+     * @param int     $index       1-based attachment position.
+     * @param int     $total       Total attachment count for the EML.
+     * @param int     $sizeBytes   Decoded attachment byte size.
+     * @param ?string $placeholder One of: null, 'too_large', 'not_renderable', 'render_failed'.
+     * @param int     $capBytes    The render byte cap (passed through to the template for 'too_large').
      *
      * @return string Divider HTML ready for mPDF.
      */
@@ -549,11 +543,10 @@ class EmlPdfAssemblyService
 
     }//end renderDivider()
 
-
     /**
      * Embed an attachment's raw bytes as a PDF/A-3 file attachment.
      *
-     * mPDF surfaces PDF file attachments via the `Annotation()` API
+     * The mPDF library surfaces PDF file attachments via the `Annotation()` API
      * with a `$file` payload. Failures are logged and swallowed —
      * they're observability cues, never assembly aborts.
      *
@@ -565,7 +558,7 @@ class EmlPdfAssemblyService
     private function embedAttachmentBytes(Mpdf $mpdf, object $attachment): void
     {
         try {
-            // mPDF's Annotation() $file param accepts the raw bytes
+            // The Annotation() $file param accepts the raw bytes
             // string and surfaces a paperclip-icon annotation linked to
             // an embedded file stream in the resulting PDF.
             $mpdf->Annotation(
@@ -590,10 +583,9 @@ class EmlPdfAssemblyService
                     'message'   => $e->getMessage(),
                 ]
             );
-        }
+        }//end try
 
     }//end embedAttachmentBytes()
-
 
     /**
      * Determine whether an attachment can be rendered as PDF pages.
@@ -628,7 +620,6 @@ class EmlPdfAssemblyService
         return false;
 
     }//end isAttachmentRenderable()
-
 
     /**
      * Render the body of an attachment into the active mPDF page stream.
@@ -674,9 +665,7 @@ class EmlPdfAssemblyService
 
         // Unknown / unrenderable — caller's renderable gate should
         // have filtered this, but if we reach here treat as a no-op.
-
     }//end renderAttachmentBody()
-
 
     /**
      * Render an embedded PDF attachment via FPDI page import.
@@ -702,11 +691,14 @@ class EmlPdfAssemblyService
             $pageCount = $mpdf->setSourceFile($tmpFile);
 
             for ($p = 1; $p <= $pageCount; $p++) {
-                $tplId   = $mpdf->importPage($p);
-                $tplSize = $mpdf->getTemplateSize($tplId);
-                $mpdf->AddPage(
-                    orientation: ($tplSize['width'] > $tplSize['height']) ? 'L' : 'P'
-                );
+                $tplId       = $mpdf->importPage($p);
+                $tplSize     = $mpdf->getTemplateSize($tplId);
+                $orientation = 'P';
+                if ($tplSize['width'] > $tplSize['height']) {
+                    $orientation = 'L';
+                }
+
+                $mpdf->AddPage(orientation: $orientation);
                 $mpdf->useTemplate($tplId);
             }
         } finally {
@@ -714,7 +706,6 @@ class EmlPdfAssemblyService
         }
 
     }//end renderPdfAttachment()
-
 
     /**
      * Render a bitmap image attachment as a single A4 page.
@@ -738,7 +729,6 @@ class EmlPdfAssemblyService
 
     }//end renderImageAttachment()
 
-
     /**
      * Render a plain-text attachment as a single page wrapped in `<pre>`.
      *
@@ -755,7 +745,6 @@ class EmlPdfAssemblyService
         $mpdf->WriteHTML(html: $html, mode: HTMLParserMode::DEFAULT_MODE);
 
     }//end renderTextAttachment()
-
 
     /**
      * Render a nested EML attachment by recursively assembling its
@@ -793,7 +782,6 @@ class EmlPdfAssemblyService
 
     }//end renderNestedEmlAttachment()
 
-
     /**
      * Substitute `<img src="cid:foo">` references in body HTML with
      * `data:` URIs sourced from the attachments collection.
@@ -802,8 +790,8 @@ class EmlPdfAssemblyService
      * substitution is conservative — only `<img>` elements with a
      * `cid:` source are rewritten.
      *
-     * @param string                $html        HTML body content.
-     * @param array<int,object>     $attachments EmlAttachment array (each has `contentId` + `content` + `mimeType`).
+     * @param string            $html        HTML body content.
+     * @param array<int,object> $attachments EmlAttachment array (each has `contentId` + `content` + `mimeType`).
      *
      * @return string Body HTML with inline cid refs substituted.
      */
@@ -837,25 +825,26 @@ class EmlPdfAssemblyService
                     return $matches[0];
                 }
 
-                $att     = $byCid[$cid];
+                $att = $byCid[$cid];
                 // EmlAttachment value object owns `mimeType` + `content`
                 // public readonly props (declared in OR's
                 // `parseEmlStructured` return shape). phpstan sees the
                 // function parameter typed as `object` (we accept both
                 // OR's value object and test-double `stdClass`), so it
                 // cannot prove the props exist.
+                // phpcs:ignore
                 // @phpstan-ignore-next-line property.notFound
                 $mimeType = (string) $att->mimeType;
+                // phpcs:ignore
                 // @phpstan-ignore-next-line property.notFound
-                $content  = (string) $att->content;
-                $dataUri  = 'data:'.$mimeType.';base64,'.base64_encode($content);
+                $content = (string) $att->content;
+                $dataUri = 'data:'.$mimeType.';base64,'.base64_encode($content);
                 return '<img '.$matches[1].'src='.$matches[2].$dataUri.$matches[2].$matches[4].'>';
             },
             $html
         );
 
     }//end substituteInlineCids()
-
 
     /**
      * Extract the headers map from an EmlStructure-shaped object.
@@ -878,7 +867,6 @@ class EmlPdfAssemblyService
 
     }//end extractHeaders()
 
-
     /**
      * Pluck the HTML body off an EmlStructure-shaped object.
      *
@@ -899,7 +887,6 @@ class EmlPdfAssemblyService
         return null;
 
     }//end extractBodyHtml()
-
 
     /**
      * Pluck the plain-text body off an EmlStructure-shaped object.
@@ -922,7 +909,6 @@ class EmlPdfAssemblyService
 
     }//end extractBodyPlain()
 
-
     /**
      * Pluck the attachments array off an EmlStructure-shaped object.
      *
@@ -939,7 +925,6 @@ class EmlPdfAssemblyService
         return [];
 
     }//end extractAttachments()
-
 
     /**
      * Render a header value defensively, accepting either a scalar or
@@ -969,7 +954,6 @@ class EmlPdfAssemblyService
 
     }//end renderHeader()
 
-
     /**
      * Format a byte count as a short human-readable string.
      *
@@ -994,7 +978,6 @@ class EmlPdfAssemblyService
         return number_format(($bytes / 1024 / 1024 / 1024), 1).' GB';
 
     }//end formatBytes()
-
 
     /**
      * Load a template file from `lib/Resources/templates/` and return
@@ -1026,7 +1009,6 @@ class EmlPdfAssemblyService
         return $content;
 
     }//end loadTemplate()
-
 
     /**
      * Resolve the OpenRegister TextExtractionService lazily, if it is

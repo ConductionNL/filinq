@@ -1,80 +1,79 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<title>Anonimisatie-samenvatting — {{ document.filename|default('document')|escape }}</title>
+<title>Grondslagen samenvatting — {{ fileName|default('') }}</title>
 <style>
-  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
-  h1 { font-size: 18pt; margin: 0 0 4pt 0; }
-  .header-grid { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt 0; }
-  .header-grid td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
-  .header-grid td.label { color: #666; width: 32%; }
-  table.summary { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 12pt 0 6pt 0; }
-  table.summary th { background: #eee; padding: 4pt 6pt; text-align: left; border-bottom: 1pt solid #999; }
-  table.summary td { padding: 3pt 6pt; border-bottom: 0.4pt solid #ddd; vertical-align: top; }
-  table.summary td.numeric { text-align: right; white-space: nowrap; }
-  .totals-line { margin-top: 10pt; font-size: 9pt; color: #444; }
-  .empty-note { font-style: italic; color: #888; }
-  .placeholder-cell { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; }
+body { font-family: "DejaVu Sans", sans-serif; font-size: 11px; color: #222; margin: 0; padding: 0; }
+h1 { font-size: 15px; color: #1a3c6e; border-bottom: 2px solid #1a3c6e; padding-bottom: 4px; margin-bottom: 8px; }
+h2 { font-size: 12px; color: #2c5f9e; margin-top: 14px; margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+th { background-color: #1a3c6e; color: #fff; text-align: left; padding: 4px 6px; font-size: 10px; }
+td { padding: 3px 6px; border-bottom: 1px solid #dde3ef; font-size: 10px; }
+tr:nth-child(even) td { background-color: #f4f6fb; }
+.meta-table td { border-bottom: none; }
+.meta-label { font-weight: bold; width: 35%; color: #444; }
+.footer { margin-top: 16px; font-size: 10px; color: #666; border-top: 1px solid #ccd3e0; padding-top: 6px; }
+.empty-note { font-style: italic; color: #888; font-size: 10px; }
 </style>
 </head>
 <body>
 
-<h1>Anonimisatie-samenvatting</h1>
+<h1>Grondslagen samenvatting per document</h1>
 
-<table class="header-grid">
+<h2>Documentgegevens</h2>
+<table class="meta-table">
   <tr>
-    <td class="label">Bestand</td>
-    <td>{{ document.filename|default('—')|escape }}</td>
+    <td class="meta-label">Bestandsnaam</td>
+    <td>{{ fileName|default('—') }}</td>
   </tr>
   <tr>
-    <td class="label">Geanonimiseerd op</td>
-    <td>{{ document.anonymisedAt|default('—')|escape }}</td>
+    <td class="meta-label">Geanonimiseerd op</td>
+    <td>{{ anonymisedAt|default('—') }}</td>
   </tr>
   <tr>
-    <td class="label">Operator</td>
-    <td>{{ document.operator|default('—')|escape }}</td>
+    <td class="meta-label">Operator</td>
+    <td>{{ operator|default('—') }}</td>
   </tr>
   <tr>
-    <td class="label">Hulpmiddel</td>
-    <td>{{ document.tool|default('—')|escape }}</td>
+    <td class="meta-label">Tool</td>
+    <td>{{ toolName|default('OpenAnonymiser via OpenRegister') }}</td>
   </tr>
 </table>
 
-{% if entities|length == 0 %}
-  <p class="empty-note">In dit document zijn geen geanonimiseerde entiteiten geregistreerd.</p>
+<h2>Geanonimiseerde entiteiten</h2>
+{% if entities is not empty %}
+<table>
+  <thead>
+    <tr>
+      <th>Entiteit</th>
+      <th>Type</th>
+      <th>Vervangende waarde</th>
+      <th>Grondslag(en)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entity in entities %}
+    <tr>
+      <td>{{ entity.entityText|default('—') }}</td>
+      <td>{{ entity.entityType|default('—') }}</td>
+      <td>{{ entity.anonymizedValue|default('—') }}</td>
+      <td>{{ entity.baseLabels|join(', ')|default('⟨geen grondslag vastgelegd⟩') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% else %}
-  <table class="summary">
-    <thead>
-      <tr>
-        <th>Placeholder</th>
-        <th class="numeric">Aantal keer geanonimiseerd</th>
-        <th>Grondslag</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for entity in entities %}
-        <tr>
-          <td class="placeholder-cell">{{ entity.placeholder|escape }}</td>
-          <td class="numeric">{{ entity.count|default(0) }}</td>
-          <td>
-            {% if entity.basesText|default('') != '' %}
-              {{ entity.basesText|escape }}
-            {% else %}
-              <span class="empty-note">geen grondslag</span>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<p class="empty-note">Geen geanonimiseerde entiteiten gevonden voor dit document.</p>
 {% endif %}
 
-<p class="totals-line">
-  Totaal: {{ totals.distinctEntityCount|default(0) }} unieke entiteit{% if totals.distinctEntityCount|default(0) != 1 %}en{% endif %} ·
-  {{ totals.entityCount|default(0) }} keer geanonimiseerd ·
-  {{ totals.distinctBasesCount|default(0) }} unieke grondsla{% if totals.distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
-</p>
+<div class="footer">
+  Totaal geanonimiseerde entiteiten: <strong>{{ entityCount|default(0) }}</strong>
+  &nbsp;|&nbsp;
+  Aantal unieke grondslagen: <strong>{{ distinctBasesCount|default(0) }}</strong>
+  &nbsp;|&nbsp;
+  Gegenereerd door DocuDesk (OpenAnonymiser via OpenRegister)
+</div>
 
 </body>
 </html>

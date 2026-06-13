@@ -21,10 +21,13 @@ declare(strict_types=1);
 
 define('PHPUNIT_RUN', 1);
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
+
+// Load global-namespace stubs first (\OC class, etc.).
+require_once __DIR__.'/stubs/GlobalStubs.php';
 
 // Load Nextcloud OCP stubs (no NC server required).
-require_once __DIR__ . '/stubs/NextcloudStubs.php';
+require_once __DIR__.'/stubs/NextcloudStubs.php';
 
 // Load OCP event-dispatcher contracts before OR stubs that reference them
 // (Event / IEventDispatcher / IEventListener). The OCP package ships them
@@ -41,4 +44,4 @@ if (is_dir($ocpEventDispatcherDir) === true) {
 }
 
 // Load OpenRegister stubs for mocking.
-require_once __DIR__ . '/stubs/OpenRegisterStubs.php';
+require_once __DIR__.'/stubs/OpenRegisterStubs.php';

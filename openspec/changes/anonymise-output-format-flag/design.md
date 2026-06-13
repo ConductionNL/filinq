@@ -1,3 +1,5 @@
+status: pr-created
+
 ## Context
 
 The `pdf-conversion` capability (sibling change `pdf-conversion-service`) gives DocuDesk a reusable file-to-PDF service with PDF/A-3b output. This change exposes that service through the anonymise endpoint: a small payload field flips between PDF (the new privacy-positive default) and preserve (the old behaviour). Conversion failures roll back the un-converted intermediate so callers never see a half-anonymised mixed-format result.

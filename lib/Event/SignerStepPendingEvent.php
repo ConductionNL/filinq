@@ -49,7 +49,6 @@ use OCP\EventDispatcher\Event;
  */
 class SignerStepPendingEvent extends Event
 {
-
     /**
      * Constructor.
      *
@@ -100,5 +99,4 @@ class SignerStepPendingEvent extends Event
         return $this->objectUuid;
 
     }//end getSigningRequestUuid()
-
 }//end class

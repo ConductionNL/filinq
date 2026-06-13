@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Behavior changes
+- **Folder-analysis anonymisation outputs now land in a subfolder.** Redacted files are written to `<source-folder>/anonymised/<original-filename>` instead of `<source-folder>/<base>_anonymized.<ext>`. The subfolder name is tenant-configurable via `docudesk.anonymisation.output_subfolder_name` (default `anonymised`). Single-file anonymisation is unchanged. (`anonymisation-folder-output-folder-layout`)
+- **Folder source-discovery excludes `_anonymized`-suffixed files.** Legacy redacted outputs from pre-layout runs are no longer included as sources for re-anonymisation; they are left as-is for operator cleanup. (`anonymisation-folder-output-folder-layout`)
+- **Response field `anonymizedFilePath` reflects the subfolder location.** After a successful post-process move, `anonymizedFilePath` in the batch file entry points into the `anonymised/` subfolder. On move failure (permissions, disk error), the path is the legacy location and a `warning` field with `code: "MOVE_FAILED"` is attached to the file entry. (`anonymisation-folder-output-folder-layout`)
+
 ### Added
 
 - **`register-i18n` full adoption (W7).** Extended `translatable: true`
@@ -158,6 +163,20 @@ configuration — not enforced in application code. See the administration guide
   `rejectUpdate()` / `rejectDelete()` methods on `SigningAuditService` —
   which were never wired into any mutation path and could give the false
   impression that immutability was enforced in-app — have been removed.
+
+### Behavior changes
+- **Batch anonymisation outputs now land in a `<source>/anonymised/` subfolder**
+  (closes #36). Previous layout (`<source>/<base>_anonymized.<ext>`) is replaced
+  for batch / folder flows only. The `_anonymized` suffix is dropped from the
+  destination filename; the subfolder is the signal. Single-file anonymisation
+  is unchanged. The subfolder name is tenant-configurable via
+  `docudesk.anonymisation.output_subfolder_name` (default `anonymised`).
+- **Batch source-discovery now excludes `_anonymized`-suffixed files.** Legacy
+  outputs in a source folder are not re-anonymised by an automated batch run.
+  Use the per-file anonymise endpoint for files that happen to end in
+  `_anonymized`.
+- **`anonymizedFilePath` in API responses reflects the new subfolder location.**
+  Pre-change clients reading this field work without code changes.
 
 ### Changed
 - **DocuDesk register configuration version bumped 5.0.0 → 5.1.0** to trigger

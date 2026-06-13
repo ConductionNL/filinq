@@ -104,6 +104,25 @@ interface IL10N
     public function t(string $text, array $parameters=[]): string;
 }//end interface
 
+/**
+ * Stub for OCP\Constants
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Constants
+{
+    public const PERMISSION_READ   = 1;
+    public const PERMISSION_UPDATE = 2;
+    public const PERMISSION_CREATE = 4;
+    public const PERMISSION_DELETE = 8;
+    public const PERMISSION_SHARE  = 16;
+    public const PERMISSION_ALL    = 31;
+}//end class
+
 namespace OCP\AppFramework;
 
 /**
@@ -156,6 +175,8 @@ class Http
     public const STATUS_ACCEPTED = 202;
 
     public const STATUS_NO_CONTENT = 204;
+
+    public const STATUS_MULTI_STATUS = 207;
 
     public const STATUS_BAD_REQUEST = 400;
 
@@ -665,27 +686,6 @@ class TemplateResponse
 }//end class
 
 namespace OCP;
-
-/**
- * Stub for OCP\Constants
- *
- * @category Tests
- * @package  OCA\DocuDesk\Tests
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
- */
-class Constants
-{
-
-    public const PERMISSION_READ   = 1;
-    public const PERMISSION_UPDATE = 2;
-    public const PERMISSION_CREATE = 4;
-    public const PERMISSION_DELETE = 8;
-    public const PERMISSION_SHARE  = 16;
-    public const PERMISSION_ALL    = 31;
-
-}//end class
 
 /**
  * Stub for OCP\ICache
@@ -1555,3 +1555,123 @@ class Middleware
         throw $exception;
     }
 }//end class
+
+namespace OCP;
+
+/**
+ * Stub for OCP\ITempManager
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ITempManager
+{
+    public function getTemporaryFile(string $postfix = ''): string|false;
+    public function getTemporaryFolder(string $postfix = ''): string|false;
+    public function clean(): void;
+    public function cleanOld(): void;
+}//end interface
+
+/**
+ * Stub for OCP\IDBConnection
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IDBConnection
+{
+    public function getQueryBuilder(): mixed;
+    public function prepare(string $sql, ?int $limit = null, ?int $offset = null): mixed;
+    public function executeQuery(string $sql, array $params = [], array $types = []): mixed;
+    public function executeStatement(string $sql, array $params = [], array $types = []): int;
+}//end interface
+
+/**
+ * Stub for OCP\Server
+ *
+ * Delegates static get() to the \OC::$server container set up by the test
+ * bootstrap, mirroring the real Nextcloud service-locator shim.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Server
+{
+    /**
+     * Resolve a service from the test container (\OC::$server).
+     *
+     * @param string $class Service class or interface name.
+     *
+     * @return mixed
+     */
+    public static function get(string $class): mixed
+    {
+        if (\OC::$server === null) {
+            throw new \Exception('Server container not available in unit tests');
+        }
+
+        return \OC::$server->get($class);
+    }//end get()
+}//end class
+
+namespace OCP\Lock;
+
+/**
+ * Stub for OCP\Lock\ILockingProvider
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ILockingProvider
+{
+    public const LOCK_SHARED    = 1;
+    public const LOCK_EXCLUSIVE = 2;
+
+    public function acquireLock(string $path, int $type, ?string $readablePath = null): void;
+    public function releaseLock(string $path, int $type): void;
+    public function changeLock(string $path, int $targetType): void;
+    public function isLocked(string $path, int $type): bool;
+}//end interface
+
+/**
+ * Stub for OCP\Lock\LockedException
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class LockedException extends \Exception
+{
+}//end class
+
+namespace OCP\Files\Conversion;
+
+/**
+ * Stub for OCP\Files\Conversion\IConversionManager
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IConversionManager
+{
+    public function hasProviders(): bool;
+    public function getProviders(): array;
+    public function convert(\OCP\Files\File $file, string $targetMimeType, ?string $path = null): string;
+}//end interface

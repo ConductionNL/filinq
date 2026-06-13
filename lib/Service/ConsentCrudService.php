@@ -18,9 +18,6 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -48,7 +45,7 @@ class ConsentCrudService
      *
      * @param SettingsService $settingsService Settings service for register/schema IDs
      * @param ConsentService  $consentService  Consent service for consent operations
-     * @param LoggerInterface $logger          Logger for error reporting
+     * @param LoggerInterface $logger          Logger for security/audit events
      *
      * @return void
      */
@@ -173,33 +170,72 @@ class ConsentCrudService
     }//end getConsent()
 
     /**
-     * Fields accepted at consent creation time.
+     * Positional consent-creation fields consumed directly by createFromRequest.
      *
-     * Any request parameter NOT in this list is silently dropped before the
-     * record is written to OpenRegister (finding #290b).  Callers must not be
-     * able to force internal state fields such as `consentStatus`,
-     * `publicationDecision`, or `userId` at creation time.
+     * These three are passed as the named positional arguments to
+     * {@see ConsentService::createConsentRequest()} and are therefore never
+     * part of the forwarded `$extra` payload.
      *
      * @var array<string>
      */
-    private const ALLOWED_CREATE_FIELDS = [
+    private const POSITIONAL_CREATE_FIELDS = [
         'documentId',
         'entityType',
         'entityText',
-        'entityKey',
-        'publicationBases',
-        'legalBasis',
-        'contactEmail',
-        'contactAddress',
+    ];
+
+    /**
+     * Server-controlled fields that callers must NOT set at creation time.
+     *
+     * These are the consent workflow/state fields whose values are owned by
+     * the server's status machine and the policy-match engine. A request that
+     * carries any of them is a probing/injection attempt: the field is
+     * stripped and a structured security warning is logged naming the key
+     * (NOT the value — ADR-005). DENYLIST, not allowlist — any field NOT
+     * listed here (and not a framework key) is a legitimate extra that is
+     * forwarded unchanged (finding #290b, PR #147 fifth-pass).
+     *
+     * @var array<string>
+     */
+    private const SERVER_CONTROLLED_CREATE_FIELDS = [
+        'policyMatch',
+        'matchKind',
+        'consentStatus',
+        'publicationDecision',
+        'notificationStatus',
+        'notificationSentAt',
+        'objectionDeadline',
+        'objectionReceivedAt',
+        'objectionReason',
+        'userId',
+        'owner',
+    ];
+
+    /**
+     * Framework / routing keys that leak into the request bag and must never
+     * be forwarded to the domain layer. Stripped silently (not a security
+     * event — they are an artefact of the request plumbing).
+     *
+     * @var array<string>
+     */
+    private const FRAMEWORK_REQUEST_KEYS = [
+        '_route',
+        '_method',
+        '_format',
     ];
 
     /**
      * Create a consent request from controller data
      *
-     * Only the fields listed in {@see ALLOWED_CREATE_FIELDS} are accepted.
-     * All other request parameters are silently dropped so that callers cannot
-     * set internal status fields (e.g. `consentStatus`, `publicationDecision`,
-     * `userId`) at creation time, bypassing status-machine logic (finding #290b).
+     * Uses a DENYLIST: the three positional fields (documentId, entityType,
+     * entityText) are consumed directly; server-controlled status/policy
+     * fields ({@see SERVER_CONTROLLED_CREATE_FIELDS}) are STRIPPED and a
+     * security warning is logged naming the stripped keys; framework routing
+     * keys are stripped silently; everything else is forwarded to
+     * ConsentService as the `$extra` payload unchanged. This prevents callers
+     * from forcing internal status fields at creation time (finding #290b)
+     * while still allowing legitimate extra fields such as `consentScope`
+     * (PR #147 fifth-pass).
      *
      * @param array<string, mixed> $data     The request data
      * @param string               $register The register ID
@@ -213,21 +249,43 @@ class ConsentCrudService
      */
     public function createFromRequest(array $data, string $register, string $schema): array
     {
-        // Only forward the explicitly allowed fields; drop everything else.
-        $filtered = array_intersect_key($data, array_flip(self::ALLOWED_CREATE_FIELDS));
+        $documentId = (string) ($data['documentId'] ?? '');
+        $entityType = (string) ($data['entityType'] ?? '');
+        $entityText = (string) ($data['entityText'] ?? '');
 
-        // Build the $extra array with idempotency and notes fields.
-        $extra = [];
-        foreach (['entityKey', 'publicationBases', 'legalBasis', 'contactEmail', 'contactAddress'] as $key) {
-            if (isset($filtered[$key]) === true) {
-                $extra[$key] = $filtered[$key];
+        // Everything that is not a positional field is a candidate $extra.
+        $extra = $data;
+        foreach (self::POSITIONAL_CREATE_FIELDS as $field) {
+            unset($extra[$field]);
+        }
+
+        // Strip framework routing keys silently.
+        foreach (self::FRAMEWORK_REQUEST_KEYS as $key) {
+            unset($extra[$key]);
+        }
+
+        // Strip server-controlled fields and record which keys were stripped
+        // so the injection attempt is visible in the audit stream. ADR-005:
+        // log the KEYS only, never the attacker-supplied values.
+        $strippedKeys = [];
+        foreach (self::SERVER_CONTROLLED_CREATE_FIELDS as $field) {
+            if (array_key_exists($field, $extra) === true) {
+                $strippedKeys[] = $field;
+                unset($extra[$field]);
             }
         }
 
+        if ($strippedKeys !== []) {
+            $this->logger->warning(
+                'ConsentCrudService: server-controlled fields stripped from consent creation request',
+                ['strippedKeys' => $strippedKeys]
+            );
+        }
+
         return $this->consentService->createConsentRequest(
-            documentId: (string) ($filtered['documentId'] ?? ''),
-            entityType: (string) ($filtered['entityType'] ?? ''),
-            entityText: (string) ($filtered['entityText'] ?? ''),
+            documentId: $documentId,
+            entityType: $entityType,
+            entityText: $entityText,
             register: $register,
             schema: $schema,
             extra: $extra
@@ -260,26 +318,33 @@ class ConsentCrudService
     }//end getConsentsByDocument()
 
     /**
-     * Update consent status for a consent record
+     * Update consent status for a consent record, enforcing policy-transition rules
+     *
+     * Delegates to ConsentService::validateAndUpdateConsent() which checks for
+     * policy-matched transition blocks and the override-up flow before saving.
      *
      * @param string               $consentId The consent object UUID
      * @param string               $register  The register ID
      * @param string               $schema    The schema ID
      * @param array<string, mixed> $data      The data to update
+     * @param \OCP\IUser|null      $user      The acting user, or null for system context
      *
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
      */
     public function updateConsentStatus(
         string $consentId,
         string $register,
         string $schema,
-        array $data
+        array $data,
+        ?\OCP\IUser $user=null
     ): array {
-        return $this->consentService->updateConsentStatus($consentId, $register, $schema, $data);
+        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
 
     }//end updateConsentStatus()
 }//end class

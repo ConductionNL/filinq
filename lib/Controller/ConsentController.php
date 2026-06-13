@@ -334,10 +334,19 @@ class ConsentController extends Controller
                 $id,
                 $config['register'],
                 $config['schema'],
-                $this->request->getParams()
+                $this->request->getParams(),
+                // Plumb the acting user so ConsentService can re-check
+                // the standing-consent admin group when the existing
+                // record is scope=entity (revoke/expire RBAC).
+                $this->userSession->getUser()
             );
 
             return new JSONResponse($result);
+        } catch (\OCP\AppFramework\OCS\OCSForbiddenException $e) {
+            return new JSONResponse(
+                ['error' => $this->l10n->t('You are not allowed to revoke or modify standing consents.')],
+                Http::STATUS_FORBIDDEN
+            );
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to update consent: ', exception: $e);
         }//end try

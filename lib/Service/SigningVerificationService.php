@@ -26,7 +26,6 @@ use DateTimeInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -37,21 +36,21 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#5-1
  */
 class SigningVerificationService
 {
     /**
      * Constructor
      *
-     * @param IRootFolder     $rootFolder Root folder
-     * @param LoggerInterface $logger     Logger
-     * @param IAppConfig      $config     App config
+     * @param IRootFolder $rootFolder Root folder
+     * @param IAppConfig  $config     App config
      *
      * @return void
      */
     public function __construct(
         private readonly IRootFolder $rootFolder,
-        private readonly LoggerInterface $logger,
         private readonly IAppConfig $config
     ) {
 

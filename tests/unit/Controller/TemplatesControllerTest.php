@@ -95,27 +95,27 @@ class TemplatesControllerTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockRequest         = $this->createMock(originalClassName: IRequest::class);
-        $this->mockTemplateService = $this->createMock(originalClassName: TemplateService::class);
-        $this->mockRequestHandler  = $this->createMock(originalClassName: TemplateRequestHandler::class);
-        $this->mockVersionService  = $this->createMock(originalClassName: TemplateVersionService::class);
-        $this->mockPreviewService  = $this->createMock(originalClassName: TemplatePreviewService::class);
-        $this->mockUserSession     = $this->createMock(originalClassName: IUserSession::class);
-        $this->mockLogger          = $this->createMock(originalClassName: LoggerInterface::class);
+        $this->mockRequest         = $this->createMock(IRequest::class);
+        $this->mockTemplateService = $this->createMock(TemplateService::class);
+        $this->mockRequestHandler  = $this->createMock(TemplateRequestHandler::class);
+        $this->mockVersionService  = $this->createMock(TemplateVersionService::class);
+        $this->mockPreviewService  = $this->createMock(TemplatePreviewService::class);
+        $this->mockUserSession     = $this->createMock(IUserSession::class);
+        $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
-        $mockUser = $this->createMock(originalClassName: \OCP\IUser::class);
-        $mockUser->method('getUID')->willReturn('test-user');
+        $mockUser = $this->createMock(\OCP\IUser::class);
+        $mockUser->method('getUID')->willReturn('testuser');
         $this->mockUserSession->method('getUser')->willReturn($mockUser);
 
         $this->controller = new TemplatesController(
-            appName: 'docudesk',
-            request: $this->mockRequest,
-            templateService: $this->mockTemplateService,
-            requestHandler: $this->mockRequestHandler,
-            versionService: $this->mockVersionService,
-            previewService: $this->mockPreviewService,
-            userSession: $this->mockUserSession,
-            logger: $this->mockLogger
+            'docudesk',
+            $this->mockRequest,
+            $this->mockTemplateService,
+            $this->mockRequestHandler,
+            $this->mockVersionService,
+            $this->mockPreviewService,
+            $this->mockUserSession,
+            $this->mockLogger
         );
 
     }//end setUp()

@@ -28,7 +28,6 @@ use OCA\DocuDesk\Service\BatchAnonymizeService;
 use OCA\DocuDesk\Service\BatchStateService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 /**
  * Unit tests for BatchAnonymizeService
@@ -51,13 +50,6 @@ class BatchAnonymizeServiceTest extends TestCase
      * @var BatchAnonymizeService
      */
     private BatchAnonymizeService $service;
-
-    /**
-     * Mocked LoggerInterface
-     *
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
 
     /**
      * Mocked AnonymizationService
@@ -83,12 +75,10 @@ class BatchAnonymizeServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger       = $this->createMock(LoggerInterface::class);
         $this->mockAnonService  = $this->createMock(AnonymizationService::class);
         $this->mockStateService = $this->createMock(BatchStateService::class);
 
         $this->service = new BatchAnonymizeService(
-            $this->mockLogger,
             $this->mockAnonService,
             $this->mockStateService
         );

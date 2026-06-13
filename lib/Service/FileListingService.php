@@ -16,6 +16,7 @@
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,6 +37,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
  */
 class FileListingService
 {
@@ -101,6 +104,7 @@ class FileListingService
             'modified'        => $file->getMTime(),
             'ocrProcessed'    => $isOcrCandidate
                 && $entityStats['status'] !== 'uploaded',
+            'ocrConfidence'   => null,
         ];
 
     }//end buildFileInfo()

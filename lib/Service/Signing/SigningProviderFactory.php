@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service\Signing;
 
 use OCP\IAppConfig;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -33,6 +32,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
  */
 class SigningProviderFactory
 {
@@ -48,7 +49,6 @@ class SigningProviderFactory
      * Constructor
      *
      * @param IAppConfig            $config            The app config
-     * @param LoggerInterface       $logger            Logger interface
      * @param NativeSigningProvider $nativeProvider    The native signing provider
      * @param ValidSignProvider     $validSignProvider The ValidSign provider
      *
@@ -56,7 +56,6 @@ class SigningProviderFactory
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger,
         NativeSigningProvider $nativeProvider,
         ValidSignProvider $validSignProvider
     ) {
@@ -109,6 +108,8 @@ class SigningProviderFactory
      * Get all available provider identifiers
      *
      * @return array<string> List of provider identifiers
+     *
+     * @spec openspec/changes/digital-signing-integration/tasks.md#2-4
      */
     public function getAvailableProviders(): array
     {

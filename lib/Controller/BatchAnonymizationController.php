@@ -456,18 +456,26 @@ class BatchAnonymizationController extends Controller
     private function resolveBatchHttpStatus(array $result): int
     {
         $prohibitionFiles = (int) ($result['prohibitionSkippedFiles'] ?? 0);
+        $conversionFails  = (int) ($result['conversionFailures'] ?? 0);
         $processed        = (int) ($result['processedFiles'] ?? 0);
         $total            = (int) ($result['totalFiles'] ?? 0);
 
-        if ($prohibitionFiles === 0) {
-            return 200;
+        // Files that could not be anonymised for any documented reason
+        // (prohibition carve-out or conversion-cascade exhaustion).
+        $failedFiles = ($prohibitionFiles + $conversionFails);
+
+        // Every file succeeded — straightforward 200.
+        if ($failedFiles === 0) {
+            return Http::STATUS_OK;
         }
 
-        if ($processed === 0 && $prohibitionFiles === $total) {
-            return 422;
+        // Nothing was processed and every file failed — 422 Unprocessable.
+        if ($processed === 0 && $failedFiles >= $total && $total > 0) {
+            return Http::STATUS_UNPROCESSABLE_ENTITY;
         }
 
-        return 207;
+        // Mixed outcome (some succeeded, some failed) — 207 Multi-Status.
+        return Http::STATUS_MULTI_STATUS;
 
     }//end resolveBatchHttpStatus()
 

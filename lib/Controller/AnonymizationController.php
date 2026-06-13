@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\DocuDesk\Exception\ProhibitionGateException;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
@@ -306,11 +307,15 @@ class AnonymizationController extends Controller
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
      */
     public function anonymize(int $fileId): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
             }
 
@@ -355,6 +360,20 @@ class AnonymizationController extends Controller
                 }
             }//end if
 
+            // Parse and validate acknowledgedOverrides.
+            $acknowledgedOverrides = $params['acknowledgedOverrides'] ?? [];
+            if (is_array($acknowledgedOverrides) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides must be an array')],
+                    400
+                );
+            }
+
+            $overridesError = $this->validateAcknowledgedOverrides(overrides: $acknowledgedOverrides);
+            if ($overridesError !== null) {
+                return $overridesError;
+            }
+
             // File access check MUST precede the prohibition oracle so that unauthenticated
             // or unauthorized callers cannot probe prohibition rules by supplying arbitrary
             // entity names without holding access to the target file (OWASP A01:2021).
@@ -390,10 +409,11 @@ class AnonymizationController extends Controller
             if ($outputFormat === null) {
                 return new JSONResponse(
                     [
-                        'error' => $this->l10n->t(
+                        'error'         => $this->l10n->t(
                             'Invalid outputFormat: must be one of %s',
                             [implode(', ', self::VALID_OUTPUT_FORMATS)]
                         ),
+                        'allowedValues' => self::VALID_OUTPUT_FORMATS,
                     ],
                     400
                 );
@@ -408,7 +428,42 @@ class AnonymizationController extends Controller
                     entities: $entities,
                     appendBasisSummary: $appendBasisSummary,
                     outputFormat: $outputFormat,
-                    unredactedEntities: $unredactedEntities
+                    unredactedEntities: $unredactedEntities,
+                    acknowledgedOverrides: $acknowledgedOverrides,
+                    userId: $user->getUID()
+                );
+            } catch (ProhibitionGateException $e) {
+                // Fail-closed (backend outage) → 503 so clients can retry;
+                // rule-match block → 422 with structured missing/rejected
+                // body so the UI can prompt for overrides.
+                $backendReason = $e->getBackendUnavailable();
+                if ($backendReason !== null) {
+                    $this->logger->warning(
+                        'ProhibitionGate failed closed: '.$backendReason,
+                        ['fileId' => $fileId]
+                    );
+                    return new JSONResponse(
+                        [
+                            'error'              => $this->l10n->t(
+                                'Anonymisation temporarily unavailable: the prohibition gate could not '
+                                .'verify the document. Please retry shortly.'
+                            ),
+                            'backendUnavailable' => $backendReason,
+                        ],
+                        503
+                    );
+                }
+
+                return new JSONResponse(
+                    [
+                        'error'                     => $this->l10n->t(
+                            'Anonymisation blocked: one or more prohibition-listed entities are missing '
+                            .'from the to-be-anonymised set or an override was rejected.'
+                        ),
+                        'missingProhibitionMatches' => $e->getMissingProhibitionMatches(),
+                        'rejectedOverrides'         => $e->getRejectedOverrides(),
+                    ],
+                    422
                 );
             } catch (ConversionFailedException $e) {
                 $this->logger->warning(
@@ -610,6 +665,57 @@ class AnonymizationController extends Controller
         return $tenantDefault;
 
     }//end resolveOutputFormat()
+
+    /**
+     * Validate the acknowledgedOverrides[] payload entries.
+     *
+     * Each entry must have:
+     *   - ruleId   (string, required)
+     *   - entityId (int, required)
+     * Optional:
+     *   - reason (string)
+     *
+     * @param array<int, mixed> $overrides The acknowledgedOverrides array from the request.
+     *
+     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     */
+    private function validateAcknowledgedOverrides(array $overrides): ?JSONResponse
+    {
+        foreach ($overrides as $idx => $override) {
+            if (is_array($override) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx])],
+                    400
+                );
+            }
+
+            if (empty($override['ruleId']) === true || is_string($override['ruleId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($override['entityId']) === false || is_int($override['entityId']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx])],
+                    400
+                );
+            }
+
+            if (isset($override['reason']) === true && is_string($override['reason']) === false) {
+                return new JSONResponse(
+                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx])],
+                    400
+                );
+            }
+        }//end foreach
+
+        return null;
+
+    }//end validateAcknowledgedOverrides()
 
     /**
      * Filter entities by excluded types

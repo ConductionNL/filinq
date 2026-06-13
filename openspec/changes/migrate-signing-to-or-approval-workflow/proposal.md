@@ -1,7 +1,5 @@
 # Proposal: migrate-signing-to-or-approval-workflow
 
-> REVERTED 2026-06-01: archived prematurely; implementation not present on development — re-opened for real apply. `SigningService` still runs its own bespoke sequential/parallel signer state machine; no OR `ApprovalChain`/`ApprovalStep` is created (no reference to OR approval classes anywhere in lib/).
-
 ## Why
 
 Docudesk ships a signing-flow engine that routes a document through one or more signers in

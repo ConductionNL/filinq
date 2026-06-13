@@ -1,0 +1,220 @@
+{
+  "change": "anonymization-link-schema",
+  "project": "docudesk",
+  "repo": "Conduction/docudesk",
+  "created": "2026-06-09",
+  "tracking_issue": 107,
+  "specs": ["anonymization-link", "document-register"],
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Add \"anonymizationLink\" to the document register's schemas array in lib/Settings/docudesk_register.json",
+      "status": "done",
+      "spec_ref": "document-register#REQ-DREG-ALINK-01"
+    },
+    {
+      "id": "1.2",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Add the anonymizationLink schema object to components.schemas (12 properties, hardValidation:true, searchable:true, objectNameField sourceFileName, objectDescriptionField status, archival retention P7Y, category placeholder pending selectielijst sign-off)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-01"
+    },
+    {
+      "id": "1.2a",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Make status a single-value enum [\"anonymized\"] (only successful runs are recorded; failed value intentionally unused)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-01"
+    },
+    {
+      "id": "1.3",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Declare sourceFileId and anonymizedFileId with facetable:true and type integer",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-03"
+    },
+    {
+      "id": "1.4",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Declare required: [sourceFileId, anonymizedFileId] on the schema",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-01"
+    },
+    {
+      "id": "1.5",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Bump info.version from 5.2.0 to 5.3.0",
+      "status": "done",
+      "spec_ref": "document-register#DREG-051"
+    },
+    {
+      "id": "1.6",
+      "section": "Register Config — Add anonymizationLink Schema",
+      "title": "Add four seed objects for anonymizationLink to components.objects (all status anonymized, includes a runCount>1 example)",
+      "status": "done",
+      "spec_ref": "document-register#DREG-055"
+    },
+    {
+      "id": "2.1",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Add @spec annotation to anonymizeDocument PHPDoc referencing the change tasks",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.2",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Add private method recordAnonymizationLink(int $fileId, array $resultInfo) with full PHPDoc",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.3",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Resolve OCA\\OpenRegister\\Service\\ObjectService via getOpenRegisterService()",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.4",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "searchObjects by @self{register:document,schema:anonymizationLink}+sourceFileId; capture first result or null",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.5",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Build object: if existing, preserve @self + runCount+1; else fresh array runCount:1. Always status anonymized",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.6",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "saveObject(object, register:document, schema:anonymizationLink) using named parameters",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.7",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Assign saved object id/uuid to $resultInfo['anonymizationLinkId'] and return updated $resultInfo",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.8",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Wrap in try/catch(\\Throwable); on failure log warning and return $resultInfo unchanged (best-effort, never abort)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.9",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Call recordAnonymizationLink on the SUCCESS path only (guard on anonymizedFileId present; never in failure branch)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-02"
+    },
+    {
+      "id": "2.10",
+      "section": "AnonymizationService — Idempotent UPSERT",
+      "title": "Verify composer check:strict passes",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.1",
+      "section": "Unit Tests",
+      "title": "Create test class following ConsentServiceTest mock pattern (mock ObjectService etc.)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.2",
+      "section": "Unit Tests",
+      "title": "testRecordAnonymizationLinkCreatesNewRecord (not-found -> create, runCount:1, anonymizationLinkId present)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.3",
+      "section": "Unit Tests",
+      "title": "testRecordAnonymizationLinkUpdatesExistingRecord (found -> update, runCount:2, @self preserved)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.4",
+      "section": "Unit Tests",
+      "title": "testRecordAnonymizationLinkIsBestEffortOnSaveFailure (saveObject throws -> no propagation, no anonymizationLinkId)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.5",
+      "section": "Unit Tests",
+      "title": "testRecordAnonymizationLinkIsBestEffortOnSearchFailure (searchObjects throws -> no propagation; document chosen branch)",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "3.6",
+      "section": "Unit Tests",
+      "title": "Run unit tests in the Nextcloud container and confirm all pass",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "4.1",
+      "section": "Seed Data Verification",
+      "title": "Confirm the four anonymizationLink seed objects are present in components.objects",
+      "status": "done",
+      "spec_ref": "document-register#DREG-055"
+    },
+    {
+      "id": "4.2",
+      "section": "Seed Data Verification",
+      "title": "Verify every seed object has status anonymized (no failed records)",
+      "status": "done",
+      "spec_ref": "document-register#DREG-055"
+    },
+    {
+      "id": "4.3",
+      "section": "Seed Data Verification",
+      "title": "Verify at least one object with runCount > 1 (re-anonymisation scenario)",
+      "status": "done",
+      "spec_ref": "document-register#DREG-055"
+    },
+    {
+      "id": "5.1",
+      "section": "Quality Gate",
+      "title": "Run composer check:strict in docudesk repo, zero errors",
+      "status": "done",
+      "spec_ref": "anonymization-link#REQ-ALINK-04"
+    },
+    {
+      "id": "5.2",
+      "section": "Quality Gate",
+      "title": "Verify docudesk_register.json is valid JSON",
+      "status": "done",
+      "spec_ref": "document-register#REQ-DREG-ALINK-01"
+    },
+    {
+      "id": "5.3",
+      "section": "Quality Gate",
+      "title": "Confirm info.version is 5.3.0",
+      "status": "done",
+      "spec_ref": "document-register#DREG-051"
+    },
+    {
+      "id": "5.4",
+      "section": "Quality Gate",
+      "title": "Flag final x-openregister-archival.category for selectielijst manager; replace placeholder before archive",
+      "status": "pending",
+      "spec_ref": "document-register#DREG-052"
+    }
+  ]
+}

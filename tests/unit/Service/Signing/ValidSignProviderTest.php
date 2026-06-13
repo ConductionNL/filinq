@@ -27,7 +27,6 @@ use OCA\DocuDesk\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -64,11 +63,9 @@ class ValidSignProviderTest extends TestCase
         parent::setUp();
 
         $this->config = $this->createMock(IAppConfig::class);
-        $logger       = $this->createMock(LoggerInterface::class);
 
         $this->provider = new ValidSignProvider(
-            config: $this->config,
-            logger: $logger
+            config: $this->config
         );
 
     }//end setUp()

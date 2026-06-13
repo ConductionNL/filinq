@@ -94,7 +94,6 @@ class EmlBackend implements ConversionBackendInterface
      */
     private const OR_TEXT_EXTRACTION_FQCN = '\\OCA\\OpenRegister\\Service\\TextExtractionService';
 
-
     /**
      * Constructor.
      *
@@ -110,7 +109,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
      *
@@ -121,7 +119,6 @@ class EmlBackend implements ConversionBackendInterface
         return 'eml';
 
     }//end name()
-
 
     /**
      * Whether the backend is usable: the tenant flag must be on AND
@@ -148,11 +145,12 @@ class EmlBackend implements ConversionBackendInterface
             return false;
         }
 
-        // phpstan eliminates the OR class symbolically (OpenRegister is
+        // PHPStan eliminates the OR class symbolically (OpenRegister is
         // an external app, ignored by config), so `method_exists()` on
         // its FQCN string constant looks like a contradiction. At
         // runtime the class is loaded by NC's autoloader once OR is
         // enabled, so the guard is the right defensive shape.
+        // phpcs:ignore
         // @phpstan-ignore-next-line function.impossibleType
         if (method_exists($orClass, 'parseEmlStructured') === false) {
             return false;
@@ -161,7 +159,6 @@ class EmlBackend implements ConversionBackendInterface
         return true;
 
     }//end isAvailable()
-
 
     /**
      * Declare the input formats this backend claims for cascade routing.
@@ -176,7 +173,6 @@ class EmlBackend implements ConversionBackendInterface
         return $mimeType === 'message/rfc822' || $extension === 'eml';
 
     }//end canHandle()
-
 
     /**
      * Convert an EML source into an assembled PDF/A-3b file beside it.
@@ -278,7 +274,6 @@ class EmlBackend implements ConversionBackendInterface
         return $parent->newFile($outputName, $pdfBinary);
 
     }//end convert()
-
 
     /**
      * Return `$name` without its trailing `.ext` suffix.

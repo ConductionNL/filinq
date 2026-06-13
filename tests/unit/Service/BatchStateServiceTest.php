@@ -30,6 +30,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Unit tests for BatchStateService
@@ -107,7 +108,6 @@ class BatchStateServiceTest extends TestCase
         $this->mockUserSession  = $this->createMock(originalClassName: IUserSession::class);
         $this->mockGroupManager = $this->createMock(originalClassName: IGroupManager::class);
 
-        // Default: no user logged in (PHPUnit mock returns null for unconfigured methods).
         $mockCacheFactory = $this->createMock(originalClassName: ICacheFactory::class);
         $mockCacheFactory->method('createDistributed')
             ->with('docudesk')
@@ -173,8 +173,9 @@ class BatchStateServiceTest extends TestCase
         $this->mockCache->expects($this->once())
             ->method('set')
             ->willReturnCallback(
-                function (string $key, string $value, int $ttl) use (&$storedJson): void {
+                function (string $key, string $value, int $ttl) use (&$storedJson): bool {
                     $storedJson = $value;
+                    return true;
                 }
             );
 
@@ -229,19 +230,15 @@ class BatchStateServiceTest extends TestCase
     }//end testGetBatchReturnsBatchArray()
 
     /**
-     * Test getBatch throws when a non-admin user accesses another user's batch (C2)
+     * Test getBatch returns null when a non-admin user accesses another user's batch (C2/WF3).
+     *
+     * Per WF3 security fix, getBatch returns null (not RuntimeException) for
+     * access-denied so callers see a uniform 404 for both "not found" and
+     * "found-but-denied" — throwing produced a distinct 500 that confirmed existence.
      *
      * @return void
      */
-    /**
-     * WF3 fix: getBatch returns null (not throws RuntimeException) for a
-     * non-owner so the controller returns 404 for both "not found" and
-     * "found-but-owned-by-another-user", preventing existence probing via
-     * the 500-vs-404 response distinction.
-     *
-     * @return void
-     */
-    public function testGetBatchReturnsNullForForeignBatch(): void
+    public function testGetBatchThrowsForForeignBatch(): void
     {
         $mockUser = $this->createMock(originalClassName: IUser::class);
         $mockUser->method('getUID')->willReturn('attacker');
@@ -251,11 +248,11 @@ class BatchStateServiceTest extends TestCase
         $batch = ['batchId' => 'abc-123', 'userId' => 'victim', 'status' => 'uploading', 'files' => []];
         $this->mockCache->method('get')->willReturn(json_encode($batch));
 
-        // WF3: must return null, never throw (existence probing fix).
         $result = $this->service->getBatch(batchId: 'abc-123');
+
         $this->assertNull(actual: $result);
 
-    }//end testGetBatchReturnsNullForForeignBatch()
+    }//end testGetBatchThrowsForForeignBatch()
 
     /**
      * Test getBatch allows admin to access any batch (C2 admin bypass)

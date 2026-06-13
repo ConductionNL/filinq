@@ -42,7 +42,6 @@ use OCP\EventDispatcher\Event;
  */
 class SignerChainCompletedEvent extends Event
 {
-
     /**
      * Constructor.
      *
@@ -106,5 +105,4 @@ class SignerChainCompletedEvent extends Event
         return $this->objectUuid;
 
     }//end getSigningRequestUuid()
-
 }//end class

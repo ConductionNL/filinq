@@ -102,7 +102,7 @@ class SigningController extends Controller
             $result = $this->signingService->createRequest(data: $data);
             return new JSONResponse($result, Http::STATUS_CREATED);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to create signing request: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to create signing request', exception: $e);
         }
 
     }//end createRequest()
@@ -173,15 +173,26 @@ class SigningController extends Controller
                 );
             }
 
-            // WF2 security fix: pass caller identity and admin flag so the service
-            // enforces that only the initiator, a signer, or an admin can read a request.
+            // WF2 + Wilco #6 fix (docudesk#100, 2026-06-06): pass caller
+            // identity and admin flag so the service enforces that only the
+            // initiator, a signer, or an admin can read a request — and
+            // returns null on BOTH not-found and access-denied so we emit
+            // a single 404 (never a 404-vs-403 split, which would be an
+            // existence-probing oracle).
             $uid     = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($uid);
             $result  = $this->signingService->getRequest(requestId: $id, callerUserId: $uid, isAdmin: $isAdmin);
+            if ($result === null) {
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Signing request not found')],
+                    statusCode: Http::STATUS_NOT_FOUND
+                );
+            }
+
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to get signing request: ', exception: $e);
-        }
+            return $this->errorResponse(message: 'Failed to get signing request', exception: $e);
+        }//end try
 
     }//end showRequest()
 
@@ -207,27 +218,59 @@ class SigningController extends Controller
                 );
             }
 
-            // WF1 security fix: only the initiator or an admin may cancel a
-            // signing request — mirrors the same gate used by getAudit().
-            // Any other authenticated user gets 403; UUID opacity alone is
-            // not an access-control mechanism for a destructive state transition.
-            if ($this->groupManager->isAdmin($user->getUID()) === false) {
-                $request     = $this->signingService->getRequest(requestId: $id);
-                $uid         = $user->getUID();
-                $isInitiator = ($request['initiatorUserId'] ?? '') === $uid;
-
-                if ($isInitiator === false) {
+            // WF1 fix (docudesk#100): only the initiator or an admin may
+            // cancel a signing request. A non-initiator, non-admin caller is
+            // rejected with 403 BEFORE cancelRequest() is ever called.
+            //
+            // getRequest() is invoked WITHOUT caller scoping (callerUserId='')
+            // so the record itself comes back and the controller can apply the
+            // tighter initiator gate locally — a signer (in-scope for READ) is
+            // still not allowed to perform the destructive cancel. A genuinely
+            // not-found request throws RuntimeException('Signing request not
+            // found'), which we catch here and map to a single 404 (no UUID is
+            // echoed, so existence is not leaked).
+            $uid     = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($uid);
+            if ($isAdmin === false) {
+                try {
+                    $request = $this->signingService->getRequest(requestId: $id);
+                } catch (Exception $e) {
                     return new JSONResponse(
-                        data: ['error' => $this->l10n->t('Access denied')],
+                        data: ['error' => $this->l10n->t('Signing request not found')],
+                        statusCode: Http::STATUS_NOT_FOUND
+                    );
+                }
+
+                if ($request === null) {
+                    return new JSONResponse(
+                        data: ['error' => $this->l10n->t('Signing request not found')],
+                        statusCode: Http::STATUS_NOT_FOUND
+                    );
+                }
+
+                // The destructive transition needs the tighter initiator gate
+                // (signers are in scope for READ only).
+                if (($request['initiatorUserId'] ?? '') !== $uid) {
+                    return new JSONResponse(
+                        data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
                         statusCode: Http::STATUS_FORBIDDEN
                     );
                 }
-            }
+            }//end if
 
             $result = $this->signingService->cancelRequest(requestId: $id);
+            if ($result === null) {
+                // Admin path or post-recheck null — race / vanished
+                // between fetch and cancel. Same generic 404.
+                return new JSONResponse(
+                    data: ['error' => $this->l10n->t('Signing request not found')],
+                    statusCode: Http::STATUS_NOT_FOUND
+                );
+            }
+
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to cancel signing request: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to cancel signing request', exception: $e);
         }//end try
 
     }//end cancelRequest()
@@ -258,7 +301,7 @@ class SigningController extends Controller
             $result   = $this->signingService->sign(requestId: $id, signerId: $signerId);
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to sign document: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to sign document', exception: $e);
         }
 
     }//end sign()
@@ -290,7 +333,7 @@ class SigningController extends Controller
             $result   = $this->signingService->decline(requestId: $id, signerId: $signerId, reason: $reason);
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to decline signing request: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to decline signing request', exception: $e);
         }
 
     }//end decline()
@@ -323,7 +366,7 @@ class SigningController extends Controller
             $results = $this->signingService->bulkSign(requestIds: $requestIds);
             return new JSONResponse($results);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to bulk sign: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to bulk sign', exception: $e);
         }
 
     }//end bulkSign()
@@ -353,7 +396,7 @@ class SigningController extends Controller
             $result = $this->verificationService->verifyDocument(fileId: $fileId, userId: $user->getUID());
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to verify document: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to verify document', exception: $e);
         }
 
     }//end verify()
@@ -380,21 +423,24 @@ class SigningController extends Controller
                 );
             }
 
-            // Security (M2): only the initiator, a listed signer, or an admin
-            // may read the audit trail for a signing request — it contains IP
-            // addresses and user identifiers that must not be exposed to
-            // unrelated parties.
-            if ($this->groupManager->isAdmin($user->getUID()) === false) {
-                $request = $this->signingService->getRequest(requestId: $id);
-                $uid     = $user->getUID();
-
-                $isInitiator    = ($request['initiatorUserId'] ?? '') === $uid;
-                $isSignerInList = in_array($uid, (array) ($request['signerIds'] ?? []), true);
-
-                if ($isInitiator === false && $isSignerInList === false) {
+            // Security (M2 + Wilco #6 / docudesk#100): only the initiator,
+            // a listed signer, or an admin may read the audit trail —
+            // it contains IP addresses + user identifiers that must not
+            // leak to unrelated parties. getRequest() now returns null on
+            // BOTH not-found and access-denied so we emit a single 404
+            // (never split into 404-vs-403).
+            $uid     = $user->getUID();
+            $isAdmin = $this->groupManager->isAdmin($uid);
+            if ($isAdmin === false) {
+                $request = $this->signingService->getRequest(
+                    requestId: $id,
+                    callerUserId: $uid,
+                    isAdmin: false
+                );
+                if ($request === null) {
                     return new JSONResponse(
-                        data: ['error' => $this->l10n->t('Access denied')],
-                        statusCode: Http::STATUS_FORBIDDEN
+                        data: ['error' => $this->l10n->t('Signing request not found')],
+                        statusCode: Http::STATUS_NOT_FOUND
                     );
                 }
             }
@@ -402,7 +448,7 @@ class SigningController extends Controller
             $result = $this->auditService->getAuditTrail(signingRequestId: $id);
             return new JSONResponse($result);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to get audit trail: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to get audit trail', exception: $e);
         }//end try
 
     }//end getAudit()
@@ -417,7 +463,16 @@ class SigningController extends Controller
      */
     private function errorResponse(string $message, Exception $exception): JSONResponse
     {
-        $this->logger->error($message.$exception->getMessage(), ['exception' => $exception]);
+        // Wilco #6 fix (docudesk#100, 2026-06-06): do NOT include the
+        // exception message in the response body. Previously, a not-found
+        // exception ("Signing request not found: <UUID>") and an access-
+        // denied exception ("Access denied: signing request belongs to
+        // another user") both surfaced verbatim in the 500 body — distinct
+        // text confirmed request-ID existence even when the status code
+        // didn't. The body now contains only a generic translated message,
+        // identical regardless of which exception fired. Operators get
+        // the full detail via the logger call.
+        $this->logger->error($message.': '.$exception->getMessage(), ['exception' => $exception]);
 
         // Honour an HTTP status carried on the exception code (e.g. 400 for invalid
         // input) so client errors are not masked as a generic 500.
@@ -426,8 +481,13 @@ class SigningController extends Controller
             $statusCode = $exception->getCode();
         }
 
+        // Wilco #6 fix (docudesk#100): the response body carries ONLY the
+        // generic translated message — never the exception text — so it can
+        // no longer act as an existence-probing oracle. The status code is
+        // still honoured from the exception (e.g. 400 for invalid input) so
+        // genuine client errors are not masked as a generic 500.
         return new JSONResponse(
-            ['error' => $this->l10n->t($message.'%s', [$exception->getMessage()])],
+            ['error' => $this->l10n->t($message)],
             $statusCode
         );
 

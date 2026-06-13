@@ -15,6 +15,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -52,13 +55,23 @@ class ConversionFailedException extends RuntimeException
     /**
      * Constructor.
      *
+     * All arguments are optional so callers and tests may construct the
+     * exception with only the parts they care about. The default code is
+     * 422 (Unprocessable Entity), matching the documented anonymise-endpoint
+     * response (design D5).
+     *
      * @param string                                                                    $message  Human-readable summary.
      * @param array<int, array{name:string,available:bool,supports:bool,reason:string}> $attempts Per-backend records.
+     * @param int                                                                       $code     HTTP-style status code (default 422).
      * @param Throwable|null                                                            $previous Underlying cause if any.
      */
-    public function __construct(string $message, array $attempts, ?Throwable $previous=null)
-    {
-        parent::__construct(message: $message, code: 0, previous: $previous);
+    public function __construct(
+        string $message='PDF conversion failed: no backend in the cascade could convert the source file.',
+        array $attempts=[],
+        int $code=422,
+        ?Throwable $previous=null
+    ) {
+        parent::__construct(message: $message, code: $code, previous: $previous);
         $this->attempts = $attempts;
 
     }//end __construct()

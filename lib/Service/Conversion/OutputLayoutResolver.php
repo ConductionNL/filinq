@@ -54,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
  */
-final class OutputLayoutResolver
+class OutputLayoutResolver
 {
 
 
@@ -159,6 +159,38 @@ final class OutputLayoutResolver
         return preg_match(self::LEGACY_SUFFIX_REGEX, $baseName) === 1;
 
     }//end isLegacyAnonymizedOutput()
+
+    /**
+     * Indicate whether a full file name (with extension) is itself a prior
+     * anonymisation output, i.e. its base name ends with `_anonymized`.
+     *
+     * This is the file-name-oriented discriminator used by the folder-flow
+     * source filter (`FolderExtractionJob`) — it strips the extension first
+     * and then defers to {@see isLegacyAnonymizedOutput()} so there is a
+     * single source of truth for the suffix semantics.
+     *
+     * @param string $fileName Full file name including extension.
+     *
+     * @return bool True iff the base name ends with the legacy `_anonymized` suffix.
+     */
+    public function hasAnonymizedSuffix(string $fileName): bool
+    {
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+        return $this->isLegacyAnonymizedOutput(baseName: $baseName);
+
+    }//end hasAnonymizedSuffix()
+
+    /**
+     * Alias for {@see getSubfolderName()} expressing the "read from config"
+     * intent at the folder-flow call-site (`FolderExtractionJob`).
+     *
+     * @return string A safe, validated subfolder name.
+     */
+    public function readSubfolderName(): string
+    {
+        return $this->getSubfolderName();
+
+    }//end readSubfolderName()
 
     /**
      * Resolve the configured subfolder name with validation and fallback.

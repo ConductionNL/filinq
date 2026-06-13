@@ -27,7 +27,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 
 /**
  * Applies a user-reviewed entity list across every file in a batch.
@@ -45,14 +44,12 @@ class BatchAnonymizeService
     /**
      * Constructor for BatchAnonymizeService
      *
-     * @param LoggerInterface      $logger       Logger for error reporting.
      * @param AnonymizationService $anonService  Service that performs single-document anonymization.
      * @param BatchStateService    $stateService Service that persists per-batch state between calls.
      *
      * @return void
      */
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonService,
         private readonly BatchStateService $stateService,
     ) {
@@ -177,28 +174,11 @@ class BatchAnonymizeService
                 // mark this file as error, attach the attempts surface
                 // for the batch caller to inspect, and continue with
                 // the next file.
-                $this->logger->warning(
-                    'BatchAnonymizeService: PDF conversion cascade exhausted for file',
-                    [
-                        'batchId'  => $batchId,
-                        'fileId'   => $file['fileId'],
-                        'attempts' => $e->getAttempts(),
-                        'error'    => $e->getMessage(),
-                    ]
-                );
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
                 $batch['files'][$i]['conversionAttempts'] = $e->getAttempts();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];
             } catch (Exception $e) {
-                $this->logger->warning(
-                    'BatchAnonymizeService: anonymise step failed for file',
-                    [
-                        'batchId' => $batchId,
-                        'fileId'  => $file['fileId'],
-                        'error'   => $e->getMessage(),
-                    ]
-                );
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];

@@ -27,8 +27,10 @@ use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\ApprovalStepListener;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
+use OCA\DocuDesk\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\DocuDesk\Service\Conversion\MpdfBackend;
 use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
 use OCA\DocuDesk\Service\Conversion\PhpWordBackend;
@@ -108,6 +110,9 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
         $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
 
+        // Auto-regen dossier grondslagen summary when checkedOn is updated.
+        $context->registerEventListener(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
+
         // Wire the PDF-conversion cascade. PdfConversionService takes an
         // ordered array of backends in its constructor; Nextcloud's DI cannot
         // autowire an `array` parameter, so without this explicit registration
@@ -115,13 +120,17 @@ class Application extends App implements IBootstrap
         // AnonymizationService → AnonymizationController) fails to construct
         // and the request 500s with a "Could not resolve backends!"
         // QueryException before the controller body ever runs. Order =
-        // OfficeApp → PhpWord → mPDF → EML (highest to lowest priority).
+        // OfficeApp → LibreOffice → PhpWord → mPDF → EML (first success wins).
+        // LibreOfficeHeadlessBackend (pdf-conversion-service) shells out to
+        // `soffice --headless` with a lock + timeout as a high-fidelity
+        // fallback when the NC IConversionManager providers are unavailable.
         $context->registerService(
             PdfConversionService::class,
             static function ($c): PdfConversionService {
                 return new PdfConversionService(
                     backends: [
                         $c->get(OfficeAppBackend::class),
+                        $c->get(LibreOfficeHeadlessBackend::class),
                         $c->get(PhpWordBackend::class),
                         $c->get(MpdfBackend::class),
                         $c->get(EmlBackend::class),
@@ -134,7 +143,6 @@ class Application extends App implements IBootstrap
         // Background jobs are declared in appinfo/info.xml under
         // <background-jobs>; Nextcloud auto-registers them with the IJobList.
         // IRegistrationContext has no registerBackgroundJob() method.
-
         // register-i18n adoption (Task 3.2): wire the docudesk-side
         // language-negotiation middleware so OR's `LanguageService`
         // sees Accept-Language / ?_lang / X-Translation-Target-Language
