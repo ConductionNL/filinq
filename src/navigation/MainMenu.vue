@@ -81,6 +81,14 @@
 					<AlertOctagon :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<NcAppNavigationItem
+				:active="isActive('Signing')"
+				:name="t('docudesk', 'Digital Signing')"
+				:to="{ name: 'SigningRequestList' }">
+				<template #icon>
+					<PenLock :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
@@ -103,12 +111,14 @@ import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import TestTube from 'vue-material-design-icons/TestTube.vue'
+import PenLock from 'vue-material-design-icons/PenLock.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
 	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
 	Anonymization: ['Anonymization', 'BatchAnonymization'],
 	AnonymizationPoc: ['AnonymizationPoc'],
+	Signing: ['SigningRequestList', 'SigningRequestDetail', 'SigningRequestForm', 'BulkSigningPanel', 'SignatureVerification'],
 }
 
 export default {
@@ -127,6 +137,7 @@ export default {
 		AccountStar,
 		AlertOctagon,
 		TestTube,
+		PenLock,
 	},
 	methods: {
 		/**

@@ -14,6 +14,11 @@ import MyDocumentsIndex from '../views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from '../components/PrintPreview.vue'
 import ProhibitionIndex from '../views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from '../views/policy/StandingConsentIndex.vue'
+import SigningRequestList from '../views/signing/SigningRequestList.vue'
+import SigningRequestDetail from '../views/signing/SigningRequestDetail.vue'
+import SigningRequestForm from '../views/signing/SigningRequestForm.vue'
+import BulkSigningPanel from '../views/signing/BulkSigningPanel.vue'
+import SignatureVerification from '../views/signing/SignatureVerification.vue'
 
 Vue.use(Router)
 
@@ -36,6 +41,11 @@ export default new Router(
 			{ path: '/templates/:id', name: 'TemplateDetail', component: TemplateDetail, props: route => ({ templateId: route.params.id }) },
 			{ path: '/my-documents', name: 'MyDocuments', component: MyDocumentsIndex },
 			{ path: '/print-preview/:templateId?', name: 'PrintPreview', component: PrintPreview, props: route => ({ templateId: route.params.templateId || '' }) },
+			{ path: '/signing', name: 'SigningRequestList', component: SigningRequestList },
+			{ path: '/signing/new', name: 'SigningRequestForm', component: SigningRequestForm },
+			{ path: '/signing/bulk', name: 'BulkSigningPanel', component: BulkSigningPanel },
+			{ path: '/signing/verify/:fileId', name: 'SignatureVerification', component: SignatureVerification, props: route => ({ fileId: route.params.fileId }) },
+			{ path: '/signing/:id', name: 'SigningRequestDetail', component: SigningRequestDetail, props: route => ({ requestId: route.params.id }) },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],
 	},
