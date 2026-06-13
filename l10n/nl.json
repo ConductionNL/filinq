@@ -264,6 +264,21 @@
         "Failed to reset the anonymiser backend warning": "Herstellen van de anonimiseringsmelding mislukt",
         "app-availability.title": "Vereiste applicatie niet beschikbaar",
         "app-availability.description": "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
-        "app-availability.action": "OpenRegister installeren"
+        "app-availability.action": "OpenRegister installeren",
+        "Content language": "Inhoudstaal",
+        "Showing fallback language": "Alternatieve taal getoond",
+        "Language": "Taal",
+        "Template language settings": "Taalinstellingen sjabloon",
+        "Default template language": "Standaardtaal sjabloon",
+        "The default language for template metadata (name, description). Dutch is the primary language per REQ-I18N-050.": "De standaardtaal voor sjabloonmetadata (naam, beschrijving). Nederlands is de primaire taal conform REQ-I18N-050.",
+        "Nederlands": "Nederlands",
+        "English": "Engels",
+        "Template name in {language}": "Sjabloonnaam in {language}",
+        "Template description in {language}": "Sjabloonbeschrijving in {language}",
+        "Translation": "Vertaling",
+        "Translations": "Vertalingen",
+        "No translation available": "Geen vertaling beschikbaar",
+        "Add translation": "Vertaling toevoegen",
+        "Fallback to {language}": "Terugvallen op {language}"
     }
 }

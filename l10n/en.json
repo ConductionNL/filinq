@@ -475,6 +475,21 @@
         "what would you like to anonymize today?": "what would you like to anonymize today?",
         "When enabled, anonymised files are converted to PDF/A-3b before being written back to Nextcloud Files. PDF flattens the text into a glyph stream, which makes the redaction much harder to revert by editing the document, and strips most metadata channels that would otherwise still name the original entities. When disabled, anonymised files keep their native format (DOCX, ODT, …). Callers can still override per-request by sending outputFormat: \"pdf\" or \"preserve\".": "When enabled, anonymised files are converted to PDF/A-3b before being written back to Nextcloud Files. PDF flattens the text into a glyph stream, which makes the redaction much harder to revert by editing the document, and strips most metadata channels that would otherwise still name the original entities. When disabled, anonymised files keep their native format (DOCX, ODT, …). Callers can still override per-request by sending outputFormat: \"pdf\" or \"preserve\".",
         "Whole word only": "Whole word only",
-        "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.": "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents."
+        "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.": "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.",
+        "Content language": "Content language",
+        "Showing fallback language": "Showing fallback language",
+        "Language": "Language",
+        "Template language settings": "Template language settings",
+        "Default template language": "Default template language",
+        "The default language for template metadata (name, description). Dutch is the primary language per REQ-I18N-050.": "The default language for template metadata (name, description). Dutch is the primary language per REQ-I18N-050.",
+        "Nederlands": "Nederlands",
+        "English": "English",
+        "Template name in {language}": "Template name in {language}",
+        "Template description in {language}": "Template description in {language}",
+        "Translation": "Translation",
+        "Translations": "Translations",
+        "No translation available": "No translation available",
+        "Add translation": "Add translation",
+        "Fallback to {language}": "Fallback to {language}"
     }
 }

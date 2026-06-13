@@ -21,6 +21,44 @@
 namespace OCP;
 
 /**
+ * Stub for OCP\IConfig
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IConfig
+{
+
+    /**
+     * Get a user config value
+     *
+     * @param string $userId  The user ID
+     * @param string $appName The app name
+     * @param string $key     The config key
+     * @param string $default Default value
+     *
+     * @return string
+     */
+    public function getUserValue(string $userId, string $appName, string $key, string $default=''): string;
+
+    /**
+     * Get a system value
+     *
+     * @param string $key     The config key
+     * @param mixed  $default Default value
+     *
+     * @return mixed
+     */
+    public function getSystemValue(string $key, mixed $default=''): mixed;
+
+
+}//end interface
+
+
+/**
  * Stub for OCP\IRequest
  *
  * @category Tests
