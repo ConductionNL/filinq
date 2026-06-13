@@ -83,6 +83,40 @@ interface IRequest
 
 
 /**
+ * Stub for OCP\ICache
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICache
+{
+    public function get(string $key): mixed;
+    public function set(string $key, mixed $value, int $ttl = 0): mixed;
+    public function remove(string $key): mixed;
+    public function clear(string $prefix = ''): mixed;
+    public function hasKey(string $key): bool;
+}//end interface
+
+/**
+ * Stub for OCP\ICacheFactory
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ICacheFactory
+{
+    public function createDistributed(string $prefix = ''): ICache;
+    public function createLocal(string $prefix = ''): ICache;
+    public function isAvailable(): bool;
+}//end interface
+
+/**
  * Stub for OCP\IL10N
  *
  * @category Tests
@@ -103,6 +137,92 @@ interface IL10N
      */
     public function t(string $text, array $parameters=[]): string;
 }//end interface
+
+/**
+ * Stub for OCP\Constants
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Constants
+{
+    public const PERMISSION_READ   = 1;
+    public const PERMISSION_UPDATE = 2;
+    public const PERMISSION_CREATE = 4;
+    public const PERMISSION_DELETE = 8;
+    public const PERMISSION_SHARE  = 16;
+    public const PERMISSION_ALL    = 31;
+}//end class
+
+namespace OCP\Files;
+
+/**
+ * Stub for OCP\Files\NotFoundException
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class NotFoundException extends \Exception
+{
+}//end class
+
+namespace OCP\AppFramework\Utility;
+
+/**
+ * Stub for OCP\AppFramework\Utility\ITimeFactory
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface ITimeFactory
+{
+    public function getTime(): int;
+    public function now(): \DateTimeImmutable;
+}//end interface
+
+namespace OCP\BackgroundJob;
+
+/**
+ * Stub for OCP\BackgroundJob\IJobList
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IJobList
+{
+    public function add(string $job, mixed $argument = null): void;
+    public function remove(string $job, mixed $argument = null): void;
+    public function has(string $job, mixed $argument): bool;
+}//end interface
+
+/**
+ * Stub for OCP\BackgroundJob\QueuedJob
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+abstract class QueuedJob
+{
+    public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time)
+    {
+    }
+    abstract protected function run(mixed $argument): void;
+}//end class
 
 namespace OCP\AppFramework;
 
