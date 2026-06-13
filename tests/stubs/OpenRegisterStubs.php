@@ -1011,15 +1011,48 @@ interface Folder extends Node
      */
     public function getById(int $id): array;
 
-    public function get(string $path): \OCP\Files\Node;
+    /**
+     * Get a child node by path
+     *
+     * @param string $path The child path.
+     *
+     * @return \OCP\Files\Node
+     */
+    public function get(string $path): Node;
 
-    public function getDirectoryListing(): array;
-
-    public function getRelativePath(string $path): ?string;
-
+    /**
+     * Check whether a node with a given path exists
+     *
+     * @param string $path The path.
+     *
+     * @return bool
+     */
     public function nodeExists(string $path): bool;
 
-    public function newFolder(string $path): \OCP\Files\Folder;
+    /**
+     * Create a new folder
+     *
+     * @param string $path The folder path.
+     *
+     * @return Folder
+     */
+    public function newFolder(string $path): Folder;
+
+    /**
+     * Get directory listing
+     *
+     * @return array<\OCP\Files\Node>
+     */
+    public function getDirectoryListing(): array;
+
+    /**
+     * Get the relative path of an item inside the folder
+     *
+     * @param string $path The absolute path.
+     *
+     * @return string|null
+     */
+    public function getRelativePath(string $path): ?string;
 
     public function newFile(string $path, mixed $content=null): \OCP\Files\File;
 
@@ -1043,6 +1076,11 @@ interface Node
     public function getName(): string;
 
     public function getPath(): string;
+    public function getId(): int;
+    public function getParent(): Folder;
+    public function getPermissions(): int;
+    public function delete(): void;
+    public function move(string $targetPath): Node;
 
     public function getId(): int;
 
