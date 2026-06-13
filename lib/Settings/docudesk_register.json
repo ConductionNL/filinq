@@ -54,13 +54,14 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "1.0.0",
-                "description": "Register voor correspondentie logging en huisstijl configuratie",
+                "version": "2.0.0",
+                "description": "Register voor correspondentie logging, gegenereerde documenten en huisstijl configuratie",
                 "schemas": [
                     "correspondence",
                     "huisstijl",
                     "batchCorrespondenceJob",
-                    "anonymizationLink"
+                    "anonymizationLink",
+                    "generatedDocument"
                 ]
             },
             "dossier": {
@@ -883,6 +884,144 @@
                     "action": "destroy",
                     "responsibleParty": "docudesk-privacy-officer"
                 }
+            },
+            "generatedDocument": {
+                "uri": null,
+                "slug": "generatedDocument",
+                "title": "Generated Document",
+                "description": "Audit trail voor documenten gegenereerd via DocumentService. Bevat metadata inclusief template UUID, versie, databronnen en resultaat.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileDocument",
+                "required": [
+                    "templateId",
+                    "templateVersion",
+                    "generatedAt",
+                    "format",
+                    "status",
+                    "generatedBy"
+                ],
+                "properties": {
+                    "templateId": {
+                        "description": "UUID van het gebruikte template",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Template ID"
+                    },
+                    "templateVersion": {
+                        "description": "Versienummer van het gebruikte template (DCS-051)",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Template versie"
+                    },
+                    "templateName": {
+                        "description": "Naam van het gebruikte template",
+                        "type": "string",
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Template naam",
+                        "maxLength": 255
+                    },
+                    "dataRefs": {
+                        "description": "Databronnen gebruikt voor het genereren van het document",
+                        "type": "array",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Databronnen"
+                    },
+                    "format": {
+                        "description": "Uitvoerformaat van het document",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Formaat",
+                        "enum": ["pdf", "odf", "html"]
+                    },
+                    "status": {
+                        "description": "Status van de documentgeneratie",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Status",
+                        "enum": ["generated", "failed"]
+                    },
+                    "generatedAt": {
+                        "description": "Datum/tijd van generatie (ISO 8601)",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Gegenereerd op"
+                    },
+                    "generatedBy": {
+                        "description": "Nextcloud gebruikers-ID die de generatie heeft gestart",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Gegenereerd door",
+                        "maxLength": 64
+                    },
+                    "zaakId": {
+                        "description": "UUID van de gekoppelde zaak in Procest (optioneel)",
+                        "type": "string",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": false,
+                        "title": "Zaak ID"
+                    },
+                    "warnings": {
+                        "description": "Waarschuwingen opgetreden tijdens generatie",
+                        "type": "array",
+                        "visible": true,
+                        "order": 10,
+                        "facetable": false,
+                        "title": "Waarschuwingen"
+                    },
+                    "errorMessage": {
+                        "description": "Foutmelding bij mislukte generatie",
+                        "type": "string",
+                        "visible": true,
+                        "order": 11,
+                        "facetable": false,
+                        "title": "Foutmelding",
+                        "maxLength": 2000
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-06-01T00:00:00+00:00",
+                "created": "2026-06-01T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "templateName",
+                    "objectDescriptionField": "status",
+                    "autoPublish": false
+                },
+                "searchable": true
             },
             "huisstijl": {
                 "uri": null,
