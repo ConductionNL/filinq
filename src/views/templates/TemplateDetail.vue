@@ -348,6 +348,7 @@ export default {
 		/**
 		 * Apply an inline formatting command in the WYSIWYG editor.
 		 *
+		 * @param cmd
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		execFormat(cmd) {
@@ -357,6 +358,7 @@ export default {
 		/**
 		 * Apply a block-level format (heading) in the WYSIWYG editor.
 		 *
+		 * @param tag
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		execBlock(tag) {
@@ -376,6 +378,7 @@ export default {
 		/**
 		 * Sync the form content from the raw HTML textarea.
 		 *
+		 * @param event
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		syncFromRaw(event) {
@@ -432,6 +435,7 @@ export default {
 		/**
 		 * Execute restore after user confirmed in the dialog.
 		 *
+		 * @param ver
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		async executeRestore() {
@@ -489,6 +493,7 @@ export default {
 		/**
 		 * Insert a merge-field token at the cursor in the editor.
 		 *
+		 * @param fieldName
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		insertMergeField(fieldName) {
@@ -499,6 +504,10 @@ export default {
 		/**
 		 * Insert a conditional section block (data-condition attributes) at the cursor.
 		 *
+		 * @param root0
+		 * @param root0.field
+		 * @param root0.op
+		 * @param root0.value
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		insertConditionalSection({ field, op, value }) {

@@ -151,6 +151,7 @@ export default {
 		/**
 		 * Open the selected template in the detail editor.
 		 *
+		 * @param tmpl
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
 		openTemplate(tmpl) {
@@ -169,6 +170,7 @@ export default {
 		/**
 		 * Duplicate a template and refresh the list.
 		 *
+		 * @param tmpl
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
 		async duplicateTemplate(tmpl) {
@@ -180,6 +182,7 @@ export default {
 		/**
 		 * Open the delete confirmation dialog for a template.
 		 *
+		 * @param tmpl
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
 		 */
 		confirmDelete(tmpl) {
