@@ -23,14 +23,17 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-5
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-6
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-9
+ * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-10
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-2
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-3
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-4
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-5
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -41,6 +44,7 @@ use Exception;
 use RuntimeException;
 use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCP\App\IAppManager;
+use OCP\IUser;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -82,6 +86,7 @@ class ConsentService
      * @param IAppManager              $appManager      App manager interface
      * @param ObjectionDeadlineChecker $deadlineChecker Deadline checker
      * @param ConsentUpdateHandler     $updateHandler   Update and query handler
+     * @param ConsentScopeValidator    $scopeValidator  Scope and transition validator
      * @param PolicyMatchService       $policyMatcher   Policy rule matcher
      * @param ConsentNotesHelper       $notesHelper     Sentinel-tagged notes helper
      * @param ConsentScopeValidator    $scopeValidator  Consent scope validator
@@ -94,6 +99,7 @@ class ConsentService
         private readonly IAppManager $appManager,
         private readonly ObjectionDeadlineChecker $deadlineChecker,
         private readonly ConsentUpdateHandler $updateHandler,
+        private readonly ConsentScopeValidator $scopeValidator,
         private readonly PolicyMatchService $policyMatcher,
         private readonly ConsentNotesHelper $notesHelper,
         private readonly ConsentScopeValidator $scopeValidator
@@ -131,6 +137,11 @@ class ConsentService
      * CONS-049 reaffirmed: new records receive `notificationStatus: "pending"` and
      * a computed `objectionDeadline`; NO email or postal notification is dispatched.
      *
+     * Checks for a matching standing-consent (scope:entity) record first.
+     * If one is found the record is auto-resolved with consentStatus=consent_given
+     * and policyMatch set to the matching entity-scope record UUID.
+     * If no match is found, the standard WOO objection-period workflow is used.
+     *
      * @param string               $documentId The document UUID
      * @param string               $entityType The entity type
      * @param string               $entityText The detected entity text
@@ -153,6 +164,8 @@ class ConsentService
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-2
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-4
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-5
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-6
      */
     public function createConsentRequest(
         string $documentId,
@@ -252,6 +265,100 @@ class ConsentService
         }//end try
 
     }//end createConsentRequest()
+
+    /**
+     * Create a standing-consent (scope:entity) record
+     *
+     * @param array<string, mixed> $data     The entity consent record data
+     * @param string               $register The register ID
+     * @param string               $schema   The schema ID
+     * @param IUser                $user     The authenticated user
+     *
+     * @return array<string, mixed> The created entity consent record
+     *
+     * @throws \OCP\AppFramework\OCS\OCSForbiddenException When user lacks admin group membership
+     * @throws \InvalidArgumentException When scope validation fails
+     * @throws Exception When the save operation fails
+     *
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-9
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-10
+     */
+    public function createEntityConsent(array $data, string $register, string $schema, IUser $user): array
+    {
+        $this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
+        $this->scopeValidator->validateWrite(data: $data);
+
+        $objectService = $this->getObjectService();
+        $savedObject   = $objectService->saveObject(
+            object: $data,
+            register: $register,
+            schema: $schema
+        );
+
+        return $savedObject->getObject();
+
+    }//end createEntityConsent()
+
+    /**
+     * Validate and update a consent record, enforcing policy-transition rules
+     *
+     * @param string               $consentId The consent object UUID
+     * @param string               $register  The register ID
+     * @param string               $schema    The schema ID
+     * @param array<string, mixed> $data      The update payload
+     *
+     * @return array<string, mixed> The updated consent record
+     *
+     * @throws \InvalidArgumentException When the transition is blocked by policy-match
+     * @throws Exception When the update fails
+     *
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
+     */
+    public function validateAndUpdateConsent(
+        string $consentId,
+        string $register,
+        string $schema,
+        array $data,
+        ?IUser $user=null
+    ): array {
+        $objectService = $this->getObjectService();
+
+        $object = $objectService->find(
+            id: $consentId,
+            register: $register,
+            schema: $schema
+        );
+
+        if ($object === null) {
+            throw new Exception('Consent record not found: '.$consentId);
+        }
+
+        $existing = $object->getObject();
+
+        // Standing-consent (scope=entity) records carry policy-level
+        // authority for whole classes of documents — revoke/expire on
+        // such a record MUST be gated on the same admin group as the
+        // create path (createEntityConsent above). Without this check
+        // a regular consent officer could revoke a standing consent
+        // directly via the update API. Backwards-compat: skip the
+        // check when no user was plumbed through (existing callers
+        // for scope=document keep working unchanged).
+        $existingScope = (string) ($existing['scope'] ?? 'document');
+        if ($existingScope === 'entity' && $user !== null) {
+            $this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
+        }
+
+        $this->scopeValidator->validateTransition(existing: $existing, update: $data);
+
+        return $this->updateConsentStatus(
+            consentId: $consentId,
+            register: $register,
+            schema: $schema,
+            data: $data
+        );
+
+    }//end validateAndUpdateConsent()
 
     /**
      * Look up an existing scope=document consent record by idempotency key.
@@ -619,6 +726,75 @@ class ConsentService
         );
 
     }//end checkObjectionDeadline()
+
+    /**
+     * Find a matching standing-consent (scope:entity) record for the given entity
+     *
+     * @param string $entityType The entity type to match
+     * @param string $entityText The entity text to match against match rules
+     * @param string $register   The register ID
+     * @param string $schema     The schema ID
+     *
+     * @return array<string, mixed>|null The first matching standing consent, or null
+     *
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-6
+     */
+    private function findMatchingStandingConsent(
+        string $entityType,
+        string $entityText,
+        string $register,
+        string $schema
+    ): ?array {
+        try {
+            $objectService = $this->getObjectService();
+
+            $results = $objectService->searchObjects(
+                [
+                    '@self'      => ['register' => $register, 'schema' => $schema],
+                    'scope'      => 'entity',
+                    'active'     => true,
+                    'entityType' => $entityType,
+                ]
+            );
+
+            $normalizedText = mb_strtolower(trim($entityText));
+
+            foreach ($results as $result) {
+                $record = (array) $result;
+                if (is_object($result) === true
+                    && method_exists($result, 'getObject') === true
+                ) {
+                    $record = $result->getObject();
+                }
+
+                $matchRules = $record['matchRules'] ?? [];
+                if (is_array($matchRules) === false) {
+                    $matchRules = [];
+                }
+
+                foreach ($matchRules as $rule) {
+                    if (is_array($rule) === true) {
+                        $ruleText = $rule['value'] ?? '';
+                    } else {
+                        $ruleText = (string) $rule;
+                    }
+
+                    if (mb_strtolower(trim($ruleText)) === $normalizedText) {
+                        return $record;
+                    }
+                }//end foreach
+            }//end foreach
+
+            return null;
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Standing consent lookup failed, falling back to WOO workflow: '.$e->getMessage(),
+                ['entityType' => $entityType, 'exception' => $e]
+            );
+            return null;
+        }//end try
+
+    }//end findMatchingStandingConsent()
 
     /**
      * Get all consent records for a specific document

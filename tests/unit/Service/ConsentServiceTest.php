@@ -91,6 +91,11 @@ class ConsentServiceTest extends TestCase
     private ConsentUpdateHandler|MockObject $mockUpdateHandler;
 
     /**
+     * @var ConsentScopeValidator|MockObject
+     */
+    private ConsentScopeValidator|MockObject $mockScopeValidator;
+
+    /**
      * Real notes helper (no external deps).
      *
      * @var ConsentNotesHelper
@@ -111,6 +116,7 @@ class ConsentServiceTest extends TestCase
         $this->mockAppManager      = $this->createMock(originalClassName: IAppManager::class);
         $this->mockDeadlineChecker = $this->createMock(originalClassName: ObjectionDeadlineChecker::class);
         $this->mockUpdateHandler   = $this->createMock(originalClassName: ConsentUpdateHandler::class);
+        $this->mockScopeValidator  = $this->createMock(originalClassName: ConsentScopeValidator::class);
         $this->notesHelper         = new ConsentNotesHelper();
 
         // Default: OpenRegister is installed.
@@ -164,6 +170,7 @@ class ConsentServiceTest extends TestCase
             appManager: $appManager ?? $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
+            scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
             notesHelper: $this->notesHelper,
             scopeValidator: new ConsentScopeValidator()
@@ -224,6 +231,7 @@ class ConsentServiceTest extends TestCase
             appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
+            scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
             notesHelper: $this->notesHelper,
             scopeValidator: new ConsentScopeValidator()
@@ -252,6 +260,7 @@ class ConsentServiceTest extends TestCase
             appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
+            scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
             notesHelper: $this->notesHelper,
             scopeValidator: new ConsentScopeValidator()
@@ -281,6 +290,7 @@ class ConsentServiceTest extends TestCase
             appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
+            scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
             notesHelper: $this->notesHelper,
             scopeValidator: new ConsentScopeValidator()
@@ -316,6 +326,7 @@ class ConsentServiceTest extends TestCase
             appManager: $noOrAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
+            scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
             notesHelper: $this->notesHelper,
             scopeValidator: new ConsentScopeValidator()

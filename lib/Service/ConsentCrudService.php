@@ -18,9 +18,6 @@
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -260,7 +257,10 @@ class ConsentCrudService
     }//end getConsentsByDocument()
 
     /**
-     * Update consent status for a consent record
+     * Update consent status for a consent record, enforcing policy-transition rules
+     *
+     * Delegates to ConsentService::validateAndUpdateConsent() which checks for
+     * policy-matched transition blocks and the override-up flow before saving.
      *
      * @param string               $consentId The consent object UUID
      * @param string               $register  The register ID
@@ -272,14 +272,17 @@ class ConsentCrudService
      * @throws Exception If update fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
      */
     public function updateConsentStatus(
         string $consentId,
         string $register,
         string $schema,
-        array $data
+        array $data,
+        ?\OCP\IUser $user=null
     ): array {
-        return $this->consentService->updateConsentStatus($consentId, $register, $schema, $data);
+        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
 
     }//end updateConsentStatus()
 }//end class

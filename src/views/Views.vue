@@ -4,6 +4,7 @@
 		<template #default>
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
 			<ConsentIndex v-if="navigationStore.selected === 'consent'" />
+			<StandingConsentIndex v-if="navigationStore.selected === 'standingConsent'" />
 			<ConsentDetail v-if="navigationStore.selected === 'consentDetail'" />
 			<StandingConsentIndex v-if="navigationStore.selected === 'standingConsents'" />
 			<ProhibitionIndex v-if="navigationStore.selected === 'prohibitions'" />
@@ -22,6 +23,7 @@ import { navigationStore } from '../store/store.js'
 
 import Dashboard from './dashboard/DashboardIndex.vue'
 import ConsentIndex from './consent/ConsentIndex.vue'
+import StandingConsentIndex from './consent/StandingConsentIndex.vue'
 import ConsentDetail from './consent/ConsentDetail.vue'
 import StandingConsentIndex from './policy/StandingConsentIndex.vue'
 import ProhibitionIndex from './policy/ProhibitionIndex.vue'
@@ -37,6 +39,7 @@ export default {
 		NcAppContent,
 		Dashboard,
 		ConsentIndex,
+		StandingConsentIndex,
 		ConsentDetail,
 		StandingConsentIndex,
 		ProhibitionIndex,
