@@ -27,7 +27,6 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use Psr\Log\LoggerInterface;
 
 /**
  * Applies a user-reviewed entity list across every file in a batch.
@@ -45,14 +44,12 @@ class BatchAnonymizeService
     /**
      * Constructor for BatchAnonymizeService
      *
-     * @param LoggerInterface      $logger       Logger for error reporting.
      * @param AnonymizationService $anonService  Service that performs single-document anonymization.
      * @param BatchStateService    $stateService Service that persists per-batch state between calls.
      *
      * @return void
      */
     public function __construct(
-        private readonly LoggerInterface $logger,
         private readonly AnonymizationService $anonService,
         private readonly BatchStateService $stateService,
     ) {
