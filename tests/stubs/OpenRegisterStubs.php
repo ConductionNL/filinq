@@ -1068,6 +1068,15 @@ interface File extends Node
     public function getParent(): \OCP\Files\Folder;
 
     public function delete(): void;
+
+    /**
+     * Move this node to a new absolute path.
+     *
+     * @param string $targetPath The absolute target path.
+     *
+     * @return \OCP\Files\Node The moved node.
+     */
+    public function move(string $targetPath): \OCP\Files\Node;
 }//end interface
 
 

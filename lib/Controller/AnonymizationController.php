@@ -409,10 +409,11 @@ class AnonymizationController extends Controller
             if ($outputFormat === null) {
                 return new JSONResponse(
                     [
-                        'error' => $this->l10n->t(
+                        'error'         => $this->l10n->t(
                             'Invalid outputFormat: must be one of %s',
                             [implode(', ', self::VALID_OUTPUT_FORMATS)]
                         ),
+                        'allowedValues' => self::VALID_OUTPUT_FORMATS,
                     ],
                     400
                 );

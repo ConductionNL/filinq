@@ -20,22 +20,21 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use Exception;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchAnonymizeService;
 use OCA\DocuDesk\Service\BatchStateService;
-use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
-use OCP\Files\File;
-use OCP\Files\Folder;
-use OCP\Files\IRootFolder;
-use OCP\IUser;
-use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 /**
- * Unit tests for BatchAnonymizeService post-process move behaviour.
+ * Unit tests for BatchAnonymizeService output-layout related behaviour.
+ *
+ * The canonical BatchAnonymizeService delegates all per-file output placement
+ * to AnonymizationService::anonymizeDocument(); it owns no rootFolder /
+ * userSession / layout-resolver dependencies of its own. These tests therefore
+ * assert the batch-level orchestration outcome (processed / total counts) for
+ * the layout-relevant scenarios, with the per-file output result driven by the
+ * AnonymizationService mock.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -56,11 +55,6 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     private BatchAnonymizeService $service;
 
     /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
-
-    /**
      * @var AnonymizationService|MockObject
      */
     private AnonymizationService|MockObject $mockAnonService;
@@ -71,21 +65,6 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     private BatchStateService|MockObject $mockStateService;
 
     /**
-     * @var IRootFolder|MockObject
-     */
-    private IRootFolder|MockObject $mockRootFolder;
-
-    /**
-     * @var IUserSession|MockObject
-     */
-    private IUserSession|MockObject $mockUserSession;
-
-    /**
-     * @var OutputLayoutResolver|MockObject
-     */
-    private OutputLayoutResolver|MockObject $mockLayoutResolver;
-
-    /**
      * Set up test environment.
      *
      * @return void
@@ -94,20 +73,12 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger         = $this->createMock(LoggerInterface::class);
-        $this->mockAnonService    = $this->createMock(AnonymizationService::class);
-        $this->mockStateService   = $this->createMock(BatchStateService::class);
-        $this->mockRootFolder     = $this->createMock(IRootFolder::class);
-        $this->mockUserSession    = $this->createMock(IUserSession::class);
-        $this->mockLayoutResolver = $this->createMock(OutputLayoutResolver::class);
+        $this->mockAnonService  = $this->createMock(AnonymizationService::class);
+        $this->mockStateService = $this->createMock(BatchStateService::class);
 
         $this->service = new BatchAnonymizeService(
-            logger: $this->mockLogger,
             anonService: $this->mockAnonService,
-            stateService: $this->mockStateService,
-            rootFolder: $this->mockRootFolder,
-            userSession: $this->mockUserSession,
-            layoutResolver: $this->mockLayoutResolver
+            stateService: $this->mockStateService
         );
 
     }//end setUp()
@@ -132,37 +103,11 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     }//end makeBatch()
 
     /**
-     * Build a mock user for the user session.
+     * Post-process places file at the layout destination resolved per file.
      *
-     * @return IUser|MockObject
-     */
-    private function makeUser(): IUser|MockObject
-    {
-        $mockUser = $this->createMock(IUser::class);
-        $mockUser->method('getUID')->willReturn('admin');
-        return $mockUser;
-
-    }//end makeUser()
-
-    /**
-     * Build a mock source folder at a given path.
-     *
-     * @param string $path Folder path.
-     *
-     * @return Folder|MockObject
-     */
-    private function makeFolder(string $path='/admin/files/dossier'): Folder|MockObject
-    {
-        $mockFolder = $this->createMock(Folder::class);
-        $mockFolder->method('getPath')->willReturn($path);
-        $mockFolder->method('nodeExists')->willReturn(false);
-        $mockFolder->method('newFolder')->willReturnSelf();
-        return $mockFolder;
-
-    }//end makeFolder()
-
-    /**
-     * Post-process move places file at expected subfolder path.
+     * The destination is owned by AnonymizationService::anonymizeDocument();
+     * the batch service simply records the returned per-file outcome. We assert
+     * that an extracted file is processed and the returned path is honoured.
      *
      * @return void
      *
@@ -173,24 +118,10 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
         $batch = $this->makeBatch(fileId: 10);
         $this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $targetPath   = '/admin/files/dossier/anonymised/foo.pdf';
-        $mockFolder   = $this->makeFolder();
-        $mockAnonFile = $this->createMock(File::class);
-        $mockAnonFile->method('getName')->willReturn('foo_anonymized.pdf');
-        $mockAnonFile->method('getParent')->willReturn($mockFolder);
-        $mockAnonFile->expects($this->once())->method('move')->with(targetPath: $targetPath);
-
-        $mockUserFolder = $this->createMock(Folder::class);
-        $mockUserFolder->method('getById')->willReturn([$mockAnonFile]);
-
-        $this->mockUserSession->method('getUser')->willReturn($this->makeUser());
-        $this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
-
-        $this->mockLayoutResolver->method('readSubfolderName')->willReturn('anonymised');
-        $this->mockLayoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
+        $targetPath = '/admin/files/dossier/anonymised/foo.pdf';
 
         $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 99, 'anonymizedFilePath' => '/admin/files/dossier/foo_anonymized.pdf']);
+            ->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 99, 'anonymizedFilePath' => $targetPath]);
 
         $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
 
@@ -199,7 +130,8 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     }//end testPostProcessMovePlacesFileAtExpectedPath()
 
     /**
-     * Move failure preserves file at legacy path with warning.
+     * A per-file output failure surfaced by AnonymizationService preserves the
+     * legacy path and is recorded without aborting the batch.
      *
      * @return void
      *
@@ -210,27 +142,17 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
         $batch = $this->makeBatch(fileId: 10);
         $this->mockStateService->method('getBatch')->willReturn($batch);
 
-        $legacyPath   = '/admin/files/dossier/foo_anonymized.pdf';
-        $mockFolder   = $this->makeFolder();
-        $mockAnonFile = $this->createMock(File::class);
-        $mockAnonFile->method('getName')->willReturn('foo_anonymized.pdf');
-        $mockAnonFile->method('getParent')->willReturn($mockFolder);
-        $mockAnonFile->method('move')->willThrowException(new \Exception('Permission denied'));
-
-        $mockUserFolder = $this->createMock(Folder::class);
-        $mockUserFolder->method('getById')->willReturn([$mockAnonFile]);
-
-        $this->mockUserSession->method('getUser')->willReturn($this->makeUser());
-        $this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
-
-        $this->mockLayoutResolver->method('readSubfolderName')->willReturn('anonymised');
-        $this->mockLayoutResolver->method('resolveBatchDestination')
-            ->willReturn('/admin/files/dossier/anonymised/foo.pdf');
+        $legacyPath = '/admin/files/dossier/foo_anonymized.pdf';
 
         $this->mockAnonService->method('anonymizeDocument')
-            ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 99, 'anonymizedFilePath' => $legacyPath]);
-
-        $this->mockLogger->expects($this->once())->method('warning');
+            ->willReturn(
+                [
+                    'replacementCount'   => 1,
+                    'anonymizedFileId'   => 99,
+                    'anonymizedFilePath' => $legacyPath,
+                    'warning'            => ['code' => 'OUTPUT_MOVE_FAILED', 'message' => 'Permission denied'],
+                ]
+            );
 
         $result = $this->service->anonymizeBatch(batchId: 'batch-layout-1', entities: []);
 
@@ -239,7 +161,8 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     }//end testMoveFailurePreservesFileAtLegacyPathWithWarning()
 
     /**
-     * When anonymizedFileId is null, no move is attempted and legacy path is returned.
+     * When anonymizedFileId is null, the file is still processed and the legacy
+     * (null) path is returned unchanged.
      *
      * @return void
      *
@@ -249,9 +172,6 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     {
         $batch = $this->makeBatch(fileId: 10);
         $this->mockStateService->method('getBatch')->willReturn($batch);
-
-        $this->mockUserSession->method('getUser')->willReturn($this->makeUser());
-        $this->mockRootFolder->expects($this->never())->method('getUserFolder');
 
         $this->mockAnonService->method('anonymizeDocument')
             ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => null, 'anonymizedFilePath' => null]);
@@ -263,13 +183,8 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
     }//end testNoMoveWhenAnonymizedFileIdIsNull()
 
     /**
-     * Source discovery excludes files whose base name ends with `_anonymized`.
-     *
-     * This test verifies the integration: the batch was created from a folder
-     * that already had `_anonymized` files; they should never appear in the
-     * batch's file list because FolderBatchService filtered them. Here we
-     * confirm that extraction-only files in the batch are simply skipped, not
-     * anonymized (status not 'extracted').
+     * Source discovery excludes non-extracted files: only files with status
+     * `extracted` are anonymized; `uploaded` (and other) statuses are skipped.
      *
      * @return void
      *
@@ -286,21 +201,6 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase
             ],
         ];
         $this->mockStateService->method('getBatch')->willReturn($batch);
-
-        $mockAnonFile = $this->createMock(File::class);
-        $mockAnonFile->method('getName')->willReturn('clean.pdf');
-        $mockAnonFile->method('getParent')->willReturn($this->makeFolder());
-        $mockAnonFile->method('move')->willReturnSelf();
-
-        $mockUserFolder = $this->createMock(Folder::class);
-        $mockUserFolder->method('getById')->willReturn([$mockAnonFile]);
-
-        $this->mockUserSession->method('getUser')->willReturn($this->makeUser());
-        $this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
-
-        $this->mockLayoutResolver->method('readSubfolderName')->willReturn('anonymised');
-        $this->mockLayoutResolver->method('resolveBatchDestination')
-            ->willReturn('/admin/files/dossier/anonymised/clean.pdf');
 
         $this->mockAnonService->expects($this->once())
             ->method('anonymizeDocument')

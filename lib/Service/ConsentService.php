@@ -489,9 +489,12 @@ class ConsentService
         }
 
         // Re-evaluate pre-emption discriminator: set policyMatch when newly
-        // applicable; never clear it when previously set (D2).
+        // applicable; never clear it when previously set (D2). Persist the
+        // matchKind marker alongside it so the standing-consent carve-out in
+        // ConsentUpdateHandler can fire on the idempotent-update path too.
         if ($policyResult !== null && ($existing['policyMatch'] ?? null) === null) {
             $updated['policyMatch'] = $policyResult['uuid'];
+            $updated['matchKind']   = (string) $policyResult['kind'];
         }
 
         // Ensure all preserved workflow fields are kept (not overwritten).
@@ -602,6 +605,12 @@ class ConsentService
 
         if ($policyResult !== null && $policyResult['kind'] === PolicyMatchService::KIND_STANDING_CONSENT) {
             $consentData['policyMatch'] = $policyResult['uuid'];
+            // Persist the match discriminator so the standing-consent
+            // carve-out in ConsentUpdateHandler::guardPolicyPreemptedTransition
+            // can fire (PR #147 Thread B regression: the carve-out keyed on
+            // `matchKind`, which was never persisted here, so the operator
+            // override on publicationDecision was 400-locked).
+            $consentData['matchKind'] = (string) $policyResult['kind'];
         }
 
         // Service-level scope contract (publication-consent-policy-fields

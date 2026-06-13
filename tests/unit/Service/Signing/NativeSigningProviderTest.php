@@ -26,7 +26,6 @@ use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -51,8 +50,7 @@ class NativeSigningProviderTest extends TestCase
      */
     private function buildProvider(): NativeSigningProvider
     {
-        $userSession = $this->createMock(IUserSession::class);
-        $logger      = $this->createMock(LoggerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
 
         $config = $this->createMock(IAppConfig::class);
         $config->method('getValueString')->willReturnCallback(
@@ -75,7 +73,6 @@ class NativeSigningProviderTest extends TestCase
         $settingsService->method('getObjectService')->willReturn($objectService);
 
         return new NativeSigningProvider(
-            userSession: $userSession,
             logger: $logger,
             settingsService: $settingsService,
             config: $config

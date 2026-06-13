@@ -174,28 +174,11 @@ class BatchAnonymizeService
                 // mark this file as error, attach the attempts surface
                 // for the batch caller to inspect, and continue with
                 // the next file.
-                $this->logger->warning(
-                    'BatchAnonymizeService: PDF conversion cascade exhausted for file',
-                    [
-                        'batchId'  => $batchId,
-                        'fileId'   => $file['fileId'],
-                        'attempts' => $e->getAttempts(),
-                        'error'    => $e->getMessage(),
-                    ]
-                );
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
                 $batch['files'][$i]['conversionAttempts'] = $e->getAttempts();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];
             } catch (Exception $e) {
-                $this->logger->warning(
-                    'BatchAnonymizeService: anonymise step failed for file',
-                    [
-                        'batchId' => $batchId,
-                        'fileId'  => $file['fileId'],
-                        'error'   => $e->getMessage(),
-                    ]
-                );
                 $batch['files'][$i]['status'] = 'error';
                 $batch['files'][$i]['error']  = $e->getMessage();
                 $skipped[] = ['fileId' => $file['fileId'], 'reason' => $e->getMessage()];

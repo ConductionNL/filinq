@@ -221,6 +221,42 @@ class GrondslagenSummaryService
     }//end appendSummaryAsSeparatePdf()
 
     /**
+     * Authorise the session user for the given dossier before rendering.
+     *
+     * Resolves the dossier through OpenRegister's ObjectService under the
+     * caller's view; OR's standard RBAC governs visibility. A dossier the
+     * caller may not read resolves to null and we deny by throwing. Throwing
+     * here is caught by the controller and surfaced as an HTTP error.
+     *
+     * @param string $dossierId Dossier UUID
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the caller may not access the dossier
+     *
+     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+     */
+    public function authorizeAccess(string $dossierId): void
+    {
+        // Resolve the dossier through OpenRegister's ObjectService. The lookup
+        // runs under the session user's view, so OR's standard RBAC governs
+        // visibility: a dossier the caller may not read resolves to null (or
+        // raises), and we deny by throwing. A successful resolution means the
+        // operator is permitted to (re)generate the dossier summary.
+        $objectService = $this->getObjectService();
+        $dossier       = $objectService->find(
+            id: $dossierId,
+            register: self::REGISTER,
+            schema: self::DOSSIER_SCHEMA
+        );
+
+        if ($dossier === null) {
+            throw new RuntimeException('Access denied or dossier not found: '.$dossierId, 403);
+        }
+
+    }//end authorizeAccess()
+
+    /**
      * Render the per-dossier grondslagen summary PDF and write it to the dossier folder.
      *
      * Walks all files under the dossier's folder, loads anonymised entities for each,
@@ -231,7 +267,7 @@ class GrondslagenSummaryService
      *
      * An empty dossier (no anonymised files) produces a valid near-empty PDF.
      *
-     * @param string $dossierId Dossier UUID
+     * @param string $dossierUuid Dossier UUID
      *
      * @return \OCA\OpenRegister\Db\ObjectEntity|null Saved dossier object
      *
@@ -239,17 +275,17 @@ class GrondslagenSummaryService
      *
      * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
      */
-    public function renderDossierSummary(string $dossierId): mixed
+    public function renderDossierSummary(string $dossierUuid): mixed
     {
         $objectService = $this->getObjectService();
         $dossier       = $objectService->find(
-            id: $dossierId,
+            id: $dossierUuid,
             register: self::REGISTER,
             schema: self::DOSSIER_SCHEMA
         );
 
         if ($dossier === null) {
-            throw new RuntimeException('Dossier not found: '.$dossierId, 404);
+            throw new RuntimeException('Dossier not found: '.$dossierUuid, 404);
         }
 
         $dossierData   = $dossier->getObject();
@@ -332,7 +368,8 @@ class GrondslagenSummaryService
 
         $labels = [];
         foreach ($baseUuids as $uuid) {
-            $labels[] = $this->resolveSingleBase(uuid: (string) $uuid);
+            $ref          = (string) $uuid;
+            $labels[$ref] = $this->resolveSingleBase(uuid: $ref);
         }
 
         return $labels;
@@ -470,12 +507,11 @@ class GrondslagenSummaryService
      *
      * @param string $uuid The UUID that could not be resolved
      *
-     * @return string Placeholder string with short UUID suffix
+     * @return string Placeholder string carrying the unresolved ref
      */
     private function buildUnresolvedPlaceholder(string $uuid): string
     {
-        $shortUuid = substr(string: $uuid, offset: 0, length: 8);
-        $message   = '⟨grondslag verwijderd: '.$shortUuid.'⟩';
+        $message = '⟨grondslag verwijderd: '.$uuid.'⟩';
 
         $this->logger->warning(
             message: 'Unresolved base UUID in grondslagen summary',
@@ -839,6 +875,100 @@ class GrondslagenSummaryService
         return $result;
 
     }//end collectDistinctBases()
+
+    /**
+     * Count the distinct union of raw `bases` refs across a list of entities.
+     *
+     * Each entity may carry a `bases` key holding an array of base refs, an
+     * empty array, or null. Null/empty bases contribute nothing. The result is
+     * the number of unique refs across every entity.
+     *
+     * @param array<int, array<string, mixed>> $entities Entities each with an optional `bases` array
+     *
+     * @return int Count of distinct base refs
+     */
+    private function countDistinctBases(array $entities): int
+    {
+        $seen = [];
+        foreach ($entities as $entity) {
+            $bases = ($entity['bases'] ?? null);
+            if (is_array($bases) === false) {
+                continue;
+            }
+
+            foreach ($bases as $base) {
+                $ref        = (string) $base;
+                $seen[$ref] = true;
+            }
+        }
+
+        return count($seen);
+
+    }//end countDistinctBases()
+
+    /**
+     * Aggregate per-file entity/grondslagen data into the per-dossier shape.
+     *
+     * Produces a flat `rows` array keyed by basis ref (each row carries the
+     * resolved `label` from $labelMap plus an `entityCount`) and a `totals`
+     * block carrying the document count, summed entity count, and the count of
+     * distinct bases across all files.
+     *
+     * @param array<int, array{fileId?: int, filename?: string, entities?: array<int, array<string, mixed>>}> $perFile  Per-file entity data
+     * @param array<string, string>                                                                           $labelMap Map of basis ref to human label
+     *
+     * @return array{rows: array<int, array{ref: string, label: string, entityCount: int}>, totals: array{documentCount: int, entityCount: int, distinctBasesCount: int}} Aggregated dossier summary
+     */
+    private function aggregateForDossier(array $perFile, array $labelMap): array
+    {
+        // Flatten every entity across all files for counting.
+        $allEntities = [];
+        $entityCount = 0;
+        foreach ($perFile as $file) {
+            $entities = ($file['entities'] ?? []);
+            if (is_array($entities) === false) {
+                $entities = [];
+            }
+
+            foreach ($entities as $entity) {
+                $allEntities[] = $entity;
+                $entityCount  += (int) ($entity['count'] ?? 0);
+            }
+        }
+
+        // Build per-basis rows: one row per distinct ref, with its resolved
+        // label and the number of entities that reference it.
+        $rowsByRef = [];
+        foreach ($allEntities as $entity) {
+            $bases = ($entity['bases'] ?? null);
+            if (is_array($bases) === false) {
+                continue;
+            }
+
+            foreach ($bases as $base) {
+                $ref = (string) $base;
+                if (isset($rowsByRef[$ref]) === false) {
+                    $rowsByRef[$ref] = [
+                        'ref'         => $ref,
+                        'label'       => ($labelMap[$ref] ?? $ref),
+                        'entityCount' => 0,
+                    ];
+                }
+
+                $rowsByRef[$ref]['entityCount']++;
+            }
+        }
+
+        return [
+            'rows'   => array_values($rowsByRef),
+            'totals' => [
+                'documentCount'      => count($perFile),
+                'entityCount'        => $entityCount,
+                'distinctBasesCount' => $this->countDistinctBases(entities: $allEntities),
+            ],
+        ];
+
+    }//end aggregateForDossier()
 
     /**
      * Load Twig template content from the templates directory.

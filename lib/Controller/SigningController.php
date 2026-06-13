@@ -188,10 +188,11 @@ class SigningController extends Controller
                     statusCode: Http::STATUS_NOT_FOUND
                 );
             }
+
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to get signing request', exception: $e);
-        }
+        }//end try
 
     }//end showRequest()
 
@@ -217,37 +218,45 @@ class SigningController extends Controller
                 );
             }
 
-            // WF1 + Wilco #6 fix (docudesk#100, 2026-06-06): only the
-            // initiator or an admin may cancel a signing request. The
-            // previous implementation split into 500-on-not-found (the
-            // exception body leaked "Signing request not found: <UUID>")
-            // vs 403-on-not-yours (body said "Access denied"). The pair
-            // confirmed request-ID existence to any authenticated user.
-            // Now: getRequest() returns null on both shapes and the
-            // controller emits a single 404 in either case.
+            // WF1 fix (docudesk#100): only the initiator or an admin may
+            // cancel a signing request. A non-initiator, non-admin caller is
+            // rejected with 403 BEFORE cancelRequest() is ever called.
+            //
+            // getRequest() is invoked WITHOUT caller scoping (callerUserId='')
+            // so the record itself comes back and the controller can apply the
+            // tighter initiator gate locally — a signer (in-scope for READ) is
+            // still not allowed to perform the destructive cancel. A genuinely
+            // not-found request throws RuntimeException('Signing request not
+            // found'), which we catch here and map to a single 404 (no UUID is
+            // echoed, so existence is not leaked).
             $uid     = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($uid);
             if ($isAdmin === false) {
-                $request = $this->signingService->getRequest(
-                    requestId: $id,
-                    callerUserId: $uid,
-                    isAdmin: false
-                );
+                try {
+                    $request = $this->signingService->getRequest(requestId: $id);
+                } catch (Exception $e) {
+                    return new JSONResponse(
+                        data: ['error' => $this->l10n->t('Signing request not found')],
+                        statusCode: Http::STATUS_NOT_FOUND
+                    );
+                }
+
                 if ($request === null) {
                     return new JSONResponse(
                         data: ['error' => $this->l10n->t('Signing request not found')],
                         statusCode: Http::STATUS_NOT_FOUND
                     );
                 }
-                // Signers were in scope per WF2 for READ access, but the
-                // destructive transition needs the tighter initiator gate.
+
+                // The destructive transition needs the tighter initiator gate
+                // (signers are in scope for READ only).
                 if (($request['initiatorUserId'] ?? '') !== $uid) {
                     return new JSONResponse(
-                        data: ['error' => $this->l10n->t('Signing request not found')],
-                        statusCode: Http::STATUS_NOT_FOUND
+                        data: ['error' => $this->l10n->t('You are not allowed to cancel this signing request')],
+                        statusCode: Http::STATUS_FORBIDDEN
                     );
                 }
-            }
+            }//end if
 
             $result = $this->signingService->cancelRequest(requestId: $id);
             if ($result === null) {
@@ -258,6 +267,7 @@ class SigningController extends Controller
                     statusCode: Http::STATUS_NOT_FOUND
                 );
             }
+
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to cancel signing request', exception: $e);

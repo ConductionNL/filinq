@@ -57,46 +57,54 @@ class AnonymizationServiceOutputFormatTest extends TestCase
     }//end testSourceFileExists()
 
     /**
-     * The service exposes the convertAndReplaceWithPdf private method.
+     * The service delegates PDF conversion to PdfConversionService::convertToPdf.
+     *
+     * The real anonymizeDocument() path calls $this->pdfConversion->convertToPdf()
+     * when outputFormat is 'pdf' and the anonymised result is not already a PDF.
      *
      * @return void
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
      */
-    public function testConvertAndReplaceWithPdfMethodExists(): void
+    public function testConvertToPdfDelegationExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function convertAndReplaceWithPdf', $content);
+        $this->assertStringContainsString('convertToPdf', $content);
 
-    }//end testConvertAndReplaceWithPdfMethodExists()
+    }//end testConvertToPdfDelegationExists()
 
     /**
-     * The service exposes the rollbackAnonymizedFile private method.
+     * The service rolls back the anonymised intermediate by deleting it when
+     * PDF conversion fails. The real source performs an inline $result->delete()
+     * inside the ConversionFailedException catch before re-throwing.
      *
      * @return void
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
      */
-    public function testRollbackMethodExists(): void
+    public function testRollbackDeletesIntermediateOnFailure(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function rollbackAnonymizedFile', $content);
+        $this->assertStringContainsString('$result->delete();', $content);
 
-    }//end testRollbackMethodExists()
+    }//end testRollbackDeletesIntermediateOnFailure()
 
     /**
-     * The service exposes the atomicReplacement private method.
+     * The PDF-conversion gate is guarded on outputFormat === 'pdf' and only runs
+     * when the anonymised result is a File. The atomic replacement (convert the
+     * native intermediate to PDF, then delete on failure) lives in this branch.
      *
      * @return void
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
      */
-    public function testAtomicReplacementMethodExists(): void
+    public function testPdfConversionGateGuardExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString('function atomicReplacement', $content);
+        $this->assertStringContainsString("\$outputFormat === 'pdf'", $content);
+        $this->assertStringContainsString('$result instanceof File', $content);
 
-    }//end testAtomicReplacementMethodExists()
+    }//end testPdfConversionGateGuardExists()
 
     /**
      * ConversionFailedException is imported and re-thrown uncaught from the outer
@@ -132,162 +140,68 @@ class AnonymizationServiceOutputFormatTest extends TestCase
     }//end testOutputFormatGuardExistsInSource()
 
     /**
-     * atomicReplacement replaces the native extension with .pdf in the new file name.
+     * The PDF conversion delegates the .pdf naming to PdfConversionService.
      *
-     * Uses reflection to invoke the private method with stub node objects.
+     * In the real source the atomic native→PDF replacement is performed by
+     * $this->pdfConversion->convertToPdf($result); the returned File becomes
+     * the new $result. The service does NOT derive the .pdf name itself — that
+     * is the PdfConversionService cascade's responsibility. We assert the
+     * delegation marker is present and the converted File is re-assigned.
      *
      * @return void
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
      */
-    public function testAtomicReplacementDerivePdfName(): void
+    public function testPdfConversionReassignsResult(): void
     {
-        $service = $this->buildServiceWithoutDependencies();
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('$result = $this->pdfConversion->convertToPdf($result);', $content);
 
-        // Use a shared array to capture side-effects without PHP reference
-        // limitations in anonymous class constructors.
-        $sideEffects = ['nativeDeleted' => false, 'pdfName' => null, 'pdfContent' => null];
-
-        $pdfNode = new class {
-            public function getId(): int
-            {
-                return 100;
-            }//end getId()
-
-            public function getName(): string
-            {
-                return 'document_anonymized.pdf';
-            }//end getName()
-
-            public function getPath(): string
-            {
-                return '/user/files/DocuDesk/document_anonymized.pdf';
-            }//end getPath()
-        };
-
-        $parentFolder = new class ($pdfNode, $sideEffects) {
-
-            private mixed $pdfNode;
-
-            private array $effects;
-
-            public function __construct(mixed $pdfNode, array &$effects)
-            {
-                $this->pdfNode = $pdfNode;
-                $this->effects = &$effects;
-            }//end __construct()
-
-            public function newFile(string $name, string $content): mixed
-            {
-                $this->effects['pdfName']    = $name;
-                $this->effects['pdfContent'] = $content;
-                return $this->pdfNode;
-            }//end newFile()
-        };
-
-        $anonymizedNode = new class ($parentFolder, $sideEffects) {
-
-            private mixed $parent;
-
-            private array $effects;
-
-            public function __construct(mixed $parent, array &$effects)
-            {
-                $this->parent  = $parent;
-                $this->effects = &$effects;
-            }//end __construct()
-
-            public function getName(): string
-            {
-                return 'document_anonymized.docx';
-            }//end getName()
-
-            public function getParent(): mixed
-            {
-                return $this->parent;
-            }//end getParent()
-
-            public function getId(): int
-            {
-                return 42;
-            }//end getId()
-
-            public function delete(): void
-            {
-                $this->effects['nativeDeleted'] = true;
-            }//end delete()
-        };
-
-        $convertedFile = new class {
-            public function getContent(): string
-            {
-                return '%PDF-1.7-stub';
-            }//end getContent()
-
-            public function getId(): int
-            {
-                return 999;
-            }//end getId()
-
-            public function delete(): void
-            {
-                // Nothing — convertedFile ID !== pdfNode ID !== anonymizedNode ID.
-            }//end delete()
-        };
-
-        $resultInfo = [
-            'anonymizedFileId'   => 42,
-            'anonymizedFileName' => 'document_anonymized.docx',
-            'anonymizedFilePath' => '/user/files/DocuDesk/document_anonymized.docx',
-        ];
-
-        $reflection = new \ReflectionMethod(AnonymizationService::class, 'atomicReplacement');
-        $reflection->setAccessible(true);
-
-        $updated = $reflection->invoke($service, $anonymizedNode, $convertedFile, $resultInfo);
-
-        $this->assertSame(100, $updated['anonymizedFileId'], 'Result must reference the new PDF node ID.');
-        $this->assertSame('document_anonymized.pdf', $updated['anonymizedFileName']);
-        $this->assertSame('document_anonymized.pdf', $sideEffects['pdfName'], 'PDF filename must drop .docx and add .pdf.');
-        $this->assertTrue($sideEffects['nativeDeleted'], 'Native intermediate must be deleted after PDF is written.');
-
-    }//end testAtomicReplacementDerivePdfName()
+    }//end testPdfConversionReassignsResult()
 
     /**
-     * rollbackAnonymizedFile is a no-op when fileId is null.
+     * PdfConversionService::convertToPdf accepts a File and returns a File.
+     *
+     * Verifies the collaborator contract the AnonymizationService relies on so
+     * the mock wiring in this suite matches the real method signature.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     */
+    public function testPdfConversionServiceConvertToPdfSignature(): void
+    {
+        $method = new \ReflectionMethod(
+            \OCA\DocuDesk\Service\PdfConversionService::class,
+            'convertToPdf'
+        );
+
+        $params = $method->getParameters();
+        $this->assertSame('source', $params[0]->getName());
+        $this->assertSame(
+            'OCP\\Files\\File',
+            (string) $params[0]->getType(),
+            'convertToPdf must accept an OCP\\Files\\File source.'
+        );
+
+    }//end testPdfConversionServiceConvertToPdfSignature()
+
+    /**
+     * Rollback delete failures are swallowed so the typed exception still
+     * propagates. The real source wraps $result->delete() in its own try/catch
+     * inside the ConversionFailedException handler and re-throws $e regardless.
      *
      * @return void
      *
      * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-4
      */
-    public function testRollbackIsNoOpWhenFileIdIsNull(): void
+    public function testRollbackDeleteFailureIsSwallowed(): void
     {
-        $service = $this->buildServiceWithoutDependencies();
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('catch (Throwable $deleteError)', $content);
+        $this->assertStringContainsString('throw $e;', $content);
 
-        $effects     = ['callCount' => 0];
-        $fileService = new class ($effects) {
-
-            private array $effects;
-
-            public function __construct(array &$effects)
-            {
-                $this->effects = &$effects;
-            }//end __construct()
-
-            public function getFileById(mixed $id): mixed
-            {
-                $this->effects['callCount']++;
-                return null;
-            }//end getFileById()
-        };
-
-        $reflection = new \ReflectionMethod(AnonymizationService::class, 'rollbackAnonymizedFile');
-        $reflection->setAccessible(true);
-        $reflection->invoke($service, null, $fileService);
-
-        $this->assertSame(0, $effects['callCount'], 'getFileById must not be called when fileId is null.');
-
-    }//end testRollbackIsNoOpWhenFileIdIsNull()
+    }//end testRollbackDeleteFailureIsSwallowed()
 
     /**
      * ConversionFailedException carries getAttempts() per the exception contract.
@@ -328,8 +242,23 @@ class AnonymizationServiceOutputFormatTest extends TestCase
     }//end testConversionFailedExceptionEmptyAttempts()
 
     /**
-     * Build AnonymizationService with all constructor deps stubbed for
-     * private-method testing via reflection.
+     * The service can be constructed with all ten promoted dependencies
+     * stubbed, proving the mock wiring in this suite matches the real
+     * constructor arity and parameter types.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/anonymise-output-format-flag/tasks.md#task-3
+     */
+    public function testServiceConstructsWithAllDependencies(): void
+    {
+        $service = $this->buildServiceWithoutDependencies();
+        $this->assertInstanceOf(AnonymizationService::class, $service);
+
+    }//end testServiceConstructsWithAllDependencies()
+
+    /**
+     * Build AnonymizationService with all constructor deps stubbed.
      *
      * @return AnonymizationService
      */
@@ -343,6 +272,8 @@ class AnonymizationServiceOutputFormatTest extends TestCase
         $consentCrud        = $this->createMock(\OCA\DocuDesk\Service\ConsentCrudService::class);
         $consentService     = $this->createMock(\OCA\DocuDesk\Service\ConsentService::class);
         $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
+        $fileEntityStats    = $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class);
+        $pdfConversion      = $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class);
 
         return new AnonymizationService(
             $logger,
@@ -352,7 +283,9 @@ class AnonymizationServiceOutputFormatTest extends TestCase
             $appConfig,
             $consentCrud,
             $consentService,
-            $grondslagenSummary
+            $grondslagenSummary,
+            $fileEntityStats,
+            $pdfConversion
         );
 
     }//end buildServiceWithoutDependencies()

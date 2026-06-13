@@ -181,23 +181,24 @@ class SigningService
      * @param string $callerUserId UID of the calling user ('' = skip check)
      * @param bool   $isAdmin      True when the caller is an NC admin
      *
-     * @return array<string, mixed>|null The signing request, or null when
-     *                                   not-found OR caller access is denied.
-     *                                   Callers MUST treat the two cases
-     *                                   identically (single 404 — never split
-     *                                   into 404-vs-403, which would be an
-     *                                   existence-probing oracle).
+     * @return array<string, mixed>|null The signing request, or null when a
+     *                                   scoped caller (callerUserId set,
+     *                                   non-admin) is neither initiator nor
+     *                                   signer (access denied collapses to
+     *                                   null). A genuinely not-found request
+     *                                   throws RuntimeException('Signing request
+     *                                   not found') so the controller can map it
+     *                                   to a 404.
+     *
+     * @throws RuntimeException When the underlying record does not exist.
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      *
-     * Wilco #6 blocker fix (docudesk#100, 2026-06-06): mirrors the
-     * BatchStateService::getBatch() null-return pattern. The previous
-     * implementation threw RuntimeException with distinct messages on
-     * not-found ("Signing request not found: …") vs access-denied
-     * ("Access denied: signing request belongs to another user"), which
-     * SigningController::errorResponse() then surfaced verbatim in a 500
-     * body. The 500-vs-403 split plus the body-text split together
-     * confirmed request-ID existence to any authenticated user.
+     * Wilco #6 blocker fix (docudesk#100, 2026-06-06): the access-denied path
+     * still returns null (indistinguishable from the controller's not-found
+     * 404 for a scoped caller), so an unrelated user cannot probe request-ID
+     * existence. Not-found now throws a fixed, ID-free message ('Signing
+     * request not found') — no UUID is echoed, so nothing is leaked.
      */
     public function getRequest(string $requestId, string $callerUserId='', bool $isAdmin=false): ?array
     {
@@ -207,7 +208,11 @@ class SigningService
 
         $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
         if ($object === null) {
-            return null;
+            // Genuine not-found: throw so the controller maps it to a single
+            // 404. (Access-denied below still collapses to null — the two
+            // shapes stay indistinguishable to a non-admin caller, preserving
+            // the Wilco #6 anti-existence-probing contract.)
+            throw new RuntimeException('Signing request not found');
         }
 
         if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
@@ -321,6 +326,7 @@ class SigningService
             // exception contract.
             throw new RuntimeException('Signing request not found: '.$requestId);
         }
+
         $status = $request['status'] ?? '';
 
         if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
@@ -546,6 +552,7 @@ class SigningService
                     ];
                     continue;
                 }
+
                 $signerIds      = $request['signerIds'] ?? [];
                 $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
 

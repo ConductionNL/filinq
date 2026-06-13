@@ -172,8 +172,7 @@ class ConsentServiceTest extends TestCase
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper,
-            scopeValidator: new ConsentScopeValidator()
+            notesHelper: $this->notesHelper
         );
 
         return ['service' => $service, 'capturedSaveArg' => &$capturedSaveArg];
@@ -233,8 +232,7 @@ class ConsentServiceTest extends TestCase
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper,
-            scopeValidator: new ConsentScopeValidator()
+            notesHelper: $this->notesHelper
         );
 
         $this->mockUpdateHandler->method('updateConsentStatus')
@@ -262,8 +260,7 @@ class ConsentServiceTest extends TestCase
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper,
-            scopeValidator: new ConsentScopeValidator()
+            notesHelper: $this->notesHelper
         );
 
         $this->mockDeadlineChecker->method('checkObjectionDeadline')
@@ -292,8 +289,7 @@ class ConsentServiceTest extends TestCase
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper,
-            scopeValidator: new ConsentScopeValidator()
+            notesHelper: $this->notesHelper
         );
 
         $this->mockUpdateHandler->method('getConsentsByDocument')
@@ -328,8 +324,7 @@ class ConsentServiceTest extends TestCase
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper,
-            scopeValidator: new ConsentScopeValidator()
+            notesHelper: $this->notesHelper
         );
 
         $service->createConsentRequest(

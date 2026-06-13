@@ -29,7 +29,6 @@ use OCA\DocuDesk\Service\Signing\ValidSignProvider;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -71,7 +70,6 @@ class SigningProviderFactoryTest extends TestCase
         parent::setUp();
 
         $this->config = $this->createMock(IAppConfig::class);
-        $logger       = $this->createMock(LoggerInterface::class);
 
         $this->nativeProvider = $this->createMock(NativeSigningProvider::class);
         $this->nativeProvider->method('getIdentifier')->willReturn('native');
@@ -79,15 +77,7 @@ class SigningProviderFactoryTest extends TestCase
         $this->validSignProvider = $this->createMock(ValidSignProvider::class);
         $this->validSignProvider->method('getIdentifier')->willReturn('validsign');
 
-        // Store logger reference for factory construction.
-        $this->logger = $logger;
-
     }//end setUp()
-
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $logger;
 
     /**
      * Build a fresh SigningProviderFactory for each test.
@@ -104,7 +94,6 @@ class SigningProviderFactoryTest extends TestCase
 
         return new SigningProviderFactory(
             config: $this->config,
-            logger: $this->logger,
             nativeProvider: $this->nativeProvider,
             validSignProvider: $this->validSignProvider
         );

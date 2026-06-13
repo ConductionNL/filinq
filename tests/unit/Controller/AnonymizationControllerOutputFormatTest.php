@@ -485,8 +485,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             $this->createMock(WooProfileService::class),
             $this->createMock(FolderBatchService::class),
             $this->mockL10n,
-            $this->mockUserSession,
-            $this->mockAppConfig
+            $this->mockAppConfig,
+            $this->mockUserSession
         );
         // phpcs:enable
 
@@ -607,9 +607,9 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             $this->mockAnonService,
             $this->createMock(FileListingService::class),
             $this->mockL10n,
+            $this->mockAppConfig,
             $this->mockUserSession,
-            $this->mockRootFolder,
-            $this->mockAppConfig
+            $this->mockRootFolder
         );
         // phpcs:enable
 
@@ -648,8 +648,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             $this->createMock(WooProfileService::class),
             $this->createMock(FolderBatchService::class),
             $this->mockL10n,
-            $this->mockUserSession,
-            $this->mockAppConfig
+            $this->mockAppConfig,
+            $this->mockUserSession
         );
         // phpcs:enable
 
