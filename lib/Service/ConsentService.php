@@ -87,7 +87,6 @@ class ConsentService
      * @param IAppManager              $appManager      App manager interface
      * @param ObjectionDeadlineChecker $deadlineChecker Deadline checker
      * @param ConsentUpdateHandler     $updateHandler   Update and query handler
-     * @param ConsentScopeValidator    $scopeValidator  Scope and transition validator
      * @param PolicyMatchService       $policyMatcher   Policy rule matcher
      * @param ConsentNotesHelper       $notesHelper     Sentinel-tagged notes helper
      * @param ConsentScopeValidator    $scopeValidator  Consent scope validator
@@ -100,7 +99,6 @@ class ConsentService
         private readonly IAppManager $appManager,
         private readonly ObjectionDeadlineChecker $deadlineChecker,
         private readonly ConsentUpdateHandler $updateHandler,
-        private readonly ConsentScopeValidator $scopeValidator,
         private readonly PolicyMatchService $policyMatcher,
         private readonly ConsentNotesHelper $notesHelper,
         private readonly ConsentScopeValidator $scopeValidator
