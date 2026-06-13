@@ -66,6 +66,14 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
+				:active="isActive('Correspondence')"
+				:name="t('docudesk', 'Brieven & correspondentie')"
+				:to="{ name: 'Correspondence' }">
+				<template #icon>
+					<EmailOutline :size="24" />
+				</template>
+			</NcAppNavigationItem>
+			<NcAppNavigationItem
 				:active="isActive('StandingConsents')"
 				:name="t('docudesk', 'Standing Consents')"
 				:to="{ name: 'StandingConsents' }">
@@ -112,6 +120,7 @@ import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import TestTube from 'vue-material-design-icons/TestTube.vue'
 import PenLock from 'vue-material-design-icons/PenLock.vue'
+import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
@@ -119,6 +128,7 @@ const ACTIVE_GROUPS = {
 	Anonymization: ['Anonymization', 'BatchAnonymization'],
 	AnonymizationPoc: ['AnonymizationPoc'],
 	Signing: ['SigningRequestList', 'SigningRequestDetail', 'SigningRequestForm', 'BulkSigningPanel', 'SignatureVerification'],
+	Correspondence: ['Correspondence'],
 }
 
 export default {
@@ -138,6 +148,7 @@ export default {
 		AlertOctagon,
 		TestTube,
 		PenLock,
+		EmailOutline,
 	},
 	methods: {
 		/**

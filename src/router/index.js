@@ -19,6 +19,7 @@ import SigningRequestDetail from '../views/signing/SigningRequestDetail.vue'
 import SigningRequestForm from '../views/signing/SigningRequestForm.vue'
 import BulkSigningPanel from '../views/signing/BulkSigningPanel.vue'
 import SignatureVerification from '../views/signing/SignatureVerification.vue'
+import CorrespondenceIndex from '../views/correspondence/CorrespondenceIndex.vue'
 
 Vue.use(Router)
 
@@ -46,6 +47,7 @@ export default new Router(
 			{ path: '/signing/bulk', name: 'BulkSigningPanel', component: BulkSigningPanel },
 			{ path: '/signing/verify/:fileId', name: 'SignatureVerification', component: SignatureVerification, props: route => ({ fileId: route.params.fileId }) },
 			{ path: '/signing/:id', name: 'SigningRequestDetail', component: SigningRequestDetail, props: route => ({ requestId: route.params.id }) },
+			{ path: '/correspondence', name: 'Correspondence', component: CorrespondenceIndex },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],
 	},
