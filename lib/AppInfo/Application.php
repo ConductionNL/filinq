@@ -30,6 +30,7 @@ use OCA\DocuDesk\EventListener\DocuDeskEventListener;
 use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
+use OCA\DocuDesk\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\DocuDesk\Service\Conversion\MpdfBackend;
 use OCA\DocuDesk\Service\Conversion\OfficeAppBackend;
 use OCA\DocuDesk\Service\Conversion\PhpWordBackend;
@@ -119,13 +120,17 @@ class Application extends App implements IBootstrap
         // AnonymizationService → AnonymizationController) fails to construct
         // and the request 500s with a "Could not resolve backends!"
         // QueryException before the controller body ever runs. Order =
-        // OfficeApp → PhpWord → mPDF → EML (highest to lowest priority).
+        // OfficeApp → LibreOffice → PhpWord → mPDF → EML (first success wins).
+        // LibreOfficeHeadlessBackend (pdf-conversion-service) shells out to
+        // `soffice --headless` with a lock + timeout as a high-fidelity
+        // fallback when the NC IConversionManager providers are unavailable.
         $context->registerService(
             PdfConversionService::class,
             static function ($c): PdfConversionService {
                 return new PdfConversionService(
                     backends: [
                         $c->get(OfficeAppBackend::class),
+                        $c->get(LibreOfficeHeadlessBackend::class),
                         $c->get(PhpWordBackend::class),
                         $c->get(MpdfBackend::class),
                         $c->get(EmlBackend::class),

@@ -1,3 +1,5 @@
+status: pr-created
+
 ## Context
 
 DocuDesk lacks a reusable file-to-PDF conversion path. Today the anonymise endpoint emits whatever OpenAnonymiser returns — DOCX in, DOCX out — and downstream consumers (e.g. summary-page rendering) can't append to a non-PDF output. PDF rendering also flattens the document (glyph stream, shed metadata, reduced edit affordances), which is the right privacy default for a redacted artifact.
