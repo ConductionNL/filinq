@@ -143,7 +143,6 @@ class Application extends App implements IBootstrap
         // Background jobs are declared in appinfo/info.xml under
         // <background-jobs>; Nextcloud auto-registers them with the IJobList.
         // IRegistrationContext has no registerBackgroundJob() method.
-
         // register-i18n adoption (Task 3.2): wire the docudesk-side
         // language-negotiation middleware so OR's `LanguageService`
         // sees Accept-Language / ?_lang / X-Translation-Target-Language

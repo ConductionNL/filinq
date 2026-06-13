@@ -327,6 +327,7 @@ class ConsentCrudService
      * @param string               $register  The register ID
      * @param string               $schema    The schema ID
      * @param array<string, mixed> $data      The data to update
+     * @param \OCP\IUser|null      $user      The acting user, or null for system context
      *
      * @return array<string, mixed> The updated consent record
      *

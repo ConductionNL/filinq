@@ -382,7 +382,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
             $realOutputTmp = realpath($outputTmp);
             if ($realTmpDir === false
                 || $realOutputTmp === false
-                || str_starts_with($realOutputTmp, $realTmpDir . '/') === false
+                || str_starts_with($realOutputTmp, $realTmpDir.'/') === false
             ) {
                 throw new ConversionFailedException(
                     message: 'soffice output path escaped the conversion sandbox.',
@@ -616,7 +616,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface
                     continue;
                 }
 
-                $candidate = rtrim($dir, '/') . '/' . $binary;
+                $candidate = rtrim($dir, '/').'/'.$binary;
                 if (is_file($candidate) === true && is_executable($candidate) === true) {
                     return true;
                 }

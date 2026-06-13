@@ -914,10 +914,10 @@ class GrondslagenSummaryService
      * block carrying the document count, summed entity count, and the count of
      * distinct bases across all files.
      *
-     * @param array<int, array{fileId?: int, filename?: string, entities?: array<int, array<string, mixed>>}> $perFile  Per-file entity data
-     * @param array<string, string>                                                                           $labelMap Map of basis ref to human label
+     * @param array<int, array<string, mixed>> $perFile  Per-file entity data
+     * @param array<string, string>            $labelMap Map of basis ref to human label
      *
-     * @return array{rows: array<int, array{ref: string, label: string, entityCount: int}>, totals: array{documentCount: int, entityCount: int, distinctBasesCount: int}} Aggregated dossier summary
+     * @return array<string, mixed> Aggregated dossier summary (rows + totals)
      */
     private function aggregateForDossier(array $perFile, array $labelMap): array
     {

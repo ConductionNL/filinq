@@ -621,7 +621,7 @@ class AnonymizationService
                 ['fileId' => $fileId]
             );
             return;
-        }
+        }//end if
 
         $threshold = $this->getHighConfidenceThreshold();
 
@@ -649,7 +649,7 @@ class AnonymizationService
                 ['fileId' => $fileId, 'error' => $e->getMessage()]
             );
             return;
-        }
+        }//end try
 
         // Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
         $matches = $this->buildProhibitionMatches(
@@ -846,7 +846,7 @@ class AnonymizationService
                     ['exception' => $e->getMessage()]
                 );
                 continue;
-            }
+            }//end try
 
             if ($match === null) {
                 continue;
@@ -961,7 +961,7 @@ class AnonymizationService
                     500,
                     $e
                 );
-            }
+            }//end try
 
             // Step 2: PATCH OR EntityRelation with skipAnonymization=true.
             if ($relationId > 0) {

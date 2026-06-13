@@ -305,6 +305,7 @@ class ConsentService
      * @param string               $register  The register ID
      * @param string               $schema    The schema ID
      * @param array<string, mixed> $data      The update payload
+     * @param IUser|null           $user      The acting user, or null for system context
      *
      * @return array<string, mixed> The updated consent record
      *

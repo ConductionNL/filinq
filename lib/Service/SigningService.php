@@ -209,9 +209,9 @@ class SigningService
         $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
         if ($object === null) {
             // Genuine not-found: throw so the controller maps it to a single
-            // 404. (Access-denied below still collapses to null — the two
+            // 404. Access-denied below still collapses to null — the two
             // shapes stay indistinguishable to a non-admin caller, preserving
-            // the Wilco #6 anti-existence-probing contract.)
+            // the Wilco #6 anti-existence-probing contract.
             throw new RuntimeException('Signing request not found');
         }
 
@@ -319,7 +319,7 @@ class SigningService
         $objectService = $this->settingsService->getObjectService();
         $request       = $this->getRequest(requestId: $requestId);
         if ($request === null) {
-            // getRequest() returns null on not-found and access-denied
+            // The getRequest() call returns null on not-found and access-denied
             // (Wilco #6 fix, docudesk#100). Internal sign() doesn't pass a
             // callerUserId so access-denied is impossible from here — null
             // means truly not-found. Throw to keep callers' existing

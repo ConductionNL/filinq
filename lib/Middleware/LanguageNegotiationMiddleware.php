@@ -31,16 +31,16 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @category  Middleware
- * @package   OCA\DocuDesk\Middleware
+ * @category Middleware
+ * @package  OCA\DocuDesk\Middleware
  *
  * @author    Conduction Development Team <dev@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * @version   GIT: <git-id>
+ * @version GIT: <git-id>
  *
- * @link      https://www.DocuDesk.app
+ * @link https://www.DocuDesk.app
  *
  * @spec openspec/changes/register-i18n/tasks.md#task-3-2
  */
@@ -139,10 +139,12 @@ class LanguageNegotiationMiddleware extends Middleware
                 if (preg_match(self::BCP47_PATTERN, $targetTrim) === 1) {
                     $this->languageService->setTargetLanguage($targetTrim);
                 } else {
-                    $this->logger->warning(sprintf(
+                    $this->logger->warning(
+                            sprintf(
                         '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
                         $targetTrim
-                    ));
+                    )
+                            );
                 }
             }
         }
@@ -196,16 +198,18 @@ class LanguageNegotiationMiddleware extends Middleware
 
             $trimmed = trim($value);
             if (preg_match(self::BCP47_PATTERN, $trimmed) !== 1) {
-                $this->logger->warning(sprintf(
+                $this->logger->warning(
+                        sprintf(
                     "[DocuDesk LanguageNegotiationMiddleware] Invalid ?%s value '%s' — falling through",
                     $name,
                     $trimmed
-                ));
+                )
+                        );
                 continue;
             }
 
             return $trimmed;
-        }
+        }//end foreach
 
         return null;
     }//end resolveFromQueryParams()
