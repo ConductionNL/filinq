@@ -41,6 +41,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use InvalidArgumentException;
 use RuntimeException;
 use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCP\App\IAppManager;
@@ -845,6 +846,13 @@ class ConsentService
                 throw new \InvalidArgumentException(message: 'scope=document requires a non-empty documentId');
             }
 
+            // A caller-supplied policyMatch must point at a permitted
+            // referent (restored after 917b80e7 wiped the check).
+            $policyMatch = ($data['policyMatch'] ?? null);
+            if (is_string($policyMatch) === true && $policyMatch !== '') {
+                $this->assertPolicyMatchReferentValid(uuid: $policyMatch);
+            }
+
             return;
         }
 
@@ -867,4 +875,156 @@ class ConsentService
         }//end if
 
     }//end validatePublicationConsentData()
+
+    /**
+     * Verify a policyMatch UUID points at a permitted referent.
+     *
+     * Permitted: a `publicationProhibition` record, or a `publicationConsent`
+     * record with `scope: "entity"`. Rejects: a `publicationConsent` with
+     * `scope: "document"` (or missing scope). Dangling UUIDs are not blocked
+     * here — the spec leaves that to OpenRegister's referential-integrity
+     * surface — but they are logged.
+     *
+     * @param string $uuid The candidate UUID.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException If the referent's scope is not entity.
+     */
+    private function assertPolicyMatchReferentValid(string $uuid): void
+    {
+        try {
+            $objectService = $this->getObjectService();
+
+            $prohibitionHits = $objectService->findAll(
+                config: [
+                    'filters' => [
+                        'register' => 'consent',
+                        'schema'   => 'publicationProhibition',
+                        'uuid'     => $uuid,
+                    ],
+                    'limit'   => 1,
+                ],
+                _rbac: false
+            );
+            if ($this->resultHasAny(result: $prohibitionHits) === true) {
+                return;
+            }
+
+            $consentHits = $objectService->findAll(
+                config: [
+                    'filters' => [
+                        'register' => 'consent',
+                        'schema'   => 'publicationConsent',
+                        'uuid'     => $uuid,
+                    ],
+                    'limit'   => 1,
+                ],
+                _rbac: false
+            );
+
+            $consentObject = $this->firstObject(result: $consentHits);
+            if ($consentObject === null) {
+                $msg = 'policyMatch UUID "%s" does not resolve to a known prohibition or entity-scope publicationConsent record.';
+                throw new InvalidArgumentException(message: sprintf($msg, $uuid));
+            }
+
+            $referentScope = (string) ($consentObject['scope'] ?? 'document');
+            if ($referentScope !== 'entity') {
+                throw new InvalidArgumentException(
+                    message: sprintf(
+                        'policyMatch points at a publicationConsent with scope=%s; only entity-scope records are permitted.',
+                        $referentScope
+                    )
+                );
+            }
+        } catch (InvalidArgumentException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            // Treat lookup failure as a hard error rather than a silent
+            // pass — a write referencing a `policyMatch` we cannot
+            // validate must not be persisted, even if the underlying
+            // ObjectService threw an infrastructure error. Surfacing
+            // the failure (mapped to HTTP 5xx by the controller) is
+            // strictly safer than masking it with a warning log.
+            $this->logger->error(
+                'ConsentService: policyMatch referent lookup failed — rejecting write',
+                ['policyMatch' => $uuid, 'error' => $e->getMessage()]
+            );
+            throw new InvalidArgumentException(
+                message: sprintf(
+                    'policyMatch UUID "%s" could not be validated against the policy registry: %s',
+                    $uuid,
+                    $e->getMessage()
+                ),
+                previous: $e
+            );
+        }//end try
+
+    }//end assertPolicyMatchReferentValid()
+
+    /**
+     * Return true when an ObjectService findAll result is non-empty.
+     *
+     * @param mixed $result The findAll return value.
+     *
+     * @return bool
+     */
+    private function resultHasAny($result): bool
+    {
+        return $this->firstObject(result: $result) !== null;
+
+    }//end resultHasAny()
+
+    /**
+     * Coerce the first hit of an ObjectService findAll result into a plain array.
+     *
+     * @param mixed $result The findAll return value.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function firstObject($result): ?array
+    {
+        $candidates = [];
+        if (is_array($result) === true) {
+            $hasResultsKey = (isset($result['results']) === true && is_array($result['results']) === true);
+            if ($hasResultsKey === true) {
+                $candidates = $result['results'];
+            } else {
+                $candidates = $result;
+            }
+        } else if (is_iterable($result) === true) {
+            foreach ($result as $candidate) {
+                $candidates[] = $candidate;
+                break;
+            }
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate) === true) {
+                return $candidate;
+            }
+
+            if (is_object($candidate) === true && method_exists($candidate, 'getObject') === true) {
+                $payload = $candidate->getObject();
+                if (is_array($payload) === true) {
+                    if (isset($payload['@self']) === false) {
+                        $self = null;
+                        if (method_exists($candidate, 'getUuid') === true) {
+                            $self = $candidate->getUuid();
+                        }
+
+                        if ($self !== null) {
+                            $payload['@self'] = ['id' => $self];
+                        }
+                    }
+
+                    return $payload;
+                }
+            }
+        }//end foreach
+
+        return null;
+
+    }//end firstObject()
 }//end class
