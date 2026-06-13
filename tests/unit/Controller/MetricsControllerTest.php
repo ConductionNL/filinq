@@ -71,17 +71,17 @@ class MetricsControllerTest extends TestCase
     {
         parent::setUp();
 
-        $mockRequest         = $this->createMock(originalClassName: IRequest::class);
-        $this->mockConfig    = $this->createMock(originalClassName: IConfig::class);
-        $this->mockAppConfig = $this->createMock(originalClassName: IAppConfig::class);
-        $this->mockCollector = $this->createMock(originalClassName: MetricsCollector::class);
+        $mockRequest         = $this->createMock(IRequest::class);
+        $this->mockConfig    = $this->createMock(IConfig::class);
+        $this->mockAppConfig = $this->createMock(IAppConfig::class);
+        $this->mockCollector = $this->createMock(MetricsCollector::class);
 
         $this->controller = new MetricsController(
-            appName: 'docudesk',
-            request: $mockRequest,
-            config: $this->mockConfig,
-            appConfig: $this->mockAppConfig,
-            metricsCollector: $this->mockCollector
+            'docudesk',
+            $mockRequest,
+            $this->mockConfig,
+            $this->mockAppConfig,
+            $this->mockCollector
         );
 
     }//end setUp()
@@ -93,14 +93,11 @@ class MetricsControllerTest extends TestCase
      */
     public function testIndexReturnsPrometheusFormat(): void
     {
-        $this->mockConfig->method('getAppValue')
-            ->willReturnMap(
-                    [
-                        ['docudesk', 'installed_version', '0.0.0', '0.0.32'],
-                        ['docudesk', 'pdf_generations_total', '0', '5'],
-                        ['docudesk', 'anonymizations_total', '0', '3'],
-                    ]
-                    );
+        $this->mockAppConfig->method('getValueString')
+            ->willReturn('0.0.32');
+
+        $this->mockAppConfig->method('getValueInt')
+            ->willReturn(5);
 
         $this->mockConfig->method('getSystemValueString')
             ->willReturn('29.0.0');

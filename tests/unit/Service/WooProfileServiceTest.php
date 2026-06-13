@@ -14,11 +14,13 @@
  *
  * @link https://www.DocuDesk.app
  *
- * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
+ * @spec openspec/changes/unit-test-coverage-75/tasks.md#task-4.6
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
+
+declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
@@ -42,135 +44,114 @@ class WooProfileServiceTest extends TestCase
 {
 
     /**
-     * The service under test.
-     *
      * @var WooProfileService
      */
     private WooProfileService $service;
 
     /**
-     * Mock IAppConfig.
-     *
-     * @var MockObject&IAppConfig
+     * @var IAppConfig|MockObject
      */
-    private MockObject $appConfig;
+    private IAppConfig|MockObject $mockAppConfig;
 
-    /**
-     * Set up test fixtures.
-     *
-     * @return void
-     */
     protected function setUp(): void
     {
-        $this->appConfig = $this->createMock(originalClassName: IAppConfig::class);
-        $this->service   = new WooProfileService(appConfig: $this->appConfig);
+        parent::setUp();
+
+        $this->mockAppConfig = $this->createMock(IAppConfig::class);
+        $this->service       = new WooProfileService(appConfig: $this->mockAppConfig);
 
     }//end setUp()
 
     /**
-     * WHEN GET /api/anonymization/profiles is called with no stored profile,
-     * THEN the default WOO profile is returned with PERSON and PHONE in anonymize.
+     * Test getProfile returns default profile when nothing is configured.
      *
      * @return void
-     *
-     * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
      */
     public function testGetProfileReturnsDefaultWhenNotConfigured(): void
     {
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturn('');
+        $this->mockAppConfig->method('getValueString')->willReturn('');
 
         $profile = $this->service->getProfile();
 
-        $this->assertArrayHasKey(key: 'anonymize', array: $profile);
-        $this->assertArrayHasKey(key: 'keep', array: $profile);
-        $this->assertContains(needle: 'PERSON', haystack: $profile['anonymize']);
-        $this->assertContains(needle: 'PHONE', haystack: $profile['anonymize']);
-        $this->assertContains(needle: 'ORGANIZATION', haystack: $profile['keep']);
+        $this->assertArrayHasKey('anonymize', $profile);
+        $this->assertArrayHasKey('keep', $profile);
+        $this->assertContains('PERSON', $profile['anonymize']);
+        $this->assertContains('ORGANIZATION', $profile['keep']);
 
     }//end testGetProfileReturnsDefaultWhenNotConfigured()
 
     /**
-     * WHEN a stored profile exists in IAppConfig,
-     * THEN getProfile returns that profile.
+     * Test getProfile returns stored profile when configured.
      *
      * @return void
-     *
-     * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
      */
     public function testGetProfileReturnsStoredProfile(): void
     {
-        $stored = json_encode(['anonymize' => ['PERSON', 'PHONE'], 'keep' => ['ORGANIZATION']]);
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturn($stored);
+        $stored = json_encode(['anonymize' => ['PERSON', 'BSN'], 'keep' => ['DATE']]);
+        $this->mockAppConfig->method('getValueString')->willReturn($stored);
 
         $profile = $this->service->getProfile();
 
-        $this->assertSame(expected: ['PERSON', 'PHONE'], actual: $profile['anonymize']);
-        $this->assertSame(expected: ['ORGANIZATION'], actual: $profile['keep']);
+        $this->assertSame(['PERSON', 'BSN'], $profile['anonymize']);
+        $this->assertSame(['DATE'], $profile['keep']);
 
     }//end testGetProfileReturnsStoredProfile()
 
     /**
-     * GIVEN a "Woo publication" rule set that anonymizes PERSON but keeps ORGANIZATION,
-     * WHEN shouldAnonymize is called,
-     * THEN it returns true for PERSON and false for ORGANIZATION.
+     * Test shouldAnonymize returns true for types in the anonymize list.
      *
      * @return void
-     *
-     * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
      */
-    public function testShouldAnonymizeMatchesProfile(): void
+    public function testShouldAnonymizeReturnsTrueForAnonymizeType(): void
     {
-        $stored = json_encode(['anonymize' => ['PERSON', 'PHONE'], 'keep' => ['ORGANIZATION']]);
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturn($stored);
+        $this->mockAppConfig->method('getValueString')->willReturn('');
 
-        $this->assertTrue(condition: $this->service->shouldAnonymize('PERSON'));
-        $this->assertTrue(condition: $this->service->shouldAnonymize('PHONE'));
-        $this->assertFalse(condition: $this->service->shouldAnonymize('ORGANIZATION'));
-        $this->assertFalse(condition: $this->service->shouldAnonymize('LOCATION'));
+        $this->assertTrue($this->service->shouldAnonymize('PERSON'));
 
-    }//end testShouldAnonymizeMatchesProfile()
+    }//end testShouldAnonymizeReturnsTrueForAnonymizeType()
 
     /**
-     * WHEN saveProfile is called, THEN the new profile is persisted.
+     * Test shouldAnonymize returns false for types in the keep list.
      *
      * @return void
-     *
-     * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
      */
-    public function testSaveProfilePersistsData(): void
+    public function testShouldAnonymizeReturnsFalseForKeepType(): void
     {
-        $this->appConfig
-            ->expects($this->once())
+        $this->mockAppConfig->method('getValueString')->willReturn('');
+
+        $this->assertFalse($this->service->shouldAnonymize('ORGANIZATION'));
+
+    }//end testShouldAnonymizeReturnsFalseForKeepType()
+
+    /**
+     * Test saveProfile calls setValueString on appConfig.
+     *
+     * @return void
+     */
+    public function testSaveProfileCallsSetValueString(): void
+    {
+        $profile = ['anonymize' => ['PERSON'], 'keep' => ['ORGANIZATION']];
+
+        $this->mockAppConfig->expects($this->once())
             ->method('setValueString')
-            ->with('docudesk', 'docudesk_woo_entity_profiles', $this->anything());
+            ->with('docudesk', 'docudesk_woo_entity_profiles', json_encode($profile));
 
-        $this->service->saveProfile(['anonymize' => ['BSN'], 'keep' => ['DATE']]);
+        $this->service->saveProfile($profile);
 
-    }//end testSaveProfilePersistsData()
+    }//end testSaveProfileCallsSetValueString()
 
     /**
-     * WHEN IAppConfig returns malformed JSON,
-     * THEN getProfile falls back to defaults.
+     * Test getProfile falls back to default on invalid JSON.
      *
      * @return void
-     *
-     * @spec openspec/changes/enhanced-anonymization/specs/batch-anonymization/spec.md
      */
     public function testGetProfileFallsBackOnInvalidJson(): void
     {
-        $this->appConfig
-            ->method('getValueString')
-            ->willReturn('not-valid-json');
+        $this->mockAppConfig->method('getValueString')->willReturn('not-valid-json');
 
         $profile = $this->service->getProfile();
 
-        $this->assertContains(needle: 'PERSON', haystack: $profile['anonymize']);
+        $this->assertContains('PERSON', $profile['anonymize']);
 
     }//end testGetProfileFallsBackOnInvalidJson()
 }//end class

@@ -101,7 +101,6 @@ class GrondslagenSummaryServiceTest extends TestCase
      */
     private ContainerInterface|MockObject $mockContainer;
 
-
     /**
      * Set up test environment
      *
@@ -118,6 +117,9 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager  = $this->createMock(originalClassName: IAppManager::class);
         $this->mockContainer   = $this->createMock(originalClassName: ContainerInterface::class);
 
+        // OpenRegister not installed — resolveBaseLabels falls back to placeholders.
+        $this->mockAppManager->method('getInstalledApps')->willReturn([]);
+
         $this->service = new GrondslagenSummaryService(
             logger: $this->mockLogger,
             pdfService: $this->mockPdfService,
@@ -128,7 +130,6 @@ class GrondslagenSummaryServiceTest extends TestCase
         );
 
     }//end setUp()
-
 
     /**
      * Service instantiates with all six DI dependencies.
@@ -143,7 +144,6 @@ class GrondslagenSummaryServiceTest extends TestCase
         );
 
     }//end testServiceCanBeInstantiated()
-
 
     /**
      * `resolveBaseLabels` produces a placeholder entry for every input ref.
@@ -173,7 +173,6 @@ class GrondslagenSummaryServiceTest extends TestCase
 
     }//end testResolveBaseLabelsProducesPlaceholders()
 
-
     /**
      * `countDistinctBases` deduplicates the union of `bases` arrays across rows.
      *
@@ -200,7 +199,6 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->assertSame(expected: 3, actual: $count);
 
     }//end testCountDistinctBases()
-
 
     /**
      * `aggregateForDossier` produces per-document, per-basis, and totals
@@ -263,7 +261,6 @@ class GrondslagenSummaryServiceTest extends TestCase
 
     }//end testAggregateForDossier()
 
-
     /**
      * Find a per-basis row by its `ref`. Returns null when missing.
      *
@@ -283,6 +280,4 @@ class GrondslagenSummaryServiceTest extends TestCase
         return null;
 
     }//end findBasisRow()
-
-
 }//end class
