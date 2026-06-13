@@ -2779,6 +2779,39 @@
                 "description": "Nieuw dossier voor anonimiseringstraject — grondslagen nog te bepalen door privacy officer.",
                 "bases": [],
                 "checkedOn": null
+            },
+            {
+                "@self": {"register": "templates", "schema": "template", "slug": "beschikking-standaard"},
+                "name": "Beschikking Standaard",
+                "description": "Standaard beschikkingsbrief voor gemeente-besluiten conform de Awb-vereisten. Bevat aanhef, motivering, beslissing en bezwaarclausule.",
+                "content": "<h1>BESCHIKKING</h1>\n<p>Datum: {{ datum }}</p>\n<p>Kenmerk: {{ kenmerk }}</p>\n<p>Geachte {{ aanhef }} {{ naam }},</p>\n<h2>Beslissing</h2>\n<p>{{ motivering }}</p>\n<p>Wij besluiten: {{ beslissing }}</p>\n<h2>Bezwaar</h2>\n<p>Tegen dit besluit kunt u binnen 6 weken bezwaar maken bij {{ gemeente }}.</p>",
+                "namespace": "docudesk",
+                "format": "A4",
+                "orientation": "P",
+                "category": "beschikkingen",
+                "tags": ["beschikking", "awb", "gemeente"]
+            },
+            {
+                "@self": {"register": "templates", "schema": "template", "slug": "brief-algemeen"},
+                "name": "Algemene Correspondentiebrief",
+                "description": "Algemene briefsjabloon voor gemeentelijke correspondentie met huisstijl-elementen. Geschikt voor informatieve brieven en uitnodigingen.",
+                "content": "<p style=\"text-align:right\">{{ gemeente }}<br>{{ adres }}<br>{{ postcode }} {{ plaats }}</p>\n<p>{{ datum }}</p>\n<p>{{ aanhef }} {{ naam }},</p>\n<p>{{ inhoud }}</p>\n<p>Met vriendelijke groet,</p>\n<p>{{ afdeling }}<br>{{ gemeente }}</p>",
+                "namespace": "docudesk",
+                "format": "A4",
+                "orientation": "P",
+                "category": "brieven",
+                "tags": ["brief", "correspondentie", "algemeen"]
+            },
+            {
+                "@self": {"register": "templates", "schema": "template", "slug": "rapportage-kwartaal"},
+                "name": "Kwartaalrapportage",
+                "description": "Template voor periodieke kwartaalrapportages richting gemeenteraad. Bevat secties voor samenvatting, cijfers en actiepunten.",
+                "content": "<h1>Kwartaalrapportage {{ kwartaal }} {{ jaar }}</h1>\n<h2>Samenvatting</h2>\n<p>{{ samenvatting }}</p>\n<h2>Kerncijfers</h2>\n<table><tr><th>Indicator</th><th>Waarde</th></tr>{% for indicator in indicatoren %}<tr><td>{{ indicator.naam }}</td><td>{{ indicator.waarde }}</td></tr>{% endfor %}</table>\n<h2>Actiepunten</h2>\n<ul>{% for actie in actiepunten %}<li>{{ actie }}</li>{% endfor %}</ul>",
+                "namespace": "docudesk",
+                "format": "A4",
+                "orientation": "L",
+                "category": "notities",
+                "tags": ["rapportage", "kwartaal", "raad"]
             }
         ]
     }
