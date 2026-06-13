@@ -44,6 +44,9 @@ return [
         ['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
 
+        // Dossier anonymization routes.
+        ['name' => 'dossier#generateGrondslagenPdf', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
+
         // Batch anonymization routes.
         ['name' => 'batchAnonymization#folderBatch', 'url' => 'api/anonymization/batch/folder', 'verb' => 'POST'],
         ['name' => 'batchAnonymization#batchUpload', 'url' => 'api/anonymization/batch/upload', 'verb' => 'POST'],
@@ -56,9 +59,6 @@ return [
         // WOO entity profile routes.
         ['name' => 'batchAnonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
         ['name' => 'batchAnonymization#updateProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'PUT'],
-
-        // Dossier routes.
-        ['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
 
         // Policy — prohibition routes.
         ['name' => 'policy#indexProhibitions', 'url' => 'api/policy/prohibitions', 'verb' => 'GET'],

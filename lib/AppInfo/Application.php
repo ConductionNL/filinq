@@ -27,6 +27,7 @@ use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\EventListener\ApprovalStepListener;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
+use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
 use OCA\DocuDesk\Service\Conversion\MpdfBackend;
@@ -107,6 +108,9 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ApprovalStepApprovedEvent::class, ApprovalStepListener::class);
         $context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
         $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
+
+        // Auto-regen dossier grondslagen summary when checkedOn is updated.
+        $context->registerEventListener(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
 
         // Wire the PDF-conversion cascade. PdfConversionService takes an
         // ordered array of backends in its constructor; Nextcloud's DI cannot
