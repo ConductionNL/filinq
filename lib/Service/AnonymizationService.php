@@ -24,6 +24,11 @@
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
  * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
  */
 
 declare(strict_types=1);
@@ -32,6 +37,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\DocuDesk\Exception\ProhibitionGateException;
 use RuntimeException;
 use Throwable;
 use OCP\App\IAppManager;
@@ -50,6 +56,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  */
 class AnonymizationService
 {
@@ -66,6 +73,45 @@ class AnonymizationService
      * @var string
      */
     private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
+
+    /**
+     * Register slug for the prohibition override audit schema.
+     *
+     * @var string
+     */
+    private const OVERRIDE_AUDIT_REGISTER = 'consent';
+
+    /**
+     * Schema slug for the prohibition override audit entries.
+     *
+     * @var string
+     */
+    private const OVERRIDE_AUDIT_SCHEMA = 'prohibitionOverrideAudit';
+
+    /**
+     * App config key controlling the gate's fail-mode for backend errors.
+     *
+     * When `true` (default) any backend error inside the prohibition gate
+     * (PolicyMatchService unavailable, EntityRelationMapper lookup throws,
+     * per-entity matchProhibition throws) is treated as gate-firing: the
+     * call is rejected via ProhibitionGateException. This is the safety-
+     * critical default for a gate protecting witness/undercover-officer
+     * identities — silent fail-open would let any service outage disable
+     * the gate.
+     *
+     * Set to `false` to opt into the legacy fail-open behaviour for non-
+     * production environments.
+     *
+     * @var string
+     */
+    private const FAIL_CLOSED_KEY = 'prohibition.fail_closed';
+
+    /**
+     * Default for the fail-closed flag.
+     *
+     * @var bool
+     */
+    private const DEFAULT_FAIL_CLOSED = true;
 
     /**
      * Constructor for AnonymizationService
@@ -314,11 +360,14 @@ class AnonymizationService
      * created for each entry AFTER the anonymise pipeline succeeds. The
      * createdConsents[] field in the response aggregates the resulting records.
      *
-     * @param int                              $fileId             The Nextcloud file ID
-     * @param array<array<string, mixed>>      $entities           The entities to anonymize
-     * @param bool                             $appendBasisSummary Whether to append a grondslagen summary (default false)
-     * @param string                           $outputFormat       Output format: 'pdf' (default) or 'preserve'
-     * @param array<int, array<string, mixed>> $unredactedEntities Entities to publish unredacted with consent creation
+     * @param int                              $fileId                The Nextcloud file ID
+     * @param array<array<string, mixed>>      $entities              The entities to anonymize
+     * @param bool                             $appendBasisSummary    Whether to append a grondslagen summary (default false)
+     * @param string                           $outputFormat          Output format: 'pdf' (default) or 'preserve'
+     * @param array<int, array<string, mixed>> $unredactedEntities    Entities to publish unredacted with consent creation
+     * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?} that
+     *                                                                release low-confidence prohibition matches.
+     * @param string                           $userId                UID of the acting user (for override audit entries).
      *
      * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
      *
@@ -326,19 +375,34 @@ class AnonymizationService
      * @throws ConversionFailedException  When `$outputFormat === "pdf"` and the cascade could not
      *                                    convert the anonymised intermediate. The intermediate
      *                                    is deleted (best-effort) before the exception propagates.
+     * @throws ProhibitionGateException   When the prohibition gate fires (high-confidence matches
+     *                                    missing or invalid overrides for high-confidence matches).
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
      */
     public function anonymizeDocument(
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
         string $outputFormat='pdf',
-        array $unredactedEntities=[]
+        array $unredactedEntities=[],
+        array $acknowledgedOverrides=[],
+        string $userId=''
     ): array {
+        // Prohibition gate — runs BEFORE any OR interaction.
+        // Throws ProhibitionGateException when gate fires; passes through otherwise.
+        $this->runProhibitionGate(
+            fileId: $fileId,
+            requestEntities: $entities,
+            acknowledgedOverrides: $acknowledgedOverrides,
+            userId: $userId
+        );
+
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
@@ -500,6 +564,474 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+    /**
+     * Run the prohibition gate before forwarding to OpenRegister.
+     *
+     * Resolves detected entities for the file, matches each against active
+     * prohibition rules, validates acknowledgedOverrides, checks that
+     * high-confidence matches are present in the to-be-anonymised set, and
+     * commits validated overrides (DocuDesk audit entry + OR PATCH). Throws
+     * ProhibitionGateException when the gate blocks the call.
+     *
+     * @param int                              $fileId                Nextcloud file ID.
+     * @param array<int, array<string, mixed>> $requestEntities       User-submitted entities[] to anonymize.
+     * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?}.
+     * @param string                           $userId                UID of the acting user.
+     *
+     * @return void
+     *
+     * @throws ProhibitionGateException When the gate blocks the call.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
+     */
+    public function runProhibitionGate(
+        int $fileId,
+        array $requestEntities,
+        array $acknowledgedOverrides=[],
+        string $userId=''
+    ): void {
+        $failClosed = $this->getFailClosed();
+
+        $policyService = $this->tryGetPolicyMatchService();
+        if ($policyService === null) {
+            // PolicyMatchService not available — fail-CLOSED by default for
+            // a privacy-critical safety gate. Silent fail-open would let
+            // any service outage disable witness/undercover-officer
+            // protection. Operators can opt into legacy fail-open via
+            // docudesk.prohibition.fail_closed=false in non-production
+            // environments.
+            if ($failClosed === true) {
+                $this->logger->warning(
+                    'ProhibitionGate: PolicyMatchService unavailable — failing closed',
+                    ['fileId' => $fileId]
+                );
+                throw new ProhibitionGateException(
+                    missingProhibitionMatches: [],
+                    rejectedOverrides: [],
+                    backendUnavailable: 'PolicyMatchService unavailable'
+                );
+            }
+
+            $this->logger->warning(
+                'ProhibitionGate: PolicyMatchService unavailable — fail-open (legacy mode)',
+                ['fileId' => $fileId]
+            );
+            return;
+        }
+
+        $threshold = $this->getHighConfidenceThreshold();
+
+        // Load detected entities from the file.
+        try {
+            $entityRelationMapper = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
+            );
+            $rawEntities          = $entityRelationMapper->findEntitiesForFile($fileId);
+        } catch (\Throwable $e) {
+            if ($failClosed === true) {
+                $this->logger->warning(
+                    'ProhibitionGate: failed to load entities for file — failing closed',
+                    ['fileId' => $fileId, 'error' => $e->getMessage()]
+                );
+                throw new ProhibitionGateException(
+                    missingProhibitionMatches: [],
+                    rejectedOverrides: [],
+                    backendUnavailable: 'EntityRelationMapper unavailable: '.$e->getMessage()
+                );
+            }
+
+            $this->logger->warning(
+                'ProhibitionGate: failed to load entities for file — fail-open (legacy mode)',
+                ['fileId' => $fileId, 'error' => $e->getMessage()]
+            );
+            return;
+        }
+
+        // Build prohibition matches: [ruleId, ruleName, entityId, entityRelationId, confidence, entityValue].
+        $matches = $this->buildProhibitionMatches(
+            rawEntities: $rawEntities,
+            policyService: $policyService
+        );
+
+        if (empty($matches) === true) {
+            return;
+        }
+
+        // Validate acknowledgedOverrides and split into released / rejected.
+        $released = [];
+        $rejected = [];
+
+        foreach ($acknowledgedOverrides as $override) {
+            $overrideRuleId   = (string) ($override['ruleId'] ?? '');
+            $overrideEntityId = (int) ($override['entityId'] ?? 0);
+
+            // Find matching prohibition match by (ruleId, entityId).
+            $foundMatch = null;
+            foreach ($matches as $match) {
+                if ($match['ruleId'] === $overrideRuleId
+                    && (int) $match['entityId'] === $overrideEntityId
+                ) {
+                    $foundMatch = $match;
+                    break;
+                }
+            }
+
+            // Non-matching combination: silently ignore.
+            if ($foundMatch === null) {
+                continue;
+            }
+
+            // High-confidence match: override is rejected.
+            if ((float) $foundMatch['confidence'] >= $threshold) {
+                $rejected[] = [
+                    'ruleId'   => $overrideRuleId,
+                    'entityId' => $overrideEntityId,
+                    'reason'   => 'override not allowed for high-confidence matches',
+                ];
+                continue;
+            }
+
+            // Low-confidence match: override is valid — mark as released.
+            $released[$overrideRuleId.'|'.$overrideEntityId] = [
+                'match'  => $foundMatch,
+                'reason' => (string) ($override['reason'] ?? ''),
+            ];
+        }//end foreach
+
+        // Build the request entity value set for fast lookup.
+        $requestValues = [];
+        foreach ($requestEntities as $ent) {
+            $val = (string) ($ent['value'] ?? $ent['text'] ?? '');
+            if ($val !== '') {
+                $requestValues[mb_strtolower($val)] = true;
+            }
+        }
+
+        // Identify high-confidence matches that are missing from entities[].
+        $missing = [];
+        foreach ($matches as $match) {
+            $key = $match['ruleId'].'|'.(int) $match['entityId'];
+            if (isset($released[$key]) === true) {
+                // Released by a valid override — skip.
+                continue;
+            }
+
+            if ((float) $match['confidence'] < $threshold) {
+                // Low-confidence, no override, not required.
+                continue;
+            }
+
+            // High-confidence match — must be in entities[].
+            $entityValueLower = mb_strtolower((string) ($match['entityValue'] ?? ''));
+            if (isset($requestValues[$entityValueLower]) === true) {
+                // Present — gate passes for this match.
+                continue;
+            }
+
+            $entityName = $this->tryGetEntityCanonicalName(entityId: (int) $match['entityId']);
+
+            $fallbackName = (string) ($match['entityValue'] ?? '');
+            if ($entityName !== '') {
+                $resolvedEntityName = $entityName;
+            } else {
+                $resolvedEntityName = $fallbackName;
+            }
+
+            $missing[] = [
+                'entityId'   => (int) $match['entityId'],
+                'entityName' => $resolvedEntityName,
+                'ruleId'     => $match['ruleId'],
+                'ruleName'   => $match['ruleName'],
+                'confidence' => (float) $match['confidence'],
+            ];
+        }//end foreach
+
+        if (empty($missing) === false || empty($rejected) === false) {
+            $this->logger->warning(
+                'ProhibitionGate: 422 — prohibition gate fired',
+                [
+                    'fileId'                => $fileId,
+                    'missingCount'          => count($missing),
+                    'rejectedOverrideCount' => count($rejected),
+                    'ruleIds'               => array_column($missing, 'ruleId'),
+                    'entityIds'             => array_column($missing, 'entityId'),
+                ]
+            );
+
+            throw new ProhibitionGateException(
+                missingProhibitionMatches: $missing,
+                rejectedOverrides: $rejected
+            );
+        }
+
+        // Gate passes — commit validated overrides.
+        if (empty($released) === false) {
+            $this->commitOverrides(
+                released: $released,
+                fileId: $fileId,
+                userId: $userId
+            );
+        }
+
+    }//end runProhibitionGate()
+
+    /**
+     * Build prohibition matches from raw EntityRelation data.
+     *
+     * For each raw entity, calls PolicyMatchService::matchProhibition and
+     * collects matches into a structured list.
+     *
+     * @param array<int, mixed> $rawEntities   Raw EntityRelation rows from findEntitiesForFile.
+     * @param mixed             $policyService PolicyMatchService instance.
+     *
+     * @return array<int, array<string, mixed>> Match entries with ruleId, ruleName, entityId,
+     *                                          entityRelationId, confidence, entityValue.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+     */
+    private function buildProhibitionMatches(array $rawEntities, mixed $policyService): array
+    {
+        $matches    = [];
+        $failClosed = $this->getFailClosed();
+
+        foreach ($rawEntities as $raw) {
+            if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
+                $entityData = $raw->jsonSerialize();
+            } else {
+                $entityData = (array) $raw;
+            }
+
+            $entityType  = (string) ($entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN');
+            $entityValue = (string) ($entityData['entity_value'] ?? $entityData['entityValue'] ?? '');
+            $confidence  = (float) ($entityData['confidence'] ?? 0.0);
+            $entityId    = (int) ($entityData['entity_id'] ?? $entityData['entityId'] ?? 0);
+            $relationId  = (int) ($entityData['relation_id'] ?? $entityData['relationId'] ?? 0);
+
+            if ($entityValue === '') {
+                continue;
+            }
+
+            try {
+                $match = $policyService->matchProhibition(
+                    entityType: $entityType,
+                    entityValue: $entityValue
+                );
+            } catch (\Throwable $e) {
+                // Per-entity match failure: when fail-closed, escalate so
+                // runProhibitionGate can surface a 422/503 rather than
+                // silently skipping the entity (which would allow the
+                // anonymise call to proceed without a check).
+                if ($failClosed === true) {
+                    $this->logger->warning(
+                        'ProhibitionGate: matchProhibition threw — failing closed',
+                        [
+                            'entityId'   => $entityId,
+                            'entityType' => $entityType,
+                            'exception'  => $e->getMessage(),
+                        ]
+                    );
+                    throw new ProhibitionGateException(
+                        missingProhibitionMatches: [],
+                        rejectedOverrides: [],
+                        backendUnavailable: 'PolicyMatchService::matchProhibition threw: '.$e->getMessage()
+                    );
+                }
+
+                $this->logger->debug(
+                    'ProhibitionGate: matchProhibition threw; skipping entity (legacy fail-open)',
+                    ['exception' => $e->getMessage()]
+                );
+                continue;
+            }
+
+            if ($match === null) {
+                continue;
+            }
+
+            $matches[] = [
+                'ruleId'           => (string) ($match['ruleId'] ?? ''),
+                'ruleName'         => (string) ($match['ruleName'] ?? ''),
+                'entityId'         => $entityId,
+                'entityRelationId' => $relationId,
+                'confidence'       => $confidence,
+                'entityValue'      => $entityValue,
+            ];
+        }//end foreach
+
+        return $matches;
+
+    }//end buildProhibitionMatches()
+
+    /**
+     * Read the fail-closed flag from app config.
+     *
+     * Defaults to TRUE — the gate fails closed by default for any backend
+     * outage path. Operators can flip to false for non-production via
+     * docudesk.prohibition.fail_closed.
+     *
+     * @return bool
+     */
+    private function getFailClosed(): bool
+    {
+        return $this->appConfig->getValueBool(
+            app: 'docudesk',
+            key: self::FAIL_CLOSED_KEY,
+            default: self::DEFAULT_FAIL_CLOSED
+        );
+
+    }//end getFailClosed()
+
+    /**
+     * Commit validated override entries: write audit + PATCH OR skip flag.
+     *
+     * Processes overrides sequentially. Writes the DocuDesk audit entry BEFORE
+     * the OR PATCH for each override. On OR PATCH failure, stops processing
+     * further overrides and throws RuntimeException (HTTP 500).
+     *
+     * @param array<string, array<string, mixed>> $released Validated overrides keyed by 'ruleId|entityId'.
+     * @param int                                 $fileId   Nextcloud file ID (for audit entry).
+     * @param string                              $userId   UID of the acting user.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When an OR PATCH fails.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     */
+    private function commitOverrides(array $released, int $fileId, string $userId): void
+    {
+        $now = (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM);
+
+        try {
+            $objectService        = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Service\ObjectService'
+            );
+            $entityRelationMapper = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
+            );
+        } catch (\Throwable $e) {
+            $this->logger->warning(
+                'ProhibitionGate: OR services unavailable — skipping override commit',
+                ['error' => $e->getMessage()]
+            );
+            return;
+        }
+
+        foreach ($released as $override) {
+            $match      = $override['match'];
+            $reason     = $override['reason'];
+            $relationId = (int) ($match['entityRelationId'] ?? 0);
+
+            // Step 1: Write DocuDesk audit entry BEFORE OR PATCH.
+            $auditEntry = [
+                'ruleId'           => $match['ruleId'],
+                'entityRelationId' => $relationId,
+                'fileId'           => $fileId,
+                'reason'           => $reason,
+                'acknowledgedBy'   => $userId,
+                'acknowledgedAt'   => $now,
+            ];
+
+            try {
+                $objectService->saveObject(
+                    object: $auditEntry,
+                    register: self::OVERRIDE_AUDIT_REGISTER,
+                    schema: self::OVERRIDE_AUDIT_SCHEMA
+                );
+            } catch (\Throwable $e) {
+                $this->logger->error(
+                    'ProhibitionGate: failed to write audit entry — aborting override commit',
+                    [
+                        'ruleId'     => $match['ruleId'],
+                        'relationId' => $relationId,
+                        'fileId'     => $fileId,
+                        'error'      => $e->getMessage(),
+                    ]
+                );
+                // AVG Art. 30 / 10-year archival: an override permanently
+                // released into OpenRegister with no DocuDesk audit record
+                // is a compliance violation. If the audit write fails we
+                // MUST NOT proceed to the OR PATCH — fail-closed.
+                throw new RuntimeException(
+                    'ProhibitionGate: refusing to commit override without audit entry: '.$e->getMessage(),
+                    500,
+                    $e
+                );
+            }
+
+            // Step 2: PATCH OR EntityRelation with skipAnonymization=true.
+            if ($relationId > 0) {
+                try {
+                    $entityRelationMapper->updateDecisionMetadata(
+                        $relationId,
+                        ['skipAnonymization' => true]
+                    );
+                } catch (\Throwable $e) {
+                    $this->logger->error(
+                        'ProhibitionGate: OR PATCH failed — stopping override processing',
+                        [
+                            'ruleId'     => $match['ruleId'],
+                            'relationId' => $relationId,
+                            'fileId'     => $fileId,
+                            'error'      => $e->getMessage(),
+                        ]
+                    );
+                    throw new RuntimeException(
+                        'ProhibitionGate: failed to update EntityRelation skip flag: '.$e->getMessage(),
+                        500,
+                        $e
+                    );
+                }//end try
+            }//end if
+        }//end foreach
+
+    }//end commitOverrides()
+
+    /**
+     * Try to get the canonical name of an OR Entity record.
+     *
+     * Best-effort: returns empty string when OR is unavailable or the entity
+     * has no canonical name field. The gate falls back to the detected text
+     * when this returns empty.
+     *
+     * @param int $entityId OR Entity record ID.
+     *
+     * @return string Canonical name, or empty string on failure.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
+     */
+    private function tryGetEntityCanonicalName(int $entityId): string
+    {
+        if ($entityId <= 0) {
+            return '';
+        }
+
+        try {
+            $objectService = $this->getOpenRegisterService(
+                className: 'OCA\OpenRegister\Service\ObjectService'
+            );
+            $entity        = $objectService->find(
+                id: (string) $entityId,
+                register: 'entities',
+                schema: 'entity'
+            );
+
+            if (is_array($entity) === false) {
+                return '';
+            }
+
+            return (string) (
+                $entity['canonicalName'] ?? $entity['canonical_name'] ?? $entity['name'] ?? $entity['displayName'] ?? $entity['primaryName'] ?? ''
+            );
+        } catch (\Throwable) {
+            return '';
+        }//end try
+
+    }//end tryGetEntityCanonicalName()
 
     /**
      * Check unredacted entities against publication-prohibition rules.

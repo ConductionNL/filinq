@@ -1,3 +1,5 @@
+<!-- status: pr-created — PR #93 https://codeberg.org/Conduction/docudesk/pulls/93 -->
+
 ## Context
 
 DocuDesk's anonymise pipeline (per the canonical `anonymization` and `anonymization-entity-review` capabilities) runs upload → extract → review → anonymise. The `publicationProhibition` list specced in `entity-publication-policies` is not consulted by this flow. A user could deselect (or fail to detect) a court-order witness or undercover officer and still anonymise the document — silently. The design from `entity-publication-policies` explicitly stated generic anonymisation flows do not touch the policy layer. That bound is right *for workflow integration* (creating `publicationConsent` records, pre-empting WOO) but too tight *for read-only safety*. We refine it.
