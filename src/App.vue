@@ -118,11 +118,6 @@ export default {
 </script>
 
 <style scoped>
-.content {
-	padding: 8px;
-	background-color: var(--background-color, #EAE9E6);
-}
-
 .open-register-icon {
 	width: 64px;
 	height: 64px;
@@ -132,14 +127,6 @@ export default {
 .open-register-admin-hint {
 	color: var(--color-text-maxcontrast);
 	text-align: center;
-}
-
-/* NcAppContent main panel chrome — `--color-main-background` is honoured by
-   the lib; radius and shadow have no NC variable, so override directly. */
-:deep(.app-content) {
-	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: var(--dd-radius-panel);
-	box-shadow: var(--dd-shadow-panel);
 }
 
 /* Centre the NcEmptyContent when OpenRegister is not installed.

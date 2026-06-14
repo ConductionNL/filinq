@@ -1,7 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
-import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 </script>
 
 <template>
@@ -58,45 +57,40 @@ import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 					show-zero-count />
 			</template>
 
-			<!-- Recent Consent Activity -->
-			<template #widget-recent-activity>
-				<div v-if="consentStore.loading" class="loading-state">
-					<NcLoadingIcon :size="32" />
-				</div>
-				<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-					<p>{{ t('docudesk', 'No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.') }}</p>
-				</div>
-				<ul v-else class="recent-list">
-					<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
-						<span class="entity-text">{{ consent.entityText }}</span>
-						<CnStatusBadge
-							:label="formatStatus(consent.consentStatus)"
-							:color-map="consentStatusColorMap" />
-					</li>
-				</ul>
+			<!-- Pending Consents table -->
+			<template #widget-pending-consents>
+				<NcEmptyContent
+					v-if="!consentStore.loading && pendingConsents.length === 0"
+					:name="t('docudesk', 'No pending consents')"
+					:description="t('docudesk', 'All consents have been handled.')" />
+				<CnTableWidget
+					v-else
+					:rows="pendingConsents"
+					:columns="consentColumns" />
 			</template>
 
 			<!-- Quick Anonymization -->
 			<template #widget-anonymization>
-				<AnonymizationWidget />
+				<AnonymizationDashboardWidget :in-app="true" />
 			</template>
 		</CnDashboardPage>
 	</div>
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
-import { CnDashboardPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { NcEmptyContent } from '@nextcloud/vue'
+import { CnDashboardPage, CnStatsBlock, CnTableWidget } from '@conduction/nextcloud-vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
 export default {
 	name: 'DashboardIndex',
 	components: {
 		CnDashboardPage,
 		CnStatsBlock,
-		CnStatusBadge,
-		NcLoadingIcon,
-		AnonymizationWidget,
+		CnTableWidget,
+		NcEmptyContent,
+		AnonymizationDashboardWidget,
 		AnonymiserBackendWarning,
 	},
 	data() {
@@ -109,25 +103,18 @@ export default {
 				showWarning: false,
 			},
 			dashboardLayout: [
-				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, showTitle: false },
-				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, showTitle: false },
-				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, showTitle: false },
-				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, showTitle: false },
-				{ id: 5, widgetId: 'recent-activity', gridX: 0, gridY: 1, gridWidth: 6 },
-				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 1, gridWidth: 6 },
+				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 5, widgetId: 'pending-consents', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 5 },
+				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 5 },
 			],
-			consentStatusColorMap: {
-				[t('docudesk', 'Pending')]: 'default',
-				[t('docudesk', 'Approved')]: 'success',
-				[t('docudesk', 'Objected')]: 'error',
-				[t('docudesk', 'No Response')]: 'warning',
-				[t('docudesk', 'Anonymized')]: 'primary',
-			},
 		}
 	},
 	computed: {
 		/**
-		 * Definitions of the dashboard statistic/activity widgets.
+		 * Widget definitions for CnDashboardPage.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
@@ -137,17 +124,30 @@ export default {
 				{ id: 'pending', title: t('docudesk', 'Pending') },
 				{ id: 'approved', title: t('docudesk', 'Approved') },
 				{ id: 'objected', title: t('docudesk', 'Objected') },
-				{ id: 'recent-activity', title: t('docudesk', 'Recent Consent Activity') },
+				{ id: 'pending-consents', title: t('docudesk', 'Pending Consents') },
 				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
 			]
 		},
 		/**
-		 * The ten most recent consent records for the activity panel.
+		 * Column definitions for the Pending Consents CnTableWidget.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
-		recentConsents() {
-			return consentStore.consents.slice(0, 10)
+		consentColumns() {
+			return [
+				{ key: 'entity', label: t('docudesk', 'Entity') },
+			]
+		},
+		/**
+		 * Consent records with status "pending", capped at 10 rows.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
+		pendingConsents() {
+			return consentStore.consents
+				.filter((c) => c.consentStatus === 'pending')
+				.slice(0, 10)
+				.map((c) => ({ entity: c.entityText || '—' }))
 		},
 	},
 	mounted() {
@@ -156,25 +156,7 @@ export default {
 	},
 	methods: {
 		/**
-		 * Map a consent status code to a localized label for the dashboard.
-		 *
-		 * @param status
-		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
-		 */
-		formatStatus(status) {
-			const map = {
-				pending: t('docudesk', 'Pending'),
-				consent_given: t('docudesk', 'Approved'),
-				objection_received: t('docudesk', 'Objected'),
-				no_response: t('docudesk', 'No Response'),
-				anonymized: t('docudesk', 'Anonymized'),
-			}
-			return map[status] || status || t('docudesk', 'Unknown')
-		},
-
-		/**
 		 * Fetch anonymiser backend state to decide whether to show the warning banner.
-		 * Admin flag and backend state come from the settings API response.
 		 *
 		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-7
 		 */
@@ -211,38 +193,3 @@ export default {
 }
 </script>
 
-<style scoped>
-.recent-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.recent-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 10px 12px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.recent-item:last-child {
-	border-bottom: none;
-}
-
-.entity-text {
-	font-weight: 500;
-}
-
-.loading-state {
-	display: flex;
-	justify-content: center;
-	padding: 20px;
-}
-
-.empty-state {
-	padding: 20px;
-	color: var(--color-text-maxcontrast);
-	text-align: center;
-}
-</style>

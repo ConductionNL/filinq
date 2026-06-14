@@ -128,10 +128,6 @@ export default {
 <style scoped>
 .app-navigation {
 	--app-navigation-padding: 16px;
-	--color-main-background-blur: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: var(--dd-radius-panel);
-	box-shadow: var(--dd-shadow-panel);
-	margin-right: 8px;
 }
 
 :deep(.app-navigation-entry) {
