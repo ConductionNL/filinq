@@ -94,7 +94,10 @@ import { anonymizationStore } from '../../store/store.js'
 				@dragleave.prevent="isDragging = false"
 				@drop.prevent="handleDrop"
 				@click="$refs.fileInput.click()">
-				<img v-if="!anonymizationStore.hasFiles" :src="uploadIcon" alt="" class="upload-icon">
+				<img v-if="!anonymizationStore.hasFiles"
+					:src="uploadIcon"
+					alt=""
+					class="upload-icon">
 				<div class="drop-content">
 					<p class="drop-title">
 						{{ anonymizationStore.hasFiles
@@ -249,6 +252,7 @@ export default {
 	},
 	methods: {
 		/**
+		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		handleDrop(event) {
@@ -262,6 +266,7 @@ export default {
 			}
 		},
 		/**
+		 * @param event
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		handleFileSelect(event) {
@@ -300,6 +305,8 @@ export default {
 		 * Navigate to the file-viewer when inside the DocuDesk app.
 		 * Safe to call from the NC dashboard context — $router is absent there
 		 * and the optional chaining prevents any error.
+		 * @param entry
+		 * @param mimeType
 		 */
 		gotoViewer(entry, mimeType) {
 			if (!this.$router) return
@@ -354,6 +361,7 @@ export default {
 			this.dossierError = ''
 		},
 		/**
+		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		fileLink(filePath) {
@@ -368,6 +376,7 @@ export default {
 			return generateUrl('/apps/files')
 		},
 		/**
+		 * @param filePath
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		downloadUrl(filePath) {
@@ -380,6 +389,7 @@ export default {
 			return generateRemoteUrl('webdav')
 		},
 		/**
+		 * @param status
 		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
 		 */
 		statusLabel(status) {
