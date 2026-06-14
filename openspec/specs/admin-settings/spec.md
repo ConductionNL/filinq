@@ -10,7 +10,7 @@ Provides configuration management for DocuDesk, including OpenRegister integrati
 ## Requirements
 ### Requirement: Nextcloud Admin Panel Integration (REQ-SET-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk registers a dedicated section in the Nextcloud admin settings panel with its own icon, accessible only to administrators.
 
@@ -49,7 +49,7 @@ DocuDesk registers a dedicated section in the Nextcloud admin settings panel wit
 
 ### Requirement: OpenRegister Integration Configuration (REQ-SET-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 Administrators can configure which OpenRegister register and schema to use for consent object storage, with validation and discovery of available registers.
 
@@ -95,7 +95,7 @@ Administrators can configure which OpenRegister register and schema to use for c
 
 ### Requirement: Auto-Initialization on Boot (REQ-SET-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 On application boot, DocuDesk automatically imports its register/schema definitions from a versioned JSON file, ensuring the required data structures exist in OpenRegister.
 
@@ -149,7 +149,7 @@ On application boot, DocuDesk automatically imports its register/schema definiti
 
 ### Requirement: WOO Consent Period Configuration (REQ-SET-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 Administrators can configure the publication objection period per WOO requirements, with validation ensuring compliance with the minimum 4-week objection period.
 
@@ -181,7 +181,7 @@ Administrators can configure the publication objection period per WOO requiremen
 
 ### Requirement: Metadata Enrichment Feature Toggles (REQ-SET-05)
 
-**Priority:** Must
+**Priority:** MUST
 
 Administrators can independently toggle language detection, keyword extraction, and topic classification features on or off.
 
@@ -216,7 +216,7 @@ Administrators can independently toggle language detection, keyword extraction, 
 
 ### Requirement: Settings REST API (REQ-SET-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 Settings can be retrieved and updated programmatically via REST API endpoints.
 
@@ -259,7 +259,7 @@ Settings can be retrieved and updated programmatically via REST API endpoints.
 
 ### Requirement: SettingsService Public Helper Methods (REQ-SET-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 SettingsService exposes reusable public methods for OpenRegister service resolution and availability checking, used by other DocuDesk services and controllers.
 
@@ -295,7 +295,7 @@ SettingsService exposes reusable public methods for OpenRegister service resolut
 
 ### Requirement: App Metadata and Compatibility (REQ-SET-08)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk declares platform compatibility and app identity in its `appinfo/info.xml`.
 
@@ -327,7 +327,7 @@ DocuDesk declares platform compatibility and app identity in its `appinfo/info.x
 
 ### Requirement: External Documentation URLs (REQ-SET-09)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk references external documentation for users, administrators, and developers.
 
@@ -352,7 +352,7 @@ DocuDesk references external documentation for users, administrators, and develo
 
 ### Requirement: Configuration File Resolution and Validation (REQ-SET-10)
 
-**Priority:** Must
+**Priority:** MUST
 
 SettingsService resolves and validates the configuration JSON file with a strict validation chain.
 
@@ -384,7 +384,7 @@ SettingsService resolves and validates the configuration JSON file with a strict
 
 ### Requirement: TypeError Catch Fallback for OpenRegister (REQ-SET-11)
 
-**Priority:** Must
+**Priority:** MUST
 
 Settings retrieval gracefully handles TypeErrors from OpenRegister internals to prevent crashes.
 
