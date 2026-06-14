@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### REQ-DSM-1 lib `useObjectStore` is the canonical OR-CRUD store
+### Requirement: REQ-DSM-1 lib `useObjectStore` is the canonical OR-CRUD store
 
 Docudesk SHALL adopt `@conduction/nextcloud-vue`'s `useObjectStore`
 as the canonical generic object store for any code path needing
@@ -27,14 +27,9 @@ renderer.
   `unregisterObjectType`, `configure`, `createObjectTypeSlug`
   (the lib's documented base API).
 
-### REQ-DSM-2 Live updates plugin enablement deferred
+### Requirement: REQ-DSM-2 Live updates plugin enablement deferred
 
-The shared store SHOULD be created with `liveUpdatesPlugin()` once
-the plugin ships in `@conduction/nextcloud-vue`. Beta.8 does not
-export it, so Phase 1 ships without the plugin. A follow-up change
-SHALL bump the lib version and add the plugin to the
-`createObjectStore` options at the line marked by the
-file-level comment in `src/store/store.js`.
+Phase 1 MUST ship without the live-updates plugin: the shared store SHOULD be created with `liveUpdatesPlugin()` once the plugin ships in `@conduction/nextcloud-vue`, but Beta.8 does not export it. A follow-up change SHALL bump the lib version and add the plugin to the `createObjectStore` options at the line marked by the file-level comment in `src/store/store.js`.
 
 #### Scenario: Plugin not yet wired (current state)
 
@@ -56,7 +51,7 @@ file-level comment in `src/store/store.js`.
 - **AND** the returned handle SHALL be acceptable to
   `store.unsubscribe(handle)`.
 
-### REQ-DSM-3 OR-backed object types registered at boot
+### Requirement: REQ-DSM-3 OR-backed object types registered at boot
 
 `initializeStores()` SHALL register every OR-backed docudesk
 object type declared in `lib/Settings/docudesk_register.json`
@@ -96,12 +91,9 @@ The required minimum set is seven types:
 - **AND** SHALL NOT re-register the seven object types
 - **AND** SHALL NOT re-fetch settings.
 
-### REQ-DSM-4 Settings store preserved
+### Requirement: REQ-DSM-4 Settings store preserved
 
-The docudesk-specific `useSettingsStore`
-(`src/store/modules/settings.js`) SHALL remain in place, since it
-talks to `/apps/docudesk/api/settings` and exposes
-`{ config, openRegisters, isAdmin }` used to gate admin-only UI.
+The docudesk-specific `useSettingsStore` (`src/store/modules/settings.js`) SHALL remain in place, since it talks to `/apps/docudesk/api/settings` and exposes `{ config, openRegisters, isAdmin }` used to gate admin-only UI.
 `initializeStores()` SHALL still `await useSettingsStore(pinia)
 .fetchSettings()` before the lib-store wiring runs.
 
@@ -121,7 +113,7 @@ talks to `/apps/docudesk/api/settings` and exposes
 - **AND** `useSettingsStore().config` SHALL contain the docudesk
   settings response payload.
 
-### REQ-DSM-5 Legacy stores preserved side-by-side
+### Requirement: REQ-DSM-5 Legacy stores preserved side-by-side
 
 Phase 1 SHALL be additive. Every legacy store currently exported
 from `src/store/store.js` SHALL continue to be exported unchanged.
@@ -151,7 +143,7 @@ function identically.
   `'folderAnonymization'`, `'navigation'`, `'settings'`,
   `'signing'`, `'template'`).
 
-### REQ-DSM-6 Boot order preserved
+### Requirement: REQ-DSM-6 Boot order preserved
 
 `src/main.js` SHALL call `initializeStores()` after
 `Vue.use(PiniaVuePlugin)` and before `new Vue(...).$mount(...)`,
@@ -166,7 +158,7 @@ without blocking the mount.
 - **AND** the failure SHALL be logged to the browser console as a
   warning.
 
-### REQ-DSM-7 Phase 2 cutover triggers documented
+### Requirement: REQ-DSM-7 Phase 2 cutover triggers documented
 
 The change SHALL document the explicit triggers for Phase 2 (the
 follow-up that retires individual legacy stores per-feature). Phase
