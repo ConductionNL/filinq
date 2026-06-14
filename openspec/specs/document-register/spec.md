@@ -21,7 +21,7 @@ Defines the data model for the `document` register used by DocuDesk to store cor
 
 ### Requirement: Correspondence Schema — Full JSON Schema with Archival (REQ-DREG-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 The `correspondence` schema tracks individual generated documents. It declares full JSON Schema validation and a P7Y archival retention.
 
@@ -55,7 +55,7 @@ The `correspondence` schema tracks individual generated documents. It declares f
 
 ### Requirement: Batch Correspondence Job Schema — Lifecycle-Backed Status (REQ-DREG-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 The `batchCorrespondenceJob` schema replaces IAppConfig-based batch-job tracking. Each batch dispatch creates an OR object; the job lifecycle (pending → processing → success|error → completed) is declared via `x-openregister-lifecycle`.
 
@@ -105,9 +105,16 @@ The `batchCorrespondenceJob` schema replaces IAppConfig-based batch-job tracking
 
 ### Requirement: Huisstijl Schema — Validation Enabled (REQ-DREG-03)
 
-**Priority:** Must
+**Priority:** MUST
 
-The `huisstijl` schema stores organisation house-style configuration. Validation is enabled to prevent malformed logo data or colour codes from reaching PDF generation.
+The `huisstijl` schema stores organisation house-style configuration. Validation MUST be enabled to prevent malformed logo data or colour codes from reaching PDF generation.
+
+#### Scenario: Malformed huisstijl write is rejected
+
+- **GIVEN** the `huisstijl` schema declares `hardValidation: true`
+- **WHEN** a controller writes a huisstijl record with an invalid colour code or unknown field
+- **THEN** OR's validator SHALL reject the write
+- **AND** no archival annotation applies because huisstijl is configuration, not a record
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
@@ -116,7 +123,7 @@ The `huisstijl` schema stores organisation house-style configuration. Validation
 
 ### Requirement: Report Schema Migrated to OR File Attachments (REQ-DREG-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 The original `report` schema (previously in `document_register.json`) is replaced by OR File Attachment metadata. Calculated fields (anonymization-confidence, OCR-confidence, risk-score, entity-density, redaction-coverage) are declared via `x-openregister-calculations` on the file-attachment extension in `docudesk_register.json`.
 
@@ -143,6 +150,8 @@ The original `report` schema (previously in `document_register.json`) is replace
 
 ### Requirement: Multi-tenancy and i18n (P2) (REQ-DREG-05)
 
+When the Phase 2 prerequisites ship, document-register reads SHALL be scoped to the current tenant via `useTenantContext()` and the API SHALL respect the `Accept-Language` header for translatable fields.
+
 **Priority:** Should (Phase 2 — gated on nc-vue shipping multi-tenancy-context + OR shipping i18n-source-of-truth)
 
 #### Scenario: Tenant scope from composable
@@ -162,6 +171,31 @@ The original `report` schema (previously in `document_register.json`) is replace
 |----|------------|----------|--------|
 | DREG-040 | Tenant-scoped reads via `useTenantContext()` | SHOULD | P2-gated |
 | DREG-041 | i18n-aware API respects `Accept-Language` header | SHOULD | P2-gated |
+
+### Requirement: AnonymizationLink Schema in Document Register (REQ-DREG-ALINK-01)
+
+The `document` register SHALL include the `anonymizationLink` schema. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3. The schema SHALL carry `x-openregister-archival` with `retention: P7Y` aligned with the anonymisation audit-trail obligation under GDPR Art. 5(2) (accountability principle). The `x-openregister-archival.category` SHALL be shipped as an explicit placeholder (e.g. `"TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager"`) — the precise selectielijst classification is to be confirmed by the organisation's selectielijst manager before this change is archived.
+
+#### Scenario: Schema present in document register after version bump
+
+- **WHEN** `SettingsInitializer::initialize()` runs against a fresh installation with `info.version "5.3.0"`
+- **THEN** the `document` register SHALL expose `anonymizationLink` in its `schemas` array
+- **AND** `objectService->getSchemas(register: 'document')` SHALL include `anonymizationLink`
+
+#### Scenario: AnonymizationLink archival after 7 years
+
+- **GIVEN** `x-openregister-archival.retention: P7Y` is declared on the `anonymizationLink` schema
+- **WHEN** OR's archival background job runs
+- **THEN** `anonymizationLink` records older than 7 years SHALL be eligible for archival
+- **AND** this traces to GDPR Art. 5(2) accountability (selectielijst category placeholder pending sign-off)
+
+#### Scenario: Document register version is 5.3.0 after config update
+
+- **GIVEN** the current stored `configuration_version` is `5.2.0`
+- **WHEN** `SettingsInitializer::initialize()` detects `info.version "5.3.0"`
+- **THEN** `version_compare("5.3.0", "5.2.0", ">")` SHALL return `true`
+- **AND** `ConfigurationService::importFromApp()` SHALL be called once
+- **AND** the stored `configuration_version` SHALL be updated to `5.3.0`
 
 ## Data Model
 

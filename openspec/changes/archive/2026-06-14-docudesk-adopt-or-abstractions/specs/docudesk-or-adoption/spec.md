@@ -61,10 +61,7 @@ SHALL be removed in favour of the annotation.
 
 ### Requirement: Calculation annotation backs computed fields
 
-Anonymization-confidence, OCR-confidence, redaction-coverage, entity-density,
-classification, language-detection, and summarization outputs SHALL be declared as
-`x-openregister-calculations` annotations on their respective schemas. They SHALL NOT be
-populated by ad-hoc writes in service classes.
+Anonymization-confidence, OCR-confidence, redaction-coverage, entity-density, classification, language-detection, and summarization outputs SHALL be declared as `x-openregister-calculations` annotations on their respective schemas. They SHALL NOT be populated by ad-hoc writes in service classes.
 
 #### Scenario: Anonymization confidence is a calculation
 
@@ -76,10 +73,7 @@ populated by ad-hoc writes in service classes.
 
 ### Requirement: Notification annotation backs lifecycle-driven alerts
 
-Sign-request issued, sign-request completed, batch-correspondence finished, and
-anonymization-failed notifications SHALL be declared as `x-openregister-notifications`
-triggers keyed on lifecycle transitions. Direct `notificationManager->notify()` calls in
-docudesk service classes SHALL be removed.
+Sign-request issued, sign-request completed, batch-correspondence finished, and anonymization-failed notifications SHALL be declared as `x-openregister-notifications` triggers keyed on lifecycle transitions. Direct `notificationManager->notify()` calls in docudesk service classes SHALL be removed.
 
 #### Scenario: Sign-request notification fires on lifecycle transition
 
@@ -92,10 +86,7 @@ docudesk service classes SHALL be removed.
 
 ### Requirement: Document-register schemas use full JSON-schema validation
 
-The report, template, and entity schemas in
-`openspec/specs/document-register/spec.md` SHALL declare full JSON-schema with
-`required`, `properties`, and `additionalProperties: false`. The current `properties: []`
-declarations SHALL be removed.
+The report, template, and entity schemas in `openspec/specs/document-register/spec.md` SHALL declare full JSON-schema with `required`, `properties`, and `additionalProperties: false`. The current `properties: []` declarations SHALL be removed.
 
 #### Scenario: Report schema validates strictly
 

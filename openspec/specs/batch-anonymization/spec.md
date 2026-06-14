@@ -21,9 +21,9 @@ Provides batch anonymization of multiple files in a single operation. Per-file s
 
 ### Requirement: Batch Job Schema Backed by OR Lifecycle (REQ-BANON-00)
 
-**Priority:** Must
+**Priority:** MUST
 
-A `batchAnonymizationJob` schema is declared with `x-openregister-lifecycle` (states: `pending → extracting → review → anonymizing → completed | error`). Each batch job is an OR object in the `dossier` register; per-file child objects carry their own lifecycle.
+A `batchAnonymizationJob` schema MUST be declared with `x-openregister-lifecycle` (states: `pending → extracting → review → anonymizing → completed | error`). Each batch job is an OR object in the `dossier` register; per-file child objects carry their own lifecycle.
 
 #### Scenario: Batch job creates an OR object on upload
 

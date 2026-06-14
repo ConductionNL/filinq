@@ -1,24 +1,11 @@
----
-status: proposed
----
-
-# Document Creatie Sjablonen
+# document-creatie-sjablonen Specification
 
 ## Purpose
-
-Provides document creation from templates by merging zaak/object data into pre-defined templates, producing ODF and PDF output. Extends the existing `template-management` (CRUD for Twig/HTML templates) and `pdf-generation` (stateless PDF rendering) specs with a higher-level workflow: resolve data from OpenRegister objects or external APIs, merge into templates, enforce huisstijl, and produce output documents. Supports bulk generation (e.g., letters to multiple citizens) and template versioning. Key tender requirement: 39% of government tenders demand document creation from templates.
-
-## Relation to Existing Specs
-
-- **template-management**: Provides the underlying CRUD for templates. This spec adds data-resolution, merge execution, bulk generation, and ODF output on top.
-- **pdf-generation**: Provides the low-level PDF rendering via mPDF. This spec orchestrates the end-to-end flow: data in, document out.
-- **document-register**: Stores generated document metadata as report objects for audit trail.
-
+TBD - created by archiving change document-creatie-sjablonen. Update Purpose after archive.
 ## Requirements
+### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 
-### REQ-DCS-01: Data Resolution from OpenRegister (Priority: Must)
-
-Resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
+The system MUST resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
 
 #### Scenario: Resolve data from a single zaak object
 - GIVEN a zaak object exists in OpenRegister with UUID "abc-123"
@@ -59,9 +46,9 @@ Resolve merge data from OpenRegister objects by register, schema, and object UUI
 | DCS-004 | Data resolution failures return descriptive errors per field | MUST | Planned |
 | DCS-005 | Accept ad-hoc JSON data context alongside or instead of object references | MUST | Planned |
 
-### REQ-DCS-02: Template Merge Execution (Priority: Must)
+### Requirement: REQ-DCS-02 Template Merge Execution (Priority: Must)
 
-Render templates by merging resolved data context using the existing Twig sandbox, with support for conditional sections and iteration.
+The system MUST render templates by merging resolved data context using the existing Twig sandbox, with support for conditional sections and iteration.
 
 #### Scenario: Generate a beschikking from a zaak
 - GIVEN a template "Beschikking Omgevingsvergunning" exists with namespace "procest"
@@ -96,9 +83,9 @@ Render templates by merging resolved data context using the existing Twig sandbo
 | DCS-013 | Support iteration over collections | MUST | Planned |
 | DCS-014 | Missing required fields produce warnings, not silent empty values | SHOULD | Planned |
 
-### REQ-DCS-03: Output Format Support (Priority: Must)
+### Requirement: REQ-DCS-03 Output Format Support (Priority: Must)
 
-Support PDF, ODF, and HTML output formats, selectable per request.
+The system MUST support PDF, ODF, and HTML output formats, selectable per request.
 
 #### Scenario: PDF output (default)
 - GIVEN a template is rendered with data
@@ -125,9 +112,9 @@ Support PDF, ODF, and HTML output formats, selectable per request.
 | DCS-022 | HTML output for browser preview | SHOULD | Planned |
 | DCS-023 | Output format selectable per request via `format` option | MUST | Planned |
 
-### REQ-DCS-04: Huisstijl Enforcement (Priority: Must)
+### Requirement: REQ-DCS-04 Huisstijl Enforcement (Priority: Must)
 
-Templates can reference a corporate identity (huisstijl) configuration for consistent branding.
+Templates MUST be able to reference a corporate identity (huisstijl) configuration for consistent branding.
 
 #### Scenario: Automatic huisstijl application
 - GIVEN a template references a huisstijl configuration stored in OpenRegister
@@ -153,9 +140,9 @@ Templates can reference a corporate identity (huisstijl) configuration for consi
 | DCS-031 | Huisstijl applied automatically during rendering | SHOULD | Planned |
 | DCS-032 | NL Design System tokens can be used as CSS variables | SHOULD | Planned |
 
-### REQ-DCS-05: Bulk Document Generation (Priority: Must)
+### Requirement: REQ-DCS-05 Bulk Document Generation (Priority: Must)
 
-Generate documents for multiple objects in a single request, with async processing for large batches and partial failure handling.
+The system MUST generate documents for multiple objects in a single request, with async processing for large batches and partial failure handling.
 
 #### Scenario: Bulk generate citizen letters
 - GIVEN a template "Kennisgeving Bestemmingsplan" exists
@@ -192,9 +179,9 @@ Generate documents for multiple objects in a single request, with async processi
 | DCS-042 | Merged output: all documents concatenated into single PDF | SHOULD | Planned |
 | DCS-043 | Partial failures do not abort the batch | MUST | Planned |
 
-### REQ-DCS-06: Template Versioning (Priority: Must)
+### Requirement: REQ-DCS-06 Template Versioning (Priority: Must)
 
-Templates support versioning so that generated documents can reference the exact template version used.
+Templates MUST support versioning so that generated documents can reference the exact template version used.
 
 #### Scenario: Template version on update
 - GIVEN template "Vergunningbrief" version 1 exists
@@ -219,9 +206,9 @@ Templates support versioning so that generated documents can reference the exact
 | DCS-051 | Generated documents reference template UUID + version number | MUST | Planned |
 | DCS-052 | Previous versions retrievable for re-generation | SHOULD | Planned |
 
-### REQ-DCS-07: Document Generation API (Priority: Must)
+### Requirement: REQ-DCS-07 Document Generation API (Priority: Must)
 
-REST API endpoints for single and bulk document generation, preview, and job status.
+The system MUST expose REST API endpoints for single and bulk document generation, preview, and job status.
 
 #### Scenario: Single document generation
 - GIVEN an authenticated user
@@ -248,9 +235,9 @@ REST API endpoints for single and bulk document generation, preview, and job sta
 | DCS-063 | `GET /api/documents/jobs/{jobId}` for async job status | SHOULD | Planned |
 | DCS-064 | All endpoints require authentication | MUST | Planned |
 
-### REQ-DCS-08: Zaaksysteem Integration (Priority: Should)
+### Requirement: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)
 
-Generated documents can be linked to cases in Procest and triggered from workflows.
+Generated documents MUST be linkable to cases in Procest and triggerable from workflows.
 
 #### Scenario: Attach document to case
 - GIVEN a document is generated from a zaak's data
@@ -275,7 +262,7 @@ Generated documents can be linked to cases in Procest and triggered from workflo
 | DCS-071 | Document generation triggerable from n8n workflows | SHOULD | Planned |
 | DCS-072 | Generated document metadata stored in document register | MUST | Planned |
 
-### REQ-DCS-09: Mock Register Test Data (Priority: Should)
+### Requirement: REQ-DCS-09 Mock Register Test Data (Priority: Should)
 
 Mock registers MUST provide realistic test data for template merge testing during development.
 
@@ -300,26 +287,3 @@ Mock registers MUST provide realistic test data for template merge testing durin
 | DCS-081 | KVK mock register (16 businesses) for business data merge testing | SHOULD | Planned |
 | DCS-082 | BAG mock register (32 addresses) for nested address resolution testing | SHOULD | Planned |
 
-## Dependencies
-
-- **template-management** spec: Template CRUD and namespace scoping
-- **pdf-generation** spec: PDF rendering via mPDF + Twig sandbox
-- **OpenRegister ObjectService**: Data resolution from register objects
-- **OpenConnector**: External data resolution (BRP, KVK, BAG)
-- **NL Design System**: Huisstijl CSS variable support
-- **LibreOffice/unoconv** (or equivalent): Server-side ODF conversion
-
-### Current Implementation Status
-- **Not yet implemented**: No `DocumentService` class exists.
-- **Building blocks that exist**:
-  - `lib/Service/TemplateService.php` -- template CRUD
-  - `lib/Service/PdfService.php` -- PDF rendering via mPDF + Twig sandbox
-  - `lib/Service/TemplateRenderer.php` -- Twig sandboxed rendering
-  - `lib/Settings/document_register.json` -- defines report and template schemas (NOT loaded during boot)
-
-### Standards & References
-- **ODF 1.2 (ISO/IEC 26300:2015)**: Required for .odt output
-- **PDF/A (ISO 19005)**: Archival PDF output
-- **NL Design System**: CSS variable-based theming
-- **WCAG 2.1 AA**: Generated document accessibility
-- **Archiefwet 1995**: Template versioning and audit trail requirements

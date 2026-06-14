@@ -20,9 +20,9 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 
 @e2e exclude Backend FileUploadService persistence as OR file attachment and OR virus-scan-hook rejection (HTTP 422) — service/contract behaviour, no UI assertion. Covered by PHPUnit (FileUploadService) and Newman (upload endpoint).
 
-**Priority:** Must
+**Priority:** MUST
 
-Users upload files and they are stored as OR File Attachments, not by docudesk-specific storage code. Virus-scan and MIME-validation hooks are inherited from OR.
+Uploaded files MUST be stored as OR File Attachments, not by docudesk-specific storage code. Virus-scan and MIME-validation hooks are inherited from OR.
 
 #### Scenario: File persisted as OR File Attachment
 
@@ -49,7 +49,7 @@ Users upload files and they are stored as OR File Attachments, not by docudesk-s
 
 @e2e exclude Backend x-openregister-calculations derivation (riskLevel/redactionCoverage computed by OR, not written by AnonymizationService) — no browser surface. Covered by PHPUnit (calculation expressions) and OR calculation integration tests.
 
-**Priority:** Must
+**Priority:** MUST
 
 `anonymizationConfidence`, `riskScore`, `riskLevel`, `entityDensity`, and `redactionCoverage` are declared as `x-openregister-calculations` on the file-attachment extension schema. `AnonymizationService` SHALL NOT write these fields directly; OR derives them from the calculation expression after entity detection completes.
 
@@ -75,9 +75,9 @@ Users upload files and they are stored as OR File Attachments, not by docudesk-s
 ## Requirements
 ### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
 
-**Priority:** Must
+**Priority:** MUST
 
-Users upload files via multipart form data, and files are stored in a per-user DocuDesk folder within Nextcloud Files.
+Users upload files via multipart form data, and files MUST be stored in a per-user DocuDesk folder within Nextcloud Files.
 
 #### Scenario: Successful file upload
 @e2e exclude multipart POST /api/anonymization/upload response shape — FileUploadService verified by PHPUnit; UI upload flow covered by complete-anonymization-workflow test
@@ -124,9 +124,9 @@ Users upload files via multipart form data, and files are stored in a per-user D
 
 ### Requirement: Text Extraction and Entity Detection (REQ-ANON-02)
 
-@e2e exclude Backend OR NER extraction via POST /api/anonymization/extract/{fileId} with derived riskLevel — service/API contract, no browser surface. Covered by Newman (extract endpoint) and PHPUnit (AnonymizationService).
-
 Text is extracted from uploaded documents and entities are detected via the OpenRegister NER pipeline. The extraction response SHALL include a `riskLevel` field summarising the privacy risk of the detected entities.
+
+@e2e exclude Backend OR NER extraction via POST /api/anonymization/extract/{fileId} with derived riskLevel — service/API contract, no browser surface. Covered by Newman (extract endpoint) and PHPUnit (AnonymizationService).
 
 #### Scenario: Extract with risk level
 - **WHEN** extraction is performed via `POST /api/anonymization/extract/{fileId}`
@@ -134,9 +134,9 @@ Text is extracted from uploaded documents and entities are detected via the Open
 
 ### Requirement: Document Anonymization with Entity Replacement (REQ-ANON-03)
 
-@e2e exclude Backend anonymize endpoint excludeTypes/minConfidence parameter handling (POST /api/anonymization/anonymize/{fileId}) — entity-replacement service logic, no browser surface. Covered by Newman (anonymize endpoint params) and PHPUnit (AnonymizationService).
-
 Detected entities are replaced with anonymized placeholders in the document, producing an anonymized copy. The anonymization endpoint SHALL additionally accept optional `excludeTypes` and `minConfidence` parameters so callers can narrow which detected entities are replaced.
+
+@e2e exclude Backend anonymize endpoint excludeTypes/minConfidence parameter handling (POST /api/anonymization/anonymize/{fileId}) — entity-replacement service logic, no browser surface. Covered by Newman (anonymize endpoint params) and PHPUnit (AnonymizationService).
 
 #### Scenario: Anonymize with entity type exclusion
 - **WHEN** `excludeTypes=["ORGANIZATION"]` is provided to `POST /api/anonymization/anonymize/{fileId}`
@@ -149,9 +149,9 @@ Detected entities are replaced with anonymized placeholders in the document, pro
 
 ### Requirement: Processed File Listing with Risk Assessment (REQ-ANON-04)
 
-**Priority:** Must
+**Priority:** MUST
 
-List all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
+The system MUST list all files in the user's DocuDesk folder with entity counts, anonymization status, and risk level assessment.
 
 #### Scenario: List files with entity counts and status
 @e2e exclude FileListingService API response content — requires pre-processed files in DocuDesk/ folder; GET /api/anonymization/files verified by PHPUnit
@@ -185,9 +185,9 @@ List all files in the user's DocuDesk folder with entity counts, anonymization s
 
 ### Requirement: Lazy OpenRegister Service Resolution (REQ-ANON-05)
 
-**Priority:** Must
+**Priority:** MUST
 
-AnonymizationService lazily resolves OpenRegister services at call time to gracefully handle the case where OpenRegister is not installed.
+AnonymizationService MUST lazily resolve OpenRegister services at call time to gracefully handle the case where OpenRegister is not installed.
 
 #### Scenario: Service resolution when OpenRegister is installed
 @e2e exclude lazy DI resolution pattern — AnonymizationService container->get() pattern verified by PHPUnit; not directly observable in UI
@@ -220,9 +220,9 @@ AnonymizationService lazily resolves OpenRegister services at call time to grace
 
 ### Requirement: UUID v4 Generation for Anonymization Keys (REQ-ANON-06)
 
-**Priority:** Must
+**Priority:** MUST
 
-Each anonymized entity is assigned a cryptographically secure UUID v4 key as its replacement identifier.
+Each anonymized entity MUST be assigned a cryptographically secure UUID v4 key as its replacement identifier.
 
 #### Scenario: UUID key generation
 @e2e exclude cryptographic UUID generation — random_bytes(16) UUID generation verified by PHPUnit unit tests
@@ -251,9 +251,9 @@ Each anonymized entity is assigned a cryptographically secure UUID v4 key as its
 
 ### Requirement: User Session Authentication (REQ-ANON-07)
 
-**Priority:** Must
+**Priority:** MUST
 
-File operations require an authenticated user session to scope files to the correct user's folder.
+File operations MUST require an authenticated user session to scope files to the correct user's folder.
 
 #### Scenario: No user session on upload
 @e2e exclude Nextcloud session authentication gate — AnonymizationController 401 path verified by PHPUnit; NC itself handles unauthenticated requests
@@ -282,9 +282,9 @@ File operations require an authenticated user session to scope files to the corr
 
 ### Requirement: Anonymization Pipeline UI (REQ-ANON-08)
 
-**Priority:** Must
+**Priority:** MUST
 
-The frontend provides a step-by-step UI for the complete anonymization workflow with drag-and-drop upload, progress tracking, and result display.
+The frontend MUST provide a step-by-step UI for the complete anonymization workflow with drag-and-drop upload, progress tracking, and result display.
 
 #### Scenario: Complete anonymization workflow in UI
 - GIVEN a logged-in user navigates to the Anonymization view
@@ -314,9 +314,9 @@ The frontend provides a step-by-step UI for the complete anonymization workflow 
 
 ### Requirement: EntityRelationMapper Method Usage (REQ-ANON-09)
 
-**Priority:** Must
+**Priority:** MUST
 
-Two distinct EntityRelationMapper methods serve different purposes in the pipeline: entity detail retrieval vs. relation counting.
+Two distinct EntityRelationMapper methods MUST serve their different purposes in the pipeline: entity detail retrieval vs. relation counting.
 
 #### Scenario: Entity details during extraction
 @e2e exclude EntityRelationMapper::findEntitiesForFile() method selection — internal OR mapper API usage verified by PHPUnit
@@ -348,9 +348,9 @@ Two distinct EntityRelationMapper methods serve different purposes in the pipeli
 
 ### Requirement: Frontend File Processing Queue (REQ-ANON-10)
 
-**Priority:** Must
+**Priority:** MUST
 
-The Pinia store manages a sequential file processing queue with status tracking through the pipeline stages.
+The Pinia store MUST manage a sequential file processing queue with status tracking through the pipeline stages.
 
 #### Scenario: Sequential file processing
 @e2e exclude multi-file queue sequencing — requires multiple simultaneous uploads; single-file flow covered by complete-anonymization-workflow test; store queue logic unit-testable
@@ -377,6 +377,470 @@ The Pinia store manages a sequential file processing queue with status tracking 
 | ANON-057 | Pinia store manages file processing queue with sequential processing | MUST | Implemented |
 | ANON-058 | Each file tracks status: queued, uploading, extracting, anonymizing, completed, or error | MUST | Implemented |
 | ANON-059 | Store provides getters: hasFiles, hasCompleted, allDone, isProcessing | MUST | Implemented |
+
+### Requirement: The anonymise endpoint MUST accept an optional `outputFormat` field
+
+The anonymise endpoint payload MUST accept an optional top-level `outputFormat` field with allowed values `"pdf"` and `"preserve"`. When omitted, the endpoint MUST use the tenant default (`docudesk.anonymisation.default_output_format`, default `pdf`). Any other value MUST be rejected with HTTP 400.
+
+#### Scenario: Default behaviour produces PDF
+
+- **GIVEN** an anonymise request with no `outputFormat` specified
+- **AND** the tenant default is `pdf`
+- **WHEN** the endpoint processes the request
+- **THEN** the resulting file written to Nextcloud Files is a PDF/A-3b
+- **AND** the response indicates success with the file's metadata
+
+#### Scenario: Explicit `outputFormat: "preserve"` keeps native format
+
+- **GIVEN** an anonymise request with `outputFormat: "preserve"`
+- **AND** an input DOCX file
+- **WHEN** the endpoint processes the request
+- **THEN** the resulting file written to Nextcloud Files is a DOCX (the native format)
+- **AND** no conversion is attempted
+
+#### Scenario: Invalid value is rejected
+
+- **GIVEN** an anonymise request with `outputFormat: "rtf"`
+- **WHEN** the endpoint processes the request
+- **THEN** the response is HTTP 400
+- **AND** the body cites the allowed values: `"pdf"`, `"preserve"`
+
+#### Scenario: Tenant default `preserve` reverses the default
+
+- **GIVEN** the tenant default is `preserve` (admin override)
+- **AND** an anonymise request without `outputFormat`
+- **WHEN** the endpoint processes the request
+- **THEN** the resulting file is in the native input format
+
+### Requirement: When `outputFormat: "pdf"`, the endpoint MUST invoke `PdfConversionService` after OpenRegister returns
+
+The anonymise pipeline MUST follow this order when the resolved `outputFormat` is `pdf`:
+
+1. Forward the anonymise request to OpenRegister (existing behaviour).
+2. Receive the anonymised file in its native format.
+3. Pass the file to `PdfConversionService::convertToPdf()`.
+4. On success, replace the native-format file in Nextcloud Files with the converted PDF/A-3b file (atomic — the operator never sees both).
+5. On failure (the service throws `ConversionFailedException`), see the next requirement.
+
+#### Scenario: Successful conversion replaces the native file with the PDF
+
+- **GIVEN** an anonymise request with `outputFormat: "pdf"` and a DOCX input
+- **AND** at least one conversion backend is available and capable
+- **WHEN** the request completes
+- **THEN** the file at the input's original NC path is replaced with the converted PDF/A-3b
+- **AND** the file extension is updated to `.pdf`
+- **AND** no DOCX intermediate is left behind
+
+#### Scenario: Native file is not written when conversion is requested but fails
+
+- **GIVEN** an anonymise request with `outputFormat: "pdf"`
+- **AND** the conversion will fail (no backend handles the input)
+- **WHEN** the request is processed
+- **THEN** the native-format intermediate is NOT left in Nextcloud Files
+- **AND** the original (pre-anonymisation) file is unchanged
+- **AND** the response is HTTP 422 (per the next requirement)
+
+### Requirement: Conversion failure MUST return HTTP 422 with structured body
+
+When `PdfConversionService::convertToPdf()` throws, the anonymise endpoint MUST:
+
+1. Roll back any intermediate state — delete the un-converted anonymised file from Nextcloud Files if it was written.
+2. Return HTTP 422 with a JSON body of the documented shape (see scenarios).
+3. NOT silently fall back to native-format output (the operator must explicitly opt in via `outputFormat: "preserve"`).
+
+The 422 body MUST include:
+
+```json
+{
+  "error": "<localised string>",
+  "conversionAttempts": [
+    {"backend": "<name>", "available": <bool>, "supports": <bool>, "reason": "<string>"}
+  ],
+  "outputFormat": "pdf",
+  "fallback": "<localised hint mentioning outputFormat: 'preserve'>"
+}
+```
+
+#### Scenario: 422 lists every backend that was tried
+
+- **GIVEN** an anonymise request with `outputFormat: "pdf"` and an input no backend can handle
+- **WHEN** the request is processed
+- **THEN** the response is HTTP 422
+- **AND** `conversionAttempts` lists each backend in cascade order with `{backend, available, supports, reason}`
+- **AND** `fallback` mentions `outputFormat: "preserve"` as the explicit escape hatch
+
+#### Scenario: 422 does not happen for `preserve`
+
+- **GIVEN** an anonymise request with `outputFormat: "preserve"`
+- **WHEN** the request completes
+- **THEN** the response is the existing pre-change shape (HTTP 200, file metadata)
+- **AND** no conversion failure can fire (no conversion is attempted)
+
+### Requirement: The change MUST be additive and non-breaking for callers that supply `outputFormat: "preserve"`
+
+Pre-change callers that begin sending `outputFormat: "preserve"` MUST see behaviour identical to the pre-change anonymise endpoint. Existing pre-change clients that do NOT send `outputFormat` MUST observe the new PDF default — this is a deliberate behaviour change documented in the CHANGELOG.
+
+#### Scenario: `preserve` callers see pre-change behaviour
+
+- **GIVEN** a pre-change client that sends `outputFormat: "preserve"` on every call
+- **WHEN** the client interacts with the anonymise endpoint
+- **THEN** behaviour is identical to before this change
+- **AND** the response shape is unchanged
+
+#### Scenario: Pre-change client without `outputFormat` sees PDF default
+
+- **GIVEN** a pre-change client that sends payloads without `outputFormat` and a DOCX input
+- **WHEN** the client receives the response
+- **THEN** the file written is now PDF (behaviour change)
+- **AND** the response remains HTTP 200 with file metadata in the existing shape (the file extension and MIME on the metadata reflect the new PDF type)
+
+### Requirement: Batch anonymise MUST honour `outputFormat` per request
+
+The batch anonymise endpoint (`POST /api/anonymization/batch/{batchId}/anonymize`) MUST accept the same top-level `outputFormat` field. When `pdf`, every file in the batch is converted; if any single file's conversion fails, the operator gets a 422 listing the failed file(s) but the batch's already-converted files remain in NC.
+
+#### Scenario: Batch with mixed-format inputs all converted to PDF
+
+- **GIVEN** a batch with DOCX, PDF, and TXT inputs
+- **AND** `outputFormat: "pdf"` (or default)
+- **WHEN** the batch anonymise endpoint processes the request
+- **THEN** all three files are anonymised AND converted to PDF/A-3b
+- **AND** the response indicates per-file outcomes
+
+#### Scenario: Partial-failure batch returns per-file status
+
+- **GIVEN** a batch where one file's conversion fails (e.g. an unsupported XLSX with no Office app installed)
+- **WHEN** the batch endpoint processes the request
+- **THEN** the response is HTTP 422 (or HTTP 207 multi-status) with per-file outcomes
+- **AND** files that converted successfully remain in NC as PDFs
+- **AND** the failed file is NOT written to NC in any format
+
+### Requirement: The anonymise endpoint MUST accept an optional `appendBasisSummary` flag
+
+The endpoint payload MUST accept an optional top-level boolean field `appendBasisSummary`. When omitted or `false`, behaviour matches pre-change exactly. When `true`, the endpoint MUST invoke the summary-append flow (per the `anonymisation-grondslagen-summary` capability) after the anonymised file has been written to Nextcloud Files.
+
+The flag MUST be honoured for both the per-document anonymise endpoint and the batch anonymise endpoint. In the batch case, the flag applies to every file in the batch.
+
+#### Scenario: appendBasisSummary omitted preserves pre-change behaviour
+
+- **GIVEN** an anonymise request with no `appendBasisSummary` field (or `appendBasisSummary: false`)
+- **WHEN** the endpoint processes the request
+- **THEN** no summary is rendered
+- **AND** no summary PDF is appended or saved
+- **AND** the response shape is identical to pre-change
+
+#### Scenario: appendBasisSummary true with PDF output appends a summary page
+
+- **GIVEN** `outputFormat: "pdf"` (or default) and `appendBasisSummary: true`
+- **WHEN** the request completes successfully
+- **THEN** the resulting file's last page is the rendered summary
+- **AND** the file is PDF/A-3b
+
+#### Scenario: appendBasisSummary true with preserve mode produces a separate PDF
+
+- **GIVEN** `outputFormat: "preserve"` and `appendBasisSummary: true` and a non-PDF input
+- **WHEN** the request completes
+- **THEN** the anonymised native-format file is written normally (per Change A's preserve path)
+- **AND** a separate `<original-base>_anonymized_grondslagen.pdf` is written alongside in the same folder
+- **AND** the response indicates both files (file metadata for the anonymised file and a `summaryFileId` / `summaryFilePath` reference for the separate summary)
+
+#### Scenario: Batch anonymise honours flag per batch
+
+- **GIVEN** a batch anonymise request with `appendBasisSummary: true`
+- **WHEN** the batch completes
+- **THEN** every file's anonymised output (or its accompanying summary PDF in preserve mode) carries the rendered summary
+- **AND** files in the batch that have no `EntityRelation.bases` data still get a summary page that lists their anonymised entities with the `⟨geen grondslag vastgelegd⟩` placeholder
+
+### Requirement: Summary append failure MUST NOT discard the anonymised file
+
+If the summary rendering or append step throws (e.g. mPDF import error, base resolution timeout), the anonymised file itself MUST be preserved as-is in Nextcloud Files. The endpoint MUST return HTTP 200 with the anonymised file metadata AND a structured warning indicating the summary failed. The operator can re-attempt summary generation later (no API surface for this in v1; it requires re-running the anonymise call or — once available in a follow-up — a standalone summary-render endpoint).
+
+#### Scenario: Append failure surfaces as a warning, not an error
+
+- **GIVEN** an anonymise request with `appendBasisSummary: true`
+- **AND** the summary rendering fails internally
+- **WHEN** the response is returned
+- **THEN** the response is HTTP 200
+- **AND** the anonymised file is in Nextcloud Files at its expected path
+- **AND** the response body contains a `warning` field describing the summary failure (with a stable error code suitable for the frontend to display)
+- **AND** no partial summary PDF is left in NC
+
+### Requirement: The change MUST be additive and non-breaking
+
+Pre-change callers that don't set `appendBasisSummary` MUST see behaviour identical to the pre-change anonymise endpoint. The response shape adds the `warning` field only when a summary failure occurs; pre-change clients that don't read it are unaffected.
+
+#### Scenario: Pre-change client unaffected
+
+- **GIVEN** a pre-change client that doesn't send `appendBasisSummary`
+- **WHEN** the client performs an anonymise call
+- **THEN** the response shape is unchanged
+- **AND** no summary work runs
+
+### Requirement: The DocuDesk anonymise endpoint MUST NOT carry `bases` per entity in its payload
+
+The endpoint payload's `entities[]` array MUST NOT introduce a `bases` field on entries. Callers that wish to attach legal bases to a detected entity occurrence MUST do so via OpenRegister's `PATCH /api/entity-relations/{id}` endpoint (or the equivalent DI mapper method `EntityRelationMapper::updateDecisionMetadata`) BEFORE invoking DocuDesk's anonymise endpoint.
+
+DocuDesk MUST ignore any `bases` field that erroneously appears on incoming payload entries — silently drop it (do NOT 400). This preserves backwards-compatibility with any caller still on the old contract; the field becomes a no-op rather than a hard failure.
+
+DocuDesk MUST NOT persist bases locally. Single source of truth: the `EntityRelation` row, written via OR's audited PATCH endpoint.
+
+#### Scenario: Anonymise request without bases works exactly as before
+
+- **GIVEN** an anonymise request payload with entities that have no `bases` field
+- **WHEN** DocuDesk's controller processes it
+- **THEN** the call MUST succeed
+- **AND** behaviour MUST match the pre-change `anonymization` capability exactly
+
+#### Scenario: Stray `bases` field on a payload entry is silently ignored
+
+- **GIVEN** a caller still using the old contract sends `entities: [{text: "Jan Janssen", entityType: "PERSON", key: "x", bases: ["uuid-a"]}]`
+- **WHEN** DocuDesk's controller processes it
+- **THEN** the call MUST succeed
+- **AND** no `bases` value MUST be written to any EntityRelation row by DocuDesk's code path (bases-set is via OR's PATCH, which the caller has not invoked)
+- **AND** no error MUST be raised
+
+#### Scenario: Bases-attached entities are redacted under their bases when those were set via OR's PATCH first
+
+- **GIVEN** an authorized caller PATCHes OR with `{bases: ["uuid-a"]}` for an EntityRelation row R
+- **AND** subsequently calls DocuDesk's anonymise endpoint without any `bases` field
+- **WHEN** the call processes
+- **THEN** R's `bases` value MUST remain `["uuid-a"]` (set via OR's PATCH; not overwritten by the anonymise call)
+- **AND** R MUST be redacted (no `skipAnonymization=true`)
+
+### Requirement: The extract endpoint response MUST include a `prohibitionMatch` field per detected entity
+
+The extract endpoint's response (currently returns `entities[]` per detected entity with `text`, `entityType`, `score`) MUST include a new field `prohibitionMatch` per entity. The field is either:
+
+- `null` — no `publicationProhibition` rule matches this entity, OR
+- An object `{ ruleId, ruleName, highConfidence }` where:
+  - `ruleId` is the matched rule's UUID,
+  - `ruleName` is the rule's `primaryName`,
+  - `highConfidence` is `true` when the entity's `score` ≥ the configured high-confidence threshold (default 0.85), `false` otherwise.
+
+The matcher used MUST be the same `PolicyMatchService` consulted by the prohibition gate (see `anonymisation-prohibition-gate` capability). The matcher invocation at extract time is read-only and MUST NOT modify any state.
+
+#### Scenario: No prohibition matches — field is null
+
+- **GIVEN** a file whose detected entities match no `publicationProhibition` rule
+- **WHEN** the extract endpoint returns the entity list
+- **THEN** every entry has `prohibitionMatch: null`
+
+#### Scenario: High-confidence prohibition match is flagged
+
+- **GIVEN** a detected entity at confidence 0.96 matching prohibition rule `R-X` whose `primaryName` is "Beschermde Getuige A"
+- **WHEN** the extract endpoint returns the entity
+- **THEN** the entry's `prohibitionMatch` is `{ruleId: "R-X", ruleName: "Beschermde Getuige A", highConfidence: true}`
+
+#### Scenario: Low-confidence prohibition match is flagged with highConfidence false
+
+- **GIVEN** a detected entity at confidence 0.62 matching prohibition rule `R-Y`
+- **AND** the configured high-confidence threshold is 0.85
+- **WHEN** the extract endpoint returns the entity
+- **THEN** the entry's `prohibitionMatch.highConfidence` is `false`
+
+#### Scenario: Same threshold is applied at extract and at the gate
+
+- **GIVEN** the threshold is configured at 0.85
+- **AND** an entity is detected at confidence 0.85 exactly
+- **WHEN** the extract endpoint returns the entity
+- **THEN** `highConfidence: true` (the threshold is inclusive — ≥ 0.85)
+- **AND** the gate (per `anonymisation-prohibition-gate`) also treats this match as high-confidence
+
+### Requirement: The change MUST be additive and non-breaking for existing consumers
+
+Pre-change clients that don't send `bases` and don't read `prohibitionMatch` MUST continue to work without modification. No existing field is removed, renamed, or repurposed.
+
+#### Scenario: Pre-change client continues to work
+
+- **GIVEN** a pre-change client constructing payloads without `bases` and reading responses without `prohibitionMatch`
+- **WHEN** the client sends an extract request followed by an anonymise request
+- **THEN** both succeed with behaviour identical to before this change
+- **AND** the response shape is a strict superset of the pre-change shape (new fields added, none removed)
+
+### Requirement: Admin Warning When No Anonymiser Backend Is Available
+
+DocuDesk MUST surface a non-blocking admin warning when entity recognition is operating in regex-only mode AND the admin viewing the page has not dismissed the warning.
+
+#### Scenario: Admin opens DocuDesk admin settings with no backend configured
+- **GIVEN** OpenRegister reports backend state `method = 'regex'`
+- **AND** the current user is in the admin group
+- **AND** the admin has not previously dismissed the warning
+- **WHEN** the admin loads the DocuDesk admin settings page
+- **THEN** a warning banner is shown at the top of the settings section
+- **AND** the banner contains a deep link to the App Store entry for `openanonymiser_light`
+- **AND** the banner contains a deep link to the App Store entry for `openanonymiser`
+- **AND** the banner contains a link to OpenRegister settings for configuring a custom endpoint
+- **AND** the banner contains a "Dismiss" action
+
+#### Scenario: Admin opens DocuDesk dashboard with no backend configured
+- **GIVEN** OpenRegister reports backend state `method = 'regex'`
+- **AND** the current user is in the admin group
+- **AND** the admin has not previously dismissed the warning
+- **WHEN** the admin loads the DocuDesk dashboard
+- **THEN** the warning banner is shown at the top of the dashboard
+
+#### Scenario: Non-admin user opens DocuDesk dashboard with no backend configured
+- **GIVEN** OpenRegister reports backend state `method = 'regex'`
+- **AND** the current user is NOT in the admin group
+- **WHEN** the user loads the DocuDesk dashboard
+- **THEN** the warning banner is NOT shown
+
+#### Scenario: Admin dismisses the warning banner
+- **WHEN** the admin clicks "Dismiss" on the warning banner
+- **THEN** the dismissal is persisted as a per-admin `IAppConfig` user value
+- **AND** the banner is not shown again to this admin on subsequent page loads
+
+#### Scenario: Admin re-enables the warning
+- **GIVEN** the admin has previously dismissed the warning
+- **WHEN** the admin enables "Show anonymiser backend warning" in DocuDesk admin settings
+- **THEN** the dismissal record is cleared
+- **AND** the banner is shown again on the next page load
+
+#### Scenario: Backend becomes available
+- **GIVEN** the warning was previously visible
+- **WHEN** OpenRegister reports backend state changes to any non-`regex` method (e.g. `openanonymiser`, `presidio`, custom URL)
+- **AND** the admin loads a DocuDesk admin page
+- **THEN** the warning banner is NOT shown
+- **AND** dismissal state remains intact (re-shown if backend later disappears)
+
+#### Scenario: AppAPI is not installed
+- **GIVEN** OpenRegister reports backend state `method = 'regex'`
+- **AND** the `app_api` Nextcloud app is not installed or not enabled
+- **WHEN** the admin loads the DocuDesk admin settings page
+- **THEN** the warning banner additionally indicates that AppAPI must be installed first
+- **AND** the deep-link CTAs to the ExApp entries remain visible
+
+### Requirement: Deep Links Target App Store Entries
+
+The warning banner's CTAs MUST link to Nextcloud App Store entries by app id, not to AppAPI internal admin pages.
+
+#### Scenario: Click on "Install OpenAnonymiser Light"
+- **WHEN** the admin clicks the OpenAnonymiser Light CTA
+- **THEN** the browser navigates to `/settings/apps/discover/openanonymiser_light` on the current Nextcloud instance
+- **AND** the Nextcloud App Store sidebar auto-opens with the app details and the "Download and enable" action
+- **AND** no install action is triggered automatically — the admin must confirm install from the sidebar
+
+### Requirement: Detection State Source
+
+DocuDesk MUST NOT query AppAPI, `IAppManager`, or HTTP health endpoints directly to determine backend availability. All detection MUST be delegated to OpenRegister via the `AnonymisationBackendService::getState()` PHP service.
+
+#### Scenario: DocuDesk delegates state lookup to OpenRegister
+- **WHEN** DocuDesk needs to determine whether to show the warning
+- **THEN** it calls `OCA\OpenRegister\Service\AnonymisationBackendService::getState()`
+- **AND** it does not directly call `IAppManager::isEnabledForUser('openanonymiser_light')` or any AppAPI service
+- **AND** if OpenRegister is not installed, DocuDesk treats this as a fatal install-time error consistent with its existing OpenRegister dependency
+
+### Requirement: The anonymise endpoint MUST reject calls when any skip-marked relation has a blocking consent record
+
+Before delegating to OpenRegister's `anonymizeDocument`, the anonymise endpoint MUST verify that every `EntityRelation` row for the target file with `skipAnonymization: true` has either no corresponding `publicationConsent` record OR a record in a non-blocking state. The classification:
+
+| consentStatus | publicationDecision | objectionDeadline | Blocking? |
+|---|---|---|---|
+| `consent_given` | (any) | (any) | No |
+| `anonymized` | (any) | (any) | No |
+| `pending` | (any) | past | No |
+| `pending` | (any) | future | **YES** |
+| `objection_received` | `anonymize` | (any) | No |
+| `objection_received` | `publish_with_consent` | (any) | No |
+| `objection_received` | `pending` | (any) | **YES** |
+| `no_response` | (any) | (any) | No |
+
+When at least one blocking record is found, the request MUST return HTTP 422 with a structured body listing every blocking consent. No file mutation MUST occur. No EntityRelation row MUST be modified.
+
+The 422 body shape MUST be:
+
+```json
+{
+  "error": "<localised string>",
+  "blockingConsents": [
+    {
+      "consentId": "<uuid>",
+      "entityText": "<string>",
+      "consentStatus": "<enum>",
+      "objectionDeadline": "<ISO-8601 timestamp or null>",
+      "reason": "<one of: objection_window_open | objection_under_review>"
+    }
+  ]
+}
+```
+
+#### Scenario: File with no skip-marked relations passes the check
+
+- **GIVEN** a file whose EntityRelations all have `skipAnonymization: false`
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes
+- **AND** anonymisation proceeds as before
+
+#### Scenario: Skip-marked relation with an auto-resolved consent passes the check
+
+- **GIVEN** a file with a `skipAnonymization: true` relation
+- **AND** a publicationConsent record for the entity has `consentStatus: "consent_given"` (standing-consent match)
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes
+- **AND** anonymisation proceeds
+
+#### Scenario: Skip-marked relation with a pending consent in window blocks the call
+
+- **GIVEN** a file with a `skipAnonymization: true` relation for entity "Anneke Jansen"
+- **AND** a publicationConsent record for that entity has `consentStatus: "pending"` and `objectionDeadline` 10 days in the future
+- **WHEN** the anonymise endpoint is called
+- **THEN** the response is HTTP 422
+- **AND** `blockingConsents[]` lists exactly one entry referencing the consent record with `reason: "objection_window_open"`
+- **AND** no file mutation occurs
+
+#### Scenario: Skip-marked relation with a pending consent past window passes
+
+- **GIVEN** a file with a `skipAnonymization: true` relation
+- **AND** the publicationConsent's `objectionDeadline` has already passed
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check passes (window closed; "no objection received" is the operator's go-ahead)
+- **AND** anonymisation proceeds
+
+#### Scenario: Skip-marked relation with objection received, decision pending, blocks
+
+- **GIVEN** a publicationConsent record with `consentStatus: "objection_received"` and `publicationDecision: "pending"`
+- **WHEN** the anonymise endpoint is called for the associated file
+- **THEN** the response is HTTP 422 with `reason: "objection_under_review"`
+
+#### Scenario: Skip-marked relation with objection received and decision = anonymize passes
+
+- **GIVEN** a publicationConsent record with `consentStatus: "objection_received"` and `publicationDecision: "anonymize"`
+- **WHEN** the anonymise endpoint is called for the associated file
+- **THEN** the check passes (operator decided to anonymise despite the skip flag — the decision overrides)
+
+#### Scenario: Skip-marked relation with no consent record proceeds with a warning
+
+- **GIVEN** a `skipAnonymization: true` relation whose corresponding publicationConsent record is missing (likely listener failure)
+- **WHEN** the anonymise endpoint is called
+- **THEN** the check logs a warning identifying the relation
+- **AND** the relation is treated as not-blocking
+- **AND** anonymisation proceeds (the operator's skip decision stands; the missing consent record is a system bug to investigate separately, not a reason to block the user)
+
+#### Scenario: Multiple skip-marked relations, mixed states
+
+- **GIVEN** three `skipAnonymization: true` relations:
+  - Relation A → consent `consent_given`
+  - Relation B → consent `pending` in window (blocking)
+  - Relation C → consent `pending` past window (not blocking)
+- **WHEN** the anonymise endpoint is called
+- **THEN** the response is HTTP 422
+- **AND** `blockingConsents[]` lists only relation B's consent
+- **AND** no file mutation occurs
+
+### Requirement: The anonymise endpoint's success-path shape MUST be unchanged
+
+This delta MUST NOT modify the anonymise endpoint's request payload or its successful (HTTP 200) response shape. Existing callers that pass the same payload they pass today MUST receive the same response they receive today.
+
+#### Scenario: Pre-change client is unaffected on the happy path
+
+- **GIVEN** a pre-change client that sends an anonymise request with the existing payload (no `skipAnonymization: true` relations on the target file)
+- **WHEN** the request succeeds
+- **THEN** the response body matches the pre-change shape exactly (no new fields)
+
+#### Scenario: HTTP 422 is the only new failure response
+
+- **WHEN** any other anonymise error condition arises (file not found, permission denied, OR rejection, etc.)
+- **THEN** the response code and shape remain whatever the pre-change behaviour produced
+- **AND** the new 422 path applies ONLY to the blocking-consent case described above
 
 ## Data Model
 
