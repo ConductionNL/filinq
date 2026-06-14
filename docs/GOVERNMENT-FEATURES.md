@@ -44,6 +44,7 @@
 | F-10 | Publicatie-instemmingsproces (Wet Open Overheid) | Beschikbaar | Configureerbare bezwaartermijnen |
 | F-11 | Minimale bezwaartermijn van 4 weken (WOO) | Beschikbaar | Wettelijk minimum ingebouwd |
 | F-12 | GDPR-anonimisering (PII-redactie) | Beschikbaar | Persoonsgegevens verwijderen uit documenten |
+| F-12a | Verwerkingsregister (AVG Art. 30) | In ontwikkeling | DocuDesk levert vier verwerkingsactiviteiten als catalogus; per-toegang logging via OpenRegister beschikbaar; geaggregeerde Art. 30-export volgt met OpenRegister |
 | F-13 | Digitale ondertekening | Beschikbaar | Elektronische handtekeningen |
 | F-14 | PKIoverheid-ondersteuning | Gepland | Overheidscertificaten voor ondertekening |
 

@@ -41,6 +41,13 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
         <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
     </documentation>
+    <!--
+        Processing-activity export (AVG Art. 30) consumes OpenRegister's
+        per-access read-logging capability (x-openregister-processing dialect,
+        ProcessingLogService / ProcessingLogController). That capability ships
+        from OpenRegister >= 0.2.14. The minimum is also recorded as the
+        `openregister` constraint in lib/Settings/docudesk_register.json.
+    -->
     <dependencies>
         <php min-version="8.3" min-int-size="64"/>
         <database min-version="10">pgsql</database>
