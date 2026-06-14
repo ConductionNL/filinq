@@ -339,15 +339,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/* Match MainMenu / NcAppContent chrome: rounded card, soft shadow,
- * translucent background. Lib does not expose a variable for radius/shadow,
- * so override directly. */
-.app-sidebar {
-	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
-	border-radius: var(--dd-radius-panel);
-	box-shadow: var(--dd-shadow-panel);
-	margin-left: 8px;
-}
 
 /* Hide the built-in X close button — the user must finish the entity
  * review (or use the viewer's Back button) before the sidebar unmounts.

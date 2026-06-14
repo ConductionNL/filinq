@@ -48,6 +48,17 @@
 	color: var(--color-main-text);
 }
 
+/* CnTableWidget renders a card container (.cn-table-container) with border,
+   border-radius and box-shadow, creating a card-within-card effect inside
+   CnDashboardPage widget panels. Fixed in nc-vue beta.112; this bridges the
+   gap until that release is published. */
+.cn-table-widget,
+.cn-table-container {
+	box-shadow: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+}
+
 /* CnStatusBadge: each variant resolves its text colour through a Nextcloud
    token (--color-success, --color-warning-text, etc.). Remap those tokens
    on the badge itself so every variant picks up the dark-blue brand colour

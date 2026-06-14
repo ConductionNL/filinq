@@ -77,6 +77,9 @@
 			"route": "/",
 			"type": "dashboard",
 			"title": "Dashboard",
+			"config": {
+				"documentationUrl": "https://docudesk.conduction.nl"
+			},
 			"widgets": [
 				{
 					"widgetKey": "DashboardIndex",
