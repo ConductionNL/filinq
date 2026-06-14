@@ -9,6 +9,23 @@
 
 ### Added
 
+- **AVG Art. 30 processing-activity register (`processing-activity-export`).**
+  DocuDesk now declares its four processing activities (anonymisation, OCR,
+  metadata-enrichment, signing) as `x-openregister-processing` catalogue
+  annotations in `docudesk_register.json` (register bumped to v5.7.0), each
+  carrying purpose, legal basis, NER data categories, backend identifier, and a
+  retention reference taken from the existing `x-openregister-archival`
+  annotations ("not declared" where absent). The annotations also opt their
+  schemas into OpenRegister's per-access read-logging (`logReads: true`),
+  attributing reads to the activity code. A new admin compliance section
+  surfaces the OpenRegister-maintained controller identity (with a configure
+  prompt) and deep-links to OpenRegister's per-access processing log and
+  per-subject extract, scoped to DocuDesk's registers. The aggregation, export,
+  no-literal-PII contract, and access gating are provided by OpenRegister
+  (>= 0.2.14); DocuDesk ships no export service, controller, or template
+  (ADR-022). The aggregate Art. 30 JSON/CSV/PDF export and the full
+  register-import catalogue seeder remain forthcoming OpenRegister capabilities.
+
 - **`register-i18n` full adoption (W7).** Extended `translatable: true`
   to user-facing string fields across the full register. Register
   bumped to v5.5.0; ten schemas bumped from v1.0.0 → v1.1.0

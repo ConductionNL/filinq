@@ -2,15 +2,15 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.5.0 — extends OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "5.6.0"
+        "description": "DocuDesk register v5.7.0 — declares the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "5.7.0"
     },
     "x-openregister": {
         "type": "application",
         "app": "docudesk",
         "sourceType": "github",
         "sourceUrl": "https://raw.githubusercontent.com/ConductionNL/docudesk/master/lib/Settings/docudesk_register.json",
-        "openregister": "^v0.2.10",
+        "openregister": "^v0.2.14",
         "github": {
             "repo": "ConductionNL/docudesk",
             "branch": "master",
@@ -886,6 +886,22 @@
                 }
             },
             "generatedDocument": {
+                "x-openregister-processing": {
+                    "code": "docudesk-ocr",
+                    "naam": "OCR text extraction",
+                    "doelbinding": "Extract machine-readable text from scanned documents and images (Tesseract OCR) for downstream metadata enrichment, search, and anonymisation.",
+                    "rechtsgrond": "public-task",
+                    "grondslagSource": "EntityRelation.bases",
+                    "dataCategories": ["PERSON", "LOCATION", "ORGANIZATION", "EMAIL", "PHONE_NUMBER"],
+                    "backend": "docudesk.ocr.tesseract",
+                    "retentionReference": "not declared (generatedDocument carries no x-openregister-archival annotation)",
+                    "lifecycle": "draft",
+                    "logReads": true,
+                    "attribution": {
+                        "default": "docudesk-ocr"
+                    },
+                    "subjectIdFields": {}
+                },
                 "uri": null,
                 "slug": "generatedDocument",
                 "title": "Generated Document",
@@ -1551,6 +1567,24 @@
                 }
             },
             "signingAuditEntry": {
+                "x-openregister-processing": {
+                    "code": "docudesk-signing",
+                    "naam": "Digital document signing",
+                    "doelbinding": "Create and maintain a tamper-evident audit trail of electronic signing activities (eIDAS SES/AdES/QES) as legal evidence.",
+                    "rechtsgrond": "legal-obligation",
+                    "grondslagSource": "EntityRelation.bases",
+                    "dataCategories": ["PERSON", "EMAIL", "IP_ADDRESS"],
+                    "backend": "docudesk.signing",
+                    "retentionReference": "signingAuditEntry/x-openregister-archival (P10Y; Archiefwet 1995 selectielijst cat. 5.1.3)",
+                    "lifecycle": "draft",
+                    "logReads": true,
+                    "attribution": {
+                        "default": "docudesk-signing"
+                    },
+                    "subjectIdFields": {
+                        "ncUserId": "actorUserId"
+                    }
+                },
                 "uri": null,
                 "slug": "signingAuditEntry",
                 "title": "Signing Audit Entry",
@@ -1898,6 +1932,22 @@
                 }
             },
             "base": {
+                "x-openregister-processing": {
+                    "code": "docudesk-metadata-enrichment",
+                    "naam": "Document metadata enrichment",
+                    "doelbinding": "Automatically enrich documents with language detection, keyword extraction, and topic classification to support findability and records management.",
+                    "rechtsgrond": "public-task",
+                    "grondslagSource": "EntityRelation.bases",
+                    "dataCategories": ["PERSON", "LOCATION", "ORGANIZATION"],
+                    "backend": "docudesk.metadata.enricher",
+                    "retentionReference": "not declared (base carries no x-openregister-archival annotation)",
+                    "lifecycle": "draft",
+                    "logReads": true,
+                    "attribution": {
+                        "default": "docudesk-metadata-enrichment"
+                    },
+                    "subjectIdFields": {}
+                },
                 "uri": null,
                 "slug": "base",
                 "title": "Grondslag",
@@ -2298,6 +2348,22 @@
                 }
             },
             "anonymizationLink": {
+                "x-openregister-processing": {
+                    "code": "docudesk-anonymisation",
+                    "naam": "Anonymisation of documents",
+                    "doelbinding": "Pseudonymise / redact personal data detected in documents so they can be shared or published under the Wet Open Overheid without disclosing identifiable persons.",
+                    "rechtsgrond": "public-task",
+                    "grondslagSource": "EntityRelation.bases",
+                    "dataCategories": ["PERSON", "LOCATION", "ORGANIZATION", "IBAN", "EMAIL", "PHONE_NUMBER", "BSN"],
+                    "backend": "docudesk.anonymiser",
+                    "retentionReference": "anonymizationLink/x-openregister-archival (P7Y; selectielijst category to be confirmed)",
+                    "lifecycle": "draft",
+                    "logReads": true,
+                    "attribution": {
+                        "default": "docudesk-anonymisation"
+                    },
+                    "subjectIdFields": {}
+                },
                 "uri": null,
                 "slug": "anonymizationLink",
                 "title": "Anonymisation Link",

@@ -345,6 +345,77 @@
 			</div>
 		</NcSettingsSection>
 
+		<!-- AVG Art. 30 processing-activity register (provided by OpenRegister) -->
+		<NcSettingsSection
+			v-if="isAdmin"
+			:name="t('docudesk', 'Processing Activity Register (AVG Art. 30)')"
+			:description="t('docudesk', 'DocuDesk\'s document-processing activities are recorded in OpenRegister\'s platform processing-activity register. The Art. 30 register, per-access logging, exports, and access control are provided by OpenRegister; DocuDesk contributes the four activity categories.')"
+			doc-url="https://conduction.gitbook.io/docudesk-nextcloud/">
+			<div v-if="!openRegisterInstalled" class="setting-item">
+				<NcNoteCard type="warning">
+					{{ t('docudesk', 'OpenRegister is not installed. The processing-activity register and Art. 30 export are provided by OpenRegister and are unavailable until it is installed.') }}
+				</NcNoteCard>
+			</div>
+			<template v-else>
+				<!-- Controller-identity record state + configure prompt (OR-PA-1) -->
+				<div class="setting-item">
+					<NcNoteCard type="info">
+						{{ t('docudesk', 'The verantwoordelijke (controller) identity for the Art. 30 register is maintained centrally in OpenRegister. If it has not been configured, the export still succeeds with identity fields rendered as "not configured". Configure it once in OpenRegister to have it appear on every export.') }}
+					</NcNoteCard>
+					<NcButton type="secondary" @click="openLink('/index.php/settings/admin/openregister', '_blank')">
+						<template #icon>
+							<OpenInNew :size="20" />
+						</template>
+						{{ t('docudesk', 'Configure controller identity in OpenRegister') }}
+					</NcButton>
+				</div>
+
+				<!-- Activity catalogue (the four DocuDesk categories) -->
+				<div class="setting-item">
+					<div class="setting-label">
+						{{ t('docudesk', 'DocuDesk processing activities') }}
+					</div>
+					<div class="setting-description">
+						{{ t('docudesk', 'DocuDesk declares four processing activities. They are seeded into OpenRegister as drafts when the DocuDesk register configuration is imported; activate them in OpenRegister to make DocuDesk processing attributable in the Art. 30 register.') }}
+					</div>
+					<ul class="processing-activities">
+						<li v-for="activity in processingActivities" :key="activity.code">
+							<strong>{{ activity.name }}</strong>
+							<span class="processing-meta">{{ activity.purpose }}</span>
+							<span class="processing-meta">{{ t('docudesk', 'Retention: {ref}', { ref: activity.retention }) }}</span>
+						</li>
+					</ul>
+				</div>
+
+				<!-- Art. 30 export entry point (delegates to OpenRegister, OR-PA-7) -->
+				<div class="setting-item">
+					<div class="setting-label">
+						{{ t('docudesk', 'Art. 30 export') }}
+					</div>
+					<div class="setting-description">
+						{{ t('docudesk', 'The Art. 30 export and per-subject (betrokkene) inzage extract are produced by OpenRegister, scoped to DocuDesk\'s registers, and never contain literal personal data beyond what the data subject is entitled to. Access is restricted to administrators and the privacy officer (FG) group; non-admins are denied.') }}
+					</div>
+					<div class="processing-export-actions">
+						<NcButton type="primary" @click="openProcessingExport">
+							<template #icon>
+								<FileExportOutline :size="20" />
+							</template>
+							{{ t('docudesk', 'Open processing-activity log in OpenRegister') }}
+						</NcButton>
+						<NcButton type="secondary" @click="openLink('/index.php/apps/openregister/api/avg/verwerkingen/betrokkene', '_blank')">
+							<template #icon>
+								<AccountSearchOutline :size="20" />
+							</template>
+							{{ t('docudesk', 'Per-subject (betrokkene) extract') }}
+						</NcButton>
+					</div>
+					<div class="setting-description">
+						<em>{{ t('docudesk', 'Note: the per-access read log and per-subject extract are available now. The aggregate Art. 30 register export to JSON/CSV/PDF is a forthcoming OpenRegister capability; until it lands, use the read-log query surface above.') }}</em>
+					</div>
+				</div>
+			</template>
+		</NcSettingsSection>
+
 		<div class="button-container">
 			<NcButton type="primary" :disabled="saving" @click="saveAll">
 				<template #icon>
@@ -362,6 +433,9 @@ import { NcSettingsSection, NcNoteCard, NcSelect, NcButton, NcLoadingIcon, NcChe
 import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
+import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
+import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
+import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
@@ -379,6 +453,9 @@ export default {
 		AnonymiserBackendWarning,
 		Plus,
 		Restart,
+		OpenInNew,
+		FileExportOutline,
+		AccountSearchOutline,
 	},
 	data() {
 		return {
@@ -423,6 +500,45 @@ export default {
 				tesseractVersion: null,
 			},
 		}
+	},
+	computed: {
+		/**
+		 * The four DocuDesk processing activities surfaced in the AVG Art. 30
+		 * compliance section. Mirrors the x-openregister-processing catalogue
+		 * annotations in lib/Settings/docudesk_register.json (authoring source
+		 * of truth); the register itself is owned and rendered by OpenRegister.
+		 *
+		 * @return {Array<{code: string, name: string, purpose: string, retention: string}>} Catalogue rows.
+		 * @spec openspec/specs/processing-activity-export/spec.md
+		 */
+		processingActivities() {
+			return [
+				{
+					code: 'docudesk-anonymisation',
+					name: t('docudesk', 'Anonymisation of documents'),
+					purpose: t('docudesk', 'Pseudonymise / redact personal data detected in documents for Wet Open Overheid publication.'),
+					retention: t('docudesk', 'P7Y (selectielijst category to be confirmed)'),
+				},
+				{
+					code: 'docudesk-ocr',
+					name: t('docudesk', 'OCR text extraction'),
+					purpose: t('docudesk', 'Extract machine-readable text from scanned documents and images.'),
+					retention: t('docudesk', 'not declared'),
+				},
+				{
+					code: 'docudesk-metadata-enrichment',
+					name: t('docudesk', 'Document metadata enrichment'),
+					purpose: t('docudesk', 'Language detection, keyword extraction, and topic classification.'),
+					retention: t('docudesk', 'not declared'),
+				},
+				{
+					code: 'docudesk-signing',
+					name: t('docudesk', 'Digital document signing'),
+					purpose: t('docudesk', 'Maintain a tamper-evident audit trail of electronic signing activities.'),
+					retention: t('docudesk', 'P10Y (Archiefwet 1995 selectielijst cat. 5.1.3)'),
+				},
+			]
+		},
 	},
 	mounted() {
 		this.fetchAll()
@@ -677,6 +793,20 @@ export default {
 		openLink(url, target = '') {
 			window.open(url, target)
 		},
+
+		/**
+		 * Open OpenRegister's AVG per-access processing log (verwerkingenlogging)
+		 * scoped to DocuDesk's registers. The export and access control are
+		 * provided by OpenRegister (OR-PA-7/OR-PA-8); DocuDesk only deep-links.
+		 *
+		 * @spec openspec/specs/processing-activity-export/spec.md#requirement-the-admin-ui-must-surface-the-platform-register-scoped-to-docudesk
+		 */
+		openProcessingExport() {
+			const registers = ['document', 'signing', 'dossier', 'consent']
+				.map((slug) => `register[]=${encodeURIComponent(slug)}`)
+				.join('&')
+			this.openLink(`/index.php/apps/openregister/api/avg/verwerkingen?${registers}`, '_blank')
+		},
 	},
 }
 </script>
@@ -743,6 +873,32 @@ export default {
 	justify-content: flex-end;
 	margin-top: 16px;
 	padding: 16px;
+}
+
+.processing-activities {
+	list-style: none;
+	margin: 8px 0 0;
+	padding: 0;
+}
+
+.processing-activities li {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.processing-meta {
+	color: var(--color-text-lighter);
+	font-size: 0.9em;
+}
+
+.processing-export-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 4px 0;
 }
 
 </style>

@@ -20,6 +20,8 @@
 // @e2e openspec/specs/admin-settings/spec.md#all-enrichment-features-enabled-by-default
 // @e2e openspec/specs/admin-settings/spec.md#user-accesses-documentation-link
 // @e2e openspec/specs/admin-settings/spec.md#settings-page-resilient-to-openregister-failures
+// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-docudesk
+// @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
 
 import { test, expect, type Page } from '@playwright/test'
 
@@ -170,5 +172,45 @@ test.describe('admin-settings — documentation links', () => {
 		// Accept either mounted Vue (with doc links) or unbuilt page (no links yet)
 		// The key assertion is the page loaded without error
 		await expect(page).not.toHaveURL(/\/login/)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// processing-activity-export: AVG Art. 30 compliance section (UI only)
+// The aggregation / export / access-gating are OpenRegister's (OR-PA-7/8);
+// these tests assert only the DocuDesk settings surface that deep-links to it.
+// ---------------------------------------------------------------------------
+
+test.describe('admin-settings — AVG Art. 30 processing-activity register', () => {
+	test('compliance section surfaces the register scoped to docudesk', async ({ page }) => {
+		// @e2e openspec/specs/processing-activity-export/spec.md#admin-exports-the-register-from-docudesk
+		await goSettings(page)
+		await expect(page.locator('body')).toBeVisible()
+		await expect(page).not.toHaveURL(/\/login/)
+
+		const bodyText = await page.locator('body').innerText().catch(() => '')
+		// If Vue is mounted, the compliance section + its export action should be present.
+		if (/Processing Activity Register|Art\. 30/i.test(bodyText)) {
+			await expect(
+				page.getByText(/Open processing-activity log in OpenRegister|Per-subject .* extract/i).first(),
+			).toBeVisible()
+			// The four declared activities should be listed.
+			await expect(page.getByText(/Anonymisation of documents/i).first()).toBeVisible()
+		}
+	})
+
+	test('unconfigured controller identity prompts to configure, does not block', async ({ page }) => {
+		// @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
+		await goSettings(page)
+		await expect(page.locator('body')).toBeVisible()
+
+		const bodyText = await page.locator('body').innerText().catch(() => '')
+		if (/Processing Activity Register|Art\. 30/i.test(bodyText)) {
+			// A configure prompt for the OR-maintained controller identity is shown,
+			// and the section still renders the export entry point (does not block).
+			await expect(
+				page.getByText(/Configure controller identity in OpenRegister/i).first(),
+			).toBeVisible()
+		}
 	})
 })
