@@ -29,7 +29,7 @@ The `document` register SHALL include the `anonymizationLink` schema. The schema
 
 ### Requirement: Correspondence Schema — Full JSON Schema with Archival (REQ-DREG-01)
 
-The `correspondence` schema tracks individual generated documents. It declares full JSON Schema validation and a P7Y archival retention.
+The `correspondence` schema tracks individual generated documents. It MUST declare full JSON Schema validation and a P7Y archival retention.
 
 **Note**: This requirement is unchanged. Listed here to confirm the `document` register now contains four active schemas: `correspondence`, `huisstijl`, `batchCorrespondenceJob`, and `anonymizationLink`.
 

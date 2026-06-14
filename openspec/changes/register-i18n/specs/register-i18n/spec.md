@@ -8,11 +8,11 @@ status: proposed
 
 Enable multi-language support for DocuDesk's register objects, allowing users to view and manage document templates in their preferred language. Built on OpenRegister's register-i18n foundation (see `openregister/openspec/specs/register-i18n/spec.md`). Note: generated documents are single-language artifacts -- the output language depends on which language version of the template was used.
 
-## Requirements
+## ADDED Requirements
 
-### REQ-I18N-01: Language-Tagged Fields (Priority: Must)
+### Requirement: REQ-I18N-01 Language-Tagged Fields (Priority: Must)
 
-DocuDesk-specific fields support multi-language content via OpenRegister's `translatable` flag.
+DocuDesk-specific fields MUST support multi-language content via OpenRegister's `translatable` flag.
 
 #### Scenario: Template title in Dutch and English
 - GIVEN a template with title "Beschikking omgevingsvergunning"
@@ -53,9 +53,9 @@ DocuDesk-specific fields support multi-language content via OpenRegister's `tran
 | I18N-004 | Template field `helpText` supports multi-language content | MUST | Planned |
 | I18N-005 | Generated documents are single-language artifacts (NOT translatable) | MUST | Planned |
 
-### REQ-I18N-02: Language Fallback Chain (Priority: Must)
+### Requirement: REQ-I18N-02 Language Fallback Chain (Priority: Must)
 
-Follow Nextcloud user language preference with a defined fallback chain.
+The system MUST follow Nextcloud user language preference with a defined fallback chain.
 
 #### Scenario: User language available
 - GIVEN a user with language preference "en"
@@ -84,9 +84,9 @@ Follow Nextcloud user language preference with a defined fallback chain.
 | I18N-011 | Fallback chain: user language -> app default -> nl -> en -> first available | MUST | Planned |
 | I18N-012 | Display fallback indicator when showing non-preferred language | MUST | Planned |
 
-### REQ-I18N-03: Frontend Language Switching (Priority: Must)
+### Requirement: REQ-I18N-03 Frontend Language Switching (Priority: Must)
 
-Users can switch between available translations on detail pages without page reload.
+Users MUST be able to switch between available translations on detail pages without page reload.
 
 #### Scenario: Language selector on detail page
 - GIVEN a template with Dutch and English translations
@@ -112,9 +112,9 @@ Users can switch between available translations on detail pages without page rel
 | I18N-021 | Preserve language selection across navigation | MUST | Planned |
 | I18N-022 | Language switching without page reload | MUST | Planned |
 
-### REQ-I18N-04: API Language Support (Priority: Must)
+### Requirement: REQ-I18N-04 API Language Support (Priority: Must)
 
-API responses respect language preferences via headers and query parameters.
+API responses MUST respect language preferences via headers and query parameters.
 
 #### Scenario: Accept-Language header
 - GIVEN an API request with `Accept-Language: en`
@@ -146,9 +146,9 @@ API responses respect language preferences via headers and query parameters.
 | I18N-032 | `?lang=` query parameter overrides Accept-Language | MUST | Planned |
 | I18N-033 | Listing endpoints return content in requested language with fallback | MUST | Planned |
 
-### REQ-I18N-05: Translation Surface Definition (Priority: Must)
+### Requirement: REQ-I18N-05 Translation Surface Definition (Priority: Must)
 
-DocuDesk has a small, well-defined translation surface limited to template metadata and field labels.
+DocuDesk MUST have a small, well-defined translation surface limited to template metadata and field labels.
 
 #### Scenario: Identify translatable fields
 - GIVEN the DocuDesk data model
@@ -171,9 +171,9 @@ DocuDesk has a small, well-defined translation surface limited to template metad
 | I18N-041 | Template content (HTML/Twig) NOT translatable via register-i18n | MUST | Planned |
 | I18N-042 | Consent records and report data NOT translatable | MUST | Planned |
 
-### REQ-I18N-06: Minimum Language Support (Priority: Must)
+### Requirement: REQ-I18N-06 Minimum Language Support (Priority: Must)
 
-All apps must support Dutch and English as minimum languages.
+All apps MUST support Dutch and English as minimum languages.
 
 #### Scenario: Dutch as primary language
 - GIVEN DocuDesk is deployed in a Dutch municipality

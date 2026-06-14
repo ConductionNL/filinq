@@ -14,11 +14,11 @@ Provides document creation from templates by merging zaak/object data into pre-d
 - **pdf-generation**: Provides the low-level PDF rendering via mPDF. This spec orchestrates the end-to-end flow: data in, document out.
 - **document-register**: Stores generated document metadata as report objects for audit trail.
 
-## Requirements
+## ADDED Requirements
 
-### REQ-DCS-01: Data Resolution from OpenRegister (Priority: Must)
+### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 
-Resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
+The system MUST resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
 
 #### Scenario: Resolve data from a single zaak object
 - GIVEN a zaak object exists in OpenRegister with UUID "abc-123"
@@ -59,9 +59,9 @@ Resolve merge data from OpenRegister objects by register, schema, and object UUI
 | DCS-004 | Data resolution failures return descriptive errors per field | MUST | Planned |
 | DCS-005 | Accept ad-hoc JSON data context alongside or instead of object references | MUST | Planned |
 
-### REQ-DCS-02: Template Merge Execution (Priority: Must)
+### Requirement: REQ-DCS-02 Template Merge Execution (Priority: Must)
 
-Render templates by merging resolved data context using the existing Twig sandbox, with support for conditional sections and iteration.
+The system MUST render templates by merging resolved data context using the existing Twig sandbox, with support for conditional sections and iteration.
 
 #### Scenario: Generate a beschikking from a zaak
 - GIVEN a template "Beschikking Omgevingsvergunning" exists with namespace "procest"
@@ -96,9 +96,9 @@ Render templates by merging resolved data context using the existing Twig sandbo
 | DCS-013 | Support iteration over collections | MUST | Planned |
 | DCS-014 | Missing required fields produce warnings, not silent empty values | SHOULD | Planned |
 
-### REQ-DCS-03: Output Format Support (Priority: Must)
+### Requirement: REQ-DCS-03 Output Format Support (Priority: Must)
 
-Support PDF, ODF, and HTML output formats, selectable per request.
+The system MUST support PDF, ODF, and HTML output formats, selectable per request.
 
 #### Scenario: PDF output (default)
 - GIVEN a template is rendered with data
@@ -125,9 +125,9 @@ Support PDF, ODF, and HTML output formats, selectable per request.
 | DCS-022 | HTML output for browser preview | SHOULD | Planned |
 | DCS-023 | Output format selectable per request via `format` option | MUST | Planned |
 
-### REQ-DCS-04: Huisstijl Enforcement (Priority: Must)
+### Requirement: REQ-DCS-04 Huisstijl Enforcement (Priority: Must)
 
-Templates can reference a corporate identity (huisstijl) configuration for consistent branding.
+Templates MUST be able to reference a corporate identity (huisstijl) configuration for consistent branding.
 
 #### Scenario: Automatic huisstijl application
 - GIVEN a template references a huisstijl configuration stored in OpenRegister
@@ -153,9 +153,9 @@ Templates can reference a corporate identity (huisstijl) configuration for consi
 | DCS-031 | Huisstijl applied automatically during rendering | SHOULD | Planned |
 | DCS-032 | NL Design System tokens can be used as CSS variables | SHOULD | Planned |
 
-### REQ-DCS-05: Bulk Document Generation (Priority: Must)
+### Requirement: REQ-DCS-05 Bulk Document Generation (Priority: Must)
 
-Generate documents for multiple objects in a single request, with async processing for large batches and partial failure handling.
+The system MUST generate documents for multiple objects in a single request, with async processing for large batches and partial failure handling.
 
 #### Scenario: Bulk generate citizen letters
 - GIVEN a template "Kennisgeving Bestemmingsplan" exists
@@ -192,9 +192,9 @@ Generate documents for multiple objects in a single request, with async processi
 | DCS-042 | Merged output: all documents concatenated into single PDF | SHOULD | Planned |
 | DCS-043 | Partial failures do not abort the batch | MUST | Planned |
 
-### REQ-DCS-06: Template Versioning (Priority: Must)
+### Requirement: REQ-DCS-06 Template Versioning (Priority: Must)
 
-Templates support versioning so that generated documents can reference the exact template version used.
+Templates MUST support versioning so that generated documents can reference the exact template version used.
 
 #### Scenario: Template version on update
 - GIVEN template "Vergunningbrief" version 1 exists
@@ -219,9 +219,9 @@ Templates support versioning so that generated documents can reference the exact
 | DCS-051 | Generated documents reference template UUID + version number | MUST | Planned |
 | DCS-052 | Previous versions retrievable for re-generation | SHOULD | Planned |
 
-### REQ-DCS-07: Document Generation API (Priority: Must)
+### Requirement: REQ-DCS-07 Document Generation API (Priority: Must)
 
-REST API endpoints for single and bulk document generation, preview, and job status.
+The system MUST expose REST API endpoints for single and bulk document generation, preview, and job status.
 
 #### Scenario: Single document generation
 - GIVEN an authenticated user
@@ -248,9 +248,9 @@ REST API endpoints for single and bulk document generation, preview, and job sta
 | DCS-063 | `GET /api/documents/jobs/{jobId}` for async job status | SHOULD | Planned |
 | DCS-064 | All endpoints require authentication | MUST | Planned |
 
-### REQ-DCS-08: Zaaksysteem Integration (Priority: Should)
+### Requirement: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)
 
-Generated documents can be linked to cases in Procest and triggered from workflows.
+Generated documents MUST be linkable to cases in Procest and triggerable from workflows.
 
 #### Scenario: Attach document to case
 - GIVEN a document is generated from a zaak's data
@@ -275,7 +275,7 @@ Generated documents can be linked to cases in Procest and triggered from workflo
 | DCS-071 | Document generation triggerable from n8n workflows | SHOULD | Planned |
 | DCS-072 | Generated document metadata stored in document register | MUST | Planned |
 
-### REQ-DCS-09: Mock Register Test Data (Priority: Should)
+### Requirement: REQ-DCS-09 Mock Register Test Data (Priority: Should)
 
 Mock registers MUST provide realistic test data for template merge testing during development.
 
