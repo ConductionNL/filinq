@@ -15,25 +15,15 @@
 // @e2e openspec/specs/document-validation-checks/spec.md#operator-sees-why-a-document-failed
 // @e2e openspec/specs/document-validation-checks/spec.md#scan-only-document-offers-the-ocr-path
 
-import { test, expect, type Page } from '@playwright/test'
-import { attachConsoleGuard } from './_helpers'
-
-const APP = '/apps/docudesk'
-
-async function dismissOverlays(page: Page): Promise<void> {
-	const wizard = page.locator('#firstrunwizard')
-	if (await wizard.isVisible().catch(() => false)) {
-		await page.keyboard.press('Escape').catch(() => {})
-		await wizard.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {})
-	}
-}
+import { test, expect } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-validation-checks — verdict + findings UI', () => {
 	test('My documents exposes a Validate action that opens the findings panel', async ({ page }) => {
 		// @e2e openspec/specs/document-validation-checks/spec.md#operator-sees-why-a-document-failed
 		const guard = attachConsoleGuard(page)
-		await page.goto(`${APP}/#/my-documents`)
-		await dismissOverlays(page)
+		// History-mode (manifest) router: deep-link the path, not a hash.
+		await go(page, 'my-documents')
 
 		// The My-documents page renders without an app-level error; the Validate
 		// action is part of every non-folder row's action menu (verified by the
@@ -47,8 +37,7 @@ test.describe('document-validation-checks — verdict + findings UI', () => {
 		// @e2e openspec/specs/document-validation-checks/spec.md#scan-only-document-offers-the-ocr-path
 		// Render the ValidationFindingsPanel in isolation against a failed verdict
 		// carrying a text-layer-missing finding, asserting the OCR cross-link.
-		await page.goto(`${APP}/#/my-documents`)
-		await dismissOverlays(page)
+		await go(page, 'my-documents')
 
 		const result = await page.evaluate(() => {
 			const status = 'failed'

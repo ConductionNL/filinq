@@ -15,25 +15,15 @@
 // @e2e openspec/specs/document-comparison/spec.md#operator-picks-two-versions
 // @e2e openspec/specs/document-comparison/spec.md#advisory-panel-for-unredacted-entities
 
-import { test, expect, type Page } from '@playwright/test'
-import { attachConsoleGuard } from './_helpers'
-
-const APP = '/apps/docudesk'
-
-async function dismissOverlays(page: Page): Promise<void> {
-	const wizard = page.locator('#firstrunwizard')
-	if (await wizard.isVisible().catch(() => false)) {
-		await page.keyboard.press('Escape').catch(() => {})
-		await wizard.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {})
-	}
-}
+import { test, expect } from '@playwright/test'
+import { attachConsoleGuard, go } from './_helpers'
 
 test.describe('document-comparison — side-by-side view', () => {
 	test('comparison view renders its heading, pickers and Compare action', async ({ page }) => {
 		// @e2e openspec/specs/document-comparison/spec.md#the-ui-must-provide-a-side-by-side-comparison-view
 		const guard = attachConsoleGuard(page)
-		await page.goto(`${APP}/#/comparison`)
-		await dismissOverlays(page)
+		// History-mode (manifest) router: deep-link the path, not a hash.
+		await go(page, 'comparison')
 
 		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
 
@@ -50,8 +40,7 @@ test.describe('document-comparison — side-by-side view', () => {
 	test('operator picks two files and triggers a comparison', async ({ page }) => {
 		// @e2e openspec/specs/document-comparison/spec.md#the-ui-must-provide-a-side-by-side-comparison-view
 		const guard = attachConsoleGuard(page)
-		await page.goto(`${APP}/#/comparison?left=1&right=2`)
-		await dismissOverlays(page)
+		await go(page, 'comparison?left=1&right=2')
 
 		// Preselected subjects auto-run; the heading remains and no JS error fires.
 		await expect(page.getByRole('heading', { name: 'Document comparison' })).toBeVisible()
