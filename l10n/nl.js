@@ -265,7 +265,23 @@ OC.L10N.register(
     "Failed to reset the anonymiser backend warning" : "Herstellen van de anonimiseringsmelding mislukt",
     "app-availability.title" : "Vereiste applicatie niet beschikbaar",
     "app-availability.description" : "Deze applicatie vereist dat OpenRegister is geïnstalleerd en ingeschakeld.",
-    "app-availability.action" : "OpenRegister installeren"
+    "app-availability.action" : "OpenRegister installeren",
+    "Compare…" : "Vergelijken…",
+    "Document comparison" : "Documentvergelijking",
+    "Compare two versions of a file or two distinct files side by side." : "Vergelijk twee versies van een bestand of twee verschillende bestanden naast elkaar.",
+    "Left file ID" : "Bestand-ID links",
+    "Left version timestamp (optional)" : "Versietijdstempel links (optioneel)",
+    "Right file ID" : "Bestand-ID rechts",
+    "Right version timestamp (optional)" : "Versietijdstempel rechts (optioneel)",
+    "Compare" : "Vergelijken",
+    "The two subjects have different formats; layout-derived differences may appear as noise." : "De twee documenten hebben verschillende formaten; opmaakverschillen kunnen als ruis verschijnen.",
+    "Redaction annotation is unavailable (OpenRegister not reachable)." : "Annotatie van geanonimiseerde gegevens is niet beschikbaar (OpenRegister niet bereikbaar).",
+    "Verify manually — entities with no detected change" : "Handmatig controleren — entiteiten zonder gedetecteerde wijziging",
+    "Comparison failed" : "Vergelijken mislukt",
+    "Subject not found" : "Document niet gevonden",
+    "File versions are not available on this instance" : "Bestandsversies zijn niet beschikbaar op deze omgeving",
+    "A subject is too large to compare" : "Een document is te groot om te vergelijken",
+    "A subject has an unsupported format" : "Een document heeft een niet-ondersteund formaat"
 },
 "nplurals=2; plural=(n != 1);"
 );

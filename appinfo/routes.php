@@ -38,6 +38,9 @@ return [
         // Metadata enrichment route.
         ['name' => 'metadata#enrich', 'url' => 'api/metadata/enrich', 'verb' => 'POST'],
 
+        // Document comparison route.
+        ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
