@@ -28,6 +28,7 @@ use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
@@ -142,7 +143,8 @@ class SigningServiceTest extends TestCase
 
         $providerFactory     = $this->createMock(SigningProviderFactory::class);
         $notificationManager = $this->createMock(INotificationManager::class);
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger          = $this->createMock(LoggerInterface::class);
+        $eventDispatcher = $this->createMock(IEventDispatcher::class);
 
         $this->service = new SigningService(
             settingsService: $this->settingsService,
@@ -152,7 +154,8 @@ class SigningServiceTest extends TestCase
             userSession: $this->userSession,
             notificationManager: $notificationManager,
             logger: $logger,
-            request: $this->request
+            request: $this->request,
+            eventDispatcher: $eventDispatcher
         );
 
     }//end setUp()
@@ -197,6 +200,87 @@ class SigningServiceTest extends TestCase
         $this->assertSame('alice', $result['initiatorUserId']);
 
     }//end testCreateRequestHappyPath()
+
+    /**
+     * createRequest() persists consumer provenance fields onto the request.
+     *
+     * Cross-app delegated-signing contract (docudesk-signing-events): a request
+     * raised via DocumentSigningRequestedEvent carries provenance that must be
+     * stored so the terminal SigningConcludedEvent can correlate back.
+     *
+     * @return void
+     */
+    public function testCreateRequestPersistsProvenance(): void
+    {
+        $captured = [];
+
+        $this->objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$captured): array {
+                // Capture the first save (the signing-request create), which
+                // carries the provenance; ignore signer-record saves.
+                if (isset($object['initiatorUserId']) === true && $captured === []) {
+                    $captured = $object;
+                }
+
+                $object['id'] = 'req-prov-1';
+                return $object;
+            }
+        );
+
+        $this->service->createRequest(
+            data: [
+                'documentFileId'    => 'file-9',
+                'documentName'      => 'contract.pdf',
+                'signatureLevel'    => 'SES',
+                'signingMode'       => 'sequential',
+                'sourceApp'         => 'shillinq',
+                'subjectRegister'   => 'finance',
+                'subjectSchema'     => 'invoice',
+                'subjectId'         => 'inv-42',
+                'externalReference' => 'ext-42',
+                'correlationId'     => 'corr-42',
+            ]
+        );
+
+        $this->assertSame('shillinq', $captured['sourceApp'] ?? null);
+        $this->assertSame('inv-42', $captured['subjectId'] ?? null);
+        $this->assertSame('ext-42', $captured['externalReference'] ?? null);
+        $this->assertSame('corr-42', $captured['correlationId'] ?? null);
+
+    }//end testCreateRequestPersistsProvenance()
+
+    /**
+     * createRequest() leaves an internal request free of provenance.
+     *
+     * @return void
+     */
+    public function testCreateRequestInternalHasNoProvenance(): void
+    {
+        $captured = [];
+
+        $this->objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$captured): array {
+                if (isset($object['initiatorUserId']) === true && $captured === []) {
+                    $captured = $object;
+                }
+
+                $object['id'] = 'req-int-1';
+                return $object;
+            }
+        );
+
+        $this->service->createRequest(
+            data: [
+                'documentFileId' => 'file-int',
+                'documentName'   => 'internal.pdf',
+                'signatureLevel' => 'SES',
+                'signingMode'    => 'sequential',
+            ]
+        );
+
+        $this->assertArrayNotHasKey('sourceApp', $captured);
+
+    }//end testCreateRequestInternalHasNoProvenance()
 
     /**
      * createRequest() rejects missing documentFileId.
