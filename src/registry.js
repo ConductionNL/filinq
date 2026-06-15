@@ -21,13 +21,13 @@
  *   - Future `kind:"modal"` entries are looked up directly from the
  *     `registry` prop by CnAppRoot.
  *
- * Dashboard note: the Dashboard page is declared `type:"dashboard"` in
- * the manifest with a single full-width body widget that wraps the
- * bespoke `DashboardIndex` view (KPI cards + recent-activity list +
- * quick-anonymization panel). Decomposing the dashboard into individual
- * widget components is a future enhancement; for now `DashboardIndex`
- * is registered as `kind:"widget"` so the manifest can reference it via
- * the v2 uniform widgets[] array (no `type:"custom"` deviation needed).
+ * Dashboard note: the Dashboard page is declared `type:"custom"` in the
+ * manifest with `component:"DashboardIndex"`. `DashboardIndex` is a
+ * self-contained view that renders exactly one `CnDashboardPage` (KPI
+ * cards + recent-activity list + quick-anonymization panel), so it is
+ * registered as `kind:"page"`. It was previously a `kind:"widget"` body
+ * of a `type:"dashboard"` page, which nested CnDashboardPage inside
+ * CnDashboardPage (the hydra dashboard-antipattern) — fixed here.
  *
  * Every other page entry stays `kind:"page"` because docudesk's domain
  * pages fall back to bespoke views — consent, anonymization, templates
@@ -52,15 +52,7 @@ import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from './components/PrintPreview.vue'
 
 export default {
-	DashboardIndex: {
-		kind: 'widget',
-		component: DashboardIndex,
-		defaultSize: { w: 12, h: 'auto' },
-		minSize: { w: 12, h: 'auto' },
-		maxSize: { w: 12, h: 'auto' },
-		allowedSlots: [],
-		propsSchema: {},
-	},
+	DashboardIndex: { kind: 'page', component: DashboardIndex },
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },

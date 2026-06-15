@@ -75,22 +75,13 @@
 		{
 			"id": "Dashboard",
 			"route": "/",
-			"type": "dashboard",
+			"type": "custom",
 			"title": "Dashboard",
+			"component": "DashboardIndex",
 			"config": {
 				"documentationUrl": "https://docudesk.conduction.nl"
 			},
-			"widgets": [
-				{
-					"widgetKey": "DashboardIndex",
-					"slot": "body",
-					"gridX": 0,
-					"gridY": 0,
-					"gridWidth": 12,
-					"gridHeight": 1,
-					"_note": "Single full-width body widget that wraps the bespoke DashboardIndex view (KPI cards + recent-activity list + quick-anonymization panel). Decomposing into individual stats-block / activity-feed widgets is a future enhancement; registering DashboardIndex as kind:\"widget\" in registry.js keeps the v2 manifest free of a type:\"custom\" deviation while preserving the existing internally-sliced view."
-				}
-			]
+			"_note": "DashboardIndex is a self-contained view that renders a single CnDashboardPage (KPI cards + recent-activity list + quick-anonymization panel). It is mounted via type:\"custom\" so only one CnDashboardPage renders — wrapping it as a body widget of a type:\"dashboard\" page nested CnDashboardPage-in-CnDashboardPage (hydra dashboard-antipattern)."
 		},
 		{
 			"id": "Consent",
