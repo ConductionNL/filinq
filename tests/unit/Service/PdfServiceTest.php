@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * Unit tests for PdfService
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2025 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://www.DocuDesk.app
+ */
+
+namespace OCA\DocuDesk\Tests\Unit\Service;
+
+use OCA\DocuDesk\Service\PdfService;
+use OCA\DocuDesk\Service\TemplateRenderer;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Unit tests for PdfService
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.nl
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
+ */
+class PdfServiceTest extends TestCase
+{
+
+    /**
+     * @var PdfService
+     */
+    private PdfService $service;
+
+    /**
+     * @var LoggerInterface|MockObject
+     */
+    private LoggerInterface|MockObject $mockLogger;
+
+    /**
+     * @var TemplateRenderer|MockObject
+     */
+    private TemplateRenderer|MockObject $mockRenderer;
+
+
+    /**
+     * Set up test environment
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mockLogger   = $this->createMock(LoggerInterface::class);
+        $this->mockRenderer = $this->createMock(TemplateRenderer::class);
+
+        $this->service = new PdfService(
+            $this->mockLogger,
+            $this->mockRenderer
+        );
+
+    }//end setUp()
+
+
+    /**
+     * Test renderPdf generates valid PDF content
+     *
+     * @return void
+     */
+    public function testRenderPdfGeneratesValidPdf(): void
+    {
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('<html><body><h1>Test</h1></body></html>');
+
+        $result = $this->service->renderPdf('<h1>{{ title }}</h1>', ['title' => 'Test']);
+
+        $this->assertNotEmpty($result);
+        // PDF files start with %PDF.
+        $this->assertStringStartsWith('%PDF', $result);
+
+    }//end testRenderPdfGeneratesValidPdf()
+
+
+    /**
+     * Test renderPdf with custom options
+     *
+     * @return void
+     */
+    public function testRenderPdfWithCustomOptions(): void
+    {
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('<html><body>Landscape</body></html>');
+
+        $result = $this->service->renderPdf(
+            '<p>Test</p>',
+            [],
+            [
+                'format'      => 'A3',
+                'orientation' => 'L',
+                'title'       => 'Test Document',
+            ]
+        );
+
+        $this->assertNotEmpty($result);
+        $this->assertStringStartsWith('%PDF', $result);
+
+    }//end testRenderPdfWithCustomOptions()
+
+
+    /**
+     * Test renderPdf with empty template
+     *
+     * @return void
+     */
+    public function testRenderPdfWithEmptyTemplate(): void
+    {
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('');
+
+        $result = $this->service->renderPdf('', []);
+
+        $this->assertNotEmpty($result);
+        $this->assertStringStartsWith('%PDF', $result);
+
+    }//end testRenderPdfWithEmptyTemplate()
+
+
+    /**
+     * Test renderPdf throws on renderer failure
+     *
+     * @return void
+     */
+    public function testRenderPdfThrowsOnRendererFailure(): void
+    {
+        $this->expectException(\Exception::class);
+
+        $this->mockRenderer->method('renderTemplate')
+            ->willThrowException(new \Exception('Template rendering failed'));
+
+        $this->service->renderPdf('{{ invalid', []);
+
+    }//end testRenderPdfThrowsOnRendererFailure()
+
+
+}//end class

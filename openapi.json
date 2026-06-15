@@ -47,6 +47,131 @@
         }
     },
     "paths": {
+        "/api/anonymization/batch/folder": {
+            "post": {
+                "operationId": "batch-anonymization-folder-batch",
+                "summary": "Create an anonymization batch from an existing Nextcloud folder",
+                "description": "Accepts either a folder ID or a folder path (exactly one). When `folderId` is provided, the folder is resolved via Nextcloud's file system by node ID; if the ID maps to multiple mounts in the user's tree, a mount with write permission is preferred over a read-only one. When `folderPath` is provided, the existing path-based lookup is used. The resulting batch stores (and the response returns) both `folderId` and `folderPath` regardless of which input was supplied.",
+                "tags": [
+                    "anonymization"
+                ],
+                "security": [
+                    {
+                        "bearer_auth": []
+                    },
+                    {
+                        "basic_auth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object",
+                                        "required": ["folderId"],
+                                        "properties": {
+                                            "folderId": {
+                                                "type": "integer",
+                                                "description": "Nextcloud node ID of the folder to batch.",
+                                                "example": 12345
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    },
+                                    {
+                                        "type": "object",
+                                        "required": ["folderPath"],
+                                        "properties": {
+                                            "folderPath": {
+                                                "type": "string",
+                                                "description": "Path of the folder relative to the user's root.",
+                                                "example": "/Documents/WOB-2024"
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Batch created; background extraction has been queued.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": ["batchId", "folderId", "folderPath", "fileCount", "files"],
+                                    "properties": {
+                                        "batchId": {
+                                            "type": "string",
+                                            "example": "a1b2c3d4-5e6f-7890-abcd-ef1234567890"
+                                        },
+                                        "folderId": {
+                                            "type": "integer",
+                                            "description": "Canonical folder node ID (rename-proof).",
+                                            "example": 12345
+                                        },
+                                        "folderPath": {
+                                            "type": "string",
+                                            "description": "Human-readable folder path, resolved at batch creation time.",
+                                            "example": "/Documents/WOB-2024"
+                                        },
+                                        "fileCount": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "files": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "fileId": { "type": "integer" },
+                                                    "fileName": { "type": "string" },
+                                                    "status": { "type": "string", "example": "uploaded" },
+                                                    "entityCount": { "type": "integer" },
+                                                    "replacementCount": { "type": "integer" },
+                                                    "error": { "type": ["string", "null"] }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input — neither `folderId` nor `folderPath` provided, both provided, the resolved node is not a folder, the folder is empty, or the folder exceeds the configured maximum batch size.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not authenticated."
+                    },
+                    "404": {
+                        "description": "Folder not found for the given `folderId` or `folderPath`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": { "error": { "type": "string" } }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ocs/v2.php/apps/dsonextcloud/api": {
             "get": {
                 "operationId": "api-index",

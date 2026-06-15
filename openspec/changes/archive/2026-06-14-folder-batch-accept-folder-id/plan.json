@@ -1,0 +1,380 @@
+{
+  "change": "folder-batch-accept-folder-id",
+  "project": "docudesk",
+  "repo": "ConductionNL/docudesk",
+  "created": "2026-04-13",
+  "tracking_issue": 105,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Update FolderBatchService::createFolderBatch() signature",
+      "description": "Change to (?int $folderId = null, ?string $folderPath = null): array",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.2",
+      "title": "Defensive XOR validation in service",
+      "description": "Throw 400 for neither-provided and both-provided cases",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.3",
+      "title": "ID-based node resolution with prefer-writable rule",
+      "description": "getById, iterate, prefer PERMISSION_UPDATE, fall back to first readable, 404 if empty",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.4",
+      "title": "Extract resolveFolderNode() helper",
+      "description": "Keep createFolderBatch readable; both input paths converge on shared downstream validation",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.5",
+      "title": "Capture canonical path and node ID post-resolution",
+      "description": "Use getRelativePath and getId so both are available regardless of input method",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.6",
+      "title": "Stash both folderId and folderPath on the batch",
+      "description": "Update batch metadata to include both identifiers",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "1.7",
+      "title": "Add inputMethod to success log",
+      "description": "Log folderId, folderPath, inputMethod ('id'|'path') for adoption monitoring",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Service/FolderBatchService.php"
+      ]
+    },
+    {
+      "id": "2.1",
+      "title": "Controller reads both folderId and folderPath params",
+      "description": "Update BatchAnonymizationController::folderBatch()",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": "2.2",
+      "title": "Coerce folderId to ?int and folderPath to ?string",
+      "description": "Empty string / missing becomes null; (int) cast otherwise",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": "2.3",
+      "title": "Controller-boundary XOR validation",
+      "description": "400 with 'Either...' / 'Provide only one...' messages",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": "2.4",
+      "title": "Pass both params through to service",
+      "description": "Invoke createFolderBatch($folderId, $folderPath)",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": "2.5",
+      "title": "Include folderId and folderPath in JSON response",
+      "description": "Response always includes both identifiers alongside batchId/fileCount/files",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": "3.1",
+      "title": "testCreateFolderBatchByIdHappyPath",
+      "description": "folderId only; node resolved via getById; batch stores both",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.2",
+      "title": "testCreateFolderBatchByPathHappyPath",
+      "description": "Path flow unchanged; batch now also stores folderId",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.3",
+      "title": "testCreateFolderBatchByIdPrefersWritableMount",
+      "description": "Multiple nodes from getById; writable selected, its path stored",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.4",
+      "title": "testCreateFolderBatchByIdFallsBackToReadableWhenNoneWritable",
+      "description": "Single read-only node still selected",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.5",
+      "title": "testCreateFolderBatchByIdReturns404WhenIdNotResolvable",
+      "description": "Empty getById array -> 404 'Folder not found'",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.6",
+      "title": "testCreateFolderBatchByIdReturns400WhenNodeIsFile",
+      "description": "File node (not Folder) -> 400 'Path is not a folder'",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.7",
+      "title": "testCreateFolderBatchByIdReturns400WhenFolderEmpty",
+      "description": "Empty folder -> 400 'No files found in folder'",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.8",
+      "title": "testCreateFolderBatchByIdReturns400WhenTooManyFiles",
+      "description": "Folder over max -> 400 with counts",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.9",
+      "title": "testCreateFolderBatchRejectsBothParams",
+      "description": "Service rejects both params set",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "3.10",
+      "title": "testCreateFolderBatchRejectsNeitherParam",
+      "description": "Service rejects both params null",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Service/FolderBatchServiceTest.php"
+      ]
+    },
+    {
+      "id": "4.1",
+      "title": "testFolderBatchAcceptsFolderId",
+      "description": "Request folderId '12345'; service called with (12345, null)",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "4.2",
+      "title": "testFolderBatchAcceptsFolderPath (updated)",
+      "description": "Path flow still works; response now includes both identifiers",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "4.3",
+      "title": "testFolderBatchRejectsBothIdAndPath",
+      "description": "400 at controller boundary; service not invoked",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "4.4",
+      "title": "testFolderBatchRejectsNeitherIdNorPath",
+      "description": "400 with 'Either folderId or folderPath must be provided'",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "4.5",
+      "title": "testFolderBatchCoercesFolderIdFromString",
+      "description": "String '12345' arrives as int(12345) at service",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "4.6",
+      "title": "testFolderBatchTreatsEmptyStringAsUnset",
+      "description": "Empty folderId + real folderPath -> (null, path), not (0, path)",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "tests/unit/Controller/BatchAnonymizationControllerFolderTest.php"
+      ]
+    },
+    {
+      "id": "5.1",
+      "title": "Run unit tests in Nextcloud container",
+      "description": "docker exec ... phpunit -c phpunit-unit.xml \u2014 all green",
+      "status": "deferred",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    },
+    {
+      "id": "5.2",
+      "title": "composer check:strict clean",
+      "description": "PHPCS/PHPMD/Psalm/PHPStan clean; fix pre-existing issues touched by change",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    },
+    {
+      "id": "5.3",
+      "title": "Manual smoke tests",
+      "description": "curl/Postman: path works, ID works (owned + shared writable), bad ID 404s, both 400s",
+      "status": "deferred",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    },
+    {
+      "id": "6.1",
+      "title": "Update folder-analysis-anonymization feature doc",
+      "description": "Document folderId, XOR rule, prefer-writable, expanded response",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "docs/features/folder-analysis-anonymization.md"
+      ]
+    },
+    {
+      "id": "6.2",
+      "title": "Update openapi.json",
+      "description": "Add folderId to request body (oneOf), add both identifiers to response schema",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "openapi.json"
+      ]
+    },
+    {
+      "id": "6.3",
+      "title": "Add ID-based API example to feature doc",
+      "description": "Show FilePicker / Files-app / Conduction-app integrator invocation",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "docs/features/folder-analysis-anonymization.md"
+      ]
+    },
+    {
+      "id": "7.1",
+      "title": "Add NL + EN translations for new error strings",
+      "description": "'Either folderId or folderPath must be provided', 'Provide only one of folderId or folderPath'",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": [
+        "l10n/nl.js",
+        "l10n/nl.json",
+        "l10n/en.js",
+        "l10n/en.json"
+      ]
+    },
+    {
+      "id": "7.2",
+      "title": "Verify no translation key regressions",
+      "description": "Endpoint errors are already wrapped in l10n->t()",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    },
+    {
+      "id": "8.1",
+      "title": "openspec validate --strict",
+      "description": "All validation checks pass for this change",
+      "status": "done",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    },
+    {
+      "id": "8.2",
+      "title": "opsx:verify drift check",
+      "description": "Code-vs-spec drift check clean",
+      "status": "deferred",
+      "spec_ref": "folder-batch-analysis",
+      "files_likely_affected": []
+    }
+  ]
+}

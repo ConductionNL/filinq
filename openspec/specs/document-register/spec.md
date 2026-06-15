@@ -1,201 +1,244 @@
 ---
-status: reviewed
+status: implementing
+or_adoption_change: docudesk-adopt-or-abstractions
 ---
 
 # Document Register
 
+@e2e exclude Backend data-model spec for the document register: schema strict-validation, archival retention (P7Y/P1Y), BatchCorrespondenceJob OR-object lifecycle + notifications, derived calculations (risk/error-count), OR file-attachment report storage, tenant-scope/i18n reads — no browser surface. Covered by PHPUnit (schema/lifecycle/calculation) and Newman (correspondence API).
+
 ## Purpose
 
-Defines the data model for the `document` register used by DocuDesk to store document analysis results. This register is loaded from `lib/Settings/document_register.json` (separate from the consent-focused `docudesk_register.json`) and contains three schemas: `report` (analysis results), `template` (document templates), and `entity` (cross-document entity management). Pre-seeded sample objects demonstrate the anonymization pipeline's output format. Note: all three schemas have `properties: []` (empty) and `hardValidation: false`, meaning field definitions exist only on the sample objects as ad-hoc data, not as schema-enforced property definitions. Fields like wcagComplianceResults, languageLevelResults, retentionPeriod, etc. on the sample objects represent planned features that are not yet implemented.
+Defines the data model for the `document` register used by DocuDesk to store correspondence audit logs and huisstijl configuration. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; template management lives in the `templates` register. Three schemas remain active in the document register: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
+
+## OR Adoption decisions (from docudesk-adopt-or-abstractions)
+
+- **Decision 3**: Schema validation is now mandatory. All schemas in the document register declare full `required`, `properties`, and `hardValidation: true`. The previous `properties: []` / `hardValidation: false` shape is removed.
+- **Decision 2**: Archival annotation per schema. `correspondence` carries `x-openregister-archival.retention: P7Y` (Archiefwet selectielijst cat. 3.2). `batchCorrespondenceJob` carries `P1Y` (operational log, cat. 1.2).
+- **Decision 1**: Lifecycle annotation backs all status fields. `batchCorrespondenceJob` declares `x-openregister-lifecycle` replacing the IAppConfig-backed status writes in `BatchCorrespondenceJob.php`. The wire status values (pending/processing/success/error/completed) are unchanged (Decision 5).
 
 ## Requirements
 
-### Document Register Structure
+### Requirement: Correspondence Schema — Full JSON Schema with Archival (REQ-DREG-01)
+
+**Priority:** MUST
+
+The `correspondence` schema tracks individual generated documents. It declares full JSON Schema validation and a P7Y archival retention.
+
+#### Scenario: Correspondence record validates strictly
+
+- **GIVEN** the correspondence schema has `hardValidation: true`
+- **WHEN** a controller writes a record with an unknown field (e.g., `foo: "bar"`)
+- **THEN** OR's validator SHALL reject the write with a validation error
+- **AND** no record SHALL be persisted
+
+#### Scenario: Correspondence archival after 7 years
+
+- **GIVEN** `x-openregister-archival.retention: P7Y` is declared on the correspondence schema
+- **WHEN** OR's archival background job runs
+- **THEN** correspondence records older than 7 years SHALL be eligible for archival
+- **AND** this traces to Archiefwet 1995 selectielijst cat. 3.2 (zakelijke correspondentie)
+
+#### Scenario: Generated correspondence lifecycle
+
+- **GIVEN** a correspondence record is created with status `generated`
+- **WHEN** the record is queried
+- **THEN** the status field SHALL equal `generated` (terminal success state)
+- **AND** no further status transitions are expected for individual correspondence records
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DREG-001 | A `document` register exists with slug `document`, version `0.0.1` | MUST | Implemented |
-| DREG-002 | The document register contains three schemas: `report`, `template`, `entity` | MUST | Implemented |
-| DREG-003 | The register is defined in `lib/Settings/document_register.json` (419 lines) | MUST | Implemented |
-| DREG-004 | The register JSON follows OpenAPI-like structure with `components` containing `registers`, `schemas`, and `objects` | MUST | Implemented |
-| DREG-005 | The register is separate from `docudesk_register.json` which handles consent schemas | MUST | Implemented |
+| DREG-001 | Correspondence schema declares `required` + `properties` + `hardValidation: true` | MUST | Implementing |
+| DREG-002 | Correspondence schema carries `x-openregister-archival.retention: P7Y` | MUST | Implementing |
+| DREG-003 | Status field has enum `[generated, failed]` — preserved per Decision 5 | MUST | Implementing |
+| DREG-004 | x-openregister-notifications: `correspondenceFailed` keyed on creation event | MUST | Implemented |
 
-### Report Schema
+### Requirement: Batch Correspondence Job Schema — Lifecycle-Backed Status (REQ-DREG-02)
+
+**Priority:** MUST
+
+The `batchCorrespondenceJob` schema replaces IAppConfig-based batch-job tracking. Each batch dispatch creates an OR object; the job lifecycle (pending → processing → success|error → completed) is declared via `x-openregister-lifecycle`.
+
+#### Scenario: BatchCorrespondenceJob creates an OR object on dispatch
+
+- **GIVEN** `CorrespondenceService::dispatchBatchJob()` is invoked with > 10 recipients
+- **WHEN** the job is queued
+- **THEN** a `batchCorrespondenceJob` object SHALL be created in the `document` register with status `pending`
+- **AND** the OR object UUID SHALL replace the current `$jobId` IAppConfig key
+
+#### Scenario: Job lifecycle transitions replace inline status writes
+
+- **GIVEN** `BatchCorrespondenceJob::run()` begins processing
+- **WHEN** the job previously wrote `'status' => 'processing'` to IAppConfig (line 113)
+- **THEN** it SHALL invoke `lifecycleService->transitionTo($batchJobObj, 'processing')` instead
+- **AND** the resulting object on the wire SHALL serialize `"status": "processing"` unchanged (Decision 5)
+
+#### Scenario: Batch completed notification fires on lifecycle transition
+
+- **GIVEN** `x-openregister-notifications.batchCompleted` is keyed on `complete` transition
+- **WHEN** the job transitions to `completed`
+- **THEN** the notification SHALL fire automatically to the `initiatedBy` user
+- **AND** no direct `notificationManager->notify()` call SHALL exist in `BatchCorrespondenceJob`
+
+#### Scenario: Batch job archival after 1 year
+
+- **GIVEN** `x-openregister-archival.retention: P1Y` is declared on batchCorrespondenceJob
+- **WHEN** OR's archival job runs
+- **THEN** batch job records older than 1 year SHALL be eligible for destruction
+- **AND** this traces to Archiefwet cat. 1.2 (operationele verwerkingslogboeken)
+
+#### Scenario: Error count is a calculation, not an ad-hoc write
+
+- **GIVEN** `batchCorrespondenceJob` carries `x-openregister-calculations.errorRate`
+- **WHEN** the job finishes
+- **THEN** the `errorRate` derived field SHALL be computed from `errorCount / recipientCount`
+- **AND** service code SHALL NOT compute this value directly
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DREG-010 | The `report` schema stores document analysis results with slug `report`, version `0.0.1` | MUST | Implemented |
-| DREG-010a | The report schema has `properties: []` and `required: []` (empty) -- all fields below exist only on sample objects as ad-hoc data, not as schema-enforced definitions | MUST | Implemented |
-| DREG-011 | Report objects track the Nextcloud file via `nodeId` (integer file ID) and `filePath` (string) | MUST | Implemented |
-| DREG-012 | Report objects store file metadata: `fileName`, `fileType` (MIME), `fileExtension`, `fileSize` | MUST | Implemented |
-| DREG-013 | Report objects track processing status via `status` field (e.g., "completed") and `errorMessage` (null on success) | MUST | Implemented |
-| DREG-014 | Report objects store risk assessment: `riskScore` (float 0-100) and `riskLevel` (string: "Critical", "High", etc.) | MUST | Implemented |
-| DREG-015 | Report objects store detected entities as an array of `{text, score, entityType}` objects | MUST | Implemented |
-| DREG-016 | Report objects store extracted text content in the `text` field | MUST | Implemented |
-| DREG-017 | Report objects store a file integrity hash via `fileHash` (MD5) | MUST | Implemented |
-| DREG-018 | Report objects have `anonymizationResults` array field (currently empty in samples -- reserved for future use) | MUST | Implemented |
-| DREG-019 | Report objects have `wcagComplianceResults` array field -- planned feature for WCAG accessibility checking, not yet implemented | SHOULD | Planned |
-| DREG-020 | Report objects have `languageLevelResults` array field -- planned feature for language level (B1/B2) analysis, not yet implemented | SHOULD | Planned |
-| DREG-021 | Report objects have `retentionPeriod` (integer, days) and `retentionExpiry` (datetime, nullable) -- planned feature for document retention policy, not yet implemented | SHOULD | Planned |
-| DREG-022 | Report objects have `legalBasis` (string, nullable) -- planned feature for legal basis tracking per document, not yet implemented | SHOULD | Planned |
-| DREG-023 | Report objects have `dataController` (string, nullable) -- planned feature for GDPR data controller assignment, not yet implemented | SHOULD | Planned |
-| DREG-024 | The schema has `hardValidation: false`, allowing flexible field usage without strict validation | MUST | Implemented |
+| DREG-010 | `batchCorrespondenceJob` schema exists in `document` register | MUST | Implementing |
+| DREG-011 | Schema declares `x-openregister-lifecycle` with states: pending/processing/success/error/completed | MUST | Implementing |
+| DREG-012 | All five lifecycle transition writes in `BatchCorrespondenceJob.php` (lines 113/162/168/186/199) route through lifecycle API | MUST | Apply-phase |
+| DREG-013 | Schema carries `x-openregister-archival.retention: P1Y` | MUST | Implementing |
+| DREG-014 | `x-openregister-notifications` keyed on `complete` and `fail` transitions | MUST | Implementing |
+| DREG-015 | `initiatedBy` field enables recipient resolution for notifications | MUST | Implementing |
 
-### Template Schema
+### Requirement: Huisstijl Schema — Validation Enabled (REQ-DREG-03)
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DREG-030 | The `template` schema exists with slug `template`, version `0.0.1` | MUST | Implemented |
-| DREG-031 | The template schema has no defined properties (empty arrays for `required`, `properties`, `archive`) | MUST | Implemented |
-| DREG-032 | The template schema has `hardValidation: false` | MUST | Implemented |
-| DREG-033 | Template objects are intended for storing reusable document templates (structure TBD) | SHOULD | Planned |
+**Priority:** MUST
 
-### Entity Schema
+The `huisstijl` schema stores organisation house-style configuration. Validation MUST be enabled to prevent malformed logo data or colour codes from reaching PDF generation.
+
+#### Scenario: Malformed huisstijl write is rejected
+
+- **GIVEN** the `huisstijl` schema declares `hardValidation: true`
+- **WHEN** a controller writes a huisstijl record with an invalid colour code or unknown field
+- **THEN** OR's validator SHALL reject the write
+- **AND** no archival annotation applies because huisstijl is configuration, not a record
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DREG-040 | The `entity` schema exists with slug `entity`, version `0.0.1` | MUST | Implemented |
-| DREG-041 | The entity schema description is "Stores detected entities across documents for consistent entity management" | MUST | Implemented |
-| DREG-042 | Entity objects enable cross-document entity tracking -- the same person/organization detected in multiple documents can be linked to a single entity record | SHOULD | Planned |
-| DREG-043 | The entity schema has no defined properties yet (empty arrays) -- schema fields TBD | MUST | Implemented |
-| DREG-044 | The entity schema has `hardValidation: false` | MUST | Implemented |
+| DREG-020 | Huisstijl schema has `hardValidation: true` | MUST | Implementing |
+| DREG-021 | No archival annotation — huisstijl is configuration, not a record | MUST | Implementing |
+
+### Requirement: Report Schema Migrated to OR File Attachments (REQ-DREG-04)
+
+**Priority:** MUST
+
+The original `report` schema (previously in `document_register.json`) is replaced by OR File Attachment metadata. Calculated fields (anonymization-confidence, OCR-confidence, risk-score, entity-density, redaction-coverage) are declared via `x-openregister-calculations` on the file-attachment extension in `docudesk_register.json`.
+
+#### Scenario: Report data lives on OR file attachment
+
+- **GIVEN** a document has been analysed
+- **WHEN** analysis results are persisted
+- **THEN** the results SHALL be stored as properties on the OR file attachment object
+- **AND** the ad-hoc `properties: []` report schema SHALL no longer exist
+
+#### Scenario: Risk level is a calculation, not an ad-hoc write
+
+- **GIVEN** `x-openregister-calculations.riskLevel` is declared on the file-attachment extension
+- **WHEN** entity detection completes
+- **THEN** `riskLevel` SHALL be derived from the calculation expression (`entityCount → riskScore → riskLevel`)
+- **AND** `AnonymizationService` SHALL NOT write `riskLevel` directly
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DREG-030 | Report data migrated to OR File Attachment properties | MUST | Apply-phase |
+| DREG-031 | `x-openregister-calculations` declares `riskScore`, `riskLevel`, `anonymizationConfidence`, `entityDensity`, `redactionCoverage` | MUST | Implementing |
+| DREG-032 | `document_register.json` with `properties: []` schemas removed after migration | MUST | Apply-phase |
+| DREG-033 | OR file-attachment extension PR raised if schema is upstream | SHOULD | Apply-phase |
+
+### Requirement: Multi-tenancy and i18n (P2) (REQ-DREG-05)
+
+When the Phase 2 prerequisites ship, document-register reads SHALL be scoped to the current tenant via `useTenantContext()` and the API SHALL respect the `Accept-Language` header for translatable fields.
+
+**Priority:** Should (Phase 2 — gated on nc-vue shipping multi-tenancy-context + OR shipping i18n-source-of-truth)
+
+#### Scenario: Tenant scope from composable
+
+- **GIVEN** nc-vue `multi-tenancy-context` composable is available
+- **WHEN** a docudesk frontend store needs the current tenant
+- **THEN** it SHALL read from `useTenantContext()`, not from user/route state
+- **AND** document-register reads SHALL be scoped to the current tenant
+
+#### Scenario: i18n-aware reads on correspondence
+
+- **GIVEN** a client sends `Accept-Language: nl-NL`
+- **WHEN** the response includes a translatable field declared in i18n-source-of-truth
+- **THEN** the field SHALL return the Dutch translation
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DREG-040 | Tenant-scoped reads via `useTenantContext()` | SHOULD | P2-gated |
+| DREG-041 | i18n-aware API respects `Accept-Language` header | SHOULD | P2-gated |
+
+### Requirement: AnonymizationLink Schema in Document Register (REQ-DREG-ALINK-01)
+
+The `document` register SHALL include the `anonymizationLink` schema. The schema SHALL declare full `required`, `properties`, and `hardValidation: true` per OR Adoption Decision 3. The schema SHALL carry `x-openregister-archival` with `retention: P7Y` aligned with the anonymisation audit-trail obligation under GDPR Art. 5(2) (accountability principle). The `x-openregister-archival.category` SHALL be shipped as an explicit placeholder (e.g. `"TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager"`) — the precise selectielijst classification is to be confirmed by the organisation's selectielijst manager before this change is archived.
+
+#### Scenario: Schema present in document register after version bump
+
+- **WHEN** `SettingsInitializer::initialize()` runs against a fresh installation with `info.version "5.3.0"`
+- **THEN** the `document` register SHALL expose `anonymizationLink` in its `schemas` array
+- **AND** `objectService->getSchemas(register: 'document')` SHALL include `anonymizationLink`
+
+#### Scenario: AnonymizationLink archival after 7 years
+
+- **GIVEN** `x-openregister-archival.retention: P7Y` is declared on the `anonymizationLink` schema
+- **WHEN** OR's archival background job runs
+- **THEN** `anonymizationLink` records older than 7 years SHALL be eligible for archival
+- **AND** this traces to GDPR Art. 5(2) accountability (selectielijst category placeholder pending sign-off)
+
+#### Scenario: Document register version is 5.3.0 after config update
+
+- **GIVEN** the current stored `configuration_version` is `5.2.0`
+- **WHEN** `SettingsInitializer::initialize()` detects `info.version "5.3.0"`
+- **THEN** `version_compare("5.3.0", "5.2.0", ">")` SHALL return `true`
+- **AND** `ConfigurationService::importFromApp()` SHALL be called once
+- **AND** the stored `configuration_version` SHALL be updated to `5.3.0`
 
 ## Data Model
 
-### Report Schema Fields
+### batchCorrespondenceJob Schema Fields
 
-| Field | Type | Required | Description | Status |
-|-------|------|----------|-------------|--------|
-| nodeId | integer | Yes | Nextcloud file node ID | Implemented |
-| filePath | string | Yes | Path to the file in Nextcloud (e.g., `/admin/files/test.docx`) | Implemented |
-| fileName | string | Yes | File name | Implemented |
-| fileType | string | Yes | MIME type (e.g., `application/vnd.openxmlformats-officedocument.wordprocessingml.document`) | Implemented |
-| fileExtension | string | Yes | File extension (e.g., `docx`) | Implemented |
-| fileSize | integer | Yes | File size in bytes | Implemented |
-| status | string | Yes | Processing status: `completed`, `error`, `processing` | Implemented |
-| errorMessage | string/null | No | Error description if processing failed, null on success | Implemented |
-| riskScore | float | No | Privacy risk score (0.0 - 100.0) | Implemented |
-| riskLevel | string | No | Risk classification: `Critical`, `High`, `Medium`, `Low`, `None` | Implemented |
-| anonymizationResults | array | No | Anonymization operation results (reserved) | Implemented (empty) |
-| entities | array[Entity] | No | Detected entities with `{text, score, entityType}` | Implemented |
-| wcagComplianceResults | array | No | WCAG accessibility compliance results | Planned |
-| languageLevelResults | array | No | Language level (B1/B2) analysis results | Planned |
-| retentionPeriod | integer | No | Retention period in days (0 = no retention) | Planned |
-| retentionExpiry | datetime/null | No | Date when document retention expires | Planned |
-| legalBasis | string/null | No | Legal basis for holding/publishing document | Planned |
-| dataController | string/null | No | GDPR data controller responsible for document | Planned |
-| fileHash | string | No | MD5 hash for file integrity verification | Implemented |
-| text | string | No | Full extracted text content | Implemented |
+| Field | Type | Required | Description | Lifecycle role |
+|-------|------|----------|-------------|----------------|
+| templateId | string (UUID) | Yes | Template used for generation | — |
+| templateName | string | No | Template name (denormalised) | — |
+| recipientCount | integer | Yes | Total recipients | — |
+| completedCount | integer | No | Successfully generated | — |
+| errorCount | integer | No | Failed generations | — |
+| status | string (enum) | Yes | pending / processing / success / error / completed | `x-openregister-lifecycle` field |
+| initiatedBy | string | Yes | Nextcloud user ID | Notification recipient |
+| startedAt | datetime | No | When processing began | — |
+| completedAt | datetime | No | When job finished | — |
+| errorMessage | string | No | Fatal error if failed | — |
 
-### Entity (inline in report)
+### correspondence Schema Fields (unchanged from current)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| text | string | The detected entity text (e.g., "Ruben van der Linde") |
-| score | float | Detection confidence (0.0 - 1.0, from NER model) |
-| entityType | string | Entity classification: `PERSON`, `ORGANIZATION`, `LOCATION`, etc. |
-
-### Template Schema Fields
-
-No properties defined yet. Schema is a placeholder for future template functionality.
-
-### Entity Schema Fields
-
-No properties defined yet. Schema is a placeholder for cross-document entity management.
-
-## Pre-Seeded Sample Objects
-
-The `document_register.json` includes 3 pre-seeded objects that demonstrate the anonymization pipeline output:
-
-### Sample 1: Original Document Report (report schema)
-
-- **UUID**: `948f8498-b828-4d41-9b21-c54fc57d8703`
-- **Purpose**: Demonstrates a completed analysis of an original document
-- **File**: `test_ano.docx` (13,545 bytes, nodeId 1089)
-- **Risk**: Score 97.85 / Level "Critical" (multiple PERSON entities detected)
-- **Entities**: 7 detected (5 PERSON, 2 ORGANIZATION), scores ranging 0.91-1.0
-- **Text**: Contains real names ("Ruben van der Linde", "Remco Damhuis", "DocuDesk")
-
-### Sample 2: Anonymization Result (anonymization schema -- not in defined schemas)
-
-- **UUID**: `c04e1fa9-d20c-457d-8afa-011af9a16b7e`
-- **Purpose**: Demonstrates the output of an anonymization operation
-- **Note**: Uses schema `anonymization` which is NOT in the register's schema list (report/template/entity) -- this is stored ad-hoc by the pipeline
-- **Fields**: `originalFileName`, `anonymizedFileName`, `anonymizedFilePath`, `replacements` array, `startTime`/`endTime`/`processingTime`, `status`, `message`
-- **Replacements**: Maps each entity to a random 8-char hex key (e.g., `"Ruben van der Linde" -> "980100f4"`)
-
-### Sample 3: Anonymized Document Report (anonymization schema)
-
-- **UUID**: `685c5b5c-1b31-45a3-9b1e-58357dc5896d`
-- **Purpose**: Demonstrates the analysis of an already-anonymized document
-- **File**: `test_ano_anonymized.docx` (8,195 bytes, nodeId 1090)
-- **Risk**: Score 77.2 / Level "High" (replacement keys still detected as entities)
-- **Text**: Contains placeholder tokens like `[PERSON: 655f2366]` and `[ORGANIZATION: 60a9f7f0]`
-- **Observation**: The NER model detects replacement tokens ("PERSON", "ORGANIZATION", hex keys) as entities, inflating the risk score of anonymized documents
-
-## Scenarios
-
-### Register Initialization
-
-```
-GIVEN DocuDesk is installed with the document_register.json file
-WHEN the register is loaded by the configuration system
-THEN the "document" register is created with report, template, and entity schemas
-AND the pre-seeded sample objects are available for reference
-```
-
-### Analyze Original Document
-
-```
-GIVEN a user uploads a document for analysis
-WHEN text extraction and entity detection complete
-THEN a report object is created in the document register
-AND it contains the extracted text, detected entities, risk score, and file metadata
-AND wcagComplianceResults, languageLevelResults, retentionPeriod are initialized to empty/zero
-```
-
-### Anonymized Document Re-Analysis
-
-```
-GIVEN a document has been anonymized (entities replaced with [TYPE: key] tokens)
-WHEN the anonymized document is re-analyzed
-THEN the NER model detects the replacement tokens as entities
-AND the risk score is lower than the original but still elevated
-AND this is a known limitation of the current pipeline
-```
-
-### Planned Features: WCAG Compliance
-
-```
-GIVEN a report object exists for a document
-WHEN WCAG compliance checking is implemented (future)
-THEN the wcagComplianceResults field will be populated with accessibility findings
-AND the results will include WCAG level (A/AA/AAA) and specific violations
-```
-
-### Planned Features: Language Level Analysis
-
-```
-GIVEN a report object exists with extracted text
-WHEN language level analysis is implemented (future)
-THEN the languageLevelResults field will contain readability metrics
-AND the results will classify text as B1/B2/C1 per CEFR framework
-```
-
-### Planned Features: Retention Policy
-
-```
-GIVEN a report object exists for a document
-WHEN retention management is implemented (future)
-THEN retentionPeriod will specify how long to keep the document (in days)
-AND retentionExpiry will be calculated as creation date + retention period
-AND legalBasis will document the legal authority for retention
-AND dataController will identify the GDPR-responsible party
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| templateId | string (UUID) | Yes | Template used |
+| templateName | string | No | Template name |
+| recipientId | string (UUID) | Yes | Recipient object UUID |
+| recipientType | string (enum) | No | PERSON / ORGANIZATION |
+| caseReference | string (UUID) | No | Source case |
+| generatedAt | datetime | Yes | Generation timestamp |
+| format | string (enum) | Yes | pdf / docx / html / email |
+| status | string (enum) | Yes | generated / failed |
+| generatedBy | string | Yes | Nextcloud user ID |
+| errorMessage | string | No | Error if failed |
 
 ## Dependencies
 
-- **OpenRegister ConfigurationService**: Loads register definitions from JSON
-- **AnonymizationService**: Creates report objects during the analysis pipeline
-- **OpenRegister ObjectService**: CRUD operations on register objects
-- **document_register.json**: Source of truth for register/schema structure and sample data
+- **OpenRegister ObjectService**: CRUD on register objects
+- **OpenRegister LifecycleService**: Transition API for batchCorrespondenceJob
+- **docudesk_register.json**: Source of truth for register/schema structure
+- **BatchCorrespondenceJob.php**: Lifecycle transitions replace IAppConfig writes (apply phase)
+- **CorrespondenceService.php**: Dispatch creates batchCorrespondenceJob OR object (apply phase)
+
+## Migration path
+
+1. This change adds the `batchCorrespondenceJob` schema to `docudesk_register.json` and annotates `correspondence` with archival.
+2. The apply phase wires `BatchCorrespondenceJob.php` and `CorrespondenceService.php` to create/transition OR objects instead of reading/writing IAppConfig.
+3. The `document_register.json` file with its `properties: []` schemas is removed after the apply phase migrates report data to OR file attachments.

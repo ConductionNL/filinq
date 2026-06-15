@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: PDF rendering from Twig template and data context
 The system SHALL provide a `PdfService` that accepts a Twig template string and a data context array, renders the template with the data, converts the resulting HTML to PDF via mPDF, and returns the PDF binary content as a string.

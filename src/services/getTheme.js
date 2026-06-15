@@ -8,23 +8,25 @@
  * accordingly. If neither attribute is present, it defaults to 'dark'.
  *
  * @return { 'light' | 'dark' } The current theme, either 'light' or 'dark'.
+ *
+ * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
  */
 export const getTheme = () => {
-    if (document.body.hasAttribute('data-theme-light')) {
-        return 'light'
-    }
+	if (document.body.hasAttribute('data-theme-light')) {
+		return 'light'
+	}
 
-    if (document.body.hasAttribute('data-theme-dark')) {
-        return 'dark'
-    }
+	if (document.body.hasAttribute('data-theme-dark')) {
+		return 'dark'
+	}
 
-    if (document.body.hasAttribute('data-theme-default')) {
-        if (window.matchMedia('(prefers-color-scheme: light)').matches) {
-            return 'light'
-        }
+	if (document.body.hasAttribute('data-theme-default')) {
+		if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+			return 'light'
+		}
 
-        return 'dark'
-    }
+		return 'dark'
+	}
 
-    return 'light'
+	return 'light'
 }

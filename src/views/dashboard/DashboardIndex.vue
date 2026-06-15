@@ -1,188 +1,194 @@
 <script setup>
+import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
-import AnonymizationWidget from '../anonymization/AnonymizationWidget.vue'
 </script>
 
 <template>
-	<div class="dashboard-content">
-		<h2 class="pageHeader">
-			Dashboard
-		</h2>
+	<div>
+		<!-- Anonymiser backend warning banner — admin-only, sits above the dashboard grid -->
+		<AnonymiserBackendWarning
+			v-if="isAdmin"
+			:show-warning="anonymiserBackend.showWarning"
+			:app-api-installed="anonymiserBackend.appApiInstalled"
+			@dismissed="onAnonymiserWarningDismissed" />
 
-		<div class="dashboard-stats">
-			<div class="stat-card">
-				<h5>Total Consents</h5>
-				<div class="content">
-					{{ consentStore.consentStats.total }}
-				</div>
-			</div>
-			<div class="stat-card">
-				<h5>Pending</h5>
-				<div class="content pending">
-					{{ consentStore.consentStats.pending }}
-				</div>
-			</div>
-			<div class="stat-card">
-				<h5>Approved</h5>
-				<div class="content approved">
-					{{ consentStore.consentStats.approved }}
-				</div>
-			</div>
-			<div class="stat-card">
-				<h5>Objected</h5>
-				<div class="content objected">
-					{{ consentStore.consentStats.objected }}
-				</div>
-			</div>
-		</div>
+		<CnDashboardPage
+			:title="t('docudesk', 'Dashboard')"
+			:widgets="widgetDefs"
+			:layout="dashboardLayout"
+			:loading="consentStore.loading">
+			<!-- KPI: Total Consents -->
+			<template #widget-total-consents>
+				<CnStatsBlock
+					:title="t('docudesk', 'Total Consents')"
+					:count="consentStore.consentStats.total"
+					:count-label="t('docudesk', 'records')"
+					variant="default"
+					show-zero-count />
+			</template>
 
-		<div class="dashboard-section">
-			<h3>Recent Consent Activity</h3>
-			<div v-if="consentStore.loading" class="loading-state">
-				<NcLoadingIcon :size="32" />
-			</div>
-			<div v-else-if="consentStore.consents.length === 0" class="empty-state">
-				<p>No consent records yet. Consent records will appear when entities are detected in documents managed by Open Register.</p>
-			</div>
-			<ul v-else class="recent-list">
-				<li v-for="consent in recentConsents" :key="consent.id || consent.uuid" class="recent-item">
-					<span class="entity-text">{{ consent.entityText }}</span>
-					<span class="badge" :class="'status-' + (consent.consentStatus || 'pending')">
-						{{ formatStatus(consent.consentStatus) }}
-					</span>
-				</li>
-			</ul>
-		</div>
+			<!-- KPI: Pending -->
+			<template #widget-pending>
+				<CnStatsBlock
+					:title="t('docudesk', 'Pending')"
+					:count="consentStore.consentStats.pending"
+					:count-label="t('docudesk', 'pending')"
+					variant="warning"
+					show-zero-count />
+			</template>
 
-		<div class="dashboard-section">
-			<h3>Quick Anonymization</h3>
-			<AnonymizationWidget />
-		</div>
+			<!-- KPI: Approved -->
+			<template #widget-approved>
+				<CnStatsBlock
+					:title="t('docudesk', 'Approved')"
+					:count="consentStore.consentStats.approved"
+					:count-label="t('docudesk', 'approved')"
+					variant="success"
+					show-zero-count />
+			</template>
+
+			<!-- KPI: Objected -->
+			<template #widget-objected>
+				<CnStatsBlock
+					:title="t('docudesk', 'Objected')"
+					:count="consentStore.consentStats.objected"
+					:count-label="t('docudesk', 'objected')"
+					variant="error"
+					show-zero-count />
+			</template>
+
+			<!-- Pending Consents table -->
+			<template #widget-pending-consents>
+				<NcEmptyContent
+					v-if="!consentStore.loading && pendingConsents.length === 0"
+					:name="t('docudesk', 'No pending consents')"
+					:description="t('docudesk', 'All consents have been handled.')" />
+				<CnTableWidget
+					v-else
+					:rows="pendingConsents"
+					:columns="consentColumns" />
+			</template>
+
+			<!-- Quick Anonymization -->
+			<template #widget-anonymization>
+				<AnonymizationDashboardWidget :in-app="true" />
+			</template>
+		</CnDashboardPage>
 	</div>
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcEmptyContent } from '@nextcloud/vue'
+import { CnDashboardPage, CnStatsBlock, CnTableWidget } from '@conduction/nextcloud-vue'
+import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
 export default {
 	name: 'DashboardIndex',
 	components: {
-		NcLoadingIcon,
-		AnonymizationWidget,
+		CnDashboardPage,
+		CnStatsBlock,
+		CnTableWidget,
+		NcEmptyContent,
+		AnonymizationDashboardWidget,
+		AnonymiserBackendWarning,
+	},
+	data() {
+		return {
+			isAdmin: false,
+			anonymiserBackend: {
+				method: 'regex',
+				appApiInstalled: false,
+				warningDismissed: false,
+				showWarning: false,
+			},
+			dashboardLayout: [
+				{ id: 1, widgetId: 'total-consents', gridX: 0, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 2, widgetId: 'pending', gridX: 3, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 3, widgetId: 'approved', gridX: 6, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 4, widgetId: 'objected', gridX: 9, gridY: 0, gridWidth: 3, gridHeight: 2, showTitle: false },
+				{ id: 5, widgetId: 'pending-consents', gridX: 0, gridY: 2, gridWidth: 6, gridHeight: 5 },
+				{ id: 6, widgetId: 'anonymization', gridX: 6, gridY: 2, gridWidth: 6, gridHeight: 5 },
+			],
+		}
 	},
 	computed: {
-		recentConsents() {
-			return consentStore.consents.slice(0, 10)
+		/**
+		 * Widget definitions for CnDashboardPage.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
+		widgetDefs() {
+			return [
+				{ id: 'total-consents', title: t('docudesk', 'Total Consents') },
+				{ id: 'pending', title: t('docudesk', 'Pending') },
+				{ id: 'approved', title: t('docudesk', 'Approved') },
+				{ id: 'objected', title: t('docudesk', 'Objected') },
+				{ id: 'pending-consents', title: t('docudesk', 'Pending Consents') },
+				{ id: 'anonymization', title: t('docudesk', 'Quick Anonymization') },
+			]
+		},
+		/**
+		 * Column definitions for the Pending Consents CnTableWidget.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
+		consentColumns() {
+			return [
+				{ key: 'entity', label: t('docudesk', 'Entity') },
+			]
+		},
+		/**
+		 * Consent records with status "pending", capped at 10 rows.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
+		 */
+		pendingConsents() {
+			return consentStore.consents
+				.filter((c) => c.consentStatus === 'pending')
+				.slice(0, 10)
+				.map((c) => ({ entity: c.entityText || '—' }))
 		},
 	},
 	mounted() {
 		consentStore.fetchConsents()
+		this.fetchAnonymiserBackendState()
 	},
 	methods: {
-		formatStatus(status) {
-			const map = {
-				pending: 'Pending',
-				consent_given: 'Approved',
-				objection_received: 'Objected',
-				no_response: 'No Response',
-				anonymized: 'Anonymized',
+		/**
+		 * Fetch anonymiser backend state to decide whether to show the warning banner.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-7
+		 */
+		async fetchAnonymiserBackendState() {
+			try {
+				const response = await fetch('/index.php/apps/docudesk/api/settings', { method: 'GET' })
+				if (response.ok === false) {
+					return
+				}
+				const data = await response.json()
+				this.isAdmin = data.isAdmin ?? false
+				if (data.anonymiserBackend) {
+					this.anonymiserBackend = {
+						method: data.anonymiserBackend.method ?? 'regex',
+						appApiInstalled: data.anonymiserBackend.appApiInstalled ?? false,
+						warningDismissed: data.anonymiserBackend.warningDismissed ?? false,
+						showWarning: data.anonymiserBackend.showWarning ?? false,
+					}
+				}
+			} catch (_err) {
+				// Non-critical — dashboard still works without the warning.
 			}
-			return map[status] || status || 'Unknown'
+		},
+
+		/**
+		 * Handle the anonymiser backend warning being dismissed on the dashboard.
+		 *
+		 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-8
+		 */
+		onAnonymiserWarningDismissed() {
+			this.anonymiserBackend = { ...this.anonymiserBackend, showWarning: false, warningDismissed: true }
 		},
 	},
 }
 </script>
-
-<style scoped>
-.dashboard-content {
-	padding: 20px;
-	max-width: 1000px;
-}
-
-.dashboard-stats {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-	gap: 16px;
-	margin-bottom: 32px;
-}
-
-.stat-card {
-	padding: 16px;
-	border-radius: 8px;
-	border: 1px solid var(--color-border);
-	background-color: var(--color-main-background);
-}
-
-.stat-card h5 {
-	margin: 0 0 8px 0;
-	font-weight: normal;
-	color: var(--color-text-maxcontrast);
-}
-
-.stat-card .content {
-	font-size: 2.5rem;
-	font-weight: bold;
-	text-align: center;
-	color: var(--color-main-text);
-}
-
-.stat-card .content.pending { color: var(--color-warning); }
-.stat-card .content.approved { color: var(--color-success); }
-.stat-card .content.objected { color: var(--color-error); }
-
-.dashboard-section {
-	margin-bottom: 24px;
-}
-
-.dashboard-section h3 {
-	margin-bottom: 12px;
-}
-
-.recent-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-}
-
-.recent-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 10px 12px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.recent-item:last-child {
-	border-bottom: none;
-}
-
-.entity-text {
-	font-weight: 500;
-}
-
-.badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 12px;
-	font-size: 0.8rem;
-	font-weight: 500;
-}
-
-.status-pending { background-color: var(--color-background-dark); color: var(--color-main-text); }
-.status-consent_given { background-color: var(--color-success); color: white; }
-.status-objection_received { background-color: var(--color-error); color: white; }
-.status-no_response { background-color: var(--color-warning); color: white; }
-.status-anonymized { background-color: var(--color-primary); color: white; }
-
-.loading-state {
-	display: flex;
-	justify-content: center;
-	padding: 20px;
-}
-
-.empty-state {
-	padding: 20px;
-	color: var(--color-text-maxcontrast);
-	text-align: center;
-}
-</style>

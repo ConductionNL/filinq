@@ -1,0 +1,86 @@
+[
+  {
+    "slug": "admin-settings",
+    "title": "Admin Settings",
+    "summary": "Provides configuration management for DocuDesk, including OpenRegister integration setup, GDPR consent period configuration, and metadata enrichment feature toggles. Settings are exposed both via the Nextcloud Admin Settings panel (under a dedicated DocuDesk section) and via a REST API. On application boot, DocuDesk automatically initializes its OpenRegister configuration by importing the register/schema definitions from `docudesk_register.json`.",
+    "docsUrl": "openspec/specs/admin-settings/spec.md"
+  },
+  {
+    "slug": "anonymization",
+    "title": "Anonymization Pipeline",
+    "summary": "Provides a complete document anonymization pipeline: upload files to a user-scoped DocuDesk folder, extract text and detect personally identifiable entities (PII) using OpenRegister's TextExtractionService, and anonymize the document by replacing detected entities with placeholders via OpenRegister's FileService. The pipeline runs 100% locally with no external cloud dependencies, ensuring GDPR/AVG compliance through privacy-by-design processing.",
+    "docsUrl": "openspec/specs/anonymization/spec.md"
+  },
+  {
+    "slug": "consent-management",
+    "title": "Consent Management",
+    "summary": "Provides GDPR-compliant publication consent tracking for entities (persons and organizations) detected in documents. When a document is destined for publication under the Wet Open Overheid (WOO), affected entities must be notified and given an objection period (minimum 4 weeks per WOO). This feature manages the full consent lifecycle: creation, notification tracking, objection handling, and publication decision-making. All consent records are stored as OpenRegister objects using the PublicationConsent schema.",
+    "docsUrl": "openspec/specs/consent-management/spec.md"
+  },
+  {
+    "slug": "dashboard",
+    "title": "Dashboard",
+    "summary": "Provides a central overview of DocuDesk activity, including consent tracking statistics, recent consent activity, and a quick anonymization widget. Additionally, DocuDesk registers two Nextcloud Dashboard widgets (AnonymizationWidget and FileEntitiesWidget) that appear on the main Nextcloud Dashboard page, giving users at-a-glance document processing information.",
+    "docsUrl": "openspec/specs/dashboard/spec.md"
+  },
+  {
+    "slug": "document-register",
+    "title": "Document Register",
+    "summary": "Defines the data model for the `document` register used by DocuDesk to store document analysis results. This register is loaded from `lib/Settings/document_register.json` (separate from the consent-focused `docudesk_register.json`) and contains three schemas: `report` (analysis results), `template` (document templates), and `entity` (cross-document entity management). Pre-seeded sample objects demonstrate the anonymization pipeline's output format. Note: all three schemas have `properties: []` (empty) and `hardValidation: false`, meaning field definitions exist only on the sample objects as ad-hoc data, not as schema-enforced property definitions.",
+    "docsUrl": "openspec/specs/document-register/spec.md"
+  },
+  {
+    "slug": "letter-correspondence-generation",
+    "title": "Letter/Correspondence Generation",
+    "summary": "Provides a dedicated correspondence generation workflow for government users to generate letters, beschikkingen, and other correspondence from templates with merge fields populated from case/citizen data. Supports batch generation for multiple recipients, multiple output formats (PDF, DOCX, HTML, email), huisstijl enforcement, and correspondence audit logging. Builds on the existing template-management and pdf-generation capabilities.",
+    "docsUrl": "openspec/specs/letter-correspondence-generation/spec.md"
+  },
+  {
+    "slug": "metadata-enrichment",
+    "title": "Metadata Enrichment",
+    "summary": "Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment runs both on-demand via the API and automatically via the OpenRegister event listener. All processing is performed locally using heuristic algorithms -- no external NLP services are required.",
+    "docsUrl": "openspec/specs/metadata-enrichment/spec.md"
+  },
+  {
+    "slug": "ocr-document-scanning",
+    "title": "OCR Document Scanning",
+    "summary": "Provides OCR (Optical Character Recognition) text extraction from scanned and image-based documents using Tesseract OCR. Enables the anonymization pipeline to process scanned PDFs, TIFF, PNG, and JPG files by extracting text locally before entity detection. All processing runs 100% on the server with no external cloud dependencies, in compliance with DocuDesk's local processing standard.",
+    "docsUrl": "openspec/specs/ocr-document-scanning/spec.md"
+  },
+  {
+    "slug": "openregister-bridge",
+    "title": "OpenRegister Bridge",
+    "summary": "Provides a single resolver service that translates DocuDesk `IAppConfig` keys into OpenRegister register/schema slug pairs and validates namespace identifiers used by per-app data partitions. Services that need to read or write OpenRegister objects depend on the resolver instead of reading config keys directly — this keeps the config-translation seam in one place, isolates the IAppConfig naming convention from consumer code, and gives controllers a typed exception to render setup-state UIs.",
+    "docsUrl": "openspec/specs/openregister-bridge/spec.md"
+  },
+  {
+    "slug": "pdf-generation",
+    "title": "PDF Generation",
+    "summary": "Provides a shared, reusable PDF rendering service that any co-installed Nextcloud app can call. Accepts a Twig template string and data context, renders HTML, converts to PDF via mPDF, and returns the binary content. The service is stateless -- callers provide template content directly. Includes a Twig sandbox with strict security policy and an HTTP API endpoint for PDF generation.",
+    "docsUrl": "openspec/specs/pdf-generation/spec.md"
+  },
+  {
+    "slug": "print-preview",
+    "title": "Print Preview",
+    "summary": "Provides browser-based print preview and PDF/A download functionality. Users can preview rendered documents in an iframe, trigger the browser's native print dialog, or download a PDF/A-3b archival-compliant document. Supports both stored templates (via TemplateService) and inline template content.",
+    "docsUrl": "openspec/specs/print-preview/spec.md"
+  },
+  {
+    "slug": "prometheus-metrics",
+    "title": "Prometheus Metrics Endpoint",
+    "summary": "Expose application metrics in Prometheus text exposition format at `GET /api/metrics` for monitoring, alerting, and operational dashboards. Provides a health check endpoint for infrastructure monitoring.",
+    "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
+  },
+  {
+    "slug": "template-management",
+    "title": "Template Management",
+    "summary": "Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister objects. Templates are scoped per-app via a `namespace` field, enabling multiple Nextcloud apps to maintain their own template collections through a shared service. Consumer apps access templates via the `TemplateService` (DI container) or the REST API.",
+    "docsUrl": "openspec/specs/template-management/spec.md"
+  },
+  {
+    "slug": "dossier-register",
+    "title": "Dossier Register",
+    "summary": "Introduces the dossier register — a structured object per anonymisation folder carrying four fields (name, description, bases[], checkedOn) plus a base register with the six canonical Woo Art. 5 grondslagen. Dossiers are bound to Nextcloud folders via OpenRegister's @self.folder mechanism. No new PHP code; all CRUD rides on the generic /api/objects/{register} routes. Seed data covers the three ADR-016 personas (municipality, consultancy, travel agency).",
+    "docsUrl": "openspec/changes/add-dossier-schema/specs/dossier-register/spec.md"
+  }
+]

@@ -3,8 +3,9 @@
  * Settings Service
  *
  * Service for handling settings-related operations in DocuDesk.
- * Provides functionality for retrieving, saving, and loading settings,
- * as well as managing configuration for OpenRegister integration.
+ * Provides functionality for retrieving and saving settings.
+ * Delegates initialization to SettingsInitializer and register
+ * discovery to RegisterDiscoveryService.
  *
  * @category  Service
  * @package   OCA\DocuDesk\Service
@@ -13,6 +14,15 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,12 +30,11 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use RuntimeException;
 use OCP\IAppConfig;
-use OCP\IRequest;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\OpenRegister\Service\RegisterService;
 
 /**
  * Service for handling settings-related operations in DocuDesk
@@ -35,6 +44,8 @@ use OCA\OpenRegister\Service\RegisterService;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  */
 class SettingsService
 {
@@ -54,108 +65,127 @@ class SettingsService
     private const OPENREGISTER_APP_ID = 'openregister';
 
     /**
-     * The minimum version of the OpenRegister application required
+     * Fallback minimum OpenRegister version if the manifest cannot be read.
      *
-     * @var string The minimum required version of OpenRegister
+     * The canonical source of truth is `openspec/manifest.yaml`
+     * (`dependencies.openregister.minVersion`) per
+     * docudesk-adopt-or-abstractions task 1. This constant is only used when
+     * the manifest is missing/unreadable so the runtime still has a defensive
+     * floor; the manifest validator enforces parity.
+     *
+     * @var string Fallback minimum required version of OpenRegister.
      */
-    private const MIN_OPENREGISTER_VERSION = '0.2.10';
+    private const FALLBACK_MIN_OPENREGISTER_VERSION = '0.2.10';
 
+    /**
+     * Cached minimum OpenRegister version resolved from the manifest.
+     *
+     * @var string|null
+     */
+    private ?string $minOpenRegisterVersion = null;
 
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig         $config          App configuration interface
-     * @param IRequest           $request         Request interface
-     * @param ContainerInterface $container       Container for dependency injection
-     * @param IAppManager        $appManager      App manager interface
-     * @param LoggerInterface    $logger          Logger interface
-     * @param RegisterService    $registerService Register service for getting registers
+     * @param IAppConfig               $config           App configuration interface
+     * @param ContainerInterface       $container        Container for DI
+     * @param IAppManager              $appManager       App manager interface
+     * @param LoggerInterface          $logger           Logger interface
+     * @param RegisterDiscoveryService $discoveryService Register discovery service
+     * @param SettingsInitializer      $initializer      Settings initializer
+     * @param OcrService               $ocrService       OCR service for Tesseract status
      *
      * @return void
+     *
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.2
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly IRequest $request,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
-        private readonly RegisterService $registerService
+        private readonly RegisterDiscoveryService $discoveryService,
+        private readonly SettingsInitializer $initializer,
+        private readonly OcrService $ocrService
     ) {
         $this->appName = 'docudesk';
 
     }//end __construct()
 
-
     /**
      * Checks if OpenRegister is installed and meets version requirements
      *
-     * @param string|null $minVersion Minimum required version
-     *
      * @return bool True if OpenRegister is installed and meets version requirements
      */
-    public function isOpenRegisterInstalled(?string $minVersion=self::MIN_OPENREGISTER_VERSION): bool
+    private function isOpenRegisterInstalled(): bool
     {
         if ($this->appManager->isInstalled(self::OPENREGISTER_APP_ID) === false) {
             return false;
         }
 
-        if ($minVersion === null) {
-            return true;
-        }
-
         $currentVersion = $this->appManager->getAppVersion(self::OPENREGISTER_APP_ID);
-        return version_compare($currentVersion, $minVersion, '>=') === true;
+        return version_compare($currentVersion, $this->getMinOpenRegisterVersion(), '>=') === true;
 
     }//end isOpenRegisterInstalled()
 
-
     /**
-     * Checks if OpenRegister is enabled
+     * Resolve the minimum supported OpenRegister version.
      *
-     * @return bool True if OpenRegister is enabled
+     * Reads `dependencies.openregister.minVersion` from the project's
+     * `openspec/manifest.yaml`. Falls back to FALLBACK_MIN_OPENREGISTER_VERSION
+     * when the manifest is missing, unreadable, or shaped unexpectedly so the
+     * boot path stays defensive. The result is memoised per-instance.
+     *
+     * @return string Semantic version of the minimum supported OpenRegister.
      */
-    public function isOpenRegisterEnabled(): bool
+    private function getMinOpenRegisterVersion(): string
     {
-        return $this->appManager->isEnabledForUser(self::OPENREGISTER_APP_ID);
+        if ($this->minOpenRegisterVersion !== null) {
+            return $this->minOpenRegisterVersion;
+        }
 
-    }//end isOpenRegisterEnabled()
+        $manifestPath = dirname(__DIR__, 2).'/openspec/manifest.yaml';
+        $minVersion   = self::FALLBACK_MIN_OPENREGISTER_VERSION;
+        if (is_file($manifestPath) === true && is_readable($manifestPath) === true) {
+            $contents = file_get_contents($manifestPath);
+            if (is_string($contents) === true && preg_match(
+                '/dependencies:\s*\n(?:\s+#[^\n]*\n)*\s+openregister:\s*\n(?:\s+#[^\n]*\n)*\s+minVersion:\s*["\']?([0-9][0-9A-Za-z\.\-+]*)["\']?/m',
+                $contents,
+                $matches
+            ) === 1
+            ) {
+                $minVersion = $matches[1];
+            }
+        }
 
+        $this->minOpenRegisterVersion = $minVersion;
+        return $minVersion;
+
+    }//end getMinOpenRegisterVersion()
 
     /**
      * Attempts to retrieve the OpenRegister service from the container
      *
-     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available
+     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service
      *
      * @throws \RuntimeException If the service is not available
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === true) {
+        if (in_array(
+            self::OPENREGISTER_APP_ID,
+            $this->appManager->getInstalledApps(),
+            true
+        ) === true
+        ) {
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         }
 
-        throw new \RuntimeException('OpenRegister service is not available.');
+        throw new RuntimeException('OpenRegister service is not available.');
 
     }//end getObjectService()
-
-
-    /**
-     * Attempts to retrieve the Configuration service from the container
-     *
-     * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available
-     *
-     * @throws \RuntimeException If the service is not available
-     */
-    public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
-    {
-        if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-        }
-
-        throw new \RuntimeException('Configuration service is not available.');
-
-    }//end getConfigurationService()
-
 
     /**
      * Initializes the app with all required components
@@ -163,299 +193,252 @@ class SettingsService
      * @return array<string, mixed> The initialization results
      *
      * @throws \RuntimeException If initialization fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
      */
     public function initialize(): array
     {
-        $results = [
-            'configuration' => false,
-            'errors'        => [],
-            'info'          => [],
-        ];
-
-        try {
-            // Check if OpenRegister is installed and enabled.
-            if ($this->isOpenRegisterInstalled() === false) {
-                throw new \RuntimeException('OpenRegister is not installed or version is too low');
-            }
-
-            if ($this->isOpenRegisterEnabled() === false) {
-                throw new \RuntimeException('OpenRegister is not enabled');
-            }
-
-            // Try to get the OpenRegister configuration service.
-            try {
-                $configurationService = $this->getConfigurationService();
-            } catch (Exception $e) {
-                throw new \RuntimeException('OpenRegister configuration service is not available: '.$e->getMessage());
-            }
-
-            // Get current configuration version from app config.
-            $currentVersion = $this->config->getValueString($this->appName, 'configuration_version', '0.0.0');
-
-            // Load settings from file.
-            $settings = $this->loadSettings();
-
-            // Check if new configuration version is higher than current.
-            if (version_compare($settings['info']['version'], $currentVersion, '<=') === true) {
-                $infoVersion       = $settings['info']['version'];
-                $results['info'][] = 'Configuration version '.$currentVersion.' is up to date or newer than '.$infoVersion;
-                return $results;
-            }
-
-            // Import the new configuration using the app-aware method.
-            $configurationService->importFromApp(
-                appId: $this->appName,
-                data: $settings,
-                version: $settings['info']['version']
-            );
-
-            $results['configuration'] = true;
-            $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
-        } catch (Exception $e) {
-            $results['errors'][] = $e->getMessage();
-            $this->logger->error(
-                'Failed to initialize DocuDesk: '.$e->getMessage(),
-                [
-                    'app' => $this->appName,
-                ]
-            );
-        }//end try
-
-        return $results;
+        return $this->initializer->initialize();
 
     }//end initialize()
 
+    /**
+     * Load feature toggle settings from app config
+     *
+     * @return array<string, mixed> Feature toggle settings
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+     */
+    private function loadFeatureToggles(): array
+    {
+        return [
+            'publication_objection_period_days'            => (int) $this->config->getValueString(
+                $this->appName,
+                'publication_objection_period_days',
+                '28'
+            ),
+            'enable_language_detection'                    => $this->config->getValueString(
+                $this->appName,
+                'enable_language_detection',
+                '1'
+            ) === '1',
+            'enable_keyword_extraction'                    => $this->config->getValueString(
+                $this->appName,
+                'enable_keyword_extraction',
+                '1'
+            ) === '1',
+            'enable_topic_classification'                  => $this->config->getValueString(
+                $this->appName,
+                'enable_topic_classification',
+                '1'
+            ) === '1',
+            'signing_enabled'                              => $this->config->getValueString(
+                $this->appName,
+                'signing_enabled',
+                '0'
+            ) === '1',
+            'signing_provider'                             => $this->config->getValueString(
+                $this->appName,
+                'signing_provider',
+                'native'
+            ),
+            'signing_default_level'                        => $this->config->getValueString(
+                $this->appName,
+                'signing_default_level',
+                'SES'
+            ),
+            'signing_request_expiry_days'                  => (int) $this->config->getValueString(
+                $this->appName,
+                'signing_request_expiry_days',
+                '30'
+            ),
+            // Anonymise-output-as-pdf-by-default — tenant-wide default
+            // for the anonymise endpoint's `outputFormat` request param.
+            // 'pdf' converts the anonymised output via the cascade;
+            // 'preserve' returns it in the native input format.
+            'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
+                $this->appName,
+                'docudesk.anonymisation.default_output_format',
+                'pdf'
+            ),
+            // OCR document scanning (ocr-document-scanning) — tenant-wide
+            // toggles read by OcrService for scanned-PDF text extraction.
+            'ocr_enabled'                                  => $this->config->getValueString(
+                $this->appName,
+                'ocr_enabled',
+                '1'
+            ) === '1',
+            'ocr_languages'                                => $this->config->getValueString(
+                $this->appName,
+                'ocr_languages',
+                'nld+eng'
+            ),
+            'ocr_dpi'                                      => (int) $this->config->getValueString(
+                $this->appName,
+                'ocr_dpi',
+                '300'
+            ),
+        ];
+
+    }//end loadFeatureToggles()
 
     /**
-     * Load settings from the docudesk_register.json file
+     * Get Tesseract OCR availability status
      *
-     * @return array<string, mixed> The loaded settings configuration
+     * @return array{tesseractAvailable: bool, tesseractVersion: string|null} OCR status
      *
-     * @throws \RuntimeException If settings loading fails
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.2
      */
-    public function loadSettings(): array
+    public function getOcrStatus(): array
     {
-        $settingsFilePath = __DIR__.'/../Settings/docudesk_register.json';
+        return [
+            'tesseractAvailable' => $this->ocrService->isTesseractAvailable(),
+            'tesseractVersion'   => $this->ocrService->getTesseractVersion(),
+        ];
 
-        try {
-            if (file_exists($settingsFilePath) === false) {
-                throw new \RuntimeException('Settings file not found at: '.$settingsFilePath);
-            }
-
-            $jsonContent = file_get_contents($settingsFilePath);
-            if ($jsonContent === false) {
-                throw new \RuntimeException('Failed to read settings file');
-            }
-
-            $settings = json_decode($jsonContent, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \RuntimeException('Error decoding JSON: '.json_last_error_msg());
-            }
-
-            if (isset($settings['info']['version']) === false) {
-                throw new \RuntimeException('Settings file does not contain version information');
-            }
-
-            return $settings;
-        } catch (Exception $e) {
-            throw new \RuntimeException('Failed to load settings: '.$e->getMessage());
-        }//end try
-
-    }//end loadSettings()
-
+    }//end getOcrStatus()
 
     /**
      * Retrieve all settings
      *
      * @return array<string, mixed> The current settings configuration
      *
-     * @throws \RuntimeException If settings retrieval fails
+     * @throws RuntimeException If settings retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+     * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
      */
     public function getAllSettings(): array
     {
-        // Initialize the data array.
-        $data = [];
-        $data['objectTypes']        = [
-            'publicationConsent',
-            'template',
+        $data = [
+            'objectTypes'        => ['publicationConsent', 'template', 'templateVersion'],
+            'openRegisters'      => false,
+            'availableRegisters' => [],
         ];
-        $data['openRegisters']      = false;
-        $data['availableRegisters'] = [];
 
-        // Check if the OpenRegister service is available.
         try {
             if ($this->isOpenRegisterInstalled() === true) {
-                $data['openRegisters'] = true;
-
-                // Add additional error handling for OpenRegister internal errors.
-                try {
-                    // Get all registers with schemas extended.
-                    $rawRegisters = $this->registerService->findAll(
-                        limit: null,
-                        offset: null,
-                        filters: [],
-                        searchConditions: [],
-                        searchParams: [],
-                        _extend: ['schemas']
-                    );
-
-                    // Convert Register entities to arrays and filter schemas.
-                    $data['availableRegisters'] = array_map(
-                        function ($register) {
-                            $registerArray = $register->jsonSerialize();
-
-                            // Filter schemas to remove properties field for cleaner response.
-                            if (isset($registerArray['schemas']) === true && is_array($registerArray['schemas']) === true) {
-                                $registerArray['schemas'] = array_map(
-                                    function ($schema) {
-                                        if (is_array($schema) === true) {
-                                            return array_filter(
-                                                $schema,
-                                                function ($key) {
-                                                    return in_array($key, ['properties'], true) === false;
-                                                },
-                                                ARRAY_FILTER_USE_KEY
-                                            );
-                                        }
-
-                                        return $schema;
-                                    },
-                                    $registerArray['schemas']
-                                );
-                            }
-
-                            return $registerArray;
-                        },
-                        $rawRegisters
-                    );
-                } catch (\TypeError $e) {
-                    $this->logger->warning(
-                        'OpenRegister internal error - using empty registers list',
-                        [
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                    );
-                    $data['availableRegisters'] = [];
-                } catch (Exception $e) {
-                    $this->logger->warning(
-                        'OpenRegister findAll() failed - using empty registers list',
-                        [
-                            'exception' => $e->getMessage(),
-                            'file'      => $e->getFile(),
-                            'line'      => $e->getLine(),
-                        ]
-                    );
-                    $data['availableRegisters'] = [];
-                }//end try
-            }//end if
+                $data['openRegisters']      = true;
+                $data['availableRegisters'] = $this->discoveryService->fetchAvailableRegisters();
+            }
         } catch (\RuntimeException $e) {
             $this->logger->info(
                 'OpenRegister service not available',
-                [
-                    'exception' => $e->getMessage(),
-                ]
+                ['exception' => $e->getMessage()]
             );
         }//end try
 
-        // Build defaults array dynamically based on object types.
-        $defaults = [];
-        foreach ($data['objectTypes'] as $type) {
-            $defaults["{$type}_source"]   = 'openregister';
-            $defaults["{$type}_schema"]   = '';
-            $defaults["{$type}_register"] = '';
-        }
-
-        // Get the current values for the object types from the configuration.
         try {
-            foreach ($defaults as $key => $defaultValue) {
-                $data['configuration'][$key] = $this->config->getValueString($this->appName, $key, $defaultValue);
-            }
-
-            // Get DocuDesk-specific consent and metadata settings.
-            $data['publication_objection_period_days'] = (int) $this->config->getValueString(
-                $this->appName,
-                'publication_objection_period_days',
-                '28'
+            $data['configuration'] = $this->discoveryService->loadObjectTypeConfiguration(
+                $data['objectTypes']
             );
-            $data['enable_language_detection']         = $this->config->getValueString(
-                $this->appName,
-                'enable_language_detection',
-                '1'
-            ) === '1';
-            $data['enable_keyword_extraction']         = $this->config->getValueString(
-                $this->appName,
-                'enable_keyword_extraction',
-                '1'
-            ) === '1';
-            $data['enable_topic_classification']       = $this->config->getValueString(
-                $this->appName,
-                'enable_topic_classification',
-                '1'
-            ) === '1';
+            $data = array_merge($data, $this->loadFeatureToggles());
+            $data['ocrStatus'] = $this->getOcrStatus();
 
             return $data;
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to retrieve settings: '.$e->getMessage());
+            throw new RuntimeException('Failed to retrieve settings: '.$e->getMessage());
         }//end try
 
     }//end getAllSettings()
 
+    /**
+     * Convert a setting value to string for storage
+     *
+     * @param mixed $value The value to convert
+     *
+     * @return string The string representation
+     */
+    private function convertValueToString(mixed $value): string
+    {
+        if (is_array($value) === true || is_object($value) === true) {
+            return json_encode($value);
+        }
+
+        return (string) $value;
+
+    }//end convertValueToString()
+
+    /**
+     * Keys that are permitted to be written via the settings endpoint.
+     *
+     * This allowlist prevents any authenticated user (wave-3 C1) from
+     * overwriting security-sensitive keys such as signing_verification_secret
+     * through the open settings POST endpoint.  Secret keys (signing_* tokens
+     * etc.) must be managed through dedicated, separately-secured endpoints.
+     *
+     * @var array<int, string>
+     */
+    private const WRITABLE_KEYS = [
+        'publicationConsent_register',
+        'publicationConsent_schema',
+        'publicationConsent_source',
+        'template_register',
+        'template_schema',
+        'template_source',
+        'publication_objection_period_days',
+        'enable_language_detection',
+        'enable_keyword_extraction',
+        'enable_topic_classification',
+        'signing_enabled',
+        'signing_provider',
+        'signing_default_level',
+        'signing_request_expiry_days',
+        'ocr_enabled',
+        'ocr_languages',
+        'ocr_dpi',
+    ];
 
     /**
      * Update the settings configuration
+     *
+     * Only keys present in WRITABLE_KEYS may be written; all other keys are
+     * silently skipped.  This prevents escalation via security-sensitive keys
+     * such as signing_verification_secret (wave-3 C1).
      *
      * @param array<string, mixed> $data The settings data to update
      *
      * @return array<string, mixed> The updated settings configuration
      *
      * @throws \RuntimeException If settings update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function updateSettings(array $data): array
     {
         try {
-            // Update each setting in the configuration.
             foreach ($data as $key => $value) {
-                // Skip empty keys.
                 if (empty($key) === true) {
                     $this->logger->warning(
                         'Skipping empty key in updateSettings',
-                        [
-                            'value' => $value,
-                        ]
+                        ['value' => $value]
                     );
                     continue;
                 }
 
-                // Handle arrays and objects by converting to JSON.
-                if (is_array($value) === true || is_object($value) === true) {
-                    $stringValue = json_encode($value);
-                } else {
-                    if (is_string($value) === true) {
-                        $stringValue = $value;
-                    } else {
-                        $stringValue = (string) $value;
-                    }
+                if (in_array($key, self::WRITABLE_KEYS, true) === false) {
+                    $this->logger->warning(
+                        'Skipping non-allowlisted key in updateSettings',
+                        ['key' => $key]
+                    );
+                    unset($data[$key]);
+                    continue;
                 }
 
+                $stringValue = $this->convertValueToString(value: $value);
                 $this->config->setValueString($this->appName, $key, $stringValue);
                 $data[$key] = $this->config->getValueString($this->appName, $key);
             }//end foreach
 
             $this->logger->info(
                 'Settings updated successfully',
-                [
-                    'updatedKeys' => array_keys($data),
-                ]
+                ['updatedKeys' => array_keys($data)]
             );
 
             return $data;
         } catch (Exception $e) {
-            throw new \RuntimeException('Failed to update settings: '.$e->getMessage());
+            throw new RuntimeException('Failed to update settings: '.$e->getMessage());
         }//end try
 
     }//end updateSettings()
-
-
 }//end class

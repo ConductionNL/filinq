@@ -17,17 +17,25 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use Exception;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\TemplateService;
-use OCA\DocuDesk\Db\Template;
-use OCA\DocuDesk\Db\TemplateMapper;
-use Test\TestCase;
+use OCA\DocuDesk\Service\TemplateVersionService;
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
+use RuntimeException;
 
 /**
  * Unit tests for TemplateService
  *
- * This test class provides comprehensive testing for the TemplateService functionality
- * including template creation, rendering, and format conversion capabilities.
+ * This test class provides testing for the TemplateService functionality
+ * including template creation, retrieval, updating, deletion, and validation.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -49,11 +57,25 @@ class TemplateServiceTest extends TestCase
     private TemplateService $templateService;
 
     /**
-     * Mocked TemplateMapper for database operations
+     * Mocked ContainerInterface for dependency injection
      *
-     * @var TemplateMapper|MockObject
+     * @var ContainerInterface|MockObject
      */
-    private TemplateMapper|MockObject $mockMapper;
+    private ContainerInterface|MockObject $mockContainer;
+
+    /**
+     * Mocked IAppManager for app management
+     *
+     * @var IAppManager|MockObject
+     */
+    private IAppManager|MockObject $mockAppManager;
+
+    /**
+     * Mocked OpenRegisterResolver for register/schema resolution
+     *
+     * @var OpenRegisterResolver|MockObject
+     */
+    private OpenRegisterResolver|MockObject $mockRegisterResolver;
 
 
     /**
@@ -68,11 +90,24 @@ class TemplateServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Create mock for TemplateMapper
-        $this->mockMapper = $this->createMock(TemplateMapper::class);
+        $this->mockContainer        = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager       = $this->createMock(IAppManager::class);
+        $this->mockRegisterResolver = $this->createMock(OpenRegisterResolver::class);
+        $mockVersionService         = $this->createMock(TemplateVersionService::class);
+        $mockUserSession            = $this->createMock(IUserSession::class);
 
-        // Initialize TemplateService with mocked dependencies
-        $this->templateService = new TemplateService($this->mockMapper);
+        // Default: getInstalledApps returns an empty array.
+        $this->mockAppManager->method('getInstalledApps')
+            ->willReturn([]);
+
+        $this->templateService = new TemplateService(
+            $this->mockContainer,
+            $this->mockAppManager,
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $mockUserSession,
+            $this->createMock(IAppConfig::class)
+        );
 
     }//end setUp()
 
@@ -90,222 +125,418 @@ class TemplateServiceTest extends TestCase
 
 
     /**
-     * Test template creation with valid data
+     * Helper to set up a TemplateService with OpenRegister available
      *
-     * This test verifies that the createTemplate method correctly creates
-     * a new template with the provided parameters and returns the inserted template.
+     * Reconfigures the mocks so that getInstalledApps returns openregister
+     * and the container returns the given mock ObjectService.
+     *
+     * @param ObjectService|MockObject $mockObjectService The mock ObjectService
      *
      * @return void
+     */
+    private function setUpWithOpenRegister(ObjectService|MockObject $mockObjectService): void
+    {
+        // Recreate appManager mock that includes openregister.
+        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockAppManager->method('getInstalledApps')
+            ->willReturn(['openregister']);
+
+        $this->mockContainer = $this->createMock(ContainerInterface::class);
+        $this->mockContainer->method('get')
+            ->with('OCA\OpenRegister\Service\ObjectService')
+            ->willReturn($mockObjectService);
+
+        $this->templateService = new TemplateService(
+            $this->mockContainer,
+            $this->mockAppManager,
+            $this->mockRegisterResolver,
+            $this->createMock(TemplateVersionService::class),
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
+        );
+
+    }//end setUpWithOpenRegister()
+
+
+    /**
+     * Helper to set up a TemplateService with OpenRegister available and a
+     * caller-supplied TemplateVersionService mock.
      *
-     * @psalm-return void
-     * @phpstan-return void
+     * Mirrors setUpWithOpenRegister() but injects the given version service so
+     * tests can assert on the version-history side effects of update flows.
+     *
+     * @param ObjectService|MockObject        $mockObjectService  The mock ObjectService.
+     * @param TemplateVersionService|MockObject $mockVersionService The mock version service.
+     *
+     * @return void
+     */
+    private function setUpWithOpenRegisterAndVersionService(
+        ObjectService|MockObject $mockObjectService,
+        TemplateVersionService|MockObject $mockVersionService
+    ): void {
+        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockAppManager->method('getInstalledApps')
+            ->willReturn(['openregister']);
+
+        $this->mockContainer = $this->createMock(ContainerInterface::class);
+        $this->mockContainer->method('get')
+            ->with('OCA\OpenRegister\Service\ObjectService')
+            ->willReturn($mockObjectService);
+
+        $this->templateService = new TemplateService(
+            $this->mockContainer,
+            $this->mockAppManager,
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
+        );
+
+    }//end setUpWithOpenRegisterAndVersionService()
+
+
+    /**
+     * Test that createTemplate throws when namespace is missing
+     *
+     * @return void
+     */
+    public function testCreateTemplateThrowsWhenNamespaceMissing(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Namespace is required');
+
+        $this->templateService->createTemplate([
+            'name'    => 'Test Template',
+            'content' => '<h1>Hello</h1>',
+        ]);
+
+    }//end testCreateTemplateThrowsWhenNamespaceMissing()
+
+
+    /**
+     * Test that createTemplate throws when namespace is invalid
+     *
+     * @return void
+     */
+    public function testCreateTemplateThrowsWhenNamespaceInvalid(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid namespace');
+
+        $this->mockRegisterResolver->method('validateNamespace')
+            ->willThrowException(new \Exception('Invalid namespace: must be lowercase alphanumeric only', 400));
+
+        $this->templateService->createTemplate([
+            'namespace' => 'INVALID-NS!',
+            'name'      => 'Test Template',
+            'content'   => '<h1>Hello</h1>',
+        ]);
+
+    }//end testCreateTemplateThrowsWhenNamespaceInvalid()
+
+
+    /**
+     * Test that createTemplate throws when name is missing
+     *
+     * @return void
+     */
+    public function testCreateTemplateThrowsWhenNameMissing(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Name is required');
+
+        $this->templateService->createTemplate([
+            'namespace' => 'testapp',
+            'content'   => '<h1>Hello</h1>',
+        ]);
+
+    }//end testCreateTemplateThrowsWhenNameMissing()
+
+
+    /**
+     * Test that createTemplate throws when content is missing
+     *
+     * @return void
+     */
+    public function testCreateTemplateThrowsWhenContentMissing(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Content is required');
+
+        $this->templateService->createTemplate([
+            'namespace' => 'testapp',
+            'name'      => 'Test Template',
+        ]);
+
+    }//end testCreateTemplateThrowsWhenContentMissing()
+
+
+    /**
+     * Test that getObjectService throws when OpenRegister is not installed
+     *
+     * This indirectly tests getObjectService by calling a public method
+     * that depends on it.
+     *
+     * @return void
+     */
+    public function testGetTemplatesThrowsWhenOpenRegisterNotAvailable(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('OpenRegister service is not available');
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $this->templateService->getTemplates();
+
+    }//end testGetTemplatesThrowsWhenOpenRegisterNotAvailable()
+
+
+    /**
+     * Test that getTemplates throws when template register/schema not configured
+     *
+     * @return void
+     */
+    public function testGetTemplatesThrowsWhenNotConfigured(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Template register/schema not configured');
+
+        // Need OpenRegister available to pass getObjectService check.
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $this->setUpWithOpenRegister($mockObjectService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willThrowException(new \Exception('Template register/schema not configured', 500));
+
+        $this->templateService->getTemplates();
+
+    }//end testGetTemplatesThrowsWhenNotConfigured()
+
+
+    /**
+     * Test that getTemplate throws when template not found
+     *
+     * @return void
+     */
+    public function testGetTemplateThrowsWhenNotFound(): void
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Template not found');
+
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $mockObjectService->expects($this->once())
+            ->method('find')
+            ->willReturn(null);
+
+        $this->setUpWithOpenRegister($mockObjectService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $this->templateService->getTemplate('non-existent-uuid');
+
+    }//end testGetTemplateThrowsWhenNotFound()
+
+
+    /**
+     * Test createTemplate with valid data succeeds
+     *
+     * @return void
      */
     public function testCreateTemplateWithValidData(): void
     {
-        // Arrange: Set up test data
-        $name = 'Test Template';
-        $content = '<h1>Hello {{ name }}</h1>';
-        $category = 'Test Category';
-        $outputFormat = 'pdf';
+        $mockEntity = $this->createMock(ObjectEntity::class);
+        $mockEntity->method('jsonSerialize')
+            ->willReturn([
+                'id'        => 'uuid-123',
+                'namespace' => 'testapp',
+                'name'      => 'Test',
+                'content'   => '<p>Test</p>',
+            ]);
 
-        // Create expected template
-        $expectedTemplate = new Template();
-        $expectedTemplate->setName($name);
-        $expectedTemplate->setContent($content);
-        $expectedTemplate->setCategory($category);
-        $expectedTemplate->setOutputFormat($outputFormat);
-        $expectedTemplate->setId(1);
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $mockObjectService->expects($this->once())
+            ->method('saveObject')
+            ->willReturn($mockEntity);
 
-        // Configure mock to return the expected template
-        $this->mockMapper->expects($this->once())
-            ->method('insert')
-            ->with($this->callback(function (Template $template): bool {
-                return $template->getName() === 'Test Template'
-                    && $template->getContent() === '<h1>Hello {{ name }}</h1>'
-                    && $template->getCategory() === 'Test Category'
-                    && $template->getOutputFormat() === 'pdf';
-            }))
-            ->willReturn($expectedTemplate);
+        $this->setUpWithOpenRegister($mockObjectService);
 
-        // Act: Call the method under test
-        $result = $this->templateService->createTemplate($name, $content, $category, $outputFormat);
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
 
-        // Assert: Verify the results
-        $this->assertInstanceOf(Template::class, $result);
-        $this->assertEquals($name, $result->getName());
-        $this->assertEquals($content, $result->getContent());
-        $this->assertEquals($category, $result->getCategory());
-        $this->assertEquals($outputFormat, $result->getOutputFormat());
-        $this->assertEquals(1, $result->getId());
+        $result = $this->templateService->createTemplate([
+            'namespace' => 'testapp',
+            'name'      => 'Test',
+            'content'   => '<p>Test</p>',
+        ]);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('uuid-123', $result['id']);
 
     }//end testCreateTemplateWithValidData()
 
 
     /**
-     * Test template rendering with simple data
+     * Test that updateTemplate snapshots the current state into version history
+     * before persisting the new state.
      *
-     * This test verifies that the renderTemplate method correctly renders
-     * a template with provided data and returns HTML content.
-     *
-     * @return void
-     *
-     * @psalm-return void
-     * @phpstan-return void
-     */
-    public function testRenderTemplateWithSimpleData(): void
-    {
-        // Arrange: Set up test data
-        $templateId = 1;
-        $templateContent = '<h1>Hello {{ name }}</h1>';
-        $renderData = ['name' => 'World'];
-        $format = 'html';
-
-        // Create mock template
-        $mockTemplate = new Template();
-        $mockTemplate->setContent($templateContent);
-
-        // Configure mock to return the template
-        $this->mockMapper->expects($this->once())
-            ->method('find')
-            ->with($templateId)
-            ->willReturn($mockTemplate);
-
-        // Act: Call the method under test
-        $result = $this->templateService->renderTemplate($templateId, $renderData, $format);
-
-        // Assert: Verify the rendered content
-        $this->assertIsString($result);
-        $this->assertStringContainsString('Hello World', $result);
-        $this->assertStringContainsString('<h1>', $result);
-
-    }//end testRenderTemplateWithSimpleData()
-
-
-    /**
-     * Test template rendering with complex data structure
-     *
-     * This test verifies that the renderTemplate method can handle
-     * complex data structures including arrays and nested objects.
+     * Regression lock for the template versioning fix: updateTemplate() must
+     * call TemplateVersionService::createVersion() with the *existing* template
+     * state (fetched via getTemplate) before saving the merged update, so the
+     * pre-edit content is recoverable. The snapshot must use the prior state,
+     * not the incoming payload.
      *
      * @return void
-     *
-     * @psalm-return void
-     * @phpstan-return void
      */
-    public function testRenderTemplateWithComplexData(): void
+    public function testUpdateTemplateSnapshotsExistingStateIntoVersionHistory(): void
     {
-        // Arrange: Set up complex test data
-        $templateId = 2;
-        $templateContent = '<h1>{{ title }}</h1><ul>{% for item in items %}<li>{{ item.name }}: {{ item.value }}</li>{% endfor %}</ul>';
-        $renderData = [
-            'title' => 'Test Report',
-            'items' => [
-                ['name' => 'Item 1', 'value' => 'Value 1'],
-                ['name' => 'Item 2', 'value' => 'Value 2'],
-            ]
+        $existing = [
+            'id'        => 'uuid-123',
+            'namespace' => 'testapp',
+            'name'      => 'Original',
+            'content'   => '<p>Original</p>',
         ];
-        $format = 'html';
 
-        // Create mock template
-        $mockTemplate = new Template();
-        $mockTemplate->setContent($templateContent);
+        $savedEntity = $this->createMock(ObjectEntity::class);
+        $savedEntity->method('jsonSerialize')
+            ->willReturn([
+                'id'        => 'uuid-123',
+                'namespace' => 'testapp',
+                'name'      => 'Updated',
+                'content'   => '<p>Updated</p>',
+            ]);
 
-        // Configure mock to return the template
-        $this->mockMapper->expects($this->once())
-            ->method('find')
-            ->with($templateId)
-            ->willReturn($mockTemplate);
+        $mockObjectService = $this->createMock(ObjectService::class);
+        // find() backs getTemplate(): returns the pre-edit state.
+        $mockObjectService->method('find')->willReturn($existing);
+        $mockObjectService->expects($this->once())
+            ->method('saveObject')
+            ->willReturn($savedEntity);
 
-        // Act: Call the method under test
-        $result = $this->templateService->renderTemplate($templateId, $renderData, $format);
+        $mockVersionService = $this->createMock(TemplateVersionService::class);
+        // The version snapshot must capture the EXISTING (pre-edit) state.
+        $mockVersionService->expects($this->once())
+            ->method('createVersion')
+            ->with(
+                $this->equalTo('uuid-123'),
+                $this->equalTo($existing),
+                $this->anything(),
+                $this->anything()
+            );
 
-        // Assert: Verify the rendered content contains expected elements
-        $this->assertIsString($result);
-        $this->assertStringContainsString('Test Report', $result);
-        $this->assertStringContainsString('Item 1: Value 1', $result);
-        $this->assertStringContainsString('Item 2: Value 2', $result);
-        $this->assertStringContainsString('<ul>', $result);
-        $this->assertStringContainsString('<li>', $result);
+        $this->setUpWithOpenRegisterAndVersionService($mockObjectService, $mockVersionService);
 
-    }//end testRenderTemplateWithComplexData()
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
 
+        $result = $this->templateService->updateTemplate('uuid-123', [
+            'name'    => 'Updated',
+            'content' => '<p>Updated</p>',
+        ]);
 
-    /**
-     * Test PDF format request returns HTML (placeholder implementation)
-     *
-     * This test verifies that requesting PDF format currently returns HTML
-     * as the PDF conversion is not yet implemented.
-     *
-     * @return void
-     *
-     * @psalm-return void
-     * @phpstan-return void
-     */
-    public function testRenderTemplatePdfFormat(): void
-    {
-        // Arrange: Set up test data for PDF format
-        $templateId = 3;
-        $templateContent = '<h1>PDF Test</h1>';
-        $renderData = [];
-        $format = 'pdf';
+        $this->assertIsArray($result);
+        $this->assertEquals('Updated', $result['name']);
 
-        // Create mock template
-        $mockTemplate = new Template();
-        $mockTemplate->setContent($templateContent);
-
-        // Configure mock to return the template
-        $this->mockMapper->expects($this->once())
-            ->method('find')
-            ->with($templateId)
-            ->willReturn($mockTemplate);
-
-        // Act: Call the method under test
-        $result = $this->templateService->renderTemplate($templateId, $renderData, $format);
-
-        // Assert: Verify HTML is returned (placeholder implementation)
-        $this->assertIsString($result);
-        $this->assertStringContainsString('PDF Test', $result);
-
-    }//end testRenderTemplatePdfFormat()
+    }//end testUpdateTemplateSnapshotsExistingStateIntoVersionHistory()
 
 
     /**
-     * Test DOCX format request returns HTML (placeholder implementation)
-     *
-     * This test verifies that requesting DOCX format currently returns HTML
-     * as the DOCX conversion is not yet implemented.
+     * Test deleteTemplate returns true on success
      *
      * @return void
-     *
-     * @psalm-return void
-     * @phpstan-return void
      */
-    public function testRenderTemplateDocxFormat(): void
+    public function testDeleteTemplateReturnsTrue(): void
     {
-        // Arrange: Set up test data for DOCX format
-        $templateId = 4;
-        $templateContent = '<h1>DOCX Test</h1>';
-        $renderData = [];
-        $format = 'docx';
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $mockObjectService->expects($this->once())
+            ->method('deleteObject');
 
-        // Create mock template
-        $mockTemplate = new Template();
-        $mockTemplate->setContent($templateContent);
+        $this->setUpWithOpenRegister($mockObjectService);
 
-        // Configure mock to return the template
-        $this->mockMapper->expects($this->once())
-            ->method('find')
-            ->with($templateId)
-            ->willReturn($mockTemplate);
+        $result = $this->templateService->deleteTemplate('uuid-to-delete');
 
-        // Act: Call the method under test
-        $result = $this->templateService->renderTemplate($templateId, $renderData, $format);
+        $this->assertTrue($result);
 
-        // Assert: Verify HTML is returned (placeholder implementation)
-        $this->assertIsString($result);
-        $this->assertStringContainsString('DOCX Test', $result);
-
-    }//end testRenderTemplateDocxFormat()
+    }//end testDeleteTemplateReturnsTrue()
 
 
-}//end class 
+    /**
+     * Test getTemplatesByNamespace delegates to getTemplates with namespace filter
+     *
+     * @return void
+     */
+    public function testGetTemplatesByNamespaceDelegatesToGetTemplates(): void
+    {
+        $expectedResults = [
+            ['id' => '1', 'name' => 'Template 1'],
+            ['id' => '2', 'name' => 'Template 2'],
+        ];
+
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $mockObjectService->expects($this->once())
+            ->method('buildSearchQuery')
+            ->willReturn([]);
+        $mockObjectService->expects($this->once())
+            ->method('searchObjectsPaginated')
+            ->willReturn(['results' => $expectedResults, 'total' => 2]);
+
+        $this->setUpWithOpenRegister($mockObjectService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $result = $this->templateService->getTemplatesByNamespace('larpingapp');
+
+        $this->assertCount(2, $result);
+        $this->assertEquals('Template 1', $result[0]['name']);
+
+    }//end testGetTemplatesByNamespaceDelegatesToGetTemplates()
+
+
+    /**
+     * Test getTemplatesByNamespace returns empty array when no results key
+     *
+     * @return void
+     */
+    public function testGetTemplatesByNamespaceReturnsEmptyWhenNoResults(): void
+    {
+        $mockObjectService = $this->createMock(ObjectService::class);
+        $mockObjectService->expects($this->once())
+            ->method('buildSearchQuery')
+            ->willReturn([]);
+        $mockObjectService->expects($this->once())
+            ->method('searchObjectsPaginated')
+            ->willReturn(['results' => [], 'total' => 0]);
+
+        $this->setUpWithOpenRegister($mockObjectService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $result = $this->templateService->getTemplatesByNamespace('emptyns');
+
+        $this->assertEmpty($result);
+
+    }//end testGetTemplatesByNamespaceReturnsEmptyWhenNoResults()
+
+
+}//end class
