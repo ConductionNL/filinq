@@ -164,6 +164,14 @@
 			"_note": "Standalone print-preview page; no nav item; launched programmatically."
 		},
 		{
+			"id": "Comparison",
+			"route": "/comparison",
+			"type": "custom",
+			"title": "Document comparison",
+			"component": "ComparisonView",
+			"_note": "Side-by-side document comparison (original vs anonymised output). Standalone page; no nav item; deep-linked with ?left=&right= file-id query params."
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",

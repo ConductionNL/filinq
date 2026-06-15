@@ -230,7 +230,6 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@conduction/nextcloud-vue'
 import { useTemplateStore } from '../../store/modules/template.js'
-import { navigationStore } from '../../store/store.js'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
@@ -240,7 +239,6 @@ export default {
 	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField, ConditionalSectionDialog, MergeFieldDialog, ConfirmRestoreVersionDialog },
 	data() {
 		return {
-			navigationStore,
 			activeTab: 'edit',
 			form: {
 				name: '',
@@ -332,7 +330,7 @@ export default {
 		 */
 		async handleBack() {
 			await this.releaseLockIfMine()
-			navigationStore.setSelected('templates')
+			this.$router.push({ name: 'Templates' })
 		},
 		/**
 		 * Release the edit lock if the current user owns it.
@@ -484,7 +482,7 @@ export default {
 					)
 				}
 				await this.releaseLockIfMine()
-				navigationStore.setSelected('templates')
+				this.$router.push({ name: 'Templates' })
 				await this.templateStore.fetchTemplates()
 			} finally {
 				this.saving = false

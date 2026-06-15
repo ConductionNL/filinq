@@ -90,7 +90,6 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField } from '@conduction/nextcloud-vue'
 import { useTemplateStore } from '../../store/modules/template.js'
-import { navigationStore } from '../../store/store.js'
 import ConfirmDeleteTemplateDialog from '../../dialogs/ConfirmDeleteTemplateDialog.vue'
 
 export default {
@@ -98,7 +97,6 @@ export default {
 	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect, NcTextField, ConfirmDeleteTemplateDialog },
 	data() {
 		return {
-			navigationStore,
 			selectedCategory: null,
 			searchQuery: '',
 			deleteTarget: null,
@@ -156,7 +154,7 @@ export default {
 		 */
 		openTemplate(tmpl) {
 			this.templateStore.templateItem = tmpl
-			navigationStore.setSelected('templateDetail')
+			this.$router.push({ name: 'TemplateDetail', params: { id: tmpl.id } })
 		},
 		/**
 		 * Open the detail editor for a brand-new template.
@@ -165,7 +163,7 @@ export default {
 		 */
 		openNewTemplate() {
 			this.templateStore.templateItem = null
-			navigationStore.setSelected('templateDetail')
+			this.$router.push({ name: 'TemplateDetail', params: { id: 'new' } })
 		},
 		/**
 		 * Duplicate a template and refresh the list.
