@@ -128,6 +128,12 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 							</template>
 							{{ t('docudesk', 'Download') }}
 						</NcActionButton>
+						<NcActionButton v-if="!row.isFolder" close-after-click @click="compareDocument(row)">
+							<template #icon>
+								<Compare :size="20" />
+							</template>
+							{{ t('docudesk', 'Compare…') }}
+						</NcActionButton>
 						<NcActionButton close-after-click @click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
@@ -155,6 +161,7 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
@@ -200,6 +207,7 @@ export default {
 		Eye,
 		EyeOffOutline,
 		Download,
+		Compare,
 		Delete,
 		Cog,
 		CheckboxMultipleMarkedOutline,
@@ -471,6 +479,23 @@ export default {
 		downloadFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
+		},
+		/**
+		 * Open the side-by-side comparison view with this document preselected
+		 * on the left. The anonymised output (when present) is offered as the
+		 * right subject so operators can verify the redaction.
+		 *
+		 * @param {object} row Document row.
+		 * @return {void}
+		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 */
+		compareDocument(row) {
+			if (!row || !row.fileId) return
+			const query = { left: String(row.fileId) }
+			if (row.anonymizedFileId) {
+				query.right = String(row.anonymizedFileId)
+			}
+			this.$router.push({ name: 'Comparison', query })
 		},
 		/**
 		 * Pick an icon component name based on the file's MIME type / extension.

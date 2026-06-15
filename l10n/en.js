@@ -196,7 +196,23 @@ OC.L10N.register(
     "Failed to reset the anonymiser backend warning" : "Failed to reset the anonymiser backend warning",
     "app-availability.title" : "Required application unavailable",
     "app-availability.description" : "This application requires OpenRegister to be installed and enabled.",
-    "app-availability.action" : "Install OpenRegister"
+    "app-availability.action" : "Install OpenRegister",
+    "Compare…" : "Compare…",
+    "Document comparison" : "Document comparison",
+    "Compare two versions of a file or two distinct files side by side." : "Compare two versions of a file or two distinct files side by side.",
+    "Left file ID" : "Left file ID",
+    "Left version timestamp (optional)" : "Left version timestamp (optional)",
+    "Right file ID" : "Right file ID",
+    "Right version timestamp (optional)" : "Right version timestamp (optional)",
+    "Compare" : "Compare",
+    "The two subjects have different formats; layout-derived differences may appear as noise." : "The two subjects have different formats; layout-derived differences may appear as noise.",
+    "Redaction annotation is unavailable (OpenRegister not reachable)." : "Redaction annotation is unavailable (OpenRegister not reachable).",
+    "Verify manually — entities with no detected change" : "Verify manually — entities with no detected change",
+    "Comparison failed" : "Comparison failed",
+    "Subject not found" : "Subject not found",
+    "File versions are not available on this instance" : "File versions are not available on this instance",
+    "A subject is too large to compare" : "A subject is too large to compare",
+    "A subject has an unsupported format" : "A subject has an unsupported format"
 },
 "nplurals=2; plural=(n != 1);"
 );

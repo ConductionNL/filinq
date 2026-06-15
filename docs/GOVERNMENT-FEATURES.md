@@ -33,7 +33,7 @@
 | F-04 | Taalherkenning | Beschikbaar | Automatische taaldetectie op documenten |
 | F-05 | Trefwoord-extractie | Beschikbaar | Automatische keyword-extractie |
 | F-06 | Tekstextractie (OCR/NLP) | Beschikbaar | Tekst uit PDF, afbeeldingen, etc. |
-| F-07 | Documentvergelijking | Beschikbaar | Versieverschillen detecteren |
+| F-07 | Documentvergelijking | Beschikbaar | Server-side structuurvergelijking van twee documenten of versies, met redactie-annotatie voor origineel-vs-geanonimiseerd ([document-comparison](features/document-comparison.md)) |
 | F-08 | Batchverwerking | Beschikbaar | Bulk-documentoperaties |
 | F-09 | Rapportage-interface | Beschikbaar | Documentoverzichten en statistieken |
 
