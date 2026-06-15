@@ -28,7 +28,7 @@
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
 | F-01 | Documentgeneratie (sjablonen, PDF/DOCX) | Beschikbaar | Sjablonen met merge-velden |
-| F-02 | Documentvalidatie (formaat, metadata) | Beschikbaar | Automatische kwaliteitscontrole |
+| F-02 | Documentvalidatie (formaat, metadata) | Beschikbaar | Configureerbare kwaliteitscontroles (formaat, integriteit, encryptie, tekstlaag, metadata-volledigheid) met verdict + bevindingen ([document-validation](features/document-validation.md)) |
 | F-03 | Documentclassificatie (auto-categorisering) | Beschikbaar | Automatische onderwerpsdetectie |
 | F-04 | Taalherkenning | Beschikbaar | Automatische taaldetectie op documenten |
 | F-05 | Trefwoord-extractie | Beschikbaar | Automatische keyword-extractie |

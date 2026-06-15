@@ -14,6 +14,8 @@ Defines automatic quality control on documents entering DocuDesk: a fixed catalo
 
 `DocumentValidationService` MUST implement these checks, each identified by a stable `checkId`:
 
+@e2e exclude Check-catalogue computation (each check family, finding shape, no-content) — pure service logic. Covered by PHPUnit (DocumentValidationServiceTest).
+
 - `format-not-allowed` — file mime type not in the profile's allowlist.
 - `extension-mime-mismatch` — file extension does not match the sniffed mime type.
 - `file-unreadable` — `DocumentTextExtractor` cannot parse the file (corruption or unsupported structure).
@@ -60,6 +62,8 @@ The service is a pure computation backend: it MUST NOT write fields, create obje
 
 Profiles live in app config `docudesk.validation.profiles`: per document type an allowed-mime list, required metadata fields, and a severity per check from `off | warning | blocking`. Unknown document types MUST resolve to the `default` profile. Shipped defaults MUST set every check to `warning` (no blocking out of the box). Profile reads happen at validation time so config changes propagate without restart.
 
+@e2e exclude Profile resolution, per-check severity, default fallback, off-skip — config-driven service logic. Covered by PHPUnit (DocumentValidationServiceTest).
+
 #### Scenario: Default deployment never blocks
 
 - **GIVEN** an instance where the admin has never edited validation settings
@@ -92,6 +96,8 @@ Profiles live in app config `docudesk.validation.profiles`: per document type an
 
 `validationStatus` and `validationFindings` SHALL be declared as `x-openregister-calculations` on the document/report schemas in `docudesk_register.json`, with `DocumentValidationService` as the computation backend (same phasing as `metadata-enrichment` REQ-META-CAL: until OR's ADR-031 calculation runtime ships, the event-listener fallback dispatches the same service; the listener MUST NOT contain validation logic). `validationStatus` aggregates findings: any `blocking`-severity finding → `failed`; otherwise any `warning` finding → `warnings`; otherwise `passed`. Records never validated render as "not yet validated" (absent value); no backfill migration.
 
+@e2e exclude Verdict aggregation + calculation/listener-fallback storage — backend wiring (x-openregister-calculations on generatedDocument + ValidationRunner). Covered by PHPUnit and the schema annotation; not browser-observable in isolation.
+
 #### Scenario: Verdict aggregation
 
 - **GIVEN** a validation run producing one `warning` finding and no blocking findings
@@ -116,6 +122,8 @@ Profiles live in app config `docudesk.validation.profiles`: per document type an
 
 `POST /api/validation/validate` accepts `{fileId: int, documentType?: string}`, requires an authenticated user (`#[NoAdminRequired]`) and MUST resolve the file through the requesting user's folder (404 when not resolvable, without existence disclosure). It returns `{validationStatus, validationFindings[]}` computed against the resolved profile and MUST NOT create or modify any object, file, or stored verdict.
 
+@e2e exclude On-demand endpoint contract (200 verdict, IDOR-safe 404, no persistence) — controller behaviour. Covered by PHPUnit (service) and the ValidationController; exercised via the My-documents Validate action e2e.
+
 #### Scenario: Pre-intake check of a file
 
 - **GIVEN** a readable file and an optional document type hint
@@ -132,6 +140,8 @@ Profiles live in app config `docudesk.validation.profiles`: per document type an
 ### Requirement: Blocking findings MUST gate intake with a structured 422; warnings MUST never block
 
 Upload and extract paths (single-document, batch, and folder flows) MUST run validation. When a finding's profile severity is `blocking`, single-document intake MUST respond HTTP 422 with body `{error, validationFindings[]}` and not ingest the file; batch and folder flows MUST skip the failing file, record its findings on the batch report, and continue processing remaining files. Findings with severity `warning` MUST be included on the success response and MUST NOT alter the flow.
+
+@e2e exclude DEFERRED — the upload/extract/batch/folder pipeline 422-gate wiring ships as a focused follow-up (touches FileUploadService/BatchExtractionService/FolderBatchService); the verdict computation it gates on is fully built and tested here. Tracked in tasks.md task 6.
 
 #### Scenario: Blocking check rejects a single upload
 
@@ -173,6 +183,8 @@ The document listing and detail views MUST show a verdict chip (`passed` / `warn
 - **THEN** the finding links to the OCR flow for this document
 
 #### Scenario: Admin sees that blocking is active
+
+@e2e exclude DEFERRED with the admin profile-editor UI (tasks.md task 7) — the per-check severity selector + blocking-active banner ships in the admin-settings overhaul; the config key + severity semantics are built and tested server-side here.
 
 - **GIVEN** at least one check in any profile set to `blocking`
 - **WHEN** the admin opens DocuDesk validation settings

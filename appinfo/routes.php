@@ -38,6 +38,9 @@ return [
         // Metadata enrichment route.
         ['name' => 'metadata#enrich', 'url' => 'api/metadata/enrich', 'verb' => 'POST'],
 
+        // Document validation route.
+        ['name' => 'validation#validate', 'url' => 'api/validation/validate', 'verb' => 'POST'],
+
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
 

@@ -84,6 +84,13 @@ class DocuDeskEventListener implements IEventListener
                 enrichRunner: $enrichRunner,
                 retroactive: $retroactive
             );
+
+            // Validation verdict fallback (document-validation-checks): until
+            // OR's ADR-031 calculation runtime invokes DocumentValidationService
+            // directly, compute + store the verdict here. The listener only
+            // resolves services and delegates; all validation logic lives in
+            // DocumentValidationService, all orchestration in ValidationRunner.
+            $this->dispatchValidation(event: $event, metadataService: $metadataService, logger: $logger);
         } catch (\Exception $e) {
             $this->logHandlerError(exception: $e, event: $event);
         }//end try
@@ -151,6 +158,52 @@ class DocuDeskEventListener implements IEventListener
         );
 
     }//end dispatchEvent()
+
+    /**
+     * Dispatch the validation-verdict fallback for create/update events.
+     *
+     * Resolves the changed object from the event and hands it to the
+     * ValidationRunner. Best-effort and contains no validation logic itself.
+     *
+     * @param Event           $event           The event.
+     * @param MetadataService $metadataService The metadata save path.
+     * @param LoggerInterface $logger          Logger.
+     *
+     * @return void
+     *
+     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
+     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     */
+    private function dispatchValidation(Event $event, MetadataService $metadataService, LoggerInterface $logger): void
+    {
+        $object = null;
+        if ($event instanceof ObjectCreatedEvent) {
+            $object = $event->getObject();
+        } else if ($event instanceof ObjectUpdatedEvent) {
+            $object = $event->getNewObject();
+        }
+
+        if ($object === null) {
+            return;
+        }
+
+        try {
+            $validationService = \OC::$server->get(\OCA\DocuDesk\Service\DocumentValidationService::class);
+            $rootFolder        = \OC::$server->get(\OCP\Files\IRootFolder::class);
+            $runner            = new ValidationRunner();
+            $runner->validateObject(
+                object: $object,
+                validationService: $validationService,
+                metadataService: $metadataService,
+                rootFolder: $rootFolder,
+                logger: $logger,
+                logContext: 'validation fallback'
+            );
+        } catch (\Throwable $e) {
+            $logger->debug('DocuDesk: validation fallback skipped: '.$e->getMessage());
+        }
+
+    }//end dispatchValidation()
 
     /**
      * Log an error from the event handler
