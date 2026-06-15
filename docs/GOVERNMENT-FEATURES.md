@@ -28,12 +28,12 @@
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
 | F-01 | Documentgeneratie (sjablonen, PDF/DOCX) | Beschikbaar | Sjablonen met merge-velden |
-| F-02 | Documentvalidatie (formaat, metadata) | Beschikbaar | Automatische kwaliteitscontrole |
+| F-02 | Documentvalidatie (formaat, metadata) | Beschikbaar | Configureerbare kwaliteitscontroles (formaat, integriteit, encryptie, tekstlaag, metadata-volledigheid) met verdict + bevindingen ([document-validation](features/document-validation.md)) |
 | F-03 | Documentclassificatie (auto-categorisering) | Beschikbaar | Automatische onderwerpsdetectie |
 | F-04 | Taalherkenning | Beschikbaar | Automatische taaldetectie op documenten |
 | F-05 | Trefwoord-extractie | Beschikbaar | Automatische keyword-extractie |
 | F-06 | Tekstextractie (OCR/NLP) | Beschikbaar | Tekst uit PDF, afbeeldingen, etc. |
-| F-07 | Documentvergelijking | Beschikbaar | Versieverschillen detecteren |
+| F-07 | Documentvergelijking | Beschikbaar | Server-side structuurvergelijking van twee documenten of versies, met redactie-annotatie voor origineel-vs-geanonimiseerd ([document-comparison](features/document-comparison.md)) |
 | F-08 | Batchverwerking | Beschikbaar | Bulk-documentoperaties |
 | F-09 | Rapportage-interface | Beschikbaar | Documentoverzichten en statistieken |
 
@@ -44,6 +44,7 @@
 | F-10 | Publicatie-instemmingsproces (Wet Open Overheid) | Beschikbaar | Configureerbare bezwaartermijnen |
 | F-11 | Minimale bezwaartermijn van 4 weken (WOO) | Beschikbaar | Wettelijk minimum ingebouwd |
 | F-12 | GDPR-anonimisering (PII-redactie) | Beschikbaar | Persoonsgegevens verwijderen uit documenten |
+| F-12a | Verwerkingsregister (AVG Art. 30) | In ontwikkeling | DocuDesk levert vier verwerkingsactiviteiten als catalogus; per-toegang logging via OpenRegister beschikbaar; geaggregeerde Art. 30-export volgt met OpenRegister |
 | F-13 | Digitale ondertekening | Beschikbaar | Elektronische handtekeningen |
 | F-14 | PKIoverheid-ondersteuning | Gepland | Overheidscertificaten voor ondertekening |
 

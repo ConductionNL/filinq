@@ -12,6 +12,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,8 +40,6 @@ use Psr\Log\LoggerInterface;
  */
 class FileEntityStatsService
 {
-
-
     /**
      * Constructor for FileEntityStatsService
      *
@@ -53,7 +57,6 @@ class FileEntityStatsService
 
     }//end __construct()
 
-
     /**
      * Check if OpenRegister app is installed
      *
@@ -65,11 +68,12 @@ class FileEntityStatsService
 
     }//end isOpenRegisterInstalled()
 
-
     /**
      * Try to get the EntityRelationMapper, returning null on failure
      *
      * @return \OCA\OpenRegister\Db\EntityRelationMapper|null The mapper or null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
      */
     public function tryGetEntityRelationMapper(): ?\OCA\OpenRegister\Db\EntityRelationMapper
     {
@@ -86,11 +90,12 @@ class FileEntityStatsService
 
     }//end tryGetEntityRelationMapper()
 
-
     /**
      * Try to get the RiskLevelService, returning null on failure
      *
      * @return \OCA\OpenRegister\Service\RiskLevelService|null The service or null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Service\RiskLevelService
     {
@@ -107,7 +112,6 @@ class FileEntityStatsService
 
     }//end tryGetRiskLevelService()
 
-
     /**
      * Get entity statistics for a file
      *
@@ -115,6 +119,8 @@ class FileEntityStatsService
      * @param \OCA\OpenRegister\Db\EntityRelationMapper|null $entityRelationMapper The mapper
      *
      * @return array{entityCount: int, anonymizedCount: int, status: string} Entity stats
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function getEntityStats(
         int $fileId,
@@ -143,8 +149,8 @@ class FileEntityStatsService
 
             $stats['anonymizedCount'] = $anonymized;
             $stats['status']          = $this->determineFileStatus(
-                $stats['entityCount'],
-                $anonymized
+                entityCount: $stats['entityCount'],
+                anonymizedCount: $anonymized
             );
         } catch (\Exception $e) {
             $this->logger->debug(
@@ -156,7 +162,6 @@ class FileEntityStatsService
 
     }//end getEntityStats()
 
-
     /**
      * Determine file status based on entity counts
      *
@@ -164,6 +169,8 @@ class FileEntityStatsService
      * @param int $anonymizedCount Anonymized entity count
      *
      * @return string The status string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function determineFileStatus(int $entityCount, int $anonymizedCount): string
     {
@@ -179,7 +186,6 @@ class FileEntityStatsService
 
     }//end determineFileStatus()
 
-
     /**
      * Get risk level for a file
      *
@@ -187,6 +193,8 @@ class FileEntityStatsService
      * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
      *
      * @return string The risk level
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
      */
     public function getFileRiskLevel(
         int $fileId,
@@ -206,6 +214,4 @@ class FileEntityStatsService
         }
 
     }//end getFileRiskLevel()
-
-
 }//end class

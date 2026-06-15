@@ -1,0 +1,14 @@
+{
+  "version.label": {
+    "message": "Volgende",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.api": {
+    "message": "api",
+    "description": "The label for category api in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.features": {
+    "message": "functionaliteiten",
+    "description": "The label for category features in sidebar tutorialSidebar"
+  }
+}

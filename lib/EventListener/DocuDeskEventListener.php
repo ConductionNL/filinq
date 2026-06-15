@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -19,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\EventListener;
 
 use OCA\DocuDesk\Service\MetadataService;
+use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -38,8 +42,6 @@ use Psr\Log\LoggerInterface;
  */
 class DocuDeskEventListener implements IEventListener
 {
-
-
     /**
      * Constructor for DocuDeskEventListener
      */
@@ -47,7 +49,6 @@ class DocuDeskEventListener implements IEventListener
     {
 
     }//end __construct()
-
 
     /**
      * Handles events related to DocuDesk document objects
@@ -62,6 +63,7 @@ class DocuDeskEventListener implements IEventListener
             $logger          = \OC::$server->get(LoggerInterface::class);
             $metadataService = \OC::$server->get(MetadataService::class);
             $settingsService = \OC::$server->get(SettingsService::class);
+            $retroactive     = \OC::$server->get(PolicyRetroactiveService::class);
             $eventHandler    = new DocuDeskEventHandler();
             $enrichRunner    = new EnrichmentRunner();
 
@@ -74,31 +76,41 @@ class DocuDeskEventListener implements IEventListener
             );
 
             $this->dispatchEvent(
-                $event,
-                $metadataService,
-                $settingsService,
-                $logger,
-                $eventHandler,
-                $enrichRunner
+                event: $event,
+                metadataService: $metadataService,
+                settingsService: $settingsService,
+                logger: $logger,
+                eventHandler: $eventHandler,
+                enrichRunner: $enrichRunner,
+                retroactive: $retroactive
             );
+
+            // Validation verdict fallback (document-validation-checks): until
+            // OR's ADR-031 calculation runtime invokes DocumentValidationService
+            // directly, compute + store the verdict here. The listener only
+            // resolves services and delegates; all validation logic lives in
+            // DocumentValidationService, all orchestration in ValidationRunner.
+            $this->dispatchValidation(event: $event, metadataService: $metadataService, logger: $logger);
         } catch (\Exception $e) {
-            $this->logHandlerError($e, $event);
+            $this->logHandlerError(exception: $e, event: $event);
         }//end try
 
     }//end handle()
 
-
     /**
      * Dispatch the event to the appropriate handler
      *
-     * @param Event                $event           The event to dispatch
-     * @param MetadataService      $metadataService The metadata service
-     * @param SettingsService      $settingsService The settings service
-     * @param LoggerInterface      $logger          The logger instance
-     * @param DocuDeskEventHandler $eventHandler    The event handler
-     * @param EnrichmentRunner     $enrichRunner    The enrichment runner
+     * @param Event                    $event           The event to dispatch
+     * @param MetadataService          $metadataService The metadata service
+     * @param SettingsService          $settingsService The settings service
+     * @param LoggerInterface          $logger          The logger instance
+     * @param DocuDeskEventHandler     $eventHandler    The event handler
+     * @param EnrichmentRunner         $enrichRunner    The enrichment runner
+     * @param PolicyRetroactiveService $retroactive     Retroactive policy applicator.
      *
      * @return void
+     *
+     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
      */
     private function dispatchEvent(
         Event $event,
@@ -106,7 +118,8 @@ class DocuDeskEventListener implements IEventListener
         SettingsService $settingsService,
         LoggerInterface $logger,
         DocuDeskEventHandler $eventHandler,
-        EnrichmentRunner $enrichRunner
+        EnrichmentRunner $enrichRunner,
+        PolicyRetroactiveService $retroactive
     ): void {
         if ($event instanceof ObjectCreatedEvent) {
             $eventHandler->handleObjectCreated(
@@ -114,7 +127,8 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner
+                $enrichRunner,
+                $retroactive
             );
             return;
         }
@@ -125,13 +139,14 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner
+                $enrichRunner,
+                $retroactive
             );
             return;
         }
 
         if ($event instanceof ObjectDeletedEvent) {
-            $eventHandler->handleObjectDeleted($event, $logger);
+            $eventHandler->handleObjectDeleted($event, $logger, $retroactive);
             return;
         }
 
@@ -144,6 +159,51 @@ class DocuDeskEventListener implements IEventListener
 
     }//end dispatchEvent()
 
+    /**
+     * Dispatch the validation-verdict fallback for create/update events.
+     *
+     * Resolves the changed object from the event and hands it to the
+     * ValidationRunner. Best-effort and contains no validation logic itself.
+     *
+     * @param Event           $event           The event.
+     * @param MetadataService $metadataService The metadata save path.
+     * @param LoggerInterface $logger          Logger.
+     *
+     * @return void
+     *
+     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
+     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     */
+    private function dispatchValidation(Event $event, MetadataService $metadataService, LoggerInterface $logger): void
+    {
+        $object = null;
+        if ($event instanceof ObjectCreatedEvent) {
+            $object = $event->getObject();
+        } else if ($event instanceof ObjectUpdatedEvent) {
+            $object = $event->getNewObject();
+        }
+
+        if ($object === null) {
+            return;
+        }
+
+        try {
+            $validationService = \OC::$server->get(\OCA\DocuDesk\Service\DocumentValidationService::class);
+            $rootFolder        = \OC::$server->get(\OCP\Files\IRootFolder::class);
+            $runner            = new ValidationRunner();
+            $runner->validateObject(
+                object: $object,
+                validationService: $validationService,
+                metadataService: $metadataService,
+                rootFolder: $rootFolder,
+                logger: $logger,
+                logContext: 'validation fallback'
+            );
+        } catch (\Throwable $e) {
+            $logger->debug('DocuDesk: validation fallback skipped: '.$e->getMessage());
+        }
+
+    }//end dispatchValidation()
 
     /**
      * Log an error from the event handler
@@ -152,6 +212,9 @@ class DocuDeskEventListener implements IEventListener
      * @param Event      $event     The event being processed
      *
      * @return void
+     *
+     * @psalm-suppress UnusedParam $exception and $event are passed to the runtime-resolved logger,
+     *                             but Psalm cannot see the call because \OC::$server->get() is mixed.
      */
     private function logHandlerError(\Exception $exception, Event $event): void
     {
@@ -171,6 +234,4 @@ class DocuDeskEventListener implements IEventListener
         }//end try
 
     }//end logHandlerError()
-
-
 }//end class

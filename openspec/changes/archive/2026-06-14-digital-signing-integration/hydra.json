@@ -1,0 +1,95 @@
+{
+  "schema_version": 2,
+  "spec_slug": "digital-signing-integration",
+  "repo": "https://codeberg.org/Conduction/docudesk",
+  "issue": 27,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T14:34:46Z",
+      "ended_at": "2026-06-01T14:35:09Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-01T13:45:32Z",
+          "ended_at": "2026-06-01T14:34:41Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 2949
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "retry:queued",
+      "started_at": "2026-06-05T03:54:41Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-05T03:54:43Z",
+          "ended_at": "2026-06-05T04:46:31Z",
+          "exit_code": 0,
+          "turns_used": 229,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 3108
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 2,
+    "turns_used": 229,
+    "cost_usd": 0.0,
+    "duration_seconds": 6057,
+    "cycles": 2,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 0,
+        "cost_usd": 0.0,
+        "duration_seconds": 2949
+      },
+      "fix": {
+        "runs": 1,
+        "turns_used": 229,
+        "cost_usd": 0.0,
+        "duration_seconds": 3108
+      }
+    }
+  }
+}

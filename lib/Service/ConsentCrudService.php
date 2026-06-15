@@ -13,6 +13,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
  */
 
 declare(strict_types=1);
@@ -30,17 +35,17 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
  */
 class ConsentCrudService
 {
-
-
     /**
      * Constructor for ConsentCrudService
      *
      * @param SettingsService $settingsService Settings service for register/schema IDs
      * @param ConsentService  $consentService  Consent service for consent operations
-     * @param LoggerInterface $logger          Logger for error reporting
+     * @param LoggerInterface $logger          Logger for security/audit events
      *
      * @return void
      */
@@ -52,11 +57,12 @@ class ConsentCrudService
 
     }//end __construct()
 
-
     /**
      * Get the consent register and schema IDs from settings
      *
      * @return array{register: string, schema: string}|null Config or null if not configured
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
      */
     public function getConsentConfig(): ?array
     {
@@ -65,6 +71,14 @@ class ConsentCrudService
         $schema   = $settings['configuration']['publicationConsent_schema'] ?? '';
 
         if (empty($register) === true || empty($schema) === true) {
+            // Surface the configuration gap to the admin: callers treat
+            // null as "consent feature disabled" and silently skip, which
+            // hid the misconfiguration in earlier iterations.
+            $this->logger->debug(
+                'ConsentCrudService: publicationConsent register/schema not configured; '
+                .'consent CRUD is disabled until both settings are populated.',
+                ['register' => $register, 'schema' => $schema]
+            );
             return null;
         }
 
@@ -72,25 +86,37 @@ class ConsentCrudService
 
     }//end getConsentConfig()
 
-
     /**
-     * List all consent records
+     * List consent records, optionally scoped to a single owner
      *
-     * @param string $register The register ID
-     * @param string $schema   The schema ID
+     * When $ownerUid is provided (non-admin callers) the search is filtered
+     * server-side so only records whose @self.owner matches the caller are
+     * returned. Passing null returns all records (admin callers only).
+     *
+     * @param string      $register The register ID
+     * @param string      $schema   The schema ID
+     * @param string|null $ownerUid UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If listing fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
-    public function listConsents(string $register, string $schema): array
+    public function listConsents(string $register, string $schema, ?string $ownerUid=null): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $results       = $objectService->searchObjects(
-            [
-                '@self' => ['register' => $register, 'schema' => $schema],
-            ]
-        );
+
+        $query = ['@self' => ['register' => $register, 'schema' => $schema]];
+
+        // Security (H1): scope listing to the caller's own records so that
+        // non-admin users cannot enumerate consent records belonging to
+        // other users through the listing endpoint.
+        if ($ownerUid !== null) {
+            $query['@self']['owner'] = $ownerUid;
+        }
+
+        $results = $objectService->searchObjects($query);
 
         $consents = [];
         foreach ($results as $result) {
@@ -106,7 +132,6 @@ class ConsentCrudService
 
     }//end listConsents()
 
-
     /**
      * Get a single consent record by ID
      *
@@ -117,16 +142,19 @@ class ConsentCrudService
      * @return array<string, mixed>|null The consent record or null if not found
      *
      * @throws Exception If retrieval fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsent(string $consentId, string $register, string $schema): ?array
     {
+        // Let OpenRegister enforce per-object RBAC and multitenancy access.
+        // Bypassing these (security finding #283) allowed any authenticated
+        // user to read consent records owned by other users.
         $objectService = $this->settingsService->getObjectService();
         $object        = $objectService->find(
             id: $consentId,
             register: $register,
-            schema: $schema,
-            _rbac: false,
-            _multitenancy: false
+            schema: $schema
         );
 
         if ($object === null) {
@@ -141,9 +169,73 @@ class ConsentCrudService
 
     }//end getConsent()
 
+    /**
+     * Positional consent-creation fields consumed directly by createFromRequest.
+     *
+     * These three are passed as the named positional arguments to
+     * {@see ConsentService::createConsentRequest()} and are therefore never
+     * part of the forwarded `$extra` payload.
+     *
+     * @var array<string>
+     */
+    private const POSITIONAL_CREATE_FIELDS = [
+        'documentId',
+        'entityType',
+        'entityText',
+    ];
+
+    /**
+     * Server-controlled fields that callers must NOT set at creation time.
+     *
+     * These are the consent workflow/state fields whose values are owned by
+     * the server's status machine and the policy-match engine. A request that
+     * carries any of them is a probing/injection attempt: the field is
+     * stripped and a structured security warning is logged naming the key
+     * (NOT the value — ADR-005). DENYLIST, not allowlist — any field NOT
+     * listed here (and not a framework key) is a legitimate extra that is
+     * forwarded unchanged (finding #290b, PR #147 fifth-pass).
+     *
+     * @var array<string>
+     */
+    private const SERVER_CONTROLLED_CREATE_FIELDS = [
+        'policyMatch',
+        'matchKind',
+        'consentStatus',
+        'publicationDecision',
+        'notificationStatus',
+        'notificationSentAt',
+        'objectionDeadline',
+        'objectionReceivedAt',
+        'objectionReason',
+        'userId',
+        'owner',
+    ];
+
+    /**
+     * Framework / routing keys that leak into the request bag and must never
+     * be forwarded to the domain layer. Stripped silently (not a security
+     * event — they are an artefact of the request plumbing).
+     *
+     * @var array<string>
+     */
+    private const FRAMEWORK_REQUEST_KEYS = [
+        '_route',
+        '_method',
+        '_format',
+    ];
 
     /**
      * Create a consent request from controller data
+     *
+     * Uses a DENYLIST: the three positional fields (documentId, entityType,
+     * entityText) are consumed directly; server-controlled status/policy
+     * fields ({@see SERVER_CONTROLLED_CREATE_FIELDS}) are STRIPPED and a
+     * security warning is logged naming the stripped keys; framework routing
+     * keys are stripped silently; everything else is forwarded to
+     * ConsentService as the `$extra` payload unchanged. This prevents callers
+     * from forcing internal status fields at creation time (finding #290b)
+     * while still allowing legitimate extra fields such as `consentScope`
+     * (PR #147 fifth-pass).
      *
      * @param array<string, mixed> $data     The request data
      * @param string               $register The register ID
@@ -152,70 +244,107 @@ class ConsentCrudService
      * @return array<string, mixed> The created consent record
      *
      * @throws Exception If creation fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
      */
     public function createFromRequest(array $data, string $register, string $schema): array
     {
-        // Extract known fields and pass any remaining as extra.
-        $knownFields = ['documentId', 'entityType', 'entityText'];
-        $extra       = array_diff_key($data, array_flip($knownFields));
+        $documentId = (string) ($data['documentId'] ?? '');
+        $entityType = (string) ($data['entityType'] ?? '');
+        $entityText = (string) ($data['entityText'] ?? '');
 
-        // Remove framework-injected params that are not consent data.
-        unset($extra['_route'], $extra['_method']);
+        // Everything that is not a positional field is a candidate $extra.
+        $extra = $data;
+        foreach (self::POSITIONAL_CREATE_FIELDS as $field) {
+            unset($extra[$field]);
+        }
+
+        // Strip framework routing keys silently.
+        foreach (self::FRAMEWORK_REQUEST_KEYS as $key) {
+            unset($extra[$key]);
+        }
+
+        // Strip server-controlled fields and record which keys were stripped
+        // so the injection attempt is visible in the audit stream. ADR-005:
+        // log the KEYS only, never the attacker-supplied values.
+        $strippedKeys = [];
+        foreach (self::SERVER_CONTROLLED_CREATE_FIELDS as $field) {
+            if (array_key_exists($field, $extra) === true) {
+                $strippedKeys[] = $field;
+                unset($extra[$field]);
+            }
+        }
+
+        if ($strippedKeys !== []) {
+            $this->logger->warning(
+                'ConsentCrudService: server-controlled fields stripped from consent creation request',
+                ['strippedKeys' => $strippedKeys]
+            );
+        }
 
         return $this->consentService->createConsentRequest(
-            $data['documentId'],
-            $data['entityType'],
-            $data['entityText'],
-            $register,
-            $schema,
-            $extra
+            documentId: $documentId,
+            entityType: $entityType,
+            entityText: $entityText,
+            register: $register,
+            schema: $schema,
+            extra: $extra
         );
 
     }//end createFromRequest()
 
-
     /**
-     * Get all consent records for a specific document
+     * Get consent records for a specific document, optionally scoped to one owner
      *
-     * @param string $documentId The document UUID
-     * @param string $register   The register ID
-     * @param string $schema     The schema ID
+     * @param string      $documentId The document UUID
+     * @param string      $register   The register ID
+     * @param string      $schema     The schema ID
+     * @param string|null $ownerUid   UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If query fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
-        return $this->consentService->getConsentsByDocument($documentId, $register, $schema);
+        return $this->consentService->getConsentsByDocument($documentId, $register, $schema, $ownerUid);
 
     }//end getConsentsByDocument()
 
-
     /**
-     * Update consent status for a consent record
+     * Update consent status for a consent record, enforcing policy-transition rules
+     *
+     * Delegates to ConsentService::validateAndUpdateConsent() which checks for
+     * policy-matched transition blocks and the override-up flow before saving.
      *
      * @param string               $consentId The consent object UUID
      * @param string               $register  The register ID
      * @param string               $schema    The schema ID
      * @param array<string, mixed> $data      The data to update
+     * @param \OCP\IUser|null      $user      The acting user, or null for system context
      *
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
+     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
      */
     public function updateConsentStatus(
         string $consentId,
         string $register,
         string $schema,
-        array $data
+        array $data,
+        ?\OCP\IUser $user=null
     ): array {
-        return $this->consentService->updateConsentStatus($consentId, $register, $schema, $data);
+        return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
 
     }//end updateConsentStatus()
-
-
 }//end class

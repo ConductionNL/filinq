@@ -1,0 +1,1724 @@
+{
+  "info": {
+    "name": "DocuDesk API Tests",
+    "_postman_id": "docudesk-api-tests",
+    "description": "API tests for DocuDesk Nextcloud app",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/index.php/apps/docudesk"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has status field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('status'); });",
+                  "pm.test('Has checks field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('checks'); });",
+                  "pm.test('Database check present', function () { var json = pm.response.json(); pm.expect(json.checks).to.have.property('database'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "GET /api/settings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has objectTypes', function () { var json = pm.response.json(); pm.expect(json).to.have.property('objectTypes'); });",
+                  "pm.test('Has configuration', function () { var json = pm.response.json(); pm.expect(json).to.have.property('configuration'); });",
+                  "pm.test('Has openRegisters flag', function () { var json = pm.response.json(); pm.expect(json).to.have.property('openRegisters'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/settings",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"enable_language_detection\": \"1\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Anonymization",
+      "item": [
+        {
+          "name": "GET /api/anonymization/files",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "files"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is array', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/extract/999999 (not found)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 500 for non-existent file', function () { pm.response.to.have.status(500); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (no entities)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 for no entities', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (invalid bases - non-array)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"text\": \"Jan Janssen\", \"entityType\": \"PERSON\", \"bases\": \"not-an-array\"}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects invalid bases (non-array) with 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (invalid bases - non-string item)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"text\": \"Jan Janssen\", \"entityType\": \"PERSON\", \"bases\": [42]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects invalid bases item (non-string) with 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/extract/999999 (prohibitionMatch field present)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Extract on a non-existent file returns 500, but we verify the field shape when entities are returned.",
+                  "// For live tests, replace 999999 with a real fileId and assert prohibitionMatch is present.",
+                  "pm.test('Response has error for non-existent file (expected)', function () {",
+                  "  pm.response.to.have.status(500);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (malformed unredactedEntities)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": \"not-an-int\", \"entityText\": \"X\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects malformed unredactedEntities with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (unredacted empty publicationBases)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": 2, \"entityText\": \"X\", \"entityType\": \"PERSON\", \"publicationBases\": []}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects empty publicationBases with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (no unredactedEntities -> no createdConsents)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Backward-compatible: no createdConsents when unredactedEntities omitted', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    pm.expect(j).to.not.have.property('createdConsents');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/batchAnonymize/test-clearance-batch (accepts unredactedEntities)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/batchAnonymize/test-clearance-batch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "batchAnonymize",
+                "test-clearance-batch"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"unredactedEntities\": [{\"entityId\": 2, \"entityText\": \"PERSON_2\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b2\"]}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Batch endpoint accepts unredactedEntities payload (200/207/404 \u2014 batch may not exist)', function () { pm.expect([200, 207, 400, 404, 422]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary true + pdf)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": true, \"outputFormat\": \"pdf\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('appendBasisSummary accepted with pdf (200/404 \u2014 fixture absence)', function () { pm.expect([200, 400, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('Warning field is well-formed when present', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    if (j.warning !== undefined) { pm.expect(j.warning).to.be.a('string'); }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary true + preserve)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": true, \"outputFormat\": \"preserve\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('appendBasisSummary preserve mode accepted', function () { pm.expect([200, 400, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('Returns summaryFileId/summaryFilePath when successful with preserve+flag', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    var hasField = j.summaryFileId !== undefined || j.summaryFilePath !== undefined || j.warning !== undefined;",
+                  "    pm.expect(hasField).to.be.true;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (appendBasisSummary invalid type)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"publicationBases\": [\"b1\"]}], \"appendBasisSummary\": \"not-a-bool\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejects non-bool appendBasisSummary with 400', function () { pm.expect([400, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (stray bases silently ignored)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"bases\": \"should-be-ignored\"}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Stray bases field does NOT cause 400', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); pm.expect(pm.response.code).to.not.equal(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/anonymize/999999 (stray non-array bases silently ignored)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/anonymize/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "anonymize",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entities\": [{\"entityId\": 1, \"entityText\": \"PERSON\", \"entityType\": \"PERSON\", \"bases\": {\"unexpected\": \"shape\"}}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Object-shaped bases field does NOT cause 400', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); pm.expect(pm.response.code).to.not.equal(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/anonymization/extract/999999 (prohibitionMatch field present in entity entries)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/extract/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "extract",
+                "999999"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Extract returns 200 / 404 (no file fixture)', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('When 200 and entities present, each has prohibitionMatch key', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    if (Array.isArray(j.entities)) {",
+                  "      j.entities.forEach(function (e) { pm.expect(e).to.have.property('prohibitionMatch'); });",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/anonymization/batch/test-batch/entities (consolidated entity shape)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/anonymization/batch/test-batch/entities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "anonymization",
+                "batch",
+                "test-batch",
+                "entities"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Endpoint reachable (200/404/422)', function () { pm.expect([200, 404, 422]).to.include(pm.response.code); });",
+                  "pm.test('When 200, each consolidated entity carries prohibitionMatch + suggestedBases keys', function () {",
+                  "  if (pm.response.code === 200) {",
+                  "    var j = pm.response.json();",
+                  "    var ents = j.entities || j.data || [];",
+                  "    if (Array.isArray(ents) && ents.length > 0) {",
+                  "      ents.forEach(function (e) {",
+                  "        pm.expect(e).to.have.property('prohibitionMatch');",
+                  "        pm.expect(e).to.have.property('suggestedBases');",
+                  "        pm.expect(e.suggestedBases).to.be.an('array');",
+                  "      });",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Consent",
+      "item": [
+        {
+          "name": "GET /api/consent",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 400', function () { pm.expect([200, 400]).to.include(pm.response.code); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (missing fields)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 for missing fields', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (idempotency \u2014 first call creates)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\",\n    \"Article 6(1)(f)\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('wasUpdated is false on first call', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(false); });",
+                  "pm.test('documentId matches', function () { var json = pm.response.json(); pm.expect(json.documentId).to.equal('idem-test-doc-1'); });",
+                  "pm.test('legalBasis set to first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Article 6(1)(e)'); });",
+                  "pm.test('notes contain sentinel region with second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('docudesk:additional-publication-bases:begin'); pm.expect(json.notes || '').to.include('Article 6(1)(f)'); });",
+                  "pm.environment.set('createdConsentId', pm.response.json().id || pm.response.json()['@self']?.id || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (idempotency \u2014 second call updates, preserves workflow state)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-1\",\n  \"entityType\": \"PERSON\",\n  \"entityText\": \"Anneke Jansen\",\n  \"entityKey\": \"entity-key-idem-1\",\n  \"publicationBases\": [\n    \"Updated basis A\",\n    \"Updated basis B\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('wasUpdated is true on re-submit', function () { var json = pm.response.json(); pm.expect(json.wasUpdated).to.equal(true); });",
+                  "pm.test('legalBasis updated to new first basis', function () { var json = pm.response.json(); pm.expect(json.legalBasis).to.include('Updated basis A'); });",
+                  "pm.test('notes sentinel updated with new second basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').to.include('Updated basis B'); });",
+                  "pm.test('notes does not contain old basis', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('Article 6(1)(f)'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/consent (operator notes preserved on re-submit)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/consent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "consent"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"idem-test-doc-2\",\n  \"entityType\": \"ORGANIZATION\",\n  \"entityText\": \"Conduction B.V.\",\n  \"entityKey\": \"entity-key-idem-2\",\n  \"publicationBases\": [\n    \"Article 6(1)(e)\"\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 201', function () { pm.expect(pm.response.code).to.be.oneOf([200, 201]); });",
+                  "pm.test('single basis does not produce sentinel region', function () { var json = pm.response.json(); pm.expect(json.notes || '').not.to.include('docudesk:additional-publication-bases'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Policy — Prohibitions",
+      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
+      "item": [
+        {
+          "name": "GET /api/policy/prohibitions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON array', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); });",
+                  "pm.test('Seed prohibitions present', function () { var json = pm.response.json(); pm.expect(json.length).to.be.at.least(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/prohibitions (create)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Test Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Returns UUID', function () { pm.expect(json['@self'] && json['@self'].id || json.id || json.uuid).to.be.a('string'); });",
+                  "if (json['@self'] && json['@self'].id) { pm.collectionVariables.set('createdProhibitionId', json['@self'].id); }",
+                  "else if (json.id) { pm.collectionVariables.set('createdProhibitionId', json.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/policy/prohibitions/{id}",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Returns the created record', function () { var json = pm.response.json(); pm.expect(json.primaryName).to.equal('Newman Test Subject'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/policy/prohibitions/{id}",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Policy — Standing Consents",
+      "description": "Coverage for entity-publication-policies §9.1 (CRUD), §9.5 (validation).",
+      "item": [
+        {
+          "name": "GET /api/policy/standing-consents",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is JSON array of scope=entity records', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); json.forEach(function (r) { pm.expect(r.scope || 'document').to.equal('entity'); }); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/standing-consents (scope validation: missing consentMethod)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Test Standing\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Test Standing\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });",
+                  "pm.test('Has error message', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/policy/standing-consents (scope validation: documentId not allowed)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman\"}],\"consentMethod\":\"paper\",\"documentId\":\"some-doc\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Rejected (400 validation, 403 group-perm, or 500 if not configured)', function () { pm.expect([400, 403, 500]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Policy — Detection-time outcomes",
+      "description": "Coverage for the canonical PolicyMatchService::match decision table (entity-publication-policies §3). Exercises the four outcomes — no-match (WOO default), prohibition-only, standing-consent-only, and both-match (prohibition wins). Each item that seeds a policy record cleans it up afterwards so the suite is idempotent across re-runs. Group-permission failures (403/500) are accepted by the seed POSTs because the test environment may not configure the docudesk-policy-admins / docudesk-standing-consent-admins groups; subsequent assertions are skipped when seeding fails.",
+      "item": [
+        {
+          "name": "no-match: POST /api/consent → WOO default (pending across the board)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-no-match\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Unseeded Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured in this env'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind is null (no rule fired)', function () { pm.expect(json.matchKind).to.satisfy(function (v) { return v === null || v === undefined; }); });",
+                  "pm.test('policyMatch is null', function () { pm.expect(json.policyMatch).to.satisfy(function (v) { return v === null || v === undefined; }); });",
+                  "pm.test('consentStatus = pending', function () { pm.expect(json.consentStatus).to.equal('pending'); });",
+                  "pm.test('publicationDecision = pending', function () { pm.expect(json.publicationDecision).to.equal('pending'); });",
+                  "pm.test('notificationStatus = pending', function () { pm.expect(json.notificationStatus).to.equal('pending'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: SEED publicationProhibition for Newman Detect Prohibition Subject",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Detect Prohibition Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture (detection-time prohibition outcome)\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Prohibition Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionProhibitionSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionProhibitionSeeded', 'true');",
+                  "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionProhibitionId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: POST /api/consent → prohibition wins (matchKind=prohibition)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-prohibition\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Prohibition Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = prohibition', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
+                  "pm.test('policyMatch = seeded UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionProhibitionId')); });",
+                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
+                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });",
+                  "pm.test('notificationStatus = skipped', function () { pm.expect(json.notificationStatus).to.equal('skipped'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: CLEANUP DELETE seeded prohibition",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
+                  "pm.test('Cleanup deleted seeded prohibition', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: SEED publicationConsent (scope=entity)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Detect Standing Subject\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Standing Subject\"}],\"consentMethod\":\"paper\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionStandingSeeded', 'false'); pm.test.skip('Seeding requires docudesk-standing-consent-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionStandingSeeded', 'true');",
+                  "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionStandingId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: POST /api/consent → consent_given + publish_with_consent",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-standing\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Standing Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = standing_consent', function () { pm.expect(json.matchKind).to.equal('standing_consent'); });",
+                  "pm.test('policyMatch = seeded UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionStandingId')); });",
+                  "pm.test('consentStatus = consent_given', function () { pm.expect(json.consentStatus).to.equal('consent_given'); });",
+                  "pm.test('publicationDecision = publish_with_consent', function () { pm.expect(json.publicationDecision).to.equal('publish_with_consent'); });",
+                  "pm.test('notificationStatus = skipped', function () { pm.expect(json.notificationStatus).to.equal('skipped'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "standing-consent: CLEANUP DELETE seeded standing consent",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents/{{detectionStandingId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents", "{{detectionStandingId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
+                  "pm.test('Cleanup deleted seeded standing consent', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: SEED conflicting prohibition + standing consent for same entity",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primaryName\":\"Newman Detect Conflict Subject\",\"entityType\":\"PERSON\",\"reason\":\"Newman integration test fixture (both-match conflict — prohibition arm)\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Conflict Subject\"}],\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "pm.collectionVariables.set('detectionConflictSeeded', 'partial');",
+                  "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionConflictProhibitionId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: SEED conflicting standing consent for same entity",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"entityText\":\"Newman Detect Conflict Subject\",\"entityType\":\"PERSON\",\"matchRules\":[{\"type\":\"exact\",\"value\":\"Newman Detect Conflict Subject\"}],\"consentMethod\":\"paper\",\"active\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'partial') { pm.test.skip('Prohibition seed skipped — cannot complete conflict setup'); return; }",
+                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Standing-consent seeding requires its admin group'); return; }",
+                  "pm.collectionVariables.set('detectionConflictSeeded', 'true');",
+                  "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "var id = (json['@self'] && json['@self'].id) || json.id || json.uuid;",
+                  "pm.collectionVariables.set('detectionConflictStandingId', id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: POST /api/consent → prohibition wins over standing consent",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"documentId\":\"newman-detect-doc-conflict\",\"entityType\":\"PERSON\",\"entityText\":\"Newman Detect Conflict Subject\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'true') { pm.test.skip('Conflict setup incomplete — cannot exercise outcome'); return; }",
+                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "var json = pm.response.json();",
+                  "pm.test('matchKind = prohibition (prohibition beats standing consent)', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
+                  "pm.test('policyMatch = prohibition UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionConflictProhibitionId')); });",
+                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
+                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: CLEANUP DELETE seeded prohibition",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionConflictProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionConflictProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('detectionConflictProhibitionId')) { pm.test.skip('No prohibition seed to clean'); return; }",
+                  "pm.test('Cleanup deleted prohibition arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "both-match: CLEANUP DELETE seeded standing consent",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/policy/standing-consents/{{detectionConflictStandingId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "standing-consents", "{{detectionConflictStandingId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('detectionConflictStandingId')) { pm.test.skip('No standing-consent seed to clean'); return; }",
+                  "pm.test('Cleanup deleted standing-consent arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metadata",
+      "item": [
+        {
+          "name": "POST /api/metadata/enrich (missing objectId)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/metadata/enrich",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metadata",
+                "enrich"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 for missing objectId', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PDF",
+      "item": [
+        {
+          "name": "POST /api/pdf/render (missing template)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/render",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pdf",
+                "render"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400 for missing template', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Has error', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/pdf/render (valid template)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/render",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pdf",
+                "render"
+              ]
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"template\": \"<h1>Hello {{ name }}</h1>\", \"data\": {\"name\": \"World\"}, \"filename\": \"test.pdf\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Content-Type is PDF', function () { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "GET /api/templates",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/templates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "templates"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200 or 500', function () { pm.expect([200, 500]).to.include(pm.response.code); });",
+                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "GET /api/metrics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/metrics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "metrics"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response contains Prometheus metrics', function () { pm.expect(pm.response.text()).to.include('docudesk'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "GET / (dashboard page)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

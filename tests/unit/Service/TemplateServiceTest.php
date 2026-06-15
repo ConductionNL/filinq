@@ -20,8 +20,11 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use Exception;
 use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\TemplateService;
+use OCA\DocuDesk\Service\TemplateVersionService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
+use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -90,6 +93,8 @@ class TemplateServiceTest extends TestCase
         $this->mockContainer        = $this->createMock(ContainerInterface::class);
         $this->mockAppManager       = $this->createMock(IAppManager::class);
         $this->mockRegisterResolver = $this->createMock(OpenRegisterResolver::class);
+        $mockVersionService         = $this->createMock(TemplateVersionService::class);
+        $mockUserSession            = $this->createMock(IUserSession::class);
 
         // Default: getInstalledApps returns an empty array.
         $this->mockAppManager->method('getInstalledApps')
@@ -98,7 +103,10 @@ class TemplateServiceTest extends TestCase
         $this->templateService = new TemplateService(
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockRegisterResolver
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $mockUserSession,
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUp()
@@ -141,10 +149,50 @@ class TemplateServiceTest extends TestCase
         $this->templateService = new TemplateService(
             $this->mockContainer,
             $this->mockAppManager,
-            $this->mockRegisterResolver
+            $this->mockRegisterResolver,
+            $this->createMock(TemplateVersionService::class),
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
         );
 
     }//end setUpWithOpenRegister()
+
+
+    /**
+     * Helper to set up a TemplateService with OpenRegister available and a
+     * caller-supplied TemplateVersionService mock.
+     *
+     * Mirrors setUpWithOpenRegister() but injects the given version service so
+     * tests can assert on the version-history side effects of update flows.
+     *
+     * @param ObjectService|MockObject        $mockObjectService  The mock ObjectService.
+     * @param TemplateVersionService|MockObject $mockVersionService The mock version service.
+     *
+     * @return void
+     */
+    private function setUpWithOpenRegisterAndVersionService(
+        ObjectService|MockObject $mockObjectService,
+        TemplateVersionService|MockObject $mockVersionService
+    ): void {
+        $this->mockAppManager = $this->createMock(IAppManager::class);
+        $this->mockAppManager->method('getInstalledApps')
+            ->willReturn(['openregister']);
+
+        $this->mockContainer = $this->createMock(ContainerInterface::class);
+        $this->mockContainer->method('get')
+            ->with('OCA\OpenRegister\Service\ObjectService')
+            ->willReturn($mockObjectService);
+
+        $this->templateService = new TemplateService(
+            $this->mockContainer,
+            $this->mockAppManager,
+            $this->mockRegisterResolver,
+            $mockVersionService,
+            $this->createMock(IUserSession::class),
+            $this->createMock(IAppConfig::class)
+        );
+
+    }//end setUpWithOpenRegisterAndVersionService()
 
 
     /**
@@ -176,7 +224,7 @@ class TemplateServiceTest extends TestCase
         $this->expectExceptionMessage('Invalid namespace');
 
         $this->mockRegisterResolver->method('validateNamespace')
-            ->willThrowException(new Exception('Invalid namespace: must be lowercase alphanumeric only', 400));
+            ->willThrowException(new \Exception('Invalid namespace: must be lowercase alphanumeric only', 400));
 
         $this->templateService->createTemplate([
             'namespace' => 'INVALID-NS!',
@@ -197,9 +245,6 @@ class TemplateServiceTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Name is required');
 
-        $this->mockRegisterResolver->method('validateNamespace')
-            ->willReturn(true);
-
         $this->templateService->createTemplate([
             'namespace' => 'testapp',
             'content'   => '<h1>Hello</h1>',
@@ -217,9 +262,6 @@ class TemplateServiceTest extends TestCase
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Content is required');
-
-        $this->mockRegisterResolver->method('validateNamespace')
-            ->willReturn(true);
 
         $this->templateService->createTemplate([
             'namespace' => 'testapp',
@@ -268,7 +310,7 @@ class TemplateServiceTest extends TestCase
         $this->setUpWithOpenRegister($mockObjectService);
 
         $this->mockRegisterResolver->method('getRegisterAndSchema')
-            ->willThrowException(new Exception('Template register/schema not configured', 500));
+            ->willThrowException(new \Exception('Template register/schema not configured', 500));
 
         $this->templateService->getTemplates();
 
@@ -326,8 +368,6 @@ class TemplateServiceTest extends TestCase
 
         $this->setUpWithOpenRegister($mockObjectService);
 
-        $this->mockRegisterResolver->method('validateNamespace')
-            ->willReturn(true);
         $this->mockRegisterResolver->method('getRegisterAndSchema')
             ->willReturn([
                 'register' => 'reg-1',
@@ -344,6 +384,73 @@ class TemplateServiceTest extends TestCase
         $this->assertEquals('uuid-123', $result['id']);
 
     }//end testCreateTemplateWithValidData()
+
+
+    /**
+     * Test that updateTemplate snapshots the current state into version history
+     * before persisting the new state.
+     *
+     * Regression lock for the template versioning fix: updateTemplate() must
+     * call TemplateVersionService::createVersion() with the *existing* template
+     * state (fetched via getTemplate) before saving the merged update, so the
+     * pre-edit content is recoverable. The snapshot must use the prior state,
+     * not the incoming payload.
+     *
+     * @return void
+     */
+    public function testUpdateTemplateSnapshotsExistingStateIntoVersionHistory(): void
+    {
+        $existing = [
+            'id'        => 'uuid-123',
+            'namespace' => 'testapp',
+            'name'      => 'Original',
+            'content'   => '<p>Original</p>',
+        ];
+
+        $savedEntity = $this->createMock(ObjectEntity::class);
+        $savedEntity->method('jsonSerialize')
+            ->willReturn([
+                'id'        => 'uuid-123',
+                'namespace' => 'testapp',
+                'name'      => 'Updated',
+                'content'   => '<p>Updated</p>',
+            ]);
+
+        $mockObjectService = $this->createMock(ObjectService::class);
+        // find() backs getTemplate(): returns the pre-edit state.
+        $mockObjectService->method('find')->willReturn($existing);
+        $mockObjectService->expects($this->once())
+            ->method('saveObject')
+            ->willReturn($savedEntity);
+
+        $mockVersionService = $this->createMock(TemplateVersionService::class);
+        // The version snapshot must capture the EXISTING (pre-edit) state.
+        $mockVersionService->expects($this->once())
+            ->method('createVersion')
+            ->with(
+                $this->equalTo('uuid-123'),
+                $this->equalTo($existing),
+                $this->anything(),
+                $this->anything()
+            );
+
+        $this->setUpWithOpenRegisterAndVersionService($mockObjectService, $mockVersionService);
+
+        $this->mockRegisterResolver->method('getRegisterAndSchema')
+            ->willReturn([
+                'register' => 'reg-1',
+                'schema'   => 'schema-1',
+            ]);
+
+        $result = $this->templateService->updateTemplate('uuid-123', [
+            'name'    => 'Updated',
+            'content' => '<p>Updated</p>',
+        ]);
+
+        $this->assertIsArray($result);
+        $this->assertEquals('Updated', $result['name']);
+
+    }//end testUpdateTemplateSnapshotsExistingStateIntoVersionHistory()
 
 
     /**

@@ -1,0 +1,78 @@
+{#
+ # EML Envelope Template
+ #
+ # Renders the email envelope (header block + body) for the EML→PDF
+ # assembly pipeline. Consumed by `EmlPdfAssemblyService::renderEnvelope`.
+ #
+ # Inputs (context):
+ #   - headers.from        string|null  RFC 5322 From value (decoded).
+ #   - headers.to          string|null  Comma-joined To list (decoded).
+ #   - headers.cc          string|null  Comma-joined Cc list (decoded).
+ #   - headers.subject     string|null  Subject (decoded).
+ #   - headers.date        string|null  Date header value as received.
+ #   - body.html           string|null  text/html body (already cid:-substituted).
+ #   - body.plainText      string|null  text/plain body (used when html is null).
+ #   - attachment_count    int          Number of attachments (footer hint).
+ #   - source_filename     string|null  Original EML filename for the document title.
+ #
+ # Rendered HTML feeds into mPDF via `WriteHTML`. Styles are inline so the
+ # sandbox doesn't have to permit `<style>` parsing tricks.
+ #
+ # spec: openspec/changes/eml-pdf-assembly/specs/eml-pdf-assembly/spec.md#email-envelope
+ #}
+<div class="docudesk-eml-envelope" style="font-family: 'DejaVu Sans', sans-serif; font-size: 11pt; color: #222;">
+  {% if source_filename is not empty %}
+    <p style="font-size: 9pt; color: #777; margin: 0 0 8mm 0;">{{ source_filename }}</p>
+  {% endif %}
+
+  <table style="width:100%; border-collapse: collapse; margin-bottom: 8mm; font-size: 10pt;">
+    <tbody>
+      {% if headers.from is not empty %}
+        <tr>
+          <td style="width: 22mm; padding: 1mm 2mm 1mm 0; color: #555; vertical-align: top;">Van</td>
+          <td style="padding: 1mm 0; vertical-align: top;">{{ headers.from }}</td>
+        </tr>
+      {% endif %}
+      {% if headers.to is not empty %}
+        <tr>
+          <td style="width: 22mm; padding: 1mm 2mm 1mm 0; color: #555; vertical-align: top;">Aan</td>
+          <td style="padding: 1mm 0; vertical-align: top;">{{ headers.to }}</td>
+        </tr>
+      {% endif %}
+      {% if headers.cc is not empty %}
+        <tr>
+          <td style="width: 22mm; padding: 1mm 2mm 1mm 0; color: #555; vertical-align: top;">Cc</td>
+          <td style="padding: 1mm 0; vertical-align: top;">{{ headers.cc }}</td>
+        </tr>
+      {% endif %}
+      {% if headers.subject is not empty %}
+        <tr>
+          <td style="width: 22mm; padding: 1mm 2mm 1mm 0; color: #555; vertical-align: top;">Onderwerp</td>
+          <td style="padding: 1mm 0; vertical-align: top; font-weight: bold;">{{ headers.subject }}</td>
+        </tr>
+      {% endif %}
+      {% if headers.date is not empty %}
+        <tr>
+          <td style="width: 22mm; padding: 1mm 2mm 1mm 0; color: #555; vertical-align: top;">Datum</td>
+          <td style="padding: 1mm 0; vertical-align: top;">{{ headers.date }}</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <hr style="border: none; border-top: 1px solid #ccc; margin: 4mm 0 6mm 0;"/>
+
+  <div class="docudesk-eml-body" style="font-size: 11pt; line-height: 1.45;">
+    {% if body.html is not empty %}
+      {{ body.html|raw }}
+    {% elseif body.plainText is not empty %}
+      <pre style="font-family: 'DejaVu Sans Mono', monospace; font-size: 10pt; white-space: pre-wrap; margin: 0;">{{ body.plainText }}</pre>
+    {% else %}
+      <p style="color: #888; font-style: italic; margin: 0;">(leeg bericht)</p>
+    {% endif %}
+  </div>
+
+  {% if attachment_count > 0 %}
+    <p style="font-size: 9pt; color: #777; margin-top: 10mm;">{{ attachment_count }} bijlage{% if attachment_count != 1 %}n{% endif %} ingesloten.</p>
+  {% endif %}
+</div>

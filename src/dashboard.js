@@ -1,7 +1,10 @@
+// Must stay first: sets __webpack_public_path__ / __webpack_nonce__ — see setPublicPath.js.
+import './setPublicPath.js'
 import Vue from 'vue'
 import { PiniaVuePlugin } from 'pinia'
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import pinia from './pinia.js'
+import './assets/fonts.css'
 import AnonymizationDashboardWidget from './views/widgets/AnonymizationDashboardWidget.vue'
 import FileEntitiesDashboardWidget from './views/widgets/FileEntitiesDashboardWidget.vue'
 
@@ -16,9 +19,9 @@ OCA.Dashboard.register(
 			{
 				pinia,
 				propsData: { title: widget.title },
-			}
+			},
 		).$mount(el)
-	}
+	},
 )
 
 OCA.Dashboard.register(
@@ -30,7 +33,7 @@ OCA.Dashboard.register(
 			{
 				pinia,
 				propsData: { title: widget.title },
-			}
+			},
 		).$mount(el)
-	}
+	},
 )

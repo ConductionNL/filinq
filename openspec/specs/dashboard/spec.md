@@ -1,5 +1,5 @@
 ---
-status: reviewed
+status: implemented
 ---
 
 # Dashboard
@@ -10,50 +10,246 @@ Provides a central overview of DocuDesk activity, including consent tracking sta
 
 ## Requirements
 
-### DocuDesk Dashboard View
+### Requirement: DocuDesk Dashboard View (REQ-DASH-01)
+
+**Priority:** MUST
+
+The dashboard serves as the default landing page displaying consent statistics, recent activity, and quick anonymization access.
+
+#### Scenario: View dashboard with consent data
+- GIVEN a logged-in user opens DocuDesk
+- AND 12 consent records exist (3 pending, 7 approved, 2 objected)
+- WHEN the dashboard page loads
+- THEN stat cards display Total: 12, Pending: 3, Approved: 7, Objected: 2
+- AND cards are color-coded: Pending (warning/orange), Approved (success/green), Objected (error/red)
+
+#### Scenario: View recent consent activity
+- GIVEN 15 consent records exist
+- WHEN the dashboard loads
+- THEN the 10 most recent consent records are displayed
+- AND each item shows entity text and consent status badge
+
+#### Scenario: Dashboard with no data
+- GIVEN no consent records exist
+- WHEN the dashboard loads
+- THEN stat cards show 0 for all categories
+- AND the recent activity section shows "No consent records yet" with guidance text
+- AND the quick anonymization widget is still available
+
+#### Scenario: Quick anonymization from dashboard
+- GIVEN the dashboard is displayed
+- WHEN the user scrolls to the Quick Anonymization section
+- THEN the AnonymizationWidget is embedded with drag-and-drop upload
+- AND files can be processed without navigating away from the dashboard
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DASH-001 | Display consent statistics as cards: Total, Pending, Approved, Objected | MUST | Implemented |
-| DASH-002 | Stats cards use color coding: Pending (warning/orange), Approved (success/green), Objected (error/red) | MUST | Implemented |
-| DASH-003 | Show recent consent activity (up to 10 most recent consent records) | MUST | Implemented |
+| DASH-002 | Stats cards use color coding: Pending (orange), Approved (green), Objected (red) | MUST | Implemented |
+| DASH-003 | Show recent consent activity (up to 10 most recent) | MUST | Implemented |
 | DASH-004 | Each recent item displays entity text and consent status badge | MUST | Implemented |
 | DASH-005 | Include a "Quick Anonymization" section embedding the AnonymizationWidget | MUST | Implemented |
 | DASH-006 | Show loading state while fetching consent data | MUST | Implemented |
-| DASH-007 | Show empty state when no consent records exist: "No consent records yet" with guidance text | MUST | Implemented |
+| DASH-007 | Show empty state when no consent records exist | MUST | Implemented |
 | DASH-008 | Dashboard is the default landing page for the DocuDesk app | MUST | Implemented |
 
-### Nextcloud Dashboard Widgets
+### Requirement: Nextcloud Dashboard Widgets (REQ-DASH-02)
+
+**Priority:** MUST
+
+DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
+
+#### Scenario: Widgets available on Nextcloud Dashboard
+- GIVEN DocuDesk is installed and enabled
+- WHEN a user visits the Nextcloud Dashboard
+- THEN "Document Anonymization" and "File Entities" widgets are available to add
+- AND each widget shows the DocuDesk app icon (app-dark.svg)
+
+#### Scenario: Widget links to DocuDesk
+- GIVEN a dashboard widget is displayed
+- WHEN the user clicks the widget
+- THEN they are navigated to the DocuDesk main page via `docudesk.dashboard.page` route
+
+#### Scenario: Widget script loading
+@e2e exclude script bundle loading is a build artifact — verified by webpack output inspection; not directly observable as a UI assertion
+- GIVEN the Nextcloud Dashboard page loads
+- WHEN DocuDesk widgets are rendered
+- THEN both widgets load the `docudesk-dashboard` script bundle
+- AND the script renders the Vue widget components
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DASH-010 | Register AnonymizationWidget as a Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
+| DASH-010 | Register AnonymizationWidget as Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
 | DASH-011 | AnonymizationWidget has ID `docudesk-anonymization`, title "Document Anonymization", order 20 | MUST | Implemented |
-| DASH-012 | Register FileEntitiesWidget as a Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
+| DASH-012 | Register FileEntitiesWidget as Nextcloud Dashboard widget (IWidget, IIconWidget) | MUST | Implemented |
 | DASH-013 | FileEntitiesWidget has ID `docudesk-file-entities`, title "File Entities", order 21 | MUST | Implemented |
-| DASH-014 | Both widgets use the DocuDesk app icon (`app-dark.svg`) for their widget icon | MUST | Implemented |
-| DASH-015 | Both widgets link to the DocuDesk main page via `docudesk.dashboard.page` route | MUST | Implemented |
+| DASH-014 | Both widgets use `app-dark.svg` icon | MUST | Implemented |
+| DASH-015 | Both widgets link to DocuDesk main page | MUST | Implemented |
 | DASH-016 | Both widgets load the `docudesk-dashboard` script bundle | MUST | Implemented |
-| DASH-017 | Widgets are registered in Application::register() via registerDashboardWidget() | MUST | Implemented |
+| DASH-017 | Widgets registered in Application::register() via registerDashboardWidget() | MUST | Implemented |
 
-### Navigation
+### Requirement: Navigation Menu (REQ-DASH-03)
+
+**Priority:** MUST
+
+The main navigation provides three items with Material Design icons for switching between DocuDesk views.
+
+#### Scenario: Navigate between views
+- GIVEN a user is on the Dashboard view
+- WHEN they click "Consent Management" in the navigation menu
+- THEN the view switches to the ConsentIndex component
+- AND the Consent Management nav item becomes active (visually highlighted)
+
+#### Scenario: Navigation items and icons
+- GIVEN the DocuDesk app is open
+- WHEN the navigation menu is displayed
+- THEN three items are shown: Dashboard (Finance icon), Anonymization (ShieldLock icon), Consent Management (AccountCheck icon)
+
+#### Scenario: Consent detail navigation state
+@e2e exclude consent detail view requires a consent record to navigate to; no consent creation UI exists (CONS-048); covered by navigate-between-views test for nav highlighting
+- GIVEN the user navigates to a consent detail view
+- WHEN the navigation menu is displayed
+- THEN the Consent Management item remains active
+- AND the active state applies to both consent list and detail views
+
+#### Scenario: Conditional view rendering
+@e2e exclude internal Pinia store→Vue component wiring — covered by navigate-between-views test which observes the rendered views; unit-testable directly
+- GIVEN the navigation store tracks the selected view
+- WHEN `navigationStore.selected` changes
+- THEN the Views.vue component renders the corresponding view:
+  - `dashboard` -> DashboardIndex
+  - `anonymization` -> AnonymizationWidget
+  - `consent` -> ConsentIndex
+  - `consentDetail` -> ConsentDetail
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DASH-020 | Main navigation menu has three items: Dashboard, Anonymization, Consent Management | MUST | Implemented |
+| DASH-020 | Main navigation has three items: Dashboard, Anonymization, Consent Management | MUST | Implemented |
 | DASH-021 | Dashboard navigation uses Finance icon | MUST | Implemented |
 | DASH-022 | Anonymization navigation uses ShieldLock icon | MUST | Implemented |
 | DASH-023 | Consent Management navigation uses AccountCheck icon | MUST | Implemented |
 | DASH-024 | Active navigation item is visually highlighted | MUST | Implemented |
-| DASH-025 | Consent Management item is active for both consent list and consent detail views | MUST | Implemented |
+| DASH-025 | Consent Management item active for both list and detail views | MUST | Implemented |
 
-### Dashboard Controller
+### Requirement: Dashboard Controller (REQ-DASH-04)
+
+**Priority:** MUST
+
+The DashboardController serves the main app page as a Nextcloud TemplateResponse.
+
+#### Scenario: Serve main app page
+@e2e exclude DashboardController::page() PHP implementation — HTTP 200 response verified by view-dashboard test navigating to /apps/docudesk
+- GIVEN an authenticated user
+- WHEN GET / is requested
+- THEN DashboardController::page() returns a TemplateResponse
+- AND the template renders the Vue app entry point
+
+#### Scenario: Error handling
+@e2e exclude backend controller error path — exception-to-template conversion verified by PHPUnit; not injectable via UI
+- GIVEN an error occurs during page rendering
+- WHEN the controller catches the exception
+- THEN an error template is returned
+- AND the user sees a meaningful error message
+
+#### Scenario: Unused parameter on page method
+@e2e exclude dead code documentation — no behavioral impact; verified by code inspection
+- GIVEN DashboardController::page() accepts `$getParameter`
+- WHEN the method is called with or without this parameter
+- THEN the parameter has no effect on the response
+- AND this is dead code that should be cleaned up
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DASH-030 | Serve the main app page via `GET /` (dashboard#page route) | MUST | Implemented |
-| DASH-031 | ~~The page template sets a CSP allowing all connect domains~~ No custom CSP is set; default Nextcloud CSP applies | MUST | Removed |
+| DASH-030 | Serve main app page via GET / (dashboard#page route) | MUST | Implemented |
+| DASH-031 | Default Nextcloud CSP applies (no custom CSP) | MUST | Implemented |
 | DASH-032 | Error handling returns an error template on failure | MUST | Implemented |
+
+### Requirement: Status Badge Display (REQ-DASH-05)
+
+**Priority:** MUST
+
+Consent status values are displayed with consistent color-coded badges throughout the dashboard and consent views.
+
+#### Scenario: Status badge color mapping
+- GIVEN a consent record with status "consent_given"
+- WHEN the status badge is rendered
+- THEN it displays "Approved" with success/green color
+
+#### Scenario: All status badges
+- GIVEN various consent statuses exist
+- WHEN badges are rendered
+- THEN the mapping is: pending (dark), consent_given (green), objection_received (red), no_response (orange), anonymized (blue)
+
+#### Scenario: Badge consistency across views
+- GIVEN a consent record appears in both dashboard recent activity and consent list
+- WHEN the status badge is rendered in both locations
+- THEN the same color and label mapping is used
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DASH-040 | Status badges use consistent color mapping across all views | MUST | Implemented |
+| DASH-041 | Five status values mapped: pending, consent_given, objection_received, no_response, anonymized | MUST | Implemented |
+
+### Requirement: Icon File Differentiation (REQ-DASH-06)
+
+**Priority:** MUST
+
+DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
+
+#### Scenario: Navigation icon
+- GIVEN the DocuDesk app is displayed in the Nextcloud top bar
+- WHEN the navigation entry is rendered
+- THEN `app.svg` is used (from info.xml)
+
+#### Scenario: Dashboard widget icon
+- GIVEN a DocuDesk dashboard widget is displayed
+- WHEN the widget icon is rendered
+- THEN `app-dark.svg` is used via IIconWidget::getIconUrl()
+- AND this provides better visibility on light backgrounds
+
+#### Scenario: Admin settings section icon
+- GIVEN the DocuDesk admin settings section is displayed
+- WHEN the section icon is rendered
+- THEN `app-dark.svg` is used (same as dashboard widgets)
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DASH-043 | Navigation entry in info.xml uses `app.svg` icon | MUST | Implemented |
+| DASH-044 | Dashboard widgets use `app-dark.svg` icon | MUST | Implemented |
+| DASH-045 | Two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
+
+### Requirement: Dead Code and Removed Features (REQ-DASH-07)
+
+**Priority:** MUST
+
+Previously identified issues have been resolved through removal.
+
+#### Scenario: DashboardController::index() removed
+@e2e exclude dead code removal — verified by static code inspection; no UI behavior to assert
+- GIVEN DashboardController previously had an index() method with dead code
+- WHEN the codebase is inspected
+- THEN the method has been removed
+- AND only the page() method remains
+
+#### Scenario: Permissive CSP removed
+@e2e exclude CSP header is a browser security header — not inspectable via UI assertions without network interception
+- GIVEN DashboardController previously set `addAllowedConnectDomain('*')`
+- WHEN the codebase is inspected
+- THEN the CSP customization has been removed
+- AND default Nextcloud CSP applies
+
+#### Scenario: Unused parameter documented
+@e2e exclude dead code documentation — duplicate of unused-parameter-on-page-method scenario above
+- GIVEN page() accepts `?string $getParameter`
+- WHEN the parameter is inspected
+- THEN it is never used in the method body
+- AND this is documented as dead code
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DASH-042 | `page()` method accepts `$getParameter` that is never used | MUST | Dead Code |
+| DASH-046 | CSP customization removed; default Nextcloud CSP applies | N/A | Removed |
+| DASH-047 | DashboardController::index() method removed | N/A | Removed |
 
 ## Data Model
 
@@ -61,160 +257,11 @@ The dashboard does not own any data. It consumes data from:
 - **Consent store**: `consentStore.consentStats` (total, pending, approved, objected, noResponse, anonymized)
 - **Consent store**: `consentStore.consents` (recent consent records)
 
-## User Interface
-
-### Dashboard Layout (`DashboardIndex.vue`)
-
-```
-+-------------------------------------------+
-|  Dashboard                                |
-+-------------------------------------------+
-|  [Total]  [Pending]  [Approved]  [Objected]  <-- Stat cards
-|    12        3           7           2
-+-------------------------------------------+
-|  Recent Consent Activity                  |
-|  - Entity A ............... [Pending]     |
-|  - Entity B ............... [Approved]    |
-|  - Entity C ............... [Objected]    |
-+-------------------------------------------+
-|  Quick Anonymization                      |
-|  [Drag & drop / select file area]         |
-+-------------------------------------------+
-```
-
-### Status Badge Mapping
-
-| Status Value | Display Label | Color |
-|-------------|--------------|-------|
-| pending | Pending | Dark background |
-| consent_given | Approved | Success/green |
-| objection_received | Objected | Error/red |
-| no_response | No Response | Warning/orange |
-| anonymized | Anonymized | Primary/blue |
-
-### Navigation Menu (`MainMenu.vue`)
-
-- Uses NcAppNavigation with NcAppNavigationList and NcAppNavigationItem
-- Three menu items with Material Design icons
-- Navigation state managed by Pinia navigationStore
-
-### View Router (`Views.vue`)
-
-Conditional rendering based on `navigationStore.selected`:
-- `dashboard` -> DashboardIndex
-- `anonymization` -> AnonymizationWidget
-- `consent` -> ConsentIndex
-- `consentDetail` -> ConsentDetail
-
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | Render DocuDesk main page (TemplateResponse) |
-
-## Scenarios
-
-### View Dashboard Overview
-
-```
-GIVEN a logged-in user opens DocuDesk
-WHEN the dashboard page loads
-THEN consent statistics are fetched from the API
-AND stat cards display the current counts for total, pending, approved, and objected
-AND the 10 most recent consent records are displayed with status badges
-AND the quick anonymization widget is available
-```
-
-### Dashboard with No Data
-
-```
-GIVEN a logged-in user opens DocuDesk
-AND no consent records exist
-WHEN the dashboard page loads
-THEN stat cards show 0 for all categories
-AND the recent activity section shows an empty state message
-AND the quick anonymization widget is still available
-```
-
-### Navigate Between Views
-
-```
-GIVEN a user is on the Dashboard view
-WHEN they click "Consent Management" in the navigation menu
-THEN the view switches to the ConsentIndex component
-AND the Consent Management nav item becomes active
-```
-
-### Nextcloud Dashboard Widgets
-
-```
-GIVEN DocuDesk is installed and enabled
-WHEN a user visits the Nextcloud Dashboard
-THEN "Document Anonymization" and "File Entities" widgets are available to add
-AND each widget shows the DocuDesk app icon
-AND clicking a widget navigates to the DocuDesk main page
-```
-
-## Internal Implementation Details
-
-### DashboardController::index() -- REMOVED (Gap 1)
-
-~~The `DashboardController::index()` method previously contained dead code referencing `self::TEST_ARRAY`.~~
-
-**Status**: This method has been **removed** from the codebase. `DashboardController` now only contains the `page()` method. The route for `index()` no longer exists in `routes.php`.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DASH-040 | ~~`DashboardController::index()` references undefined `self::TEST_ARRAY` constant~~ Method has been removed from codebase | N/A | Removed |
-| DASH-041 | ~~Calling `index()` always results in a 500 error response~~ No longer applicable | N/A | Removed |
-
-### Unused $getParameter on page() Method (Gap 2)
-
-The `DashboardController::page()` method accepts a `?string $getParameter` parameter that is **never used** in the method body:
-
-```php
-public function page(?string $getParameter): TemplateResponse
-{
-    // $getParameter is never referenced
-    $response = new TemplateResponse($this->appName, 'index', []);
-    // ...
-}
-```
-
-**Impact**: The parameter is harmless but misleading. It suggests the page method can accept a query parameter for customization, but it has no effect. The TemplateResponse is always rendered with an empty data array.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DASH-042 | `page()` method accepts `$getParameter` that is never used in the method body | MUST | Dead Code |
-
-### Icon File Difference: Navigation vs Widgets (Gap 19)
-
-DocuDesk uses **two different icon files** for navigation and dashboard widgets:
-
-| Context | Icon File | Location |
-|---------|-----------|----------|
-| Navigation menu (info.xml) | `app.svg` | `<icon>app.svg</icon>` in navigation entry |
-| Dashboard widgets | `app-dark.svg` | `$this->urlGenerator->imagePath(Application::APP_ID, 'app-dark.svg')` |
-| Admin settings section | `app-dark.svg` | Used by DocuDeskAdmin IIconSection (see admin-settings spec) |
-
-**Reasoning**: The navigation icon (`app.svg`) is used in the Nextcloud top bar where the background varies. The `app-dark.svg` variant is used for dashboard widgets and admin settings where a dark icon on a light background is expected. This follows Nextcloud's convention where widgets use the `-dark` variant for proper visibility.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DASH-043 | Navigation entry in info.xml uses `app.svg` icon | MUST | Implemented |
-| DASH-044 | Dashboard widgets use `app-dark.svg` icon via IIconWidget::getIconUrl() | MUST | Implemented |
-| DASH-045 | The two icon files serve different contexts (navigation vs widget/settings) | MUST | Implemented |
-
-### Permissive CSP Policy -- REMOVED (Gap 25)
-
-~~The `DashboardController::page()` method previously set a Content Security Policy allowing connections to all domains via `addAllowedConnectDomain('*')`.~~
-
-**Status**: The CSP configuration has been **removed** from the codebase. The `page()` method no longer sets any custom CSP -- it relies on Nextcloud's default Content Security Policy. The `ContentSecurityPolicy` import is also gone from the controller.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DASH-046 | ~~CSP `connect-src` is set to wildcard `*`~~ CSP customization has been removed; default Nextcloud CSP applies | N/A | Removed |
-| DASH-047 | ~~The permissive CSP is a security risk~~ No longer applicable | N/A | Removed |
 
 ## Dependencies
 
@@ -223,30 +270,19 @@ DocuDesk uses **two different icon files** for navigation and dashboard widgets:
 - **Pinia anonymizationStore**: Quick anonymization pipeline
 - **Nextcloud IWidget/IIconWidget**: Dashboard widget registration
 - **Nextcloud NcAppNavigation**: Navigation component framework
-- ~~**Nextcloud ContentSecurityPolicy**: CSP configuration for the page response~~ (removed -- default Nextcloud CSP now applies)
 
 ### Current Implementation Status
 - **Fully implemented** with file paths:
-  - `lib/Controller/DashboardController.php` -- `page()` method serving TemplateResponse (unused `$getParameter` noted)
-  - `lib/Dashboard/AnonymizationWidget.php` -- Nextcloud dashboard widget (IWidget, IIconWidget), ID `docudesk-anonymization`, order 20
-  - `lib/Dashboard/FileEntitiesWidget.php` -- Nextcloud dashboard widget (IWidget, IIconWidget), ID `docudesk-file-entities`, order 21
-  - `lib/AppInfo/Application.php` -- registers both widgets via `registerDashboardWidget()`
-  - `src/views/dashboard/DashboardIndex.vue` -- consent stats cards, recent activity, quick anonymization
-  - `src/views/Views.vue` -- conditional view rendering based on navigation state
-  - `src/navigation/MainMenu.vue` -- three-item navigation (Dashboard, Anonymization, Consent Management)
-  - `src/store/modules/navigation.ts` -- Pinia navigation store (TypeScript)
-  - `src/views/widgets/AnonymizationDashboardWidget.vue` -- NC Dashboard widget frontend
-  - `src/views/widgets/FileEntitiesDashboardWidget.vue` -- NC Dashboard widget frontend
-  - `src/dashboard.js` -- dashboard widget script bundle entry point
-  - `appinfo/routes.php` -- dashboard page route (`/`) plus SPA catch-all (`/{path}`)
-- **Not yet implemented**: Nothing -- all dashboard requirements are fully implemented
-- **Removed items**: DashboardController::index() method and permissive CSP have been removed as documented
+  - `lib/Controller/DashboardController.php` -- page() serving TemplateResponse
+  - `lib/Dashboard/AnonymizationWidget.php` -- Nextcloud dashboard widget, order 20
+  - `lib/Dashboard/FileEntitiesWidget.php` -- Nextcloud dashboard widget, order 21
+  - `lib/AppInfo/Application.php` -- registers both widgets
+  - `src/views/dashboard/DashboardIndex.vue` -- consent stats and recent activity
+  - `src/views/Views.vue` -- conditional view rendering
+  - `src/navigation/MainMenu.vue` -- three-item navigation
+  - `src/store/modules/navigation.ts` -- Pinia navigation store
+  - `src/dashboard.js` -- dashboard widget script bundle
 
 ### Standards & References
-- **WCAG 2.1 AA**: Dashboard UI should comply with accessibility standards (color contrast on stat cards, keyboard navigation)
-- **Nextcloud IWidget/IIconWidget**: Standard Nextcloud Dashboard widget API
-
-### Specificity Assessment
-- **Specific enough**: Yes, this spec is complete and all requirements match the implementation.
-- **Missing/Ambiguous**: The dead code `$getParameter` on `page()` is documented but not resolved. The SPA catch-all route (`/{path}`) in routes.php is not documented in this spec.
-- **Open questions**: Should the unused `$getParameter` be removed from `page()`?
+- **WCAG 2.1 AA**: Dashboard UI accessibility (color contrast, keyboard navigation)
+- **Nextcloud IWidget/IIconWidget**: Standard Dashboard widget API

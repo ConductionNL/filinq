@@ -1,202 +1,289 @@
----
-status: proposed
----
-
-# Document Creatie Sjablonen
+# document-creatie-sjablonen Specification
 
 ## Purpose
-
-Provides document creation from templates by merging zaak/object data into pre-defined templates, producing ODF and PDF output. Extends the existing `template-management` (CRUD for Twig/HTML templates) and `pdf-generation` (stateless PDF rendering) specs with a higher-level workflow: resolve data from OpenRegister objects or external APIs, merge into templates, enforce huisstijl, and produce output documents. Supports bulk generation (e.g., letters to multiple citizens) and template versioning. Key tender requirement: 39% of government tenders demand document creation from templates.
-
-## Relation to Existing Specs
-
-- **template-management**: Provides the underlying CRUD for templates. This spec adds data-resolution, merge execution, bulk generation, and ODF output on top.
-- **pdf-generation**: Provides the low-level PDF rendering via mPDF. This spec orchestrates the end-to-end flow: data in, document out.
-- **document-register**: Stores generated document metadata as report objects for audit trail.
-
+TBD - created by archiving change document-creatie-sjablonen. Update Purpose after archive.
 ## Requirements
+### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 
-### Data Resolution
+The system MUST resolve merge data from OpenRegister objects by register, schema, and object UUID, with support for nested resolution and ad-hoc context data.
+
+#### Scenario: Resolve data from a single zaak object
+- GIVEN a zaak object exists in OpenRegister with UUID "abc-123"
+- AND the object contains fields: aanvrager, status, datum
+- WHEN DocumentService resolves data for register "zaken", schema "zaak", object "abc-123"
+- THEN all object fields are available as template variables
+
+#### Scenario: Nested data resolution
+- GIVEN a zaak object references a persoon (aanvrager), which references an adres
+- WHEN data resolution runs with recursive resolution enabled
+- THEN the persoon is resolved from its register/schema
+- AND the adres is resolved from the persoon reference
+- AND resolution stops at 3 levels deep (zaak -> persoon -> adres)
+
+#### Scenario: Data resolution failure
+- GIVEN a data reference points to a non-existent object
+- WHEN data resolution is attempted
+- THEN a descriptive error is returned per field (not a generic 500)
+- AND other fields that resolved successfully are still available
+
+#### Scenario: Ad-hoc data context
+- GIVEN a template needs both OpenRegister data and user-supplied context
+- WHEN the API is called with both object references and a JSON data object
+- THEN the ad-hoc data is merged with the resolved OpenRegister data
+- AND ad-hoc values take precedence over resolved values
+
+#### Scenario: External data via OpenConnector
+- GIVEN a template needs BRP citizen data
+- WHEN the data reference specifies an OpenConnector source (e.g., BRP API)
+- THEN data is resolved via OpenConnector
+- AND the result is available as template variables
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DCS-001 | Resolve merge data from OpenRegister objects by register + schema + object UUID | MUST | Planned |
-| DCS-002 | Resolve merge data from external API sources via OpenConnector (e.g., BRP, KVK, BAG) | SHOULD | Planned |
-| DCS-003 | Support nested data resolution: a zaak object references a persoon, which references an adres — all resolved recursively up to 3 levels deep | MUST | Planned |
-| DCS-004 | Data resolution failures return descriptive errors per field, not a generic 500 | MUST | Planned |
-| DCS-005 | Accept ad-hoc data context (JSON object) alongside or instead of object references, merged with resolved data | MUST | Planned |
+| DCS-002 | Resolve merge data from external API sources via OpenConnector | SHOULD | Planned |
+| DCS-003 | Support nested data resolution up to 3 levels deep | MUST | Planned |
+| DCS-004 | Data resolution failures return descriptive errors per field | MUST | Planned |
+| DCS-005 | Accept ad-hoc JSON data context alongside or instead of object references | MUST | Planned |
 
-### Template Merge Execution
+### Requirement: REQ-DCS-02 Template Merge Execution (Priority: Must)
+
+The system MUST render templates by merging resolved data context using the existing Twig sandbox, with support for conditional sections and iteration.
+
+#### Scenario: Generate a beschikking from a zaak
+- GIVEN a template "Beschikking Omgevingsvergunning" exists with namespace "procest"
+- AND a zaak object is resolved with aanvrager, activiteiten, and besluit data
+- WHEN DocumentService::generateDocument() is called
+- THEN the Twig template is rendered with the merged data
+- AND conditional sections show/hide based on zaaktype
+- AND document metadata is stored in the document register
+
+#### Scenario: Conditional sections in template
+- GIVEN a template has `{% if zaaktype == 'omgevingsvergunning' %}` blocks
+- WHEN the zaak has type "omgevingsvergunning"
+- THEN the conditional block is rendered
+- AND other conditional blocks for different types are hidden
+
+#### Scenario: Iteration over collections
+- GIVEN a template has `{% for activiteit in activiteiten %}` loops
+- WHEN the zaak has 3 activiteiten
+- THEN the loop renders 3 times with each activiteit's data
+
+#### Scenario: Missing required fields produce warnings
+- GIVEN a template references `{{ aanvrager.naam }}` but aanvrager.naam is null
+- WHEN the template is rendered
+- THEN the field is rendered as empty (Twig strict_variables is false)
+- AND a warning is included in the response indicating the missing field
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DCS-010 | `DocumentService::generateDocument(string $templateId, array $dataRefs, array $options): array` — resolve data, render template, return document metadata + binary | MUST | Planned |
+| DCS-010 | `DocumentService::generateDocument()` resolves data, renders template, returns document metadata + binary | MUST | Planned |
 | DCS-011 | Merge uses the existing Twig sandbox from pdf-generation (same security policy) | MUST | Planned |
-| DCS-012 | Support conditional sections in templates (e.g., show/hide blocks based on zaaktype or status) | MUST | Planned |
-| DCS-013 | Support iteration over collections (e.g., list of activiteiten, list of documenten in a zaak) | MUST | Planned |
-| DCS-014 | Merge result is validated: missing required fields produce warnings in the response, not silent empty values | SHOULD | Planned |
+| DCS-012 | Support conditional sections in templates | MUST | Planned |
+| DCS-013 | Support iteration over collections | MUST | Planned |
+| DCS-014 | Missing required fields produce warnings, not silent empty values | SHOULD | Planned |
 
-### Output Formats
+### Requirement: REQ-DCS-03 Output Format Support (Priority: Must)
+
+The system MUST support PDF, ODF, and HTML output formats, selectable per request.
+
+#### Scenario: PDF output (default)
+- GIVEN a template is rendered with data
+- WHEN the format is "pdf" (or not specified)
+- THEN the output is generated via PdfService using mPDF
+- AND the PDF binary is returned
+
+#### Scenario: ODF output
+- GIVEN a template is rendered with data
+- WHEN the format is "odf"
+- THEN an ODF (.odt) file is produced via server-side conversion
+- AND the file conforms to ODF 1.2 specification (ISO/IEC 26300:2015)
+
+#### Scenario: HTML preview
+- GIVEN a template needs to be previewed before final generation
+- WHEN the format is "html"
+- THEN the rendered HTML is returned without PDF/ODF conversion
+- AND the preview can be displayed in the browser
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | DCS-020 | PDF output via existing PdfService (default) | MUST | Planned |
-| DCS-021 | ODF output (.odt) via server-side conversion — hard requirement in Dutch government tenders | MUST | Planned |
-| DCS-022 | HTML output for preview in browser before final generation | SHOULD | Planned |
-| DCS-023 | Output format selectable per request via `format` option: `pdf`, `odf`, `html` | MUST | Planned |
+| DCS-021 | ODF output (.odt) via server-side conversion | MUST | Planned |
+| DCS-022 | HTML output for browser preview | SHOULD | Planned |
+| DCS-023 | Output format selectable per request via `format` option | MUST | Planned |
 
-### Huisstijl Enforcement
+### Requirement: REQ-DCS-04 Huisstijl Enforcement (Priority: Must)
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DCS-030 | Templates can reference a huisstijl configuration (logo, colors, fonts, header/footer) stored as an OpenRegister object | MUST | Planned |
-| DCS-031 | Huisstijl is applied automatically during rendering — template authors do not need to hardcode brand elements | SHOULD | Planned |
-| DCS-032 | NL Design System tokens can be used as CSS variables in template styling | SHOULD | Planned |
+Templates MUST be able to reference a corporate identity (huisstijl) configuration for consistent branding.
 
-### Bulk Generation
+#### Scenario: Automatic huisstijl application
+- GIVEN a template references a huisstijl configuration stored in OpenRegister
+- WHEN the document is rendered
+- THEN the logo, colors, fonts, and header/footer are applied automatically
+- AND the template author does not need to hardcode brand elements
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DCS-040 | `DocumentService::generateBulk(string $templateId, array $objectIds, array $options): array` — generate one document per object, return array of results | MUST | Planned |
-| DCS-041 | Bulk generation is asynchronous for >10 objects — returns a job ID, status queryable via `GET /api/documents/jobs/{jobId}` | SHOULD | Planned |
-| DCS-042 | Bulk generation supports merged output: all documents concatenated into a single PDF with page breaks | SHOULD | Planned |
-| DCS-043 | Individual failures in bulk do not abort the entire batch — partial results are returned with per-item error details | MUST | Planned |
+#### Scenario: NL Design System token integration
+- GIVEN a template uses CSS variables for styling
+- WHEN NL Design System tokens are available
+- THEN the tokens can be used as CSS variables in the template
+- AND the output matches the municipality's design system
 
-### Template Versioning
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| DCS-050 | Templates support versioning: each update creates a new version, previous versions are retained | MUST | Planned |
-| DCS-051 | Generated documents reference the specific template version used (template UUID + version number) | MUST | Planned |
-| DCS-052 | Previous template versions can be retrieved and used for re-generation | SHOULD | Planned |
-
-### API Endpoints
+#### Scenario: No huisstijl configured
+- GIVEN a template does not reference a huisstijl configuration
+- WHEN the document is rendered
+- THEN default styling is applied
+- AND the document is still valid and readable
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DCS-060 | `POST /api/documents/generate` — generate a single document from template + data references | MUST | Planned |
-| DCS-061 | `POST /api/documents/generate/bulk` — bulk generate documents for multiple objects | MUST | Planned |
-| DCS-062 | `POST /api/documents/generate/preview` — HTML preview without producing final output | SHOULD | Planned |
-| DCS-063 | `GET /api/documents/jobs/{jobId}` — query bulk generation job status | SHOULD | Planned |
-| DCS-064 | All endpoints require authentication (`@NoAdminRequired @NoCSRFRequired`) | MUST | Planned |
+| DCS-030 | Templates can reference a huisstijl configuration stored in OpenRegister | MUST | Planned |
+| DCS-031 | Huisstijl applied automatically during rendering | SHOULD | Planned |
+| DCS-032 | NL Design System tokens can be used as CSS variables | SHOULD | Planned |
 
-### Zaaksysteem Integration
+### Requirement: REQ-DCS-05 Bulk Document Generation (Priority: Must)
+
+The system MUST generate documents for multiple objects in a single request, with async processing for large batches and partial failure handling.
+
+#### Scenario: Bulk generate citizen letters
+- GIVEN a template "Kennisgeving Bestemmingsplan" exists
+- AND 150 persoon objects are selected
+- WHEN POST /api/documents/generate/bulk is called
+- THEN a job ID is returned (>10 objects = async)
+- AND each letter is generated with the individual citizen's data
+- AND GET /api/documents/jobs/{jobId} returns progress
+
+#### Scenario: Partial failure in bulk generation
+- GIVEN 50 objects are being processed in bulk
+- AND 3 objects have missing required data
+- WHEN bulk generation runs
+- THEN 47 documents are generated successfully
+- AND 3 failures are returned with per-item error details
+- AND the batch is not aborted
+
+#### Scenario: Merged PDF output
+- GIVEN a bulk generation request with mergedOutput option
+- WHEN all documents are generated
+- THEN all documents are concatenated into a single PDF with page breaks
+- AND the merged PDF is returned as a single download
+
+#### Scenario: Small batch synchronous processing
+- GIVEN 5 objects are submitted for bulk generation
+- WHEN the batch size is <= 10
+- THEN processing is synchronous
+- AND all results are returned in the response
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| DCS-070 | Generated documents can be automatically attached to the source zaak in Procest | SHOULD | Planned |
-| DCS-071 | Document generation can be triggered from n8n workflows (e.g., on zaak status change) | SHOULD | Planned |
-| DCS-072 | Generated document metadata is stored in the document register for audit trail | MUST | Planned |
+| DCS-040 | `DocumentService::generateBulk()` generates one document per object | MUST | Planned |
+| DCS-041 | Async processing for >10 objects with job ID and status query | SHOULD | Planned |
+| DCS-042 | Merged output: all documents concatenated into single PDF | SHOULD | Planned |
+| DCS-043 | Partial failures do not abort the batch | MUST | Planned |
 
-## Scenarios
+### Requirement: REQ-DCS-06 Template Versioning (Priority: Must)
 
-### Generate a beschikking from a zaak
+Templates MUST support versioning so that generated documents can reference the exact template version used.
 
-```
-GIVEN a template "Beschikking Omgevingsvergunning" exists with namespace "procest"
-AND a zaak object exists in OpenRegister with aanvrager, activiteiten, and besluit data
-WHEN POST /api/documents/generate with templateId and zaak object reference
-THEN data is resolved from the zaak (including nested aanvrager/adres)
-AND the template is rendered with merged data
-AND a PDF is returned with huisstijl applied
-AND document metadata is stored in the document register
-```
+#### Scenario: Template version on update
+- GIVEN template "Vergunningbrief" version 1 exists
+- WHEN the template is updated with new content
+- THEN a new version 2 is created
+- AND version 1 is retained and retrievable
 
-### Bulk generate citizen letters
+#### Scenario: Document references template version
+- GIVEN a document is generated from template version 3
+- WHEN the document metadata is stored
+- THEN it includes the template UUID and version number 3
 
-```
-GIVEN a template "Kennisgeving Bestemmingsplan" exists
-AND 150 persoon objects are selected from OpenRegister
-WHEN POST /api/documents/generate/bulk with templateId and object IDs
-THEN a job ID is returned (>10 objects = async)
-AND each letter is generated with the individual citizen's data
-AND failures for individual citizens do not abort the batch
-AND GET /api/documents/jobs/{jobId} returns progress and partial results
-```
+#### Scenario: Re-generate with previous version
+- GIVEN a document was originally generated from version 3
+- AND the template is now at version 4
+- WHEN the user requests re-generation
+- THEN they can choose version 3 (original) or version 4 (current)
 
-### ODF output for archiving
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DCS-050 | Each template update creates a new version; previous versions retained | MUST | Planned |
+| DCS-051 | Generated documents reference template UUID + version number | MUST | Planned |
+| DCS-052 | Previous versions retrievable for re-generation | SHOULD | Planned |
 
-```
-GIVEN a template exists and data is available
-WHEN POST /api/documents/generate with format: "odf"
-THEN an ODF (.odt) file is produced
-AND the file is valid according to the ODF 1.2 specification
-```
+### Requirement: REQ-DCS-07 Document Generation API (Priority: Must)
 
-### Template version tracking
+The system MUST expose REST API endpoints for single and bulk document generation, preview, and job status.
 
-```
-GIVEN template "Vergunningbrief" version 3 was used to generate a document last month
-AND the template has since been updated to version 4
-WHEN the user requests re-generation of the same document
-THEN they can choose to use version 3 (original) or version 4 (current)
-```
+#### Scenario: Single document generation
+- GIVEN an authenticated user
+- WHEN POST /api/documents/generate is called with templateId and data references
+- THEN the document is generated and returned with metadata
 
-## Dependencies
+#### Scenario: Bulk document generation
+- GIVEN an authenticated user with 20 object IDs
+- WHEN POST /api/documents/generate/bulk is called
+- THEN a job ID is returned for async processing
+- AND the job can be queried via GET /api/documents/jobs/{jobId}
 
-- **template-management** spec: Template CRUD and namespace scoping
-- **pdf-generation** spec: PDF rendering via mPDF + Twig sandbox
-- **OpenRegister ObjectService**: Data resolution from register objects
-- **OpenConnector**: External data resolution (BRP, KVK, BAG)
-- **NL Design System**: Huisstijl CSS variable support
-- **LibreOffice/unoconv** (or equivalent): Server-side ODF conversion
+#### Scenario: HTML preview
+- GIVEN an authenticated user
+- WHEN POST /api/documents/generate/preview is called
+- THEN the rendered HTML is returned without producing final output
+- AND the preview can be displayed inline
 
-### Using Mock Register Data
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DCS-060 | `POST /api/documents/generate` for single document generation | MUST | Planned |
+| DCS-061 | `POST /api/documents/generate/bulk` for bulk generation | MUST | Planned |
+| DCS-062 | `POST /api/documents/generate/preview` for HTML preview | SHOULD | Planned |
+| DCS-063 | `GET /api/documents/jobs/{jobId}` for async job status | SHOULD | Planned |
+| DCS-064 | All endpoints require authentication | MUST | Planned |
 
-This spec depends on **BRP**, **KVK**, and **BAG** mock registers for data resolution testing (DCS-002: resolve merge data from external sources).
+### Requirement: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)
 
-**Loading the registers:**
-```bash
-# Load BRP register (35 persons, register slug: "brp", schema: "ingeschreven-persoon")
-docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/brp_register.json
+Generated documents MUST be linkable to cases in Procest and triggerable from workflows.
 
-# Load KVK register (16 businesses + 14 branches, register slug: "kvk")
-docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/kvk_register.json
+#### Scenario: Attach document to case
+- GIVEN a document is generated from a zaak's data
+- WHEN the generation completes
+- THEN the document can be automatically attached to the source zaak in Procest
+- AND document metadata is stored in the document register
 
-# Load BAG register (32 addresses + 21 objects + 21 buildings, register slug: "bag")
-docker exec -u www-data nextcloud php occ openregister:load-register /var/www/html/custom_apps/openregister/lib/Settings/bag_register.json
-```
+#### Scenario: Workflow-triggered generation
+- GIVEN an n8n workflow monitors zaak status changes
+- WHEN a zaak status changes to "besluit genomen"
+- THEN the workflow triggers document generation via the API
+- AND the generated beschikking is attached to the zaak
 
-**Test data for this spec's use cases:**
-- **BRP data merge**: BSN `999993653` (Suzanne Moulin) -- test template merge with person fields (naam, adres, geboortedatum)
-- **KVK data merge**: KVK `69599084` (Test EMZ Dagobert) -- test template merge with business fields (naam, KVK nummer, rechtsvorm)
-- **BAG address resolution**: Use BAG `nummeraanduiding` records -- test nested data resolution (zaak -> persoon -> adres, DCS-003)
-- **Bulk generation**: 35 BRP person records -- test bulk letter generation to multiple citizens
+#### Scenario: Audit trail
+- GIVEN a document is generated
+- WHEN the metadata is stored in the document register
+- THEN it includes: template ID, version, data sources, generation timestamp, generating user
 
-### Current Implementation Status
-- **Not yet implemented**: This is an entirely planned spec. No `DocumentService` class exists in the codebase.
-- **Building blocks that exist**:
-  - `lib/Service/TemplateService.php` -- template CRUD is implemented (the `template-management` spec this builds on)
-  - `lib/Service/PdfService.php` -- PDF rendering via mPDF + Twig sandbox is implemented (the `pdf-generation` spec this builds on)
-  - `lib/Settings/document_register.json` -- defines the `report` and `template` schemas, but is NOT loaded during boot
-  - `appinfo/routes.php` -- no `/api/documents/generate` routes exist
-- **Key gaps**:
-  - No `DocumentService` class (DCS-010, DCS-040)
-  - No `DocumentController` class
-  - No data resolution from OpenRegister objects (DCS-001 through DCS-005)
-  - No ODF output support -- no LibreOffice/unoconv integration (DCS-021)
-  - No huisstijl configuration system (DCS-030 through DCS-032)
-  - No bulk generation or job queue (DCS-040 through DCS-043)
-  - No template versioning (DCS-050 through DCS-052)
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DCS-070 | Generated documents can be attached to zaak in Procest | SHOULD | Planned |
+| DCS-071 | Document generation triggerable from n8n workflows | SHOULD | Planned |
+| DCS-072 | Generated document metadata stored in document register | MUST | Planned |
 
-### Standards & References
-- **ODF 1.2 (ISO/IEC 26300:2015)**: Required for .odt output -- hard requirement in Dutch government tenders
-- **PDF/A (ISO 19005)**: Should be considered for archival PDF output alongside standard PDF
-- **NL Design System**: CSS variable-based theming for huisstijl enforcement
-- **WCAG 2.1 AA**: Generated documents should meet accessibility requirements (especially for government publications)
-- **Tenderned requirements**: 39% of government tenders demand document creation from templates per tender analysis
-- **Archiefwet 1995**: Template versioning supports document retention and audit trail requirements
+### Requirement: REQ-DCS-09 Mock Register Test Data (Priority: Should)
 
-### Specificity Assessment
-- **Specific enough to implement**: Partially. The API shape and core flow are well-defined, but several areas need elaboration.
-- **Missing/Ambiguous**:
-  - ODF conversion technology not specified (LibreOffice headless? unoconv? Collabora CODE?)
-  - Huisstijl data model not defined -- what fields does the "huisstijl configuration" OpenRegister object contain?
-  - Async job queue implementation not specified (Nextcloud background jobs? Redis? n8n?)
-  - Template versioning storage mechanism not specified (OpenRegister object versions? Separate version objects?)
-  - How does nested data resolution interact with OpenConnector -- what mapping format?
-- **Open questions**:
-  1. Which ODF conversion tool will be used and how will it be deployed (docker sidecar? system package?)
-  2. How does this integrate with the existing `document_register.json` which is not currently loaded?
-  3. Should this use Nextcloud's built-in background job system or n8n for async bulk generation?
-  4. What is the maximum document size/complexity supported?
+Mock registers MUST provide realistic test data for template merge testing during development.
+
+#### Scenario: BRP data merge test
+- GIVEN BRP mock register is loaded with 35 person records
+- WHEN a template is merged with BSN 999993653 (Suzanne Moulin)
+- THEN person fields (naam, adres, geboortedatum) are available as template variables
+
+#### Scenario: Bulk generation test
+- GIVEN BRP mock register has 35 person records
+- WHEN bulk generation is tested
+- THEN 35 letters are generated with individual citizen data
+
+#### Scenario: Nested resolution test
+- GIVEN BAG mock register has nummeraanduiding records
+- WHEN nested resolution is tested (zaak -> persoon -> adres)
+- THEN address data is resolved from BAG through the reference chain
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| DCS-080 | BRP mock register (35 persons) for person data merge testing | SHOULD | Planned |
+| DCS-081 | KVK mock register (16 businesses) for business data merge testing | SHOULD | Planned |
+| DCS-082 | BAG mock register (32 addresses) for nested address resolution testing | SHOULD | Planned |
+

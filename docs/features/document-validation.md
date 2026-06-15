@@ -11,74 +11,115 @@ keywords:
   - verification
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # ✅ Document Validation
 
 ## Overview
-Ensure document quality and compliance through automated validation checks, all processed securely within your local environment.
 
-## Features
+Automatic quality control on documents entering DocuDesk: a fixed catalogue of
+file-level checks (format, integrity, encryption, text-layer presence) and a
+record-level check (metadata completeness), configured through per-document-type
+**validation profiles**, producing a `validationStatus` verdict and
+`validationFindings[]` on the document record via the ADR-031 calculation
+pattern (computation backend service + `x-openregister-calculations`, mirroring
+metadata enrichment).
 
-### Validation Capabilities
-- Structure validation
-- Content completeness checks
-- Format compliance
-- Required field verification
-- Custom validation rules
-- Quality scoring
+Validation **judges and never mutates** — enrichment (deriving values) stays
+with metadata enrichment, object-shape validation stays with OpenRegister schema
+validation, virus scanning stays with OpenRegister file attachments. Defaults
+are **warn-only**; blocking intake is an explicit per-check admin opt-in.
 
-## Quick Start
+It closes the "zero entities because zero text" silent-failure mode: a scan-only
+PDF with no text layer yields zero detected entities, which an operator could
+mistake for "nothing to redact" and publish PII.
 
-<Tabs>
-<TabItem value="validate" label="Validate Document" default>
+## Check catalogue
 
-```php
-// Validate a document against rules
-$validation = $validationService->validate(
-    documentId: 123,
-    ruleSet: 'contract_requirements',
-    options: [
-        'strictMode' => true,
-        'autoFix' => false
-    ]
-);
+| `checkId` | Fires when |
+|-----------|------------|
+| `format-not-allowed` | The file mime type is not in the profile's allowlist. |
+| `extension-mime-mismatch` | The file extension contradicts the detected content type. |
+| `file-unreadable` | The file could not be read/parsed. |
+| `pdf-encrypted` | The PDF is encrypted/password-protected (cannot be anonymised). |
+| `text-layer-missing` | A page-bearing format yields fewer than `docudesk.validation.text_layer_min_chars_per_page` (default 32) extractable chars/page. Carries `suggestedAction: "ocr"`. |
+| `metadata-incomplete` | A required metadata field for the profile is absent/empty. Names the `field`. |
+
+A finding contains only `checkId`, `severity`, a localised `message` (+ params),
+optional `field`, and optional `suggestedAction` — never document content.
+
+## Verdict aggregation
+
+`validationStatus` aggregates findings: any `blocking` finding → `failed`;
+otherwise any `warning` → `warnings`; otherwise `passed`. Records never validated
+render as **not yet validated** (absent value); there is no backfill migration.
+
+## Profiles
+
+Profiles live in app config `docudesk.validation.profiles` (JSON):
+
+```json
+{
+  "default": {
+    "allowedMimes": ["application/pdf", "text/plain"],
+    "requiredFields": [],
+    "severities": { "pdf-encrypted": "warning" }
+  },
+  "factuur": {
+    "allowedMimes": ["application/pdf"],
+    "requiredFields": ["invoiceNumber"],
+    "severities": { "pdf-encrypted": "blocking" }
+  }
+}
 ```
 
-</TabItem>
-<TabItem value="custom" label="Custom Validation">
+Per document type: an allowed-mime list, required metadata fields, and a severity
+per check (`off | warning | blocking`). Unknown document types resolve to the
+`default` profile. Shipped defaults set every check to `warning` (no blocking out
+of the box). Profile reads happen at validation time, so config changes propagate
+without a restart.
 
-```php
-// Define custom validation rules
-$rules = [
-    'required_sections' => ['introduction', 'terms', 'signatures'],
-    'field_formats' => [
-        'date' => 'Y-m-d',
-        'amount' => '/^\d+(\.\d{2})?$/'
-    ]
-];
+## On-demand endpoint
 
-$result = $validationService->validateWithRules(
-    documentId: 123,
-    rules: $rules
-);
+`POST /apps/docudesk/api/validation/validate`
+
+```json
+{ "fileId": 42, "documentType": "factuur" }
 ```
 
-</TabItem>
-</Tabs>
+Response (200):
 
-:::tip Quality Assurance
-Automated validation ensures consistent document quality across your organization.
-:::
+```json
+{
+  "validationStatus": "warnings",
+  "validationFindings": [
+    { "checkId": "pdf-encrypted", "severity": "warning", "message": "…", "params": {} }
+  ]
+}
+```
 
-:::info Compliance
-Built-in rules for common compliance requirements with support for custom validation logic.
-:::
+`#[NoAdminRequired]`; the file is resolved through the requesting user's folder
+(404 when not resolvable, no existence disclosure — IDOR-safe per ADR-005). The
+endpoint computes findings **without persisting** anything.
 
-## Use Cases
-- Contract validation
-- Form completeness checking
-- Regulatory compliance
-- Quality assurance
-- Standard enforcement 
+## Stored verdict (calculation)
+
+`validationStatus` and `validationFindings` are declared as
+`x-openregister-calculations` on the `generatedDocument` schema in
+`docudesk_register.json`, with `DocumentValidationService` (backend
+`docudesk.validation`) as the computation backend. Until OpenRegister's ADR-031
+calculation runtime invokes the service directly, the DocuDesk event-listener
+fallback (`ValidationRunner`) computes and stores the verdict on object
+create/update. The listener contains no validation logic.
+
+## Configuration
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `docudesk.validation.profiles` | `{}` (defaults apply) | Per-type validation profiles. |
+| `docudesk.validation.text_layer_min_chars_per_page` | `32` | Text-layer threshold. |
+
+## Note: full-text search
+
+Full-text search across documents is **OpenRegister's domain** (ADR-022) and is
+surfaced through Nextcloud's unified search — DocuDesk does not ship a separate
+search integration. (The previous Apache Solr document was removed; no Solr
+integration exists in the codebase.)

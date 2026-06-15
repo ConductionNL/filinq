@@ -11,6 +11,12 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,8 +40,6 @@ use OCP\Util;
  */
 class FileEntitiesWidget implements IWidget, IIconWidget
 {
-
-
     /**
      * Constructor for FileEntitiesWidget
      *
@@ -47,11 +51,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end __construct()
 
-
     /**
      * Returns the unique widget identifier
      *
      * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getId(): string
     {
@@ -59,11 +64,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getId()
 
-
     /**
      * Returns the widget display title
      *
      * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getTitle(): string
     {
@@ -71,11 +77,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getTitle()
 
-
     /**
      * Returns the widget display order
      *
      * @return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getOrder(): int
     {
@@ -83,11 +90,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getOrder()
 
-
     /**
      * Returns the CSS icon class for the widget
      *
      * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getIconClass(): string
     {
@@ -95,11 +103,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getIconClass()
 
-
     /**
      * Returns the URL to the widget icon
      *
      * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
      */
     public function getIconUrl(): string
     {
@@ -109,11 +118,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getIconUrl()
 
-
     /**
      * Returns the URL the widget links to
      *
      * @return string|null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getUrl(): ?string
     {
@@ -121,19 +131,21 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getUrl()
 
-
     /**
      * Loads the widget scripts and styles
      *
      * @return void
      *
-     * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function load(): void
     {
+        // Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-vendor');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-nc-vue');
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
 
     }//end load()
-
-
 }//end class

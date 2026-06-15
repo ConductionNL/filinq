@@ -1,5 +1,5 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 </script>
@@ -44,6 +44,9 @@ import axios from '@nextcloud/axios'
 						<th class="col-status">
 							{{ t('docudesk', 'Status') }}
 						</th>
+						<th class="col-ocr">
+							{{ t('docudesk', 'OCR') }}
+						</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -68,6 +71,13 @@ import axios from '@nextcloud/axios'
 						<td class="col-status">
 							<span :class="'status-badge status-' + file.status">
 								{{ statusLabel(file.status) }}
+							</span>
+						</td>
+						<td class="col-ocr">
+							<span v-if="file.ocrProcessed"
+								class="ocr-badge"
+								:title="t('docudesk', 'Processed with OCR')">
+								{{ t('docudesk', 'OCR') }}
 							</span>
 						</td>
 					</tr>
@@ -106,6 +116,11 @@ export default {
 		}
 	},
 	computed: {
+		/**
+		 * Deep link to the DocuDesk app from the widget footer.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		appUrl() {
 			return generateUrl('/apps/docudesk')
 		},
@@ -114,6 +129,11 @@ export default {
 		this.fetchFiles()
 	},
 	methods: {
+		/**
+		 * Fetch the processed-file list with risk assessment for the widget.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		async fetchFiles() {
 			this.loading = true
 			this.error = null
@@ -129,6 +149,12 @@ export default {
 				this.loading = false
 			}
 		},
+		/**
+		 * Build a Files-app link to a processed file.
+		 *
+		 * @param filePath
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		fileLink(filePath) {
 			const parts = filePath.split('/')
 			const filesIndex = parts.indexOf('files')
@@ -140,6 +166,12 @@ export default {
 			}
 			return generateUrl('/apps/files')
 		},
+		/**
+		 * Localized label for a file's personal-data risk level.
+		 *
+		 * @param level
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		riskLevelLabel(level) {
 			const labels = {
 				none: t('docudesk', 'None'),
@@ -150,6 +182,12 @@ export default {
 			}
 			return labels[level] || labels.none
 		},
+		/**
+		 * Localized label for a file's processing status.
+		 *
+		 * @param status
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		statusLabel(status) {
 			const labels = {
 				uploaded: t('docudesk', 'Uploaded'),
@@ -271,6 +309,22 @@ export default {
 	text-align: right;
 	width: 90px;
 	white-space: nowrap;
+}
+
+.col-ocr {
+	text-align: center;
+	width: 50px;
+	white-space: nowrap;
+}
+
+.ocr-badge {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: var(--border-radius-pill);
+	font-size: 0.7rem;
+	font-weight: 600;
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element);
 }
 
 .file-link {

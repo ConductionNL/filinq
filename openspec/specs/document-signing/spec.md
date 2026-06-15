@@ -1,179 +1,176 @@
----
-status: proposed
-source: tender-research
-tender_demand: 76% (56/74 tenders)
----
-
-# Document Signing Specification
+# document-signing Specification
 
 ## Purpose
+TBD - created by archiving change digital-signing-integration. Update Purpose after archive.
 
-Provide digital document signing within Docudesk, supporting both internal (ambtelijke) and external (burger/ketenpartner) signing flows. 76% of analyzed Dutch government tenders require digital signing — typically via ValidSign integration, but also as native capability.
-
-Dutch municipalities use signing for: vergunningbesluiten, overeenkomsten, verwerkersovereenkomsten, mandaatbesluiten, and B&W collegestukken. The flow is tightly coupled with case handling (Procest) and document creation (Docudesk templates).
-
-**Market context:** ValidSign is widely used in the Dutch municipal market. Alternatives: DocuSign, Adobe Sign. Open-source: LibreSign (Nextcloud app). Many platforms only support external signing services; this spec adds both native and provider-integrated signing.
-
-## Standards
-
-- **eIDAS Regulation** — three signature levels:
-  - Simple Electronic Signature (SES) — basic, lowest assurance
-  - Advanced Electronic Signature (AdES) — linked to signatory, detects changes
-  - Qualified Electronic Signature (QES) — PKIoverheid certificate, legal equivalent of handwritten
-- **PAdES** (PDF Advanced Electronic Signatures) — PDF-embedded signatures
-- **PKIoverheid** — Dutch government PKI for qualified signatures
-- **TSA** (Time Stamp Authority) — trusted timestamp on signatures
+@e2e exclude Backend signing API + eIDAS crypto + status machine + OR schema/audit contracts; no navigable UI surface. Covered by PHPUnit (SignatureService, status transitions, audit immutability) and Newman (/api/signing/* contracts).
 
 ## Requirements
+### Requirement: Signing request creation
+The system SHALL allow authenticated users to create a signing request for a document. A signing request specifies the document (Nextcloud file ID), the signature level (SES, AdES, or QES), the signing mode (sequential or parallel), and an ordered list of signers. The signing request SHALL be stored as an OpenRegister object via ObjectService using the SigningRequest schema.
 
-### REQ-SIGN-01: Sign document from case context (Priority: Must)
+#### Scenario: Create a signing request for a single signer
+- **WHEN** a user submits a POST to `/api/signing/requests` with a file ID, signature level "SES", mode "sequential", and one signer
+- **THEN** a SigningRequest object is created in OpenRegister with status "PENDING"
+- **AND** a SignerRecord object is created with status "PENDING"
+- **AND** the document file is locked for editing via ILockManager
+- **AND** a SigningAuditEntry is created recording the initiation
 
-#### Scenario: Behandelaar sends document for signing
-- GIVEN a case in Procest with a generated besluit document
-- WHEN the behandelaar clicks "Ter ondertekening aanbieden"
-- THEN a signing request is created in Docudesk
-- AND the document is locked for editing
-- AND the designated signer(s) receive a notification
+#### Scenario: Create a signing request with sequential multi-signer
+- **WHEN** a user creates a signing request with signers [A, B, C] in sequential mode
+- **THEN** signer A receives a Nextcloud notification to sign
+- **AND** signers B and C do not receive notifications until the previous signer completes
 
-#### Scenario: Sequential multi-signer flow
-- GIVEN a signing request with signers [adviseur, manager, wethouder] in sequence
-- WHEN adviseur signs
-- THEN manager receives the signing request
-- AND the document shows adviseur's signature
-- AND the next signer cannot be skipped
+#### Scenario: Create a signing request with parallel multi-signer
+- **WHEN** a user creates a signing request with signers [A, B, C] in parallel mode
+- **THEN** all three signers receive Nextcloud notifications simultaneously
+- **AND** each signer can sign independently of the others
 
-#### Scenario: Parallel signing
-- GIVEN a signing request with 3 signers in parallel
-- WHEN any signer signs
-- THEN the other signers can still sign independently
-- AND the signing request completes when all have signed
+### Requirement: Signing request lifecycle management
+The system SHALL enforce a strict status machine for signing requests: DRAFT -> PENDING -> IN_PROGRESS -> COMPLETED | DECLINED | EXPIRED | CANCELLED. Invalid transitions SHALL be rejected with an error response.
 
-### REQ-SIGN-02: Signature levels (Priority: Must)
+#### Scenario: Sequential signing progresses through signers
+- **WHEN** signer A signs in a sequential request with signers [A, B, C]
+- **THEN** signer A's SignerRecord status changes to "SIGNED" with timestamp
+- **AND** signer B receives a notification to sign
+- **AND** the SigningRequest status changes to "IN_PROGRESS"
+- **AND** a SigningAuditEntry records signer A's signature
 
-#### Scenario: Simple electronic signature (internal use)
-- GIVEN a user with Nextcloud session
-- WHEN they sign a document
-- THEN a SES signature is applied with user identity, timestamp, and IP
-- AND the signed PDF is stored as a new version
-
-#### Scenario: Advanced electronic signature (ketenpartners)
-- GIVEN an external signing request
-- WHEN the signer authenticates via email verification + SMS OTP
-- THEN an AdES signature is applied
-- AND a certificate is embedded in the PDF
-
-#### Scenario: Qualified electronic signature (besluiten)
-- GIVEN a document requiring QES (e.g., formal besluit)
-- WHEN the signer uses a PKIoverheid certificate or eHerkenning
-- THEN a QES signature with TSA timestamp is applied
-- AND the signature is PAdES compliant
-
-### REQ-SIGN-03: External signing service integration (Priority: Must)
-
-#### Scenario: ValidSign integration via OpenConnector
-- GIVEN Docudesk is configured with a ValidSign endpoint in OpenConnector
-- WHEN a signing request is initiated
-- THEN the document is sent to ValidSign via API
-- AND the signer receives an email from ValidSign with a signing link
-- AND upon completion, the signed document is returned to Docudesk
-- AND the signed document is stored in the case dossier with signing metadata
-
-#### Scenario: Pluggable signing providers
-- GIVEN Docudesk signing is configured
-- WHEN an administrator selects a signing provider
-- THEN ValidSign, DocuSign, Adobe Sign, or LibreSign can be configured
-- AND each provider implements the same SigningProvider interface
-
-### REQ-SIGN-04: Signing status tracking (Priority: Must)
-
-#### Scenario: Track signing progress
-- GIVEN a signing request sent to 3 signers
-- WHEN the case behandelaar views the document
-- THEN they see: who has signed (with timestamp), who hasn't yet, and any rejections
-- AND expired requests are highlighted
+#### Scenario: All signers complete
+- **WHEN** the last signer in a request signs the document
+- **THEN** the SigningRequest status changes to "COMPLETED"
+- **AND** the document file lock is released
+- **AND** the signed PDF is stored as a new file version in Nextcloud
 
 #### Scenario: Signer declines
-- GIVEN a signer receives a signing request
-- WHEN they decline with a reason
-- THEN the signing request is paused
-- AND the initiator is notified with the decline reason
-- AND the case status is updated to reflect the block
+- **WHEN** a signer declines a signing request with a reason
+- **THEN** the SignerRecord status changes to "DECLINED" with the reason
+- **AND** the SigningRequest status changes to "DECLINED"
+- **AND** the request initiator receives a notification with the decline reason
+- **AND** the document file lock is released
 
-### REQ-SIGN-05: Bulk signing (Priority: Should)
+#### Scenario: Signing request expires
+- **WHEN** a signing request passes its deadline without all signatures
+- **THEN** the SigningRequest status changes to "EXPIRED"
+- **AND** all pending SignerRecords are marked "EXPIRED"
+- **AND** the document file lock is released
 
-#### Scenario: Manager signs multiple documents
-- GIVEN a manager has 15 pending signing requests
-- WHEN they select all and choose "Bulk ondertekenen"
-- THEN each document is presented for review
-- AND a single authentication applies to all signatures
-- AND all signed documents are returned to their respective cases
+#### Scenario: Initiator cancels a signing request
+- **WHEN** the initiator sends a DELETE to `/api/signing/requests/{id}`
+- **THEN** the SigningRequest status changes to "CANCELLED"
+- **AND** all pending SignerRecords are marked "CANCELLED"
+- **AND** a SigningAuditEntry records the cancellation
 
-### REQ-SIGN-06: Signature verification (Priority: Must)
+### Requirement: Signature levels
+The system SHALL support three eIDAS signature levels. The signature level is specified per signing request and determines the authentication and signing method used.
 
-#### Scenario: Verify signed document
-- GIVEN a document with embedded PAdES signatures
-- WHEN a user opens the document details
-- THEN all signatures are listed with: signer identity, timestamp, signature level, validity status
-- AND tampered documents show an invalid signature warning
+#### Scenario: Simple Electronic Signature (SES)
+- **WHEN** a signer signs a document with level "SES"
+- **THEN** the NativeSigningProvider applies a signature using the signer's Nextcloud user identity, current timestamp, and IP address
+- **AND** the signature is embedded in the PDF document
 
-### REQ-SIGN-07: Audit trail (Priority: Must)
+#### Scenario: Advanced Electronic Signature (AdES)
+- **WHEN** a signer signs a document with level "AdES"
+- **THEN** the configured external signing provider handles the authentication (email verification + SMS OTP)
+- **AND** an AdES-compliant signature with certificate is embedded in the PDF
 
-#### Scenario: Complete signing audit
-- GIVEN a completed signing flow
-- THEN the audit trail records: who initiated, when sent, who signed/declined (with timestamps), IP addresses, signature level, provider used
-- AND the audit trail is immutable and retained for 10 years minimum
+#### Scenario: Qualified Electronic Signature (QES)
+- **WHEN** a signer signs a document with level "QES"
+- **THEN** the configured external signing provider handles PKIoverheid/eHerkenning authentication
+- **AND** a QES signature with TSA timestamp is applied
+- **AND** the signature is PAdES compliant
 
-## Non-Requirements
+### Requirement: Pluggable signing provider interface
+The system SHALL define a SigningProviderInterface that all signing providers implement. The active provider is selected based on admin configuration. The interface SHALL define methods for: initiating a signing flow, checking signing status, downloading the signed document, and cancelling a signing flow.
 
-- **Wet signing / physical signatures** — out of scope
-- **Certificate management / PKI infrastructure** — delegated to external CA or PKIoverheid
-- **Payment for signing services** — commercial signing providers handle their own billing
+#### Scenario: Native provider handles SES signing
+- **WHEN** the signing provider is set to "native" and a SES signing request is created
+- **THEN** NativeSigningProvider processes the signing locally without external API calls
+- **AND** the signed PDF is returned directly
 
-## Dependencies
+#### Scenario: ValidSign provider handles external signing
+- **WHEN** the signing provider is set to "validsign" and a signing request is created
+- **THEN** ValidSignProvider sends the document to ValidSign via OpenConnector
+- **AND** the signer receives an email from ValidSign with a signing link
+- **AND** upon completion, the signed document is retrieved and stored in Nextcloud
 
-- `document-creatie-sjablonen` — generates documents that need signing
-- `openregister:workflow-integration` — triggers signing flows from case status changes
-- `procest:bw-parafering` — B&W parafering may trigger formal signing after approval
-- `openconnector` — routes to external signing providers (ValidSign, DocuSign)
-- `openregister:audit-trail-immutable` — stores signing audit records
+#### Scenario: Provider not configured
+- **WHEN** a signing request requires an external provider but none is configured
+- **THEN** the system returns an error indicating the signing provider is not configured
+- **AND** a warning is logged
 
-### Current Implementation Status
-- **Not yet implemented**: This is an entirely planned spec. Zero implementation exists in the codebase.
-  - No `SigningService`, `SigningController`, or signing-related classes exist in `lib/`
-  - No signing-related Vue components exist in `src/`
-  - No signing-related routes exist in `appinfo/routes.php`
-  - No references to "signing", "ValidSign", "PAdES", or "eIDAS" exist in any PHP, Vue, or JS files
-  - No signing provider interface or integration code exists
-- **Dependencies not yet available**:
-  - Procest integration for case-based signing flows (REQ-SIGN-01)
-  - OpenConnector integration for external signing providers (REQ-SIGN-03)
-  - OpenRegister audit trail immutable storage (REQ-SIGN-07)
+### Requirement: Signing status tracking
+The system SHALL provide a REST API endpoint to retrieve the current status of a signing request, including the status of each individual signer.
 
-### Standards & References
-- **eIDAS Regulation (EU 910/2014)**: Defines three signature levels (SES, AdES, QES) -- legally binding across EU
-- **PAdES (ETSI EN 319 142)**: PDF Advanced Electronic Signatures standard for PDF-embedded signatures
-- **PKIoverheid**: Dutch government PKI framework for qualified electronic signatures (maintained by Logius)
-- **TSA (RFC 3161)**: Time Stamp Authority protocol for trusted timestamps
-- **Wet digitale overheid (Wdo)**: Dutch law governing digital government services including electronic signatures
-- **eHerkenning**: Dutch business authentication framework, relevant for external signer verification
-- **DigiD**: Dutch citizen authentication, relevant for citizen-facing signing flows
-- **ETSI EN 319 132 (XAdES)**: XML Advanced Electronic Signatures (alternative to PAdES for non-PDF documents)
-- **Archiefwet 1995**: 10-year audit trail retention requirement for signing records
+#### Scenario: View signing request status
+- **WHEN** a user sends a GET to `/api/signing/requests/{id}`
+- **THEN** the response includes: request status, document reference, signature level, list of signers with their individual status and timestamps, and any decline reasons
 
-### Specificity Assessment
-- **Specific enough to implement**: No -- this is a high-level requirement spec, not an implementation spec.
-- **Missing/Ambiguous**:
-  - No data model defined for signing requests, signer records, or audit trail objects
-  - No API endpoints specified (what routes? what request/response format?)
-  - No `SigningProvider` interface defined (what methods? what lifecycle hooks?)
-  - ValidSign API specifics not documented (which API version? what authentication?)
-  - No Vue component designs or UI wireframes
-  - PKIoverheid certificate handling not specified (how does the app access certificates?)
-  - Bulk signing authentication mechanism unclear (session-based? certificate-based?)
-  - No schema for signing metadata storage in OpenRegister
-- **Open questions**:
-  1. Will signing be a DocuDesk feature or a separate Nextcloud app?
-  2. Should LibreSign (existing Nextcloud app) be used instead of building from scratch?
-  3. How will external signing providers be integrated -- via OpenConnector sources or direct API integration?
-  4. What is the priority ordering: ValidSign first, then native, or native first?
-  5. How does the 10-year audit trail requirement interact with Nextcloud's data retention policies?
+#### Scenario: List all signing requests
+- **WHEN** a user sends a GET to `/api/signing/requests`
+- **THEN** the response includes all signing requests the user has initiated or is a signer on
+- **AND** each request includes summary status information
+
+### Requirement: Bulk signing
+The system SHALL allow users to sign multiple pending signing requests in a single authenticated session.
+
+#### Scenario: Bulk sign multiple documents
+- **WHEN** a user sends a POST to `/api/signing/bulk` with an array of signing request IDs
+- **THEN** each document is signed in sequence using the user's current authentication
+- **AND** each individual signing creates its own SigningAuditEntry
+- **AND** the response includes the result (success/failure) for each request
+
+### Requirement: Signature verification
+The system SHALL provide the ability to verify signatures embedded in PDF documents, including checking certificate validity, detecting document tampering, and displaying signature details.
+
+#### Scenario: Verify a signed document
+- **WHEN** a user sends a GET to `/api/signing/verify/{fileId}`
+- **THEN** the response lists all signatures with: signer identity, timestamp, signature level, and validity status
+- **AND** tampered documents show an "INVALID" status with details
+
+### Requirement: Signing audit trail
+The system SHALL maintain an immutable audit trail for all signing-related events. Audit entries SHALL be stored as OpenRegister objects and SHALL NOT be modifiable or deletable through the API. The retention period SHALL be minimum 10 years per Archiefwet 1995.
+
+#### Scenario: Audit trail records signing events
+- **WHEN** any signing action occurs (create, sign, decline, cancel, expire)
+- **THEN** a SigningAuditEntry is created with: action type, actor identity, timestamp, IP address, signature level, provider used, and document reference
+
+#### Scenario: Audit trail is immutable
+- **WHEN** a user attempts to update or delete a SigningAuditEntry via the API
+- **THEN** the request is rejected with a 403 Forbidden response
+
+#### Scenario: Retrieve audit trail for a signing request
+- **WHEN** a user sends a GET to `/api/signing/requests/{id}/audit`
+- **THEN** the response includes all audit entries for that signing request in chronological order
+
+### Requirement: Signing request data model
+The system SHALL store signing data using three OpenRegister schemas defined in `docudesk_register.json`.
+
+#### Scenario: SigningRequest schema
+- **WHEN** a signing request is created
+- **THEN** the object contains: id, documentFileId, documentName, initiatorUserId, signatureLevel (SES|AdES|QES), signingMode (sequential|parallel), status (DRAFT|PENDING|IN_PROGRESS|COMPLETED|DECLINED|EXPIRED|CANCELLED), provider (native|validsign|docusign|adobesign|libresign), deadline (ISO 8601), signerIds (array), createdAt, updatedAt
+
+#### Scenario: SignerRecord schema
+- **WHEN** a signer record is created
+- **THEN** the object contains: id, signingRequestId, userId, displayName, email, order (for sequential), status (PENDING|SIGNED|DECLINED|EXPIRED|CANCELLED), signedAt, declineReason, ipAddress, signatureData (base64)
+
+#### Scenario: SigningAuditEntry schema
+- **WHEN** an audit entry is created
+- **THEN** the object contains: id, signingRequestId, action (CREATED|SIGNED|DECLINED|CANCELLED|EXPIRED|COMPLETED|VIEWED), actorUserId, actorDisplayName, timestamp, ipAddress, signatureLevel, provider, metadata (JSON)
+
+### Requirement: Signing REST API
+The system SHALL expose signing functionality via REST API endpoints registered in `appinfo/routes.php`.
+
+#### Scenario: API endpoints are registered
+- **WHEN** the DocuDesk app is loaded
+- **THEN** the following routes are available:
+  - POST `/api/signing/requests` (create signing request)
+  - GET `/api/signing/requests` (list signing requests)
+  - GET `/api/signing/requests/{id}` (get signing request details)
+  - DELETE `/api/signing/requests/{id}` (cancel signing request)
+  - POST `/api/signing/requests/{id}/sign` (sign a document)
+  - POST `/api/signing/requests/{id}/decline` (decline a signing request)
+  - POST `/api/signing/bulk` (bulk sign)
+  - GET `/api/signing/verify/{fileId}` (verify signatures)
+  - GET `/api/signing/requests/{id}/audit` (get audit trail)
+

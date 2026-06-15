@@ -1,11 +1,17 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translate as t } from '@nextcloud/l10n'
 import { anonymizationStore } from '../../store/store.js'
 </script>
 
 <template>
-	<div class="docudesk-dashboard-widget">
-		<!-- Results table -->
+	<div class="docudesk-anon-widget">
+		<!-- Greeting header -->
+		<h2 class="anon-widget__title">
+			{{ greeting }}<br>
+			{{ t('docudesk', 'what would you like to anonymize today?') }}
+		</h2>
+
+		<!-- Results table: shown when files are in the queue -->
 		<div v-if="anonymizationStore.hasFiles" class="results-area">
 			<table class="results-table">
 				<thead>
@@ -24,7 +30,6 @@ import { anonymizationStore } from '../../store/store.js'
 				</thead>
 				<tbody>
 					<tr v-for="file in anonymizationStore.files" :key="file.id">
-						<!-- Original file name / link -->
 						<td class="col-file">
 							<a
 								v-if="file.filePath"
@@ -36,8 +41,6 @@ import { anonymizationStore } from '../../store/store.js'
 							</a>
 							<span v-else :title="file.name">{{ file.name }}</span>
 						</td>
-
-						<!-- Entities detected -->
 						<td class="col-number">
 							<template v-if="file.status === 'completed' || file.status === 'anonymizing'">
 								{{ file.entityCount }}
@@ -47,8 +50,6 @@ import { anonymizationStore } from '../../store/store.js'
 							</template>
 							<NcLoadingIcon v-else :size="16" />
 						</td>
-
-						<!-- Entities removed -->
 						<td class="col-number">
 							<template v-if="file.status === 'completed'">
 								{{ file.replacementCount }}
@@ -61,8 +62,6 @@ import { anonymizationStore } from '../../store/store.js'
 								&mdash;
 							</template>
 						</td>
-
-						<!-- Download / status -->
 						<td class="col-action">
 							<a
 								v-if="file.status === 'completed' && file.anonymizedFilePath"
@@ -86,7 +85,7 @@ import { anonymizationStore } from '../../store/store.js'
 			</table>
 		</div>
 
-		<!-- Drop zone (always shown when not processing, or below table) -->
+		<!-- Drop zone -->
 		<div class="upload-area" :class="{ compact: anonymizationStore.hasFiles }">
 			<div
 				class="drop-zone"
@@ -95,79 +94,278 @@ import { anonymizationStore } from '../../store/store.js'
 				@dragleave.prevent="isDragging = false"
 				@drop.prevent="handleDrop"
 				@click="$refs.fileInput.click()">
-				<Upload :size="24" />
-				<p class="drop-text">
-					{{ anonymizationStore.hasFiles
-						? t('docudesk', 'Drop more files to anonymize')
-						: t('docudesk', 'Drop files to anonymize')
-					}}
-				</p>
+				<img v-if="!anonymizationStore.hasFiles"
+					:src="uploadIcon"
+					alt=""
+					class="upload-icon">
+				<div class="drop-content">
+					<p class="drop-title">
+						{{ anonymizationStore.hasFiles
+							? t('docudesk', 'Drop more files to anonymize')
+							: t('docudesk', 'Drag and drop one or more documents')
+						}}
+					</p>
+					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">
+						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+					</p>
+					<span class="fake-button">
+						{{ anonymizationStore.hasFiles ? t('docudesk', '+ Add more files') : t('docudesk', '+ Select files') }}
+					</span>
+				</div>
 				<input
 					ref="fileInput"
 					type="file"
 					multiple
+					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
 		</div>
 
-		<!-- Footer -->
-		<a class="widget-footer" :href="appUrl">
+		<!-- Footer: shown in the Nextcloud dashboard widget context, hidden in-app -->
+		<a v-if="!inApp" class="widget-footer" :href="appUrl">
 			{{ t('docudesk', 'Open DocuDesk') }}
 		</a>
+
+		<!-- Dossier name dialog (multi-file upload) -->
+		<NcDialog
+			v-if="showDossierDialog"
+			:name="t('docudesk', 'Create dossier')"
+			:can-close="!dossierSubmitting"
+			size="normal"
+			@closing="cancelDossier">
+			<div class="dossier-dialog">
+				<NcTextField
+					ref="dossierInput"
+					:value.sync="dossierName"
+					:label="t('docudesk', 'Dossier name')"
+					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
+					:disabled="dossierSubmitting"
+					:error="!!dossierError"
+					:helper-text="dossierError"
+					@keyup.enter="confirmDossier" />
+				<NcNoteCard type="info">
+					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+				</NcNoteCard>
+			</div>
+			<template #actions>
+				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton type="primary" :disabled="dossierSubmitting" @click="confirmDossier">
+					<template v-if="dossierSubmitting" #icon>
+						<NcLoadingIcon :size="18" />
+					</template>
+					{{ t('docudesk', 'Continue to anonymization') }}
+				</NcButton>
+			</template>
+		</NcDialog>
 	</div>
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { getCurrentUser } from '@nextcloud/auth'
 import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
+import { showError } from '@nextcloud/dialogs'
+import uploadIcon from '../../assets/upload.png'
 
-import Upload from 'vue-material-design-icons/Upload.vue'
+const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
+const ALLOWED_MIMES = new Set([
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'text/plain',
+	'application/pdf',
+])
+
+function partitionFiles(files) {
+	const accepted = []
+	const rejected = []
+	for (const file of Array.from(files)) {
+		const ext = (file.name.split('.').pop() || '').toLowerCase()
+		if (ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.includes(ext)) {
+			accepted.push(file)
+		} else {
+			rejected.push(file)
+		}
+	}
+	return { accepted, rejected }
+}
 
 export default {
 	name: 'AnonymizationDashboardWidget',
 	components: {
+		NcButton,
+		NcDialog,
 		NcLoadingIcon,
-		Upload,
+		NcNoteCard,
+		NcTextField,
 	},
 	props: {
 		title: {
 			type: String,
-			required: true,
+			default: '',
+		},
+		/**
+		 * Set to true when embedded in the in-app dashboard to hide the
+		 * "Open DocuDesk" footer link (redundant when already in the app).
+		 */
+		inApp: {
+			type: Boolean,
+			default: false,
 		},
 	},
 	data() {
 		return {
 			isDragging: false,
+			showDossierDialog: false,
+			pendingFiles: [],
+			dossierName: '',
+			dossierSubmitting: false,
+			dossierError: '',
+			uploadIcon,
 		}
 	},
 	computed: {
+		/**
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		appUrl() {
 			return generateUrl('/apps/docudesk')
 		},
+		userName() {
+			const user = getCurrentUser()
+			return user?.displayName || user?.uid || ''
+		},
+		/**
+		 * Time-of-day greeting (morning 05–11, afternoon 12–17, evening 18–04).
+		 */
+		greeting() {
+			const hour = new Date().getHours()
+			if (hour >= 5 && hour < 12) {
+				return t('docudesk', 'Good morning {name},', { name: this.userName })
+			}
+			if (hour >= 12 && hour < 18) {
+				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
+			}
+			return t('docudesk', 'Good evening {name},', { name: this.userName })
+		},
 	},
 	methods: {
+		/**
+		 * @param event
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		handleDrop(event) {
 			this.isDragging = false
 			const files = event.dataTransfer?.files
 			if (files && files.length > 0) {
-				anonymizationStore.addFiles(files)
+				const filtered = this.filterAllowed(files)
+				if (filtered.length > 0) {
+					this.dispatchFiles(filtered)
+				}
 			}
 		},
+		/**
+		 * @param event
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		handleFileSelect(event) {
 			const files = event.target?.files
 			if (files && files.length > 0) {
-				anonymizationStore.addFiles(files)
+				const filtered = this.filterAllowed(files)
+				if (filtered.length > 0) {
+					this.dispatchFiles(filtered)
+				}
 			}
-			// Reset input so same files can be re-selected
 			event.target.value = ''
 		},
+		filterAllowed(files) {
+			const { accepted, rejected } = partitionFiles(files)
+			if (rejected.length > 0) {
+				const names = rejected.map((f) => f.name).join(', ')
+				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+			}
+			return accepted
+		},
+		async dispatchFiles(fileList) {
+			const files = Array.from(fileList)
+			if (files.length >= 2) {
+				this.openDossierDialog(files)
+				return
+			}
+			const mimeType = files[0]?.type || ''
+			const before = anonymizationStore.files.length
+			await anonymizationStore.addFiles(files)
+			const entry = anonymizationStore.files[before]
+			if (entry && entry.fileId) {
+				this.gotoViewer(entry, mimeType)
+			}
+		},
+		/**
+		 * Navigate to the file-viewer when inside the DocuDesk app.
+		 * Safe to call from the NC dashboard context — $router is absent there
+		 * and the optional chaining prevents any error.
+		 * @param entry
+		 * @param mimeType
+		 */
+		gotoViewer(entry, mimeType) {
+			if (!this.$router) return
+			if (this.$route?.name !== 'MyDocuments') {
+				this.$router.push({ name: 'MyDocuments' }).catch(() => {})
+			}
+		},
+		openDossierDialog(files) {
+			this.pendingFiles = files
+			this.dossierName = ''
+			this.dossierError = ''
+			this.showDossierDialog = true
+			this.$nextTick(() => {
+				this.$refs.dossierInput?.focus?.()
+			})
+		},
+		async confirmDossier() {
+			const name = this.dossierName.trim()
+			this.dossierSubmitting = true
+			this.dossierError = ''
+			try {
+				const before = anonymizationStore.files.length
+				if (name) {
+					await anonymizationStore.addFilesAsDossier(this.pendingFiles, name)
+					try {
+						await anonymizationStore.bindDossier(name)
+					} catch (err) {
+						console.error('Failed to bind dossier to OpenRegister:', err)
+					}
+				} else {
+					await anonymizationStore.addFiles(this.pendingFiles)
+				}
+				const firstEntry = anonymizationStore.files[before]
+				if (firstEntry && firstEntry.fileId) {
+					this.gotoViewer(firstEntry, this.pendingFiles[0]?.type || '')
+				}
+				this.closeDossierDialog()
+			} catch (err) {
+				this.dossierError = err?.response?.data?.error || err?.message || 'Failed to upload'
+			} finally {
+				this.dossierSubmitting = false
+			}
+		},
+		cancelDossier() {
+			if (this.dossierSubmitting) return
+			this.closeDossierDialog()
+		},
+		closeDossierDialog() {
+			this.showDossierDialog = false
+			this.pendingFiles = []
+			this.dossierName = ''
+			this.dossierError = ''
+		},
+		/**
+		 * @param filePath
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		fileLink(filePath) {
-			// filePath is like /admin/files/DocuDesk/file.txt
-			// Nextcloud files app URL: /index.php/apps/files/?dir=/DocuDesk&file=file.txt
-			// Or simply link to the files app with the directory
 			const parts = filePath.split('/')
-			// Remove user prefix (e.g. /admin/files/) to get the relative path
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
 				const relativePath = '/' + parts.slice(filesIndex + 1).join('/')
@@ -177,9 +375,11 @@ export default {
 			}
 			return generateUrl('/apps/files')
 		},
+		/**
+		 * @param filePath
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		downloadUrl(filePath) {
-			// filePath is like /admin/files/DocuDesk/file_anonymized.txt
-			// WebDAV download: /remote.php/webdav/DocuDesk/file_anonymized.txt
 			const parts = filePath.split('/')
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
@@ -188,6 +388,10 @@ export default {
 			}
 			return generateRemoteUrl('webdav')
 		},
+		/**
+		 * @param status
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		statusLabel(status) {
 			const labels = {
 				queued: t('docudesk', 'Queued'),
@@ -202,18 +406,24 @@ export default {
 </script>
 
 <style scoped>
-.docudesk-dashboard-widget {
+.docudesk-anon-widget {
 	display: flex;
 	flex-direction: column;
+	padding: 20px;
 	height: 100%;
-	padding: 0;
+}
+
+.anon-widget__title {
+	margin: 0 0 16px 0;
+	font-size: 1.2rem;
 }
 
 /* Results table */
 .results-area {
-	flex: 1;
+	flex-shrink: 0;
 	overflow-y: auto;
-	padding: 0 8px;
+	max-height: 200px;
+	margin-bottom: 8px;
 }
 
 .results-table {
@@ -234,7 +444,7 @@ export default {
 
 .results-table td {
 	padding: 4px 6px;
-	border-bottom: 1px solid var(--color-border-dark, var(--color-border));
+	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
 
@@ -289,58 +499,84 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-/* Upload area */
+/* Drop zone */
 .upload-area {
-	padding: 12px;
-}
-
-.upload-area.compact {
-	padding: 6px 12px 8px;
+	padding: 4px 0;
 }
 
 .drop-zone {
 	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 24px;
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
-	padding: 16px 12px;
-	text-align: center;
+	padding: 32px;
+	background-color: var(--color-main-background);
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
 }
 
 .upload-area.compact .drop-zone {
-	padding: 8px 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-}
-
-.upload-area.compact .drop-text {
-	margin: 0;
+	padding: 12px 16px;
 }
 
 .drop-zone:hover,
 .drop-zone.dragging {
 	border-color: var(--color-primary);
-	background-color: var(--color-primary-element-light);
 }
 
-.drop-text {
-	margin: 4px 0 0 0;
-	color: var(--color-text-maxcontrast);
+.upload-icon {
+	width: 107px;
+	height: 103px;
+	flex-shrink: 0;
+	object-fit: contain;
+}
+
+.drop-content {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	text-align: left;
+}
+
+.drop-title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+
+.drop-subtitle {
+	margin: 0;
 	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.fake-button {
+	margin-top: 4px;
+	padding: 8px 16px;
+	border-radius: var(--border-radius);
+	background-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+	font-size: 0.9rem;
+	font-weight: 500;
+	white-space: nowrap;
 }
 
 .file-input {
 	display: none;
 }
 
-/* Footer link */
+/* Footer (NC dashboard context only) */
 .widget-footer {
 	display: block;
 	text-align: center;
 	padding: 8px;
+	margin-top: auto;
 	border-top: 1px solid var(--color-border);
 	color: var(--color-text-maxcontrast);
 	font-size: 0.85rem;
@@ -350,5 +586,17 @@ export default {
 .widget-footer:hover {
 	background-color: var(--color-background-hover);
 	color: var(--color-main-text);
+}
+
+/* Dossier dialog */
+.dossier-dialog {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 20px;
+}
+
+.dossier-dialog :deep(.notecard) {
+	margin: 0;
 }
 </style>
