@@ -196,7 +196,27 @@ OC.L10N.register(
     "Failed to reset the anonymiser backend warning" : "Failed to reset the anonymiser backend warning",
     "app-availability.title" : "Required application unavailable",
     "app-availability.description" : "This application requires OpenRegister to be installed and enabled.",
-    "app-availability.action" : "Install OpenRegister"
+    "app-availability.action" : "Install OpenRegister",
+    "Validate" : "Validate",
+    "Document validation" : "Document validation",
+    "Validation passed" : "Validation passed",
+    "Validation warnings" : "Validation warnings",
+    "Validation failed" : "Validation failed",
+    "Not yet validated" : "Not yet validated",
+    "No validation findings." : "No validation findings.",
+    "Run OCR" : "Run OCR",
+    "Format not allowed" : "Format not allowed",
+    "Extension/type mismatch" : "Extension/type mismatch",
+    "File unreadable" : "File unreadable",
+    "Encrypted PDF" : "Encrypted PDF",
+    "Missing text layer" : "Missing text layer",
+    "Incomplete metadata" : "Incomplete metadata",
+    "The file format {mime} is not allowed for this document type." : "The file format {mime} is not allowed for this document type.",
+    "The file extension does not match its detected content type." : "The file extension does not match its detected content type.",
+    "The file could not be read or parsed." : "The file could not be read or parsed.",
+    "The PDF is encrypted or password-protected and cannot be anonymised." : "The PDF is encrypted or password-protected and cannot be anonymised.",
+    "The document has little or no extractable text; OCR may be required." : "The document has little or no extractable text; OCR may be required.",
+    "Required metadata field \"{field}\" is missing." : "Required metadata field \"{field}\" is missing."
 },
 "nplurals=2; plural=(n != 1);"
 );

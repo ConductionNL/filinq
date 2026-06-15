@@ -128,6 +128,12 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 							</template>
 							{{ t('docudesk', 'Download') }}
 						</NcActionButton>
+						<NcActionButton v-if="!row.isFolder" close-after-click @click="validateDocument(row)">
+							<template #icon>
+								<ShieldCheckOutline :size="20" />
+							</template>
+							{{ t('docudesk', 'Validate') }}
+						</NcActionButton>
 						<NcActionButton close-after-click @click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
@@ -138,6 +144,15 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 				</template>
 			</DdIndexPage>
 		</template>
+
+		<ValidationResultModal
+			:show="validation.show"
+			:loading="validation.loading"
+			:error="validation.error"
+			:status="validation.status"
+			:findings="validation.findings"
+			@close="validation.show = false"
+			@ocr="onOcrRequested" />
 	</div>
 </template>
 
@@ -151,10 +166,13 @@ import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
+import ValidationResultModal from '../../modals/ValidationResultModal.vue'
+import { validateFile } from '../../services/validationService.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
@@ -196,10 +214,12 @@ export default {
 		DdPageHeader,
 		DdDocumentCard,
 		FileViewerPage,
+		ValidationResultModal,
 		DotsHorizontal,
 		Eye,
 		EyeOffOutline,
 		Download,
+		ShieldCheckOutline,
 		Delete,
 		Cog,
 		CheckboxMultipleMarkedOutline,
@@ -217,6 +237,14 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			validation: {
+				show: false,
+				loading: false,
+				error: '',
+				status: '',
+				findings: [],
+				fileId: null,
+			},
 			kindColorMap: {
 				[t('docudesk', 'Dossier')]: 'info',
 				[t('docudesk', 'Concept')]: 'warning',
@@ -471,6 +499,41 @@ export default {
 		downloadFile(row) {
 			if (!row || !row.fileId) return
 			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
+		},
+		/**
+		 * Run on-demand validation for a document and surface the verdict +
+		 * findings in a modal. Nothing is persisted by this call.
+		 *
+		 * @param {object} row Document row.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+		 */
+		async validateDocument(row) {
+			if (!row || !row.fileId) return
+			this.validation.show = true
+			this.validation.loading = true
+			this.validation.error = ''
+			this.validation.fileId = row.fileId
+			try {
+				const result = await validateFile(row.fileId, row.documentType)
+				this.validation.status = result.validationStatus || ''
+				this.validation.findings = result.validationFindings || []
+			} catch (e) {
+				const reason = e.response && e.response.data && e.response.data.error
+				this.validation.error = reason || t('docudesk', 'Validation failed')
+			} finally {
+				this.validation.loading = false
+			}
+		},
+		/**
+		 * Handle an OCR cross-link from a text-layer-missing finding.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+		 */
+		onOcrRequested() {
+			this.validation.show = false
+			this.$router.push({ name: 'Anonymization' })
 		},
 		/**
 		 * Pick an icon component name based on the file's MIME type / extension.

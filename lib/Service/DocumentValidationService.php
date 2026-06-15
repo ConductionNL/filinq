@@ -279,6 +279,8 @@ class DocumentValidationService
      * @param string $documentType The document type.
      *
      * @return array{allowedMimes:array<int,string>, requiredFields:array<int,string>, severities:array<string,string>}
+     *
+     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
      */
     public function resolveProfile(string $documentType): array
     {
@@ -322,6 +324,8 @@ class DocumentValidationService
      * @param array<int, array<string, mixed>> $findings The findings.
      *
      * @return string The verdict (passed|warnings|failed).
+     *
+     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
      */
     public function aggregate(array $findings): string
     {
