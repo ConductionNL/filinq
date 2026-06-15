@@ -20,7 +20,7 @@ Provides CRUD operations for reusable Twig/HTML templates stored as OpenRegister
 
 ### Requirement: Template Data Model (REQ-TMPL-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 Templates are stored as OpenRegister objects with defined properties for name, content, namespace, and page configuration.
 
@@ -49,7 +49,7 @@ Templates are stored as OpenRegister objects with defined properties for name, c
 
 ### Requirement: Template CRUD API (REQ-TMPL-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 Full CRUD operations for templates via REST API with pagination and filtering support.
 
@@ -93,7 +93,7 @@ Full CRUD operations for templates via REST API with pagination and filtering su
 
 ### Requirement: Namespace Enforcement (REQ-TMPL-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 Templates are scoped to app namespaces with strict validation and immutability after creation.
 
@@ -127,7 +127,7 @@ Templates are scoped to app namespaces with strict validation and immutability a
 
 ### Requirement: TemplateService Programmatic Access (REQ-TMPL-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 TemplateService is injectable via DI, enabling other Nextcloud apps to manage templates programmatically.
 
@@ -165,7 +165,7 @@ TemplateService is injectable via DI, enabling other Nextcloud apps to manage te
 
 ### Requirement: OpenRegister Integration (REQ-TMPL-05)
 
-**Priority:** Must
+**Priority:** MUST
 
 TemplateService resolves register and schema configuration via OpenRegisterResolver and uses ObjectService for all data operations.
 
@@ -195,7 +195,7 @@ TemplateService resolves register and schema configuration via OpenRegisterResol
 
 ### Requirement: Search and Pagination (REQ-TMPL-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 Template listing supports search, filtering, and pagination via OpenRegister's query builder.
 
@@ -223,7 +223,7 @@ Template listing supports search, filtering, and pagination via OpenRegister's q
 
 ### Requirement: Object Serialization (REQ-TMPL-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 Template objects from OpenRegister are consistently serialized for API responses.
 

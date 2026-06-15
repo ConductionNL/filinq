@@ -20,7 +20,7 @@ Provides automatic metadata enrichment for documents stored in OpenRegister. Whe
 
 ### Requirement: Enrichment Outputs as OR Calculations (REQ-META-CAL)
 
-**Priority:** Must (Phase 2 — gated on OR shipping ADR-031 calculation runtime)
+**Priority:** MUST (Phase 2 — gated on OR shipping ADR-031 calculation runtime)
 
 Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and normalised date fields SHALL be declared as `x-openregister-calculations` on the file-attachment schema (or the enriched object's schema). The `MetadataEnrichmentService` methods become calculation expressions.
 
@@ -64,7 +64,7 @@ Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and n
 
 ### Requirement: Language Detection (REQ-META-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 Detect document language from text content using word frequency analysis for Dutch and English.
 
@@ -109,7 +109,7 @@ Detect document language from text content using word frequency analysis for Dut
 
 ### Requirement: Keyword Extraction (REQ-META-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 Extract top keywords from document text using word frequency analysis with stop word filtering.
 
@@ -146,7 +146,7 @@ Extract top keywords from document text using word frequency analysis with stop 
 
 ### Requirement: Topic Classification (REQ-META-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 Classify documents into topic categories using keyword matching against predefined vocabularies.
 
@@ -182,7 +182,7 @@ Classify documents into topic categories using keyword matching against predefin
 
 ### Requirement: Document Type Standardization (REQ-META-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 Standardize document type strings to canonical categories by mapping file extensions and names.
 
@@ -210,7 +210,7 @@ Standardize document type strings to canonical categories by mapping file extens
 
 ### Requirement: Date Normalization (REQ-META-05)
 
-**Priority:** Must
+**Priority:** MUST
 
 Normalize date fields to ISO 8601 format across standard field names.
 
@@ -238,7 +238,7 @@ Normalize date fields to ISO 8601 format across standard field names.
 
 ### Requirement: Event-Driven Enrichment (REQ-META-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 Automatically enrich metadata when objects are created or updated in OpenRegister, with content change detection on updates.
 
@@ -287,7 +287,7 @@ Automatically enrich metadata when objects are created or updated in OpenRegiste
 
 ### Requirement: API On-Demand Enrichment (REQ-META-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 On-demand metadata enrichment via REST API for specific objects.
 
@@ -319,7 +319,7 @@ On-demand metadata enrichment via REST API for specific objects.
 
 ### Requirement: Duplicated ObjectService Resolution (REQ-META-08)
 
-**Priority:** Must
+**Priority:** MUST
 
 MetadataService has its own private getObjectService() duplicating the pattern found in other services.
 
@@ -342,7 +342,7 @@ MetadataService has its own private getObjectService() duplicating the pattern f
 
 ### Requirement: Event Listener Service Resolution (REQ-META-09)
 
-**Priority:** Must
+**Priority:** MUST
 
 The event listener resolves services via `\OC::$server->get()` at handle time rather than constructor DI to avoid circular dependencies.
 
@@ -378,7 +378,7 @@ The event listener resolves services via `\OC::$server->get()` at handle time ra
 
 ### Requirement: Text Content Extraction from Object Data (REQ-META-10)
 
-**Priority:** Must
+**Priority:** MUST
 
 MetadataService extracts text content from object data fields in a defined priority order for analysis.
 

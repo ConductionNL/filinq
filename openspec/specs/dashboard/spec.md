@@ -12,7 +12,7 @@ Provides a central overview of DocuDesk activity, including consent tracking sta
 
 ### Requirement: DocuDesk Dashboard View (REQ-DASH-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 The dashboard serves as the default landing page displaying consent statistics, recent activity, and quick anonymization access.
 
@@ -55,7 +55,7 @@ The dashboard serves as the default landing page displaying consent statistics, 
 
 ### Requirement: Nextcloud Dashboard Widgets (REQ-DASH-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance document processing information.
 
@@ -90,7 +90,7 @@ DocuDesk registers two widgets on the main Nextcloud Dashboard for at-a-glance d
 
 ### Requirement: Navigation Menu (REQ-DASH-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 The main navigation provides three items with Material Design icons for switching between DocuDesk views.
 
@@ -133,7 +133,7 @@ The main navigation provides three items with Material Design icons for switchin
 
 ### Requirement: Dashboard Controller (REQ-DASH-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 The DashboardController serves the main app page as a Nextcloud TemplateResponse.
 
@@ -166,7 +166,7 @@ The DashboardController serves the main app page as a Nextcloud TemplateResponse
 
 ### Requirement: Status Badge Display (REQ-DASH-05)
 
-**Priority:** Must
+**Priority:** MUST
 
 Consent status values are displayed with consistent color-coded badges throughout the dashboard and consent views.
 
@@ -192,7 +192,7 @@ Consent status values are displayed with consistent color-coded badges throughou
 
 ### Requirement: Icon File Differentiation (REQ-DASH-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk uses different icon files for navigation vs. dashboard widgets, following Nextcloud conventions.
 
@@ -220,7 +220,7 @@ DocuDesk uses different icon files for navigation vs. dashboard widgets, followi
 
 ### Requirement: Dead Code and Removed Features (REQ-DASH-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 Previously identified issues have been resolved through removal.
 
