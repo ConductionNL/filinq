@@ -510,6 +510,22 @@
         "The file could not be read or parsed.": "The file could not be read or parsed.",
         "The PDF is encrypted or password-protected and cannot be anonymised.": "The PDF is encrypted or password-protected and cannot be anonymised.",
         "The document has little or no extractable text; OCR may be required.": "The document has little or no extractable text; OCR may be required.",
-        "Required metadata field \"{field}\" is missing.": "Required metadata field \"{field}\" is missing."
+        "Required metadata field \"{field}\" is missing.": "Required metadata field \"{field}\" is missing.",
+        "Compare…": "Compare…",
+        "Document comparison": "Document comparison",
+        "Compare two versions of a file or two distinct files side by side.": "Compare two versions of a file or two distinct files side by side.",
+        "Left file ID": "Left file ID",
+        "Left version timestamp (optional)": "Left version timestamp (optional)",
+        "Right file ID": "Right file ID",
+        "Right version timestamp (optional)": "Right version timestamp (optional)",
+        "Compare": "Compare",
+        "The two subjects have different formats; layout-derived differences may appear as noise.": "The two subjects have different formats; layout-derived differences may appear as noise.",
+        "Redaction annotation is unavailable (OpenRegister not reachable).": "Redaction annotation is unavailable (OpenRegister not reachable).",
+        "Verify manually — entities with no detected change": "Verify manually — entities with no detected change",
+        "Comparison failed": "Comparison failed",
+        "Subject not found": "Subject not found",
+        "File versions are not available on this instance": "File versions are not available on this instance",
+        "A subject is too large to compare": "A subject is too large to compare",
+        "A subject has an unsupported format": "A subject has an unsupported format"
     }
 }

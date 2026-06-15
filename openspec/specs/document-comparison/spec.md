@@ -1,18 +1,13 @@
----
-status: draft
----
-
-# Document Comparison
+# document-comparison Specification
 
 ## Purpose
-
-Defines post-hoc, read-only comparison of two document subjects — two versions of one Nextcloud file, or two distinct files — producing a server-computed structured diff rendered side-by-side in the UI. When the compared pair is an original document and its anonymised output, diff hunks are annotated with redaction metadata from the OR NER pipeline (`Entity`/`EntityRelation` rows for the source file) and the response carries a redaction-completeness signal. Distinct from `template-management` REQ-TMPL-09 (template source diff) and from `enhanced-anonymization`'s pre-commit before/after preview (in-pipeline, transient); this capability compares stored artifacts after the fact. Documents and versions are resolved from NC Files / `files_versions` — content is never copied, re-stored, or indexed (search stays with OpenRegister per ADR-022).
-
-## ADDED Requirements
-
+TBD - created by archiving change document-comparison. Update Purpose after archive.
+## Requirements
 ### Requirement: The comparison endpoint MUST accept two subjects resolved from NC Files without re-storing content
 
 `POST /api/comparison/compare` MUST accept a JSON payload with `left` and `right` subjects, each of shape `{fileId: int, versionTimestamp?: int}`. A subject without `versionTimestamp` resolves to the file's current content; with `versionTimestamp`, to that version via the `files_versions` integration. Each subject MUST be resolved through the requesting user's folder (`IRootFolder::getUserFolder()`); a file that cannot be resolved for this user MUST yield HTTP 404 (no distinction between "does not exist" and "no access"). The service MUST NOT copy, persist, or index either subject's content.
+
+@e2e exclude Backend subject resolution, version lookup, IDOR-safe 404, and files_versions-disabled 422 — controller/service behaviour with no isolated UI assertion. Covered by PHPUnit (DocumentComparisonServiceTest) and Newman.
 
 #### Scenario: Compare two versions of the same file
 
@@ -50,6 +45,8 @@ Defines post-hoc, read-only comparison of two document subjects — two versions
 ### Requirement: The diff MUST be a server-computed word-level structured diff
 
 The service MUST extract text from both subjects via the existing `DocumentTextExtractor`, normalise whitespace, and compute a word-level diff returned as ordered hunks. Each hunk MUST have shape `{type: "unchanged"|"added"|"removed"|"changed", left: {offset, length}|null, right: {offset, length}|null, leftText?: string, rightText?: string}`. Extracted text per subject is capped at app config `docudesk.comparison.max_text_bytes` (default 5242880); exceeding the cap MUST yield HTTP 413. A subject whose format the extractor does not support MUST yield HTTP 415 naming the unsupported subject. When the two subjects have different source formats, the response MUST set `crossFormat: true` so the UI can warn about layout-derived noise.
+
+@e2e exclude LCS diff engine, whitespace normalisation, hunk shape, size cap (413), unsupported-format (415) and cross-format flagging — pure server computation. Covered by PHPUnit (DocumentComparisonServiceTest).
 
 #### Scenario: Structured hunks for a changed document
 
@@ -89,6 +86,8 @@ The service MUST extract text from both subjects via the existing `DocumentTextE
 
 When the right subject is the anonymised output of the left subject (linked via the anonymisation result/report for the source file), the service MUST annotate change hunks whose inserted text maps to an anonymisation replacement: first by replacement-key mapping (REQ-ANON-06 keys / placeholders recorded on the anonymisation result), falling back to matching removed-span text against `Entity` canonical values for the source file. An annotated hunk carries `redaction: {entityId: int, entityType: string, matchedBy: "key"|"value"}`. OR mappers MUST be resolved lazily (REQ-ANON-05); when OpenRegister is unavailable or the pair is unrelated, the comparison MUST still succeed as a plain diff with no `redaction` annotations. The annotation pass MUST NOT re-run entity detection.
 
+@e2e exclude Key-based and value-based redaction annotation, lazy OR resolution, and graceful plain-diff degradation — service annotation logic against OR EntityRelation rows, no isolated UI assertion. Covered by PHPUnit (DocumentComparisonServiceTest).
+
 #### Scenario: Original vs anonymised output is annotated
 
 - **GIVEN** file 42 was anonymised producing output file 88, with `EntityRelation` rows and a replacement-key mapping recorded for file 42
@@ -120,6 +119,8 @@ When the right subject is the anonymised output of the left subject (linked via 
 
 For an annotated original/anonymised pair, the response MUST include `unredactedEntities[]`: every `EntityRelation` row for the source file that was part of the anonymise set (not flagged `skipAnonymization`) and matched zero change hunks. Entries are reported as `{entityId, entityName}` using the OR `Entity` canonical name — never the literal detected document text. Skip-flagged relations (operator-released overrides per `anonymisation-prohibition-gate`) MUST NOT appear. The signal is advisory: it MUST NOT block, fail, or alter the comparison response status.
 
+@e2e exclude unredactedEntities computation, skip-flag exclusion, and canonical-name-only reporting — server signal computation. Covered by PHPUnit (DocumentComparisonServiceTest).
+
 #### Scenario: A missed redaction is surfaced
 
 - **GIVEN** file 42's anonymise set contained three `EntityRelation` rows
@@ -145,6 +146,8 @@ For an annotated original/anonymised pair, the response MUST include `unredacted
 ### Requirement: Comparison MUST be ephemeral
 
 The comparison MUST NOT create, modify, or delete any OR object, NC file, or other persistent record. Repeated identical requests recompute the result. Application logs for a comparison MUST contain at most the two subjects' file IDs and version timestamps — no extracted text, no hunk content, no entity values.
+
+@e2e exclude No-persistence side effects and identifier-only logging — backend invariants verified by PHPUnit and Newman (object-count assertions), not browser-observable.
 
 #### Scenario: No persistence side effects
 
@@ -182,3 +185,4 @@ The frontend MUST offer a "Compare…" entry on the document detail surface and 
 - **WHEN** the view renders
 - **THEN** an advisory panel lists the entity's canonical name with "verify manually" guidance
 - **AND** the panel does not block any interaction
+

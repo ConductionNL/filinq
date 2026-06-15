@@ -41,6 +41,9 @@ return [
         // Document validation route.
         ['name' => 'validation#validate', 'url' => 'api/validation/validate', 'verb' => 'POST'],
 
+        // Document comparison route.
+        ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
+
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
         ['name' => 'anonymization#upload', 'url' => 'api/anonymization/upload', 'verb' => 'POST'],
