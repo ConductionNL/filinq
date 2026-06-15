@@ -41,6 +41,12 @@ export default {
 		findings: { type: Array, default: () => [] },
 	},
 	computed: {
+		/**
+		 * Localised verdict label for the status chip.
+		 *
+		 * @return {string} The label.
+		 * @spec openspec/specs/document-validation-checks/spec.md
+		 */
 		verdictLabel() {
 			switch (this.status) {
 			case 'passed':
@@ -53,11 +59,24 @@ export default {
 				return t('docudesk', 'Not yet validated')
 			}
 		},
+		/**
+		 * Colour-map for the status chip keyed by the verdict label.
+		 *
+		 * @return {object} The colour map.
+		 * @spec openspec/specs/document-validation-checks/spec.md
+		 */
 		colorMap() {
 			return { [this.verdictLabel]: verdictColor(this.status) }
 		},
 	},
 	methods: {
+		/**
+		 * Human-readable label for a finding's check id.
+		 *
+		 * @param {object} finding A validation finding.
+		 * @return {string} The localised check label.
+		 * @spec openspec/specs/document-validation-checks/spec.md
+		 */
 		checkLabel(finding) {
 			const map = {
 				'format-not-allowed': t('docudesk', 'Format not allowed'),
@@ -69,9 +88,15 @@ export default {
 			}
 			return map[finding.checkId] || finding.checkId
 		},
+		/**
+		 * Translate a finding's English source message + interpolate its
+		 * (non-content) placeholder params.
+		 *
+		 * @param {object} finding A validation finding.
+		 * @return {string} The localised message.
+		 * @spec openspec/specs/document-validation-checks/spec.md
+		 */
 		findingMessage(finding) {
-			// The backend ships English source messages with placeholder params;
-			// translate the source string and interpolate the (non-content) params.
 			return t('docudesk', finding.message || '', finding.params || {})
 		},
 	},
