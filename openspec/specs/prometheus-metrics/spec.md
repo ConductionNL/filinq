@@ -14,7 +14,7 @@ Expose application metrics in Prometheus text exposition format at `GET /api/met
 
 ### Requirement: Metrics Endpoint (REQ-PROM-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 Expose a Prometheus-compatible metrics endpoint with proper content type and authentication.
 
@@ -44,7 +44,7 @@ Expose a Prometheus-compatible metrics endpoint with proper content type and aut
 
 ### Requirement: Standard Application Metrics (REQ-PROM-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 Every DocuDesk installation exposes standard metrics for version info, health, and basic operational data.
 
@@ -71,7 +71,7 @@ Every DocuDesk installation exposes standard metrics for version info, health, a
 
 ### Requirement: App-Specific Metrics (REQ-PROM-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 DocuDesk exposes metrics specific to its document processing capabilities.
 
@@ -108,9 +108,9 @@ DocuDesk exposes metrics specific to its document processing capabilities.
 
 ### Requirement: Planned Standard Metrics (REQ-PROM-04)
 
-**Priority:** Should
-
 The app MUST expose additional standard metrics for request tracking and error monitoring.
+
+**Priority:** Should
 
 #### Scenario: Request counter (planned)
 - GIVEN DocuDesk handles HTTP requests
@@ -135,9 +135,9 @@ The app MUST expose additional standard metrics for request tracking and error m
 
 ### Requirement: Planned Duration Metrics (REQ-PROM-05)
 
-**Priority:** Should
-
 The app MUST expose duration histograms for PDF generation and anonymization operations.
+
+**Priority:** Should
 
 #### Scenario: PDF generation duration (planned)
 - GIVEN PDF generation operations vary in duration
@@ -157,7 +157,7 @@ The app MUST expose duration histograms for PDF generation and anonymization ope
 
 ### Requirement: Health Check Endpoint (REQ-PROM-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 A health check endpoint provides infrastructure monitoring with component-level status checks.
 
@@ -184,7 +184,7 @@ A health check endpoint provides infrastructure monitoring with component-level 
 
 ### Requirement: MetricsCollector Delegation (REQ-PROM-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 MetricsController delegates count queries to MetricsCollector for separation of concerns.
 

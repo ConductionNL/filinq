@@ -14,7 +14,7 @@ Provides a shared, reusable PDF rendering service that any co-installed Nextclou
 
 ### Requirement: PDF Rendering Service (REQ-PDF-01)
 
-**Priority:** Must
+**Priority:** MUST
 
 PdfService accepts a Twig template string and data context, renders HTML via a sandboxed Twig environment, and converts to PDF via mPDF.
 
@@ -54,7 +54,7 @@ PdfService accepts a Twig template string and data context, renders HTML via a s
 
 ### Requirement: Page Configuration Options (REQ-PDF-02)
 
-**Priority:** Must
+**Priority:** MUST
 
 PDF output can be configured with page format, orientation, margins, and document title metadata.
 
@@ -88,7 +88,7 @@ PDF output can be configured with page format, orientation, margins, and documen
 
 ### Requirement: Twig Sandbox Security Policy (REQ-PDF-03)
 
-**Priority:** Must
+**Priority:** MUST
 
 Twig templates are rendered in a sandboxed environment with strict security policy to prevent template injection attacks.
 
@@ -131,7 +131,7 @@ Twig templates are rendered in a sandboxed environment with strict security poli
 
 ### Requirement: mPDF Temp Directory Management (REQ-PDF-04)
 
-**Priority:** Must
+**Priority:** MUST
 
 mPDF requires a writable temp directory, which is created and configured automatically.
 
@@ -161,7 +161,7 @@ mPDF requires a writable temp directory, which is created and configured automat
 
 ### Requirement: PDF Rendering API Endpoint (REQ-PDF-05)
 
-**Priority:** Must
+**Priority:** MUST
 
 An HTTP endpoint allows authenticated users to generate PDFs on demand.
 
@@ -195,7 +195,7 @@ An HTTP endpoint allows authenticated users to generate PDFs on demand.
 
 ### Requirement: Dependencies (REQ-PDF-06)
 
-**Priority:** Must
+**Priority:** MUST
 
 PdfService requires mPDF and Twig libraries at specific minimum versions.
 
@@ -223,7 +223,7 @@ PdfService requires mPDF and Twig libraries at specific minimum versions.
 
 ### Requirement: Twig Sandbox Configuration Details (REQ-PDF-07)
 
-**Priority:** Must
+**Priority:** MUST
 
 The sandbox configuration is centralized in TemplateRenderer with explicit whitelists.
 
