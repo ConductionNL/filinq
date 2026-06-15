@@ -27,8 +27,10 @@ The Roadmap is available [here](https://github.com/orgs/docudesk/projects/1/view
 Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
 
 Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
+
+**Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.0.34</version>
+    <version>0.0.35</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
@@ -41,12 +43,19 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
         <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
     </documentation>
+    <!--
+        Processing-activity export (AVG Art. 30) consumes OpenRegister's
+        per-access read-logging capability (x-openregister-processing dialect,
+        ProcessingLogService / ProcessingLogController). That capability ships
+        from OpenRegister >= 0.2.14. The minimum is also recorded as the
+        `openregister` constraint in lib/Settings/docudesk_register.json.
+    -->
     <dependencies>
-        <php min-version="8.0" min-int-size="64"/>
+        <php min-version="8.3" min-int-size="64"/>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="28" max-version="32"/>
+        <nextcloud min-version="30" max-version="34"/>
     </dependencies>
     <navigations>
         <navigation>
@@ -60,4 +69,7 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
 		<admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
 		<admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
 	</settings>
+    <background-jobs>
+        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+    </background-jobs>
 </info>

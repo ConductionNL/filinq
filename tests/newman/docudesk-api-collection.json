@@ -1,0 +1,274 @@
+{
+  "info": {
+    "name": "DocuDesk API Collection",
+    "_postman_id": "docudesk-api-v1",
+    "description": "Newman/Postman collection for DocuDesk API workflow validation. Covers CRUD operations, status transitions, and error handling.\n\nRequired environment variables:\n- baseUrl: Nextcloud base URL (e.g. https://cloud.example.com)\n- authToken: Bearer token or basic auth credentials\n- userId: Nextcloud user ID for authenticated requests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "{{baseUrl}}",
+      "description": "Nextcloud base URL — set via environment (never hardcode)"
+    },
+    {
+      "key": "authToken",
+      "value": "{{authToken}}",
+      "description": "Bearer token or Basic auth — set via environment"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health - returns 200 ok",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "health"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Body has status field', () => pm.expect(body).to.have.property('status'));",
+                  "pm.test('Body has checks field', () => pm.expect(body).to.have.property('checks'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "GET /api/templates - list templates (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "templates"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Results array present', () => pm.expect(body).to.have.property('results'));",
+                  "pm.test('Total count present', () => pm.expect(body).to.have.property('total'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/templates - 401 without auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "templates"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 or 302', () => {",
+                  "  pm.expect([401, 302]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PDF Generation",
+      "item": [
+        {
+          "name": "POST /api/pdf/render - 400 missing template",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/pdf/render",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "pdf", "render"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Preferences",
+      "item": [
+        {
+          "name": "GET /api/preferences/:key - 401 without auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/preferences/test-key",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "preferences", "test-key"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401 or 302', () => {",
+                  "  pm.expect([401, 302]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/preferences/:key - 200 when authenticated",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/preferences/support-dialog-seen",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "preferences", "support-dialog-seen"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Value field present', () => pm.expect(body).to.have.property('value'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Anonymization Batch",
+      "item": [
+        {
+          "name": "GET /api/anonymization/batch/:id - 404 for unknown batch",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/anonymization/batch/non-existent-batch-id",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "anonymization", "batch", "non-existent-batch-id"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "GET /api/metrics - returns Prometheus format",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/apps/docudesk/api/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["apps", "docudesk", "api", "metrics"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const text = pm.response.text();",
+                  "pm.test('Contains HELP lines', () => pm.expect(text).to.include('# HELP'));",
+                  "pm.test('Contains docudesk_up metric', () => pm.expect(text).to.include('docudesk_up'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

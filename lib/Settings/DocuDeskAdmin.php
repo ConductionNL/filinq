@@ -11,6 +11,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+ *
  * DocuDesk is free software: you can redistribute it and/or modify
  * it under the terms of the European Union Public License (EUPL),
  * version 1.2 only (the "Licence"), appearing in the file LICENSE
@@ -23,13 +25,18 @@
  *
  * You should have received a copy of the European Union Public License
  * along with DocuDesk. If not, see <https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12>.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\DocuDesk\Settings;
 
+use OCA\DocuDesk\AppInfo\Application;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\IL10N;
-use OCP\Settings\ISettings;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\Settings\IDelegatedSettings;
 
 /**
  * Admin settings for DocuDesk
@@ -42,30 +49,37 @@ use OCP\Settings\ISettings;
  * @license  EUPL-1.2
  * @link     https://github.com/conductionnl/docudesk
  */
-class DocuDeskAdmin implements ISettings
+class DocuDeskAdmin implements IDelegatedSettings
 {
 
     /**
-     * L10N service for translations
+     * App manager for retrieving app version
      *
-     * @var IL10N $l
+     * @var IAppManager $appManager
      */
-    private IL10N $l;
+    private IAppManager $appManager;
 
+    /**
+     * Initial state service for passing data to the frontend
+     *
+     * @var IInitialState $initialState
+     */
+    private IInitialState $initialState;
 
     /**
      * Constructor for DocuDeskAdmin
      *
-     * @param IL10N $l L10N service for translations
+     * @param IAppManager   $appManager   App manager for retrieving app version
+     * @param IInitialState $initialState Initial state service for the frontend
      *
      * @return void
      */
-    public function __construct(IL10N $l)
+    public function __construct(IAppManager $appManager, IInitialState $initialState)
     {
-        $this->l = $l;
+        $this->appManager   = $appManager;
+        $this->initialState = $initialState;
 
     }//end __construct()
-
 
     /**
      * Get the admin settings form
@@ -74,13 +88,23 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   TemplateResponse
      * @phpstan-return TemplateResponse
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getForm(): TemplateResponse
     {
-        return new TemplateResponse('docudesk', 'settings/admin', [], '');
+        $version = $this->appManager->getAppVersion(Application::APP_ID);
+
+        $this->initialState->provideInitialState('version', $version);
+
+        return new TemplateResponse(
+            'docudesk',
+            'settings/admin',
+            [],
+            ''
+        );
 
     }//end getForm()
-
 
     /**
      * Get the section ID for the admin settings
@@ -89,13 +113,14 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   string
      * @phpstan-return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getSection(): string
     {
         return 'docudesk';
 
     }//end getSection()
-
 
     /**
      * Get the priority for the admin settings
@@ -104,6 +129,8 @@ class DocuDeskAdmin implements ISettings
      *
      * @psalm-return   int
      * @phpstan-return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
      */
     public function getPriority(): int
     {
@@ -111,5 +138,36 @@ class DocuDeskAdmin implements ISettings
 
     }//end getPriority()
 
+    /**
+     * Get the name of this delegated settings section.
+     *
+     * Returns null so only the section name is displayed in the UI.
+     *
+     * @return string|null The display name, or null to use the section name only.
+     *
+     * @psalm-return   string|null
+     * @phpstan-return string|null
+     */
+    public function getName(): ?string
+    {
+        return null;
 
+    }//end getName()
+
+    /**
+     * Get the list of authorized app config keys for this settings section.
+     *
+     * DocuDesk admin settings are full-admin-only; no delegated config keys
+     * are granted.
+     *
+     * @return array<string,mixed> Empty array — no delegated config keys.
+     *
+     * @psalm-return   array<string,mixed>
+     * @phpstan-return array<string,mixed>
+     */
+    public function getAuthorizedAppConfig(): array
+    {
+        return [];
+
+    }//end getAuthorizedAppConfig()
 }//end class

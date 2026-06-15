@@ -1,0 +1,57 @@
+{#
+ # EML Attachment Divider Page
+ #
+ # Single-page divider that introduces each attachment in the assembled
+ # PDF. Consumed by `EmlPdfAssemblyService::renderDivider`.
+ #
+ # Inputs (context):
+ #   - index            int          1-based position of the attachment.
+ #   - total            int          Total attachment count.
+ #   - filename         string       Attachment filename.
+ #   - mime_type        string       MIME type.
+ #   - size_bytes       int          Decoded byte size.
+ #   - size_human       string       Pre-formatted size (e.g. "1.2 MB").
+ #   - placeholder      string|null  One of: null | 'too_large' | 'not_renderable' | 'render_failed'
+ #                                  Drives the "kon niet worden weergegeven" notice.
+ #   - cap_bytes        int|null     The configured max-render byte cap (only set when placeholder == 'too_large').
+ #
+ # spec: openspec/changes/eml-pdf-assembly/specs/eml-pdf-assembly/spec.md#attachment-divider
+ #}
+<div class="docudesk-eml-divider" style="font-family: 'DejaVu Sans', sans-serif; padding: 30mm 0 0 0; color: #222;">
+  <p style="font-size: 9pt; color: #888; margin: 0;">Bijlage {{ index }} van {{ total }}</p>
+  <h1 style="font-size: 18pt; margin: 4mm 0 8mm 0; word-break: break-all;">{{ filename }}</h1>
+
+  <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 10mm;">
+    <tbody>
+      <tr>
+        <td style="width: 30mm; padding: 1mm 2mm 1mm 0; color: #555;">MIME-type</td>
+        <td style="padding: 1mm 0;">{{ mime_type }}</td>
+      </tr>
+      <tr>
+        <td style="width: 30mm; padding: 1mm 2mm 1mm 0; color: #555;">Grootte</td>
+        <td style="padding: 1mm 0;">{{ size_human }} ({{ size_bytes }} bytes)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if placeholder == 'too_large' %}
+    <p style="font-size: 10pt; color: #a04; margin: 0;">
+      Deze bijlage is te groot om in dit document te worden weergegeven
+      (grens: {{ cap_bytes }} bytes). De bytes zijn wel als ingesloten bestand bewaard.
+    </p>
+  {% elseif placeholder == 'not_renderable' %}
+    <p style="font-size: 10pt; color: #a04; margin: 0;">
+      Dit bestandstype kan niet als pagina worden weergegeven. De bytes zijn
+      wel als ingesloten bestand bewaard.
+    </p>
+  {% elseif placeholder == 'render_failed' %}
+    <p style="font-size: 10pt; color: #a04; margin: 0;">
+      De bijlage kon niet worden weergegeven. De bytes zijn wel als ingesloten
+      bestand bewaard.
+    </p>
+  {% else %}
+    <p style="font-size: 10pt; color: #555; margin: 0;">
+      De volgende pagina's tonen de inhoud van deze bijlage.
+    </p>
+  {% endif %}
+</div>

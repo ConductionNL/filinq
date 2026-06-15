@@ -11,6 +11,12 @@
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,14 +40,10 @@ use OCP\Util;
  */
 class FileEntitiesWidget implements IWidget, IIconWidget
 {
-
-
     /**
      * Constructor for FileEntitiesWidget
      *
-     * @param IURLGenerator $urlGenerator URL generator for building URLs
-     *
-     * @return void
+     * @param IURLGenerator $urlGenerator The URL generator service
      */
     public function __construct(
         private readonly IURLGenerator $urlGenerator
@@ -49,11 +51,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end __construct()
 
-
     /**
-     * Get the unique widget identifier
+     * Returns the unique widget identifier
      *
-     * @return string The widget ID
+     * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getId(): string
     {
@@ -61,11 +64,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getId()
 
-
     /**
-     * Get the widget display title
+     * Returns the widget display title
      *
-     * @return string The widget title
+     * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getTitle(): string
     {
@@ -73,11 +77,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getTitle()
 
-
     /**
-     * Get the widget display order
+     * Returns the widget display order
      *
-     * @return int The widget order
+     * @return int
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getOrder(): int
     {
@@ -85,11 +90,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getOrder()
 
-
     /**
-     * Get the widget icon CSS class
+     * Returns the CSS icon class for the widget
      *
-     * @return string The icon CSS class
+     * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getIconClass(): string
     {
@@ -97,11 +103,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getIconClass()
 
-
     /**
-     * Get the widget icon URL
+     * Returns the URL to the widget icon
      *
-     * @return string The absolute URL to the widget icon
+     * @return string
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
      */
     public function getIconUrl(): string
     {
@@ -111,11 +118,12 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getIconUrl()
 
-
     /**
-     * Get the widget URL
+     * Returns the URL the widget links to
      *
-     * @return string|null The URL the widget links to
+     * @return string|null
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function getUrl(): ?string
     {
@@ -123,17 +131,21 @@ class FileEntitiesWidget implements IWidget, IIconWidget
 
     }//end getUrl()
 
-
     /**
-     * Load the widget scripts
+     * Loads the widget scripts and styles
      *
      * @return void
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
      */
     public function load(): void
     {
+        // Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-vendor');
+        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-nc-vue');
         Util::addScript(Application::APP_ID, 'docudesk-dashboard');
 
     }//end load()
-
-
 }//end class

@@ -1,0 +1,2044 @@
+{
+ "info": {
+  "name": "DocuDesk API Contract Suite",
+  "description": "Newman/Postman API-contract tests for the DocuDesk Nextcloud app. Locks the HTTP contract of docudesk's controllers (appinfo/routes.php + lib/Controller/*): Templates CRUD + versioning, Signing requests, Anonymization (extract/files/folder-batch), Consent, and Settings. Every endpoint family is exercised for a happy path, an error/validation case (4xx not 500), and an authorization case (no auth -> 401/403). The suite is self-contained and idempotent: setup seeds a template and a signing request and captures their ids; teardown deletes everything it created.\n\nAUTH MODEL: collection auth is noauth; every authenticated request carries an EXPLICIT basic-auth block (admin:admin via adminUser/adminPass) and an OCS-APIRequest header. Authz (no-auth) requests run against {{noAuthBase}} (127.0.0.1) so the host-scoped NC session cookie established by authed requests against {{baseUrl}} (localhost) is never sent — keeping them genuinely unauthenticated. They carry Accept: application/json and the runner uses --ignore-redirects so a clean JSON 401 is asserted, not a 303-to-login.\n\nPHASE-0 FIXES LOCKED HERE: (1) signing createRequest returns 201 PENDING, not a 500 on an Entity-vs-array mismatch; (2) template version-history returns a 200 results envelope; (3) the anonymization surface (files/extract/folder-batch) returns clean JSON 4xx/200, NOT an HTML 500, even with the NER sidecar absent — this required fixing a duplicate `use Throwable;` import in AnonymizationService.php that fatally broke class load.\n\nQUARANTINED BUGS (non-fake-pass, assert CURRENT bad status so the suite stays green and the bug stays visible): (a) template show of a non-existent id returns 500 (should be 404); (b) signing create with an invalid signatureLevel returns 500 (should be 400).",
+  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+ },
+ "variable": [
+  {
+   "key": "baseUrl",
+   "value": "http://localhost:8080"
+  },
+  {
+   "key": "noAuthBase",
+   "value": "http://127.0.0.1:8080"
+  },
+  {
+   "key": "adminUser",
+   "value": "admin"
+  },
+  {
+   "key": "adminPass",
+   "value": "admin"
+  },
+  {
+   "key": "templateId",
+   "value": ""
+  },
+  {
+   "key": "signingId",
+   "value": ""
+  }
+ ],
+ "auth": {
+  "type": "noauth"
+ },
+ "item": [
+  {
+   "name": "0. Setup",
+   "item": [
+    {
+     "name": "seed template (capture templateId)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('template create returns 2xx (not 500)', () => pm.expect(pm.response.code).to.be.within(200, 299));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));",
+         "const b = pm.response.json();",
+         "const id = (b['@self'] && b['@self'].id) || b.id;",
+         "pm.test('returned a template id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.collectionVariables.set('templateId', id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"name\": \"Newman Probe Template\", \"description\": \"Created by the Newman API-contract suite; removed in teardown.\", \"content\": \"<h1>{{titel}}</h1><p>Beste {{naam}}</p>\", \"namespace\": \"docudesknewman\", \"format\": \"A4\", \"orientation\": \"P\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates"
+       ]
+      }
+     }
+    },
+    {
+     "name": "seed signing request (capture signingId — Entity-vs-array fix)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Phase-0 Entity-vs-array fix: createRequest() must persist and return the",
+         "// signing request object (HTTP 201), NOT 500 on an Entity-vs-array mismatch.",
+         "pm.test('signing create returns 201 Created (not 500)', () => pm.response.to.have.status(201));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));",
+         "const b = pm.response.json();",
+         "pm.test('status is PENDING', () => pm.expect(b.status).to.eql('PENDING'));",
+         "const id = (b['@self'] && b['@self'].id) || b.id;",
+         "pm.test('returned a signing request id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+         "pm.collectionVariables.set('signingId', id);"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"documentFileId\": \"file-newman-seed\", \"documentName\": \"Newman Seed.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "1. Templates (CRUD + versioning)",
+   "item": [
+    {
+     "name": "templates index (happy: 200, results array)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "pm.test('body has results array', () => pm.expect(pm.response.json().results).to.be.an('array'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template show (happy: 200)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "const id = (b['@self'] && b['@self'].id) || b.id;",
+         "pm.test('returns the seeded template', () => pm.expect(id).to.eql(pm.collectionVariables.get('templateId')));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates/{{templateId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates",
+        "{{templateId}}"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template update (happy: 200)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "PUT",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"description\": \"Updated by Newman\", \"namespace\": \"docudesknewman\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates/{{templateId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates",
+        "{{templateId}}"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template versions (happy: 200 — templateVersion fix)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Phase-0 templateVersion fix: the version-history endpoint resolves the",
+         "// templateVersion register/schema and returns a paginated results envelope,",
+         "// rather than 500-ing on a missing/!misconfigured version schema.",
+         "pm.test('200 OK (not 500)', () => pm.response.to.have.status(200));",
+         "pm.test('body has results array', () => pm.expect(pm.response.json().results).to.be.an('array'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates/{{templateId}}/versions",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates",
+        "{{templateId}}",
+        "versions"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template create missing namespace (error: 400 not 500)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('400 Bad Request (not 500)', () => pm.response.to.have.status(400));",
+         "pm.test('error mentions namespace', () => pm.expect(String(pm.response.json().error)).to.match(/namespace/i));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"content\": \"<p>no namespace</p>\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template show non-existent -> 404",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// FIXED: TemplateService::getTemplate() now catches OpenRegister's",
+         "// DoesNotExistException ('Object not found in magic table') and rethrows a",
+         "// 404-coded Exception, which buildErrorResponse() emits as HTTP 404.",
+         "pm.test('returns 404 for a non-existent template id', () => pm.response.to.have.status(404));",
+         "pm.test('still clean JSON, not an HTML error page', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(() => pm.response.json()).to.not.throw(); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates/newman-nonexistent-template-uuid",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates",
+        "newman-nonexistent-template-uuid"
+       ]
+      }
+     }
+    },
+    {
+     "name": "templates index NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));",
+         "pm.test('clean JSON 401, not HTML', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/templates",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates"
+       ]
+      }
+     }
+    },
+    {
+     "name": "template create NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"name\": \"x\", \"namespace\": \"y\"}"
+      },
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/templates",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "2. Signing requests",
+   "item": [
+    {
+     "name": "signing list (happy: 200 — seeded request present)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Entity-vs-array fix: listRequests() returns a real array including the seeded",
+         "// request rather than 500-ing on a shape mismatch.",
+         "pm.test('200 OK (not 500)', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "const arr = Array.isArray(b) ? b : (b.results || []);",
+         "pm.test('response is array-shaped', () => pm.expect(arr).to.be.an('array'));",
+         "const seeded = pm.collectionVariables.get('signingId');",
+         "const ids = arr.map(r => (r['@self'] && r['@self'].id) || r.id);",
+         "pm.test('seeded signing request is listed', () => pm.expect(ids).to.include(seeded));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests"
+       ]
+      }
+     }
+    },
+    {
+     "name": "signing show (happy: 200, status PENDING)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "pm.test('status PENDING', () => pm.expect(pm.response.json().status).to.eql('PENDING'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests/{{signingId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests",
+        "{{signingId}}"
+       ]
+      }
+     }
+    },
+    {
+     "name": "signing audit (happy: 200, initiator allowed)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK (initiator may read audit)', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests/{{signingId}}/audit",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests",
+        "{{signingId}}",
+        "audit"
+       ]
+      }
+     }
+    },
+    {
+     "name": "signing create invalid signature level (error: 400 not 500)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// FIXED: SigningService::validateRequestData() now throws a 400-coded",
+         "// RuntimeException for an invalid signatureLevel and the controller's",
+         "// errorResponse() honours the exception code, returning HTTP 400.",
+         "pm.test('returns 400 for an invalid signature level', () => pm.response.to.have.status(400));",
+         "pm.test('clean JSON, not HTML', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(String(pm.response.json().error)).to.match(/signature level/i); });"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"documentFileId\": \"x\", \"documentName\": \"y.pdf\", \"signatureLevel\": \"BOGUS\", \"signingMode\": \"sequential\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests"
+       ]
+      }
+     }
+    },
+    {
+     "name": "signing list NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));",
+         "pm.test('clean JSON 401', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/signing/requests",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests"
+       ]
+      }
+     }
+    },
+    {
+     "name": "signing create NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"documentFileId\": \"x\", \"documentName\": \"y.pdf\", \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\"}"
+      },
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/signing/requests",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "3. Anonymization",
+   "item": [
+    {
+     "name": "anonymization files (happy: 200, clean JSON — Throwable fix)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Phase-0 Throwable fix: the deployed AnonymizationService had a duplicate",
+         "// `use Throwable;` import which fatally broke class load -> HTML 500 before the",
+         "// controller's catch (\\Throwable) could run. With that fixed, files() returns a",
+         "// clean JSON array even when the NER sidecar is absent (it lists folder files).",
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "pm.test('Content-Type is JSON, not text/html', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+         "pm.test('body parses as JSON', () => pm.expect(() => pm.response.json()).to.not.throw());"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/anonymization/files",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "files"
+       ]
+      }
+     }
+    },
+    {
+     "name": "anonymization extract non-existent fileId (error: clean 404 not HTML 500)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// File IDOR guard: a file the caller cannot resolve returns 404 (not 403, not",
+         "// an HTML 500). Asserts clean JSON even though the NER sidecar is absent.",
+         "pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+         "pm.test('clean JSON, not HTML 500', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'); pm.expect(() => pm.response.json()).to.not.throw(); });",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/anonymization/extract/999999999",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "extract",
+        "999999999"
+       ]
+      }
+     }
+    },
+    {
+     "name": "anonymization anonymize no entities (error: 400 not 500)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Request-body validation runs before file access, so an empty entities[]",
+         "// always yields a clean 400 regardless of NER sidecar state.",
+         "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+         "pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"entities\": []}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/anonymization/anonymize/999999999",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "anonymize",
+        "999999999"
+       ]
+      }
+     }
+    },
+    {
+     "name": "anonymization folder batch missing folderId (error: 400 clean JSON — Throwable fix)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Phase-0 Throwable fix at the batch surface: a missing folderId/folderPath",
+         "// returns a clean JSON 400, NOT an HTML 500 (the duplicate-import fatal also",
+         "// affected the batch controller's pipeline).",
+         "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+         "pm.test('Content-Type is JSON, not text/html', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/anonymization/batch/folder",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "batch",
+        "folder"
+       ]
+      }
+     }
+    },
+    {
+     "name": "anonymization files NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));",
+         "pm.test('clean JSON 401', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/anonymization/files",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "files"
+       ]
+      }
+     }
+    },
+    {
+     "name": "anonymization folder batch NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"folderId\": 1}"
+      },
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/anonymization/batch/folder",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "anonymization",
+        "batch",
+        "folder"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "4. Consent",
+   "item": [
+    {
+     "name": "consents index (happy: 200)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/consents",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "consents"
+       ]
+      }
+     }
+    },
+    {
+     "name": "consents by document (happy: 200)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/consents/document/newman-no-such-document",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "consents",
+        "document",
+        "newman-no-such-document"
+       ]
+      }
+     }
+    },
+    {
+     "name": "consent create missing required field (error: 400 not 500)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('400 Bad Request (not 500)', () => pm.response.to.have.status(400));",
+         "pm.test('error names the missing field', () => pm.expect(String(pm.response.json().error)).to.match(/required field/i));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"documentId\": \"newman-doc\"}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/consents",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "consents"
+       ]
+      }
+     }
+    },
+    {
+     "name": "consents index NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));",
+         "pm.test('clean JSON 401', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/consents",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "consents"
+       ]
+      }
+     }
+    },
+    {
+     "name": "consent create NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"documentId\": \"x\", \"entityType\": \"PERSON\", \"entityText\": \"X\"}"
+      },
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/consents",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "consents"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "5. Settings",
+   "item": [
+    {
+     "name": "settings index (happy: 200, admin flag)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK', () => pm.response.to.have.status(200));",
+         "const b = pm.response.json();",
+         "pm.test('exposes openRegisters flag', () => pm.expect(b).to.have.property('openRegisters'));",
+         "pm.test('exposes isAdmin flag (true for admin)', () => pm.expect(b.isAdmin).to.eql(true));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/settings",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "settings"
+       ]
+      }
+     }
+    },
+    {
+     "name": "settings create as admin (happy: 200)",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('200 OK (admin may write settings)', () => pm.response.to.have.status(200));",
+         "pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{}"
+      },
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/settings",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "settings"
+       ]
+      }
+     }
+    },
+    {
+     "name": "settings index NO AUTH (authz: 401)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));",
+         "pm.test('clean JSON 401', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "GET",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/settings",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "settings"
+       ]
+      }
+     }
+    },
+    {
+     "name": "settings create NO AUTH (authz: 401/403 — admin-gated write)",
+     "event": [
+      {
+       "listen": "prerequest",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "// Cookie isolation: authenticated requests run against {{baseUrl}} (localhost) and",
+         "// establish an NC session cookie scoped to that host. These authz requests run",
+         "// against {{noAuthBase}} (127.0.0.1) so that host-scoped session cookie is NOT",
+         "// sent, guaranteeing the request is genuinely unauthenticated.",
+         "const jar = pm.cookies.jar();",
+         "jar.clear(pm.request.url.toString(), function () {});"
+        ]
+       }
+      },
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('not authorized without credentials (401 or 403)', () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));",
+         "pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json'));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "noauth"
+      },
+      "method": "POST",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       },
+       {
+        "key": "Content-Type",
+        "value": "application/json"
+       },
+       {
+        "key": "Accept",
+        "value": "application/json"
+       }
+      ],
+      "body": {
+       "mode": "raw",
+       "raw": "{\"someKey\": \"someValue\"}"
+      },
+      "url": {
+       "raw": "{{noAuthBase}}/index.php/apps/docudesk/api/settings",
+       "host": [
+        "{{noAuthBase}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "settings"
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "9. Teardown",
+   "item": [
+    {
+     "name": "cancel seeded signing request",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('signing cancel returns 2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/signing/requests/{{signingId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "signing",
+        "requests",
+        "{{signingId}}"
+       ]
+      }
+     }
+    },
+    {
+     "name": "delete seeded template",
+     "event": [
+      {
+       "listen": "test",
+       "script": {
+        "type": "text/javascript",
+        "exec": [
+         "pm.test('template delete returns 2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));"
+        ]
+       }
+      }
+     ],
+     "request": {
+      "auth": {
+       "type": "basic",
+       "basic": [
+        {
+         "key": "username",
+         "value": "{{adminUser}}",
+         "type": "string"
+        },
+        {
+         "key": "password",
+         "value": "{{adminPass}}",
+         "type": "string"
+        }
+       ]
+      },
+      "method": "DELETE",
+      "header": [
+       {
+        "key": "OCS-APIRequest",
+        "value": "true"
+       }
+      ],
+      "url": {
+       "raw": "{{baseUrl}}/index.php/apps/docudesk/api/templates/{{templateId}}",
+       "host": [
+        "{{baseUrl}}"
+       ],
+       "path": [
+        "index.php",
+        "apps",
+        "docudesk",
+        "api",
+        "templates",
+        "{{templateId}}"
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}
