@@ -487,6 +487,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {void}
+		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
 		 */
 		compareDocument(row) {
 			if (!row || !row.fileId) return

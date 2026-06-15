@@ -18,6 +18,8 @@ import { generateUrl } from '@nextcloud/router'
  * @param {object} left  Left subject `{ fileId, versionTimestamp? }`.
  * @param {object} right Right subject `{ fileId, versionTimestamp? }`.
  * @return {Promise<object>} The comparison response.
+ *
+ * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
  */
 export async function compareDocuments(left, right) {
 	const url = generateUrl('/apps/docudesk/api/comparison/compare')
