@@ -1,32 +1,23 @@
-/* eslint-disable no-console */
 import { defineStore } from 'pinia'
 
 interface NavigationStoreState {
-    selected: 'dashboard' | 'consent' | 'consentDetail' | 'settings' | 'anonymization';
-    modal: string;
-    dialog: string;
-    transferData: string;
+    modal: string | null;
+    dialog: string | null;
+    transferData: string | null;
 }
 
 export const useNavigationStore = defineStore('ui', {
 	state: () => ({
-		selected: 'dashboard',
 		modal: null,
 		dialog: null,
 		transferData: null,
 	} as NavigationStoreState),
 	actions: {
-		setSelected(selected: NavigationStoreState['selected']) {
-			this.selected = selected
-			console.log('Active menu item set to ' + selected)
-		},
 		setModal(modal: NavigationStoreState['modal']) {
 			this.modal = modal
-			console.log('Active modal set to ' + modal)
 		},
 		setDialog(dialog: NavigationStoreState['dialog']) {
 			this.dialog = dialog
-			console.log('Active dialog set to ' + dialog)
 		},
 		setTransferData(transferData: NavigationStoreState['transferData']) {
 			this.transferData = transferData

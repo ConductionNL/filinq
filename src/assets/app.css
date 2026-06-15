@@ -1,15 +1,143 @@
 /**
  * Global (unscoped) styles for DocuDesk.
  *
- * Styles that must be unscoped (e.g. overriding library components) belong here
- * instead of in Vue <style> blocks. The ESLint rule vue/enforce-style-attribute
- * enforces that all <style> blocks in .vue files use the `scoped` attribute.
+ * Component-specific overrides — including overrides of @nextcloud/vue
+ * internals — live in the relevant SFC's <style scoped> block, using
+ * `:deep(...)` to reach lib-rendered nodes. Only add rules here when a
+ * style genuinely needs to be unscoped (e.g. resets that must apply
+ * regardless of which component is mounted).
+ *
+ * Prefer overriding via Nextcloud CSS variables over selector + !important.
+ * Only fall back to direct property overrides when no NC variable exists,
+ * and only add !important when the lib itself sets the property with
+ * !important on a higher-specificity (`[data-v-…]`) selector.
  */
 
-/* Center the NcEmptyContent when OpenRegister is not installed. */
-.open-register-missing {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 100% !important;
+/* DocuDesk design tokens. This stylesheet is only loaded inside the
+   DocuDesk bundle (see main.js), so a `:root` override applies to this
+   app only and does not leak into other Nextcloud apps. */
+:root {
+	--dd-color-dark-blue: #02162E;
+	--dd-color-blue: #2874D1;
+	--dd-color-white: #FFF;
+	--dd-color-white-70: rgba(255, 255, 255, 0.70);
+	--dd-color-light-grey: rgba(247, 247, 247, 0.70);
+
+	/* Remap Nextcloud's `--color-main-text` token so all components that
+	   honour it — including @nextcloud/vue internals — pick up the brand
+	   colour for default text. */
+	--color-main-text: var(--dd-color-dark-blue, #02162E);
+
+	/* Remap Nextcloud's `--border-radius-pill` token so all components that
+	   honour it pick up the brand radius. */
+	--border-radius-pill: var(--dd-border-radius-pill, 6px);
+
+	/* Shared elevation + radius scale. Bare 4px / 12px values map to NC's
+	   native --border-radius / --border-radius-large and are not duplicated
+	   here. These tokens cover the values NC has no native equivalent for. */
+	--dd-radius-panel: 20px;       /* large surfaces: cards, panels, sidebars */
+	--dd-radius-md: 8px;           /* mid-size cards / list rows */
+	--dd-radius-pill-full: 999px;  /* fully-round controls (search, toggles) */
+
+	--dd-shadow-panel: 0 4px 22px -3px rgba(0, 0, 0, 0.08);                            /* elevated surface */
+	--dd-shadow-doc: 0 2px 8px rgba(0, 0, 0, 0.15);                                    /* document viewers */
+	--dd-shadow-popout: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24); /* menu pop-out */
+}
+
+#content {
+	color: var(--color-main-text);
+}
+
+/* CnTableWidget renders a card container (.cn-table-container) with border,
+   border-radius and box-shadow, creating a card-within-card effect inside
+   CnDashboardPage widget panels. Fixed in nc-vue beta.112; this bridges the
+   gap until that release is published. */
+.cn-table-widget,
+.cn-table-container {
+	box-shadow: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+}
+
+/* CnStatusBadge: each variant resolves its text colour through a Nextcloud
+   token (--color-success, --color-warning-text, etc.). Remap those tokens
+   on the badge itself so every variant picks up the dark-blue brand colour
+   without overriding `color` directly. Background tokens use distinct
+   `*-light` vars and remain untouched. */
+.cn-status-badge {
+	--color-main-text: var(--dd-color-dark-blue, #02162E);
+	--color-primary-element: var(--dd-color-dark-blue, #02162E);
+	--color-success: var(--dd-color-dark-blue, #02162E);
+	--color-warning: var(--dd-color-dark-blue, #02162E);
+	--color-warning-text: var(--dd-color-dark-blue, #02162E);
+	--color-error: var(--dd-color-dark-blue, #02162E);
+	--color-info: var(--dd-color-dark-blue, #02162E);
+	border: 1px solid var(--dd-badge-border-color, var(--color-primary-element));
+}
+
+.cn-status-badge--success {
+	--dd-badge-border-color: #8ABC75;
+	--color-success-light: var(--dd-bg-success-light, #BDFFA0);
+}
+
+.cn-status-badge--warning {
+	--dd-badge-border-color: #EFD68B;
+	--color-warning-light: var(--dd-bg-warning-light, #FFE7A0);
+}
+
+.cn-status-badge--info {
+	--dd-badge-border-color: #8ABCE0;
+	--color-info-light: var(--dd-bg-info-light, #A0D7FF);
+}
+
+/* PdfViewer: pdfjs-dist writes text-layer spans directly into the DOM
+   without Vue's scope hash, so these rules must be global. */
+.pdf-viewer__text-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	opacity: 0.25;
+	line-height: 1;
+}
+
+.pdf-viewer__text-layer > span {
+	color: transparent;
+	position: absolute;
+	white-space: pre;
+	cursor: text;
+	transform-origin: 0% 0%;
+}
+
+.pdf-viewer__text-layer ::selection {
+	background: rgba(0, 100, 255, 0.4);
+}
+
+/* WordViewer: mammoth writes raw HTML without Vue's scope hash. */
+.word-viewer__content h1,
+.word-viewer__content h2,
+.word-viewer__content h3 {
+	margin-top: 1.2em;
+	margin-bottom: 0.4em;
+	color: #000;
+}
+
+.word-viewer__content p {
+	margin: 0 0 1em 0;
+}
+
+.word-viewer__content table {
+	border-collapse: collapse;
+	margin: 1em 0;
+}
+
+.word-viewer__content table td,
+.word-viewer__content table th {
+	border: 1px solid #ddd;
+	padding: 6px 10px;
+}
+
+.word-viewer__content img {
+	max-width: 100%;
+	height: auto;
 }

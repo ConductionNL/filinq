@@ -12,6 +12,12 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -20,10 +26,15 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use RuntimeException;
+use OCA\DocuDesk\Service\AnonymiserBackendStateClient;
 use OCA\DocuDesk\Service\SettingsService;
+use OCA\DocuDesk\Settings\DocuDeskAdmin;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -38,6 +49,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
 class SettingsController extends Controller
 {
@@ -49,18 +62,19 @@ class SettingsController extends Controller
      */
     private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
 
-
     /**
      * SettingsController constructor
      *
-     * @param string             $appName         The name of the app
-     * @param IRequest           $request         The request object
-     * @param ContainerInterface $container       The container
-     * @param IAppManager        $appManager      The app manager
-     * @param IGroupManager      $groupManager    The group manager
-     * @param IUserSession       $userSession     The user session
-     * @param LoggerInterface    $logger          Logger for error reporting
-     * @param SettingsService    $settingsService Service for settings operations
+     * @param string                       $appName          The name of the app
+     * @param IRequest                     $request          The request object
+     * @param ContainerInterface           $container        The container
+     * @param IAppManager                  $appManager       The app manager
+     * @param IGroupManager                $groupManager     The group manager
+     * @param IUserSession                 $userSession      The user session
+     * @param LoggerInterface              $logger           Logger for error reporting
+     * @param SettingsService              $settingsService  Service for settings operations
+     * @param AnonymiserBackendStateClient $anonymiserClient Backend state client
+     * @param IConfig                      $config           Nextcloud config for user values
      *
      * @return void
      */
@@ -72,18 +86,21 @@ class SettingsController extends Controller
         private readonly IGroupManager $groupManager,
         private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
-        private readonly SettingsService $settingsService
+        private readonly SettingsService $settingsService,
+        private readonly AnonymiserBackendStateClient $anonymiserClient,
+        private readonly IConfig $config,
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Attempts to retrieve the OpenRegister service from the container.
      *
      * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -96,12 +113,13 @@ class SettingsController extends Controller
 
     }//end getObjectService()
 
-
     /**
      * Attempts to retrieve the Configuration service from the container.
      *
      * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
      * @throws \RuntimeException If the service is not available.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-28
      */
     public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
     {
@@ -114,7 +132,6 @@ class SettingsController extends Controller
 
     }//end getConfigurationService()
 
-
     /**
      * Retrieve the current settings
      *
@@ -122,6 +139,8 @@ class SettingsController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
     public function index(): JSONResponse
     {
@@ -129,13 +148,31 @@ class SettingsController extends Controller
             $user    = $this->userSession->getUser();
             $isAdmin = $user !== null && $this->groupManager->isAdmin($user->getUID());
 
+            $backendState = $this->anonymiserClient->getState();
+            $dismissed    = false;
+            if ($user !== null) {
+                $dismissed = $this->config->getUserValue(
+                    userId: $user->getUID(),
+                    appName: 'docudesk',
+                    key: \OCA\DocuDesk\Controller\AnonymiserWarningController::DISMISSED_KEY,
+                    default: ''
+                ) === '1';
+            }
+
             $data = $this->settingsService->getAllSettings();
             return new JSONResponse(
                 array_merge(
                     $data,
                     [
-                        'openRegisters' => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
-                        'isAdmin'       => $isAdmin,
+                        'openRegisters'     => in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()),
+                        'isAdmin'           => $isAdmin,
+                        'anonymiserBackend' => array_merge(
+                            $backendState,
+                            [
+                                'warningDismissed' => $dismissed,
+                                'showWarning'      => ($backendState['method'] ?? 'regex') === 'regex' && $dismissed === false,
+                            ]
+                        ),
                     ]
                 )
             );
@@ -151,18 +188,38 @@ class SettingsController extends Controller
 
     }//end index()
 
-
     /**
      * Handle the post request to update settings
      *
+     * Admin-only: writing settings (including signing_verification_secret,
+     * register/schema pointers, signing provider) must be restricted to
+     * administrators to prevent authenticated non-admin users from forging
+     * the HMAC verification secret or redirecting data to attacker-controlled
+     * registers (wave-3 C1).
+     *
      * @return JSONResponse JSON response containing the updated settings
      *
-     * @NoAdminRequired
-     * @NoCSRFRequired
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
      */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
     public function create(): JSONResponse
     {
         try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
+            if ($this->groupManager->isAdmin($user->getUID()) === false) {
+                return new JSONResponse(
+                    data: ['error' => 'Admin privileges required'],
+                    statusCode: Http::STATUS_FORBIDDEN
+                );
+            }
+
             $data = $this->request->getParams();
 
             $updatedData = $this->settingsService->updateSettings($data);
@@ -176,9 +233,7 @@ class SettingsController extends Controller
                 ]
             );
             return new JSONResponse(['error' => $e->getMessage()], 500);
-        }
+        }//end try
 
     }//end create()
-
-
 }//end class

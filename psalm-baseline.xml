@@ -18,30 +18,4 @@
       <code><![CDATA[$statusCode]]></code>
     </InvalidArgument>
   </file>
-  <file src="lib/Controller/TemplatesController.php">
-    <InvalidArgument>
-      <code><![CDATA[$statusCode]]></code>
-      <code><![CDATA[$statusCode]]></code>
-      <code><![CDATA[$statusCode]]></code>
-      <code><![CDATA[$statusCode]]></code>
-      <code><![CDATA[$statusCode]]></code>
-    </InvalidArgument>
-  </file>
-  <file src="lib/Service/AnonymizationService.php">
-    <UndefinedInterfaceMethod>
-      <code><![CDATA[getDirectoryListing]]></code>
-      <code><![CDATA[newFile]]></code>
-      <code><![CDATA[nodeExists]]></code>
-    </UndefinedInterfaceMethod>
-  </file>
-  <file src="lib/Service/MetadataService.php">
-    <FalsableReturnStatement>
-      <code><![CDATA[array_search($maxScore, $scores)]]></code>
-    </FalsableReturnStatement>
-  </file>
-  <file src="lib/Service/TemplateService.php">
-    <UnusedReturnValue>
-      <code><![CDATA[bool]]></code>
-    </UnusedReturnValue>
-  </file>
 </files>

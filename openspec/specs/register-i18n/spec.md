@@ -1,48 +1,194 @@
-# Register Content Internationalization
+# register-i18n Specification
 
 ## Purpose
-Enable multi-language support for Docudesk's register objects, allowing users to view and manage document templates in their preferred language. Built on OpenRegister's register-i18n foundation (see `openregister/openspec/specs/register-i18n/spec.md`).
-
+TBD - created by archiving change register-i18n. Update Purpose after archive.
 ## Requirements
+### Requirement: REQ-I18N-01 Language-Tagged Fields (Priority: Must)
 
-### REQ-I18N-001: Language-Tagged Fields
-The following Docudesk-specific fields MUST support multi-language content via OpenRegister's `translatable` flag:
+DocuDesk-specific fields MUST support multi-language content via OpenRegister's `translatable` flag.
 
-**Templates:**
-- `title` — display name of the template (e.g., "Beschikking omgevingsvergunning" / "Environmental permit decision")
-- `description` — explanation of the template's purpose and when to use it
+#### Scenario: Template title in Dutch and English
+- GIVEN a template with title "Beschikking omgevingsvergunning"
+- AND a Dutch and English translation are stored
+- WHEN a Dutch user views the template
+- THEN the Dutch title is displayed
+- AND an English user sees "Environmental permit decision"
 
-**Template fields/placeholders:**
-- `label` — display label shown to the user when filling in the template field
-- `helpText` — guidance text explaining what value to enter in the field
+#### Scenario: Template description translation
+- GIVEN a template with a Dutch description
+- AND an English translation exists
+- WHEN the user's language is English
+- THEN the English description is shown
 
-**NOT translatable:** Generated documents themselves are NOT translatable via this mechanism. The output language of a generated document depends on which language version of the template was used to generate it. A template may exist in multiple languages, but each generated document is a single-language artifact.
+#### Scenario: Field label translation
+- GIVEN a template with placeholder field label "Naam aanvrager"
+- AND English translation "Applicant name" exists
+- WHEN the user fills in the template in English
+- THEN the field label shows "Applicant name"
 
-### REQ-I18N-002: Language Fallback Chain
-- MUST follow the Nextcloud user's language preference
-- MUST fall back: user language -> app default language -> nl -> en -> first available
-- MUST display fallback indicator when showing non-preferred language
+#### Scenario: Help text translation
+- GIVEN a template field with helpText "Vul de volledige naam in"
+- AND English translation "Enter the full name" exists
+- WHEN the user views the field help text
+- THEN the translated help text is shown
 
-### REQ-I18N-003: Frontend Language Switching
-- MUST show language selector on detail pages when translated content exists
-- MUST preserve current language selection across navigation within the app
-- Language switching MUST NOT require page reload
+#### Scenario: Generated documents are NOT translatable
+- GIVEN a template exists in Dutch and English
+- WHEN a document is generated from the Dutch version
+- THEN the output document is in Dutch only
+- AND it is a single-language artifact, not a translatable register object
 
-### REQ-I18N-004: API Language Support
-- API responses MUST accept `Accept-Language` header
-- API responses MUST include `Content-Language` header
-- `?lang=nl` query parameter MUST override Accept-Language
-- Listing endpoints MUST return content in requested language with fallback
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-001 | Template `title` supports multi-language content | MUST | Planned |
+| I18N-002 | Template `description` supports multi-language content | MUST | Planned |
+| I18N-003 | Template field `label` supports multi-language content | MUST | Planned |
+| I18N-004 | Template field `helpText` supports multi-language content | MUST | Planned |
+| I18N-005 | Generated documents are single-language artifacts (NOT translatable) | MUST | Planned |
 
-## Current Implementation Status
-Not implemented. No multi-language content support exists in Docudesk. All content is stored in a single language (typically Dutch). Template definitions and their field labels are all single-language.
+### Requirement: REQ-I18N-02 Language Fallback Chain (Priority: Must)
 
-## Standards & References
-- OpenRegister register-i18n spec (foundation)
-- BCP 47 language tags (nl, en, de, fr, etc.)
-- W3C Internationalization best practices
-- Nextcloud l10n framework (for UI strings -- separate from register content i18n)
-- WCAG 2.1 SC 3.1.1 (Language of Page) and SC 3.1.2 (Language of Parts)
+The system MUST follow Nextcloud user language preference with a defined fallback chain.
 
-## Specificity Assessment
-Depends on OpenRegister's register-i18n being implemented first. App-level work is primarily frontend (language selector, fallback display) and API layer (Accept-Language routing). Docudesk has a small translation surface -- only template metadata and field labels need translation. The key distinction is that generated documents are single-language outputs, not translatable register content.
+#### Scenario: User language available
+- GIVEN a user with language preference "en"
+- AND the template has an English translation
+- WHEN the template is displayed
+- THEN the English version is shown
+
+#### Scenario: User language not available, fallback to nl
+- GIVEN a user with language preference "de" (German)
+- AND the template has no German translation but has Dutch
+- WHEN the template is displayed
+- THEN the Dutch version is shown (fallback: nl)
+- AND a fallback indicator is displayed
+
+#### Scenario: Full fallback chain
+- GIVEN a user with language preference "fr"
+- AND the template has no French, Dutch, or English translations
+- AND the only available translation is Spanish
+- WHEN the template is displayed
+- THEN the Spanish version is shown (first available)
+- AND a fallback indicator shows the displayed language
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-010 | Follow Nextcloud user language preference | MUST | Planned |
+| I18N-011 | Fallback chain: user language -> app default -> nl -> en -> first available | MUST | Planned |
+| I18N-012 | Display fallback indicator when showing non-preferred language | MUST | Planned |
+
+### Requirement: REQ-I18N-03 Frontend Language Switching (Priority: Must)
+
+Users MUST be able to switch between available translations on detail pages without page reload.
+
+#### Scenario: Language selector on detail page
+- GIVEN a template with Dutch and English translations
+- WHEN the user opens the template detail page
+- THEN a language selector dropdown appears
+- AND Dutch and English are listed as options
+
+#### Scenario: Switch language without reload
+- GIVEN a template detail page is open in Dutch
+- WHEN the user selects English from the language selector
+- THEN the template content updates to English immediately
+- AND no page reload occurs
+
+#### Scenario: Language selection persists across navigation
+- GIVEN the user selects English on a template detail page
+- WHEN they navigate to another template
+- THEN the English language selection is preserved
+- AND the new template is shown in English (if available)
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-020 | Language selector on detail pages when translations exist | MUST | Planned |
+| I18N-021 | Preserve language selection across navigation | MUST | Planned |
+| I18N-022 | Language switching without page reload | MUST | Planned |
+
+### Requirement: REQ-I18N-04 API Language Support (Priority: Must)
+
+API responses MUST respect language preferences via headers and query parameters.
+
+#### Scenario: Accept-Language header
+- GIVEN an API request with `Accept-Language: en`
+- WHEN GET /api/templates is called
+- THEN template content is returned in English (if available)
+- AND the response includes `Content-Language: en` header
+
+#### Scenario: Query parameter override
+- GIVEN an API request with `Accept-Language: nl` and `?lang=en`
+- WHEN the API processes the request
+- THEN the `?lang=en` parameter takes precedence
+- AND English content is returned
+
+#### Scenario: Listing endpoint language filtering
+- GIVEN 5 templates with Dutch content and 3 with English translations
+- WHEN GET /api/templates?lang=en is called
+- THEN all 5 templates are returned
+- AND 3 show English content, 2 fall back to Dutch with fallback indicator
+
+#### Scenario: No Accept-Language header
+- GIVEN an API request with no language preference
+- WHEN the request is processed
+- THEN the default language (nl) is used
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-030 | Accept `Accept-Language` header on API requests | MUST | Planned |
+| I18N-031 | Include `Content-Language` header in API responses | MUST | Planned |
+| I18N-032 | `?lang=` query parameter overrides Accept-Language | MUST | Planned |
+| I18N-033 | Listing endpoints return content in requested language with fallback | MUST | Planned |
+
+### Requirement: REQ-I18N-05 Translation Surface Definition (Priority: Must)
+
+DocuDesk MUST have a small, well-defined translation surface limited to template metadata and field labels.
+
+#### Scenario: Identify translatable fields
+- GIVEN the DocuDesk data model
+- WHEN the translatable surface is defined
+- THEN only template title, description, field label, and helpText are translatable
+- AND template content (HTML/Twig) is NOT translatable via this mechanism
+- AND consent records are NOT translatable
+- AND document register report data is NOT translatable
+
+#### Scenario: Template content language variants
+- GIVEN a template needs to generate documents in Dutch and English
+- WHEN multi-language support is implemented
+- THEN two separate templates are created (one per language)
+- AND each template has its own content in the target language
+- AND the template metadata (title, description) is translated via i18n
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-040 | Translatable fields limited to template metadata and field labels | MUST | Planned |
+| I18N-041 | Template content (HTML/Twig) NOT translatable via register-i18n | MUST | Planned |
+| I18N-042 | Consent records and report data NOT translatable | MUST | Planned |
+
+### Requirement: REQ-I18N-06 Minimum Language Support (Priority: Must)
+
+All apps MUST support Dutch and English as minimum languages.
+
+#### Scenario: Dutch as primary language
+- GIVEN DocuDesk is deployed in a Dutch municipality
+- WHEN all templates are created
+- THEN Dutch is the primary language for all content
+- AND all UI strings are available in Dutch via Nextcloud l10n
+
+#### Scenario: English as secondary language
+- GIVEN an English-speaking user accesses DocuDesk
+- WHEN template metadata is displayed
+- THEN English translations are available for template titles and descriptions
+- AND UI strings are available in English via Nextcloud l10n
+
+#### Scenario: Distinction between register-i18n and l10n
+- GIVEN DocuDesk uses both Nextcloud l10n and register-i18n
+- WHEN the systems are compared
+- THEN l10n handles UI strings (buttons, labels, error messages) via gettext
+- AND register-i18n handles register object content (template titles, descriptions) via OpenRegister
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| I18N-050 | Dutch (nl) as primary/default language | MUST | Planned |
+| I18N-051 | English (en) as minimum secondary language | MUST | Planned |
+| I18N-052 | Register-i18n is separate from Nextcloud l10n | MUST | Planned |
+

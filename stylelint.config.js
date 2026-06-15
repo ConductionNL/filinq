@@ -1,7 +1,8 @@
 module.exports = {
-	extends: 'stylelint-config-recommended-vue',
+	extends: '@nextcloud/stylelint-config',
 	rules: {
-		'no-descending-specificity': null,
-		'rule-empty-line-before': null,
+		'selector-pseudo-element-no-unknown': [true, {
+			ignorePseudoElements: ['v-deep'],
+		}],
 	},
 }

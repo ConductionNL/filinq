@@ -42,8 +42,8 @@ export default {
 
 <style scoped>
 .file-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 </style>

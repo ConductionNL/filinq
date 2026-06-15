@@ -1,7 +1,3 @@
-<script setup>
-import { navigationStore } from '../store/store.js'
-</script>
-
 <template>
 	<!-- Main content container for all views -->
 	<NcAppContent>
@@ -9,18 +5,31 @@ import { navigationStore } from '../store/store.js'
 			<Dashboard v-if="navigationStore.selected === 'dashboard'" />
 			<ConsentIndex v-if="navigationStore.selected === 'consent'" />
 			<ConsentDetail v-if="navigationStore.selected === 'consentDetail'" />
+			<StandingConsentIndex v-if="navigationStore.selected === 'standingConsents'" />
+			<ProhibitionIndex v-if="navigationStore.selected === 'prohibitions'" />
 			<AnonymizationWidget v-if="navigationStore.selected === 'anonymization'" />
+			<TemplateIndex v-if="navigationStore.selected === 'templates'" />
+			<TemplateDetail v-if="navigationStore.selected === 'templateDetail'" />
+			<BatchAnonymizationView v-if="navigationStore.selected === 'batchAnonymization'" />
+			<FolderAnonymizationView v-if="navigationStore.selected === 'folderAnonymization'" />
 		</template>
 	</NcAppContent>
 </template>
 
 <script>
 import { NcAppContent } from '@nextcloud/vue'
+import { navigationStore } from '../store/store.js'
 
 import Dashboard from './dashboard/DashboardIndex.vue'
 import ConsentIndex from './consent/ConsentIndex.vue'
 import ConsentDetail from './consent/ConsentDetail.vue'
+import StandingConsentIndex from './policy/StandingConsentIndex.vue'
+import ProhibitionIndex from './policy/ProhibitionIndex.vue'
 import AnonymizationWidget from './anonymization/AnonymizationWidget.vue'
+import TemplateIndex from './templates/TemplateIndex.vue'
+import TemplateDetail from './templates/TemplateDetail.vue'
+import BatchAnonymizationView from './anonymization/BatchAnonymizationView.vue'
+import FolderAnonymizationView from './anonymization/FolderAnonymizationView.vue'
 
 export default {
 	name: 'Views',
@@ -29,7 +38,22 @@ export default {
 		Dashboard,
 		ConsentIndex,
 		ConsentDetail,
+		StandingConsentIndex,
+		ProhibitionIndex,
 		AnonymizationWidget,
+		TemplateIndex,
+		TemplateDetail,
+		BatchAnonymizationView,
+		FolderAnonymizationView,
+	},
+	/**
+	 * Expose the navigation store so the shell can conditionally render the
+	 * selected DocuDesk view.
+	 *
+	 * @spec openspec/specs/dashboard/spec.md#requirement-navigation-menu-req-dash-03
+	 */
+	setup() {
+		return { navigationStore }
 	},
 }
 </script>

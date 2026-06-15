@@ -20,13 +20,18 @@ export const useSettingsStore = defineStore(
 			getIsAdmin: (state) => state.isAdmin,
 		},
 		actions: {
+			/**
+			 * Fetch DocuDesk settings, OpenRegister availability and admin status.
+			 *
+			 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+			 */
 			async fetchSettings() {
 				this.loading = true
 				this.error = null
 
 				try {
 					const response = await fetch(
-						'/apps/docudesk/api/settings',
+						'/index.php/apps/docudesk/api/settings',
 						{
 							method: 'GET',
 							headers: {
@@ -34,7 +39,7 @@ export const useSettingsStore = defineStore(
 								requesttoken: OC.requestToken,
 								'OCS-APIREQUEST': 'true',
 							},
-						}
+						},
 					)
 
 					if (!response.ok) {
@@ -67,13 +72,19 @@ export const useSettingsStore = defineStore(
 				}
 			},
 
+			/**
+			 * Persist DocuDesk settings via the settings REST API.
+			 *
+			 * @param settingsData
+			 * @spec openspec/specs/admin-settings/spec.md#requirement-settings-rest-api-req-set-06
+			 */
 			async saveSettings(settingsData) {
 				this.loading = true
 				this.error = null
 
 				try {
 					const response = await fetch(
-						'/apps/docudesk/api/settings',
+						'/index.php/apps/docudesk/api/settings',
 						{
 							method: 'POST',
 							headers: {
@@ -82,7 +93,7 @@ export const useSettingsStore = defineStore(
 								'OCS-APIREQUEST': 'true',
 							},
 							body: JSON.stringify(settingsData),
-						}
+						},
 					)
 
 					if (!response.ok) {
@@ -102,5 +113,5 @@ export const useSettingsStore = defineStore(
 				}
 			},
 		},
-	}
+	},
 )

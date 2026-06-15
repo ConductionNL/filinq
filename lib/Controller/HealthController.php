@@ -11,6 +11,11 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +27,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\App\IAppManager;
 use OCP\IDBConnection;
 use OCP\IRequest;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,16 +41,13 @@ use Psr\Log\LoggerInterface;
  */
 class HealthController extends Controller
 {
-
-
     /**
      * HealthController constructor
      *
-     * @param string          $appName    The name of the app
-     * @param IRequest        $request    The request object
-     * @param IDBConnection   $database   The database connection
-     * @param LoggerInterface $logger     Logger for error reporting
-     * @param IAppManager     $appManager The app manager service
+     * @param string          $appName  The name of the app
+     * @param IRequest        $request  The request object
+     * @param IDBConnection   $database The database connection
+     * @param LoggerInterface $logger   Logger for error reporting
      *
      * @return void
      */
@@ -52,13 +55,11 @@ class HealthController extends Controller
         string $appName,
         IRequest $request,
         private readonly IDBConnection $database,
-        private readonly LoggerInterface $logger,
-        private readonly IAppManager $appManager
+        private readonly LoggerInterface $logger
     ) {
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Return health check status
@@ -66,6 +67,10 @@ class HealthController extends Controller
      * @return JSONResponse JSON response with health status and checks
      *
      * @NoCSRFRequired
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
      */
     public function index(): JSONResponse
     {
@@ -87,8 +92,9 @@ class HealthController extends Controller
 
         // OpenRegister dependency check.
         try {
+            $appManager = Server::get(IAppManager::class);
             $checks['openregister'] = 'missing';
-            if ($this->appManager->isEnabledForUser('openregister') === true) {
+            if ($appManager->isEnabledForUser('openregister') === true) {
                 $checks['openregister'] = 'ok';
             }
 
@@ -107,6 +113,4 @@ class HealthController extends Controller
         );
 
     }//end index()
-
-
 }//end class

@@ -12,6 +12,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
  */
 
 declare(strict_types=1);
@@ -19,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use InvalidArgumentException;
 use RuntimeException;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -35,8 +39,6 @@ use Psr\Log\LoggerInterface;
  */
 class ConsentUpdateHandler
 {
-
-
     /**
      * Constructor for ConsentUpdateHandler
      *
@@ -53,7 +55,6 @@ class ConsentUpdateHandler
     ) {
 
     }//end __construct()
-
 
     /**
      * Get the ObjectService from OpenRegister
@@ -72,7 +73,6 @@ class ConsentUpdateHandler
 
     }//end getObjectService()
 
-
     /**
      * Update consent status for a consent record
      *
@@ -84,6 +84,8 @@ class ConsentUpdateHandler
      * @return array<string, mixed> The updated consent record
      *
      * @throws Exception If update fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
      */
     public function updateConsentStatus(
         string $consentId,
@@ -94,33 +96,62 @@ class ConsentUpdateHandler
         try {
             $objectService = $this->getObjectService();
 
+            // Let OpenRegister enforce per-object RBAC and multitenancy
+            // access. Bypassing these (security finding #283) allowed any
+            // authenticated user to overwrite consent records owned by
+            // other users.
             $object = $objectService->find(
                 id: $consentId,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             if ($object === null) {
                 throw new Exception('Consent record not found: '.$consentId);
             }
 
-            $consentData = array_merge($object->getObject(), $data);
+            // Whitelist the fields a consent update may mutate so callers
+            // cannot rewrite arbitrary consent attributes (e.g. documentId,
+            // entityText) or inject extra keys (security finding #283).
+            $mutableFields = [
+                'notificationStatus',
+                'consentStatus',
+                'publicationDecision',
+                'objectionReason',
+                'objectionDeadline',
+            ];
+            $allowedData   = array_intersect_key($data, array_flip($mutableFields));
+
+            $existing = $object->getObject();
+
+            // Server-controlled-fields immutability gate: this always-on
+            // guard runs AHEAD of the policy-pre-emption lock so a PATCH that
+            // fabricates or swaps `policyMatch` / `matchKind` is rejected on
+            // BOTH the matched and unmatched branches (PR #147 sixth-pass).
+            // We pass the FULL inbound $data here (not the mutable-field
+            // whitelist) because server-controlled fields are deliberately
+            // absent from $mutableFields — checking the whitelist would never
+            // see the injection attempt.
+            $this->guardServerControlledFields(existing: $existing, data: $data);
+
+            // Policy pre-emption lock: records bound to a prohibition /
+            // standing-consent match must not have their transition fields
+            // overridden by operators (restored after 917b80e7 wiped it).
+            $this->guardPolicyPreemptedTransition(existing: $existing, data: $allowedData);
+
+            $consentData = array_merge($existing, $allowedData);
 
             $savedObject = $objectService->saveObject(
                 object: $consentData,
                 register: $register,
-                schema: $schema,
-                _rbac: false,
-                _multitenancy: false
+                schema: $schema
             );
 
             $this->logger->info(
                 'Consent status updated',
                 [
                     'consentId'   => $consentId,
-                    'updatedKeys' => array_keys($data),
+                    'updatedKeys' => array_keys($allowedData),
                 ]
             );
 
@@ -142,29 +173,191 @@ class ConsentUpdateHandler
 
     }//end updateConsentStatus()
 
+    /**
+     * Reject any caller mutation of server-controlled consent fields.
+     *
+     * The fields `policyMatch` and `matchKind` are set exclusively by the
+     * server when a prohibition / standing-consent rule matches an entity.
+     * A caller may RE-SEND the current value (idempotent full-record PUTs),
+     * but may never change it to a different value — nor fabricate it on a
+     * record that does not yet carry it. This is an always-on immutability
+     * gate that runs AHEAD of `guardPolicyPreemptedTransition` so it cannot
+     * be bypassed on either the matched or the unmatched branch
+     * (PR #147 sixth-pass).
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When a server-controlled field would be mutated.
+     */
+    private function guardServerControlledFields(array $existing, array $data): void
+    {
+        // Fields the server alone owns. A caller may RE-SEND the current
+        // value (idempotent full-record PUTs), but may never mutate them to
+        // a different value — nor fabricate them on a record that does not
+        // yet carry them. This guard is always-on and runs ahead of the
+        // policy-pre-emption lock so it cannot be bypassed by either the
+        // matched or the unmatched branch (PR #147 sixth-pass).
+        $serverControlledFields = [
+            'policyMatch',
+            'matchKind',
+        ];
+
+        foreach ($serverControlledFields as $field) {
+            if (array_key_exists($field, $data) === false) {
+                continue;
+            }
+
+            $proposed = $data[$field];
+            $current  = ($existing[$field] ?? null);
+
+            // Equal values are a no-op for an immutable field — allow them so
+            // idempotent clients that echo the full record state still work.
+            if ($proposed === $current) {
+                continue;
+            }
+
+            // Tolerate loose scalar equality (e.g. "" vs null) so a client
+            // re-sending an empty marker against an unset field is not
+            // rejected, while a genuine value change still trips.
+            if (($proposed === null || $proposed === '')
+                && ($current === null || $current === '')
+            ) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                message: sprintf(
+                    '%s is server-controlled and cannot be modified by the caller.',
+                    $field
+                )
+            );
+        }//end foreach
+
+    }//end guardServerControlledFields()
+
+    /**
+     * Reject `consentStatus` changes on records pre-empted by a policy.
+     *
+     * When an existing consent record has a non-null `policyMatch`, its
+     * `consentStatus` is bound to the matched rule (prohibition → anonymized,
+     * standing consent → consent_given). Only updates that do NOT change
+     * `consentStatus` are permitted — including overrides like setting
+     * `publicationDecision: "anonymize"` on a standing-consent-matched record
+     * while leaving `consentStatus: "consent_given"` in place.
+     *
+     * Standing-consent carve-out: when `matchKind` is the persisted
+     * 'standing_consent' marker the operator MAY flip `publicationDecision`
+     * (e.g. consent_given → anonymize) as long as `consentStatus` itself is
+     * preserved. A prohibition match locks BOTH fields.
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
+     */
+    private function guardPolicyPreemptedTransition(array $existing, array $data): void
+    {
+        $existingMatch = ($existing['policyMatch'] ?? null);
+        if ($existingMatch === null || $existingMatch === '') {
+            return;
+        }
+
+        // Guard the two operator-controlled transition fields. The
+        // prohibition lock applies to BOTH `consentStatus` AND
+        // `publicationDecision` — a record that's been pre-empted by a
+        // policy match must not be coaxed into "publish" via either
+        // field. Without this both-fields check, a PATCH carrying only
+        // `publicationDecision: "publish"` would bypass the lock.
+        $consentStatusChanged       = (
+            array_key_exists('consentStatus', $data) === true
+            && (string) $data['consentStatus'] !== (string) ($existing['consentStatus'] ?? '')
+        );
+        $publicationDecisionChanged = (
+            array_key_exists('publicationDecision', $data) === true
+            && (string) $data['publicationDecision'] !== (string) ($existing['publicationDecision'] ?? '')
+        );
+
+        // Standing-consent carve-out: a record matched to a standing-consent
+        // rule (matchKind === 'standing_consent') still permits the operator
+        // to flip `publicationDecision` (e.g. consent_given → anonymize) as
+        // long as `consentStatus` itself is preserved. Only a prohibition
+        // match locks both transition fields. The carve-out is driven by the
+        // PERSISTED `matchKind` marker (PR #147 Thread B regression: pre-fix
+        // the marker was never persisted, so the carve-out never fired and
+        // the override was 400-locked).
+        $existingMatchKind = (string) ($existing['matchKind'] ?? '');
+        if ($existingMatchKind === 'standing_consent'
+            && $consentStatusChanged === false
+            && $publicationDecisionChanged === true
+        ) {
+            return;
+        }
+
+        if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
+            return;
+        }
+
+        if ($consentStatusChanged === true) {
+            $rejectedField = 'consentStatus';
+        } else {
+            $rejectedField = 'publicationDecision';
+        }
+
+        $rejectedValue = (string) $data[$rejectedField];
+        $currentValue  = (string) ($existing[$rejectedField] ?? '');
+
+        throw new InvalidArgumentException(
+            message: sprintf(
+                '%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
+                $rejectedField,
+                $rejectedValue,
+                (string) $existingMatch,
+                $currentValue
+            )
+        );
+
+    }//end guardPolicyPreemptedTransition()
 
     /**
      * Get all consent records for a specific document
      *
-     * @param string $documentId The document UUID
-     * @param string $register   The register ID
-     * @param string $schema     The schema ID
+     * @param string      $documentId The document UUID
+     * @param string      $register   The register ID
+     * @param string      $schema     The schema ID
+     * @param string|null $ownerUid   UID to scope results to, or null for all
      *
      * @return array<int, array<string, mixed>> List of consent records
      *
      * @throws Exception If query fails
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
      */
     public function getConsentsByDocument(
         string $documentId,
         string $register,
-        string $schema
+        string $schema,
+        ?string $ownerUid=null
     ): array {
         try {
             $objectService = $this->getObjectService();
 
+            $selfScope = ['register' => $register, 'schema' => $schema];
+
+            // Security (H1): scope the query to the caller's own records when
+            // a non-admin UID is provided, so users cannot enumerate consent
+            // records that belong to other users via the byDocument endpoint.
+            if ($ownerUid !== null) {
+                $selfScope['owner'] = $ownerUid;
+            }
+
             $results = $objectService->searchObjects(
                 [
-                    '@self'      => ['register' => $register, 'schema' => $schema],
+                    '@self'      => $selfScope,
                     'documentId' => $documentId,
                 ]
             );
@@ -198,6 +391,4 @@ class ConsentUpdateHandler
         }//end try
 
     }//end getConsentsByDocument()
-
-
 }//end class

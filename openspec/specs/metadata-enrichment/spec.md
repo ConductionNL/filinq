@@ -1,105 +1,422 @@
 ---
-status: reviewed
+status: implementing
+or_adoption_change: docudesk-adopt-or-abstractions
+retrofit_extensions:
+  - REQ-META-11
 ---
 
 # Metadata Enrichment
 
 ## Purpose
 
-Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment runs both on-demand via the API and automatically via the OpenRegister event listener. All processing is performed locally using heuristic algorithms -- no external NLP services are required.
+@e2e exclude pure backend event-driven processing service — no dedicated UI surface; enrichment logic covered by PHPUnit unit tests
+
+Provides automatic metadata enrichment for documents stored in OpenRegister. When documents are created or updated, DocuDesk detects language, extracts keywords, classifies topics, standardizes document types, and normalizes date fields. Enrichment outputs are declared as **`x-openregister-calculations`** annotations on the relevant schemas; the custom service is retained as the computation backend but MUST NOT write derived fields directly — OR's calculation engine invokes the service and stores the result. All processing is performed locally using heuristic algorithms — no external NLP services are required.
+
+## OR Adoption decisions (from docudesk-adopt-or-abstractions)
+
+- **Task 9** — Metadata enrichment is declared as a `x-openregister-calculations` annotation rather than a custom service that writes fields ad-hoc. Each enrichment output (language, keywords, documentType, topicCategory, dates) is a declared calculation whose expression calls the relevant `MetadataEnrichmentService` method. The service remains in docudesk as the domain algorithm; OR's calculation engine dispatches it and persists the result.
+- **Rationale** — This follows ADR-031 (schema-declarative business logic). The enrichment outputs are derived/virtual fields that fit `x-openregister-calculations` exactly. The service is NOT removed — it is the computation backend. Only the wiring changes: instead of the event listener writing `$object['language'] = $lang` directly, it declares `language` as a calculation and OR invokes the service.
+
+### Requirement: Enrichment Outputs as OR Calculations (REQ-META-CAL)
+
+**Priority:** MUST (Phase 2 — gated on OR shipping ADR-031 calculation runtime)
+
+Enrichment fields `language`, `keywords`, `documentType`, `topicCategory`, and normalised date fields SHALL be declared as `x-openregister-calculations` on the file-attachment schema (or the enriched object's schema). The `MetadataEnrichmentService` methods become calculation expressions.
+
+#### Scenario: Language is a calculation
+
+- **GIVEN** `x-openregister-calculations.language` is declared on the enriched object schema
+- **WHEN** a new object is created
+- **THEN** OR SHALL invoke `MetadataEnrichmentService::detectLanguage($object['text'])`
+- **AND** the result SHALL be stored as `language` on the object
+- **AND** the event listener SHALL NOT contain a `$object['language'] = ...` write
+
+#### Scenario: Keyword extraction is a calculation
+
+- **GIVEN** `x-openregister-calculations.keywords` is declared
+- **WHEN** OR's calculation engine runs after object creation
+- **THEN** `MetadataEnrichmentService::extractKeywords($object['text'])` SHALL be called
+- **AND** the keywords array SHALL be stored by OR, not by the event listener directly
+
+#### Scenario: Skip-if-populated preserved
+
+- **GIVEN** an object already has `language: "nl"` set
+- **WHEN** OR evaluates the `language` calculation
+- **THEN** the calculation SHOULD be a no-op (OR calculation engine respects pre-populated fields)
+- **AND** the existing value is preserved
+
+#### Scenario: Feature toggle respected
+
+- **GIVEN** `enable_language_detection` is `0` in admin settings
+- **WHEN** OR's calculation engine would invoke the language calculation
+- **THEN** the calculation expression SHALL call `IAppConfig::getValueBool('docudesk', 'enable_language_detection', true)` before proceeding
+- **AND** if disabled, the calculation returns `null` (no write)
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| META-CAL-001 | `x-openregister-calculations` declared for: language, keywords, documentType, topicCategory, normalised dates | MUST | Implementing |
+| META-CAL-002 | MetadataEnrichmentService methods called as calculation expressions, not ad-hoc event-listener writes | MUST | Apply-phase |
+| META-CAL-003 | Feature toggles (`enable_*`) checked inside the calculation expression | MUST | Apply-phase |
+| META-CAL-004 | Skip-if-populated logic preserved via OR calculation semantics | MUST | Apply-phase |
 
 ## Requirements
 
-### Language Detection
+### Requirement: Language Detection (REQ-META-01)
+
+**Priority:** MUST
+
+Detect document language from text content using word frequency analysis for Dutch and English.
+
+#### Scenario: Detect Dutch document
+- GIVEN a document with text containing frequent Dutch words (de, het, een, en, van)
+- AND Dutch word count exceeds 5 and is higher than English
+- WHEN language detection runs
+- THEN the language is detected as "nl"
+
+#### Scenario: Detect English document
+- GIVEN a document with text containing frequent English words (the, be, to, of, and)
+- AND English word count exceeds 5
+- WHEN language detection runs
+- THEN the language is detected as "en"
+
+#### Scenario: Insufficient text for detection
+- GIVEN a document with very short text (few words)
+- AND neither Dutch nor English word counts exceed 5
+- WHEN language detection runs
+- THEN null is returned (language undetermined)
+
+#### Scenario: Skip detection for pre-populated field
+- GIVEN a document object already has a `language` field set to "nl"
+- WHEN metadata enrichment runs
+- THEN language detection is skipped
+- AND the existing value is preserved
+
+#### Scenario: Feature toggle disabled
+- GIVEN `enable_language_detection` is set to "0" in admin settings
+- WHEN an ObjectCreatedEvent fires
+- THEN language detection is skipped entirely
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | META-001 | Detect document language from text content | MUST | Implemented |
-| META-002 | Support Dutch (nl) language detection using common Dutch word frequency | MUST | Implemented |
-| META-003 | Support English (en) language detection using common English word frequency | MUST | Implemented |
-| META-004 | Require a minimum word count threshold (>5 matches) before declaring a language | MUST | Implemented |
-| META-005 | Return null if language cannot be determined confidently | MUST | Implemented |
-| META-006 | Skip language detection if the object already has a `language` field populated | MUST | Implemented |
-| META-007 | Language detection can be toggled on/off via admin settings (`enable_language_detection`) | MUST | Implemented |
+| META-002 | Support Dutch (nl) using 10 common Dutch words | MUST | Implemented |
+| META-003 | Support English (en) using 10 common English words | MUST | Implemented |
+| META-004 | Require minimum threshold (>5 matches) before declaring language | MUST | Implemented |
+| META-005 | Return null if language undetermined | MUST | Implemented |
+| META-006 | Skip detection if object already has `language` populated | MUST | Implemented |
+| META-007 | Toggle via admin settings (`enable_language_detection`) | MUST | Implemented |
 
-### Keyword Extraction
+### Requirement: Keyword Extraction (REQ-META-02)
+
+**Priority:** MUST
+
+Extract top keywords from document text using word frequency analysis with stop word filtering.
+
+#### Scenario: Extract keywords from a legal document
+- GIVEN a document about a contract with terms like "contract", "party", "obligation" appearing frequently
+- WHEN keyword extraction runs
+- THEN the top 10 most frequent non-stop words are returned
+- AND common stop words (the, de, het, and, en, etc.) are filtered out
+
+#### Scenario: Keywords ranked by frequency
+- GIVEN a document where "budget" appears 15 times and "plan" appears 8 times
+- WHEN keywords are extracted
+- THEN "budget" ranks higher than "plan" in the results
+
+#### Scenario: Maximum 10 keywords
+- GIVEN a document with 50 unique non-stop words
+- WHEN keywords are extracted
+- THEN exactly 10 keywords are returned (the top 10 by frequency)
+
+#### Scenario: Skip extraction for pre-populated field
+- GIVEN a document object already has a `keywords` field with values
+- WHEN metadata enrichment runs
+- THEN keyword extraction is skipped
+- AND the existing keywords are preserved
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| META-010 | Extract top keywords from document text content | MUST | Implemented |
-| META-011 | Filter out Dutch and English stop words before ranking | MUST | Implemented |
+| META-010 | Extract top keywords from document text | MUST | Implemented |
+| META-011 | Filter out Dutch and English stop words | MUST | Implemented |
 | META-012 | Rank keywords by frequency (most frequent first) | MUST | Implemented |
-| META-013 | Return a maximum of 10 keywords | MUST | Implemented |
-| META-014 | Skip keyword extraction if the object already has a `keywords` field populated | MUST | Implemented |
-| META-015 | Keyword extraction can be toggled on/off via admin settings (`enable_keyword_extraction`) | MUST | Implemented |
+| META-013 | Return maximum 10 keywords | MUST | Implemented |
+| META-014 | Skip if `keywords` already populated | MUST | Implemented |
+| META-015 | Toggle via admin settings (`enable_keyword_extraction`) | MUST | Implemented |
 
-### Topic Classification
+### Requirement: Topic Classification (REQ-META-03)
+
+**Priority:** MUST
+
+Classify documents into topic categories using keyword matching against predefined vocabularies.
+
+#### Scenario: Classify a financial document
+- GIVEN a document containing words "invoice", "payment", "budget" frequently
+- WHEN topic classification runs
+- THEN the document is classified as "financial"
+
+#### Scenario: Classify a legal document
+- GIVEN a document containing words "contract", "agreement", "law", "court"
+- WHEN topic classification runs
+- THEN the document is classified as "legal"
+
+#### Scenario: No matching topic
+- GIVEN a document about gardening with no words matching any topic vocabulary
+- WHEN topic classification runs
+- THEN null is returned (no topic matches)
+
+#### Scenario: Highest score wins
+- GIVEN a document with 5 legal keywords and 3 financial keywords
+- WHEN topic scores are calculated
+- THEN "legal" wins because it has the highest score
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| META-020 | Classify documents into topic categories based on text content | MUST | Implemented |
-| META-021 | Support topic categories: `legal`, `financial`, `medical`, `technical` | MUST | Implemented |
-| META-022 | Classification uses keyword matching with predefined topic vocabularies | MUST | Implemented |
-| META-023 | Return the topic with the highest keyword match score | MUST | Implemented |
-| META-024 | Return null if no topic matches (all scores are 0) | MUST | Implemented |
-| META-025 | Skip topic classification if the object already has a `topic` field populated | MUST | Implemented |
-| META-026 | Topic classification can be toggled on/off via admin settings (`enable_topic_classification`) | MUST | Implemented |
+| META-020 | Classify documents into topic categories | MUST | Implemented |
+| META-021 | Support topics: legal, financial, medical, technical | MUST | Implemented |
+| META-022 | Classification uses keyword matching with predefined vocabularies | MUST | Implemented |
+| META-023 | Return topic with highest score | MUST | Implemented |
+| META-024 | Return null if no topic matches | MUST | Implemented |
+| META-025 | Skip if `topic` already populated | MUST | Implemented |
+| META-026 | Toggle via admin settings (`enable_topic_classification`) | MUST | Implemented |
 
-### Document Type Standardization
+### Requirement: Document Type Standardization (REQ-META-04)
+
+**Priority:** MUST
+
+Standardize document type strings to canonical categories by mapping file extensions and names.
+
+#### Scenario: Standardize "docx" to "word"
+- GIVEN a document with documentType "docx"
+- WHEN type standardization runs
+- THEN the type is normalized to "word"
+
+#### Scenario: Map spreadsheet extensions
+- GIVEN documents with types "xls", "xlsx", "excel"
+- WHEN type standardization runs
+- THEN all are normalized to "spreadsheet"
+
+#### Scenario: Unknown type passed through
+- GIVEN a document with documentType "custom_format"
+- WHEN type standardization runs
+- THEN "custom_format" is returned unchanged
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | META-030 | Standardize document type strings to canonical categories | MUST | Implemented |
-| META-031 | Supported canonical types: `pdf`, `word`, `spreadsheet`, `presentation`, `text`, `html`, `image` | MUST | Implemented |
-| META-032 | Map common extensions and names (e.g., doc/docx -> word, xls/xlsx -> spreadsheet) | MUST | Implemented |
-| META-033 | Pass through unknown document types unchanged | MUST | Implemented |
+| META-031 | Canonical types: pdf, word, spreadsheet, presentation, text, html, image | MUST | Implemented |
+| META-032 | Map extensions: doc/docx -> word, xls/xlsx -> spreadsheet, ppt/pptx -> presentation | MUST | Implemented |
+| META-033 | Unknown types passed through unchanged | MUST | Implemented |
 
-### Date Normalization
+### Requirement: Date Normalization (REQ-META-05)
+
+**Priority:** MUST
+
+Normalize date fields to ISO 8601 format across standard field names.
+
+#### Scenario: Normalize created date
+- GIVEN an object with `created: "March 15, 2024"`
+- WHEN date normalization runs
+- THEN the field is normalized to ISO 8601 format: "2024-03-15T00:00:00+00:00"
+
+#### Scenario: Unparseable date skipped
+- GIVEN an object with `date: "not a real date"`
+- WHEN date normalization runs
+- THEN the field is skipped gracefully (debug log, no exception)
+- AND other date fields continue to be processed
+
+#### Scenario: Multiple date fields normalized
+- GIVEN an object with both `created` and `modified` fields
+- WHEN date normalization runs
+- THEN both fields are normalized independently
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
 | META-040 | Normalize date fields to ISO 8601 format | MUST | Implemented |
-| META-041 | Normalize fields: created, modified, date, creationDate, modificationDate | MUST | Implemented |
-| META-042 | Skip fields that fail date parsing gracefully (log debug, do not throw) | MUST | Implemented |
+| META-041 | Normalize: created, modified, date, creationDate, modificationDate | MUST | Implemented |
+| META-042 | Skip unparseable dates gracefully (log debug, no throw) | MUST | Implemented |
 
-### Event-Driven Enrichment
+### Requirement: Event-Driven Enrichment (REQ-META-06)
+
+**Priority:** MUST
+
+Automatically enrich metadata when objects are created or updated in OpenRegister, with content change detection on updates.
+
+#### Scenario: Auto-enrich on object creation
+- GIVEN a document object is created in OpenRegister with text content
+- AND all enrichment features are enabled
+- WHEN ObjectCreatedEvent is dispatched
+- THEN DocuDeskEventListener processes the event
+- AND MetadataService enhances the metadata
+- AND enriched fields are saved back to the object
+
+#### Scenario: Re-enrich on content update
+- GIVEN a document object exists in OpenRegister
+- WHEN the `content` field is updated and ObjectUpdatedEvent fires
+- THEN the event listener detects the content change
+- AND metadata is re-enriched based on the new content
+
+#### Scenario: Skip re-enrichment on non-content update
+- GIVEN a document object exists
+- WHEN a non-content field (e.g., status) is updated
+- THEN the listener checks content fields: content, text, description, title
+- AND finds no changes, so enrichment is skipped
+- AND a debug log records the skip
+
+#### Scenario: Object deletion logged
+- GIVEN a document object is deleted from OpenRegister
+- WHEN ObjectDeletedEvent fires
+- THEN the deletion is logged
+- AND no additional processing occurs
+
+#### Scenario: All features disabled
+- GIVEN all enrichment features are toggled off in admin settings
+- WHEN an ObjectCreatedEvent fires
+- THEN the listener checks settings and finds all features disabled
+- AND no enrichment processing occurs
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| META-050 | Automatically enrich metadata when an object is created in OpenRegister (ObjectCreatedEvent) | MUST | Implemented |
-| META-051 | Re-enrich metadata when an object is updated in OpenRegister (ObjectUpdatedEvent) and content fields have changed | MUST | Implemented |
-| META-052 | Content change detection checks fields: content, text, description, title | MUST | Implemented |
-| META-053 | Skip re-enrichment if no content fields have changed on update | MUST | Implemented |
-| META-054 | Log object deletion events (ObjectDeletedEvent) without additional processing | MUST | Implemented |
-| META-055 | Check admin settings to determine which enrichment features are enabled before running | MUST | Implemented |
-| META-056 | Save enriched metadata back to OpenRegister via MetadataService::saveEnrichedMetadata() | MUST | Implemented |
+| META-050 | Auto-enrich on ObjectCreatedEvent | MUST | Implemented |
+| META-051 | Re-enrich on ObjectUpdatedEvent when content fields changed | MUST | Implemented |
+| META-052 | Content change detection checks: content, text, description, title | MUST | Implemented |
+| META-053 | Skip re-enrichment if no content fields changed | MUST | Implemented |
+| META-054 | Log object deletion events without processing | MUST | Implemented |
+| META-055 | Check admin settings before running enrichment | MUST | Implemented |
+| META-056 | Save enriched metadata back to OpenRegister | MUST | Implemented |
 
-### API Enrichment
+### Requirement: API On-Demand Enrichment (REQ-META-07)
+
+**Priority:** MUST
+
+On-demand metadata enrichment via REST API for specific objects.
+
+#### Scenario: Trigger enrichment for an object
+- GIVEN a document object in OpenRegister with objectId, register, and schema
+- WHEN POST /api/metadata/enrich is called with these identifiers
+- THEN metadata is enhanced
+- AND enriched fields are saved back to the object
+- AND the response includes the list of enriched field names
+
+#### Scenario: Enrichment with direct data
+- GIVEN objectData is provided in the request body
+- WHEN enrichment is triggered
+- THEN the provided data is used directly (avoids extra lookup)
+
+#### Scenario: No enrichment needed
+- GIVEN an object with all metadata fields already populated
+- WHEN enrichment is triggered
+- THEN no fields are enriched
+- AND a success message indicates nothing was needed
 
 | ID | Requirement | Priority | Status |
 |----|------------|----------|--------|
-| META-060 | On-demand metadata enrichment via `POST /api/metadata/enrich` | MUST | Implemented |
-| META-061 | Requires objectId, register, and schema in request body | MUST | Implemented |
-| META-062 | Optionally accepts objectData for direct enrichment (avoids extra lookup) | MUST | Implemented |
+| META-060 | On-demand enrichment via `POST /api/metadata/enrich` | MUST | Implemented |
+| META-061 | Requires objectId, register, and schema in request | MUST | Implemented |
+| META-062 | Optionally accepts objectData for direct enrichment | MUST | Implemented |
 | META-063 | Returns enriched fields list and updated object data | MUST | Implemented |
-| META-064 | Returns success message if no enrichment is needed | MUST | Implemented |
+| META-064 | Returns success if no enrichment needed | MUST | Implemented |
+
+### Requirement: Duplicated ObjectService Resolution (REQ-META-08)
+
+**Priority:** MUST
+
+MetadataService has its own private getObjectService() duplicating the pattern found in other services.
+
+#### Scenario: MetadataService resolves ObjectService
+- GIVEN MetadataService needs to save enriched metadata
+- WHEN it calls its private `getObjectService()`
+- THEN the same `getInstalledApps()` + `container->get()` pattern is used
+- AND this duplicates SettingsService::getObjectService() (public)
+
+#### Scenario: Pattern exists in 3+ services
+- GIVEN MetadataService, ConsentService, and ObjectionDeadlineChecker all have this pattern
+- WHEN the code is inspected
+- THEN identical code exists in each
+- AND consolidation to SettingsService::getObjectService() is recommended
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| META-070 | MetadataService has private `getObjectService()` duplicating SettingsService | MUST | Implemented |
+| META-071 | Same `getInstalledApps()` + `container->get()` pattern used | MUST | Implemented |
+
+### Requirement: Event Listener Service Resolution (REQ-META-09)
+
+**Priority:** MUST
+
+The event listener resolves services via `\OC::$server->get()` at handle time rather than constructor DI to avoid circular dependencies.
+
+#### Scenario: Lazy service resolution at handle time
+- GIVEN DocuDeskEventListener has an empty constructor
+- WHEN an event is dispatched
+- THEN services are resolved via `\OC::$server->get()` inside handle()
+- AND this avoids premature service resolution during app registration
+
+#### Scenario: Error handling with nested try/catch
+- GIVEN an exception occurs during event processing
+- WHEN the outer catch block runs
+- THEN it attempts to re-resolve the logger from `\OC::$server`
+- AND if the logger resolution also fails, the error is silently swallowed
+
+#### Scenario: Enrichment failures are non-fatal
+- GIVEN metadata enrichment fails during event handling
+- WHEN the exception is caught
+- THEN the error is logged
+- AND the event is considered "handled" (non-fatal)
+- AND the system continues operating
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| META-072 | Event listener resolves services via `\OC::$server->get()` at handle time | MUST | Implemented |
+| META-073 | Empty constructor avoids circular dependency | MUST | Implemented |
+| META-074 | `\OC::$server` usage reduces testability (anti-pattern) | MUST | Bug |
+| META-075 | ConsentService is NOT imported in the event listener | MUST | Verified |
+| META-076 | Event handler errors caught and logged without propagating | MUST | Implemented |
+| META-077 | Logger re-resolved during error handling; failures silently swallowed | MUST | Implemented |
+| META-078 | Enrichment failures are non-fatal | MUST | Implemented |
+| META-079 | Nested try/catch re-resolves logger for error scope safety | MUST | Implemented |
+
+### Requirement: Text Content Extraction from Object Data (REQ-META-10)
+
+**Priority:** MUST
+
+MetadataService extracts text content from object data fields in a defined priority order for analysis.
+
+#### Scenario: Extract from content field
+- GIVEN an object with `content: "This is a legal contract..."`
+- WHEN text extraction runs
+- THEN the content field is used for analysis
+
+#### Scenario: Fallback to text field
+- GIVEN an object with no `content` field but `text: "Financial report..."`
+- WHEN text extraction runs
+- THEN the text field is used as fallback
+
+#### Scenario: Fallback to description field
+- GIVEN an object with no content or text but `description: "Medical document..."`
+- WHEN text extraction runs
+- THEN the description field is used as second fallback
+
+#### Scenario: No text content available
+- GIVEN an object with no content, text, or description fields
+- WHEN text extraction runs
+- THEN an empty string is returned
+- AND text-based enrichment (language, keywords, topic) is skipped
+
+| ID | Requirement | Priority | Status |
+|----|------------|----------|--------|
+| META-080 | Extract text from object fields in priority: content, text, description | MUST | Implemented |
+| META-081 | Skip text-based enrichment when no text content available | MUST | Implemented |
 
 ## Data Model
-
-### Enrichment Input
-
-Text content is extracted from object data fields in priority order:
-1. `content`
-2. `text`
-3. `description`
 
 ### Enrichment Output Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| language | string | ISO language code (`nl`, `en`, or null) |
+| language | string | ISO language code (nl, en, or null) |
 | keywords | array[string] | Top 10 keywords by frequency |
-| topic | string | Topic category (`legal`, `financial`, `medical`, `technical`) |
+| topic | string | Topic category (legal, financial, medical, technical) |
 | documentType | string | Standardized document type |
 | created, modified, etc. | string (ISO 8601) | Normalized date fields |
 
@@ -112,211 +429,82 @@ Text content is extracted from object data fields in priority order:
 | medical | patient, diagnosis, treatment, medical, health, doctor |
 | technical | system, software, technical, code, development, api |
 
-## User Interface
-
-Metadata enrichment has no dedicated UI view. It operates:
-1. Automatically via the event listener (invisible to the user)
-2. On-demand via the API endpoint
-3. Configurable via admin settings toggles (see admin-settings spec)
-
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/metadata/enrich` | Trigger metadata enrichment for an object |
 
-## Scenarios
-
-### Auto-Enrich on Object Creation
-
-```
-GIVEN a document object is created in OpenRegister with text content
-AND language detection, keyword extraction, and topic classification are all enabled
-WHEN the ObjectCreatedEvent is dispatched
-THEN the DocuDeskEventListener receives the event
-AND MetadataService::enhanceMetadata() analyzes the text
-AND detected language, keywords, and topic are saved back to the object
-```
-
-### Re-Enrich on Content Update
-
-```
-GIVEN a document object exists in OpenRegister
-WHEN the content field is updated and ObjectUpdatedEvent fires
-THEN the event listener detects the content change
-AND metadata is re-enriched based on the new content
-AND updated fields are saved back to OpenRegister
-```
-
-### Skip Re-Enrichment on Non-Content Update
-
-```
-GIVEN a document object exists in OpenRegister
-WHEN a non-content field (e.g., status) is updated and ObjectUpdatedEvent fires
-THEN the event listener detects no content change
-AND metadata re-enrichment is skipped
-AND a debug log message is recorded
-```
-
-### API-Triggered Enrichment
-
-```
-GIVEN a document object in OpenRegister with objectId, register, and schema
-WHEN POST /api/metadata/enrich is called with the object identifiers and data
-THEN the metadata is enhanced
-AND the enriched fields are saved back to the object
-AND the response includes the list of enriched field names
-```
-
-### Enrichment with All Features Disabled
-
-```
-GIVEN all three enrichment features are disabled in admin settings
-WHEN an ObjectCreatedEvent fires
-THEN the event listener checks settings
-AND no enrichment processing occurs
-```
-
-## Internal Implementation Details
-
-### Duplicated getObjectService() in MetadataService (Gap 10)
-
-MetadataService has its own private `getObjectService()` method that duplicates the same pattern found in ConsentService and SettingsService:
-
-```php
-private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
-{
-    if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-    }
-    throw new \RuntimeException('OpenRegister service is not available.');
-}
-```
-
-This identical code exists in 3 services:
-1. **MetadataService** (private) -- used by `saveEnrichedMetadata()`
-2. **ConsentService** (private) -- used by all consent CRUD operations
-3. **SettingsService** (public) -- used by the controller and available for reuse
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| META-070 | MetadataService has its own private `getObjectService()` duplicating SettingsService pattern | MUST | Implemented |
-| META-071 | The duplicated method uses the same `getInstalledApps()` + `container->get()` pattern | MUST | Implemented |
-
-**Recommended fix**: Inject SettingsService into MetadataService and use `SettingsService::getObjectService()` (public method) instead of maintaining a private copy.
-
-### Event Listener Service Resolution via OC::$server (Gap 16)
-
-The `DocuDeskEventListener` resolves all its dependencies via `\OC::$server->get()` inside the `handle()` method rather than through constructor dependency injection:
-
-```php
-public function __construct()
-{
-    // Empty constructor - services are retrieved from the server container.
-}
-
-public function handle(Event $event): void
-{
-    $logger = \OC::$server->get(LoggerInterface::class);
-    $metadataService = \OC::$server->get(MetadataService::class);
-    $settingsService = \OC::$server->get(SettingsService::class);
-    // ...
-}
-```
-
-**This is an anti-pattern** because:
-- It bypasses the Nextcloud DI container's constructor injection
-- Makes the class harder to unit test (cannot mock dependencies via constructor)
-- Relies on the global `\OC::$server` static accessor
-
-**Likely reason**: The empty constructor avoids circular dependency issues. Event listeners are registered early in the app lifecycle, and injecting MetadataService/SettingsService via constructor might trigger premature resolution of OpenRegister services (which may not be initialized yet). By resolving at handle-time, the listener ensures all services are fully booted.
-
-**Note**: The listener only imports `MetadataService` and `SettingsService`. `ConsentService` is NOT imported or referenced in the event listener.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| META-072 | Event listener resolves services via `\OC::$server->get()` at handle time, not via constructor DI | MUST | Implemented |
-| META-073 | Empty constructor is intentional to avoid circular dependency during app registration | MUST | Implemented |
-| META-074 | `\OC::$server` usage is an anti-pattern that reduces testability | MUST | Bug |
-| META-075 | ~~ConsentService is imported but never used in the event listener~~ ConsentService is NOT imported in the event listener -- only MetadataService and SettingsService are imported | MUST | Verified (not dead code) |
-
-### Nested Try/Catch Error Handling in Event Listener (Gap 17)
-
-The event listener uses a nested try/catch pattern where logging failures are silently swallowed:
-
-```php
-public function handle(Event $event): void
-{
-    try {
-        // Main event processing...
-    } catch (\Exception $e) {
-        try {
-            $logger = \OC::$server->get(LoggerInterface::class);
-            $logger->error('DocuDesk: Error in event handler', [...]);
-        } catch (\Exception $logException) {
-            // Silently fail if logging fails.
-        }
-    }
-}
-```
-
-**Behavior**:
-1. **Outer try**: Catches any exception from event processing (service resolution, metadata enrichment, etc.)
-2. **Inner try**: Attempts to log the error. Re-resolves the logger from `\OC::$server` because it may not have been resolved yet (the error could have occurred during initial service resolution)
-3. **Inner catch**: Silently swallows logging failures -- if the logger itself cannot be resolved, the error is completely lost
-
-**Additionally**, within `handleObjectCreated()` and `handleObjectUpdated()`, metadata enrichment failures are caught and logged but do NOT prevent the event from being considered "handled":
-
-```php
-} catch (\Exception $e) {
-    $logger->error('DocuDesk: Failed to enrich metadata for new object', [...]);
-}
-```
-
-This means enrichment failures are non-fatal and the system continues operating.
-
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| META-076 | Event handler errors are caught and logged without propagating to the event dispatcher | MUST | Implemented |
-| META-077 | If the logger cannot be resolved during error handling, the error is silently swallowed | MUST | Implemented |
-| META-078 | Metadata enrichment failures within event handlers are non-fatal (logged, not thrown) | MUST | Implemented |
-| META-079 | The nested try/catch re-resolves the logger because it may not have been resolved in the outer scope | MUST | Implemented |
-
 ## Dependencies
 
 - **OpenRegister ObjectService**: Find and save document objects
 - **OpenRegister Events**: ObjectCreatedEvent, ObjectUpdatedEvent, ObjectDeletedEvent
-- **SettingsService**: Check enabled enrichment feature toggles
-- **Nextcloud IAppConfig**: Enrichment feature toggle persistence
-- **Nextcloud IAppManager**: Checking OpenRegister installation status (in duplicated getObjectService)
-- **PSR ContainerInterface**: Lazy service resolution (in duplicated getObjectService)
-- **\OC::$server**: Global service container used by event listener for runtime service resolution
+- **SettingsService**: Feature toggle checking
+- **TextAnalysisService**: Language detection, keyword extraction, topic classification
+- **LanguageClassifier**: Word frequency-based language and topic analysis
+- **DocumentTextExtractor**: Text extraction from object fields and date normalization
 
 ### Current Implementation Status
 - **Fully implemented** with file paths:
-  - `lib/Service/MetadataService.php` -- core enrichment: `enhanceMetadata()`, `detectLanguage()`, `extractKeywords()`, `classifyTopic()`, `standardizeDocumentType()`, `normalizeDates()`, `saveEnrichedMetadata()`, private `getObjectService()`
-  - `lib/Controller/MetadataController.php` -- REST API: `enrich()` endpoint for on-demand enrichment
-  - `lib/EventListener/DocuDeskEventListener.php` -- handles ObjectCreatedEvent, ObjectUpdatedEvent, ObjectDeletedEvent; resolves services via `\OC::$server->get()` at handle time
-  - `lib/AppInfo/Application.php` -- registers event listener for all three OpenRegister events
-  - `appinfo/routes.php` -- route for `metadata#enrich` (POST `/api/metadata/enrich`)
-- **Not yet implemented**: Nothing -- all requirements (META-001 through META-079) are fully implemented
-- **Known issues**:
-  - META-074: `\OC::$server` usage in event listener is an anti-pattern that reduces testability
-  - META-070/071: `getObjectService()` duplicated across MetadataService, ConsentService, and SettingsService
-  - Topic vocabulary is limited to 4 categories with 6 keywords each -- may need expansion for production use
+  - `lib/Service/MetadataService.php` -- core enrichment orchestration
+  - `lib/Service/TextAnalysisService.php` -- keyword extraction and type standardization
+  - `lib/Service/LanguageClassifier.php` -- language detection and topic classification
+  - `lib/Service/DocumentTextExtractor.php` -- text extraction and date normalization
+  - `lib/Controller/MetadataController.php` -- REST API endpoint
+  - `lib/EventListener/DocuDeskEventListener.php` -- event handling
+  - `lib/EventListener/DocuDeskEventHandler.php` -- event dispatch logic
+  - `lib/EventListener/EnrichmentRunner.php` -- enrichment execution
 
 ### Standards & References
-- **ISO 639-1**: Language codes used for detection output (`nl`, `en`)
-- **Dublin Core Metadata Element Set (ISO 15836)**: Standard metadata fields (language, subject/keywords, type, date) align with Dublin Core
-- **ISO 8601**: Date normalization target format
-- **DCAT-AP (EU metadata standard)**: Document metadata enrichment aligns with EU open data metadata requirements
-- **OWMS (Overheid.nl Web Metadata Standaard)**: Dutch government metadata standard -- enriched fields could be mapped to OWMS properties
+- **ISO 639-1**: Language codes (nl, en)
+- **Dublin Core (ISO 15836)**: Metadata fields align with Dublin Core
+- **ISO 8601**: Date normalization format
+- **DCAT-AP**: EU metadata requirements
+- **OWMS**: Dutch government metadata standard
 
-### Specificity Assessment
-- **Specific enough**: Yes, this spec is detailed and fully implemented. All enrichment algorithms are documented.
-- **Missing/Ambiguous**: The topic vocabulary is very small (4 topics, 6 keywords each). The language detection only supports Dutch and English. The word frequency threshold (>5 matches) is hardcoded.
-- **Open questions**:
-  1. Should more languages be supported (German, French, etc.)?
-  2. Should the topic vocabulary be configurable via admin settings rather than hardcoded?
-  3. Should the `\OC::$server` anti-pattern in the event listener be refactored to use constructor DI?
-  4. Should the duplicated `getObjectService()` be consolidated to use `SettingsService::getObjectService()` (public method)?
+---
+
+## Retrofit Requirements (REQ-META-11)
+
+Reverse-engineered from already-shipped code on 2026-05-24 via ghost change
+`retrofit-2026-05-24-metadata-enrichment` (archived).
+
+### REQ-META-11: Language and Topic Classifier Class Boundary
+
+DocuDesk SHALL implement the language-detection and topic-classification algorithms in a dedicated `LanguageClassifier` service that owns the word-list vocabularies, the minimum-match threshold, and the scoring tiebreaker. Other services (`TextAnalysisService`, `MetadataService`) SHALL consume the classifier via dependency injection; they MUST NOT re-implement the vocabulary or scoring logic.
+
+The class encapsulates three constants — `DUTCH_WORDS` (10 stop-ish high-frequency Dutch words), `ENGLISH_WORDS` (10 high-frequency English words), and `TOPIC_KEYWORDS` (4 topic categories with 6 keywords each: `legal`, `financial`, `medical`, `technical`). The detection helpers share a private `countWordOccurrences()` implementation that counts whitespace-padded `' word '` substrings (so word boundaries are required on both sides, matching what REQ-META-01 / REQ-META-03 already specify abstractly).
+
+#### Scenario: Classifier owns the word lists
+
+- **WHEN** REQ-META-01 / REQ-META-03 are implemented
+- **THEN** the word vocabularies live in `LanguageClassifier` constants and are NOT redefined in `TextAnalysisService` or `MetadataService`
+- **AND** `TextAnalysisService::detectLanguage()` / `::classifyTopic()` forward to the injected `LanguageClassifier`
+
+#### Scenario: Language detection threshold
+
+- **WHEN** `LanguageClassifier::detectLanguage(text)` is called
+- **THEN** it lowercases the text, computes Dutch and English match counts via `countWordOccurrences`, and returns `"nl"` when `dutchCount > englishCount AND dutchCount > 5`
+- **AND** otherwise returns `"en"` when `englishCount > 5`
+- **AND** otherwise returns `null`
+
+#### Scenario: Topic classification scoring
+
+- **WHEN** `LanguageClassifier::classifyTopic(text)` is called
+- **THEN** for each of the four topics it computes the keyword-match count via `countWordOccurrences`
+- **AND** returns the topic with the highest non-zero score (`array_search` on the max score)
+- **AND** returns `null` if the highest score is `0`
+
+#### Scenario: Word-occurrence helper requires word boundaries
+
+- **WHEN** `countWordOccurrences(text, words)` is called
+- **THEN** for each target word it sums `substr_count(text, " word ")` — i.e. the word must be padded by spaces on both sides
+- **AND** the running total across the list is returned
+- **AND** a substring match inside a longer word (e.g. `"the"` inside `"theater"`) is NOT counted
+
+#### Notes
+
+- The class is stateless and has no constructor dependencies; it can be resolved either via DI or instantiated directly (used as a unit-test seam).
+- `TextAnalysisService` still defines its own public `countWordOccurrences()` with byte-identical logic — that is a residual duplicate not yet consolidated. TODO: remove `TextAnalysisService::countWordOccurrences()` once no external caller relies on it (the coverage scan flagged `LanguageClassifier::countWordOccurrences` as the duplicate, but at HEAD the situation has inverted — the classifier owns the logic, the analyzer is the leftover).
+- The 5-match threshold and the 10-keyword vocabularies are constants, not config — by design (REQ-META-04 calibration). Changing them requires a code change + spec revision.
+- `countWordOccurrences()` is byte-naive — non-ASCII whitespace (NBSP, tabs) is not treated as a boundary. Real-world DocuDesk text is whitespace-normalised earlier in the pipeline; if that ever changes, detection accuracy will drop.

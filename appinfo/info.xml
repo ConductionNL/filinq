@@ -4,7 +4,9 @@
     <id>docudesk</id>
     <name>DocuDesk</name>
     <summary>GDPR publication consent management and document metadata enrichment for Nextcloud</summary>
-    <description><![CDATA[GDPR publication consent management and document metadata enrichment for Nextcloud
+    <description><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/docudesk) for release planning and what this app does.
+
+GDPR publication consent management and document metadata enrichment for Nextcloud
 
 DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid) and automatic document metadata enrichment. It integrates with Open Register via events to enrich documents as they are created and updated.
 
@@ -28,7 +30,7 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.0.34-unstable.8</version>
+    <version>0.0.35</version>
     <licence>agpl</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
@@ -41,12 +43,19 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
         <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
     </documentation>
+    <!--
+        Processing-activity export (AVG Art. 30) consumes OpenRegister's
+        per-access read-logging capability (x-openregister-processing dialect,
+        ProcessingLogService / ProcessingLogController). That capability ships
+        from OpenRegister >= 0.2.14. The minimum is also recorded as the
+        `openregister` constraint in lib/Settings/docudesk_register.json.
+    -->
     <dependencies>
-        <php min-version="8.0" min-int-size="64"/>
+        <php min-version="8.3" min-int-size="64"/>
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="28" max-version="32"/>
+        <nextcloud min-version="30" max-version="34"/>
     </dependencies>
     <navigations>
         <navigation>
@@ -60,4 +69,7 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
 		<admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
 		<admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
 	</settings>
+    <background-jobs>
+        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+    </background-jobs>
 </info>
