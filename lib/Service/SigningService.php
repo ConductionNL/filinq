@@ -24,7 +24,9 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use OCA\DocuDesk\Event\SigningConcludedEvent;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -73,6 +75,7 @@ class SigningService
      * @param INotificationManager   $notificationManager Notification manager
      * @param LoggerInterface        $logger              Logger
      * @param IRequest               $request             HTTP request
+     * @param IEventDispatcher       $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
      *
      * @return void
      */
@@ -84,10 +87,28 @@ class SigningService
         private readonly IUserSession $userSession,
         private readonly INotificationManager $notificationManager,
         private readonly LoggerInterface $logger,
-        private readonly IRequest $request
+        private readonly IRequest $request,
+        private readonly IEventDispatcher $eventDispatcher
     ) {
 
     }//end __construct()
+
+    /**
+     * Provenance keys threaded from a cross-app DocumentSigningRequestedEvent
+     * onto the persisted signing-request object so the terminal
+     * SigningConcludedEvent can correlate back to the originating consumer.
+     *
+     * @var list<string>
+     */
+    private const PROVENANCE_FIELDS = [
+        'sourceApp',
+        'subjectRegister',
+        'subjectSchema',
+        'subjectId',
+        'subjectLabel',
+        'externalReference',
+        'correlationId',
+    ];
 
     /**
      * Create a new signing request
@@ -126,6 +147,18 @@ class SigningService
         ];
 
         $this->validateRequestData(data: $request);
+
+        // Cross-app delegated-signing contract (docudesk-signing-events): when a
+        // consumer raised this request through DocumentSigningRequestedEvent it
+        // carries provenance fields. Persist any present provenance onto the
+        // signing-request object (additive/optional) so the terminal
+        // SigningConcludedEvent can correlate back to the originating consumer.
+        // Internal requests omit these and are unaffected.
+        foreach (self::PROVENANCE_FIELDS as $field) {
+            if (empty($data[$field]) === false) {
+                $request[$field] = $data[$field];
+            }
+        }
 
         $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
         $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
@@ -452,6 +485,10 @@ class SigningService
         $request['status'] = 'DECLINED';
         $objectService->saveObject(object: $request, register: $register, schema: $schema);
 
+        // Cross-app delegated-signing contract: a declined request is terminal —
+        // emit SigningConcludedEvent (status=declined) for a delegated request.
+        $this->emitConclusionIfDelegated(request: $request, status: 'declined');
+
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'DECLINED',
@@ -509,6 +546,10 @@ class SigningService
 
         $request['status'] = 'CANCELLED';
         $objectService->saveObject(object: $request, register: $register, schema: $schema);
+
+        // Cross-app delegated-signing contract: a cancelled request is terminal
+        // — emit SigningConcludedEvent (status=cancelled) for a delegated request.
+        $this->emitConclusionIfDelegated(request: $request, status: 'cancelled');
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
@@ -670,7 +711,99 @@ class SigningService
 
         $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
 
+        // Cross-app delegated-signing contract: when all signers have signed the
+        // request is COMPLETED — emit the terminal SigningConcludedEvent
+        // (status=signed) for a delegated (provenance-carrying) request. The
+        // signed document reference is the persisted documentFileId.
+        if ($allSigned === true) {
+            $this->emitConclusionIfDelegated(
+                request: $freshRequest,
+                status: 'signed',
+                signedDocumentRef: ($freshRequest['documentFileId'] ?? null)
+            );
+        }
+
     }//end updateRequestStatus()
+
+    /**
+     * Emit a terminal SigningConcludedEvent for an expired request.
+     *
+     * Public entry point for the SigningExpirationJob, which marks requests
+     * EXPIRED outside this service. Delegates to the shared fail-soft helper so
+     * the cross-app contract has a single emission source. Only fires for a
+     * delegated (provenance-carrying) request; internal requests emit nothing.
+     *
+     * @param array<string, mixed> $request The persisted (EXPIRED) signing-request array
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+     *
+     * @return void
+     */
+    public function emitExpiredConclusion(array $request): void
+    {
+        $this->emitConclusionIfDelegated(request: $request, status: 'expired');
+
+    }//end emitExpiredConclusion()
+
+    /**
+     * Emit a SigningConcludedEvent when a delegated request concludes.
+     *
+     * Cross-app delegated-signing contract (docudesk-signing-events): only
+     * fires for a signing request that carries provenance (`sourceApp` set and
+     * non-empty) — internal DocuDesk requests emit nothing. The outcome
+     * envelope is built from the persisted request fields (signers, signed
+     * document reference) and dispatched via IEventDispatcher so the originating
+     * consumer (e.g. shillinq) can run its own downstream side effects.
+     * Fail-soft: any dispatch error is logged and the already-persisted
+     * terminal transition is never rolled back.
+     *
+     * @param array<string, mixed> $request           The persisted (terminal) signing-request array
+     * @param string               $status            Normalised status (signed|declined|expired|cancelled)
+     * @param string|null          $signedDocumentRef Reference to the signed document, when signed
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
+     *
+     * @return void
+     */
+    private function emitConclusionIfDelegated(array $request, string $status, ?string $signedDocumentRef=null): void
+    {
+        $sourceApp = (string) ($request['sourceApp'] ?? '');
+        if ($sourceApp === '') {
+            // Internal request (no consumer is waiting) — emit nothing.
+            return;
+        }
+
+        try {
+            $event = SigningConcludedEvent::fromRequest(
+                request: $request,
+                status: $status,
+                signedDocumentRef: $signedDocumentRef
+            );
+
+            $this->eventDispatcher->dispatchTyped($event);
+
+            $this->logger->info(
+                'DocuDesk: dispatched SigningConcludedEvent',
+                [
+                    'signingRequestId' => $event->getSigningRequestId(),
+                    'sourceApp'        => $sourceApp,
+                    'status'           => $status,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // The terminal transition has already persisted; a dispatch failure
+            // must not roll it back.
+            $this->logger->error(
+                'DocuDesk: signing request concluded but SigningConcludedEvent dispatch failed',
+                [
+                    'sourceApp' => $sourceApp,
+                    'status'    => $status,
+                    'exception' => $e->getMessage(),
+                ]
+            );
+        }//end try
+
+    }//end emitConclusionIfDelegated()
 
     /**
      * Find the signer record ID for a given user

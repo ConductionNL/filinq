@@ -25,7 +25,9 @@ use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
+use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
 use OCA\DocuDesk\EventListener\ApprovalStepListener;
+use OCA\DocuDesk\EventListener\DocumentSigningRequestedListener;
 use OCA\DocuDesk\EventListener\DocuDeskEventListener;
 use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
 use OCA\DocuDesk\Middleware\LanguageNegotiationMiddleware;
@@ -112,6 +114,17 @@ class Application extends App implements IBootstrap
 
         // Auto-regen dossier grondslagen summary when checkedOn is updated.
         $context->registerEventListener(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
+
+        // Cross-app delegated-signing contract (docudesk-signing-events): any
+        // installed consumer app (e.g. shillinq) dispatches
+        // DocumentSigningRequestedEvent and DocuDesk raises the signing request
+        // synchronously via SigningService::createRequest, writing the resolved
+        // signingRequestId back onto the event. The in-process replacement for
+        // the broken $registry->call('docudesk','createSigningRequest',…) path.
+        $context->registerEventListener(
+            DocumentSigningRequestedEvent::class,
+            DocumentSigningRequestedListener::class
+        );
 
         // Wire the PDF-conversion cascade. PdfConversionService takes an
         // ordered array of backends in its constructor; Nextcloud's DI cannot
