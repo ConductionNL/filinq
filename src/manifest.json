@@ -180,5 +180,61 @@
 				"documentationUrl": "https://docudesk.conduction.nl"
 			}
 		}
-	]
+	],
+	"observability": {
+		"_note": "Consumed by OpenRegister's AppHost observability engine (ADR-006 / ADR-040). The GenericHealthController + GenericMetricsController read this block to serve /api/health (public) and /api/metrics (admin-only). Replaces the bespoke HealthController/MetricsController/MetricsCollector deleted in build/adopt-apphost-2026-06-16.",
+		"health": {
+			"statusCodePolicy": "adr006",
+			"checks": [
+				{
+					"id": "database",
+					"type": "database",
+					"severity": "critical"
+				},
+				{
+					"id": "openregister",
+					"type": "orAvailable",
+					"severity": "degraded"
+				}
+			]
+		},
+		"metrics": [
+			{
+				"name": "documents_total",
+				"type": "gauge",
+				"help": "Total number of documents",
+				"source": {
+					"kind": "objectCount",
+					"schema": "document"
+				}
+			},
+			{
+				"name": "templates_total",
+				"type": "gauge",
+				"help": "Total number of templates",
+				"source": {
+					"kind": "objectCount",
+					"schema": "template"
+				}
+			},
+			{
+				"name": "pdf_generations_total",
+				"type": "counter",
+				"help": "Total PDF generation operations",
+				"source": {
+					"kind": "appConfig",
+					"key": "pdf_generations_total"
+				}
+			},
+			{
+				"name": "anonymizations_total",
+				"type": "counter",
+				"help": "Total anonymization operations",
+				"source": {
+					"kind": "appConfig",
+					"key": "anonymizations_total"
+				}
+			}
+		]
+	}
 }
