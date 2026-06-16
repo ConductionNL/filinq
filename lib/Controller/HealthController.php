@@ -1,18 +1,25 @@
 <?php
+
 /**
- * Health Controller
+ * Health Controller — AppHost delegator.
  *
- * Controller for exposing health check status.
+ * Thin subclass of OpenRegister's engine-owned GenericHealthController. It
+ * exists only so the `health#index` route resolves to a concrete DocuDesk
+ * class carrying the ADR-006 auth posture (#[PublicPage]); all behaviour —
+ * running the declarative `observability.health` checks from src/manifest.json
+ * and rendering `{status, app, version, checks}` — lives in the engine. The
+ * previous hand-written database + openregister checks are gone (declared in
+ * the manifest instead).
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
  * @author    Conduction B.V. <info@conduction.nl>
- * @copyright 2024 Conduction B.V.
+ * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
+ * @spec openspec/changes/adopt-apphost/tasks.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,16 +29,13 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
 
-use OCP\AppFramework\Controller;
+use OCA\OpenRegister\AppHost\Controller\GenericHealthController;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\App\IAppManager;
-use OCP\IDBConnection;
-use OCP\IRequest;
-use OCP\Server;
-use Psr\Log\LoggerInterface;
 
 /**
- * Controller for health check endpoint
+ * Public, declarative health endpoint backed by the AppHost engine.
  *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
@@ -39,78 +43,23 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class HealthController extends Controller
+class HealthController extends GenericHealthController
 {
     /**
-     * HealthController constructor
+     * GET /api/health — declarative health check (ADR-006).
      *
-     * @param string          $appName  The name of the app
-     * @param IRequest        $request  The request object
-     * @param IDBConnection   $database The database connection
-     * @param LoggerInterface $logger   Logger for error reporting
+     * Public per ADR-006: an anonymous probe (load balancer, uptime monitor)
+     * must reach this without a session. Delegates entirely to the engine.
      *
-     * @return void
+     * @return JSONResponse `{status, app, version, checks}`.
+     *
+     * @spec openspec/changes/adopt-apphost/tasks.md
      */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        private readonly IDBConnection $database,
-        private readonly LoggerInterface $logger
-    ) {
-        parent::__construct(appName: $appName, request: $request);
-
-    }//end __construct()
-
-    /**
-     * Return health check status
-     *
-     * @return JSONResponse JSON response with health status and checks
-     *
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-19
-     */
+    #[PublicPage]
+    #[NoCSRFRequired]
     public function index(): JSONResponse
     {
-        $checks = [];
-        $status = 'ok';
-
-        // Database check.
-        try {
-            $queryBuilder = $this->database->getQueryBuilder();
-            $queryBuilder->select($queryBuilder->createFunction('1'));
-            $result = $queryBuilder->executeQuery();
-            $result->closeCursor();
-            $checks['database'] = 'ok';
-        } catch (\Exception $e) {
-            $checks['database'] = 'error';
-            $status = 'error';
-            $this->logger->error('Health check: database failed', ['exception' => $e->getMessage()]);
-        }
-
-        // OpenRegister dependency check.
-        try {
-            $appManager = Server::get(IAppManager::class);
-            $checks['openregister'] = 'missing';
-            if ($appManager->isEnabledForUser('openregister') === true) {
-                $checks['openregister'] = 'ok';
-            }
-
-            if ($checks['openregister'] !== 'ok') {
-                $status = 'degraded';
-            }
-        } catch (\Exception $e) {
-            $checks['openregister'] = 'unknown';
-        }
-
-        return new JSONResponse(
-            [
-                'status' => $status,
-                'checks' => $checks,
-            ]
-        );
+        return parent::index();
 
     }//end index()
 }//end class

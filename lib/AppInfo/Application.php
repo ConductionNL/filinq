@@ -44,6 +44,8 @@ use OCA\OpenRegister\Event\ApprovalStepRejectedEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\DocuDesk\Controller\HealthController;
+use OCA\DocuDesk\Controller\MetricsController;
 use OCP\Files\Conversion\IConversionManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -164,7 +166,75 @@ class Application extends App implements IBootstrap
         // TranslationHandler resolve translatable properties on docudesk
         // objects to the right variant.
         $context->registerMiddleware(LanguageNegotiationMiddleware::class);
+
+        // AppHost observability adoption (ADR-006 / ADR-040). The thin
+        // HealthController / MetricsController subclasses of OpenRegister's
+        // engine-owned generic controllers serve /api/health and /api/metrics
+        // (URLs unchanged in appinfo/routes.php) — driven by the declarative
+        // `observability` block in src/manifest.json. The bespoke checks /
+        // metric lines / MetricsCollector are gone. Auth posture is owned by
+        // the controllers (health public, metrics admin-only). These factories
+        // supply the engine dependencies the subclasses inherit from the
+        // generic controllers' constructors.
+        $this->registerAppHostObservability(context: $context);
     }//end register()
+
+    /**
+     * Wire the AppHost-backed health + metrics controllers.
+     *
+     * Registers DocuDesk's HealthController / MetricsController (thin subclasses
+     * of OpenRegister's GenericHealthController / GenericMetricsController) with
+     * `appName = docudesk`, so the engine loads docudesk's src/manifest.json
+     * `observability` block. ManifestLoader + HealthCheckExecutor resolve
+     * through the server container; MetricsEngine is built explicitly because
+     * OpenRegister's own MetricsEngine factory is registered under the
+     * `openregister` app container and is not visible here (auto-wiring it
+     * fresh would fail on the multi-arg constructor).
+     *
+     * @param IRegistrationContext $context The registration context.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/adopt-apphost/tasks.md
+     */
+    private function registerAppHostObservability(IRegistrationContext $context): void
+    {
+        $context->registerService(
+            HealthController::class,
+            static function (ContainerInterface $container): HealthController {
+                return new HealthController(
+                    appName: self::APP_ID,
+                    request: $container->get(\OCP\IRequest::class),
+                    manifestLoader: $container->get(\OCA\OpenRegister\AppHost\Observability\ManifestLoader::class),
+                    executor: $container->get(\OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor::class)
+                );
+            }
+        );
+
+        $context->registerService(
+            MetricsController::class,
+            static function (ContainerInterface $container): MetricsController {
+                $engine = new \OCA\OpenRegister\AppHost\Observability\MetricsEngine(
+                    objectSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource::class),
+                    tableSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource::class),
+                    appConfigSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\AppConfigMetricSource::class),
+                    providerSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\ProviderMetricSource::class),
+                    renderer: $container->get(\OCA\OpenRegister\AppHost\Observability\PrometheusRenderer::class),
+                    manifestLoader: $container->get(\OCA\OpenRegister\AppHost\Observability\ManifestLoader::class),
+                    cacheFactory: $container->get(\OCP\ICacheFactory::class),
+                    config: $container->get(\OCP\IConfig::class),
+                    logger: $container->get(\Psr\Log\LoggerInterface::class)
+                );
+
+                return new MetricsController(
+                    appName: self::APP_ID,
+                    request: $container->get(\OCP\IRequest::class),
+                    manifestLoader: $container->get(\OCA\OpenRegister\AppHost\Observability\ManifestLoader::class),
+                    engine: $engine
+                );
+            }
+        );
+    }//end registerAppHostObservability()
 
     /**
      * Boot the application
