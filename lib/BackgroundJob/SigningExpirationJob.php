@@ -28,6 +28,7 @@ use DateTimeInterface;
 use Exception;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningAuditService;
+use OCA\DocuDesk\Service\SigningService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
@@ -58,6 +59,7 @@ class SigningExpirationJob extends TimedJob
      * @param SigningAuditService $auditService    Audit service
      * @param IAppConfig          $config          App config
      * @param LoggerInterface     $logger          Logger
+     * @param SigningService      $signingService  Signing service (emits the cross-app conclusion event)
      *
      * @return void
      */
@@ -66,7 +68,8 @@ class SigningExpirationJob extends TimedJob
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
         private readonly IAppConfig $config,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly SigningService $signingService
     ) {
         parent::__construct(time: $time);
         // Run every hour to enforce deadline expiry.
@@ -191,6 +194,12 @@ class SigningExpirationJob extends TimedJob
 
         $request['status'] = 'EXPIRED';
         $objectService->saveObject(object: $request, register: $register, schema: $schema);
+
+        // Cross-app delegated-signing contract (docudesk-signing-events): an
+        // expired request is terminal — emit SigningConcludedEvent
+        // (status=expired) for a delegated (provenance-carrying) request.
+        // Internal requests emit nothing. Fail-soft inside the service.
+        $this->signingService->emitExpiredConclusion(request: $request);
 
         try {
             $this->auditService->logEvent(

@@ -50,6 +50,7 @@ import SigningRequestList from './views/signing/SigningRequestList.vue'
 import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from './components/PrintPreview.vue'
+import ComparisonView from './views/comparison/ComparisonView.vue'
 
 export default {
 	DashboardIndex: { kind: 'page', component: DashboardIndex },
@@ -63,4 +64,5 @@ export default {
 	SigningRequestDetail: { kind: 'page', component: SigningRequestDetail },
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
 	PrintPreview: { kind: 'page', component: PrintPreview },
+	ComparisonView: { kind: 'page', component: ComparisonView },
 }

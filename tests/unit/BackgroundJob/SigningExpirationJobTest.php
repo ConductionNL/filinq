@@ -26,6 +26,7 @@ namespace OCA\DocuDesk\Tests\Unit\BackgroundJob;
 use OCA\DocuDesk\BackgroundJob\SigningExpirationJob;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningAuditService;
+use OCA\DocuDesk\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -105,7 +106,8 @@ class SigningExpirationJobTest extends TestCase
             settingsService: $this->settingsService,
             auditService: $this->auditService,
             config: $this->config,
-            logger: $this->createMock(LoggerInterface::class)
+            logger: $this->createMock(LoggerInterface::class),
+            signingService: $this->createMock(SigningService::class)
         );
 
     }//end setUp()
@@ -223,7 +225,8 @@ class SigningExpirationJobTest extends TestCase
             settingsService: $this->settingsService,
             auditService: $this->auditService,
             config: $config,
-            logger: $this->createMock(LoggerInterface::class)
+            logger: $this->createMock(LoggerInterface::class),
+            signingService: $this->createMock(SigningService::class)
         );
 
         // findAll must not be called when register/schema is empty.
@@ -255,7 +258,8 @@ class SigningExpirationJobTest extends TestCase
             settingsService: $settingsService,
             auditService: $this->auditService,
             config: $this->config,
-            logger: $this->createMock(LoggerInterface::class)
+            logger: $this->createMock(LoggerInterface::class),
+            signingService: $this->createMock(SigningService::class)
         );
 
         $ref    = new ReflectionClass($job);
