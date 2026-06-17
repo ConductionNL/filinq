@@ -25,6 +25,12 @@ export const useFileViewerStore = defineStore(
 			anonymizedFile: null,
 			showAnonymized: false,
 			selection: '',
+			// Whether the user may edit the detected entities (set legal
+			// grounds / toggle inclusion) before anonymising. Set by the
+			// upload modal and live-switchable from the sidebar header.
+			// `true` keeps the existing reviewable UI; `false` makes the
+			// entity cards read-only with default values (see T03/T04).
+			grondslagen: true,
 		}),
 		getters: {
 			/**
@@ -47,13 +53,18 @@ export const useFileViewerStore = defineStore(
 			 * @param {string} file.fileName File name with extension.
 			 * @param {string} file.mimeType MIME type.
 			 * @param {string} file.path     Absolute path inside the user's storage (e.g. /DocuDesk/foo.pdf).
+			 * @param {object} [options]             Viewer options.
+			 * @param {boolean} [options.grondslagen] Whether the entity cards
+			 *        start editable (review mode). Defaults to `true` so callers
+			 *        that don't pass it keep the existing reviewable behaviour.
 			 */
-			open(file) {
+			open(file, options = {}) {
 				this.currentFile = file
 				this.originalFile = file
 				this.anonymizedFile = null
 				this.showAnonymized = false
 				this.selection = ''
+				this.grondslagen = options.grondslagen ?? true
 			},
 			/**
 			 * Attach the anonymised counterpart of the currently-open file and
@@ -78,6 +89,7 @@ export const useFileViewerStore = defineStore(
 				this.anonymizedFile = null
 				this.showAnonymized = false
 				this.selection = ''
+				this.grondslagen = true
 			},
 			/**
 			 * Swap `currentFile` between the original and the anonymised variant.
@@ -90,6 +102,18 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = !this.showAnonymized
 				this.currentFile = this.showAnonymized ? this.anonymizedFile : this.originalFile
 				this.selection = ''
+			},
+			/**
+			 * Toggle whether the detected entities may be edited. Driven by the
+			 * sidebar-header switch so the user can switch into review mode
+			 * (add legal grounds) after opening a file that started read-only,
+			 * or back out again. Does not reload or re-extract entities — only
+			 * the editability of the cards changes (see T03).
+			 *
+			 * @param {boolean} value `true` = editable review mode, `false` = read-only.
+			 */
+			setGrondslagen(value) {
+				this.grondslagen = Boolean(value)
 			},
 			/**
 			 * Record the latest text selection from the viewer surface.

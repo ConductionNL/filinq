@@ -13,6 +13,20 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		v-if="fileViewerStore.currentFile"
 		:name="sidebarTitle"
 		:subname="sidebarSubtitle">
+		<!-- Header toggle: switches the entity cards between editable review
+		     (grondslagen on) and read-only with defaults (off). Lives in the
+		     header band's `description` slot so it reads as part of the header.
+		     Only shown while reviewing a freshly extracted file — irrelevant
+		     for the anonymised/completed views. -->
+		<template v-if="showGrondslagenToggle" #description>
+			<NcCheckboxRadioSwitch
+				type="switch"
+				class="grondslagen-toggle"
+				:checked="grondslagen"
+				@update:checked="fileViewerStore.setGrondslagen($event)">
+				{{ t('docudesk', 'Edit legal grounds (grondslagen)') }}
+			</NcCheckboxRadioSwitch>
+		</template>
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
 			<div v-if="isLoading" class="entities-list">
@@ -84,6 +98,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 					:key="'entity-' + idx"
 					:item="item"
 					mode="review"
+					:editable="grondslagen"
 					:bases-options="basesOptions"
 					@toggle="anonymizationStore.toggleEntity(entry, idx)"
 					@set-bases="anonymizationStore.setEntityBases(entry, idx, $event)" />
@@ -108,7 +123,7 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import DdEntityCard from '../components/DdEntityCard.vue'
 
@@ -130,6 +145,7 @@ export default {
 	components: {
 		NcAppSidebar,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
 		DdEntityCard,
@@ -203,6 +219,28 @@ export default {
 		 */
 		includedCount() {
 			return (this.entry?.entities || []).filter((e) => e.included !== false).length
+		},
+		/**
+		 * Whether the user may edit the detected entities. Mirrors the
+		 * shared viewer state set by the upload modal and the header switch.
+		 * Read through a computed (not a template store-path) so the toggle
+		 * and the cards react reliably — a string-path watch on the imported
+		 * store never fires.
+		 *
+		 * @return {boolean}
+		 */
+		grondslagen() {
+			return fileViewerStore.grondslagen
+		},
+		/**
+		 * Whether to show the grondslagen toggle in the header. Only relevant
+		 * while reviewing a freshly extracted file — hidden for the
+		 * anonymised, completed and loading/error views.
+		 *
+		 * @return {boolean}
+		 */
+		showGrondslagenToggle() {
+			return this.entry?.status === 'extracted'
 		},
 		/**
 		 * Sidebar header title — detected-entity count once extraction has
@@ -386,6 +424,13 @@ export default {
 	background: #fff;
 	border-top-left-radius: 20px;
 	border-top-right-radius: 20px;
+}
+
+/* Grondslagen toggle in the header `description` slot — small top margin so
+ * it clears the subname, font-size matched to the surrounding header text. */
+.grondslagen-toggle {
+	margin-top: 4px;
+	font-size: 0.85rem;
 }
 
 .entities-summary {

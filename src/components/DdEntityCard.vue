@@ -43,12 +43,16 @@ import DdSkeleton from './DdSkeleton.vue'
 	<div
 		v-else
 		class="dd-entity-card"
-		:class="{ 'dd-entity-card--excluded': !item.included }">
+		:class="{
+			'dd-entity-card--excluded': !item.included,
+			'dd-entity-card--readonly': !editable,
+		}">
 		<div class="dd-entity-card__header">
 			<input
 				type="checkbox"
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
+				:disabled="!editable"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
 				@change="$emit('toggle')">
 			<span class="dd-entity-card__type">{{ item.type }}</span>
@@ -67,7 +71,7 @@ import DdSkeleton from './DdSkeleton.vue'
 				:multiple="true"
 				:input-label="t('docudesk', 'Grondslagen')"
 				:placeholder="t('docudesk', 'Pick grondslagen…')"
-				:disabled="!hasRelation"
+				:disabled="!editable || !hasRelation"
 				@input="$emit('set-bases', $event)" />
 		</div>
 		<div v-if="item._patchError" class="dd-entity-card__error" :title="item._patchError">
@@ -133,6 +137,16 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+		/**
+		 * Review view only — whether the card is editable. When `false`
+		 * (grondslagen toggle off) the include checkbox and grondslagen
+		 * select are disabled; the entity keeps its default values and the
+		 * card reads as fixed. Live-reactive to the sidebar header toggle.
+		 */
+		editable: {
+			type: Boolean,
+			default: true,
+		},
 	},
 	emits: ['toggle', 'set-bases'],
 	computed: {
@@ -161,6 +175,15 @@ export default {
 
 	&--excluded {
 		opacity: 0.55;
+	}
+
+	/* Read-only review card (grondslagen toggle off): the controls are
+	 * disabled rather than hidden so the user still sees the fixed default
+	 * values. The not-allowed cursor signals the card can't be edited. */
+	&--readonly {
+		.dd-entity-card__checkbox {
+			cursor: not-allowed;
+		}
 	}
 
 	&--skeleton {
