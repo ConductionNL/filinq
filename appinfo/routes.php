@@ -21,8 +21,12 @@ return [
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
 
-        // Dashboard.
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+        // Dashboard SPA page — served by OpenRegister's AppHost
+        // GenericDashboardController (aliased at
+        // AppHost\Controller\GenericDashboardController in Application::register,
+        // mirroring the Health/Metrics adoption precedent). URL + auth posture
+        // unchanged.
+        ['name' => 'AppHost\Controller\GenericDashboard#page', 'url' => '/', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
@@ -136,17 +140,18 @@ return [
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],
 
-        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
-        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
-        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
+        // CnSupportDialog) — served by OpenRegister's AppHost
+        // GenericPreferencesController (aliased in Application::register).
+        ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
 
         // SPA catch-all — serves the Vue app shell for any frontend deep
         // link (vue-router HTML5 history mode). Must come LAST so it
-        // doesn't shadow specific routes above. The dedicated
-        // `dashboard#catchAll` controller method exists because
-        // `dashboard#page` takes a `getParameter` arg, not a `path`
-        // arg — matching arg names to the route placeholder lets NC's
-        // router inject the captured value cleanly.
-        ['name' => 'dashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
+        // doesn't shadow specific routes above. Served by the AppHost
+        // GenericDashboardController (aliased in Application::register);
+        // GenericDashboard#catchAll delegates to page(). A distinct route
+        // name keeps it from shadowing the `/` index route.
+        ['name' => 'AppHost\Controller\GenericDashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
     ],
 ];
