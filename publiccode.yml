@@ -1,7 +1,7 @@
 publiccodeYmlVersion: "0.4"
 
 name: DocuDesk
-url: "https://github.com/ConductionNL/docudesk"
+url: "https://codeberg.org/Conduction/docudesk"
 softwareVersion: "0.0.34"
 releaseDate: "2026-05-26"
 developmentStatus: stable
