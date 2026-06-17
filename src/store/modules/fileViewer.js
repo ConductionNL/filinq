@@ -110,6 +110,15 @@ export const useFileViewerStore = defineStore(
 			 * or back out again. Does not reload or re-extract entities — only
 			 * the editability of the cards changes (see T03).
 			 *
+			 * Switching back to read-only (AAN→UIT) does NOT discard decisions
+			 * the user already made while editing: the per-entity
+			 * `_decisionBases` / `_decisionSkip` live on the entity rows in the
+			 * anonymization store, untouched here. They stay frozen in state and
+			 * are still applied on the next `anonymiseEntry` (its PATCH step
+			 * compares against the extracted defaults). This keeps deliberate
+			 * edits from silently vanishing on an accidental toggle; flipping
+			 * the switch only locks further editing, it does not roll back (T04).
+			 *
 			 * @param {boolean} value `true` = editable review mode, `false` = read-only.
 			 */
 			setGrondslagen(value) {

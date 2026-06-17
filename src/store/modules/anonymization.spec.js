@@ -97,6 +97,38 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		expect(axios.post).toHaveBeenCalledTimes(1)
 	})
 
+	it('anonymises with the default-included entities when grondslagen are off', async () => {
+		// Grondslagen UIT: the cards are read-only, the user touches nothing,
+		// so the anonymise call must still carry the default-included entity.
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null })
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.patch).not.toHaveBeenCalled()
+		expect(axios.post).toHaveBeenCalledTimes(1)
+		expect(axios.post).toHaveBeenCalledWith(
+			'/apps/docudesk/api/anonymization/anonymize/42',
+			{ entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }] },
+		)
+		expect(entry.status).toBe('completed')
+		expect(entry.anonymizedFilePath).toBe('/files/doc-anon.pdf')
+	})
+
+	it('omits entities the review excluded from the anonymise payload', async () => {
+		// Even with grondslagen off the inclusion default is `true`; an entity
+		// explicitly de-selected (included=false) must drop out of the payload.
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null, included: false })
+
+		await store.anonymiseEntry(entry)
+
+		expect(axios.post).toHaveBeenCalledWith(
+			'/apps/docudesk/api/anonymization/anonymize/42',
+			{ entities: [] },
+		)
+	})
+
 	it('PATCHes once per relation when the user edits the grondslagen', async () => {
 		axios.patch.mockResolvedValue({ data: {} })
 		const store = useAnonymizationStore()
