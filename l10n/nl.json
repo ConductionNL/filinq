@@ -233,9 +233,13 @@
         "Hide original values": "Originele waarden verbergen",
         "Unknown value": "Onbekende waarde",
         "Resolved from the GDPR register.": "Opgehaald uit het AVG-register.",
+        "Anonymised version of {source}": "Geanonimiseerde versie van {source}",
         "%n entity detected": ["%n entiteit gedetecteerd", "%n entiteiten gedetecteerd"],
         "%n entity replaced": ["%n entiteit vervangen", "%n entiteiten vervangen"],
         "%n occurrence": ["%n keer", "%n keer"],
-        "%n item anonymised": ["%n item geanonimiseerd", "%n items geanonimiseerd"]
+        "%n item anonymised": ["%n item geanonimiseerd", "%n items geanonimiseerd"],
+        "This file is anonymised.": "Dit bestand is geanonimiseerd.",
+        "Open {source} to review which items were removed.": "Open {source} om te zien welke items zijn verwijderd.",
+        "%n item removed": ["%n item verwijderd", "%n items verwijderd"]
     }
 }

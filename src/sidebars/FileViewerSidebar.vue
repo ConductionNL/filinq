@@ -35,6 +35,22 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 				</a>
 			</NcNoteCard>
 
+			<!-- Anonymised file recognised via the source↔anonymised DB link,
+			     but its text carries no readable placeholders (e.g. a flattened
+			     PDF). The per-entity list can't be shown without a mutating
+			     re-extract, so we surface the link summary read-only. -->
+			<NcNoteCard
+				v-else-if="entry && entry.viewMode === 'anonymized' && entry.detailUnavailable"
+				type="success">
+				<div>{{ t('docudesk', 'This file is anonymised.') }}</div>
+				<div class="muted">
+					{{ n('docudesk', '%n item removed', '%n items removed', entry.replacementCount || 0) }}
+				</div>
+				<div v-if="entry.sourceFileName" class="muted">
+					{{ t('docudesk', 'Open {source} to review which items were removed.', { source: entry.sourceFileName }) }}
+				</div>
+			</NcNoteCard>
+
 			<!-- Anonymised-document view: a read-only list resolved from the
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
@@ -222,6 +238,9 @@ export default {
 		 */
 		sidebarSubtitle() {
 			if (this.entry?.viewMode === 'anonymized') {
+				if (this.entry.sourceFileName) {
+					return t('docudesk', 'Anonymised version of {source}', { source: this.entry.sourceFileName })
+				}
 				return t('docudesk', 'Resolved from the GDPR register.')
 			}
 			if (this.isLoading) {

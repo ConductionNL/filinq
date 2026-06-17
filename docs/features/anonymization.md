@@ -53,6 +53,20 @@ GET /apps/openregister/api/objects/document/anonymizationLink?sourceFileId=<NC_F
 GET /apps/openregister/api/objects/document/anonymizationLink?anonymizedFileId=<NC_FILE_ID>
 ```
 
+The file-viewer sidebar consumes the **reverse** direction: when a file is
+opened it first resolves its `anonymizationLink` by `anonymizedFileId`. A hit
+means the file is an anonymised output, so the sidebar shows the read-only
+'removed items' review instead of restarting the un-anonymised detection flow.
+The header subtitle names the source ('Anonymised version of <source>').
+
+The per-entity list is resolved from the `[<TYPE>: <id>]` placeholders baked
+into the file's text (each id is looked up read-only via
+`GET /api/entities/{id}`). When the text carries no readable placeholders
+(e.g. a flattened PDF), the sidebar shows a read-only summary from the link
+object only (replacement count + source name); it does **not** re-extract,
+because the extract endpoint mutates (appends) the entity store and opening a
+file for viewing must stay read-only.
+
 ## Output format (PDF by default)
 
 Since the `anonymise-output-as-pdf-by-default` change, the anonymise endpoints produce **PDF/A-3b** output by default. PDF flattens the redaction into a glyph stream and strips most metadata channels that would otherwise still name the original entities — making the anonymisation harder to revert by editing the file.
