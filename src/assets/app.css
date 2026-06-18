@@ -65,6 +65,23 @@
 	color: var(--color-main-text);
 }
 
+/* Entity highlight spans injected into the document viewers (T09). The
+   background colour for a detected entity is set inline per type via
+   entityTypeColor(); these rules cover the shared chrome. Defined unscoped
+   because the WordViewer injects spans into v-html content that carries no
+   component scope hash. `--pending` marks the text the user is about to add
+   as a manual entity. */
+.dd-hl {
+	border-radius: 3px;
+	padding: 0 1px;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.dd-hl--pending {
+	background-color: var(--color-warning, #f5d76e);
+	box-shadow: 0 0 0 2px var(--color-warning-text, #8a6d3b);
+}
+
 /* CnStatusBadge: each variant resolves its text colour through a Nextcloud
    token (--color-success, --color-warning-text, etc.). Remap those tokens
    on the badge itself so every variant picks up the dark-blue brand colour

@@ -221,6 +221,22 @@ export default {
 			return (this.entry?.entities || []).filter((e) => e.included !== false).length
 		},
 		/**
+		 * Entities to highlight in the document viewer — the detected values
+		 * with their type, fed to the viewer via `setHighlightEntities`. Only
+		 * for the review step: the anonymised view shows placeholders, not the
+		 * original values, so there is nothing to match there.
+		 *
+		 * @return {Array<{value: string, type: string}>}
+		 */
+		highlightList() {
+			if (!this.entry || this.entry.viewMode === 'anonymized') {
+				return []
+			}
+			return (this.entry.entities || [])
+				.filter((e) => e && e.value)
+				.map((e) => ({ value: e.value, type: e.type }))
+		},
+		/**
 		 * Whether the user may edit the detected entities. Mirrors the
 		 * shared viewer state set by the upload modal and the header switch.
 		 * Read through a computed (not a template store-path) so the toggle
@@ -328,6 +344,20 @@ export default {
 				}
 				this.loadEntitiesForCurrentFile(file)
 			},
+			immediate: true,
+		},
+		/**
+		 * Push the current detected-entity values to the viewer so it can
+		 * highlight them in the rendered document (T09). Fires on load and
+		 * whenever the entity list changes.
+		 *
+		 * @param {Array<{value: string, type: string}>} list Entities to mark.
+		 */
+		highlightList: {
+			handler(list) {
+				fileViewerStore.setHighlightEntities(list)
+			},
+			deep: true,
 			immediate: true,
 		},
 	},
