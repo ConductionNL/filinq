@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # processing-activity-export Specification
 
 ## Purpose

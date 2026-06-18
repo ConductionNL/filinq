@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # docudesk-notifications Specification
 
 ## Purpose
-TBD - created by archiving change docudesk-notifications. Update Purpose after archive.
+Defines the notification rules for DocuDesk's signing, document, consent, and correspondence schemas, declared in OpenRegister's verified `x-openregister-notifications` dialect. Rules route to confirmed Nextcloud user IDs, groups, and object-ACL recipients only, deliberately never notifying external data-subject email addresses, and approximate status-transition triggers where the engine cannot yet express field-change conditions. This keeps DocuDesk's automated notifications staff-safe and aligned with the supported notification engine.
 
 @e2e exclude Backend schema notification-rule declarations (x-openregister-notifications dialect) with no browser surface. Covered by PHPUnit schema-validation tests and the OR notification-engine integration suite.
 

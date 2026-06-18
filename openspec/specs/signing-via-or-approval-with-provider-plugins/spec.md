@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # signing-via-or-approval-with-provider-plugins Specification
 
 ## Purpose
-TBD - created by archiving change migrate-signing-to-or-approval-workflow. Update Purpose after archive.
+Implements document signing on top of OpenRegister's approval-workflow, creating an `ApprovalChain` with one ordered `ApprovalStep` per signer instead of a DocuDesk-local approval store. Signer decisions are emitted exclusively through OR's approve and reject step endpoints, while pluggable signing providers (the native provider and external providers) present the signing UI and return a sign-or-decline result without mutating step state themselves. This reuses OR's chain orchestration for sequencing and lets DocuDesk integrate alternative signing backends.
 ## Requirements
 ### Requirement: Sign-Request Creation SHALL Create an OR ApprovalChain with One Step per Signer
 

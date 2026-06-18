@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # document-signing Specification
 
 ## Purpose
-TBD - created by archiving change digital-signing-integration. Update Purpose after archive.
+Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. This gives DocuDesk a legally meaningful, auditable signature process.
 
 @e2e exclude Backend signing API + eIDAS crypto + status machine + OR schema/audit contracts; no navigable UI surface. Covered by PHPUnit (SignatureService, status transitions, audit immutability) and Newman (/api/signing/* contracts).
 

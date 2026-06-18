@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # folder-batch-analysis Specification
 
 ## Purpose
-TBD - created by archiving change folder-analysis-anonymization. Update Purpose after archive.
+Creates anonymisation batches from the files already present in a Nextcloud folder, accepting either a folder ID or a folder path and enumerating the folder's direct file children. The batch stores both the rename-proof folder ID and a human-readable path snapshot, resolves multi-mount folder IDs by preferring a writable node, and processes the files through a background extraction job and entity-consolidation service subject to admin-configurable size limits. This lets operators run analysis and anonymisation over an existing document folder in one batch operation.
 
 @e2e exclude Backend folder-batch API + FolderExtractionJob (QueuedJob) + EntityConsolidationService + file-system output placement; every scenario asserts an HTTP contract or background-job/service behaviour, not UI rendering. Covered by Newman (/api/anonymization/batch/* contracts) and PHPUnit (job + consolidation).
 ## Requirements

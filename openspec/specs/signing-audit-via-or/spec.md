@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # signing-audit-via-or Specification
 
 ## Purpose
-TBD - created by archiving change migrate-signing-audit-to-or-audit. Update Purpose after archive.
+Records every signing action (CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED) as an OpenRegister audit-trail entry with a `docudesk.signing.{ACTION}` action type, instead of a private app-local audit schema. Each entry is bound to the signing request's UUID, participates in OR's tamper-evident hash chain, carries signing context such as actor, IP, signature level, and provider, and is retrievable through the standard audit-trail API. This gives signing a single, queryable, integrity-protected audit record.
 ## Requirements
 ### Requirement: Signing Action Emits OR Audit Event
 

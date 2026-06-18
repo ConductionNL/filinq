@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 # Specification — `docudesk-store-migration` (Phase 1, side-by-side)
 
 @e2e exclude Frontend store-wiring internals: pinia store id/exports, useObjectStore barrel adoption, type registration, configure() base URL, boot-fetch and no-collision invariants — module-level concerns with no browser-rendered surface. Covered by Vitest unit tests on the store module.

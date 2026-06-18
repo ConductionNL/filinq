@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # document-comparison Specification
 
 ## Purpose
-TBD - created by archiving change document-comparison. Update Purpose after archive.
+Compares two documents or two versions of the same document and returns a structured diff, without copying, persisting, or indexing either subject's content. Each subject is resolved through the requesting user's Nextcloud folder by file ID and optional version timestamp, with access failures returning an IDOR-safe 404. This lets users review what changed between document revisions or between distinct files.
 ## Requirements
 ### Requirement: The comparison endpoint MUST accept two subjects resolved from NC Files without re-storing content
 

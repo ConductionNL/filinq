@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # folder-analysis-anonymization Specification
 
 ## Purpose
-TBD - created by archiving change anonymisation-folder-output-folder-layout. Update Purpose after archive.
+Governs where folder-driven anonymisation writes its redacted outputs, placing them in a configured subfolder (default `anonymised`) alongside the source files using the same layout and suffix-stripping rules as the batch flow. Source discovery excludes legacy `_anonymized`-suffixed files so prior runs are never re-redacted, and background anonymisation jobs honour the same layout. This keeps anonymised outputs predictably organised and consistent across the folder and batch flows.
 ## Requirements
 ### Requirement: Folder-driven anonymisation MUST write outputs to the configured subfolder
 

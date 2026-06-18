@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # register-i18n Specification
 
 ## Purpose
-TBD - created by archiving change register-i18n. Update Purpose after archive.
+Enables multi-language content for DocuDesk-specific register fields using OpenRegister's `translatable` flag, so template titles, descriptions, field labels, and help text can be stored and displayed in the viewing user's language. Generated documents are explicitly single-language artifacts, not translatable register objects. This lets DocuDesk present its templates and forms in Dutch or English while keeping each produced document in one language.
 ## Requirements
 ### Requirement: REQ-I18N-01 Language-Tagged Fields (Priority: Must)
 

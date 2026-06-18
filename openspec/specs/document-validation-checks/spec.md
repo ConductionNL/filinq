@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # document-validation-checks Specification
 
 ## Purpose
-TBD - created by archiving change document-validation-checks. Update Purpose after archive.
+Runs a catalogue of document quality checks covering format allowlisting, extension/mime consistency, file integrity, PDF encryption, text-layer presence, and metadata completeness, returning structured findings keyed by a stable check ID and severity. It is a pure computation backend that reads document content and records but never writes fields, creates objects, or modifies files. This lets DocuDesk flag documents that are unreadable, scan-only, encrypted, or missing required metadata before further processing.
 ## Requirements
 ### Requirement: The check catalogue MUST cover format, integrity, encryption, text-layer, and metadata completeness
 
