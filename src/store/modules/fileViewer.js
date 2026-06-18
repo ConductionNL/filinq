@@ -24,6 +24,9 @@ export const useFileViewerStore = defineStore(
 			originalFile: null,
 			anonymizedFile: null,
 			showAnonymized: false,
+			// Latest text selection from the viewer surface. In edit mode this
+			// doubles as the pending candidate text for a new manual entity
+			// (see setEditMode / T10).
 			selection: '',
 			// Whether the user may edit the detected entities (set legal
 			// grounds / toggle inclusion) before anonymising. Set by the
@@ -31,6 +34,13 @@ export const useFileViewerStore = defineStore(
 			// `true` keeps the existing reviewable UI; `false` makes the
 			// entity cards read-only with default values (see T03/T04).
 			grondslagen: true,
+			// "Add new data" mode: the sidebar swaps to the add-entity panel
+			// and the viewer enables text selection for highlighting (T10).
+			editMode: false,
+			// Entities the viewer should highlight in the rendered document,
+			// as `{ value, type }`. Pushed by the sidebar from the current
+			// entity list; consumed by the viewers (T09).
+			highlightEntities: [],
 		}),
 		getters: {
 			/**
@@ -65,6 +75,8 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = false
 				this.selection = ''
 				this.grondslagen = options.grondslagen ?? true
+				this.editMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Attach the anonymised counterpart of the currently-open file and
@@ -79,6 +91,8 @@ export const useFileViewerStore = defineStore(
 				this.currentFile = file
 				this.showAnonymized = true
 				this.selection = ''
+				this.editMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Close the viewer. Host page reverts to file list.
@@ -90,6 +104,8 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = false
 				this.selection = ''
 				this.grondslagen = true
+				this.editMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Swap `currentFile` between the original and the anonymised variant.
@@ -102,6 +118,8 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = !this.showAnonymized
 				this.currentFile = this.showAnonymized ? this.anonymizedFile : this.originalFile
 				this.selection = ''
+				this.editMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Toggle whether the detected entities may be edited. Driven by the
@@ -125,12 +143,34 @@ export const useFileViewerStore = defineStore(
 				this.grondslagen = Boolean(value)
 			},
 			/**
-			 * Record the latest text selection from the viewer surface.
+			 * Record the latest text selection from the viewer surface. In
+			 * edit mode this is the pending candidate value for a new manual
+			 * entity (T10/T11).
 			 *
 			 * @param {string} text Selected text.
 			 */
 			setSelection(text) {
 				this.selection = text || ''
+			},
+			/**
+			 * Toggle the "Add new data" edit mode. Turning it off clears the
+			 * pending selection so a stale highlight does not linger.
+			 *
+			 * @param {boolean} value `true` enters the add-entity panel; `false` leaves it.
+			 */
+			setEditMode(value) {
+				this.editMode = Boolean(value)
+				if (!this.editMode) {
+					this.selection = ''
+				}
+			},
+			/**
+			 * Replace the list of entities the viewer should highlight.
+			 *
+			 * @param {Array<{value: string, type: string}>} list Entities to mark.
+			 */
+			setHighlightEntities(list) {
+				this.highlightEntities = Array.isArray(list) ? list : []
 			},
 		},
 	},

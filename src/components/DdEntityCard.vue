@@ -2,6 +2,7 @@
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { NcSelect } from '@nextcloud/vue'
 import DdSkeleton from './DdSkeleton.vue'
+import { entityTypeColor } from '../services/entityTypes.js'
 </script>
 
 <template>
@@ -17,7 +18,9 @@ import DdSkeleton from './DdSkeleton.vue'
 	<!-- Anonymised-document view — read-only, value hidden behind reveal. -->
 	<div v-else-if="mode === 'anonymized'" class="dd-entity-card">
 		<div class="dd-entity-card__header">
-			<span class="dd-entity-card__type">{{ item.type }}</span>
+			<span
+				class="dd-entity-card__type"
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ item.type }}</span>
 			<span class="dd-entity-card__confidence">
 				{{ n('docudesk', '%n occurrence', '%n occurrences', item.count) }}
 			</span>
@@ -55,7 +58,9 @@ import DdSkeleton from './DdSkeleton.vue'
 				:disabled="!editable"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
 				@change="$emit('toggle')">
-			<span class="dd-entity-card__type">{{ item.type }}</span>
+			<span
+				class="dd-entity-card__type"
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ item.type }}</span>
 			<span class="dd-entity-card__confidence">
 				{{ ((item.confidence || 0) * 100).toFixed(0) }}%
 			</span>
@@ -209,8 +214,11 @@ export default {
 	letter-spacing: 0.04em;
 	padding: 2px 8px;
 	border-radius: var(--border-radius-large);
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element);
+	/* Background is set inline per type via entityTypeColor(); this is the
+	 * fallback when no inline style is present. Text colour comes from the
+	 * shared entity-text token (revisit contrast once backgrounds diverge). */
+	background-color: var(--dd-entity-color-default);
+	color: var(--dd-entity-color-text, var(--color-primary-element));
 	display: inline-block;
 	max-width: max-content;
 }

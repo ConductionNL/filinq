@@ -11,23 +11,7 @@ import {
 import { translate as t } from '@nextcloud/l10n'
 
 import { anonymizationPocStore } from '../../store/store.js'
-
-/**
- * Entity-type seed for the PoC — flat list per the docudesk#225 scope.
- * A production version would source these from OR's detector vocabulary
- * (presidio + openanonymiser type tags). The PoC keeps it static so
- * the frontend team has a working example.
- */
-const ENTITY_TYPES = [
-	'PERSON',
-	'ORGANIZATION',
-	'EMAIL',
-	'PHONE_NUMBER',
-	'IBAN_CODE',
-	'IP_ADDRESS',
-	'LOCATION',
-	'OTHER',
-]
+import { ENTITY_TYPES } from '../../services/entityTypes.js'
 
 export default {
 	name: 'AddManualEntityModal',
