@@ -64,12 +64,13 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig               $config           App configuration interface
-     * @param ContainerInterface       $container        Container for DI
-     * @param IAppManager              $appManager       App manager interface
-     * @param LoggerInterface          $logger           Logger interface
-     * @param RegisterDiscoveryService $discoveryService Register discovery service
-     * @param SettingsInitializer      $initializer      Settings initializer
+     * @param IAppConfig               $config            App configuration interface
+     * @param ContainerInterface       $container         Container for DI
+     * @param IAppManager              $appManager        App manager interface
+     * @param LoggerInterface          $logger            Logger interface
+     * @param RegisterDiscoveryService $discoveryService  Register discovery service
+     * @param SettingsInitializer      $initializer       Settings initializer
+     * @param GrondslagProposalService $grondslagProposal Grondslag-per-entity-type proposal service
      *
      * @return void
      */
@@ -79,7 +80,8 @@ class SettingsService
         private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
         private readonly RegisterDiscoveryService $discoveryService,
-        private readonly SettingsInitializer $initializer
+        private readonly SettingsInitializer $initializer,
+        private readonly GrondslagProposalService $grondslagProposal
     ) {
         $this->appName = 'docudesk';
 
@@ -197,6 +199,11 @@ class SettingsService
                 'docudesk.anonymisation.default_output_format',
                 'pdf'
             ),
+            // Propose-grondslag-per-entity-type — instance-global map of
+            // entity type → base slug(s), used to pre-fill a proposed
+            // grondslag onto freshly-detected entities. Decoded to an
+            // object so the settings UI can bind it directly.
+            'docudesk.grondslagen.entity_type_bases'       => $this->grondslagProposal->getMapping(),
         ];
 
     }//end loadFeatureToggles()
@@ -234,6 +241,12 @@ class SettingsService
                 $data['objectTypes']
             );
             $data = array_merge($data, $this->loadFeatureToggles());
+
+            // Data for the grondslag-per-entity-type selector: the curated
+            // entity types and the available `base` records (slug + name).
+            // Both degrade to safe defaults when OpenRegister is absent.
+            $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
+            $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
 
             return $data;
         } catch (Exception $e) {

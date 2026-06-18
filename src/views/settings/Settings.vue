@@ -69,6 +69,31 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('docudesk', 'Legal basis per entity type')"
+			:description="t('docudesk', 'Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.')">
+			<div v-if="grondslagBaseOptions.length === 0" class="setting-item">
+				<NcNoteCard type="info">
+					{{ t('docudesk', 'No legal bases (grondslagen) are available yet. Add base records to the dossier register to map them here.') }}
+				</NcNoteCard>
+			</div>
+			<div v-else>
+				<div v-for="entityType in grondslagEntityTypes" :key="entityType" class="setting-item">
+					<div class="setting-label">
+						{{ entityType }}
+					</div>
+					<NcSelect
+						:options="grondslagBaseOptions"
+						:multiple="true"
+						:close-on-select="false"
+						:value="selectedBasesFor(entityType)"
+						:input-label="t('docudesk', 'Proposed legal basis')"
+						:placeholder="t('docudesk', 'No proposal')"
+						@input="onBasesChange(entityType, $event)" />
+				</div>
+			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('docudesk', 'Metadata Enrichment')"
 			:description="t('docudesk', 'Configure automatic metadata enrichment for documents')">
 			<div class="setting-item">
@@ -293,6 +318,12 @@ export default {
 			globalSchemasOptions: {},
 			objectTypes: ['publicationConsent'],
 			sections: {},
+			// Propose-grondslag-per-entity-type: curated entity types, the
+			// available base records, and the operator-configured mapping
+			// (entity type → base slug[]). All supplied by the settings GET.
+			grondslagEntityTypes: [],
+			grondslagBases: [],
+			entityTypeBases: {},
 			settings: {
 				publication_objection_period_days: 28,
 				enable_language_detection: true,
@@ -314,10 +345,37 @@ export default {
 			},
 		}
 	},
+	computed: {
+		// `base` records as NcSelect options (value = slug, label = name).
+		grondslagBaseOptions() {
+			return (this.grondslagBases || []).map((base) => ({
+				value: base.slug,
+				label: base.name,
+			}))
+		},
+	},
 	mounted() {
 		this.fetchAll()
 	},
 	methods: {
+		// Currently-selected base options for an entity type, derived from
+		// the slug[] mapping so the multi-select reflects saved state.
+		selectedBasesFor(entityType) {
+			const slugs = this.entityTypeBases[entityType] || []
+			return this.grondslagBaseOptions.filter((option) => slugs.includes(option.value))
+		},
+		// Persist a multi-select change back to the slug[] mapping. Replacing
+		// the object (rather than mutating a key) keeps Vue 2 reactivity.
+		onBasesChange(entityType, selectedOptions) {
+			const slugs = (selectedOptions || []).map((option) => option.value)
+			const next = { ...this.entityTypeBases }
+			if (slugs.length === 0) {
+				delete next[entityType]
+			} else {
+				next[entityType] = slugs
+			}
+			this.entityTypeBases = next
+		},
 		onRegisterChange(type) {
 			this.sections = {
 				...this.sections,
@@ -344,6 +402,12 @@ export default {
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					this.settings['docudesk.anonymisation.default_output_format'] = data['docudesk.anonymisation.default_output_format'] ?? 'pdf'
+
+					// Grondslag-per-entity-type: selectable types, available
+					// bases, and the saved mapping (object keyed by type).
+					this.grondslagEntityTypes = data.grondslagEntityTypes || []
+					this.grondslagBases = data.grondslagBases || []
+					this.entityTypeBases = data['docudesk.grondslagen.entity_type_bases'] || {}
 
 					// Parse OCR languages
 					const ocrLangStr = data.ocr_languages || 'nld+eng'
@@ -458,6 +522,8 @@ export default {
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				'docudesk.anonymisation.default_output_format': this.settings['docudesk.anonymisation.default_output_format'] === 'pdf' ? 'pdf' : 'preserve',
+				// Sent as an object; the backend json-encodes it for storage.
+				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
 			}
 
 			// Add register/schema configs
