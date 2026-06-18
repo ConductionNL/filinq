@@ -53,10 +53,14 @@ export default {
 .file-viewer-header {
 	display: flex;
 	align-items: center;
-	gap: 16px;
-	padding-block: 12px;
-	padding-inline: 20px;
-	background: #fff;
+	gap: var(--dd-file-viewer-header-gap, 16px);
+	padding-block: var(--dd-file-viewer-header-padding-block, 16px);
+	padding-inline: var(--dd-file-viewer-header-padding-inline, 20px);
+	background: var(--dd-file-viewer-header-background, #fff);
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	border-bottom: 1px solid var(--dd-file-viewer-header-border-color, var(--color-border));
 }
 
 .file-viewer-header__icon {

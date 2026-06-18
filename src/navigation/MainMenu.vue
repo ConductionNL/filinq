@@ -168,4 +168,29 @@ export default {
 	--color-primary-element-text: var(--color-main-text);
 	box-shadow: var(--dd-shadow-popout);
 }
+
+/* Collapse toggle (open nav): move it from its default top-right overhang to
+   the bottom-left corner inside the navigation. The wrapper is a child of
+   `.app-navigation` (which carries this component's scope id), so a plain
+   `:deep()` matches; the doubled class lifts specificity above the library
+   rule that pins it top-right via `[data-v-…]`. */
+:deep(.app-navigation-toggle-wrapper.app-navigation-toggle-wrapper) {
+	top: auto;
+	right: auto;
+	bottom: var(--app-navigation-padding);
+	left: var(--app-navigation-padding);
+	margin-right: 0;
+}
+
+/* Collapse toggle (closed nav): when collapsed the whole navigation slides
+   left off-screen, so a left-anchored toggle would go with it and become
+   unreachable. Restore NC's right-edge overhang (keeping the bottom anchor)
+   so the button still peeks on-screen and can reopen the menu. The scope id
+   sits on `.app-navigation` itself, so prefix with the (non-deep) close class
+   and `:deep()` the descendant wrapper. */
+.app-navigation--close :deep(.app-navigation-toggle-wrapper.app-navigation-toggle-wrapper) {
+	left: auto;
+	right: calc(0px - var(--app-navigation-padding));
+	margin-right: calc(-1 * var(--default-clickable-area));
+}
 </style>

@@ -421,9 +421,22 @@ export default {
 	/* `.app-sidebar` re-points --color-main-background to white-54, so a var
 	 * reference here would stay translucent. The card design is white-on-white
 	 * regardless of theme, so use opaque white for the header band. */
+	padding-block: 16px;
+	padding-inline: 20px;
 	background: #fff;
 	border-top-left-radius: 20px;
 	border-top-right-radius: 20px;
+	border-bottom: 1px solid var(--color-border);
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+:deep(.app-sidebar-header__desc) {
+	/* The lib's default header description styles are too large and too
+	 * tightly spaced for our use — override to match the FileViewerHeader
+	 * description. */
+	padding: 0 !important;
 }
 
 /* Grondslagen toggle in the header `description` slot — small top margin so
