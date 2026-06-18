@@ -87,7 +87,7 @@ async function loadPdfjs() {
 			const workerUrl = new URL(
 				'pdfjs-dist/build/pdf.worker.min.mjs',
 				import.meta.url,
-			)
+			).toString()
 			pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 			return pdfjsLib
 		})()
