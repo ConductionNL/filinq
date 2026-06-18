@@ -17,14 +17,7 @@
 					<TextBoxOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem
-				:active="isActive('Gallery')"
-				:name="t('docudesk', 'Component Gallery')"
-				:to="{ name: 'Gallery' }">
-				<template #icon>
-					<Palette :size="20" />
-				</template>
-			</NcAppNavigationItem>
+			<NcAppNavigationSpacer />
 			<NcAppNavigationItem
 				:active="isActive('AnonymizationPoc')"
 				:name="t('docudesk', 'Anonymisation PoC')"
@@ -81,6 +74,16 @@
 					<AlertOctagon :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<!-- Temporary feature: kept at the bottom, set apart by a spacer. -->
+			<NcAppNavigationSpacer />
+			<NcAppNavigationItem
+				:active="isActive('Gallery')"
+				:name="t('docudesk', 'Component Gallery')"
+				:to="{ name: 'Gallery' }">
+				<template #icon>
+					<Palette :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
@@ -90,6 +93,7 @@ import {
 	NcAppNavigation,
 	NcAppNavigationList,
 	NcAppNavigationItem,
+	NcAppNavigationSpacer,
 } from '@nextcloud/vue'
 
 import MonitorDashboard from 'vue-material-design-icons/MonitorDashboard.vue'
@@ -117,6 +121,7 @@ export default {
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
+		NcAppNavigationSpacer,
 		MonitorDashboard,
 		AccountCheckOutline,
 		LockOutline,
