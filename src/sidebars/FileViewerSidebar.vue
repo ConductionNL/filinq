@@ -86,6 +86,37 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 					:reveal-values="revealValues" />
 			</div>
 
+			<!-- Add new data panel — edit mode. The user selects text in the
+			     document (highlighted as pending), picks a type and optionally
+			     grondslagen, then saves it as one new entity. -->
+			<div v-else-if="entry && isEditing" class="add-entity-panel">
+				<NcNoteCard :type="selectedText ? 'info' : 'warning'">
+					{{ selectedText
+						? t('docudesk', 'This text will be added to the anonymisation list.')
+						: t('docudesk', 'Select text in the document to add it.') }}
+				</NcNoteCard>
+				<div class="add-entity-panel__field">
+					<span class="add-entity-panel__label">{{ t('docudesk', 'Selected text') }}</span>
+					<div class="add-entity-panel__selection">
+						{{ selectedText || '—' }}
+					</div>
+				</div>
+				<NcSelect
+					v-model="newType"
+					class="add-entity-panel__select"
+					:options="typeOptions"
+					:input-label="t('docudesk', 'Type')"
+					:placeholder="t('docudesk', 'Pick a type…')" />
+				<NcSelect
+					v-if="grondslagen"
+					v-model="newBases"
+					class="add-entity-panel__select"
+					:options="basesOptions"
+					:multiple="true"
+					:input-label="t('docudesk', 'Grondslagen')"
+					:placeholder="t('docudesk', 'Pick grondslagen…')" />
+			</div>
+
 			<!-- Empty state. -->
 			<div v-else-if="entry && entry.entities.length === 0" class="empty-state">
 				<p>{{ t('docudesk', 'No entities detected in this file.') }}</p>
@@ -109,23 +140,46 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		     the button rides inside the default slot and stays glued to
 		     the viewport bottom via `position: sticky`. -->
 		<div v-if="entry && entry.status === 'extracted'" class="sidebar-action-bar">
-			<NcButton
-				type="primary"
-				:disabled="includedCount === 0 || isAnonymising"
-				@click="onAnonymise">
-				<template v-if="isAnonymising" #icon>
-					<NcLoadingIcon :size="20" />
-				</template>
-				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
-			</NcButton>
+			<!-- Edit mode: cancel / save the new entity. -->
+			<template v-if="isEditing">
+				<NcButton type="tertiary" @click="onCancelEdit">
+					{{ t('docudesk', 'Cancel') }}
+				</NcButton>
+				<NcButton
+					type="primary"
+					:disabled="!canSaveNew"
+					@click="onSaveNew">
+					{{ t('docudesk', 'Save change') }}
+				</NcButton>
+			</template>
+			<!-- Review mode: open the add-entity panel / anonymise. -->
+			<template v-else>
+				<NcButton type="secondary" @click="onEdit">
+					<template #icon>
+						<Pencil :size="20" />
+					</template>
+					{{ t('docudesk', 'Edit') }}
+				</NcButton>
+				<NcButton
+					type="primary"
+					:disabled="includedCount === 0 || isAnonymising"
+					@click="onAnonymise">
+					<template v-if="isAnonymising" #icon>
+						<NcLoadingIcon :size="20" />
+					</template>
+					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
+				</NcButton>
+			</template>
 		</div>
 	</NcAppSidebar>
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
+import { ENTITY_TYPES } from '../services/entityTypes.js'
 
 // Woo Art. 5 grondslagen — duplicated from EntityReviewTable so we don't
 // reach into a sibling component's internals. Both lists must stay in
@@ -148,16 +202,23 @@ export default {
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcNoteCard,
+		NcSelect,
 		DdEntityCard,
+		Pencil,
 	},
 	data() {
 		return {
 			basesOptions: BASES_OPTIONS,
+			typeOptions: ENTITY_TYPES,
 			loadingFileId: null,
 			// Anonymised-document view shows the original values by default —
 			// the whole point of the panel is to review what was removed. The
 			// toggle still lets the user hide them again (e.g. screen-sharing).
 			revealValues: true,
+			// "Add new data" panel state (edit mode). The chosen type and
+			// grondslagen for the entity about to be added from the selection.
+			newType: '',
+			newBases: [],
 		}
 	},
 	computed: {
@@ -249,14 +310,59 @@ export default {
 			return fileViewerStore.grondslagen
 		},
 		/**
+		 * Whether the "Add new data" panel is active — the edit mode set by the
+		 * Bewerken button. Only meaningful during the review step.
+		 *
+		 * @return {boolean}
+		 */
+		isEditing() {
+			return fileViewerStore.editMode && this.entry?.status === 'extracted'
+		},
+		/**
+		 * The text the user selected in the document viewer — the candidate
+		 * value for the new manual entity.
+		 *
+		 * @return {string}
+		 */
+		selectedText() {
+			return fileViewerStore.selection || ''
+		},
+		/**
+		 * Selected type unwrapped to a plain string. NcSelect may bind a plain
+		 * string or a `{ value, label }` object; we feed plain strings but
+		 * defend anyway.
+		 *
+		 * @return {string}
+		 */
+		newTypeValue() {
+			const raw = this.newType
+			if (typeof raw === 'string') {
+				return raw
+			}
+			if (raw && typeof raw === 'object') {
+				return raw.value || raw.label || ''
+			}
+			return ''
+		},
+		/**
+		 * Whether the new-entity form can be saved: a non-empty selection and a
+		 * chosen type. Grondslagen are optional.
+		 *
+		 * @return {boolean}
+		 */
+		canSaveNew() {
+			return this.selectedText.trim().length > 0 && this.newTypeValue.length > 0
+		},
+		/**
 		 * Whether to show the grondslagen toggle in the header. Only relevant
 		 * while reviewing a freshly extracted file — hidden for the
-		 * anonymised, completed and loading/error views.
+		 * anonymised, completed and loading/error views, and while the
+		 * add-entity panel is open.
 		 *
 		 * @return {boolean}
 		 */
 		showGrondslagenToggle() {
-			return this.entry?.status === 'extracted'
+			return this.entry?.status === 'extracted' && !this.isEditing
 		},
 		/**
 		 * Sidebar header title — detected-entity count once extraction has
@@ -265,6 +371,9 @@ export default {
 		 * @return {string}
 		 */
 		sidebarTitle() {
+			if (this.isEditing) {
+				return t('docudesk', 'Add new data')
+			}
 			if (this.entry?.viewMode === 'anonymized') {
 				return n(
 					'docudesk',
@@ -291,6 +400,9 @@ export default {
 		 * @return {string}
 		 */
 		sidebarSubtitle() {
+			if (this.isEditing) {
+				return t('docudesk', 'Select text in the document, then choose a type.')
+			}
 			if (this.entry?.viewMode === 'anonymized') {
 				if (this.entry.sourceFileName) {
 					return t('docudesk', 'Anonymised version of {source}', { source: this.entry.sourceFileName })
@@ -421,6 +533,49 @@ export default {
 				})
 			}
 		},
+		/**
+		 * Enter the "Add new data" panel: switch the viewer into edit mode so
+		 * text selection drives a pending highlight, and reset the form.
+		 *
+		 * @return {void}
+		 */
+		onEdit() {
+			this.resetNewEntityForm()
+			fileViewerStore.setEditMode(true)
+		},
+		/**
+		 * Leave the add-entity panel without saving — back to the review list.
+		 * `setEditMode(false)` also clears the pending selection.
+		 *
+		 * @return {void}
+		 */
+		onCancelEdit() {
+			fileViewerStore.setEditMode(false)
+			this.resetNewEntityForm()
+		},
+		/**
+		 * Reset the add-entity form fields.
+		 *
+		 * @return {void}
+		 */
+		resetNewEntityForm() {
+			this.newType = ''
+			this.newBases = []
+		},
+		/**
+		 * Save the selected text as a new manual entity. Wired to the backend
+		 * in T11 (addManualEntity); for now it only guards the form state.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onSaveNew() {
+			if (this.canSaveNew && this.entry) {
+				// TODO(T11): call anonymizationStore.addManualEntity(this.entry, {
+				//   value: this.selectedText, type: this.newTypeValue,
+				//   bases: this.newBases,
+				// }) — prepend the result to the list and persist; then reset.
+			}
+		},
 	},
 }
 </script>
@@ -486,6 +641,38 @@ export default {
 	flex-direction: column;
 }
 
+/* Add new data panel (edit mode). */
+.add-entity-panel {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 4px 0;
+}
+
+.add-entity-panel__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.add-entity-panel__label {
+	font-size: 0.8rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.add-entity-panel__selection {
+	padding: 8px 10px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--dd-radius-md);
+	background-color: var(--color-background-hover);
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+
+.add-entity-panel__select {
+	width: 100%;
+}
+
 .reveal-note .reveal-toggle {
 	margin-top: 6px;
 }
@@ -526,10 +713,10 @@ export default {
 	border-top: 1px solid var(--color-border);
 	background-color: var(--color-main-background);
 	display: flex;
-	justify-content: stretch;
+	gap: 8px;
 
 	:deep(.button-vue) {
-		width: 100%;
+		flex: 1;
 	}
 }
 </style>
