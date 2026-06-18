@@ -414,7 +414,7 @@ export default {
 	display: none !important;
 }
 
-/* Solid white header to match the viewer's FileViewerHeader. The sidebar
+/* Solid white header to match the viewer's DdFileViewerHeader. The sidebar
  * body keeps the translucent card background (set above); only the header
  * band is opaque white so the two headers read as one toolbar row. */
 :deep(.app-sidebar-header) {
@@ -433,9 +433,8 @@ export default {
 }
 
 :deep(.app-sidebar-header__desc) {
-	/* The lib's default header description styles are too large and too
-	 * tightly spaced for our use — override to match the FileViewerHeader
-	 * description. */
+	/* Drop the lib's default description padding so the sidebar subtitle
+	 * lines up with the DdFileViewerHeader description. */
 	padding: 0 !important;
 }
 
