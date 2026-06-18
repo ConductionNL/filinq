@@ -18,11 +18,11 @@
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
-				:active="isActive('Settings')"
-				:name="t('docudesk', 'Settings')"
-				:to="{ name: 'Settings' }">
+				:active="isActive('Gallery')"
+				:name="t('docudesk', 'Component Gallery')"
+				:to="{ name: 'Gallery' }">
 				<template #icon>
-					<TuneVertical :size="24" />
+					<Palette :size="20" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
@@ -98,11 +98,11 @@ import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
-import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 // Icons
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import TestTube from 'vue-material-design-icons/TestTube.vue'
+import Palette from 'vue-material-design-icons/Palette.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
@@ -123,10 +123,10 @@ export default {
 		FileDocumentMultipleOutline,
 		TextBoxOutline,
 		FolderSearchOutline,
-		TuneVertical,
 		AccountStar,
 		AlertOctagon,
 		TestTube,
+		Palette,
 	},
 	methods: {
 		/**

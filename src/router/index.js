@@ -15,6 +15,7 @@ import SettingsIndex from '../views/settings/SettingsIndex.vue'
 import PrintPreview from '../components/PrintPreview.vue'
 import ProhibitionIndex from '../views/policy/ProhibitionIndex.vue'
 import StandingConsentIndex from '../views/policy/StandingConsentIndex.vue'
+import ComponentGallery from '../views/gallery/ComponentGallery.vue'
 
 Vue.use(Router)
 
@@ -38,6 +39,7 @@ export default new Router(
 			{ path: '/my-documents', name: 'MyDocuments', component: MyDocumentsIndex },
 			{ path: '/settings', name: 'Settings', component: SettingsIndex },
 			{ path: '/print-preview/:templateId?', name: 'PrintPreview', component: PrintPreview, props: route => ({ templateId: route.params.templateId || '' }) },
+			{ path: '/gallery', name: 'Gallery', component: ComponentGallery },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],
 	},
