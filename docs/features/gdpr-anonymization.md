@@ -178,6 +178,23 @@ Configure the anonymization feature in the DocuDesk admin settings:
 4. Adjust the **Confidence Threshold** (0.0-1.0) for entity detection sensitivity
 5. Enable or disable the **Store Original Text** option for de-anonymization capability
 
+### Proposed legal basis (grondslag) per entity type
+
+DocuDesk can pre-fill a proposed **legal basis** (grondslag, Woo Art. 5 / AVG) on each detected entity, so operators don't assign one by hand for every detection. Within an organisation a given entity *type* (PERSON, BSN, EMAIL, …) almost always rests on the same grondslag, so the proposal is configured per type.
+
+Configure it under **Admin Settings → DocuDesk → "Legal basis per entity type"**:
+
+1. Each detectable entity type is listed with a multi-select of the available `base` (grondslag) records. Bases come from the `base` schema, so any grondslagen your organisation has added appear automatically.
+2. Pick one (or more) bases as the default for a type, then **Save All Settings**. The mapping is stored instance-wide in the app config key `docudesk.grondslagen.entity_type_bases` (JSON: `{ "PERSON": ["base-slug"], … }`).
+
+Behaviour at detection time:
+
+- After analysis, each detected entity whose legal basis is still **empty** is pre-filled with the configured base(s) for its type.
+- **Operator choices are never overwritten** — a relation that already has a basis (manually assigned or previously proposed) is left untouched. This also means changing the mapping does **not** retroactively rewrite already-filled entities; only future detections onto empty entities use the new mapping.
+- Entity types with **no mapping** get no proposal (their basis stays empty) — DocuDesk never applies a catch-all default it isn't sure of.
+
+Proposed bases are stored in the same field as manually assigned ones, so they flow into the grondslagen summary exactly like operator-confirmed bases (no separate "proposed" badge). The list of selectable entity types is currently a curated list maintained in DocuDesk; sourcing it live from the anonymiser backend is a planned enhancement.
+
 ### OpenRegisters Integration
 
 DocuDesk supports storing anonymization data in OpenRegisters, which provides additional capabilities for data management:

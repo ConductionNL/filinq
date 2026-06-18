@@ -202,7 +202,17 @@ class AnonymizationService
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
-            $entities   = $entityRelationMapper->findEntitiesForFile($fileId);
+            $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+            // Pre-fill a proposed grondslag per entity type onto the freshly-
+            // detected relations (fill-only-when-empty), then enrich the rows
+            // with their bases so the review UI shows the proposal. Resolved
+            // via the container to keep this class's coupling in check; both
+            // calls are internally best-effort and never block detection.
+            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+            $grondslagProposal->applyProposals(fileId: $fileId);
+            $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+
             $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
             $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
