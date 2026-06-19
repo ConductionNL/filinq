@@ -25,6 +25,7 @@
 		<!-- App loaded normally -->
 		<template v-else-if="storesReady && hasOpenRegisters">
 			<FolderFilesNavigation v-if="inDossier" />
+			<FileNavigation v-else-if="singleFileOpen" />
 			<MainMenu v-else />
 			<Views />
 			<!-- Sidebar lives at App level (NcContent demands a direct child)
@@ -49,6 +50,7 @@ import { NcContent, NcAppContent, NcButton, NcEmptyContent, NcLoadingIcon } from
 import { generateUrl, imagePath } from '@nextcloud/router'
 import MainMenu from './navigation/MainMenu.vue'
 import FolderFilesNavigation from './navigation/FolderFilesNavigation.vue'
+import FileNavigation from './navigation/FileNavigation.vue'
 import Modals from './modals/Modals.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Views from './views/Views.vue'
@@ -65,6 +67,7 @@ export default {
 		NcLoadingIcon,
 		MainMenu,
 		FolderFilesNavigation,
+		FileNavigation,
 		Modals,
 		Dialogs,
 		Views,
@@ -90,6 +93,16 @@ export default {
 		 */
 		inDossier() {
 			return myDocumentsStore.currentPath !== '/DocuDesk'
+		},
+		/**
+		 * True when a single file is open at the root of My Documents (not
+		 * inside a dossier). Replaces the main menu with the minimal
+		 * file navigation showing the back button and the file name.
+		 *
+		 * @return {boolean}
+		 */
+		singleFileOpen() {
+			return !this.inDossier && !!fileViewerStore.currentFile
 		},
 		isAdmin() {
 			const settingsStore = useSettingsStore()

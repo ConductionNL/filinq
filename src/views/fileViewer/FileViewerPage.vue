@@ -5,12 +5,6 @@
 				<component :is="fileTypeIcon" :size="28" />
 			</template>
 			<template #actions>
-				<NcButton v-if="showBack" type="tertiary" @click="onBack">
-					<template #icon>
-						<ArrowLeft :size="18" />
-					</template>
-					{{ t('docudesk', 'Back') }}
-				</NcButton>
 				<!-- Toggle between original and anonymised version — enabled once
 				     the sidebar attaches the anonymised variant via `setAnonymizedVariant`. -->
 				<NcButton
@@ -51,7 +45,6 @@
 import { NcButton } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -59,7 +52,7 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
-import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
+import { fileViewerStore } from '../../store/store.js'
 import DdFileViewerHeader from '../../components/DdFileViewerHeader.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
@@ -88,7 +81,6 @@ export default {
 	name: 'FileViewerPage',
 	components: {
 		NcButton,
-		ArrowLeft,
 		Eye,
 		EyeOffOutline,
 		Download,
@@ -159,16 +151,6 @@ export default {
 			return this.viewerComponent !== null
 		},
 		/**
-		 * Show the Back button only for single-file context (root of My
-		 * Documents). Inside a dossier the user returns via the navigation
-		 * link, so a header Back button would duplicate that affordance.
-		 *
-		 * @return {boolean}
-		 */
-		showBack() {
-			return myDocumentsStore.currentPath === '/DocuDesk'
-		},
-		/**
 		 * Tooltip for the toggle button — explains the disabled state when
 		 * the anonymised variant is not (yet) available.
 		 *
@@ -185,10 +167,6 @@ export default {
 	},
 	methods: {
 		t,
-		/** Navigate back to the previous view via the store. */
-		onBack() {
-			fileViewerStore.close()
-		},
 		/** Download the currently previewed file via Nextcloud's file URL. */
 		downloadCurrent() {
 			const file = fileViewerStore.currentFile
