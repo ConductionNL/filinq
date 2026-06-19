@@ -115,6 +115,9 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 					:multiple="true"
 					:input-label="t('docudesk', 'Grondslagen')"
 					:placeholder="t('docudesk', 'Pick grondslagen…')" />
+				<NcNoteCard v-if="saveError" type="error">
+					{{ saveError }}
+				</NcNoteCard>
 			</div>
 
 			<!-- Empty state. -->
@@ -142,13 +145,16 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		<div v-if="entry && entry.status === 'extracted'" class="sidebar-action-bar">
 			<!-- Edit mode: cancel / save the new entity. -->
 			<template v-if="isEditing">
-				<NcButton type="tertiary" @click="onCancelEdit">
+				<NcButton type="tertiary" :disabled="savingNew" @click="onCancelEdit">
 					{{ t('docudesk', 'Cancel') }}
 				</NcButton>
 				<NcButton
 					type="primary"
-					:disabled="!canSaveNew"
+					:disabled="!canSaveNew || savingNew"
 					@click="onSaveNew">
+					<template v-if="savingNew" #icon>
+						<NcLoadingIcon :size="20" />
+					</template>
 					{{ t('docudesk', 'Save change') }}
 				</NcButton>
 			</template>
@@ -219,6 +225,8 @@ export default {
 			// grondslagen for the entity about to be added from the selection.
 			newType: '',
 			newBases: [],
+			savingNew: false,
+			saveError: null,
 		}
 	},
 	computed: {
@@ -561,19 +569,36 @@ export default {
 		resetNewEntityForm() {
 			this.newType = ''
 			this.newBases = []
+			this.saveError = null
 		},
 		/**
-		 * Save the selected text as a new manual entity. Wired to the backend
-		 * in T11 (addManualEntity); for now it only guards the form state.
+		 * Save the current selection as a new manual entity via the store.
+		 * Persists it, prepends it to the list, then clears the selection and
+		 * form so the user can add the next one (one entity at a time). Stays
+		 * in edit mode so adding several in a row needs no re-click.
 		 *
 		 * @return {Promise<void>}
 		 */
 		async onSaveNew() {
-			if (this.canSaveNew && this.entry) {
-				// TODO(T11): call anonymizationStore.addManualEntity(this.entry, {
-				//   value: this.selectedText, type: this.newTypeValue,
-				//   bases: this.newBases,
-				// }) — prepend the result to the list and persist; then reset.
+			if (!this.canSaveNew || !this.entry || this.savingNew) {
+				return
+			}
+			this.savingNew = true
+			this.saveError = null
+			try {
+				await anonymizationStore.addManualEntity(this.entry, {
+					value: this.selectedText,
+					type: this.newTypeValue,
+					bases: this.grondslagen ? this.newBases : [],
+				})
+				// Clear the selection + form; the new entity now highlights as
+				// its own type and the pending mark is gone.
+				fileViewerStore.setSelection('')
+				this.resetNewEntityForm()
+			} catch (err) {
+				this.saveError = err?.message || t('docudesk', 'Failed to add the selected text')
+			} finally {
+				this.savingNew = false
 			}
 		},
 	},

@@ -1075,6 +1075,105 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
+			 * Add a manually-selected piece of text as a new entity on the file.
+			 *
+			 * POSTs to the existing OpenRegister manual-entities endpoint, which
+			 * persists the entity plus one relation per match in the document,
+			 * then prepends the resulting review row so the newest addition sits
+			 * at the top of the list. When grondslagen are supplied they are
+			 * PATCHed onto the new relations straight away so they survive a
+			 * reopen (rather than only at anonymise-time).
+			 *
+			 * Overwrite priority: the actual document replacement order is decided
+			 * in `anonymiseEntry`, which sorts the payload by descending value
+			 * length (longest first) so an overlapping longer span always redacts
+			 * before a shorter one. Prepending here is purely the list/display
+			 * priority; the length sort guarantees correctness.
+			 *
+			 * @param {object} entry Queue entry (must have fileId).
+			 * @param {object} payload Manual-entity input.
+			 * @param {string} payload.value Selected text to anonymise.
+			 * @param {string} payload.type Entity type tag.
+			 * @param {string[]} [payload.bases] Grondslagen to apply to the new relations.
+			 * @param {boolean} [payload.wholeWord] Whole-word match flag (default true).
+			 * @param {boolean} [payload.caseSensitive] Case-sensitive match flag (default true).
+			 * @return {Promise<object>} The backend response payload (entity, relations, matchCount).
+			 * @throws {Error} With `.message` operator-facing; on missing fileId/value/type or HTTP error.
+			 */
+			async addManualEntity(entry, payload) {
+				if (!entry?.fileId) {
+					const err = new Error('Entry has no fileId yet.')
+					err.status = 0
+					throw err
+				}
+				const value = (payload?.value || '').trim()
+				const type = payload?.type || ''
+				if (!value || !type) {
+					const err = new Error('A value and a type are required.')
+					err.status = 0
+					throw err
+				}
+
+				const body = {
+					value,
+					type,
+					wholeWord: payload?.wholeWord ?? true,
+					caseSensitive: payload?.caseSensitive ?? true,
+				}
+
+				const response = await axios.post(
+					generateUrl(`/apps/openregister/api/files/${entry.fileId}/manual-entities`),
+					body,
+				)
+				const data = response.data || {}
+
+				const relations = Array.isArray(data.relations) ? data.relations : []
+				const relationIds = relations.map((r) => r.id).filter((id) => id != null)
+				const bases = Array.isArray(payload?.bases) ? payload.bases : []
+
+				// Persist the chosen grondslagen immediately (mirrors the PATCH in
+				// anonymiseEntry). On failure leave `bases` empty so anonymiseEntry
+				// retries the PATCH when the user anonymises.
+				let persistedBases = []
+				if (bases.length > 0 && relationIds.length > 0) {
+					try {
+						await Promise.all(relationIds.map((rid) => axios.patch(
+							generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+							{ bases, skipAnonymization: false },
+						)))
+						persistedBases = bases
+					} catch (err) {
+						console.error('[anonymization] failed to set grondslagen on manual entity:', err)
+					}
+				}
+
+				// Build a review row in the same shape decorateEntities produces,
+				// grouping every matched relation under one card.
+				const newRow = {
+					type: data?.entity?.type ?? type,
+					value: data?.entity?.value ?? value,
+					included: true,
+					confidence: 1.0,
+					highestConfidence: 1.0,
+					fileCount: 1,
+					count: relationIds.length || 1,
+					relationId: relationIds[0] ?? null,
+					relationIds,
+					bases: [...persistedBases],
+					_decisionBases: [...bases],
+					_decisionSkip: false,
+					skipAnonymization: false,
+					_patchError: null,
+				}
+
+				// Prepend so the newest addition sits at the top of the list.
+				entry.entities = [newRow, ...entry.entities]
+				entry.entityCount = entry.entities.length
+
+				return data
+			},
+
+			/**
 			 * Remove all completed or errored files from the queue.
 			 * Used by the "Clear completed" button in the widget.
 			 */
