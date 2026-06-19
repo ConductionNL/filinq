@@ -111,12 +111,22 @@ export default {
 				const mammoth = mammothModule.default || mammothModule
 				const result = await mammoth.convertToHtml({ arrayBuffer })
 				this.html = result.value
-				this.scheduleHighlights()
 			} catch (err) {
 				console.error('[WordViewer] failed to load docx:', err)
 				this.error = err.message || t('docudesk', 'Failed to load document')
 			} finally {
 				this.loading = false
+			}
+			// Highlight only after `loading` is false: the content element
+			// (ref="content") sits behind `v-else`, so it is not in the DOM
+			// while loading. Scheduling the highlight pass here ensures the
+			// re-render that mounts the element is queued before the
+			// $nextTick highlight callback runs — otherwise `$refs.content`
+			// is null and nothing is marked (notably on a cache-hit reopen,
+			// where the entity list is pre-set and no later change retriggers
+			// the highlight watcher).
+			if (!this.error) {
+				this.scheduleHighlights()
 			}
 		},
 		/**
