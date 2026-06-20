@@ -38,8 +38,6 @@ use OCP\IRequest;
  */
 class DashboardController extends GenericDashboardController
 {
-
-
     /**
      * Constructor.
      *
@@ -53,6 +51,4 @@ class DashboardController extends GenericDashboardController
         parent::__construct(appName: Application::APP_ID, request: $request);
 
     }//end __construct()
-
-
 }//end class

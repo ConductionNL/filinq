@@ -37,6 +37,7 @@ use RuntimeException;
  */
 class ComparisonException extends RuntimeException
 {
+
     /**
      * HTTP status code for this failure.
      *
@@ -62,7 +63,7 @@ class ComparisonException extends RuntimeException
      */
     public function __construct(int $statusCode, string $reason, string $message='')
     {
-        parent::__construct($message);
+        parent::__construct(message: $message);
         $this->statusCode = $statusCode;
         $this->reason     = $reason;
 

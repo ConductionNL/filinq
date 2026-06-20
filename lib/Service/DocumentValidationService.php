@@ -53,12 +53,12 @@ class DocumentValidationService
     /**
      * Check identifiers.
      */
-    public const CHECK_FORMAT_NOT_ALLOWED    = 'format-not-allowed';
-    public const CHECK_EXTENSION_MIME        = 'extension-mime-mismatch';
-    public const CHECK_FILE_UNREADABLE       = 'file-unreadable';
-    public const CHECK_PDF_ENCRYPTED         = 'pdf-encrypted';
-    public const CHECK_TEXT_LAYER_MISSING    = 'text-layer-missing';
-    public const CHECK_METADATA_INCOMPLETE   = 'metadata-incomplete';
+    public const CHECK_FORMAT_NOT_ALLOWED  = 'format-not-allowed';
+    public const CHECK_EXTENSION_MIME      = 'extension-mime-mismatch';
+    public const CHECK_FILE_UNREADABLE     = 'file-unreadable';
+    public const CHECK_PDF_ENCRYPTED       = 'pdf-encrypted';
+    public const CHECK_TEXT_LAYER_MISSING  = 'text-layer-missing';
+    public const CHECK_METADATA_INCOMPLETE = 'metadata-incomplete';
 
     /**
      * Severity values.
@@ -140,7 +140,6 @@ class DocumentValidationService
         'htm'  => ['text/html'],
     ];
 
-
     /**
      * Constructor.
      *
@@ -155,7 +154,6 @@ class DocumentValidationService
     ) {
 
     }//end __construct()
-
 
     /**
      * Validate a file + its document record against the resolved profile.
@@ -203,8 +201,8 @@ class DocumentValidationService
         }
 
         // Read content once for the readability / encryption / text-layer checks.
-        $content        = null;
-        $contentFailed  = false;
+        $content       = null;
+        $contentFailed = false;
         try {
             $content = $file->getContent();
         } catch (Throwable $e) {
@@ -244,7 +242,7 @@ class DocumentValidationService
                         'The document has little or no extractable text; OCR may be required.'
                     );
                     $finding['suggestedAction'] = 'ocr';
-                    $findings[]                 = $finding;
+                    $findings[] = $finding;
                 }
             }
         }
@@ -271,7 +269,6 @@ class DocumentValidationService
         ];
 
     }//end validate()
-
 
     /**
      * Resolve the validation profile for a document type, falling back to default.
@@ -317,7 +314,6 @@ class DocumentValidationService
 
     }//end resolveProfile()
 
-
     /**
      * Aggregate findings into a verdict.
      *
@@ -348,7 +344,6 @@ class DocumentValidationService
 
     }//end aggregate()
 
-
     /**
      * The shipped default profile (every check warn-only).
      *
@@ -368,7 +363,6 @@ class DocumentValidationService
         ];
 
     }//end defaultProfile()
-
 
     /**
      * Load and decode the configured profiles JSON.
@@ -397,7 +391,6 @@ class DocumentValidationService
 
     }//end loadProfiles()
 
-
     /**
      * Resolve the severity for a check under a profile.
      *
@@ -411,7 +404,6 @@ class DocumentValidationService
         return (string) ($profile['severities'][$check] ?? self::SEVERITY_WARNING);
 
     }//end checkSeverity()
-
 
     /**
      * Build a finding entry.
@@ -433,7 +425,6 @@ class DocumentValidationService
         ];
 
     }//end finding()
-
 
     /**
      * Whether a required field is absent or empty on the record.
@@ -457,7 +448,6 @@ class DocumentValidationService
         return false;
 
     }//end fieldMissing()
-
 
     /**
      * Whether the file extension contradicts the detected mime type.
@@ -487,7 +477,6 @@ class DocumentValidationService
 
     }//end extensionMismatches()
 
-
     /**
      * Heuristic: whether a PDF byte stream is encrypted.
      *
@@ -507,7 +496,6 @@ class DocumentValidationService
         return str_contains($content, '/Encrypt');
 
     }//end isPdfEncrypted()
-
 
     /**
      * Heuristic: whether a PDF lacks a usable text layer.
@@ -544,7 +532,6 @@ class DocumentValidationService
 
     }//end textLayerMissing()
 
-
     /**
      * Read the configured minimum chars-per-page threshold.
      *
@@ -560,7 +547,6 @@ class DocumentValidationService
         return $value;
 
     }//end getTextLayerMin()
-
 
     /**
      * Read a file's mime type defensively.
@@ -578,7 +564,6 @@ class DocumentValidationService
         }
 
     }//end safeMimeType()
-
 
     /**
      * Read a file's name defensively.
