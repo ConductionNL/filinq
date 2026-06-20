@@ -48,8 +48,6 @@ use Throwable;
  */
 class ValidationController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -75,7 +73,6 @@ class ValidationController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Validate a file on demand without persisting.

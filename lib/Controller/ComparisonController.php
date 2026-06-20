@@ -48,8 +48,6 @@ use Throwable;
  */
 class ComparisonController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -73,7 +71,6 @@ class ComparisonController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Compare two document subjects.
@@ -113,7 +110,7 @@ class ComparisonController extends Controller
         } catch (ComparisonException $e) {
             return new JSONResponse(
                 data: [
-                    'error'  => $this->mapReasonToMessage($e->getReason()),
+                    'error'  => $this->mapReasonToMessage(reason: $e->getReason()),
                     'reason' => $e->getReason(),
                 ],
                 statusCode: $e->getStatusCode()
@@ -127,7 +124,6 @@ class ComparisonController extends Controller
         }//end try
 
     }//end compare()
-
 
     /**
      * Map a machine-readable reason code to a localised message.
