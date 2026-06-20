@@ -169,33 +169,33 @@ class DocumentValidationService
     public function validate(File $file, array $record=[], ?string $documentType=null): array
     {
         $type    = ($documentType ?? (string) ($record['documentType'] ?? ''));
-        $profile = $this->resolveProfile($type);
+        $profile = $this->resolveProfile(documentType: $type);
 
         $findings = [];
 
-        $mime = $this->safeMimeType($file);
-        $name = $this->safeName($file);
+        $mime = $this->safeMimeType(file: $file);
+        $name = $this->safeName(file: $file);
 
         // 1. format-not-allowed.
-        if ($this->checkSeverity($profile, self::CHECK_FORMAT_NOT_ALLOWED) !== self::SEVERITY_OFF) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_FORMAT_NOT_ALLOWED) !== self::SEVERITY_OFF) {
             $allowed = $profile['allowedMimes'];
             if ($mime !== '' && in_array($mime, $allowed, true) === false) {
                 $findings[] = $this->finding(
-                    self::CHECK_FORMAT_NOT_ALLOWED,
-                    $profile,
-                    'The file format {mime} is not allowed for this document type.',
-                    ['mime' => $mime]
+                    checkId: self::CHECK_FORMAT_NOT_ALLOWED,
+                    profile: $profile,
+                    messageKey: 'The file format {mime} is not allowed for this document type.',
+                    params: ['mime' => $mime]
                 );
             }
         }
 
         // 2. extension-mime-mismatch.
-        if ($this->checkSeverity($profile, self::CHECK_EXTENSION_MIME) !== self::SEVERITY_OFF) {
-            if ($this->extensionMismatches($name, $mime) === true) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_EXTENSION_MIME) !== self::SEVERITY_OFF) {
+            if ($this->extensionMismatches(name: $name, mime: $mime) === true) {
                 $findings[] = $this->finding(
-                    self::CHECK_EXTENSION_MIME,
-                    $profile,
-                    'The file extension does not match its detected content type.'
+                    checkId: self::CHECK_EXTENSION_MIME,
+                    profile: $profile,
+                    messageKey: 'The file extension does not match its detected content type.'
                 );
             }
         }
@@ -210,36 +210,36 @@ class DocumentValidationService
         }
 
         // 3. file-unreadable.
-        if ($this->checkSeverity($profile, self::CHECK_FILE_UNREADABLE) !== self::SEVERITY_OFF) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_FILE_UNREADABLE) !== self::SEVERITY_OFF) {
             if ($contentFailed === true || $content === null) {
                 $findings[] = $this->finding(
-                    self::CHECK_FILE_UNREADABLE,
-                    $profile,
-                    'The file could not be read or parsed.'
+                    checkId: self::CHECK_FILE_UNREADABLE,
+                    profile: $profile,
+                    messageKey: 'The file could not be read or parsed.'
                 );
             }
         }
 
         // 4. pdf-encrypted.
-        if ($this->checkSeverity($profile, self::CHECK_PDF_ENCRYPTED) !== self::SEVERITY_OFF) {
-            if ($mime === 'application/pdf' && $content !== null && $this->isPdfEncrypted($content) === true) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_PDF_ENCRYPTED) !== self::SEVERITY_OFF) {
+            if ($mime === 'application/pdf' && $content !== null && $this->isPdfEncrypted(content: $content) === true) {
                 $findings[] = $this->finding(
-                    self::CHECK_PDF_ENCRYPTED,
-                    $profile,
-                    'The PDF is encrypted or password-protected and cannot be anonymised.'
+                    checkId: self::CHECK_PDF_ENCRYPTED,
+                    profile: $profile,
+                    messageKey: 'The PDF is encrypted or password-protected and cannot be anonymised.'
                 );
             }
         }
 
         // 5. text-layer-missing (page-bearing formats only: PDF here).
-        if ($this->checkSeverity($profile, self::CHECK_TEXT_LAYER_MISSING) !== self::SEVERITY_OFF) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_TEXT_LAYER_MISSING) !== self::SEVERITY_OFF) {
             if ($mime === 'application/pdf' && $content !== null) {
-                $missing = $this->textLayerMissing($content);
+                $missing = $this->textLayerMissing(content: $content);
                 if ($missing === true) {
                     $finding = $this->finding(
-                        self::CHECK_TEXT_LAYER_MISSING,
-                        $profile,
-                        'The document has little or no extractable text; OCR may be required.'
+                        checkId: self::CHECK_TEXT_LAYER_MISSING,
+                        profile: $profile,
+                        messageKey: 'The document has little or no extractable text; OCR may be required.'
                     );
                     $finding['suggestedAction'] = 'ocr';
                     $findings[] = $finding;
@@ -248,14 +248,14 @@ class DocumentValidationService
         }
 
         // 6. metadata-incomplete (one finding per missing required field).
-        if ($this->checkSeverity($profile, self::CHECK_METADATA_INCOMPLETE) !== self::SEVERITY_OFF) {
+        if ($this->checkSeverity(profile: $profile, check: self::CHECK_METADATA_INCOMPLETE) !== self::SEVERITY_OFF) {
             foreach ($profile['requiredFields'] as $field) {
-                if ($this->fieldMissing($record, (string) $field) === true) {
+                if ($this->fieldMissing(record: $record, field: (string) $field) === true) {
                     $finding          = $this->finding(
-                        self::CHECK_METADATA_INCOMPLETE,
-                        $profile,
-                        'Required metadata field "{field}" is missing.',
-                        ['field' => (string) $field]
+                        checkId: self::CHECK_METADATA_INCOMPLETE,
+                        profile: $profile,
+                        messageKey: 'Required metadata field "{field}" is missing.',
+                        params: ['field' => (string) $field]
                     );
                     $finding['field'] = (string) $field;
                     $findings[]       = $finding;
@@ -264,7 +264,7 @@ class DocumentValidationService
         }
 
         return [
-            'validationStatus'   => $this->aggregate($findings),
+            'validationStatus'   => $this->aggregate(findings: $findings),
             'validationFindings' => $findings,
         ];
 
@@ -306,9 +306,19 @@ class DocumentValidationService
             }
         }
 
+        $allowedMimes = $defaults['allowedMimes'];
+        if (isset($raw['allowedMimes']) === true && is_array($raw['allowedMimes']) === true) {
+            $allowedMimes = array_values($raw['allowedMimes']);
+        }
+
+        $requiredFields = $defaults['requiredFields'];
+        if (isset($raw['requiredFields']) === true && is_array($raw['requiredFields']) === true) {
+            $requiredFields = array_values($raw['requiredFields']);
+        }
+
         return [
-            'allowedMimes'   => (isset($raw['allowedMimes']) === true && is_array($raw['allowedMimes']) === true) ? array_values($raw['allowedMimes']) : $defaults['allowedMimes'],
-            'requiredFields' => (isset($raw['requiredFields']) === true && is_array($raw['requiredFields']) === true) ? array_values($raw['requiredFields']) : $defaults['requiredFields'],
+            'allowedMimes'   => $allowedMimes,
+            'requiredFields' => $requiredFields,
             'severities'     => $severities,
         ];
 
@@ -419,7 +429,7 @@ class DocumentValidationService
     {
         return [
             'checkId'  => $checkId,
-            'severity' => $this->checkSeverity($profile, $checkId),
+            'severity' => $this->checkSeverity(profile: $profile, check: $checkId),
             'message'  => $messageKey,
             'params'   => $params,
         ];
