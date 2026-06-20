@@ -15,20 +15,17 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
-    'routes' => [
+// The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
+// catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
+// `Routes::standard()`; both resolve to docudesk's `DashboardController`
+// (which extends the AppHost `GenericDashboardController`), so the route name
+// `docudesk.dashboard.page` that the navigation (info.xml) and the dashboard
+// widgets link to is defined. The app-specific API routes below are passed
+// through as `$extra` and inserted before the catch-all.
+return \OCA\OpenRegister\AppHost\Routes::standard([
         // Metrics and health.
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
-
-        // Dashboard SPA page — served by OpenRegister's AppHost
-        // GenericDashboardController via a `DashboardController` alias
-        // (Application::register), so the route resolves to the conventional
-        // name `docudesk.dashboard.page` that the navigation (info.xml) and the
-        // dashboard widgets' getUrl() link to. Using the non-standard
-        // `AppHost\Controller\GenericDashboard#page` name left
-        // `docudesk.dashboard.page` undefined → 503 on every app page.
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
@@ -147,13 +144,4 @@ return [
         // GenericPreferencesController (aliased in Application::register).
         ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
-
-        // SPA catch-all — serves the Vue app shell for any frontend deep
-        // link (vue-router HTML5 history mode). Must come LAST so it
-        // doesn't shadow specific routes above. Served by the AppHost
-        // GenericDashboardController (aliased in Application::register);
-        // GenericDashboard#catchAll delegates to page(). A distinct route
-        // name keeps it from shadowing the `/` index route.
-        ['name' => 'AppHost\Controller\GenericDashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
-    ],
-];
+]);

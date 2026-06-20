@@ -215,6 +215,18 @@ class Application extends App implements IBootstrap
                 );
             }
         );
+        // The conventional `dashboard#page` route resolves to this real
+        // DashboardController subclass; register it explicitly (mirroring
+        // procest) so NC's DI constructs it from IRequest — the AppHost engine
+        // base otherwise expects an injected `string $appName`.
+        $context->registerService(
+            \OCA\DocuDesk\Controller\DashboardController::class,
+            static function (ContainerInterface $container): \OCA\DocuDesk\Controller\DashboardController {
+                return new \OCA\DocuDesk\Controller\DashboardController(
+                    request: $container->get(\OCP\IRequest::class)
+                );
+            }
+        );
         $context->registerService(
             'OCA\\DocuDesk\\AppHost\\Controller\\GenericPreferencesController',
             static function (ContainerInterface $container): GenericPreferencesController {
