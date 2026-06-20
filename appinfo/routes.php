@@ -22,11 +22,13 @@ return [
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
 
         // Dashboard SPA page — served by OpenRegister's AppHost
-        // GenericDashboardController (aliased at
-        // AppHost\Controller\GenericDashboardController in Application::register,
-        // mirroring the Health/Metrics adoption precedent). URL + auth posture
-        // unchanged.
-        ['name' => 'AppHost\Controller\GenericDashboard#page', 'url' => '/', 'verb' => 'GET'],
+        // GenericDashboardController via a `DashboardController` alias
+        // (Application::register), so the route resolves to the conventional
+        // name `docudesk.dashboard.page` that the navigation (info.xml) and the
+        // dashboard widgets' getUrl() link to. Using the non-standard
+        // `AppHost\Controller\GenericDashboard#page` name left
+        // `docudesk.dashboard.page` undefined → 503 on every app page.
+        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],

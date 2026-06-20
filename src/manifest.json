@@ -118,10 +118,16 @@
 		{
 			"id": "Templates",
 			"route": "/templates",
-			"type": "custom",
+			"type": "index",
 			"title": "Templates",
-			"component": "TemplateIndex",
-			"_note": "Templates are managed by docudesk's own template controller. Future ADR may migrate to OR-backed index if a template schema is registered."
+			"config": {
+				"register": "docudesk",
+				"schema": "template",
+				"columns": ["name", "category", "format", "namespace", "description"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://docudesk.conduction.nl"
+			},
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered (register docudesk), so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail."
 		},
 		{
 			"id": "TemplateDetail",
@@ -134,10 +140,16 @@
 		{
 			"id": "SigningRequests",
 			"route": "/signing",
-			"type": "custom",
+			"type": "index",
 			"title": "Signing Requests",
-			"component": "SigningRequestList",
-			"_note": "Signing requests are managed by docudesk's signing controller; type:custom preserves the existing data path."
+			"config": {
+				"register": "docudesk",
+				"schema": "signingRequest",
+				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://docudesk.conduction.nl"
+			},
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail."
 		},
 		{
 			"id": "SigningRequestDetail",
