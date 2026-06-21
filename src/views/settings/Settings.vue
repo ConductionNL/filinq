@@ -1,39 +1,15 @@
 <template>
-	<div>
+	<CnAdminSettingsShell
+		app-id="docudesk"
+		app-name="DocuDesk"
+		doc-url="https://docudesk.app"
+		:show-reimport="false">
 		<!-- Anonymiser backend warning (shown when regex-only and admin has not dismissed) -->
 		<AnonymiserBackendWarning
 			v-if="isAdmin"
 			:show-warning="anonymiserBackend.showWarning"
 			:app-api-installed="anonymiserBackend.appApiInstalled"
 			@dismissed="onAnonymiserWarningDismissed" />
-
-		<!-- Version Information -->
-		<CnVersionInfoCard
-			:app-name="'DocuDesk'"
-			:app-version="appVersion"
-			:is-up-to-date="true"
-			:show-update-button="true"
-			:title="t('docudesk', 'Version Information')"
-			:description="t('docudesk', 'Information about the current DocuDesk installation')">
-			<template #footer>
-				<div class="cn-support-info">
-					<h4>{{ t('docudesk', 'Support') }}</h4>
-					<p>
-						{{ t('docudesk', 'For support, contact us at') }}
-						<a href="mailto:support@conduction.nl">support@conduction.nl</a>
-					</p>
-					<p>
-						{{ t('docudesk', 'For a Service Level Agreement (SLA), contact') }}
-						<a href="mailto:sales@conduction.nl">sales@conduction.nl</a>
-					</p>
-				</div>
-			</template>
-		</CnVersionInfoCard>
-
-		<NcSettingsSection
-			name="DocuDesk"
-			:description="t('docudesk', 'GDPR publication consent management and document metadata enrichment for Nextcloud')"
-			doc-url="https://docudesk.app" />
 
 		<NcSettingsSection
 			:name="t('docudesk', 'Consent Settings')"
@@ -425,19 +401,18 @@
 				{{ t('docudesk', 'Save All Settings') }}
 			</NcButton>
 		</div>
-	</div>
+	</CnAdminSettingsShell>
 </template>
 
 <script>
 import { NcSettingsSection, NcNoteCard, NcSelect, NcButton, NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
+import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
-import { loadState } from '@nextcloud/initial-state'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 
 export default {
@@ -449,7 +424,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		NcCheckboxRadioSwitch,
-		CnVersionInfoCard,
+		CnAdminSettingsShell,
 		AnonymiserBackendWarning,
 		Plus,
 		Restart,
@@ -459,7 +434,6 @@ export default {
 	},
 	data() {
 		return {
-			appVersion: loadState('docudesk', 'version', 'Unknown'),
 			loading: false,
 			saving: false,
 			isAdmin: false,
