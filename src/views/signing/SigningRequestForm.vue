@@ -13,13 +13,13 @@
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
 			<select v-model="form.signatureLevel">
 				<option value="SES">
-					SES - Simple
+					{{ t('docudesk', 'SES - Simple') }}
 				</option>
 				<option value="AdES">
-					AdES - Advanced
+					{{ t('docudesk', 'AdES - Advanced') }}
 				</option>
 				<option value="QES">
-					QES - Qualified
+					{{ t('docudesk', 'QES - Qualified') }}
 				</option>
 			</select>
 		</div>

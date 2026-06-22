@@ -4,7 +4,6 @@ import pinia from '../pinia.js'
 import { useNavigationStore } from './modules/navigation.ts'
 import { useConsentStore } from './modules/consent.js'
 import { useAnonymizationStore } from './modules/anonymization.js'
-import { useAnonymizationPocStore } from './modules/anonymizationPoc.js'
 import { useBatchAnonymizationStore } from './modules/batchAnonymization.js'
 import { useFolderAnonymizationStore } from './modules/folderAnonymization.js'
 import { useMyDocumentsStore } from './modules/myDocuments.js'
@@ -16,7 +15,6 @@ import { useSettingsStore } from './modules/settings.js'
 const navigationStore = useNavigationStore(pinia)
 const consentStore = useConsentStore(pinia)
 const anonymizationStore = useAnonymizationStore(pinia)
-const anonymizationPocStore = useAnonymizationPocStore(pinia)
 const batchAnonymizationStore = useBatchAnonymizationStore(pinia)
 const folderAnonymizationStore = useFolderAnonymizationStore(pinia)
 const myDocumentsStore = useMyDocumentsStore(pinia)
@@ -39,7 +37,6 @@ export {
 	navigationStore,
 	consentStore,
 	anonymizationStore,
-	anonymizationPocStore,
 	batchAnonymizationStore,
 	folderAnonymizationStore,
 	myDocumentsStore,

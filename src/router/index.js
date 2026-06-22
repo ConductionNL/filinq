@@ -3,7 +3,6 @@ import Router from 'vue-router'
 
 import Dashboard from '../views/dashboard/DashboardIndex.vue'
 import AnonymizationIndex from '../views/anonymization/AnonymizationIndex.vue'
-import AnonymizationPocWidget from '../views/anonymization/AnonymizationPocWidget.vue'
 import BatchAnonymizationView from '../views/anonymization/BatchAnonymizationView.vue'
 import FolderAnonymizationView from '../views/anonymization/FolderAnonymizationView.vue'
 import ConsentIndex from '../views/consent/ConsentIndex.vue'
@@ -25,7 +24,6 @@ export default new Router(
 			{ path: '/', redirect: { name: 'Anonymization' } },
 			{ path: '/dashboard', name: 'Dashboard', component: Dashboard },
 			{ path: '/anonymization', name: 'Anonymization', component: AnonymizationIndex },
-			{ path: '/anonymization/poc', name: 'AnonymizationPoc', component: AnonymizationPocWidget },
 			{ path: '/anonymization/batch', name: 'BatchAnonymization', component: BatchAnonymizationView },
 			{ path: '/anonymization/folder', name: 'FolderAnonymization', component: FolderAnonymizationView },
 			{ path: '/consent', name: 'Consent', component: ConsentIndex },

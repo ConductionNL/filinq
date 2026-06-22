@@ -16,6 +16,10 @@
   .totals-line { margin-top: 10pt; font-size: 9pt; color: #444; }
   .empty-note { font-style: italic; color: #888; }
   .placeholder-cell { font-family: 'DejaVu Sans Mono', monospace; font-size: 8.5pt; }
+  h2.bases-heading { font-size: 11pt; margin: 16pt 0 4pt 0; }
+  dl.bases-list { font-size: 9pt; margin: 0; }
+  dl.bases-list dt { font-weight: bold; margin-top: 6pt; }
+  dl.bases-list dd { margin: 1pt 0 0 0; padding-left: 0; color: #333; }
 </style>
 </head>
 <body>
@@ -75,6 +79,22 @@
   {{ totals.entityCount|default(0) }} keer geanonimiseerd ·
   {{ totals.distinctBasesCount|default(0) }} unieke grondsla{% if totals.distinctBasesCount|default(0) != 1 %}gen{% else %}g{% endif %}
 </p>
+
+{% if bases|default([])|length > 0 %}
+  <h2 class="bases-heading">Toegepaste grondslagen</h2>
+  <dl class="bases-list">
+    {% for base in bases %}
+      <dt>{{ base.name|escape }}</dt>
+      <dd>
+        {% if base.description|default('') != '' %}
+          {{ base.description|escape }}
+        {% else %}
+          <span class="empty-note">geen omschrijving beschikbaar</span>
+        {% endif %}
+      </dd>
+    {% endfor %}
+  </dl>
+{% endif %}
 
 </body>
 </html>
