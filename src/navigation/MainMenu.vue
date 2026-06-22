@@ -17,14 +17,7 @@
 					<TextBoxOutline :size="24" />
 				</template>
 			</NcAppNavigationItem>
-			<NcAppNavigationItem
-				:active="isActive('Settings')"
-				:name="t('docudesk', 'Settings')"
-				:to="{ name: 'Settings' }">
-				<template #icon>
-					<TuneVertical :size="24" />
-				</template>
-			</NcAppNavigationItem>
+			<NcAppNavigationSpacer />
 			<NcAppNavigationItem
 				:active="isActive('AnonymizationPoc')"
 				:name="t('docudesk', 'Anonymisation PoC')"
@@ -81,6 +74,16 @@
 					<AlertOctagon :size="20" />
 				</template>
 			</NcAppNavigationItem>
+			<!-- Temporary feature: kept at the bottom, set apart by a spacer. -->
+			<NcAppNavigationSpacer />
+			<NcAppNavigationItem
+				:active="isActive('Gallery')"
+				:name="t('docudesk', 'Component Gallery')"
+				:to="{ name: 'Gallery' }">
+				<template #icon>
+					<Palette :size="20" />
+				</template>
+			</NcAppNavigationItem>
 		</NcAppNavigationList>
 	</NcAppNavigation>
 </template>
@@ -90,6 +93,7 @@ import {
 	NcAppNavigation,
 	NcAppNavigationList,
 	NcAppNavigationItem,
+	NcAppNavigationSpacer,
 } from '@nextcloud/vue'
 
 import MonitorDashboard from 'vue-material-design-icons/MonitorDashboard.vue'
@@ -98,11 +102,11 @@ import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
-import TuneVertical from 'vue-material-design-icons/TuneVertical.vue'
 // Icons
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import TestTube from 'vue-material-design-icons/TestTube.vue'
+import Palette from 'vue-material-design-icons/Palette.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
@@ -117,16 +121,17 @@ export default {
 		NcAppNavigation,
 		NcAppNavigationList,
 		NcAppNavigationItem,
+		NcAppNavigationSpacer,
 		MonitorDashboard,
 		AccountCheckOutline,
 		LockOutline,
 		FileDocumentMultipleOutline,
 		TextBoxOutline,
 		FolderSearchOutline,
-		TuneVertical,
 		AccountStar,
 		AlertOctagon,
 		TestTube,
+		Palette,
 	},
 	methods: {
 		/**
@@ -167,5 +172,30 @@ export default {
 	--color-primary-element-hover: #fff;
 	--color-primary-element-text: var(--color-main-text);
 	box-shadow: var(--dd-shadow-popout);
+}
+
+/* Collapse toggle (open nav): move it from its default top-right overhang to
+   the bottom-left corner inside the navigation. The wrapper is a child of
+   `.app-navigation` (which carries this component's scope id), so a plain
+   `:deep()` matches; the doubled class lifts specificity above the library
+   rule that pins it top-right via `[data-v-…]`. */
+:deep(.app-navigation-toggle-wrapper.app-navigation-toggle-wrapper) {
+	top: auto;
+	right: auto;
+	bottom: var(--app-navigation-padding);
+	left: var(--app-navigation-padding);
+	margin-right: 0;
+}
+
+/* Collapse toggle (closed nav): when collapsed the whole navigation slides
+   left off-screen, so a left-anchored toggle would go with it and become
+   unreachable. Restore NC's right-edge overhang (keeping the bottom anchor)
+   so the button still peeks on-screen and can reopen the menu. The scope id
+   sits on `.app-navigation` itself, so prefix with the (non-deep) close class
+   and `:deep()` the descendant wrapper. */
+.app-navigation--close :deep(.app-navigation-toggle-wrapper.app-navigation-toggle-wrapper) {
+	left: auto;
+	right: calc(0px - var(--app-navigation-padding));
+	margin-right: calc(-1 * var(--default-clickable-area));
 }
 </style>

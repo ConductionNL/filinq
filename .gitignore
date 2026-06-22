@@ -2,6 +2,9 @@
 /*.iml
 *.Identifier
 
+# macOS
+.DS_Store
+
 /vendor/
 /vendor-bin/*/vendor/
 

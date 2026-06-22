@@ -11,7 +11,7 @@
 			<!-- mammoth output is HTML extracted from the docx; safe enough here
 				since it strips scripts and we never execute it. -->
 			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div class="word-viewer__content" v-html="html" />
+			<div ref="content" class="word-viewer__content" v-html="html" />
 		</div>
 	</div>
 </template>
@@ -21,6 +21,7 @@ import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
 import { fileViewerStore } from '../../store/store.js'
+import { applyDomHighlights, clearDomHighlights } from '../../services/highlightDom.js'
 
 let mammothPromise = null
 
@@ -54,6 +55,25 @@ export default {
 			html: '',
 		}
 	},
+	computed: {
+		/**
+		 * Entities the sidebar asked to mark in the document. Read through a
+		 * computed (not a store string-path) so the watcher fires reliably.
+		 *
+		 * @return {Array<{value: string, type: string}>}
+		 */
+		highlightEntities() {
+			return fileViewerStore.highlightEntities || []
+		},
+		/**
+		 * Pending selection to mark distinctly — only while in edit mode.
+		 *
+		 * @return {string}
+		 */
+		pendingValue() {
+			return fileViewerStore.editMode ? (fileViewerStore.selection || '') : ''
+		},
+	},
 	watch: {
 		path: {
 			immediate: true,
@@ -61,6 +81,18 @@ export default {
 				this.load()
 			},
 		},
+		highlightEntities: {
+			deep: true,
+			handler() {
+				this.scheduleHighlights()
+			},
+		},
+		pendingValue() {
+			this.scheduleHighlights()
+		},
+	},
+	beforeDestroy() {
+		clearDomHighlights(this.$refs.content)
 	},
 	methods: {
 		/**
@@ -85,6 +117,28 @@ export default {
 			} finally {
 				this.loading = false
 			}
+			// Highlight only after `loading` is false: the content element
+			// (ref="content") sits behind `v-else`, so it is not in the DOM
+			// while loading. Scheduling the highlight pass here ensures the
+			// re-render that mounts the element is queued before the
+			// $nextTick highlight callback runs — otherwise `$refs.content`
+			// is null and nothing is marked (notably on a cache-hit reopen,
+			// where the entity list is pre-set and no later change retriggers
+			// the highlight watcher).
+			if (!this.error) {
+				this.scheduleHighlights()
+			}
+		},
+		/**
+		 * Re-apply the entity highlights after the DOM has rendered the latest
+		 * mammoth HTML / store change.
+		 *
+		 * @return {void}
+		 */
+		scheduleHighlights() {
+			this.$nextTick(() => {
+				applyDomHighlights(this.$refs.content, this.highlightEntities, this.pendingValue)
+			})
 		},
 		/**
 		 * Push the current text selection into the viewer store so future

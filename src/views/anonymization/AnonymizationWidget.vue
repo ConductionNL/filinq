@@ -57,25 +57,47 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			</div>
 		</section>
 
-		<!-- Dossier name dialog -->
+		<!-- Upload dialog (single document or dossier) -->
 		<NcDialog
 			v-if="showDossierDialog"
-			:name="t('docudesk', 'Create dossier')"
+			:name="dialogName"
 			:can-close="!dossierSubmitting"
 			size="normal"
 			@closing="cancelDossier">
 			<div class="dossier-dialog">
-				<NcTextField
-					ref="dossierInput"
-					:value.sync="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-					:disabled="dossierSubmitting"
-					:error="!!dossierError"
-					:helper-text="dossierError"
-					@keyup.enter="confirmDossier" />
+				<!-- Single file: read-only filename, no dossier name -->
+				<div v-if="isSingleFile" class="single-file">
+					<span class="single-file__label">{{ t('docudesk', 'Document') }}</span>
+					<span class="single-file__name">{{ singleFileName }}</span>
+					<NcNoteCard v-if="dossierError" type="error">
+						{{ dossierError }}
+					</NcNoteCard>
+				</div>
+				<!-- Multiple files: dossier name input -->
+				<template v-else>
+					<NcTextField
+						ref="dossierInput"
+						:value.sync="dossierName"
+						:label="t('docudesk', 'Dossier name')"
+						:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
+						:disabled="dossierSubmitting"
+						:error="!!dossierError"
+						:helper-text="dossierError"
+						@keyup.enter="confirmDossier" />
+					<NcNoteCard type="info">
+						{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+					</NcNoteCard>
+				</template>
+
+				<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:checked.sync="grondslagen"
+					:disabled="dossierSubmitting">
+					{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
+				</NcCheckboxRadioSwitch>
 				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+					{{ t('docudesk', 'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.') }}
 				</NcNoteCard>
 			</div>
 			<template #actions>
@@ -94,7 +116,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
@@ -147,6 +169,7 @@ export default {
 	name: 'AnonymizationWidget',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -162,6 +185,7 @@ export default {
 			dossierName: '',
 			dossierSubmitting: false,
 			dossierError: '',
+			grondslagen: true,
 			uploadIcon,
 			recentItems: [],
 			recentLoading: false,
@@ -193,6 +217,32 @@ export default {
 				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
 			}
 			return t('docudesk', 'Good evening {name},', { name: this.userName })
+		},
+		/**
+		 * Whether the upload modal is showing a single document (no dossier).
+		 *
+		 * @return {boolean} True when exactly one file is pending.
+		 */
+		isSingleFile() {
+			return this.pendingFiles.length === 1
+		},
+		/**
+		 * Filename of the single pending file, shown read-only in the modal.
+		 *
+		 * @return {string} The first pending file's name, or empty string.
+		 */
+		singleFileName() {
+			return this.pendingFiles[0]?.name || ''
+		},
+		/**
+		 * Title of the upload modal: single-file vs dossier wording.
+		 *
+		 * @return {string} Localised dialog title.
+		 */
+		dialogName() {
+			return this.isSingleFile
+				? t('docudesk', 'Anonymize document')
+				: t('docudesk', 'Create dossier')
 		},
 	},
 	mounted() {
@@ -291,37 +341,21 @@ export default {
 			return accepted
 		},
 		/**
-		 * Route the incoming files to the right flow:
-		 *   - 2+ files → open the dossier dialog (user picks a folder name).
-		 *   - single file → straight into the queue under /DocuDesk/, then
-		 *     open the file in the in-app viewer and route to /my-documents
-		 *     so `FileViewerPage` mounts and the sidebar lists entities.
+		 * Always open the upload modal so the user confirms the grondslagen
+		 * choice before anonymization, regardless of file count:
+		 *   - single file → read-only filename, no dossier name.
+		 *   - 2+ files → dossier-name input.
+		 * The actual upload + viewer routing happens on confirm.
 		 *
 		 * @param {File[] | FileList} fileList Files from drop or input.
-		 * @return {Promise<void>}
+		 * @return {void}
 		 */
-		async dispatchFiles(fileList) {
+		dispatchFiles(fileList) {
 			const files = Array.from(fileList)
-			if (files.length >= 2) {
-				this.openDossierDialog(files)
+			if (files.length === 0) {
 				return
 			}
-
-			// Capture MIME type before addFiles consumes the File blob,
-			// and the queue length so we can find the new entry afterwards.
-			const mimeType = files[0]?.type || ''
-			const before = anonymizationStore.files.length
-			await anonymizationStore.addFiles(files)
-			const entry = anonymizationStore.files[before]
-			if (entry && entry.fileId) {
-				fileViewerStore.open({
-					fileId: entry.fileId,
-					fileName: entry.name,
-					mimeType,
-					path: entry.filePath,
-				})
-				this.gotoViewer()
-			}
+			this.openDossierDialog(files)
 		},
 		/**
 		 * Route to the file-viewer host page when not already there.
@@ -337,15 +371,17 @@ export default {
 			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
 		},
 		/**
-		 * Open the dossier-name dialog with an empty input so the
-		 * placeholder is visible and focus on next tick.
+		 * Open the upload dialog with a fresh state: empty dossier name,
+		 * grondslagen defaulting to AAN. Focuses the dossier-name input on
+		 * next tick when present (multi-file only).
 		 *
-		 * @param {File[]} files Files that will be placed into the dossier.
+		 * @param {File[]} files Files pending upload.
 		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 			this.showDossierDialog = true
 			this.$nextTick(() => {
 				this.$refs.dossierInput?.focus?.()
@@ -401,7 +437,7 @@ export default {
 						fileName: firstEntry.name,
 						mimeType: firstMime,
 						path: firstEntry.filePath,
-					})
+					}, { grondslagen: this.grondslagen })
 					this.gotoViewer()
 				}
 
@@ -426,6 +462,7 @@ export default {
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 		},
 	},
 }
@@ -516,6 +553,23 @@ export default {
 
 .dossier-dialog :deep(.notecard) {
 	margin: 0;
+}
+
+.single-file {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.single-file__label {
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.single-file__name {
+	font-weight: 600;
+	color: var(--color-main-text);
+	word-break: break-word;
 }
 
 .recent-section {

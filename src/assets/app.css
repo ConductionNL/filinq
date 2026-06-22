@@ -42,10 +42,44 @@
 	--dd-shadow-panel: 0 4px 22px -3px rgba(0, 0, 0, 0.08);                            /* elevated surface */
 	--dd-shadow-doc: 0 2px 8px rgba(0, 0, 0, 0.15);                                    /* document viewers */
 	--dd-shadow-popout: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24); /* menu pop-out */
+
+	/* Entity-type colours. One colour per detected entity type, used for both
+	   the sidebar type badge and the in-document highlight (see
+	   src/services/entityTypes.js). Definitive per-type colours are TBD — every
+	   type currently points at the shared default so the palette can be tuned
+	   later by editing only these vars. `--dd-entity-color-text` is the badge
+	   foreground; revisit contrast when the backgrounds diverge. */
+	--dd-entity-color-default: #e8eef7;
+	--dd-entity-color-text: var(--dd-color-dark-blue, #02162E);
+	--dd-entity-color-person: var(--dd-entity-color-default);
+	--dd-entity-color-organization: var(--dd-entity-color-default);
+	--dd-entity-color-email: var(--dd-entity-color-default);
+	--dd-entity-color-phone_number: var(--dd-entity-color-default);
+	--dd-entity-color-iban_code: var(--dd-entity-color-default);
+	--dd-entity-color-ip_address: var(--dd-entity-color-default);
+	--dd-entity-color-location: var(--dd-entity-color-default);
+	--dd-entity-color-other: var(--dd-entity-color-default);
 }
 
 #content {
 	color: var(--color-main-text);
+}
+
+/* Entity highlight spans injected into the document viewers (T09). The
+   background colour for a detected entity is set inline per type via
+   entityTypeColor(); these rules cover the shared chrome. Defined unscoped
+   because the WordViewer injects spans into v-html content that carries no
+   component scope hash. `--pending` marks the text the user is about to add
+   as a manual entity. */
+.dd-hl {
+	border-radius: 3px;
+	padding: 0 1px;
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.dd-hl--pending {
+	background-color: var(--color-warning, #f5d76e);
+	box-shadow: 0 0 0 2px var(--color-warning-text, #8a6d3b);
 }
 
 /* CnStatusBadge: each variant resolves its text colour through a Nextcloud

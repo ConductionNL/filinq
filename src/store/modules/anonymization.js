@@ -37,15 +37,22 @@ import { extractDocumentText } from '../../services/fileViewerService.js'
 let fileCounter = 0
 
 /**
- * Matches the in-file anonymisation placeholder `[<TYPE>: <entity_id>]`
- * produced by OpenRegister's DocumentProcessingHandler. The type is an
- * uppercase token (LOCATION, ORGANIZATION, PERSON, …) and the id is the
- * stable `openregister_entities.id` primary key, resolvable via
- * `GET /apps/openregister/api/entities/{id}`.
+ * Matches any bracketed token `[ … ]` so the inner text can be inspected
+ * for the anonymisation placeholder `[<TYPE>: <entity_id>]` produced by
+ * OpenRegister's DocumentProcessingHandler.
+ *
+ * The two-step (match brackets, then validate inner) approach is
+ * deliberate: pdfjs rebuilds a PDF's text by joining positioned glyph
+ * runs with spaces, so a single `[LOCATION: 205]` can surface as
+ * `[ LOCATION : 2 0 5 ]` — spaces injected around the type, the colon AND
+ * between the digits. A single strict regex can't anticipate every split,
+ * so we grab the bracket then strip whitespace from the candidate type
+ * and id before validating. The type stays all-caps + the id all-digits,
+ * which rejects ordinary bracketed prose (`[zie bijlage 2]`).
  *
  * @type {RegExp}
  */
-const PLACEHOLDER_RE = /\[([A-Z][A-Z0-9_]*):\s*(\d+)\]/g
+const PLACEHOLDER_RE = /\[([^[\]]{1,60})\]/g
 
 /**
  * Scan anonymised document text for `[<TYPE>: <entity_id>]` placeholders.
@@ -61,8 +68,18 @@ function parsePlaceholders(text) {
 	}
 	const byId = new Map()
 	for (const match of text.matchAll(PLACEHOLDER_RE)) {
-		const type = match[1]
-		const entityId = Number(match[2])
+		// Split on the first colon; strip whitespace pdfjs may have injected
+		// inside the type token and between the id's digits.
+		const colon = match[1].indexOf(':')
+		if (colon === -1) {
+			continue
+		}
+		const type = match[1].slice(0, colon).replace(/\s+/g, '')
+		const idText = match[1].slice(colon + 1).replace(/\s+/g, '')
+		if (/^[A-Z][A-Z0-9_]*$/.test(type) === false || /^\d+$/.test(idText) === false) {
+			continue
+		}
+		const entityId = Number(idText)
 		if (!Number.isFinite(entityId)) {
 			continue
 		}
@@ -74,6 +91,39 @@ function parsePlaceholders(text) {
 		}
 	}
 	return Array.from(byId.values())
+}
+
+/**
+ * Collapse duplicate entity rows that represent the same removed value.
+ *
+ * The OpenRegister extract pipeline appends entity_relation rows on each
+ * run instead of replacing them, so a source file accumulates several rows
+ * for the same `(type, value)` (see the entity-double-extract TODO — DB
+ * shows e.g. 188 rows where 47 distinct values exist). This is a display
+ * band-aid: it does not clean the DB, it just shows each distinct value
+ * once with its occurrence counts summed. Keyed on `(type, value)` —
+ * resolving the same PII text once regardless of how many duplicate
+ * `openregister_entities.id`s the appends minted.
+ *
+ * @param {Array<object>} entities Resolved anonymised-card entities.
+ * @return {Array<object>} Deduplicated list, first-appearance order preserved.
+ */
+function dedupeAnonEntities(entities) {
+	const byKey = new Map()
+	for (const e of entities || []) {
+		// Fall back to entityId/placeholder when the value is hidden/unresolved,
+		// so unresolved rows still collapse on their stable id.
+		const key = `${e.type}\u0000${e.value ?? e.entityId ?? e.placeholder ?? ''}`
+		const existing = byKey.get(key)
+		if (existing) {
+			existing.count += e.count || 1
+			// Union of grondslagen across the merged rows.
+			existing.bases = [...new Set([...(existing.bases || []), ...(e.bases || [])])]
+		} else {
+			byKey.set(key, { ...e, count: e.count || 1 })
+		}
+	}
+	return Array.from(byKey.values())
 }
 
 /**
@@ -180,20 +230,64 @@ function inferDossier(path) {
  * shape `EntityReviewTable` expects. Centralised so both `addFiles` and
  * `ensureExtracted` produce identical entry.entities.
  *
+ * Rows are grouped by `(type, value)`: OpenRegister's extract pipeline
+ * appends entity_relation rows on each run (force=true) instead of
+ * replacing them, so a single occurrence of e.g. "Claudia Fischer" comes
+ * back as several rows — each with its own `relationId`. Showing one card
+ * per raw row makes a value that appears once look like it appears twice
+ * (see the entity-double-extract TODO). Grouping collapses them to one
+ * review row while keeping **every** `relationId` in `relationIds`, so the
+ * decision PATCH + anonymise still cover all duplicate relations.
+ *
  * @param {Array<object>} entities Raw entities array.
  * @return {Array<object>}
  */
 function decorateEntities(entities) {
-	return (entities || []).map((e) => ({
-		...e,
-		included: true,
-		highestConfidence: e.confidence ?? 0,
-		fileCount: 1,
-		relationIds: e.relationId != null ? [e.relationId] : [],
-		_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
-		_decisionSkip: !!e.skipAnonymization,
-		_patchError: null,
-	}))
+	const byKey = new Map()
+	for (const e of entities || []) {
+		const type = e.type ?? 'UNKNOWN'
+		const value = e.value ?? ''
+		const key = `${type}\u0000${value}`
+		const relationId = e.relationId ?? null
+		const existing = byKey.get(key)
+		if (existing) {
+			// Duplicate row from the append bug: merge into the first card.
+			if (relationId != null && existing.relationIds.includes(relationId) === false) {
+				existing.relationIds.push(relationId)
+			}
+			existing.count += 1
+			existing.highestConfidence = Math.max(existing.highestConfidence, e.confidence ?? 0)
+			existing.confidence = existing.highestConfidence
+			// Adopt grondslagen / skip metadata from whichever row carries it.
+			if ((existing.bases == null || existing.bases.length === 0)
+				&& Array.isArray(e.bases) && e.bases.length > 0) {
+				existing.bases = [...e.bases]
+				existing._decisionBases = [...e.bases]
+			}
+			if (e.skipAnonymization) {
+				existing.skipAnonymization = true
+				existing._decisionSkip = true
+			}
+			continue
+		}
+		byKey.set(key, {
+			...e,
+			type,
+			value,
+			included: true,
+			confidence: e.confidence ?? 0,
+			highestConfidence: e.confidence ?? 0,
+			fileCount: 1,
+			count: 1,
+			relationId,
+			relationIds: relationId != null ? [relationId] : [],
+			bases: Array.isArray(e.bases) ? [...e.bases] : (e.bases ?? null),
+			_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
+			_decisionSkip: !!e.skipAnonymization,
+			_patchError: null,
+		})
+	}
+	return Array.from(byKey.values())
 }
 
 /**
@@ -418,7 +512,6 @@ export const useAnonymizationStore = defineStore(
 						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
 					)
 					const entities = extractResponse.data.entities || []
-					entry.entityCount = entities.length
 
 					// Seed per-row review state on every detected entity.
 					// `decorateEntities` adds the extra fields (`included`,
@@ -426,8 +519,10 @@ export const useAnonymizationStore = defineStore(
 					// `EntityReviewTable` expects — see helpers at the top of
 					// this file. Same shape is used by `ensureExtracted` so the
 					// sidebar can read entities regardless of how the file
-					// entered the queue.
+					// entered the queue. It also de-duplicates the append-bug
+					// rows, so count the grouped result, not the raw rows.
 					entry.entities = decorateEntities(entities)
+					entry.entityCount = entry.entities.length
 
 					if (entities.length === 0) {
 						// Nothing to anonymise; skip review and mark done.
@@ -461,7 +556,12 @@ export const useAnonymizationStore = defineStore(
 				try {
 					// Step 1 — PATCH decisions for entities the user modified.
 					for (const entity of entry.entities) {
-						if (entity.relationId == null) {
+						// A grouped row may own several relation rows (append bug);
+						// fall back to the single id for older entries.
+						const relationIds = Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+							? entity.relationIds
+							: (entity.relationId != null ? [entity.relationId] : [])
+						if (relationIds.length === 0) {
 							continue
 						}
 
@@ -474,10 +574,12 @@ export const useAnonymizationStore = defineStore(
 						}
 
 						try {
-							await axios.patch(
-								generateUrl(`/apps/openregister/api/entity-relations/${entity.relationId}`),
+							// Apply the decision to every duplicate relation so a
+							// re-extracted copy can't slip through unredacted.
+							await Promise.all(relationIds.map((rid) => axios.patch(
+								generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
 								{ bases: newBases, skipAnonymization: !!entity._decisionSkip },
-							)
+							)))
 							entity.bases = newBases
 							entity.skipAnonymization = !!entity._decisionSkip
 							entity._patchError = null
@@ -493,6 +595,13 @@ export const useAnonymizationStore = defineStore(
 					// The OR side additionally filters skipAnonymization=true
 					// relations, so an explicit skip still takes effect even
 					// when the entity was left included.
+					//
+					// Longest value first: OpenRegister replaces matches in
+					// payload order via str_ireplace. If a shorter span runs
+					// first it eats its own text out of an overlapping longer
+					// span — e.g. redacting "Claudia Fischer" before "Mevrouw
+					// Claudia Fischer" leaves a dangling "Mevrouw". Sorting by
+					// descending length makes the longest overlap redact first.
 					const anonymizePayload = {
 						entities: entry.entities
 							.filter((e) => e.included !== false)
@@ -500,7 +609,8 @@ export const useAnonymizationStore = defineStore(
 								type: e.type,
 								value: e.value,
 								confidence: e.confidence,
-							})),
+							}))
+							.sort((a, b) => (b.value || '').length - (a.value || '').length),
 					}
 					const anonymizeResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),
@@ -566,8 +676,8 @@ export const useAnonymizationStore = defineStore(
 						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
 					)
 					const entities = extractResponse.data.entities || []
-					entry.entityCount = entities.length
 					entry.entities = decorateEntities(entities)
+					entry.entityCount = entry.entities.length
 					entry.status = entities.length === 0 ? 'completed' : 'extracted'
 				} catch (err) {
 					console.error(`Failed to load entities for ${entry.name}:`, err)
@@ -576,6 +686,43 @@ export const useAnonymizationStore = defineStore(
 				}
 
 				return entry
+			},
+
+			/**
+			 * Resolve the source↔anonymised mapping recorded for a file.
+			 *
+			 * Every successful anonymisation persists an `anonymizationLink`
+			 * object in the OpenRegister `document` register (feat #107). Both
+			 * `sourceFileId` and `anonymizedFileId` are facetable, so the link
+			 * resolves in either direction. The sidebar uses the *reverse*
+			 * direction — given the file the user opened, is it the anonymised
+			 * output of some source file? — to recognise an already-anonymised
+			 * document even when its extracted text carries no parseable
+			 * `[<TYPE>: <id>]` placeholders (e.g. a redacted PDF whose text
+			 * layout breaks the pattern). Without this, such a file falls
+			 * through to `ensureExtracted` and the un-anonymised review flow
+			 * starts again on an already-anonymised file.
+			 *
+			 * @param {number} anonymizedFileId Nextcloud file id of the opened file.
+			 * @return {Promise<object|null>} The link object, or null when none / on error.
+			 */
+			async findAnonymizationLink(anonymizedFileId) {
+				if (anonymizedFileId === null || anonymizedFileId === undefined) {
+					return null
+				}
+				try {
+					const r = await axios.get(
+						generateUrl('/apps/openregister/api/objects/document/anonymizationLink'),
+						{ params: { anonymizedFileId } },
+					)
+					const results = r.data?.results || []
+					return results[0] || null
+				} catch (err) {
+					// Best-effort: a missing register / search failure must not
+					// block the placeholder fallback below.
+					console.error(`Failed to resolve anonymization link for file ${anonymizedFileId}:`, err)
+					return null
+				}
 			},
 
 			/**
@@ -590,8 +737,13 @@ export const useAnonymizationStore = defineStore(
 			 * `GET /apps/openregister/api/entities/{id}`, which returns the
 			 * original value, type and the entity's relations (bases).
 			 *
-			 * Returns `null` when the document contains no placeholders — the
-			 * caller should then fall back to `ensureExtracted`.
+			 * Detection is anchored on the durable `anonymizationLink` DB
+			 * mapping (reverse lookup by file id); placeholder parsing is the
+			 * entity source when present. Returns `null` only when the file is
+			 * neither linked nor carries placeholders — the caller should then
+			 * fall back to `ensureExtracted`. When a link exists but no
+			 * placeholders parse (e.g. a redacted PDF), the entities are
+			 * resolved from the linked source file instead.
 			 *
 			 * NOTE: `entity.value` is the *original, un-anonymised* text.
 			 * Surfacing it re-exposes the data the file hid — the sidebar
@@ -605,7 +757,12 @@ export const useAnonymizationStore = defineStore(
 			 * @return {Promise<object|null>} The review entry, or null when not anonymised.
 			 */
 			async loadAnonymizedEntities(fileMeta) {
-				let text
+				// Authoritative signal: the source↔anonymised DB mapping. A hit
+				// means this file IS an anonymised output regardless of whether
+				// its text yields parseable placeholders.
+				const link = await this.findAnonymizationLink(fileMeta.fileId)
+
+				let text = ''
 				try {
 					text = await extractDocumentText({
 						path: fileMeta.path,
@@ -614,12 +771,23 @@ export const useAnonymizationStore = defineStore(
 					})
 				} catch (err) {
 					console.error(`Failed to read text for ${fileMeta.fileName}:`, err)
-					return null
+					// A linked file is still anonymised even if its text is
+					// unreadable — fall through to the source-entity resolution.
+					if (!link) {
+						return null
+					}
 				}
 
 				const placeholders = parsePlaceholders(text)
-				if (placeholders.length === 0) {
+				if (placeholders.length === 0 && !link) {
 					return null
+				}
+
+				// No parseable placeholders but a DB link exists (e.g. redacted
+				// PDF): resolve the removed entities from the linked source file
+				// and map them onto the anonymised-card shape.
+				if (placeholders.length === 0) {
+					return this.buildLinkedAnonymizedEntry(fileMeta, link)
 				}
 
 				// Resolve every distinct entity id in parallel. A failed lookup
@@ -663,6 +831,10 @@ export const useAnonymizationStore = defineStore(
 					}),
 				)
 
+				// Collapse rows duplicated by the extract-append bug so the same
+				// removed value is shown once (see entity-double-extract TODO).
+				const deduped = dedupeAnonEntities(resolved)
+
 				const entry = {
 					id: `file-${++fileCounter}`,
 					name: fileMeta.fileName,
@@ -671,12 +843,68 @@ export const useAnonymizationStore = defineStore(
 					error: null,
 					fileId: fileMeta.fileId,
 					filePath: fileMeta.path,
-					entities: resolved,
-					entityCount: resolved.length,
-					replacementCount: resolved.reduce((sum, e) => sum + e.count, 0),
+					entities: deduped,
+					entityCount: deduped.length,
+					replacementCount: link?.replacementCount
+						?? deduped.reduce((sum, e) => sum + e.count, 0),
 					anonymizedFileId: null,
 					anonymizedFileName: null,
 					anonymizedFilePath: null,
+					// Source mapping (feat #107) when a link was recorded.
+					sourceFileId: link?.sourceFileId ?? null,
+					sourceFileName: link?.sourceFileName ?? null,
+					sourceFilePath: link?.sourceFilePath ?? null,
+					anonymizationLinkId: link?.id ?? null,
+					runCount: link?.runCount ?? null,
+					dossier: inferDossier(fileMeta.path),
+				}
+				this.files.push(entry)
+				return entry
+			},
+
+			/**
+			 * Build a read-only summary entry from a DB link alone, for files
+			 * whose text yields no parseable `[<TYPE>: <id>]` placeholders
+			 * (e.g. a flattened PDF whose redaction markers don't survive text
+			 * extraction).
+			 *
+			 * Deliberately does NOT call the `extract` endpoint: that endpoint
+			 * re-runs OpenRegister's `extractFile($id, force: true)`, which
+			 * APPENDS entity_relation rows every call (see the
+			 * entity-double-extract TODO). Triggering it just to *view* a file
+			 * grows the DB on every open/refresh — exactly the bug this avoids.
+			 * Opening a file must be read-only. We therefore surface only what
+			 * the link object already records (replacement count, source name);
+			 * the per-entity list is available on the DOCX twin via the
+			 * placeholder path, or once the file's placeholders are readable.
+			 *
+			 * @param {object} fileMeta File descriptor of the opened (anonymised) file.
+			 * @param {object} link The resolved `anonymizationLink` object.
+			 * @return {object} The read-only summary entry.
+			 */
+			buildLinkedAnonymizedEntry(fileMeta, link) {
+				const entry = {
+					id: `file-${++fileCounter}`,
+					name: fileMeta.fileName,
+					status: 'completed',
+					viewMode: 'anonymized',
+					error: null,
+					fileId: fileMeta.fileId,
+					filePath: fileMeta.path,
+					entities: [],
+					entityCount: 0,
+					replacementCount: link?.replacementCount ?? 0,
+					// No readable placeholders → the detailed list can't be shown
+					// without a (mutating) re-extract. The sidebar renders a note.
+					detailUnavailable: true,
+					anonymizedFileId: null,
+					anonymizedFileName: null,
+					anonymizedFilePath: null,
+					sourceFileId: link?.sourceFileId ?? null,
+					sourceFileName: link?.sourceFileName ?? null,
+					sourceFilePath: link?.sourceFilePath ?? null,
+					anonymizationLinkId: link?.id ?? null,
+					runCount: link?.runCount ?? null,
 					dossier: inferDossier(fileMeta.path),
 				}
 				this.files.push(entry)
@@ -844,6 +1072,105 @@ export const useAnonymizationStore = defineStore(
 					return
 				}
 				entry.entities[idx]._decisionSkip = !!skip
+			},
+
+			/**
+			 * Add a manually-selected piece of text as a new entity on the file.
+			 *
+			 * POSTs to the existing OpenRegister manual-entities endpoint, which
+			 * persists the entity plus one relation per match in the document,
+			 * then prepends the resulting review row so the newest addition sits
+			 * at the top of the list. When grondslagen are supplied they are
+			 * PATCHed onto the new relations straight away so they survive a
+			 * reopen (rather than only at anonymise-time).
+			 *
+			 * Overwrite priority: the actual document replacement order is decided
+			 * in `anonymiseEntry`, which sorts the payload by descending value
+			 * length (longest first) so an overlapping longer span always redacts
+			 * before a shorter one. Prepending here is purely the list/display
+			 * priority; the length sort guarantees correctness.
+			 *
+			 * @param {object} entry Queue entry (must have fileId).
+			 * @param {object} payload Manual-entity input.
+			 * @param {string} payload.value Selected text to anonymise.
+			 * @param {string} payload.type Entity type tag.
+			 * @param {string[]} [payload.bases] Grondslagen to apply to the new relations.
+			 * @param {boolean} [payload.wholeWord] Whole-word match flag (default true).
+			 * @param {boolean} [payload.caseSensitive] Case-sensitive match flag (default true).
+			 * @return {Promise<object>} The backend response payload (entity, relations, matchCount).
+			 * @throws {Error} With `.message` operator-facing; on missing fileId/value/type or HTTP error.
+			 */
+			async addManualEntity(entry, payload) {
+				if (!entry?.fileId) {
+					const err = new Error('Entry has no fileId yet.')
+					err.status = 0
+					throw err
+				}
+				const value = (payload?.value || '').trim()
+				const type = payload?.type || ''
+				if (!value || !type) {
+					const err = new Error('A value and a type are required.')
+					err.status = 0
+					throw err
+				}
+
+				const body = {
+					value,
+					type,
+					wholeWord: payload?.wholeWord ?? true,
+					caseSensitive: payload?.caseSensitive ?? true,
+				}
+
+				const response = await axios.post(
+					generateUrl(`/apps/openregister/api/files/${entry.fileId}/manual-entities`),
+					body,
+				)
+				const data = response.data || {}
+
+				const relations = Array.isArray(data.relations) ? data.relations : []
+				const relationIds = relations.map((r) => r.id).filter((id) => id != null)
+				const bases = Array.isArray(payload?.bases) ? payload.bases : []
+
+				// Persist the chosen grondslagen immediately (mirrors the PATCH in
+				// anonymiseEntry). On failure leave `bases` empty so anonymiseEntry
+				// retries the PATCH when the user anonymises.
+				let persistedBases = []
+				if (bases.length > 0 && relationIds.length > 0) {
+					try {
+						await Promise.all(relationIds.map((rid) => axios.patch(
+							generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+							{ bases, skipAnonymization: false },
+						)))
+						persistedBases = bases
+					} catch (err) {
+						console.error('[anonymization] failed to set grondslagen on manual entity:', err)
+					}
+				}
+
+				// Build a review row in the same shape decorateEntities produces,
+				// grouping every matched relation under one card.
+				const newRow = {
+					type: data?.entity?.type ?? type,
+					value: data?.entity?.value ?? value,
+					included: true,
+					confidence: 1.0,
+					highestConfidence: 1.0,
+					fileCount: 1,
+					count: relationIds.length || 1,
+					relationId: relationIds[0] ?? null,
+					relationIds,
+					bases: [...persistedBases],
+					_decisionBases: [...bases],
+					_decisionSkip: false,
+					skipAnonymization: false,
+					_patchError: null,
+				}
+
+				// Prepend so the newest addition sits at the top of the list.
+				entry.entities = [newRow, ...entry.entities]
+				entry.entityCount = entry.entities.length
+
+				return data
 			},
 
 			/**

@@ -179,6 +179,12 @@ export default {
 		/**
 		 * Push the current text selection into the viewer store so future
 		 * features (e.g. "send selection to anonymisation") can pick it up.
+		 *
+		 * NOTE: entity highlighting (T09) is intentionally NOT applied here.
+		 * pdfjs renders text as absolutely-positioned, transparent spans over a
+		 * canvas; colouring matched values reliably needs a separate overlay
+		 * layer. Highlighting is supported in TextViewer/WordViewer only;
+		 * PDF highlighting is a known, deferred limitation.
 		 */
 		captureSelection() {
 			const text = window.getSelection()?.toString() || ''
