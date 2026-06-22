@@ -257,6 +257,15 @@ class GrondslagenSummaryService
         // and sorts. No second label-resolution pass needed here.
         $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
 
+        // Distinct grondslagen assigned across every file in the dossier, with
+        // their Woo Art. 5 toelichting — rendered as a legend under the table.
+        $allEntities = [];
+        foreach ($perFile as $fileRow) {
+            foreach (($fileRow['entities'] ?? []) as $entity) {
+                $allEntities[] = $entity;
+            }
+        }
+
         $data = [
             'dossier'     => [
                 'name'        => (string) ($dossier['name'] ?? ''),
@@ -266,6 +275,7 @@ class GrondslagenSummaryService
             'generatedAt' => date('c'),
             'rows'        => $aggregated['rows'],
             'totals'      => $aggregated['totals'],
+            'bases'       => $this->collectAssignedBases(entities: $allEntities),
         ];
 
         $template = $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER);
@@ -774,7 +784,7 @@ class GrondslagenSummaryService
             // the operator at least sees the slug, not a dangling
             // placeholder. Better than masking the failure entirely.
             foreach ($baseRefs as $ref) {
-                $labels[(string) $ref] = (string) $ref;
+                $labels[(string) $ref] = ['name' => (string) $ref, 'description' => ''];
             }
 
             return $labels;
@@ -793,6 +803,8 @@ class GrondslagenSummaryService
         // tables aren't visible to the generic getHandler path.
         $slugToName = [];
         $uuidToName = [];
+        $slugToDesc = [];
+        $uuidToDesc = [];
         try {
             $result = $objectService->searchObjectsBySlug(
                 registerSlug: 'dossier',
@@ -810,6 +822,11 @@ class GrondslagenSummaryService
                     continue;
                 }
 
+                // `description` is the Woo Art. 5 toelichting (schema `base`,
+                // property "Omschrijving") — the explanatory text shown under
+                // the summary table.
+                $desc = (string) ($base['description'] ?? '');
+
                 $slug = '';
                 $uuid = '';
                 if (is_array($self) === true) {
@@ -819,10 +836,12 @@ class GrondslagenSummaryService
 
                 if ($slug !== '') {
                     $slugToName[$slug] = $name;
+                    $slugToDesc[$slug] = $desc;
                 }
 
                 if ($uuid !== '') {
                     $uuidToName[$uuid] = $name;
+                    $uuidToDesc[$uuid] = $desc;
                 }
             }//end foreach
         } catch (Exception $e) {
@@ -835,17 +854,65 @@ class GrondslagenSummaryService
         foreach ($baseRefs as $ref) {
             $refString = (string) $ref;
             if (isset($slugToName[$refString]) === true) {
-                $labels[$refString] = $slugToName[$refString];
+                $labels[$refString] = ['name' => $slugToName[$refString], 'description' => ($slugToDesc[$refString] ?? '')];
             } else if (isset($uuidToName[$refString]) === true) {
-                $labels[$refString] = $uuidToName[$refString];
+                $labels[$refString] = ['name' => $uuidToName[$refString], 'description' => ($uuidToDesc[$refString] ?? '')];
             } else {
-                $labels[$refString] = $refString;
+                $labels[$refString] = ['name' => $refString, 'description' => ''];
             }
         }
 
         return $labels;
 
     }//end resolveBaseLabels()
+
+    /**
+     * Collect the distinct grondslagen assigned across the given entities,
+     * each with its name + description (the Woo Art. 5 toelichting), for the
+     * explanatory legend rendered under the summary table.
+     *
+     * @param array<int, array{bases?: array<int, string>}> $entities Shaped entities (each carrying a `bases` ref list).
+     *
+     * @return array<int, array{name: string, description: string}> Distinct bases, sorted by name.
+     */
+    private function collectAssignedBases(array $entities): array
+    {
+        $refs = [];
+        foreach ($entities as $entity) {
+            foreach (($entity['bases'] ?? []) as $ref) {
+                $refs[(string) $ref] = true;
+            }
+        }
+
+        if (count($refs) === 0) {
+            return [];
+        }
+
+        $detail = $this->resolveBaseLabels(baseRefs: array_keys($refs));
+
+        // Dedup by name (distinct refs may resolve to the same grondslag) and
+        // drop nameless entries; keep the first non-empty description.
+        $byName = [];
+        foreach ($detail as $entry) {
+            $name = (string) ($entry['name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            if (isset($byName[$name]) === false || $byName[$name] === '') {
+                $byName[$name] = (string) ($entry['description'] ?? '');
+            }
+        }
+
+        $bases = [];
+        foreach ($byName as $name => $description) {
+            $bases[] = ['name' => $name, 'description' => $description];
+        }
+
+        usort($bases, static fn(array $a, array $b): int => strcmp($a['name'], $b['name']));
+
+        return $bases;
+    }//end collectAssignedBases()
 
 
     /**
@@ -1000,7 +1067,7 @@ class GrondslagenSummaryService
             $basesRefs = array_keys($group['basesSet']);
             $labels    = [];
             foreach ($basesRefs as $ref) {
-                $labels[] = ($labelMap[$ref] ?? $ref);
+                $labels[] = ($labelMap[$ref]['name'] ?? $ref);
             }
 
             $shaped[] = [
@@ -1067,6 +1134,9 @@ class GrondslagenSummaryService
                 'distinctEntityCount' => count($entities),
                 'distinctBasesCount'  => $distinctBases,
             ],
+            // Distinct grondslagen assigned in this document, each with its
+            // Woo Art. 5 toelichting — rendered as a legend under the table.
+            'bases'    => $this->collectAssignedBases(entities: $entities),
         ];
 
         try {
