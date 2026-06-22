@@ -19,13 +19,12 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		     Only shown while reviewing a freshly extracted file — irrelevant
 		     for the anonymised/completed views. -->
 		<template v-if="showGrondslagenToggle" #description>
-			<NcCheckboxRadioSwitch
-				type="switch"
+			<DdToggle
 				class="grondslagen-toggle"
 				:checked="grondslagen"
 				@update:checked="fileViewerStore.setGrondslagen($event)">
-				{{ t('docudesk', 'Edit legal grounds (grondslagen)') }}
-			</NcCheckboxRadioSwitch>
+				{{ t('docudesk', 'Use legal grounds (grondslagen)') }}
+			</DdToggle>
 		</template>
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
@@ -181,10 +180,11 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
+import DdToggle from '../components/DdToggle.vue'
 import { ENTITY_TYPES } from '../services/entityTypes.js'
 
 // Woo Art. 5 grondslagen — duplicated from EntityReviewTable so we don't
@@ -205,7 +205,7 @@ export default {
 	components: {
 		NcAppSidebar,
 		NcButton,
-		NcCheckboxRadioSwitch,
+		DdToggle,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
@@ -631,7 +631,9 @@ export default {
 	/* `.app-sidebar` re-points --color-main-background to white-54, so a var
 	 * reference here would stay translucent. The card design is white-on-white
 	 * regardless of theme, so use opaque white for the header band. */
-	padding-block: 16px;
+	display: grid;
+	gap: 20px;
+	padding-block: 16px 20px;
 	padding-inline: 20px;
 	background: #fff;
 	border-top-left-radius: 20px;
@@ -639,7 +641,7 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 	position: sticky;
 	top: 0;
-	z-index: 1;
+	z-index: 2;
 }
 
 :deep(.app-sidebar-header__desc) {
@@ -648,17 +650,13 @@ export default {
 	padding: 0 !important;
 }
 
-/* Grondslagen toggle in the header `description` slot — small top margin so
- * it clears the subname, font-size matched to the surrounding header text. */
-.grondslagen-toggle {
-	margin-top: 4px;
-	font-size: 0.85rem;
+:deep(.app-sidebar-header__description) {
+	margin-inline: 0 !important;
 }
 
 .entities-summary {
 	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
-	margin-bottom: 8px;
 }
 
 .entities-list {
