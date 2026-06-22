@@ -114,6 +114,16 @@ class AnonymizationService
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
+            // Pre-fill a proposed grondslag per entity type onto the
+            // freshly-detected relations (fill-only-when-empty), then enrich
+            // the returned rows with their current bases so the review UI can
+            // show the proposal. Resolved via the container (string class
+            // name) to keep this class's coupling in check; both calls are
+            // internally best-effort and never block detection.
+            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+            $grondslagProposal->applyProposals(fileId: $fileId);
+            $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+
             return [
                 'entities'    => $this->entityDetection->normalizeEntities($entities),
                 'entityCount' => count($entities),
@@ -180,9 +190,26 @@ class AnonymizationService
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
             $result         = $fileService->anonymizeDocument($node, $mappedEntities);
 
+            // Best-effort policy: OpenRegister now produces the anonymised file
+            // even when some entity text could not be removed (e.g. the ExApp
+            // NER over-captured a span across table cells, so the value is not
+            // contiguous in the document). Pull the residual list so the
+            // operator can be warned and iterate (manual entities, skip
+            // unselected occurrences). Defensive method_exists() guard for
+            // older OpenRegister versions without the best-effort API.
+            $residualEntities = [];
+            if (method_exists($fileService, 'getLastResidualEntities') === true) {
+                $residualEntities = $fileService->getLastResidualEntities();
+            }
+
             $this->logger->info(
                 'Document anonymized',
-                ['fileId' => $fileId, 'entityCount' => count($mappedEntities)]
+                [
+                    'fileId'        => $fileId,
+                    'entityCount'   => count($mappedEntities),
+                    // PII-free: count only, never the residual text.
+                    'residualCount' => count($residualEntities),
+                ]
             );
 
             // PDF conversion gate: when outputFormat is 'pdf' AND the
@@ -230,6 +257,13 @@ class AnonymizationService
 
             $resultInfo = $this->entityDetection->parseAnonymizationResult($result);
             $resultInfo['replacementCount'] = count($mappedEntities);
+
+            // Surface best-effort residuals so the UI can warn that the file was
+            // produced but some entities could not be fully removed, and let the
+            // operator refine them. `complete` drives the warning banner.
+            $resultInfo['complete']         = (count($residualEntities) === 0);
+            $resultInfo['residualCount']    = count($residualEntities);
+            $resultInfo['residualEntities'] = $residualEntities;
 
             if ($appendBasisSummary === true) {
                 $resultInfo = $this->attachGrondslagenSummary(
