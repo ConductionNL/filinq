@@ -1,10 +1,10 @@
 <template>
 	<div class="folder-anonymization">
-		<h2>Folder Analysis &amp; Anonymization</h2>
+		<h2>{{ t('docudesk', 'Folder Analysis & Anonymization') }}</h2>
 
 		<!-- Step 1: Folder input -->
 		<div v-if="!store.isActive" class="input-section">
-			<p>Enter a folder path from your Nextcloud files to analyze all documents in it.</p>
+			<p>{{ t('docudesk', 'Enter a folder path from your Nextcloud files to analyze all documents in it.') }}</p>
 			<div class="folder-input">
 				<input
 					v-model="folderPath"
@@ -114,7 +114,7 @@
 			</label>
 			<div class="action-bar">
 				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeBatch()">
-					{{ t('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
+					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
 				</NcButton>
 				<NcButton type="tertiary" @click="store.reset()">
 					{{ t('docudesk', 'Cancel') }}

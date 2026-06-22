@@ -1,28 +1,28 @@
 <template>
 	<div class="batch-anonymization">
-		<h2>Batch Anonymization</h2>
+		<h2>{{ t('docudesk', 'Batch Anonymization') }}</h2>
 		<div v-if="!batchAnonymizationStore.isActive" class="upload-section">
 			<div class="drop-zone" @dragover.prevent @drop.prevent="handleDrop">
-				<p>Drag and drop files here</p>
+				<p>{{ t('docudesk', 'Drag and drop files here') }}</p>
 				<input ref="fileInput"
 					type="file"
 					multiple
 					style="display:none"
 					@change="handleFileSelect">
 				<NcButton type="secondary" @click="$refs.fileInput.click()">
-					Select Files
+					{{ t('docudesk', 'Select Files') }}
 				</NcButton>
 			</div>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'extracting'">
-			<h3>Analyzing...</h3>
+			<h3>{{ t('docudesk', 'Analyzing...') }}</h3>
 			<NcProgressBar :value="batchAnonymizationStore.progress" />
 			<div v-for="f in batchAnonymizationStore.files" :key="f.fileId||f.fileName" class="file-item">
-				{{ f.fileName }} - {{ f.status }} <span v-if="f.entityCount">({{ f.entityCount }} entities)</span>
+				{{ f.fileName }} - {{ f.status }} <span v-if="f.entityCount">({{ n('docudesk', '%n entity', '%n entities', f.entityCount) }})</span>
 			</div>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'review'">
-			<h3>Review Entities</h3>
+			<h3>{{ t('docudesk', 'Review Entities') }}</h3>
 			<EntityReviewTable
 				:entities="batchAnonymizationStore.entities"
 				:file-count="batchAnonymizationStore.filesWithEntities"
@@ -30,29 +30,29 @@
 				@bulk-select="batchAnonymizationStore.setVisibleEntities($event, true)"
 				@bulk-deselect="batchAnonymizationStore.setVisibleEntities($event, false)" />
 			<NcButton type="primary" @click="batchAnonymizationStore.anonymizeBatch()">
-				Anonymize {{ batchAnonymizationStore.selectedEntityCount }} entities
+				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', batchAnonymizationStore.selectedEntityCount) }}
 			</NcButton>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'anonymizing'" style="text-align:center;padding:48px">
-			<NcLoadingIcon :size="44" /><p>Anonymizing...</p>
+			<NcLoadingIcon :size="44" /><p>{{ t('docudesk', 'Anonymizing...') }}</p>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'completed'">
 			<NcNoteCard type="success">
-				Batch anonymization completed!
+				{{ t('docudesk', 'Batch anonymization completed!') }}
 			</NcNoteCard>
 			<NcButton type="secondary" @click="window.open(batchAnonymizationStore.getReportUrl(), '_blank')">
-				Download Report
+				{{ t('docudesk', 'Download Report') }}
 			</NcButton>
 			<NcButton type="primary" @click="batchAnonymizationStore.reset()">
-				New Batch
+				{{ t('docudesk', 'New Batch') }}
 			</NcButton>
 		</div>
 		<div v-if="batchAnonymizationStore.batchStatus === 'error'">
 			<NcNoteCard type="error">
-				{{ batchAnonymizationStore.error || 'Error occurred' }}
+				{{ batchAnonymizationStore.error || t('docudesk', 'An error occurred') }}
 			</NcNoteCard>
 			<NcButton type="primary" @click="batchAnonymizationStore.reset()">
-				Try Again
+				{{ t('docudesk', 'Try Again') }}
 			</NcButton>
 		</div>
 	</div>

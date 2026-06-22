@@ -19,14 +19,6 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationSpacer />
 			<NcAppNavigationItem
-				:active="isActive('AnonymizationPoc')"
-				:name="t('docudesk', 'Anonymisation PoC')"
-				:to="{ name: 'AnonymizationPoc' }">
-				<template #icon>
-					<TestTube :size="20" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem
 				:active="isActive('Dashboard')"
 				:name="t('docudesk', 'Dashboard')"
 				:to="{ name: 'Dashboard' }">
@@ -105,14 +97,12 @@ import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.v
 // Icons
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
-import TestTube from 'vue-material-design-icons/TestTube.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
 	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
 	Anonymization: ['Anonymization', 'BatchAnonymization'],
-	AnonymizationPoc: ['AnonymizationPoc'],
 }
 
 export default {
@@ -130,7 +120,6 @@ export default {
 		FolderSearchOutline,
 		AccountStar,
 		AlertOctagon,
-		TestTube,
 		Palette,
 	},
 	methods: {

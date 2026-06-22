@@ -31,14 +31,14 @@
 				</p>
 			</div>
 			<div class="dd-demo dd-demo--stack">
-				<DdPageHeader title="Documents" />
+				<DdPageHeader :title="t('docudesk', 'Documents')" />
 				<DdPageHeader
-					title="Anonymization"
+					:title="t('docudesk', 'Anonymization')"
 					icon="lock"
 					description="Review detected entities before removing them." />
-				<DdPageHeader title="Templates" icon="article" description="With a right-aligned action.">
+				<DdPageHeader :title="t('docudesk', 'Templates')" icon="article" description="With a right-aligned action.">
 					<template #actions>
-						<DdButton variant="primary" icon="add" label="New template" />
+						<DdButton variant="primary" icon="add" :label="t('docudesk', 'New template')" />
 					</template>
 				</DdPageHeader>
 			</div>
