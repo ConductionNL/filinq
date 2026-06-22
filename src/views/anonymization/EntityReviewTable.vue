@@ -1,13 +1,13 @@
 <template>
 	<div class="entity-review">
 		<div class="summary-bar">
-			{{ selectedCount }} of {{ entities.length }} entities selected across {{ fileCount }} files
+			{{ t('docudesk', '{selected} of {total} entities selected across {files} files', { selected: selectedCount, total: entities.length, files: fileCount }) }}
 		</div>
 		<div class="filter-bar">
-			<input v-model="searchQuery" type="text" placeholder="Search entities...">
+			<input v-model="searchQuery" type="text" :placeholder="t('docudesk', 'Search entities...')">
 			<select v-model="typeFilter">
 				<option value="">
-					All types
+					{{ t('docudesk', 'All types') }}
 				</option><option v-for="t in availableTypes" :key="t" :value="t">
 					{{ t }}
 				</option>
@@ -15,30 +15,30 @@
 		</div>
 		<div class="bulk-actions">
 			<NcButton type="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">
-				Select All Visible
+				{{ t('docudesk', 'Select All Visible') }}
 			</NcButton>
 			<NcButton type="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">
-				Deselect All Visible
+				{{ t('docudesk', 'Deselect All Visible') }}
 			</NcButton>
 			<NcButton v-if="defaultBases.length > 0" type="tertiary" @click="applyDefaultBasesToVisible">
-				Apply dossier grondslagen to visible
+				{{ t('docudesk', 'Apply dossier grondslagen to visible') }}
 			</NcButton>
 		</div>
 		<table class="entity-table">
 			<thead>
 				<tr>
 					<th /><th @click="sortBy('type')">
-						Type
+						{{ t('docudesk', 'Type') }}
 					</th><th @click="sortBy('value')">
-						Value
+						{{ t('docudesk', 'Value') }}
 					</th><th @click="sortBy('highestConfidence')">
-						Confidence
+						{{ t('docudesk', 'Confidence') }}
 					</th><th @click="sortBy('fileCount')">
-						Files
+						{{ t('docudesk', 'Files') }}
 					</th><th class="bases-col">
-						Grondslag (bases)
+						{{ t('docudesk', 'Grondslag (bases)') }}
 					</th><th>
-						Skip
+						{{ t('docudesk', 'Skip') }}
 					</th>
 				</tr>
 			</thead>
