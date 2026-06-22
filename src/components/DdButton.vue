@@ -118,7 +118,7 @@ export default {
 	box-shadow:
 		0 -2px 7px 0 var(--dd-color-blue-bright, #4698fc) inset,
 		0 5px 8px 0 rgba(255, 255, 255, 0.26) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09);
+		var(--dd-shadow-button);
 }
 
 /* Interactive states use !important to override Nextcloud core
@@ -133,7 +133,7 @@ export default {
 	box-shadow:
 		0 -2px 7px 0 var(--dd-color-blue-bright, #4698fc) inset,
 		0 5px 8px 0 rgba(255, 255, 255, 0.26) inset,
-		0 6px 22px 0 rgba(0, 0, 0, 0.13) !important;
+		var(--dd-shadow-button-hover) !important;
 }
 
 .dd-button--primary:focus-visible {
@@ -170,7 +170,7 @@ export default {
 	box-shadow:
 		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
 		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09);
+		var(--dd-shadow-button);
 }
 
 /* Hover: solid surface fill, border matches (no dark outline). */
@@ -180,7 +180,7 @@ export default {
 	box-shadow:
 		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
 		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
-		0 6px 22px 0 rgba(0, 0, 0, 0.13) !important;
+		var(--dd-shadow-button-hover) !important;
 }
 
 /* Focus: brand-ink border, no NC ring (suppress NC's forced outline + shadow). */
@@ -190,7 +190,7 @@ export default {
 	box-shadow:
 		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
 		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09) !important;
+		var(--dd-shadow-button) !important;
 }
 
 .dd-button:disabled {

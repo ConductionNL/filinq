@@ -69,6 +69,12 @@
 	--dd-shadow-doc: 0 2px 8px rgba(0, 0, 0, 0.15);                                    /* document viewers */
 	--dd-shadow-popout: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24); /* menu pop-out */
 
+	/* Button drop shadow (the OUTER lift, not the on-fill inset gloss). A faint
+	   black reads as elevation over a light surface; the same alpha vanishes
+	   over a dark one, so the dark values (below) deepen it. */
+	--dd-shadow-button: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	--dd-shadow-button-hover: 0 6px 22px 0 rgba(0, 0, 0, 0.13);
+
 	/* Entity-type colours. One colour per detected entity type, used for both
 	   the sidebar type badge and the in-document highlight (see
 	   src/services/entityTypes.js). The badge sits on a fixed light background
@@ -106,6 +112,9 @@
 	--dd-border: rgba(255, 255, 255, 0.13);
 	--dd-app-bg: #121316;
 	--dd-active-pill-bg: rgba(255, 255, 255, 0.11);
+	/* Deepen the drop shadow so the lift still reads against a dark surface. */
+	--dd-shadow-button: 0 4px 18px -2px rgba(0, 0, 0, 0.55);
+	--dd-shadow-button-hover: 0 8px 24px -2px rgba(0, 0, 0, 0.65);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -119,6 +128,8 @@
 		--dd-border: rgba(255, 255, 255, 0.13);
 		--dd-app-bg: #121316;
 		--dd-active-pill-bg: rgba(255, 255, 255, 0.11);
+		--dd-shadow-button: 0 4px 18px -2px rgba(0, 0, 0, 0.55);
+		--dd-shadow-button-hover: 0 8px 24px -2px rgba(0, 0, 0, 0.65);
 	}
 }
 
