@@ -63,10 +63,11 @@ import { consentStore } from '../../store/store.js'
 					v-if="!consentStore.loading && pendingConsents.length === 0"
 					:name="t('docudesk', 'No pending consents')"
 					:description="t('docudesk', 'All consents have been handled.')" />
-				<CnTableWidget
+				<CnDataTable
 					v-else
 					:rows="pendingConsents"
-					:columns="consentColumns" />
+					:columns="consentColumns"
+					borderless />
 			</template>
 
 			<!-- Quick Anonymization -->
@@ -79,7 +80,7 @@ import { consentStore } from '../../store/store.js'
 
 <script>
 import { NcEmptyContent } from '@nextcloud/vue'
-import { CnDashboardPage, CnStatsBlock, CnTableWidget } from '@conduction/nextcloud-vue'
+import { CnDashboardPage, CnStatsBlock, CnDataTable } from '@conduction/nextcloud-vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
@@ -88,7 +89,7 @@ export default {
 	components: {
 		CnDashboardPage,
 		CnStatsBlock,
-		CnTableWidget,
+		CnDataTable,
 		NcEmptyContent,
 		AnonymizationDashboardWidget,
 		AnonymiserBackendWarning,
@@ -129,7 +130,7 @@ export default {
 			]
 		},
 		/**
-		 * Column definitions for the Pending Consents CnTableWidget.
+		 * Column definitions for the Pending Consents CnDataTable.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
