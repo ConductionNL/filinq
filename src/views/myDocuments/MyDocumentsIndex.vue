@@ -46,7 +46,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 				<template #column-fileName="{ row }">
 					<div class="my-documents-name">
-						<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
+						<DdIcon :name="iconFor(row)" :size="18" class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
 					</div>
 				</template>
@@ -150,6 +150,7 @@ import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import DdIcon from '../../components/DdIcon.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -159,10 +160,6 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
-import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
-import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
-import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
-import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 
 const VIEW_MODE_STORAGE_KEY = 'docudesk:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
@@ -195,6 +192,7 @@ export default {
 		DdSearchBar,
 		DdPageHeader,
 		DdDocumentCard,
+		DdIcon,
 		FileViewerPage,
 		DotsHorizontal,
 		Eye,
@@ -204,10 +202,6 @@ export default {
 		Cog,
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
-		FolderOutline,
-		FilePdfBox,
-		FileWordBox,
-		FileDocumentOutline,
 	},
 	data() {
 		return {
@@ -454,18 +448,17 @@ export default {
 			window.open(generateUrl(`/apps/files/ajax/download.php?dir=/&files=${encodeURIComponent(row.fileName)}&downloadStartSecret=&ocRequest=true`), '_blank')
 		},
 		/**
-		 * Pick an icon component name based on the file's MIME type / extension.
+		 * Pick a DocuDesk icon name based on the file's MIME type / extension.
 		 *
 		 * @param {object} row Document row.
-		 * @return {string} Component name.
+		 * @return {string} DdIcon name ('folder', 'pdf' or 'article').
 		 */
 		iconFor(row) {
 			const mime = row.mimeType || ''
 			const name = (row.fileName || '').toLowerCase()
-			if (mime === 'httpd/unix-directory' || name.endsWith('/')) return 'FolderOutline'
-			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'FilePdfBox'
-			if (mime.includes('word') || name.match(/\.(docx?|odt)$/)) return 'FileWordBox'
-			return 'FileDocumentOutline'
+			if (mime === 'httpd/unix-directory' || name.endsWith('/')) return 'folder'
+			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
+			return 'article'
 		},
 		/**
 		 * Strip the file extension for cleaner display (folders show full name).
