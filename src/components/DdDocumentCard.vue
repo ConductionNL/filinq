@@ -160,8 +160,8 @@ export default {
 	--dd-card-padding-inline: 16px;
 	--dd-card-radius: var(--dd-radius-panel);
 	--dd-card-gap: 16px;
-	--dd-card-border: 1px solid #d9d9d9;
-	--dd-card-bg: #fff;
+	--dd-card-border: 1px solid var(--dd-border, #d9d9d9);
+	--dd-card-bg: var(--dd-surface, #fff);
 	--dd-card-shadow: var(--dd-shadow-panel);
 	--dd-card-shadow-hover: 0 6px 26px -3px rgba(0, 0, 0, 0.12);
 	--dd-card-focus-ring: 0 0 0 2px var(--color-primary-element, #0a5eaf);

@@ -59,7 +59,7 @@ export default {
 <style scoped>
 .app-navigation {
 	--app-navigation-padding: 16px;
-	--color-main-background-blur: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	--color-main-background-blur: var(--dd-glass-bg, rgba(255, 255, 255, 0.54));
 	border-radius: var(--dd-radius-panel);
 	box-shadow: var(--dd-shadow-panel);
 	margin-right: 8px;
@@ -68,6 +68,6 @@ export default {
 :deep(.app-navigation-entry) {
 	--default-clickable-area: 48px;
 	--border-radius-element: 11px;
-	--color-background-hover: #efefef;
+	--color-background-hover: var(--dd-surface-hover, #efefef);
 }
 </style>

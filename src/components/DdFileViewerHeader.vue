@@ -56,7 +56,7 @@ export default {
 	gap: var(--dd-dd-file-viewer-header-gap, 16px);
 	padding-block: var(--dd-dd-file-viewer-header-padding-block, 16px);
 	padding-inline: var(--dd-dd-file-viewer-header-padding-inline, 20px);
-	background: var(--dd-dd-file-viewer-header-background, #fff);
+	background: var(--dd-dd-file-viewer-header-background, var(--dd-surface, #fff));
 	position: sticky;
 	top: 0;
 	z-index: 1;

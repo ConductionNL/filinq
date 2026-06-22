@@ -470,7 +470,8 @@ export default {
 
 <style scoped>
 .anonymization-widget {
-	--dd-color-dark-grey: #61616c;
+	/* Theme-aware mid-contrast grey for the drop-zone's dashed border. */
+	--dd-color-dark-grey: var(--color-border-maxcontrast, #61616c);
 	display: flex;
 	flex-direction: column;
 	padding: 20px;
@@ -495,7 +496,7 @@ export default {
 	border: 1px dashed var(--dd-color-dark-grey);
 	border-radius: var(--dd-radius-panel);
 	padding: 32px;
-	background-color: #fff;
+	background-color: var(--dd-surface, #fff);
 	box-shadow: var(--dd-shadow-panel);
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
