@@ -21,6 +21,7 @@ use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCA\DocuDesk\Service\PdfService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
+use OCP\IL10N;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -280,6 +281,66 @@ class GrondslagenSummaryServiceTest extends TestCase
         return null;
 
     }//end findBasisRow()
+
+
+    /**
+     * The summary localises the placeholder TYPE to the acting user's language
+     * (PERSON → PERSOON) so the legend matches OpenRegister's redacted output;
+     * an unknown type falls back to its raw label.
+     *
+     * @return void
+     */
+    public function testLocalizeEntityTypeTranslatesKnownTypesAndFallsBack(): void
+    {
+        $l10n = $this->createMock(originalClassName: IL10N::class);
+        $l10n->method('t')->willReturnCallback(
+            static function (string $text): string {
+                $map = ['PERSON' => 'PERSOON', 'ORGANIZATION' => 'ORGANISATIE'];
+                return ($map[$text] ?? $text);
+            }
+        );
+
+        $service = new GrondslagenSummaryService(
+            logger: $this->mockLogger,
+            pdfService: $this->mockPdfService,
+            rootFolder: $this->mockRootFolder,
+            userSession: $this->mockUserSession,
+            appManager: $this->mockAppManager,
+            container: $this->mockContainer,
+            l10n: $l10n
+        );
+
+        $method = new ReflectionMethod(
+            objectOrMethod: GrondslagenSummaryService::class,
+            method: 'localizeEntityType'
+        );
+        $method->setAccessible(accessible: true);
+
+        $this->assertSame(expected: 'PERSOON', actual: $method->invoke($service, 'PERSON'));
+        $this->assertSame(expected: 'ORGANISATIE', actual: $method->invoke($service, 'ORGANIZATION'));
+        // Unknown / free-form type → raw label unchanged.
+        $this->assertSame(expected: 'CUSTOM_THING', actual: $method->invoke($service, 'CUSTOM_THING'));
+
+    }//end testLocalizeEntityTypeTranslatesKnownTypesAndFallsBack()
+
+
+    /**
+     * With no IL10N injected the raw English label is emitted.
+     *
+     * @return void
+     */
+    public function testLocalizeEntityTypeWithoutL10nReturnsRaw(): void
+    {
+        // $this->service was constructed without an IL10N (l10n defaults null).
+        $method = new ReflectionMethod(
+            objectOrMethod: GrondslagenSummaryService::class,
+            method: 'localizeEntityType'
+        );
+        $method->setAccessible(accessible: true);
+
+        $this->assertSame(expected: 'PERSON', actual: $method->invoke($this->service, 'PERSON'));
+
+    }//end testLocalizeEntityTypeWithoutL10nReturnsRaw()
 
 
 }//end class
