@@ -545,9 +545,16 @@ export const useAnonymizationStore = defineStore(
 			 * no-op writes.
 			 *
 			 * @param {object} entry Queue entry (must be in `extracted` status).
+			 * @param {object} [options] Anonymisation options.
+			 * @param {boolean} [options.appendBasisSummary] Append the
+			 *   grondslagen summary to the output document. Only takes effect
+			 *   when `outputFormat` is also supplied — the backend requires
+			 *   both flags before it generates and appends the summary.
+			 * @param {string} [options.outputFormat] Output document format
+			 *   (e.g. `pdf`). Required alongside `appendBasisSummary`.
 			 * @return {Promise<void>}
 			 */
-			async anonymiseEntry(entry) {
+			async anonymiseEntry(entry, options = {}) {
 				if (entry.status !== 'extracted') {
 					return
 				}
@@ -612,6 +619,14 @@ export const useAnonymizationStore = defineStore(
 							}))
 							.sort((a, b) => (b.value || '').length - (a.value || '').length),
 					}
+
+					// Grondslagen summary. The backend only generates and appends
+					// it when BOTH flags are present, so send them as a pair or
+					// not at all — a lone flag is a silent no-op.
+					if (options.appendBasisSummary && options.outputFormat) {
+						anonymizePayload.appendBasisSummary = true
+						anonymizePayload.outputFormat = options.outputFormat
+					}
 					const anonymizeResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),
 						anonymizePayload,
@@ -639,12 +654,15 @@ export const useAnonymizationStore = defineStore(
 			 * Bulk-anonymise every entry currently in the `extracted` state.
 			 * Useful for "review all then run" UX.
 			 *
+			 * @param {object} [options] Anonymisation options, forwarded to
+			 *   `anonymiseEntry` (see its signature for `appendBasisSummary`
+			 *   and `outputFormat`).
 			 * @return {Promise<void>}
 			 */
-			async anonymiseAllExtracted() {
+			async anonymiseAllExtracted(options = {}) {
 				for (const entry of this.files) {
 					if (entry.status === 'extracted') {
-						await this.anonymiseEntry(entry)
+						await this.anonymiseEntry(entry, options)
 					}
 				}
 			},
