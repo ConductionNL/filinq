@@ -583,7 +583,12 @@ export default {
 			if (!this.entry) {
 				return
 			}
-			await anonymizationStore.anonymiseEntry(this.entry)
+			// When grondslagen are on, ask the backend to append the legal-grounds
+			// summary to the output. Both flags must travel together (see
+			// anonymiseEntry) or the summary is silently skipped.
+			await anonymizationStore.anonymiseEntry(this.entry, this.grondslagen
+				? { appendBasisSummary: true, outputFormat: 'pdf' }
+				: {})
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
 					fileId: this.entry.anonymizedFileId,
