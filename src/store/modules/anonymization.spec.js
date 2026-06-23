@@ -149,6 +149,60 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 	})
 })
 
+describe('anonymiseEntry — grondslagen summary flags', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockResolvedValue({
+			data: {
+				anonymizedFileId: 99,
+				anonymizedFileName: 'doc-anon.pdf',
+				anonymizedFilePath: '/files/doc-anon.pdf',
+			},
+		})
+	})
+
+	it('appends both flags when summary + format are supplied (grondslagen on)', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null })
+
+		await store.anonymiseEntry(entry, { appendBasisSummary: true, outputFormat: 'pdf' })
+
+		expect(axios.post).toHaveBeenCalledWith(
+			'/apps/docudesk/api/anonymization/anonymize/42',
+			{
+				entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }],
+				appendBasisSummary: true,
+				outputFormat: 'pdf',
+			},
+		)
+	})
+
+	it('omits both flags when no options are given (grondslagen off)', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null })
+
+		await store.anonymiseEntry(entry)
+
+		const payload = axios.post.mock.calls[0][1]
+		expect(payload.appendBasisSummary).toBeUndefined()
+		expect(payload.outputFormat).toBeUndefined()
+	})
+
+	it('omits both flags when only one of the pair is supplied', async () => {
+		// The backend needs appendBasisSummary AND outputFormat together;
+		// a lone flag is a silent no-op, so the store must not send it alone.
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null })
+
+		await store.anonymiseEntry(entry, { appendBasisSummary: true })
+
+		const payload = axios.post.mock.calls[0][1]
+		expect(payload.appendBasisSummary).toBeUndefined()
+		expect(payload.outputFormat).toBeUndefined()
+	})
+})
+
 describe('addManualEntity — add selected text as a new entity', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())

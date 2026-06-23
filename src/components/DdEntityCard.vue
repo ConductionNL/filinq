@@ -48,14 +48,12 @@ import { entityTypeColor } from '../services/entityTypes.js'
 		class="dd-entity-card"
 		:class="{
 			'dd-entity-card--excluded': !item.included,
-			'dd-entity-card--readonly': !editable,
 		}">
 		<div class="dd-entity-card__header">
 			<input
 				type="checkbox"
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
-				:disabled="!editable"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
 				@change="$emit('toggle')">
 			<span
@@ -143,10 +141,11 @@ export default {
 			default: () => [],
 		},
 		/**
-		 * Review view only — whether the card is editable. When `false`
-		 * (grondslagen toggle off) the include checkbox and grondslagen
-		 * select are disabled; the entity keeps its default values and the
-		 * card reads as fixed. Live-reactive to the sidebar header toggle.
+		 * Review view only — whether grondslagen are editable. When `false`
+		 * (grondslagen toggle off) the grondslagen select is disabled and no
+		 * grondslagen are applied. The include checkbox is always editable:
+		 * including/excluding an entity is independent of grondslagen.
+		 * Live-reactive to the sidebar header toggle.
 		 */
 		editable: {
 			type: Boolean,
@@ -180,15 +179,6 @@ export default {
 
 	&--excluded {
 		opacity: 0.55;
-	}
-
-	/* Read-only review card (grondslagen toggle off): the controls are
-	 * disabled rather than hidden so the user still sees the fixed default
-	 * values. The not-allowed cursor signals the card can't be edited. */
-	&--readonly {
-		.dd-entity-card__checkbox {
-			cursor: not-allowed;
-		}
 	}
 
 	&--skeleton {

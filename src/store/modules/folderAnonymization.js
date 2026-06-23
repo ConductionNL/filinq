@@ -256,11 +256,12 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 						entities: selected,
 						// Wave 4a flag — when true, each per-file anonymise call
 						// gets a grondslagen-summary page appended to its output.
-						appendBasisSummary: this.appendBasisSummary,
-						// scope=dossier: this folder IS the dossier, so a person
-						// gets the SAME scope-local placeholder number across every
-						// file in it (OpenRegister recomputes it per dossier).
-						scope: 'dossier',
+						// The summary is only produced when appendBasisSummary
+						// and outputFormat travel together, so send the format
+						// alongside the flag (omit both when summarising is off).
+						...(this.appendBasisSummary
+							? { appendBasisSummary: true, outputFormat: 'pdf' }
+							: {}),
 					},
 				)
 				this.batchStatus = 'completed'

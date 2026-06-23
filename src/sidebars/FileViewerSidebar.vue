@@ -13,19 +13,38 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 		v-if="fileViewerStore.currentFile"
 		:name="sidebarTitle"
 		:subname="sidebarSubtitle">
-		<!-- Header toggle: switches the entity cards between editable review
-		     (grondslagen on) and read-only with defaults (off). Lives in the
-		     header band's `description` slot so it reads as part of the header.
-		     Only shown while reviewing a freshly extracted file — irrelevant
-		     for the anonymised/completed views. -->
+		<!-- Review controls — search + grondslagen toggle + Edit. These stay
+		     part of the sidebar header (anchored, not scrolling with the list).
+		     NcAppSidebar only exposes `#description` as an in-header content slot
+		     below the title, so we render through it but wrap our own
+		     semantically-named `.review-controls` container inside.
+		     Only shown while reviewing a freshly extracted file. -->
 		<template v-if="showGrondslagenToggle" #description>
-			<NcCheckboxRadioSwitch
-				type="switch"
-				class="grondslagen-toggle"
-				:checked="grondslagen"
-				@update:checked="fileViewerStore.setGrondslagen($event)">
-				{{ t('docudesk', 'Edit legal grounds (grondslagen)') }}
-			</NcCheckboxRadioSwitch>
+			<div class="review-controls">
+				<!-- Filter the entity list by value (letter) or type. -->
+				<DdSearchBar
+					v-model="searchQuery"
+					class="entity-search"
+					:placeholder="t('docudesk', 'Search by letter or type')"
+					:clear-label="t('docudesk', 'Clear')" />
+				<!-- Toggle (left) + Edit button (right). The toggle switches the
+				     cards between editable review and read-only defaults; Edit
+				     opens the add-entity panel. -->
+				<div class="review-controls__row">
+					<DdToggle
+						class="grondslagen-toggle"
+						:checked="grondslagen"
+						@update:checked="fileViewerStore.setGrondslagen($event)">
+						{{ t('docudesk', 'Use legal grounds (grondslagen)') }}
+					</DdToggle>
+					<NcButton type="secondary" @click="onEdit">
+						<template #icon>
+							<Pencil :size="20" />
+						</template>
+						{{ t('docudesk', 'Edit') }}
+					</NcButton>
+				</div>
+			</div>
 		</template>
 		<div class="file-viewer-sidebar">
 			<!-- Loading state: skeletons while ensureExtracted resolves. -->
@@ -131,10 +150,15 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 				<p>{{ t('docudesk', 'No entities detected in this file.') }}</p>
 			</div>
 
-			<!-- Entity list — one card per detected entity. -->
+			<!-- Entity list — one card per detected entity. Filtered by the
+			     header search; `idx` is the original position in
+			     `entry.entities` so the store mutators target the right row. -->
 			<div v-else-if="entry" class="entities-list">
+				<div v-if="filteredEntities.length === 0" class="empty-state">
+					<p>{{ t('docudesk', 'No entities match your search.') }}</p>
+				</div>
 				<DdEntityCard
-					v-for="(item, idx) in entry.entities"
+					v-for="{ item, idx } in filteredEntities"
 					:key="'entity-' + idx"
 					:item="item"
 					mode="review"
@@ -164,14 +188,9 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 					{{ t('docudesk', 'Save change') }}
 				</NcButton>
 			</template>
-			<!-- Review mode: open the add-entity panel / anonymise. -->
+			<!-- Review mode: anonymise. The Edit button lives in the review
+			     controls above the list, next to the grondslagen toggle. -->
 			<template v-else>
-				<NcButton type="secondary" @click="onEdit">
-					<template #icon>
-						<Pencil :size="20" />
-					</template>
-					{{ t('docudesk', 'Edit') }}
-				</NcButton>
 				<NcButton
 					type="primary"
 					:disabled="includedCount === 0 || isAnonymising"
@@ -187,10 +206,12 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 </template>
 
 <script>
-import { NcAppSidebar, NcButton, NcCheckboxRadioSwitch, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
 import { generateRemoteUrl } from '@nextcloud/router'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
+import DdToggle from '../components/DdToggle.vue'
+import DdSearchBar from '../components/DdSearchBar.vue'
 import { ENTITY_TYPES } from '../services/entityTypes.js'
 
 // Woo Art. 5 grondslagen — duplicated from EntityReviewTable so we don't
@@ -211,11 +232,12 @@ export default {
 	components: {
 		NcAppSidebar,
 		NcButton,
-		NcCheckboxRadioSwitch,
+		DdToggle,
 		NcLoadingIcon,
 		NcNoteCard,
 		NcSelect,
 		DdEntityCard,
+		DdSearchBar,
 		Pencil,
 	},
 	data() {
@@ -233,6 +255,9 @@ export default {
 			newBases: [],
 			savingNew: false,
 			saveError: null,
+			// Header search query — filters the review entity list by value
+			// (letter) or type. Empty string shows every entity.
+			searchQuery: '',
 		}
 	},
 	computed: {
@@ -294,6 +319,27 @@ export default {
 		 */
 		includedCount() {
 			return (this.entry?.entities || []).filter((e) => e.included !== false).length
+		},
+		/**
+		 * Review entities filtered by the header search, paired with their
+		 * original index in `entry.entities` so the store mutators
+		 * (toggle/set-bases) still target the correct row. Matches the query
+		 * case-insensitively against the entity value (letter) or its type.
+		 *
+		 * @return {Array<{item: object, idx: number}>}
+		 */
+		filteredEntities() {
+			const entities = this.entry?.entities || []
+			const indexed = entities.map((item, idx) => ({ item, idx }))
+			const query = this.searchQuery.trim().toLowerCase()
+			if (!query) {
+				return indexed
+			}
+			return indexed.filter(({ item }) => {
+				const value = String(item.value || '').toLowerCase()
+				const type = String(item.type || '').toLowerCase()
+				return value.includes(query) || type.includes(query)
+			})
 		},
 		/**
 		 * Entities to highlight in the document viewer — the detected values
@@ -537,7 +583,12 @@ export default {
 			if (!this.entry) {
 				return
 			}
-			await anonymizationStore.anonymiseEntry(this.entry)
+			// When grondslagen are on, ask the backend to append the legal-grounds
+			// summary to the output. Both flags must travel together (see
+			// anonymiseEntry) or the summary is silently skipped.
+			await anonymizationStore.anonymiseEntry(this.entry, this.grondslagen
+				? { appendBasisSummary: true, outputFormat: 'pdf' }
+				: {})
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
 					fileId: this.entry.anonymizedFileId,
@@ -634,10 +685,12 @@ export default {
  * body keeps the translucent card background (set above); only the header
  * band is opaque so the two headers read as one toolbar row. */
 :deep(.app-sidebar-header) {
-	/* `.app-sidebar` re-points --color-main-background to the translucent
-	 * glass, so a var reference here would stay see-through. Use the opaque,
-	 * theme-aware surface token for the header band instead. */
-	padding-block: 16px;
+	/* `.app-sidebar` re-points --color-main-background to white-54, so a var
+	 * reference here would stay translucent. The card design is white-on-white
+	 * regardless of theme, so use opaque white for the header band. */
+	display: grid;
+	gap: 20px;
+	padding-block: 16px 20px;
 	padding-inline: 20px;
 	background: var(--dd-surface, #fff);
 	border-top-left-radius: 20px;
@@ -645,7 +698,7 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 	position: sticky;
 	top: 0;
-	z-index: 1;
+	z-index: 2;
 }
 
 :deep(.app-sidebar-header__desc) {
@@ -654,17 +707,40 @@ export default {
 	padding: 0 !important;
 }
 
-/* Grondslagen toggle in the header `description` slot — small top margin so
- * it clears the subname, font-size matched to the surrounding header text. */
-.grondslagen-toggle {
-	margin-top: 4px;
-	font-size: 0.85rem;
+:deep(.app-sidebar-header__description) {
+	margin-inline: 0 !important;
+}
+
+/* Review controls (search + toggle/edit row) in the sticky header band.
+ * Stacked, with the search bar on top; the header's own padding handles
+ * the spacing above and below. */
+.review-controls {
+	display: grid;
+	gap: 12px;
+	width: 100%;
+}
+
+/* Toggle on the left, Edit button pushed to the right. */
+.review-controls__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+/* The DdSearchBar carries a 392px min-width tuned for full-page toolbars;
+ * relax it so it fits the narrow sidebar and fills the available width. */
+.entity-search {
+	max-width: none;
+}
+
+.entity-search :deep(.dd-search-bar__input) {
+	min-width: 0;
 }
 
 .entities-summary {
 	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
-	margin-bottom: 8px;
 }
 
 .entities-list {

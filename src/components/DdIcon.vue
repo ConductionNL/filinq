@@ -40,9 +40,16 @@ const ICONS = iconContext.keys().reduce((acc, key) => {
 }, {})
 
 /**
- * Strip width/height from the root <svg> tag so the wrapper controls the
- * box, and replace the designer's hardcoded dark fill with `currentColor`
- * so consumers can recolor with standard CSS `color`.
+ * Clean up a raw Figma SVG export for crisp, themeable inline rendering:
+ *
+ * 1. Strip width/height from the root <svg> so the wrapper controls the box.
+ * 2. Replace the designer's hardcoded dark fill with `currentColor` so
+ *    consumers can recolor with standard CSS `color`.
+ * 3. Remove Figma's full-bleed `<mask>` wrapper. The mask is a no-op clip
+ *    (a solid rect covering the whole icon), but applying any mask forces
+ *    the browser to render the icon through an offscreen raster buffer —
+ *    which is rasterized at 1x DPI and upscaled on HiDPI screens, making
+ *    the icon look fuzzy. Dropping it keeps the icon as pure vector.
  *
  * @param {string} raw The raw SVG source.
  * @return {string} The cleaned-up SVG source.
@@ -55,6 +62,10 @@ function prepareSvg(raw) {
 				.replace(/\s(width|height)="[^"]*"/gi, '')
 			return `<svg${stripped} width="100%" height="100%">`
 		})
+		// Drop the <mask>…</mask> definition and the mask attribute that
+		// references it; the mask is full-coverage so removing it is safe.
+		.replace(/<mask[^>]*>[\s\S]*?<\/mask>/gi, '')
+		.replace(/\smask="url\(#[^)]*\)"/gi, '')
 		.replace(/fill="#02162E"/gi, 'fill="currentColor"')
 }
 
