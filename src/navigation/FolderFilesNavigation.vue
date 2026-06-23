@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { myDocumentsStore, fileViewerStore } from '../store/store.js'
+import { myDocumentsStore, fileViewerStore, anonymizationStore } from '../store/store.js'
 </script>
 
 <template>
@@ -23,6 +23,16 @@ import { myDocumentsStore, fileViewerStore } from '../store/store.js'
 				<template #icon>
 					<component :is="iconFor(file)" :size="24" />
 				</template>
+				<template #counter>
+					<CheckCircle v-if="statusFor(file) === 'completed'"
+						:size="20"
+						class="dd-file-status dd-file-status--done"
+						:title="t('docudesk', 'Anonymized')" />
+					<AlertCircleOutline v-else-if="statusFor(file) === 'error'"
+						:size="20"
+						class="dd-file-status dd-file-status--error"
+						:title="t('docudesk', 'Could not be processed')" />
+				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				v-if="!files.length && !myDocumentsStore.loading"
@@ -33,6 +43,26 @@ import { myDocumentsStore, fileViewerStore } from '../store/store.js'
 				</template>
 			</NcAppNavigationItem>
 		</template>
+
+		<!-- Batch action: anonymise every extracted file in this dossier. -->
+		<template #footer>
+			<div class="dossier-batch-footer">
+				<NcButton v-if="batchCount > 0 || batchState.running"
+					wide
+					type="primary"
+					:disabled="batchState.running || batchCount === 0"
+					@click="anonymizeAll">
+					<template #icon>
+						<NcLoadingIcon v-if="batchState.running" :size="20" />
+						<ShieldLockOutline v-else :size="20" />
+					</template>
+					{{ batchButtonLabel }}
+				</NcButton>
+				<p v-if="batchSummary" class="dossier-batch-summary">
+					{{ batchSummary }}
+				</p>
+			</div>
+		</template>
 	</NcAppNavigation>
 </template>
 
@@ -41,6 +71,8 @@ import {
 	NcAppNavigation,
 	NcAppNavigationItem,
 	NcAppNavigationCaption,
+	NcButton,
+	NcLoadingIcon,
 } from '@nextcloud/vue'
 
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
@@ -48,6 +80,9 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 
 export default {
 	name: 'FolderFilesNavigation',
@@ -55,11 +90,16 @@ export default {
 		NcAppNavigation,
 		NcAppNavigationItem,
 		NcAppNavigationCaption,
+		NcButton,
+		NcLoadingIcon,
 		ArrowLeft,
 		FilePdfBox,
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
+		CheckCircle,
+		AlertCircleOutline,
+		ShieldLockOutline,
 	},
 	computed: {
 		/**
@@ -79,6 +119,57 @@ export default {
 			const parts = (myDocumentsStore.currentPath || '').split('/').filter(Boolean)
 			return parts[parts.length - 1] || ''
 		},
+		/**
+		 * Live batch-run progress from the anonymization store.
+		 *
+		 * @return {{running: boolean, total: number, done: number, failed: number}}
+		 */
+		batchState() {
+			return anonymizationStore.batch
+		},
+		/**
+		 * Number of files in this dossier still awaiting anonymisation
+		 * (queue entries in the `extracted` state). Drives the button count
+		 * and disabled state.
+		 *
+		 * @return {number}
+		 */
+		batchCount() {
+			const fileIds = this.files.map((f) => f.fileId)
+			return anonymizationStore.extractedInFiles(fileIds).length
+		},
+		/**
+		 * Label for the batch button: a live progress count while running,
+		 * otherwise "Anonymize all files (N)".
+		 *
+		 * @return {string}
+		 */
+		batchButtonLabel() {
+			if (this.batchState.running) {
+				const processed = this.batchState.done + this.batchState.failed
+				return t('docudesk', 'Anonymizing… ({processed}/{total})', {
+					processed,
+					total: this.batchState.total,
+				})
+			}
+			return t('docudesk', 'Anonymize all files ({count})', { count: this.batchCount })
+		},
+		/**
+		 * One-line summary shown after a finished batch run; empty while
+		 * idle or running.
+		 *
+		 * @return {string}
+		 */
+		batchSummary() {
+			const { running, total, done, failed } = this.batchState
+			if (running || total === 0) {
+				return ''
+			}
+			if (failed > 0) {
+				return t('docudesk', '{done} anonymized, {failed} failed.', { done, failed })
+			}
+			return t('docudesk', 'All {total} files anonymized.', { total })
+		},
 	},
 	methods: {
 		/**
@@ -93,6 +184,33 @@ export default {
 			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'FilePdfBox'
 			if (mime.includes('word') || name.match(/\.(docx?|odt)$/)) return 'FileWordBox'
 			return 'FileDocumentOutline'
+		},
+		/**
+		 * Anonymisation status of a dossier file, read from its queue entry.
+		 * Drives the per-row status icon (done / error).
+		 *
+		 * @param {object} file Document descriptor.
+		 * @return {string|null} The entry status, or null if not tracked.
+		 */
+		statusFor(file) {
+			return anonymizationStore.findByFileId(file.fileId)?.status || null
+		},
+		/**
+		 * Anonymise every extracted file in this dossier in one action.
+		 *
+		 * Scopes the run to this dossier's files (by fileId) and forwards the
+		 * grondslagen options — when the grondslagen toggle is on, each file
+		 * gets the basis-summary page appended and is rendered to PDF, mirroring
+		 * the per-file sidebar's `onAnonymise`.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async anonymizeAll() {
+			const fileIds = this.files.map((f) => f.fileId)
+			const options = fileViewerStore.grondslagen
+				? { fileIds, appendBasisSummary: true, outputFormat: 'pdf' }
+				: { fileIds }
+			await anonymizationStore.anonymiseAllExtracted(options)
 		},
 		/**
 		 * Open a file in the in-app viewer.
@@ -145,5 +263,27 @@ export default {
 	--color-primary-element-hover: #fff;
 	--color-primary-element-text: var(--color-main-text);
 	box-shadow: var(--dd-shadow-popout);
+}
+
+.dossier-batch-footer {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 12px;
+}
+
+.dossier-batch-summary {
+	margin: 0;
+	text-align: center;
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.dd-file-status--done {
+	color: var(--color-success);
+}
+
+.dd-file-status--error {
+	color: var(--color-error);
 }
 </style>

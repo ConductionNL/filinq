@@ -327,11 +327,34 @@ export const useAnonymizationStore = defineStore(
 			 * @type {Array<{folderName: string, folderId: number, uuid: string, name: string, bases: string[]}>}
 			 */
 			dossiers: [],
+			/**
+			 * Progress of a batch "anonymise all" run (see `anonymiseAllExtracted`).
+			 * `running` gates the dossier nav button; `done`/`failed` drive the
+			 * "Anonymizing X/N…" label and the completion summary.
+			 *
+			 * @type {{running: boolean, total: number, done: number, failed: number}}
+			 */
+			batch: { running: false, total: 0, done: 0, failed: 0 },
 		}),
 		getters: {
 			hasFiles: (state) => state.files.length > 0,
 			hasCompleted: (state) => state.files.some((f) => f.status === 'completed'),
 			hasExtracted: (state) => state.files.some((f) => f.status === 'extracted'),
+			/**
+			 * Queue entries in the `extracted` state whose fileId is in the
+			 * given set — i.e. the files a dossier batch run would anonymise.
+			 * Used by `FolderFilesNavigation` to label and gate the
+			 * "Anonymize all files (N)" button against the dossier's listing.
+			 *
+			 * @param {object} state Store state.
+			 * @return {(fileIds: Array<number>) => Array<object>}
+			 */
+			extractedInFiles: (state) => (fileIds) => {
+				const set = new Set((fileIds || []).map(Number))
+				return state.files.filter(
+					(f) => f.status === 'extracted' && set.has(Number(f.fileId)),
+				)
+			},
 			allDone: (state) => state.files.length > 0
 				&& state.files.every((f) => f.status === 'completed' || f.status === 'error'),
 			isProcessing: (state) => state.processing,
@@ -660,10 +683,37 @@ export const useAnonymizationStore = defineStore(
 			 * @return {Promise<void>}
 			 */
 			async anonymiseAllExtracted(options = {}) {
-				for (const entry of this.files) {
-					if (entry.status === 'extracted') {
-						await this.anonymiseEntry(entry, options)
+				const { fileIds, ...entryOptions } = options
+				const scope = fileIds ? new Set(fileIds.map(Number)) : null
+
+				// Snapshot the targets up-front: anonymiseEntry mutates each
+				// entry's status to 'completed'/'error', so iterating live
+				// would be order-sensitive.
+				const targets = this.files.filter(
+					(entry) => entry.status === 'extracted'
+						&& (!scope || scope.has(Number(entry.fileId))),
+				)
+
+				this.batch = { running: true, total: targets.length, done: 0, failed: 0 }
+				try {
+					for (const entry of targets) {
+						try {
+							await this.anonymiseEntry(entry, entryOptions)
+						} catch (err) {
+							// anonymiseEntry already sets entry.status = 'error';
+							// swallow so one bad file doesn't abort the batch.
+							console.error(`Batch anonymise failed for ${entry.name}:`, err)
+						}
+						// Classify by the entry's own outcome — anonymiseEntry
+						// can mark 'error' without throwing on partial failures.
+						if (entry.status === 'error') {
+							this.batch.failed++
+						} else {
+							this.batch.done++
+						}
 					}
+				} finally {
+					this.batch.running = false
 				}
 			},
 
@@ -1212,6 +1262,7 @@ export const useAnonymizationStore = defineStore(
 				this.files = []
 				this.processing = false
 				this.dossiers = []
+				this.batch = { running: false, total: 0, done: 0, failed: 0 }
 			},
 		},
 	},
