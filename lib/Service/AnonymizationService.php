@@ -368,6 +368,12 @@ class AnonymizationService
      * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?} that
      *                                                                release low-confidence prohibition matches.
      * @param string                           $userId                UID of the acting user (for override audit entries).
+     * @param string                           $scope                 Placeholder-numbering scope forwarded to
+     *                                                                OpenRegister: 'document' (default) or 'dossier'
+     *                                                                (consistent numbering across the dossier folder).
+     * @param string|null                      $dossierKey            Stable folder id for the dossier when
+     *                                                                $scope='dossier'; null lets OpenRegister fall
+     *                                                                back to the file's parent folder.
      *
      * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
      *
@@ -392,7 +398,9 @@ class AnonymizationService
         string $outputFormat='pdf',
         array $unredactedEntities=[],
         array $acknowledgedOverrides=[],
-        string $userId=''
+        string $userId='',
+        string $scope='document',
+        ?string $dossierKey=null
     ): array {
         // Prohibition gate — runs BEFORE any OR interaction.
         // Throws ProhibitionGateException when gate fires; passes through otherwise.
@@ -415,7 +423,13 @@ class AnonymizationService
             // DocumentProcessingHandler). Closes #286.
             $originalText = $this->readNodeTextSafely(node: $node);
 
-            $result = $fileService->anonymizeDocument($node, $mappedEntities);
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // 'document' numbers entities locally to this file; 'dossier' makes
+            // the number consistent across the dossier folder's files.
+            // OpenRegister derives the dossier from $dossierKey (a stable folder
+            // id) or falls back to the file's parent folder when null. Passed
+            // positionally for the reflectively-resolved OpenRegister FileService.
+            $result = $fileService->anonymizeDocument($node, $mappedEntities, $scope, $dossierKey);
 
             // Derive the REAL replacement-stats from the original text:
             // an entity counts as "applied" iff its literal value

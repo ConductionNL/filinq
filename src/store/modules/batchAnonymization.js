@@ -75,7 +75,9 @@ export const useBatchAnonymizationStore = defineStore('batchAnonymization', {
 			this.processing = true; this.error = null; this.batchStatus = 'anonymizing'
 			try {
 				const sel = this.entities.filter((e) => e.included).map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence }))
-				await axios.post(generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/anonymize'), { entities: sel })
+				// scope=dossier: a batch IS a folder/dossier, so a person gets the
+				// same scope-local placeholder number across all the batch's files.
+				await axios.post(generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/anonymize'), { entities: sel, scope: 'dossier' })
 				this.batchStatus = 'completed'; await this.refreshStatus()
 			} catch (e) { this.error = e.response?.data?.error || e.message; this.batchStatus = 'error' } finally { this.processing = false }
 		},

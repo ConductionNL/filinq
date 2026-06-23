@@ -1,6 +1,16 @@
 OC.L10N.register(
     "docudesk",
     {
+    "PERSON" : "PERSOON",
+    "ORGANIZATION" : "ORGANISATIE",
+    "LOCATION" : "LOCATIE",
+    "EMAIL" : "E-MAILADRES",
+    "PHONE" : "TELEFOONNUMMER",
+    "ADDRESS" : "ADRES",
+    "DATE" : "DATUM",
+    "IBAN" : "IBAN",
+    "SSN" : "BSN",
+    "IP_ADDRESS" : "IP-ADRES",
     "Dashboard" : "Dashboard",
     "Tiles" : "Tegels",
     "List" : "Lijst",

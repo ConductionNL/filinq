@@ -38,6 +38,7 @@ use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
+use OCP\IL10N;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -98,6 +99,30 @@ class GrondslagenSummaryService
     private const ANONYMISED_SUBFOLDER = 'anonymised';
 
     /**
+     * Entity-type labels localised in the summary, mirroring OpenRegister's
+     * `DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES` (the
+     * `EntityRecognitionHandler::ENTITY_TYPE_*` values). Only these are
+     * translated so the summary's TYPE column reads the same as the labels
+     * OpenRegister wrote into the redacted document; an unknown type falls back
+     * to its raw string. DocuDesk's `l10n/` carries the same Dutch translations
+     * so the two apps resolve identically for a given language.
+     *
+     * @var array<int, string>
+     */
+    private const LOCALIZABLE_ENTITY_TYPES = [
+        'PERSON',
+        'ORGANIZATION',
+        'LOCATION',
+        'EMAIL',
+        'PHONE',
+        'ADDRESS',
+        'DATE',
+        'IBAN',
+        'SSN',
+        'IP_ADDRESS',
+    ];
+
+    /**
      * Constructor for GrondslagenSummaryService
      *
      * @param PdfService         $pdfService  PDF rendering service (Twig + mPDF)
@@ -106,6 +131,11 @@ class GrondslagenSummaryService
      * @param LoggerInterface    $logger      Logger for diagnostics
      * @param IRootFolder        $rootFolder  Nextcloud root folder for file operations
      * @param IUserSession       $userSession User session for operator identification
+     * @param IL10N|null         $l10n        Acting-user localisation, used to translate the entity
+     *                                        TYPE label (PERSON → PERSOON on a Dutch instance) so the
+     *                                        summary matches the localized labels OpenRegister wrote
+     *                                        into the redacted document. Nullable: when absent the raw
+     *                                        English label is used.
      *
      * @return void
      *
@@ -118,6 +148,7 @@ class GrondslagenSummaryService
         private readonly LoggerInterface $logger,
         private readonly IRootFolder $rootFolder,
         private readonly IUserSession $userSession,
+        private readonly ?IL10N $l10n=null,
     ) {
 
     }//end __construct()
@@ -430,7 +461,10 @@ class GrondslagenSummaryService
 
             $result[] = [
                 'entityText'      => (string) ($row['entity_value'] ?? ''),
-                'entityType'      => (string) ($row['entity_type'] ?? ''),
+                // Localise the TYPE label (PERSON → PERSOON) so the summary's
+                // TYPE column matches the labels OpenRegister wrote into the
+                // redacted document (anonymisation-placeholder-id-scope).
+                'entityType'      => $this->localizeEntityType(entityType: (string) ($row['entity_type'] ?? '')),
                 'anonymizedValue' => (string) ($relation->getAnonymizedValue() ?? ''),
                 'bases'           => $bases,
             ];
@@ -439,6 +473,31 @@ class GrondslagenSummaryService
         return $result;
 
     }//end loadAnonymisedEntitiesForFile()
+
+
+    /**
+     * Localise an entity-type label for the summary so it reads the same as
+     * the label OpenRegister wrote into the redacted document
+     * (anonymisation-placeholder-id-scope). Only the enumerated
+     * `LOCALIZABLE_ENTITY_TYPES` set is translated; an unknown / free-form type
+     * is returned unchanged. When no `IL10N` is injected the raw label is
+     * returned (the `en` / untranslated behaviour).
+     *
+     * @param string $entityType The raw entity type (e.g. 'PERSON').
+     *
+     * @return string The localised label (e.g. 'PERSOON' on nl), or the raw type.
+     */
+    private function localizeEntityType(string $entityType): string
+    {
+        if ($this->l10n === null
+            || in_array($entityType, self::LOCALIZABLE_ENTITY_TYPES, true) === false
+        ) {
+            return $entityType;
+        }
+
+        return $this->l10n->t($entityType);
+
+    }//end localizeEntityType()
 
     /**
      * Read bases from an EntityRelation object defensively.
