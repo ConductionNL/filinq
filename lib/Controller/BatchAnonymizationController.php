@@ -349,12 +349,23 @@ class BatchAnonymizationController extends Controller
                 );
             }
 
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // a batch IS a folder/dossier, so the default is 'dossier' — a
+            // person gets the same scope-local number across all the batch's
+            // files. Any value other than 'document' keeps the dossier default.
+            $scopeParam = (string) ($params['scope'] ?? 'dossier');
+            $scope      = 'dossier';
+            if ($scopeParam === 'document') {
+                $scope = 'document';
+            }
+
             return new JSONResponse(
                 $this->anonService->anonymizeBatch(
                     $batchId,
                     $entities,
                     $appendBasisSummary,
-                    $outputFormat
+                    $outputFormat,
+                    $scope
                 )
             );
         } catch (Exception $e) {

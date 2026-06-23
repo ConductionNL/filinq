@@ -275,12 +275,33 @@ class AnonymizationController extends Controller
             $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
             $entities = $this->filterByConfidence(entities: $entities, params: $params);
 
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // forwarded to OpenRegister. 'document' (default) numbers entities
+            // locally to this file; 'dossier' makes the number consistent across
+            // the dossier folder's files. `dossierKey` is the stable folder id;
+            // when omitted under scope=dossier, OpenRegister falls back to the
+            // file's parent folder. Any value other than 'dossier' normalises to
+            // per-document.
+            $scopeParam = (string) ($params['scope'] ?? 'document');
+            $scope      = 'document';
+            if ($scopeParam === 'dossier') {
+                $scope = 'dossier';
+            }
+
+            $dossierKeyParam = $params['dossierKey'] ?? null;
+            $dossierKey      = null;
+            if ($dossierKeyParam !== null && $dossierKeyParam !== '') {
+                $dossierKey = (string) $dossierKeyParam;
+            }
+
             try {
                 $result = $this->anonymizationService->anonymizeDocument(
                     $fileId,
                     $entities,
                     $appendBasisSummary,
-                    $outputFormat
+                    $outputFormat,
+                    $scope,
+                    $dossierKey
                 );
             } catch (ConversionFailedException $e) {
                 $this->logger->warning(

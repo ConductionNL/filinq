@@ -611,6 +611,10 @@ export const useAnonymizationStore = defineStore(
 								confidence: e.confidence,
 							}))
 							.sort((a, b) => (b.value || '').length - (a.value || '').length),
+						// Placeholder-numbering scope: a single-document anonymise
+						// numbers entities locally to this file. Folder/dossier
+						// consistency is handled by the batch path (scope=dossier).
+						scope: 'document',
 					}
 					const anonymizeResponse = await axios.post(
 						generateUrl(`/apps/docudesk/api/anonymization/anonymize/${entry.fileId}`),

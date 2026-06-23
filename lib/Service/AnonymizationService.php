@@ -167,6 +167,13 @@ class AnonymizationService
      *                                                        `"preserve"` skips conversion and
      *                                                        returns the anonymised file in its
      *                                                        native format.
+     * @param string                      $scope              Placeholder-numbering scope forwarded to
+     *                                                        OpenRegister: `"document"` (default) or
+     *                                                        `"dossier"` (consistent numbering across
+     *                                                        the dossier folder's files).
+     * @param string|null                 $dossierKey         Stable folder id for the dossier when
+     *                                                        $scope='dossier'; null lets OpenRegister
+     *                                                        fall back to the file's parent folder.
      *
      * @return array<string, mixed> Anonymization result. Adds the optional `warning` field when
      *                              the grondslagen-summary step failed but the anonymise itself
@@ -182,13 +189,24 @@ class AnonymizationService
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        string $scope='document',
+        ?string $dossierKey=null
     ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
-            $result         = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // 'document' (default) numbers entities locally to this file;
+            // 'dossier' makes the number consistent across the dossier folder's
+            // files. OpenRegister derives the dossier from $dossierKey (a stable
+            // folder id) or falls back to the file's parent folder when null —
+            // so a folder anonymise only needs to signal scope=dossier. Passed
+            // positionally for compatibility with the reflectively-resolved
+            // OpenRegister FileService.
+            $result = $fileService->anonymizeDocument($node, $mappedEntities, $scope, $dossierKey);
 
             // Best-effort policy: OpenRegister now produces the anonymised file
             // even when some entity text could not be removed (e.g. the ExApp

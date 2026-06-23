@@ -112,6 +112,14 @@
 				<input v-model="store.appendBasisSummary" type="checkbox">
 				<span>{{ t('docudesk', 'Append a grondslagen-summary page to each anonymised PDF (Wave 4a)') }}</span>
 			</label>
+			<!-- Hard warning: per-dossier placeholder numbers are carried across
+				the folder's files, so the whole folder MUST be published as ONE
+				publication/dossier. Splitting it into separate publications would
+				re-introduce the cross-publication linking key the scope-local
+				numbering exists to prevent. -->
+			<NcNoteCard type="warning">
+				{{ t('docudesk', 'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.') }}
+			</NcNoteCard>
 			<div class="action-bar">
 				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeBatch()">
 					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
