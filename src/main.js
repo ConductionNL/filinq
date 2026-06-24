@@ -22,6 +22,7 @@ import {
 import pinia from './pinia.js'
 import App from './App.vue'
 import bundledManifest from './manifest.json'
+import menuLayout from './menu-layout.json'
 import registry from './registry.js'
 import { initializeStores } from './store/store.js'
 
@@ -68,6 +69,205 @@ function tryLoadTranslations() {
 const RoutePageRenderer = { ...CnPageRenderer }
 
 /**
+ * Merge incoming menu items onto a target list by `id`. A top-level or child
+ * entry already present is extended (only filling undefined scalar keys, then
+ * recursing into children); a new entry is appended. Used by the relocation
+ * pass to re-home leaves/groups into a target group without duplicating ids.
+ *
+ * @param {Array<object>} target The accumulated menu (mutated in place).
+ * @param {Array<object>} incoming Menu items to merge in.
+ * @return {void}
+ */
+function mergeMenuItems(target, incoming) {
+	incoming.forEach((item) => {
+		const existing = target.find((t) => t.id === item.id)
+		if (!existing) {
+			target.push({ ...item, children: Array.isArray(item.children) ? [...item.children] : item.children })
+			return
+		}
+		for (const key of ['label', 'icon', 'route', 'order', 'section', 'featureFlag', 'permission', 'visibleIf', 'href', 'action']) {
+			if (existing[key] === undefined && item[key] !== undefined) {
+				existing[key] = item[key]
+			}
+		}
+		if (Array.isArray(item.children) && item.children.length > 0) {
+			if (!Array.isArray(existing.children)) {
+				existing.children = []
+			}
+			mergeMenuItems(existing.children, item.children)
+		}
+	})
+}
+
+/**
+ * Re-home merged menu entries onto the canonical navigation layout declared
+ * by `src/menu-layout.json#relocations` (`{ sourceId: targetGroupId }`).
+ *
+ *  - A relocated GROUP dissolves: its children merge (by id) into the
+ *    target group and the now-empty shell is dropped.
+ *  - A relocated LEAF (top-level or child of any group) moves under the
+ *    target group.
+ *  - A child group relocated onto its own parent flattens into it.
+ *  - Unknown source ids are inert; a missing target group keeps the entry
+ *    at the top level so nothing silently disappears.
+ *
+ * Runs in passes until stable (children freed by a dissolved group can
+ * themselves be relocated on the next pass).
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Record<string, string>|undefined} relocations Source-id → target-group-id map.
+ * @return {Array<object>} The menu with relocations applied.
+ */
+function applyMenuRelocations(menu, relocations) {
+	if (!relocations || typeof relocations !== 'object') return menu
+	for (let pass = 0; pass < 5; pass++) {
+		const moves = []
+		for (let i = menu.length - 1; i >= 0; i--) {
+			const node = menu[i]
+			const target = relocations[node.id]
+			if (target && target !== node.id) {
+				menu.splice(i, 1)
+				moves.push({ node, target })
+				continue
+			}
+			if (!Array.isArray(node.children)) continue
+			for (let j = node.children.length - 1; j >= 0; j--) {
+				const child = node.children[j]
+				const childTarget = relocations[child.id]
+				if (!childTarget) continue
+				if (childTarget === node.id && !Array.isArray(child.children)) continue
+				node.children.splice(j, 1)
+				moves.push({ node: child, target: childTarget })
+			}
+		}
+		if (moves.length === 0) break
+		moves.forEach(({ node, target }) => {
+			const group = menu.find((m) => m.id === target)
+			if (!group) {
+				menu.push(node)
+				return
+			}
+			if (!Array.isArray(group.children)) group.children = []
+			if (Array.isArray(node.children)) {
+				mergeMenuItems(group.children, node.children)
+			} else {
+				mergeMenuItems(group.children, [node])
+			}
+		})
+	}
+	return menu.filter((m) => m.type === 'caption' || m.route || m.href || m.action
+		|| (Array.isArray(m.children) && m.children.length > 0))
+}
+
+/**
+ * Assign top-level menu leaves to a navigation section declared by
+ * `src/menu-layout.json#sections` (`{ menuEntryId: sectionName }`). Only
+ * top-level entries are sectioned; unknown ids are inert.
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Record<string, string>|undefined} sections Menu-entry id → section name.
+ * @return {Array<object>} The menu with sections applied.
+ */
+function applyMenuSections(menu, sections) {
+	if (!sections || typeof sections !== 'object') return menu
+	menu.forEach((node) => {
+		const section = sections[node.id]
+		if (section) node.section = section
+	})
+	return menu
+}
+
+/**
+ * Remove individual menu entries by id after relocation — used to retire
+ * duplicate navigation entries whose PAGE must stay routable (deep links
+ * and e2e specs hit the route directly). Declared in
+ * `src/menu-layout.json#removals`. Only leaf entries are removed; group ids
+ * are ignored so a removal can never silently hide a whole cluster.
+ *
+ * @param {Array<object>} menu The merged menu (mutated in place).
+ * @param {Array<string>|undefined} removals Menu-entry ids to drop.
+ * @return {Array<object>} The menu without the removed entries.
+ */
+function applyMenuRemovals(menu, removals) {
+	if (!Array.isArray(removals) || removals.length === 0) return menu
+	const drop = new Set(removals)
+	const isLeaf = (n) => !Array.isArray(n.children) || n.children.length === 0
+	menu.forEach((node) => {
+		if (Array.isArray(node.children)) {
+			node.children = node.children.filter((c) => !(drop.has(c.id) && isLeaf(c)))
+		}
+	})
+	return menu.filter((node) => !(drop.has(node.id) && isLeaf(node)))
+}
+
+/**
+ * Promote the menu entries listed in `src/menu-layout.json#settingsSection`
+ * into Nextcloud's settings foldout — the NcAppNavigationSettings gear at the
+ * bottom-left of the navigation, OUTSIDE the scrollable list. CnAppNav renders
+ * every TOP-LEVEL item carrying `section: "settings"` as a flat entry inside
+ * that foldout (with an auto-prepended "Personal settings"). This lifts each
+ * listed id out of wherever it currently sits, tags it `section: "settings"`,
+ * flattens it (the foldout has no nested groups), and appends it to the top
+ * level. Empty non-clickable groups left behind are dropped; a clickable group
+ * (one with route/href/action) is kept.
+ *
+ * @param {Array<object>} menu        The merged + relocated + pruned menu.
+ * @param {Array<string>|undefined} settingsIds Entry ids to move to the foldout.
+ * @return {Array<object>} The menu with the settings entries lifted out.
+ */
+function applySettingsSection(menu, settingsIds) {
+	if (!Array.isArray(settingsIds) || settingsIds.length === 0) return menu
+	const want = new Set(settingsIds)
+	const isClickable = (n) => n.route !== undefined || n.href !== undefined || n.action !== undefined
+	const lifted = []
+	const strip = (nodes) => nodes.reduce((acc, n) => {
+		if (want.has(n.id)) {
+			const { children, ...leaf } = n
+			lifted.push({ ...leaf, section: 'settings' })
+			return acc
+		}
+		if (Array.isArray(n.children)) {
+			const children = strip(n.children)
+			if (children.length === 0 && n.children.length > 0 && !isClickable(n)) return acc
+			acc.push({ ...n, children })
+			return acc
+		}
+		acc.push(n)
+		return acc
+	}, [])
+	const remaining = strip(menu)
+	return [...remaining, ...lifted]
+}
+
+/**
+ * Apply the canonical navigation layout (src/menu-layout.json) to the bundled
+ * manifest's menu and return a shallow-cloned manifest carrying the rewritten
+ * menu. DocuDesk ships a monolithic manifest (no manifest.d fragments), so the
+ * four canonical passes run directly on a deep copy of `manifest.menu`:
+ * relocations → sections → removals → settingsSection. The manifest stays the
+ * source of WHAT exists (ADR-037); menu-layout.json is the single place deciding
+ * WHERE entries live, including which config/admin entries fold into the
+ * Nextcloud settings gear (applySettingsSection). Currently every map in
+ * menu-layout.json is empty (DocuDesk's in-app menu is wholly operational and
+ * its admin surface lives in NC's settings framework), so this is an identity
+ * transform today — the wiring exists for fleet parity so any future in-menu
+ * config entry folds in by listing its id in menu-layout.json alone.
+ *
+ * @param {object} manifest The bundled base manifest (with `menu[]`).
+ * @return {object} A manifest clone whose `menu` reflects the canonical layout.
+ */
+function applyMenuLayout(manifest) {
+	let menu = JSON.parse(JSON.stringify(manifest.menu || []))
+	menu = applyMenuRelocations(menu, menuLayout.relocations)
+	menu = applyMenuSections(menu, menuLayout.sections)
+	menu = applyMenuRemovals(menu, menuLayout.removals)
+	menu = applySettingsSection(menu, menuLayout.settingsSection)
+	return { ...manifest, menu }
+}
+
+const manifest = applyMenuLayout(bundledManifest)
+
+/**
  * Build the vue-router config from the manifest. Each manifest page
  * becomes one route; the route's `name` IS `page.id` (per the lib's
  * manifest contract). Routes whose path declares a `:` parameter pass
@@ -91,7 +291,7 @@ function routesFromManifest(manifest) {
 const router = new VueRouter({
 	mode: 'history',
 	base: generateUrl('/apps/docudesk'),
-	routes: routesFromManifest(bundledManifest),
+	routes: routesFromManifest(manifest),
 })
 
 tryLoadTranslations()
@@ -141,7 +341,7 @@ new Vue({
 	router,
 	render: (h) => h(App, {
 		props: {
-			manifest: bundledManifest,
+			manifest,
 			customComponents: customComponentsProp,
 			pageTypes: pageTypesProp,
 			registry: registryProp,
