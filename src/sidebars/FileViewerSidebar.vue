@@ -493,7 +493,9 @@ export default {
 			const parts = path.split('/')
 			const filesIndex = parts.indexOf('files')
 			if (filesIndex >= 0) {
-				const relativePath = parts.slice(filesIndex + 1).join('/')
+				// Encode each segment so a dossier/file name containing `?`,
+				// `#` or `&` doesn't corrupt the download URL.
+				const relativePath = parts.slice(filesIndex + 1).map(encodeURIComponent).join('/')
 				return generateRemoteUrl('webdav') + '/' + relativePath
 			}
 			return generateRemoteUrl('webdav')

@@ -355,6 +355,22 @@ export const useAnonymizationStore = defineStore(
 					(f) => f.status === 'extracted' && set.has(Number(f.fileId)),
 				)
 			},
+			/**
+			 * Completed queue entries (anonymised, with a downloadable result)
+			 * whose original fileId is in the given set. Drives the dossier
+			 * "Download all" action in `FolderFilesNavigation` (T14).
+			 *
+			 * @param {object} state Store state.
+			 * @return {(fileIds: Array<number>) => Array<object>}
+			 */
+			completedInFiles: (state) => (fileIds) => {
+				const set = new Set((fileIds || []).map(Number))
+				return state.files.filter(
+					(f) => f.status === 'completed'
+						&& f.anonymizedFilePath
+						&& set.has(Number(f.fileId)),
+				)
+			},
 			allDone: (state) => state.files.length > 0
 				&& state.files.every((f) => f.status === 'completed' || f.status === 'error'),
 			isProcessing: (state) => state.processing,

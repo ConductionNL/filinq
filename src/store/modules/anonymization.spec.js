@@ -390,3 +390,41 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		expect(body.outputFormat).toBe('pdf')
 	})
 })
+
+describe('completedInFiles — downloadable results in a dossier', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	/**
+	 * Seed a mixed queue: one completed-with-result, one completed-without-path,
+	 * one still extracted, one completed but outside the dossier scope.
+	 *
+	 * @param {object} store The active anonymization store.
+	 * @return {void}
+	 */
+	function seedMixed(store) {
+		store.files = [
+			{ ...makeEntry(), id: 'a', fileId: 1, status: 'completed', anonymizedFilePath: '/files/a-anon.pdf' },
+			{ ...makeEntry(), id: 'b', fileId: 2, status: 'completed', anonymizedFilePath: null },
+			{ ...makeEntry(), id: 'c', fileId: 3, status: 'extracted', anonymizedFilePath: null },
+			{ ...makeEntry(), id: 'd', fileId: 9, status: 'completed', anonymizedFilePath: '/files/d-anon.pdf' },
+		]
+	}
+
+	it('returns only completed entries with a result path that are in scope', () => {
+		const store = useAnonymizationStore()
+		seedMixed(store)
+
+		const result = store.completedInFiles([1, 2, 3])
+
+		expect(result.map((f) => f.fileId)).toEqual([1])
+	})
+
+	it('returns an empty array when no fileIds are given', () => {
+		const store = useAnonymizationStore()
+		seedMixed(store)
+
+		expect(store.completedInFiles([])).toEqual([])
+	})
+})
