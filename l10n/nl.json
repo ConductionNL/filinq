@@ -1,6 +1,6 @@
 {
     "translations": {
-        "{found} unique data found · {occurrences} occurrences": "{found} unieke gegevens gevonden · {occurrences} voorkomens",
+        "{found} unique data found": "{found} unieke gegevens gevonden",
         "Dashboard": "Dashboard",
         "Tiles": "Tegels",
         "List": "Lijst",

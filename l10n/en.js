@@ -3,7 +3,7 @@ OC.L10N.register(
 	{
 		"(no relation ids — grondslagen will not persist)": "(no relation ids — grondslagen will not persist)",
 		"{selected} of {total} entities selected across {files} files": "{selected} of {total} entities selected across {files} files",
-		"{found} unique data found · {occurrences} occurrences": "{found} unique data found · {occurrences} occurrences",
+		"{found} unique data found": "{found} unique data found",
 		"%n entity": ["%n entity","%n entities"],
 		"%n entity could not be fully removed. Check the file below before using it.": ["%n entity could not be fully removed. Check the file below before using it.","%n entities could not be fully removed. Check the file below before using it."],
 		"%n entity detected": ["%n entity detected","%n entities detected"],

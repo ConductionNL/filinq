@@ -573,16 +573,6 @@ export default {
 			return this.anonymizedSummaryList.length
 		},
 		/**
-		 * Total occurrences across the document: the sum of each card's `count`
-		 * (the "Nx" badge). Higher than `summaryFound` when a value appears more
-		 * than once.
-		 *
-		 * @return {number}
-		 */
-		summaryOccurrences() {
-			return this.anonymizedSummaryList.reduce((sum, e) => sum + (e.count || 1), 0)
-		},
-		/**
 		 * Review entities filtered by the header search, paired with their
 		 * original index in `entry.entities` so the store mutators
 		 * (toggle/set-bases) still target the correct row. Matches the query
@@ -697,12 +687,11 @@ export default {
 				return t('docudesk', 'Add new data')
 			}
 			// Anonymised result — re-opened document or the just-finished run:
-			// the title summarises the removed data (unique values vs total
-			// occurrences) instead of a bare "items anonymised" count.
+			// the title summarises the removed data (unique values found) instead
+			// of a bare "items anonymised" count.
 			if (this.entry?.viewMode === 'anonymized' || this.isCompletedResult) {
-				return t('docudesk', '{found} unique data found · {occurrences} occurrences', {
+				return t('docudesk', '{found} unique data found', {
 					found: this.summaryFound,
-					occurrences: this.summaryOccurrences,
 				})
 			}
 			if (this.entry && Array.isArray(this.entry.entities)) {
