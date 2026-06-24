@@ -102,7 +102,7 @@ import Palette from 'vue-material-design-icons/Palette.vue'
 const ACTIVE_GROUPS = {
 	Consent: ['Consent', 'ConsentDetail'],
 	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
-	Anonymization: ['Anonymization', 'BatchAnonymization'],
+	Anonymization: ['Anonymization'],
 }
 
 export default {
