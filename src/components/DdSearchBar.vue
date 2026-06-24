@@ -145,7 +145,6 @@ export default {
 	position: relative;
 	display: flex;
 	align-items: center;
-	max-width: 360px;
 	flex: 1;
 }
 
