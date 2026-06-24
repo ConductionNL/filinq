@@ -71,60 +71,60 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				{{ entry.error || t('docudesk', 'Failed to load entities') }}
 			</NcNoteCard>
 
-			<!-- Success state: file finished anonymising and everything was removed. -->
-			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath && entry.complete !== false" type="success">
-				<div>{{ t('docudesk', 'Anonymisation complete') }}</div>
-				<div class="muted">
-					{{ n('docudesk', '%n entity replaced', '%n entities replaced', entry.replacementCount || 0) }}
-				</div>
-				<a :href="downloadUrl" download class="download-link">
-					{{ t('docudesk', 'Download anonymised file') }}
-				</a>
-			</NcNoteCard>
+			<!-- Completed result: the file finished anonymising and a downloadable
+			     output exists. Shows a success or best-effort warning note with
+			     the download link, then the same removed-entity list + reveal
+			     toggle as the re-opened view (`viewMode === 'anonymized'`) so the
+			     operator can verify what was taken out before downloading. -->
+			<div v-else-if="isCompletedResult" class="entities-list">
+				<!-- Success: everything the user selected was removed. -->
+				<NcNoteCard v-if="entry.complete !== false" type="success">
+					<div>{{ t('docudesk', 'Anonymisation complete') }}</div>
+					<div class="muted">
+						{{ n('docudesk', '%n entity replaced', '%n entities replaced', entry.replacementCount || 0) }}
+					</div>
+					<a :href="downloadUrl" download class="download-link">
+						{{ t('docudesk', 'Download anonymised file') }}
+					</a>
+				</NcNoteCard>
 
-			<!-- Best-effort warning: the file was produced, but some entities could
-			     not be fully removed (e.g. text recognised across table cells that
-			     is not contiguous in the document). Refining entities is not part
-			     of this result view, so we only flag the residuals and tell the
-			     operator to check the file before using it. -->
-			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath && entry.complete === false" type="warning">
-				<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
-				<div class="muted">
-					{{ n('docudesk',
-						'%n entity could not be fully removed. Check the file below before using it.',
-						'%n entities could not be fully removed. Check the file below before using it.',
-						entry.residualCount || 0) }}
-				</div>
-				<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">
-					<li v-for="(r, idx) in entry.residualEntities" :key="'res-' + idx">
-						<span class="residual-type">{{ r.type }}</span>: {{ r.text }}
-					</li>
-				</ul>
-				<a :href="downloadUrl" download class="download-link">
-					{{ t('docudesk', 'Download anonymised file') }}
-				</a>
-			</NcNoteCard>
+				<!-- Best-effort warning: the file was produced, but some entities
+				     could not be fully removed (e.g. text recognised across table
+				     cells that is not contiguous in the document). Refining
+				     entities is not part of this result view, so we only flag the
+				     residuals and tell the operator to check the file. -->
+				<NcNoteCard v-else type="warning">
+					<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
+					<div class="muted">
+						{{ n('docudesk',
+							'%n entity could not be fully removed. Check the file below before using it.',
+							'%n entities could not be fully removed. Check the file below before using it.',
+							entry.residualCount || 0) }}
+					</div>
+					<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">
+						<li v-for="(r, idx) in entry.residualEntities" :key="'res-' + idx">
+							<span class="residual-type">{{ r.type }}</span>: {{ r.text }}
+						</li>
+					</ul>
+					<a :href="downloadUrl" download class="download-link">
+						{{ t('docudesk', 'Download anonymised file') }}
+					</a>
+				</NcNoteCard>
+
+				<!-- Removed-entity list with the reveal toggle: shows what was
+				     taken out of the document, original values hidden behind an
+				     explicit reveal so the result panel doesn't silently re-expose
+				     the data the file just hid. -->
+				<DdRemovedEntitiesList v-if="removedEntities.length" :items="removedEntities" />
+			</div>
 
 			<!-- Anonymised-document view: a read-only list resolved from the
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
 			     opening the result doesn't silently de-anonymise it. -->
-			<div v-else-if="entry && entry.viewMode === 'anonymized'" class="entities-list">
-				<NcNoteCard type="warning" class="reveal-note">
-					<div>{{ t('docudesk', 'These items were removed from this document.') }}</div>
-					<NcButton type="tertiary" class="reveal-toggle" @click="revealValues = !revealValues">
-						{{ revealValues
-							? t('docudesk', 'Hide original values')
-							: t('docudesk', 'Reveal original values') }}
-					</NcButton>
-				</NcNoteCard>
-				<DdEntityCard
-					v-for="(item, idx) in entry.entities"
-					:key="'anon-' + idx"
-					:item="item"
-					mode="anonymized"
-					:reveal-values="revealValues" />
-			</div>
+			<DdRemovedEntitiesList
+				v-else-if="entry && entry.viewMode === 'anonymized'"
+				:items="entry.entities" />
 
 			<!-- Add new data panel — edit mode. The user selects text in the
 			     document (highlighted as pending), picks a type and optionally
@@ -268,6 +268,7 @@ import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
+import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdToggle from '../components/DdToggle.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import { ENTITY_TYPES } from '../services/entityTypes.js'
@@ -295,6 +296,7 @@ export default {
 		NcNoteCard,
 		NcSelect,
 		DdEntityCard,
+		DdRemovedEntitiesList,
 		DdSearchBar,
 		Pencil,
 		ShieldLockOutline,
@@ -305,10 +307,6 @@ export default {
 			basesOptions: BASES_OPTIONS,
 			typeOptions: ENTITY_TYPES,
 			loadingFileId: null,
-			// Anonymised-document view shows the original values by default —
-			// the whole point of the panel is to review what was removed. The
-			// toggle still lets the user hide them again (e.g. screen-sharing).
-			revealValues: true,
 			// "Add new data" panel state (edit mode). The chosen type and
 			// grondslagen for the entity about to be added from the selection.
 			newType: '',
@@ -512,6 +510,41 @@ export default {
 		 */
 		includedCount() {
 			return (this.entry?.entities || []).filter((e) => e.included !== false).length
+		},
+		/**
+		 * True for the post-anonymise result step: the run finished and a
+		 * downloadable output exists. Gates the completed result view (note +
+		 * download link + removed-entity list). Distinct from the re-opened
+		 * `viewMode === 'anonymized'` view, which carries no download link.
+		 *
+		 * @return {boolean}
+		 */
+		isCompletedResult() {
+			return this.entry?.status === 'completed' && !!this.entry?.anonymizedFilePath
+		},
+		/**
+		 * Entities actually removed by the just-finished run, mapped onto the
+		 * anonymised-card shape so the result step can show the same reveal
+		 * list as the re-opened view. Only `included` entities are taken (the
+		 * ones sent to the backend); the original value sits behind the reveal
+		 * toggle, with a masked `[<TYPE>]` placeholder shown while hidden.
+		 *
+		 * @return {Array<object>}
+		 */
+		removedEntities() {
+			if (!this.isCompletedResult) {
+				return []
+			}
+			return (this.entry.entities || [])
+				.filter((e) => e.included !== false)
+				.map((e) => ({
+					type: e.type,
+					value: e.value,
+					count: e.count || 1,
+					bases: Array.isArray(e.bases) ? e.bases : [],
+					placeholder: `[${e.type}]`,
+					_resolveError: null,
+				}))
 		},
 		/**
 		 * Review entities filtered by the header search, paired with their
@@ -1119,10 +1152,6 @@ export default {
 
 .add-entity-panel__select {
 	width: 100%;
-}
-
-.reveal-note .reveal-toggle {
-	margin-top: 6px;
 }
 
 .empty-state {
