@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t, translatePlural as n } from '@nextcloud/l10n'
-import { fileViewerStore, anonymizationStore } from '../store/store.js'
+import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/store.js'
 </script>
 
 <template>
@@ -598,6 +598,10 @@ export default {
 					mimeType: fileViewerStore.originalFile?.mimeType || '',
 					path: this.entry.anonymizedFilePath,
 				})
+				// The anonymise call wrote a new `_anonymized` file into the
+				// current folder. Refresh the document list so it shows up in
+				// the dossier navigation instead of only after a re-entry.
+				await myDocumentsStore.fetchDocuments()
 			}
 		},
 		/**

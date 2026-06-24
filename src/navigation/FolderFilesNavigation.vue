@@ -260,6 +260,12 @@ export default {
 				? { fileIds, appendBasisSummary: true, outputFormat: 'pdf' }
 				: { fileIds }
 			await anonymizationStore.anonymiseAllExtracted(options)
+			// Each run writes a new `_anonymized` file into this dossier folder.
+			// The navigation list is built from `myDocumentsStore.documents`,
+			// which only reflects the last WebDAV fetch — without this refresh
+			// the freshly created results stay invisible until the user leaves
+			// and re-enters the dossier.
+			await myDocumentsStore.fetchDocuments()
 		},
 		/**
 		 * Build the WebDAV download URL for an anonymised result path. Mirrors
