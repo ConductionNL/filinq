@@ -4,7 +4,7 @@ OC.L10N.register(
 		"(no relation ids — grondslagen will not persist)": "(no relation ids — grondslagen will not persist)",
 		"{selected} of {total} entities selected across {files} files": "{selected} of {total} entities selected across {files} files",
 		"%n entity": ["%n entity","%n entities"],
-		"%n entity could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.": ["%n entity could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.","%n entities could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again."],
+		"%n entity could not be fully removed. Check the file below before using it.": ["%n entity could not be fully removed. Check the file below before using it.","%n entities could not be fully removed. Check the file below before using it."],
 		"%n entity detected": ["%n entity detected","%n entities detected"],
 		"%n entity replaced": ["%n entity replaced","%n entities replaced"],
 		"%n item anonymised": ["%n item anonymised","%n items anonymised"],

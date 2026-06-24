@@ -84,14 +84,15 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 
 			<!-- Best-effort warning: the file was produced, but some entities could
 			     not be fully removed (e.g. text recognised across table cells that
-			     is not contiguous in the document). The operator can refine the
-			     entities (add a manual entity, skip an occurrence) and re-run. -->
+			     is not contiguous in the document). Refining entities is not part
+			     of this result view, so we only flag the residuals and tell the
+			     operator to check the file before using it. -->
 			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath && entry.complete === false" type="warning">
 				<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
 				<div class="muted">
 					{{ n('docudesk',
-						'%n entity could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.',
-						'%n entities could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.',
+						'%n entity could not be fully removed. Check the file below before using it.',
+						'%n entities could not be fully removed. Check the file below before using it.',
 						entry.residualCount || 0) }}
 				</div>
 				<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">

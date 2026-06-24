@@ -4,7 +4,7 @@ OC.L10N.register(
 		"(no relation ids — grondslagen will not persist)": "(geen relatie-id's — grondslagen worden niet bewaard)",
 		"{selected} of {total} entities selected across {files} files": "{selected} van {total} entiteiten geselecteerd over {files} bestanden",
 		"%n entity": ["%n entiteit","%n entiteiten"],
-		"%n entity could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.": ["%n entiteit kon niet volledig worden verwijderd. Controleer het bestand en verfijn de entiteiten (voeg een handmatige entiteit toe of sla een voorkomen over) en anonimiseer opnieuw.","%n entiteiten konden niet volledig worden verwijderd. Controleer het bestand en verfijn de entiteiten (voeg een handmatige entiteit toe of sla een voorkomen over) en anonimiseer opnieuw."],
+		"%n entity could not be fully removed. Check the file below before using it.": ["%n entiteit kon niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt.","%n entiteiten konden niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt."],
 		"%n entity detected": ["%n entiteit gedetecteerd","%n entiteiten gedetecteerd"],
 		"%n entity replaced": ["%n entiteit vervangen","%n entiteiten vervangen"],
 		"%n item anonymised": ["%n item geanonimiseerd","%n items geanonimiseerd"],
