@@ -1230,20 +1230,18 @@ class GrondslagenSummaryService
         // Group raw relation rows by (entity_type, entity_id) so the
         // template sees one row per entity rather than one row per
         // occurrence. Each group carries:
-        // - placeholder: `[<localizedTYPE>: <entity_id>]` — the TYPE label is
-        // localized to the acting user's language (PERSON → PERSOON) to match
-        // the labels OR's `DocumentProcessingHandler` wrote into the redacted
-        // document (anonymisation-placeholder-id-scope). NOTE: the <id> here is
-        // still the global entity_id, whereas OR now emits a scope-local
-        // number; making the NUMBER match too needs OR to expose its
-        // per-entity placeholder map (tracked as a follow-up). The localized
-        // TYPE is the part this summary owns.
-        // - count: number of EntityRelation rows in the group (i.e.
-        // how many times this entity got redacted in this file).
-        // - bases: set-union of `bases` arrays across the group.
-        // - baseLabels: bases resolved to human-readable Dutch names,
-        // comma-joined for direct render.
+        // - placeholder: the SCOPE-LOCAL placeholder, resolved from either
+        // (1) the relation's stored `anonymized_value` when it IS a real
+        // placeholder (OpenRegister persists each entity's exact emitted
+        // placeholder there at anonymise time — authoritative), or
+        // (2) the recomputed/live `$placeholderMap` for this entity id
+        // (dossier on-demand recompute / live anonymise map).
+        // There is NO global-id fallback: an entity for which neither yields
+        // a scope-local placeholder is OMITTED (a global id is relatable).
+        // - count: number of EntityRelation rows in the group.
+        // - bases / baseLabels: set-union of bases across the group.
         $grouped = [];
+        $omitted = 0;
         foreach ($rawRows as $row) {
             $entityId   = (int) ($row['entity_id'] ?? 0);
             $entityType = (string) ($row['entity_type'] ?? '');
@@ -1251,13 +1249,33 @@ class GrondslagenSummaryService
             $key        = $entityType.':'.$entityId;
 
             if (isset($grouped[$key]) === false) {
-                // Prefer the EXACT placeholder OpenRegister emitted for this
-                // global entity id (carries the scope-local number + localized
-                // label, so the summary legend matches the redacted document).
-                // Fall back to re-deriving `[<localizedTYPE>: <entity_id>]` only
-                // when no map was supplied (e.g. the on-demand per-dossier
-                // report, or an older OpenRegister without getLastPlaceholderMap).
-                $placeholder = ($placeholderMap[(string) $entityId] ?? '['.$this->localizeEntityType(entityType: $entityType).': '.$entityId.']');
+                // Resolve the SCOPE-LOCAL placeholder. We NEVER fall back to the
+                // global entity_id: a global id is a relatable cross-disclosure
+                // handle, so an entity for which we cannot establish a
+                // scope-local placeholder is OMITTED from the summary entirely
+                // rather than leaked.
+                //
+                // The caller-supplied map wins: it is computed for THIS report's
+                // scope (dossier-wide for the per-dossier report, per-document
+                // for the single-file report), so it carries the numbering the
+                // reader expects. The placeholder OpenRegister persisted in
+                // anonymized_value is per-document; it is only a fallback for
+                // when no live map is available (e.g. a report regenerated long
+                // after anonymisation).
+                $stored      = (string) ($row['anonymized_value'] ?? '');
+                $placeholder = null;
+                if (isset($placeholderMap[(string) $entityId]) === true) {
+                    // Tier 1 — scope-correct map from the caller.
+                    $placeholder = $placeholderMap[(string) $entityId];
+                } else if (preg_match('/^\[[^:\]]+:\s*\d+\]$/u', $stored) === 1) {
+                    // Tier 2 — the per-document placeholder OpenRegister persisted.
+                    $placeholder = $stored;
+                }
+
+                if ($placeholder === null) {
+                    $omitted++;
+                    continue;
+                }
 
                 $grouped[$key] = [
                     'entityId'    => $entityId,
@@ -1267,7 +1285,7 @@ class GrondslagenSummaryService
                     'count'       => 0,
                     'basesSet'    => [],
                 ];
-            }
+            }//end if
 
             $grouped[$key]['count']++;
 
@@ -1278,6 +1296,15 @@ class GrondslagenSummaryService
                 }
             }
         }//end foreach
+
+        if ($omitted > 0) {
+            // PII-free: count only. Surfaces stale relations with no recoverable
+            // scope-local placeholder, deliberately left out of the summary.
+            $this->logger->info(
+                'GrondslagenSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
+                ['fileId' => $fileId, 'omitted' => $omitted]
+            );
+        }
 
         $shaped = [];
         foreach ($grouped as $group) {
@@ -1616,7 +1643,10 @@ class GrondslagenSummaryService
      */
     private function isOpenRegisterAvailable(): bool
     {
-        return in_array('openregister', $this->appManager->getInstalledApps(), true);
+        // Defensive `?? []`: getInstalledApps() is array-typed in production but
+        // a bare mock returns null, and PHP 8.4 makes in_array(x, null) a fatal
+        // TypeError rather than a warning.
+        return in_array('openregister', ($this->appManager->getInstalledApps() ?? []), true);
 
     }//end isOpenRegisterAvailable()
 
