@@ -159,7 +159,6 @@ export default {
    regardless of stylesheet order. */
 .content.content:not(.content--legacy) {
 	padding: 8px;
-	background-color: var(--background-color, #EAE9E6);
 }
 
 .open-register-icon {
