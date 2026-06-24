@@ -696,10 +696,28 @@ export const useAnonymizationStore = defineStore(
 			 * @param {object} [options] Anonymisation options, forwarded to
 			 *   `anonymiseEntry` (see its signature for `appendBasisSummary`
 			 *   and `outputFormat`).
+			 * @param {Array<number>} [options.fileIds] Scope the run to these
+			 *   file ids (a dossier's files); omit to run every extracted entry.
+			 * @param {Array<object>} [options.files] File descriptors to extract
+			 *   before anonymising — covers dossier files the user never opened,
+			 *   which are otherwise missing from the queue.
 			 * @return {Promise<void>}
 			 */
 			async anonymiseAllExtracted(options = {}) {
-				const { fileIds, ...entryOptions } = options
+				const { fileIds, files, ...entryOptions } = options
+
+				// Dossier batch: the listing may contain files the user never
+				// opened in the viewer, so they were never lazily extracted and
+				// aren't in the queue yet. Extract them first — otherwise the
+				// run silently skips every un-opened file. ensureExtracted is a
+				// no-op for files already in the queue, so this is idempotent.
+				if (Array.isArray(files) && files.length > 0) {
+					this.batch = { running: true, total: 0, done: 0, failed: 0 }
+					for (const meta of files) {
+						await this.ensureExtracted(meta)
+					}
+				}
+
 				const scope = fileIds ? new Set(fileIds.map(Number)) : null
 
 				// Snapshot the targets up-front: anonymiseEntry mutates each

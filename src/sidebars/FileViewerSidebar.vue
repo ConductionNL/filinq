@@ -356,6 +356,35 @@ export default {
 				.map((d) => d.fileId)
 		},
 		/**
+		 * The dossier's source files: every listed file that isn't a folder
+		 * or an already-anonymised `_anonymized` output. This is the full set
+		 * the batch run covers — taken from the listing, NOT from the store's
+		 * `extracted` queue, because extraction is lazy (only the opened file
+		 * is extracted), so the queue under-counts files until each is opened.
+		 *
+		 * @return {Array<object>}
+		 */
+		dossierSourceFiles() {
+			return myDocumentsStore.documents.filter(
+				(d) => !d.isFolder && !d.isAnonymized,
+			)
+		},
+		/**
+		 * Dossier source files still awaiting anonymisation — a file is
+		 * pending unless its store entry is already `completed` or `error`.
+		 * Drives the batch button count, so it reflects the whole dossier
+		 * straight after upload instead of only the files opened so far.
+		 *
+		 * @return {Array<object>}
+		 */
+		pendingSourceFiles() {
+			return this.dossierSourceFiles.filter((d) => {
+				const entry = anonymizationStore.findByFileId(d.fileId)
+				return !entry
+					|| (entry.status !== 'completed' && entry.status !== 'error')
+			})
+		},
+		/**
 		 * Display name of the current dossier (last path segment) — used as the
 		 * zip file name for the "Download all" bundle.
 		 *
@@ -374,13 +403,15 @@ export default {
 			return anonymizationStore.batch
 		},
 		/**
-		 * Number of dossier files still awaiting anonymisation (entries in the
-		 * `extracted` state). Drives the batch button count and disabled state.
+		 * Number of dossier files still awaiting anonymisation. Counts the
+		 * listing's pending source files (see `pendingSourceFiles`) rather than
+		 * the store's `extracted` queue, so it covers files not yet opened —
+		 * the batch is one unit, so the count must reflect the whole dossier.
 		 *
 		 * @return {number}
 		 */
 		batchCount() {
-			return anonymizationStore.extractedInFiles(this.dossierFileIds).length
+			return this.pendingSourceFiles.length
 		},
 		/**
 		 * Completed (anonymised) dossier files with a downloadable result —
@@ -761,12 +792,22 @@ export default {
 		 * @return {Promise<void>}
 		 */
 		async anonymizeAll() {
-			const fileIds = this.dossierFileIds
+			// Scope the run to the dossier's pending source files and pass full
+			// descriptors: the store extracts any file the user never opened
+			// before anonymising, so the batch covers the whole dossier — not
+			// just the files that happened to be opened in the viewer.
+			const files = this.pendingSourceFiles.map((d) => ({
+				fileId: d.fileId,
+				fileName: d.fileName,
+				path: `${myDocumentsStore.currentPath}/${d.fileName}`,
+				mimeType: d.mimeType,
+			}))
+			const fileIds = files.map((f) => f.fileId)
 			// When grondslagen are on, append the basis summary and render to
 			// PDF — both flags must travel together (see anonymiseEntry).
 			const options = this.grondslagen
-				? { fileIds, appendBasisSummary: true, outputFormat: 'pdf' }
-				: { fileIds }
+				? { files, fileIds, appendBasisSummary: true, outputFormat: 'pdf' }
+				: { files, fileIds }
 			await anonymizationStore.anonymiseAllExtracted(options)
 			// Each run writes a new `_anonymized` file into the dossier folder;
 			// refresh so the results show up without leaving and re-entering.
@@ -1130,8 +1171,11 @@ export default {
 }
 
 /* Dossier batch footer stacks its button(s) and summary vertically rather
- * than sharing one row. */
+ * than sharing one row. Override --color-main-background to opaque white so
+ * the inherited `background-color: var(--color-main-background)` matches the
+ * header band (the sidebar re-points that var to translucent white-54). */
 .sidebar-action-bar--stacked {
+	--color-main-background: #fff;
 	flex-direction: column;
 	gap: 6px;
 }

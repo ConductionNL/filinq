@@ -378,6 +378,41 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 		expect(store.batch.running).toBe(false)
 	})
 
+	it('extracts dossier files the user never opened before anonymising', async () => {
+		const store = useAnonymizationStore()
+		// Only file 1 is in the queue (the file the user opened); files 2 and 3
+		// were uploaded but never opened, so they must be extracted on the fly
+		// before the batch can anonymise them.
+		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }]
+
+		axios.post.mockImplementation((url) => {
+			if (String(url).includes('/extract/')) {
+				return Promise.resolve({
+					data: {
+						entities: [
+							{ type: 'PERSON', value: 'X', confidence: 0.9, relationIds: [1] },
+						],
+					},
+				})
+			}
+			return Promise.resolve({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+		})
+
+		await store.anonymiseAllExtracted({
+			fileIds: [1, 2, 3],
+			files: [
+				{ fileId: 2, fileName: 'b.pdf', path: '/DocuDesk/D/b.pdf' },
+				{ fileId: 3, fileName: 'c.pdf', path: '/DocuDesk/D/c.pdf' },
+			],
+		})
+
+		expect(store.findByFileId(2)).toBeDefined()
+		expect(store.findByFileId(3)).toBeDefined()
+		expect(store.batch.total).toBe(3)
+		expect(store.batch.done).toBe(3)
+		expect(store.files.every((f) => f.status === 'completed')).toBe(true)
+	})
+
 	it('does not forward the fileIds scope as an anonymise option', async () => {
 		const store = useAnonymizationStore()
 		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }]
