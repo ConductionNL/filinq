@@ -547,6 +547,42 @@ export default {
 				}))
 		},
 		/**
+		 * The anonymised-card list currently on screen: the re-opened document's
+		 * resolved entities, or the just-finished run's removed entities. Backs
+		 * the header summary so the title counts whatever the body shows. Empty
+		 * in every other state.
+		 *
+		 * @return {Array<object>}
+		 */
+		anonymizedSummaryList() {
+			if (this.entry?.viewMode === 'anonymized') {
+				return this.entry.entities || []
+			}
+			if (this.isCompletedResult) {
+				return this.removedEntities
+			}
+			return []
+		},
+		/**
+		 * Unique values in the anonymised view — one per card. Matches the number
+		 * of rows the user can count.
+		 *
+		 * @return {number}
+		 */
+		summaryFound() {
+			return this.anonymizedSummaryList.length
+		},
+		/**
+		 * Total occurrences across the document: the sum of each card's `count`
+		 * (the "Nx" badge). Higher than `summaryFound` when a value appears more
+		 * than once.
+		 *
+		 * @return {number}
+		 */
+		summaryOccurrences() {
+			return this.anonymizedSummaryList.reduce((sum, e) => sum + (e.count || 1), 0)
+		},
+		/**
 		 * Review entities filtered by the header search, paired with their
 		 * original index in `entry.entities` so the store mutators
 		 * (toggle/set-bases) still target the correct row. Matches the query
@@ -660,13 +696,14 @@ export default {
 			if (this.isEditing) {
 				return t('docudesk', 'Add new data')
 			}
-			if (this.entry?.viewMode === 'anonymized') {
-				return n(
-					'docudesk',
-					'%n item anonymised',
-					'%n items anonymised',
-					this.entry.entities.length,
-				)
+			// Anonymised result — re-opened document or the just-finished run:
+			// the title summarises the removed data (unique values vs total
+			// occurrences) instead of a bare "items anonymised" count.
+			if (this.entry?.viewMode === 'anonymized' || this.isCompletedResult) {
+				return t('docudesk', '{found} unique data found · {occurrences} occurrences', {
+					found: this.summaryFound,
+					occurrences: this.summaryOccurrences,
+				})
 			}
 			if (this.entry && Array.isArray(this.entry.entities)) {
 				return n(

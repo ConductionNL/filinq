@@ -1,5 +1,6 @@
 {
     "translations": {
+        "{found} unique data found · {occurrences} occurrences": "{found} unique data found · {occurrences} occurrences",
         "Dashboard": "Dashboard",
         "Anonymization": "Anonymization",
         "Create dossier": "Create dossier",

@@ -20,7 +20,8 @@ import DdEntityCard from './DdEntityCard.vue'
  * original value stacked above the anonymised placeholder it was replaced with.
  * Used in two places that previously each duplicated this markup: the
  * post-anonymise download step and the re-opened anonymised-document view in
- * `FileViewerSidebar`.
+ * `FileViewerSidebar`. The unique-values / occurrences summary lives in the
+ * sidebar header title (see `FileViewerSidebar.sidebarTitle`).
  */
 export default {
 	name: 'DdRemovedEntitiesList',
