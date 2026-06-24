@@ -1,5 +1,5 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translate as t } from '@nextcloud/l10n'
 import { NcSelect } from '@nextcloud/vue'
 import DdSkeleton from './DdSkeleton.vue'
 import { entityTypeColor } from '../services/entityTypes.js'
@@ -15,23 +15,19 @@ import { entityTypeColor } from '../services/entityTypes.js'
 		</div>
 	</div>
 
-	<!-- Anonymised-document view — read-only, value hidden behind reveal. -->
+	<!-- Anonymised-document view — read-only. Shows the original value and the
+	     anonymised placeholder it was replaced with, stacked together. -->
 	<div v-else-if="mode === 'anonymized'" class="dd-entity-card">
 		<div class="dd-entity-card__header">
 			<span
 				class="dd-entity-card__type"
 				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ item.type }}</span>
-			<span class="dd-entity-card__confidence">
-				{{ n('docudesk', '%n occurrence', '%n occurrences', item.count) }}
-			</span>
+			<span class="dd-entity-card__count">{{ item.count }}x</span>
 		</div>
-		<div
-			v-if="revealValues"
-			class="dd-entity-card__value"
-			:title="item.value || ''">
+		<div class="dd-entity-card__value" :title="item.value || ''">
 			{{ item.value || t('docudesk', 'Unknown value') }}
 		</div>
-		<div v-else class="dd-entity-card__value dd-entity-card__value--hidden">
+		<div class="dd-entity-card__value dd-entity-card__value--hidden">
 			{{ item.placeholder }}
 		</div>
 		<div v-if="item.bases && item.bases.length" class="dd-entity-card__bases-tags">
@@ -89,8 +85,8 @@ import { entityTypeColor } from '../services/entityTypes.js'
  *
  * Renders one of three states selected by props:
  *   - `loading`            → skeleton placeholder (no `item` required).
- *   - `mode="anonymized"`  → read-only summary of a removed entity, with
- *                            its original value hidden behind `revealValues`.
+ *   - `mode="anonymized"`  → read-only summary of a removed entity: its
+ *                            original value plus the anonymised placeholder.
  *   - `mode="review"`      → editable: include checkbox + grondslagen select.
  *
  * The card owns no store state; it emits `toggle` and `set-bases` so the
@@ -122,14 +118,6 @@ export default {
 		 * Render the skeleton placeholder instead of an entity.
 		 */
 		loading: {
-			type: Boolean,
-			default: false,
-		},
-		/**
-		 * Anonymised view only — show the original value instead of the
-		 * `[<TYPE>: <id>]` placeholder.
-		 */
-		revealValues: {
 			type: Boolean,
 			default: false,
 		},
@@ -219,6 +207,14 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* Occurrence count for the anonymised view, shown as "3x". */
+.dd-entity-card__count {
+	flex: 0 0 auto;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+}
+
 .dd-entity-card__value {
 	font-size: 0.95rem;
 	font-weight: 500;
@@ -240,8 +236,9 @@ export default {
 	font-size: 0.75rem;
 }
 
-/* Anonymised-document view — placeholder shown until the user reveals the
- * original value, plus the read-only grondslagen tags. */
+/* Anonymised-document view — the placeholder the value was replaced with,
+ * rendered below the original value in a muted monospace so the two read as
+ * "original → anonymised". */
 .dd-entity-card__value--hidden {
 	font-family: var(--font-face-monospace, monospace);
 	color: var(--color-text-maxcontrast);
