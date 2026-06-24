@@ -228,6 +228,8 @@
         "Anonymize %n entity": ["%n entiteit anonimiseren", "%n entiteiten anonimiseren"],
         "Sidebar": "Zijbalk",
         "Detecting entities…": "Entiteiten detecteren…",
+        "Anonymising…": "Anonimiseren…",
+        "Removing the selected entities from the document. This can take a moment.": "De geselecteerde entiteiten worden uit het document verwijderd. Dit kan even duren.",
         "Failed to load entities": "Entiteiten laden mislukt",
         "Failed to load": "Laden mislukt",
         "Automatic detection. Always verify yourself.": "Automatische herkenning. Blijf zelf controleren.",

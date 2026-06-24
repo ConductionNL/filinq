@@ -125,6 +125,8 @@ OC.L10N.register(
 		"Deselect All Visible": "Alle zichtbare deselecteren",
 		"Detected Entities": "Gedetecteerde entiteiten",
 		"Detecting entities…": "Entiteiten detecteren…",
+		"Anonymising…": "Anonimiseren…",
+		"Removing the selected entities from the document. This can take a moment.": "De geselecteerde entiteiten worden uit het document verwijderd. Dit kan even duren.",
 		"Detecting...": "Detecteren...",
 		"DocuDesk needs the OpenRegister app to store and manage data. Please install OpenRegister from the app store to get started.": "DocuDesk heeft de OpenRegister-app nodig om gegevens op te slaan en te beheren. Installeer OpenRegister vanuit de app store om te beginnen.",
 		"Document": "Document",

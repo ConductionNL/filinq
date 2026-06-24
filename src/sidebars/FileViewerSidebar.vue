@@ -52,6 +52,20 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<DdEntityCard v-for="i in 4" :key="'skeleton-' + i" loading />
 			</div>
 
+			<!-- Anonymising state: the anonymise PATCH+POST round-trip is in
+			     flight. The `extracted` action bar (with the button) has
+			     unmounted, so show an explicit centred loader here instead of
+			     leaving the panel blank while the backend works. -->
+			<div v-else-if="isAnonymising" class="anonymising-state">
+				<NcLoadingIcon :size="44" />
+				<p class="anonymising-state__label">
+					{{ t('docudesk', 'Anonymising…') }}
+				</p>
+				<p class="anonymising-state__hint">
+					{{ t('docudesk', 'Removing the selected entities from the document. This can take a moment.') }}
+				</p>
+			</div>
+
 			<!-- Error state. -->
 			<NcNoteCard v-else-if="entry && entry.status === 'error'" type="error">
 				{{ entry.error || t('docudesk', 'Failed to load entities') }}
@@ -1113,6 +1127,28 @@ export default {
 .empty-state {
 	padding: 24px 12px;
 	text-align: center;
+	color: var(--color-text-maxcontrast);
+}
+
+/* Anonymising loader — centred spinner + label shown while the anonymise
+ * round-trip runs and the extracted action bar has unmounted. */
+.anonymising-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 48px 24px;
+	text-align: center;
+}
+
+.anonymising-state__label {
+	margin: 0;
+	font-weight: 600;
+}
+
+.anonymising-state__hint {
+	margin: 0;
+	font-size: 0.85rem;
 	color: var(--color-text-maxcontrast);
 }
 
