@@ -164,11 +164,12 @@ class GrondslagenSummaryService
      *
      * @throws RuntimeException When template rendering, PDF merging, or file write fails.
      */
-    public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId): File
+    public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
         $summaryBytes = $this->renderPerDocumentSummary(
             anonymisedFile: $anonymisedFile,
-            sourceFileId: $sourceFileId
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
         );
 
         $combinedBytes = $this->mergeSummaryIntoPdf(
@@ -213,11 +214,12 @@ class GrondslagenSummaryService
      *
      * @throws RuntimeException When rendering or write fails.
      */
-    public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId): File
+    public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
         $summaryBytes = $this->renderPerDocumentSummary(
             anonymisedFile: $anonymisedFile,
-            sourceFileId: $sourceFileId
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
         );
 
         $parent          = $anonymisedFile->getParent();
@@ -1014,7 +1016,7 @@ class GrondslagenSummaryService
      * @return array<int, array<string, mixed>> Rows shaped as
      *         `{relationId, entityText, entityType, anonymizedValue, bases, baseLabels}`.
      */
-    private function loadAnonymisedEntitiesForFile(int $fileId): array
+    private function loadAnonymisedEntitiesForFile(int $fileId, array $placeholderMap=[]): array
     {
         $mapper = $this->getEntityRelationMapper();
         if ($mapper === null) {
@@ -1079,11 +1081,20 @@ class GrondslagenSummaryService
             $key        = $entityType.':'.$entityId;
 
             if (isset($grouped[$key]) === false) {
+                // Prefer the EXACT placeholder OpenRegister emitted for this
+                // global entity id (carries the scope-local number + localized
+                // label, so the summary legend matches the redacted document).
+                // Fall back to re-deriving `[<localizedTYPE>: <entity_id>]` only
+                // when no map was supplied (e.g. the on-demand per-dossier
+                // report, or an older OpenRegister without getLastPlaceholderMap).
+                $placeholder = ($placeholderMap[(string) $entityId]
+                    ?? '['.$this->localizeEntityType(entityType: $entityType).': '.$entityId.']');
+
                 $grouped[$key] = [
                     'entityId'    => $entityId,
                     'entityType'  => $entityType,
                     'entityText'  => $entityText,
-                    'placeholder' => '['.$this->localizeEntityType(entityType: $entityType).': '.$entityId.']',
+                    'placeholder' => $placeholder,
                     'count'       => 0,
                     'basesSet'    => [],
                 ];
@@ -1167,9 +1178,9 @@ class GrondslagenSummaryService
      *
      * @throws RuntimeException When template or PDF rendering fails.
      */
-    private function renderPerDocumentSummary(File $anonymisedFile, int $sourceFileId): string
+    private function renderPerDocumentSummary(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): string
     {
-        $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId);
+        $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId, placeholderMap: $placeholderMap);
         $distinctBases = $this->countDistinctBases(entities: $entities);
 
         $totalOccurrences = 0;

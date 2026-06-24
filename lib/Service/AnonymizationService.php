@@ -220,6 +220,18 @@ class AnonymizationService
                 $residualEntities = $fileService->getLastResidualEntities();
             }
 
+            // Per-entity placeholder map (anonymisation-placeholder-id-scope):
+            // the EXACT placeholder OpenRegister emitted per global entity id
+            // (e.g. `"7" => "[PERSOON: 1]"`), so the grondslagen-summary renders
+            // the same scope-local number + localized label the document carries
+            // instead of re-deriving `[<TYPE>: <entity_id>]`. Defensive
+            // method_exists() for older OpenRegister versions (summary then
+            // falls back to the global id).
+            $placeholderMap = [];
+            if (method_exists($fileService, 'getLastPlaceholderMap') === true) {
+                $placeholderMap = $fileService->getLastPlaceholderMap();
+            }
+
             $this->logger->info(
                 'Document anonymized',
                 [
@@ -287,7 +299,8 @@ class AnonymizationService
                 $resultInfo = $this->attachGrondslagenSummary(
                     anonymisedNode: $result,
                     sourceFileId: $fileId,
-                    resultInfo: $resultInfo
+                    resultInfo: $resultInfo,
+                    placeholderMap: $placeholderMap
                 );
             }
 
@@ -563,13 +576,18 @@ class AnonymizationService
      * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
      * @param int                  $sourceFileId   The pre-anonymisation source file id (used to look
      *                                             up the EntityRelation rows that carry the bases).
-     * @param array<string, mixed> $resultInfo     The current result info — extended with the
-     *                                             summary's `summaryFileId` / `warning` fields and
-     *                                             returned.
+     * @param array<string, mixed>  $resultInfo     The current result info — extended with the
+     *                                              summary's `summaryFileId` / `warning` fields and
+     *                                              returned.
+     * @param array<string, string> $placeholderMap OpenRegister's per-entity placeholder map
+     *                                              (global entity id → emitted placeholder, e.g.
+     *                                              `"7" => "[PERSOON: 1]"`) so the summary renders
+     *                                              the SAME placeholder the document carries. Empty
+     *                                              → summary falls back to `[<TYPE>: <entity_id>]`.
      *
      * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo, array $placeholderMap=[]): array
     {
         if (($anonymisedNode instanceof \OCP\Files\File) === false) {
             $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
@@ -583,13 +601,15 @@ class AnonymizationService
             if ($isPdf === true) {
                 $this->grondslagenSummary->appendSummaryToPdf(
                     anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
                 );
                 $resultInfo['summaryAppended'] = true;
             } else {
                 $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
                     anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
                 );
                 $resultInfo['summaryAppended'] = false;
                 $resultInfo['summaryFileId']   = $summaryFile->getId();
