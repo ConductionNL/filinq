@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # anonymisation-prohibition-gate Specification
 
 ## Purpose
-TBD - created by archiving change anonymisation-prohibition-gate. Update Purpose after archive.
+Enforces publication-prohibition policies during anonymisation by checking every detected entity against active prohibition rules before forwarding a request to OpenRegister. High-confidence prohibited entities must be included in the set to be anonymised or the request is rejected with HTTP 422, while low-confidence matches can be released through acknowledged overrides that record an audit entry and flag the entity to skip redaction. This ensures legally protected entities cannot be left unredacted without an explicit, audited operator decision.
 ## Requirements
 ### Requirement: The anonymise endpoint MUST consult the prohibition cache before forwarding the request
 

@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # document-creatie-sjablonen Specification
 
 ## Purpose
-TBD - created by archiving change document-creatie-sjablonen. Update Purpose after archive.
+Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.
 ## Requirements
 ### Requirement: REQ-DCS-01 Data Resolution from OpenRegister (Priority: Must)
 

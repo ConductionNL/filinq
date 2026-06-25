@@ -46,6 +46,8 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\DocuDesk\Controller\HealthController;
 use OCA\DocuDesk\Controller\MetricsController;
+use OCA\OpenRegister\AppHost\Controller\GenericDashboardController;
+use OCA\OpenRegister\AppHost\Controller\GenericPreferencesController;
 use OCP\Files\Conversion\IConversionManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -177,6 +179,65 @@ class Application extends App implements IBootstrap
         // supply the engine dependencies the subclasses inherit from the
         // generic controllers' constructors.
         $this->registerAppHostObservability(context: $context);
+
+        // AppHost boilerplate adoption (ADR-040). The bespoke DashboardController
+        // (SPA page + catch-all) and PreferencesController (per-user key/value
+        // UI flags) were byte-for-byte copies of OpenRegister's shared AppHost
+        // generics, so bind docudesk's conventional AppHost controller class
+        // names to the engine generics with docudesk's app id injected as
+        // $appName. URLs, route names' targets and JSON contracts are unchanged;
+        // the engine owns the (identical) auth posture so the leaf cannot drift
+        // it. The bespoke classes were deleted.
+        //
+        // NOT adopted (kept bespoke — domain-entangled): SettingsController
+        // (its index() merges the openregister-installed flag + isAdmin +
+        // anonymiser-backend warning state on top of the bespoke
+        // SettingsService->getAllSettings() envelope, and create() is
+        // admin-gated via AuthorizedAdminSetting(DocuDeskAdmin::class) +
+        // explicit isAdmin recheck — the generic SettingsController reproduces
+        // none of that), the DocuDeskAdmin AdminSettings, and the GDPR/consent,
+        // anonymisation, PDF/print, signing and dossier domain controllers.
+        //
+        // The /api/preferences/{key} and / + /{path} routes resolve to
+        // leaf-namespaced AppHost controller class names
+        // (OCA\DocuDesk\AppHost\Controller\Generic{Dashboard,Preferences}Controller)
+        // that do not physically exist in this app — same pattern as the
+        // Health/Metrics adoption above. Register them as services that
+        // construct the OpenRegister generics with docudesk's id injected as
+        // $appName, so templates/index.php and the `pref_` user-value namespace
+        // are scoped to docudesk, never OpenRegister.
+        $context->registerService(
+            'OCA\\DocuDesk\\AppHost\\Controller\\GenericDashboardController',
+            static function (ContainerInterface $container): GenericDashboardController {
+                return new GenericDashboardController(
+                    appName: self::APP_ID,
+                    request: $container->get(\OCP\IRequest::class)
+                );
+            }
+        );
+        // The conventional `dashboard#page` route resolves to this real
+        // DashboardController subclass; register it explicitly (mirroring
+        // procest) so NC's DI constructs it from IRequest — the AppHost engine
+        // base otherwise expects an injected `string $appName`.
+        $context->registerService(
+            \OCA\DocuDesk\Controller\DashboardController::class,
+            static function (ContainerInterface $container): \OCA\DocuDesk\Controller\DashboardController {
+                return new \OCA\DocuDesk\Controller\DashboardController(
+                    request: $container->get(\OCP\IRequest::class)
+                );
+            }
+        );
+        $context->registerService(
+            'OCA\\DocuDesk\\AppHost\\Controller\\GenericPreferencesController',
+            static function (ContainerInterface $container): GenericPreferencesController {
+                return new GenericPreferencesController(
+                    appName: self::APP_ID,
+                    request: $container->get(\OCP\IRequest::class),
+                    config: $container->get(\OCP\IConfig::class),
+                    userSession: $container->get(\OCP\IUserSession::class)
+                );
+            }
+        );
     }//end register()
 
     /**

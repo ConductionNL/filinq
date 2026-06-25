@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # entity-publication-policies Specification
 
 ## Purpose
-TBD - created by archiving change publication-prohibition-schema. Update Purpose after archive.
+Defines the `publicationProhibition` schema in the consent register, an entity-level deny-list where each rule names a person or organisation that must always be anonymised when detected in a publication-bound document, regardless of any consent. Rules carry match criteria (exact, normalized, BSN, KVK), legal authority, severity, validity window, and active state, and are importable on app install and queryable via the OpenRegister API. This provides the policy data that anonymisation and publication-clearance flows match detected entities against.
 ## Requirements
 ### Requirement: A `publicationProhibition` schema MUST exist in the consent register
 

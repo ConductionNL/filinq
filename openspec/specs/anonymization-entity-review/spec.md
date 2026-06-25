@@ -1,3 +1,7 @@
+---
+status: done
+---
+
 ## Purpose
 
 @e2e exclude entity review UI for batch anonymization is not yet shipped in the current DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review table are unbuilt; covered by PHPUnit and API contract tests when implemented

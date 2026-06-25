@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # pdf-conversion Specification
 
 ## Purpose
-TBD - created by archiving change pdf-conversion-service. Update Purpose after archive.
+Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives DocuDesk a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.
 ## Requirements
 ### Requirement: A `PdfConversionService` MUST exist that converts files to PDF/A-3b
 

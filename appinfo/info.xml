@@ -22,11 +22,11 @@ DocuDesk provides GDPR-compliant publication consent tracking (Wet Open Overheid
 
 Requirements can be found [here](https://conduction.gitbook.io/docudesk-nextcloud/installatie)
 
-The Roadmap is available [here](https://github.com/orgs/docudesk/projects/1/views/2)
+The Roadmap is available [here](https://codeberg.org/Conduction/docudesk/milestones)
 
-Create a [bug report](https://github.com/docudesk/.github/issues/new/choose)
+Create a [bug report](https://codeberg.org/Conduction/docudesk/issues/new)
 
-Create a [feature request](https://github.com/docudesk/.github/issues/new/choose)
+Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
@@ -35,9 +35,9 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
     <category>organization</category>
-    <website>https://github.com/ConductionNL/DocuDesk</website>
-    <bugs>https://github.com/ConductionNL/DocuDesk/issues</bugs>
-    <repository>https://github.com/ConductionNL/docudesk</repository>
+    <website>https://codeberg.org/Conduction/docudesk</website>
+    <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
+    <repository>https://codeberg.org/Conduction/docudesk</repository>
     <documentation>
         <user>https://conduction.gitbook.io/docudesk-nextcloud/</user>
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>

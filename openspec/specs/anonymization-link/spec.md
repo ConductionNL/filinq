@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # anonymization-link Specification
 
 ## Purpose
-TBD - created by archiving change anonymization-link-schema. Update Purpose after archive.
+Records the mapping between a source Nextcloud file and its anonymised counterpart through an `anonymizationLink` schema in the document register. Each successful run persists the source and anonymised file IDs, names, paths, output format, replacement count, and operator, with both file IDs made facetable so links can be looked up in either direction via the OpenRegister search API. This provides a queryable, idempotent record of which documents have been anonymised and into what.
 ## Requirements
 ### Requirement: AnonymizationLink Schema — Data Model (REQ-ALINK-01)
 

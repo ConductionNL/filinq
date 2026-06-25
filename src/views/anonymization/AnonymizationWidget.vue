@@ -5,10 +5,6 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 
 <template>
 	<div class="anonymization-widget">
-		<h2 class="page-title">
-			{{ greeting }}<br>
-			{{ t('docudesk', 'what would you like to anonymize today?') }}
-		</h2>
 		<!-- Drop zone -->
 		<div class="upload-area">
 			<div
@@ -95,7 +91,6 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
-import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import uploadIcon from '../../assets/upload.png'
@@ -165,34 +160,7 @@ export default {
 			recentLoading: false,
 		}
 	},
-	computed: {
-		/**
-		 * Display name of the currently logged-in Nextcloud user.
-		 *
-		 * @return {string} The user's display name, or their uid as fallback, or empty string when unauthenticated.
-		 */
-		userName() {
-			const user = getCurrentUser()
-			return user?.displayName || user?.uid || ''
-		},
-		/**
-		 * Time-of-day greeting interpolated with the user's display name.
-		 *
-		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
-		 *
-		 * @return {string} Localised greeting like 'Good morning Marco,'.
-		 */
-		greeting() {
-			const hour = new Date().getHours()
-			if (hour >= 5 && hour < 12) {
-				return t('docudesk', 'Good morning {name},', { name: this.userName })
-			}
-			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
-			}
-			return t('docudesk', 'Good evening {name},', { name: this.userName })
-		},
-	},
+	computed: {},
 	mounted() {
 		this.loadRecent()
 	},

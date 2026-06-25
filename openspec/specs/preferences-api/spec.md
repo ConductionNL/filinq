@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # preferences-api Specification
 
 ## Purpose
-TBD - created by archiving change retrofit-2026-05-26-preferences-api. Update Purpose after archive.
+Provides a per-user preference API for reading and writing small UI and workflow settings scoped to the authenticated user within a `pref_` key namespace. Both endpoints require authentication, sanitise the requested key to a safe charset, return a default when unset, and clear a preference when an empty value is supplied. This lets the DocuDesk frontend persist user-specific choices without a dedicated schema.
 
 @e2e exclude Backend per-user preference API: auth enforcement, key sanitization within pref_ namespace, and empty-value clearing — pure HTTP contract with no browser surface. Covered by Newman (/api preference endpoints) and PHPUnit.
 

@@ -15,14 +15,17 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
-    'routes' => [
+// The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
+// catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
+// `Routes::standard()`; both resolve to docudesk's `DashboardController`
+// (which extends the AppHost `GenericDashboardController`), so the route name
+// `docudesk.dashboard.page` that the navigation (info.xml) and the dashboard
+// widgets link to is defined. The app-specific API routes below are passed
+// through as `$extra` and inserted before the catch-all.
+return \OCA\OpenRegister\AppHost\Routes::standard([
         // Metrics and health.
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
-
-        // Dashboard.
-        ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
@@ -136,17 +139,9 @@ return [
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],
 
-        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
-        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
-        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
-
-        // SPA catch-all — serves the Vue app shell for any frontend deep
-        // link (vue-router HTML5 history mode). Must come LAST so it
-        // doesn't shadow specific routes above. The dedicated
-        // `dashboard#catchAll` controller method exists because
-        // `dashboard#page` takes a `getParameter` arg, not a `path`
-        // arg — matching arg names to the route placeholder lets NC's
-        // router inject the captured value cleanly.
-        ['name' => 'dashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
-    ],
-];
+        // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
+        // CnSupportDialog) — served by OpenRegister's AppHost
+        // GenericPreferencesController (aliased in Application::register).
+        ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+]);

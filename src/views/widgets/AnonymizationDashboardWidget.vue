@@ -5,12 +5,6 @@ import { anonymizationStore } from '../../store/store.js'
 
 <template>
 	<div class="docudesk-anon-widget">
-		<!-- Greeting header -->
-		<h2 class="anon-widget__title">
-			{{ greeting }}<br>
-			{{ t('docudesk', 'what would you like to anonymize today?') }}
-		</h2>
-
 		<!-- Results table: shown when files are in the queue -->
 		<div v-if="anonymizationStore.hasFiles" class="results-area">
 			<table class="results-table">
@@ -165,7 +159,6 @@ import { anonymizationStore } from '../../store/store.js'
 
 <script>
 import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
-import { getCurrentUser } from '@nextcloud/auth'
 import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
 import uploadIcon from '../../assets/upload.png'
@@ -231,23 +224,6 @@ export default {
 		 */
 		appUrl() {
 			return generateUrl('/apps/docudesk')
-		},
-		userName() {
-			const user = getCurrentUser()
-			return user?.displayName || user?.uid || ''
-		},
-		/**
-		 * Time-of-day greeting (morning 05–11, afternoon 12–17, evening 18–04).
-		 */
-		greeting() {
-			const hour = new Date().getHours()
-			if (hour >= 5 && hour < 12) {
-				return t('docudesk', 'Good morning {name},', { name: this.userName })
-			}
-			if (hour >= 12 && hour < 18) {
-				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
-			}
-			return t('docudesk', 'Good evening {name},', { name: this.userName })
 		},
 	},
 	methods: {

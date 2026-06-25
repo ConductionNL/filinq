@@ -1,7 +1,11 @@
+---
+status: done
+---
+
 # anonymisation-grondslagen-summary Specification
 
 ## Purpose
-TBD - created by archiving change anonymisation-grondslagen-summary-rendering. Update Purpose after archive.
+Generates legal-basis (grondslagen) summary documents for anonymised files and dossiers, producing PDF/A-3b reports that list each redacted entity alongside the legal grounds under which it was anonymised. It can append a per-document summary page to an anonymised PDF, render a per-dossier summary aggregating entities by document and by grondslag, and regenerate that dossier summary automatically when a review is recorded. This gives operators an auditable record of what was redacted and why.
 ## Requirements
 ### Requirement: A `GrondslagenSummaryService` MUST exist
 

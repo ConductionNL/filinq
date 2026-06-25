@@ -45,8 +45,6 @@ use Throwable;
  */
 class ValidationRunner
 {
-
-
     /**
      * Compute + store the validation verdict for an OpenRegister object.
      *
@@ -80,7 +78,7 @@ class ValidationRunner
                 return;
             }
 
-            $file = $this->resolveFile($rootFolder, $object, $fileId);
+            $file = $this->resolveFile(rootFolder: $rootFolder, object: $object, fileId: $fileId);
             if ($file === null) {
                 return;
             }
@@ -116,7 +114,6 @@ class ValidationRunner
         }//end try
 
     }//end validateObject()
-
 
     /**
      * Resolve the object's owning user's folder and fetch the file by id.

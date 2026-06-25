@@ -67,7 +67,7 @@ const config = createConfig({
             'features/pdf-generation.md',
           ],
           sidebarPath: require.resolve('./sidebars.js'),
-          editUrl: 'https://github.com/ConductionNL/docudesk/tree/main/docs/',
+          editUrl: 'https://codeberg.org/Conduction/docudesk/src/branch/main/docs/',
         },
         blog: false,
         theme: {
@@ -132,8 +132,8 @@ const config = createConfig({
         position: 'right',
       },
       {
-        href: 'https://github.com/ConductionNL/docudesk',
-        label: 'GitHub',
+        href: 'https://codeberg.org/Conduction/docudesk',
+        label: 'Codeberg',
         position: 'right',
       },
       { type: 'localeDropdown', position: 'right' },
