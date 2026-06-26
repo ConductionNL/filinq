@@ -158,7 +158,7 @@ class ConsentScopeValidator
         }
 
         // Validate the merged record against the scope contract.
-        $merged         = array_merge($existing, $update);
+        $merged          = array_merge($existing, $update);
         $merged['scope'] = $existingScope;
         $this->assertValid(consent: $merged);
 

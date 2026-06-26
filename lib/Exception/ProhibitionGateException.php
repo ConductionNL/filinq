@@ -38,19 +38,14 @@ namespace OCA\DocuDesk\Exception;
 class ProhibitionGateException extends \RuntimeException
 {
     /**
-     * @param array<int, array<string, mixed>> $missingProhibitionMatches
-     *   Prohibition-listed entities that are absent from the anonymised set.
-     * @param array<int, array<string, mixed>> $rejectedOverrides
-     *   User-submitted overrides that were rejected by the gate.
-     * @param string|null                      $backendUnavailable
-     *   Non-null when the gate failed closed due to a backend outage; contains
-     *   a human-readable reason string. Null for a normal rule-match block.
-     * @param string                           $message
-     *   Optional exception message (defaults to a generic description).
-     * @param int                              $code
-     *   Exception code.
-     * @param \Throwable|null                  $previous
-     *   Previous exception for chaining.
+     * Construct a new ProhibitionGateException.
+     *
+     * @param array<int, array<string, mixed>> $missingProhibitionMatches Prohibition-listed entities absent from anonymised set.
+     * @param array<int, array<string, mixed>> $rejectedOverrides         User-submitted overrides rejected by the gate.
+     * @param string|null                      $backendUnavailable        Non-null when gate failed closed due to backend outage.
+     * @param string                           $message                   Exception message.
+     * @param int                              $code                      Exception code.
+     * @param \Throwable|null                  $previous                  Previous exception for chaining.
      */
     public function __construct(
         private readonly array $missingProhibitionMatches=[],
@@ -60,7 +55,7 @@ class ProhibitionGateException extends \RuntimeException
         int $code=0,
         ?\Throwable $previous=null
     ) {
-        parent::__construct($message, $code, $previous);
+        parent::__construct(message: $message, code: $code, previous: $previous);
     }//end __construct()
 
     /**
