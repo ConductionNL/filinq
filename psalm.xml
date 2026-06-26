@@ -63,6 +63,8 @@
                 <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
                 <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrail"/>
+                <referencedClass name="OCA\OpenRegister\Db\AuditTrailMapper"/>
                 <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
@@ -77,14 +79,28 @@
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <!-- OpenRegister AppHost controller base classes -->
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericDashboardController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericHealthController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericMetricsController"/>
                 <!-- Additional OCP infrastructure types used across the fleet -->
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
                 <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
+                <referencedClass name="OCP\AppFramework\Middleware"/>
+                <referencedClass name="OCP\Constants"/>
+                <referencedClass name="OCP\Dashboard\IWidget"/>
                 <referencedClass name="OCP\DB\Exception"/>
+                <referencedClass name="OCP\Files\Conversion\IConversionManager"/>
+                <referencedClass name="OCP\ICache"/>
                 <referencedClass name="OCP\IGroup"/>
+                <referencedClass name="OCP\ITempManager"/>
                 <referencedClass name="OCP\IUser"/>
+                <referencedClass name="OCP\Lock\ILockingProvider"/>
+                <referencedClass name="OCP\Lock\LockedException"/>
                 <referencedClass name="OCP\Migration\IRepairStep"/>
+                <referencedClass name="OCP\Settings\IDelegatedSettings"/>
+                <referencedClass name="OCP\Settings\IIconSection"/>
                 <!-- Nextcloud server internals -->
                 <referencedClass name="OC"/>
                 <!-- GuzzleHttp (loaded via composer at runtime) -->

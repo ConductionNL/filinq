@@ -1564,13 +1564,12 @@ class AnonymizationService
         try {
             if ($isPdf === true) {
                 $this->grondslagenSummary->appendSummaryToPdf(
-                    anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
+                    node: $anonymisedNode
                 );
                 $resultInfo['summaryAppended'] = true;
             } else {
                 $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
-                    anonymisedFile: $anonymisedNode,
+                    node: $anonymisedNode,
                     sourceFileId: $sourceFileId
                 );
                 $resultInfo['summaryAppended'] = false;

@@ -17,6 +17,10 @@ parameters:
         - lib/Resources/template
     scanDirectories:
         - vendor/nextcloud/ocp
+        # AppHost controller base classes — OpenRegister is co-installed at runtime.
+        # Scanning its lib/AppHost lets phpstan resolve GenericDashboardController etc.
+        # without needing to include all of OpenRegister in paths.
+        - ../openregister/lib/AppHost
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp

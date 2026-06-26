@@ -1,2 +1,46 @@
 parameters:
-	ignoreErrors: []
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#2 \\$listener of method OCP\\\\AppFramework\\\\Bootstrap\\\\IRegistrationContext\\:\\:registerEventListener\\(\\) expects class\\-string\\<OCP\\\\EventDispatcher\\\\IEventListener\\<OCP\\\\EventDispatcher\\\\Event\\>\\>, 'OCA\\\\\\\\DocuDesk\\\\\\\\EventListener\\\\\\\\DossierCheckedOnListener' given\\.$#"
+			count: 1
+			path: lib/AppInfo/Application.php
+
+		-
+			message: "#^Type OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent in generic type OCP\\\\EventDispatcher\\\\IEventListener\\<OCA\\\\OpenRegister\\\\Event\\\\ObjectUpdatedEvent\\> in PHPDoc tag @implements is not subtype of template type T of OCP\\\\EventDispatcher\\\\Event of interface OCP\\\\EventDispatcher\\\\IEventListener\\.$#"
+			count: 1
+			path: lib/EventListener/DossierCheckedOnListener.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\ConsentService\\:\\:findMatchingStandingConsent\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/ConsentService.php
+
+		-
+			message: "#^Offset 'fileId' on array\\{fileId\\: int, versionTimestamp\\?\\: int\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 3
+			path: lib/Service/DocumentComparisonService.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string and null will always evaluate to false\\.$#"
+			count: 1
+			path: lib/Service/DocumentValidationService.php
+
+		-
+			message: "#^Call to an undefined method OCP\\\\Files\\\\Node\\:\\:putContent\\(\\)\\.$#"
+			count: 1
+			path: lib/Service/GrondslagenSummaryService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\GrondslagenSummaryService\\:\\:aggregateForDossier\\(\\) is unused\\.$#"
+			count: 1
+			path: lib/Service/GrondslagenSummaryService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\GrondslagenSummaryService\\:\\:aggregatePerGrondslag\\(\\) should return array\\<string, array\\{name\\: string, fileCount\\: int, entityCount\\: int\\}\\> but returns array\\<int, array\\{entityCount\\: \\(float\\|int\\), fileCount\\: int\\<1, max\\>, name\\: mixed\\}\\>\\.$#"
+			count: 1
+			path: lib/Service/GrondslagenSummaryService.php
+
+		-
+			message: "#^Method OCA\\\\DocuDesk\\\\Service\\\\GrondslagenSummaryService\\:\\:saveFileToFolder\\(\\) should return OCP\\\\Files\\\\File\\|null but returns OCP\\\\Files\\\\Node\\.$#"
+			count: 1
+			path: lib/Service/GrondslagenSummaryService.php

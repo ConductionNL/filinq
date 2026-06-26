@@ -144,7 +144,7 @@ class GrondslagenSummaryService
         $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
         $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
 
-        $tempInput = tempnam(dir: '/tmp/mpdf', prefix: 'grondsl_in_');
+        $tempInput = tempnam(directory: '/tmp/mpdf', prefix: 'grondsl_in_');
 
         try {
             // Write current file content to a temp file for FPDI to read.
@@ -219,6 +219,60 @@ class GrondslagenSummaryService
         ];
 
     }//end appendSummaryAsSeparatePdf()
+
+    /**
+     * Render a grondslagen summary as a separate PDF beside the anonymised file.
+     *
+     * Used when the anonymised result is NOT a PDF (preserve-mode non-PDF files)
+     * so that the summary cannot be appended inline. The summary is saved as a
+     * sibling file in the same NC folder. Returns the saved NC file node so the
+     * caller can record its fileId and path.
+     *
+     * @param mixed $node         Nextcloud file node of the anonymised preserve-mode file.
+     * @param int   $sourceFileId Source file id (used to look up EntityRelation rows). Currently
+     *                            passed for future use; the entities are loaded from the anonymised
+     *                            node's id (same as appendSummaryAsSeparatePdf).
+     *
+     * @return \OCP\Files\Node The saved summary file node.
+     *
+     * @throws \RuntimeException When the file cannot be saved.
+     *
+     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-4
+     */
+    public function renderSummaryBesideFile(mixed $node, int $sourceFileId): \OCP\Files\Node
+    {
+        $fileId   = (int) $node->getId();
+        $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
+        $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
+
+        $pdfContent = $this->pdfService->renderPdf(
+            templateContent: $html,
+            data: [],
+            options: ['pdfa' => true, 'title' => 'Grondslagen samenvatting']
+        );
+
+        $originalName = $node->getName();
+        // phpcs:disable CustomSn.Functions.NamedParameters - pathinfo() has no named params in PHP 8.3
+        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
+        // phpcs:enable CustomSn.Functions.NamedParameters
+        $summaryName  = $baseName.'_grondslagen.pdf';
+        $parentFolder = $node->getParent();
+
+        $savedNode = $this->saveFileToFolder(
+            folder: $parentFolder,
+            fileName: $summaryName,
+            content: $pdfContent
+        );
+
+        if ($savedNode === null) {
+            throw new \RuntimeException(
+                'Failed to save grondslagen summary beside anonymised file: '.$node->getPath()
+            );
+        }
+
+        return $savedNode;
+
+    }//end renderSummaryBesideFile()
 
     /**
      * Authorise the session user for the given dossier before rendering.
@@ -614,11 +668,11 @@ class GrondslagenSummaryService
         }
 
         $mpdf      = new Mpdf(config: $config);
-        $pageCount = $mpdf->setSourceFile(filename: $sourcePath);
+        $pageCount = $mpdf->setSourceFile(file: $sourcePath);
 
         for ($i = 1; $i <= $pageCount; $i++) {
             $tplId       = $mpdf->importPage(pageNumber: $i);
-            $size        = $mpdf->getTemplateSize(template: $tplId);
+            $size        = $mpdf->getTemplateSize(tpl: $tplId);
             $orientation = 'P';
             if ($size['width'] > $size['height']) {
                 $orientation = 'L';
@@ -628,7 +682,7 @@ class GrondslagenSummaryService
                 orientation: $orientation,
                 newformat: [$size['width'], $size['height']]
             );
-            $mpdf->useTemplate(template: $tplId);
+            $mpdf->useTemplate(tpl: $tplId);
         }
 
         // Add summary page.
