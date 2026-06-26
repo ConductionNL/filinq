@@ -73,7 +73,7 @@ Since the `anonymise-output-as-pdf-by-default` change, the anonymise endpoints p
 
 ### Per-call override: `outputFormat`
 
-The `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batchAnonymize/{batchId}` endpoints accept an optional top-level `outputFormat` field:
+The `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batch/{batchId}/anonymize` endpoints accept an optional top-level `outputFormat` field:
 
 | Value | Behaviour |
 |---|---|
@@ -121,9 +121,56 @@ The un-converted anonymised intermediate is best-effort deleted before the 422 r
 
 `batchAnonymize` accepts the same `outputFormat`. Per-file conversion failure is recorded as an `error` on that file's batch entry (with a `conversionAttempts` array) and the batch continues with the next file rather than aborting.
 
+## Placeholder-numbering scope (`scope`)
+
+Anonymisation replaces each detected entity with a numbered placeholder (e.g. `[PERSOON: 1]`, `[DATUM: 3]`). The `scope` field controls how those numbers are assigned — whether each file is numbered on its own, or a whole folder/dossier shares one consistent numbering so the **same** entity carries the **same** number across every file in the set. The flag is forwarded to OpenRegister, which owns the numbering.
+
+| Value | Behaviour |
+|---|---|
+| `"document"` | Numbers are local to the single file being anonymised. `[PERSOON: 1]` in file A and `[PERSOON: 1]` in file B are unrelated. |
+| `"dossier"` | Numbers are consistent across the dossier folder: a given entity gets the same number in every file of the dossier, so the redacted set reads as one unit. |
+
+### Defaults differ per endpoint
+
+The default matches the typical unit of work, so you usually don't pass `scope` at all:
+
+| Endpoint | Default `scope` | Rationale |
+|---|---|---|
+| `POST /api/anonymization/anonymize/{fileId}` | `"document"` | A single-file call anonymises one file in isolation. |
+| `POST /api/anonymization/batch/{batchId}/anonymize` | `"dossier"` | A batch **is** a folder/dossier, so its files share one numbering. |
+
+Normalisation is lenient and never errors on an unrecognised value: on the single-file endpoint only `"dossier"` selects dossier scope (anything else, including omitted, is per-document); on the batch endpoint only `"document"` selects per-document scope (anything else, including omitted, is dossier).
+
+### `dossierKey` (single-file endpoint)
+
+On `POST /api/anonymization/anonymize/{fileId}`, an optional `dossierKey` names the folder the file belongs to when `scope: "dossier"`. It is the stable identifier of the dossier folder, so numbering stays consistent across separate single-file calls that target the same dossier. When omitted under `scope: "dossier"`, OpenRegister falls back to the file's parent folder. `dossierKey` has no effect under `scope: "document"`.
+
+### Examples
+
+Anonymise one file, numbered on its own (the default — `scope` may be omitted):
+
+```json
+POST /api/anonymization/anonymize/123
+{ "entities": [ ... ], "scope": "document" }
+```
+
+Anonymise one file as part of a dossier, sharing the dossier's numbering:
+
+```json
+POST /api/anonymization/anonymize/123
+{ "entities": [ ... ], "scope": "dossier", "dossierKey": "dossier-7f3a..." }
+```
+
+Anonymise a batch with per-file (independent) numbering, overriding the batch default:
+
+```json
+POST /api/anonymization/batch/abc123/anonymize
+{ "entities": [ ... ], "scope": "document" }
+```
+
 ## API Endpoints (extended)
 
 | Method | URL | Description |
 |--------|-----|-------------|
-| POST | `/api/anonymization/anonymize/{fileId}` | Anonymise a single file. Body supports `entities`, `outputFormat`, `appendBasisSummary`, `excludeTypes`, `minConfidence`. |
-| POST | `/api/anonymization/batchAnonymize/{batchId}` | Anonymise every file in a batch. Body supports `entities`, `outputFormat`, `appendBasisSummary`. |
+| POST | `/api/anonymization/anonymize/{fileId}` | Anonymise a single file. Body supports `entities`, `outputFormat`, `appendBasisSummary`, `excludeTypes`, `minConfidence`, `scope` (default `document`), `dossierKey`. |
+| POST | `/api/anonymization/batch/{batchId}/anonymize` | Anonymise every file in a batch. Body supports `entities`, `outputFormat`, `appendBasisSummary`, `scope` (default `dossier`). |
