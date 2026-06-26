@@ -302,11 +302,7 @@ class ConsentUpdateHandler
             return;
         }
 
-        if ($consentStatusChanged === true) {
-            $rejectedField = 'consentStatus';
-        } else {
-            $rejectedField = 'publicationDecision';
-        }
+        $rejectedField = $consentStatusChanged === true ? 'consentStatus' : 'publicationDecision';
 
         $rejectedValue = (string) $data[$rejectedField];
         $currentValue  = (string) ($existing[$rejectedField] ?? '');

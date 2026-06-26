@@ -109,20 +109,24 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 }
+
 .validation-findings__list {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 }
+
 .validation-findings__item {
 	display: flex;
 	gap: 8px;
 	align-items: baseline;
 	flex-wrap: wrap;
 }
+
 .validation-findings__check {
 	font-weight: bold;
 }
+
 .validation-findings__ocr {
 	color: var(--color-primary-element);
 	text-decoration: underline;

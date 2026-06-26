@@ -172,6 +172,7 @@ class DocuDeskEventListener implements IEventListener
      * @return void
      *
      * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
+     * @psalm-suppress UnusedParam — both params are passed to validateObject() below.
      * @spec           openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
      */
     private function dispatchValidation(Event $event, MetadataService $metadataService, LoggerInterface $logger): void

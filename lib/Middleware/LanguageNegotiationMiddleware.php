@@ -136,16 +136,17 @@ class LanguageNegotiationMiddleware extends Middleware
             $targetHeader = $this->request->getHeader('X-Translation-Target-Language');
             if ($targetHeader !== '' && $targetHeader !== null) {
                 $targetTrim = trim($targetHeader);
-                if (preg_match(self::BCP47_PATTERN, $targetTrim) === 1) {
-                    $this->languageService->setTargetLanguage($targetTrim);
-                } else {
+                if (preg_match(self::BCP47_PATTERN, $targetTrim) !== 1) {
                     $this->logger->warning(
-                            sprintf(
-                        '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
-                        $targetTrim
-                    )
-                            );
+                        sprintf(
+                            '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
+                            $targetTrim
+                        )
+                    );
+                    return;
                 }
+
+                $this->languageService->setTargetLanguage($targetTrim);
             }
         }
     }//end beforeController()

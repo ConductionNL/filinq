@@ -383,6 +383,48 @@ class PolicyCrudService
     }//end deleteStandingConsent()
 
     /**
+     * Public alias for assertProhibitionPermission — called by PolicyController.
+     *
+     * Delegates to the private gate so the controller does not need to duplicate
+     * the permission logic. Throws RuntimeException (mapped to 403) when the
+     * current user is not authorised.
+     *
+     * @param string $action The operation being authorised ('read', 'create', 'update', 'delete').
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the current user is not authorised.
+     *
+     * @spec openspec/changes/archive/2026-06-14-publication-prohibition-schema/tasks.md
+     */
+    public function requireProhibitionPermission(string $action): void
+    {
+        $this->assertProhibitionPermission(action: $action);
+
+    }//end requireProhibitionPermission()
+
+    /**
+     * Public alias for assertStandingConsentPermission — called by PolicyController.
+     *
+     * Delegates to the private gate so the controller does not need to duplicate
+     * the permission logic. Throws RuntimeException (mapped to 403) when the
+     * current user is not authorised.
+     *
+     * @param string $action The operation being authorised ('read', 'create', 'update', 'delete').
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the current user is not authorised.
+     *
+     * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
+     */
+    public function requireStandingConsentPermission(string $action): void
+    {
+        $this->assertStandingConsentPermission(action: $action);
+
+    }//end requireStandingConsentPermission()
+
+    /**
      * Enforce service-level standing-consent group membership.
      *
      * Spec §RBAC, scenario "Standing-consent write requires standing-consent

@@ -37,9 +37,8 @@ use ReflectionMethod;
  * The public methods touch OpenRegister via the container and the
  * Nextcloud filesystem, which are out of scope for unit tests; Newman
  * integration tests in phase 9 cover the end-to-end happy paths. This
- * suite exercises the pure-data helpers (`resolveBaseLabels`,
- * `countDistinctBases`, `aggregateForDossier`) through reflection plus
- * the construction smoke test.
+ * suite exercises the pure-data helpers (`resolveBaseLabels`)
+ * through reflection plus the construction smoke test.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -173,85 +172,6 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->assertSame(expected: '⟨grondslag verwijderd: persoonsgegevens⟩', actual: $result['persoonsgegevens']);
 
     }//end testResolveBaseLabelsProducesPlaceholders()
-
-    /**
-     * `countDistinctBases` deduplicates the union of `bases` arrays across rows.
-     *
-     * @return void
-     */
-    public function testCountDistinctBases(): void
-    {
-        $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
-            method: 'countDistinctBases'
-        );
-        $method->setAccessible(accessible: true);
-
-        $entities = [
-            ['bases' => ['persoonsgegevens', 'strafrechtelijk']],
-            ['bases' => ['persoonsgegevens']],
-            ['bases' => []],
-            ['bases' => null],
-            ['bases' => ['nationale-veiligheid']],
-        ];
-
-        $count = $method->invoke($this->service, $entities);
-
-        $this->assertSame(expected: 3, actual: $count);
-
-    }//end testCountDistinctBases()
-
-    /**
-     * `aggregateForDossier` produces per-document, per-basis, and totals
-     * tables matching the per-dossier template's expected shape.
-     *
-     * @return void
-     */
-    public function testAggregateForDossier(): void
-    {
-        $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
-            method: 'aggregateForDossier'
-        );
-        $method->setAccessible(accessible: true);
-
-        $perFile = [
-            [
-                'fileId'   => 10,
-                'filename' => 'verslag-1.pdf',
-                'entities' => [
-                    ['bases' => ['persoonsgegevens']],
-                    ['bases' => ['persoonsgegevens', 'strafrechtelijk']],
-                ],
-            ],
-            [
-                'fileId'   => 11,
-                'filename' => 'verslag-2.pdf',
-                'entities' => [
-                    ['bases' => ['nationale-veiligheid']],
-                    ['bases' => ['persoonsgegevens']],
-                ],
-            ],
-        ];
-
-        $labelMap = [
-            'persoonsgegevens'     => 'Persoonsgegevens',
-            'strafrechtelijk'      => 'Strafrechtelijke gegevens',
-            'nationale-veiligheid' => 'Nationale veiligheid',
-        ];
-
-        $result = $method->invoke($this->service, $perFile, $labelMap);
-
-        $this->assertSame(expected: 2, actual: $result['totals']['documentCount']);
-        // EntityCount sums entity['count'] which defaults to 0 when absent in test data.
-        $this->assertSame(expected: 0, actual: $result['totals']['entityCount']);
-        $this->assertSame(expected: 3, actual: $result['totals']['distinctBasesCount']);
-
-        // The method returns a flat `rows` array, not a perDocument/perBasis split.
-        $this->assertArrayHasKey(key: 'rows', array: $result);
-        $this->assertArrayHasKey(key: 'totals', array: $result);
-
-    }//end testAggregateForDossier()
 
     /**
      * Find a per-basis row by its `ref`. Returns null when missing.

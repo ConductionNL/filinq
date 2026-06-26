@@ -734,12 +734,8 @@ class AnonymizationService
 
             $entityName = $this->tryGetEntityCanonicalName(entityId: (int) $match['entityId']);
 
-            $fallbackName = (string) ($match['entityValue'] ?? '');
-            if ($entityName !== '') {
-                $resolvedEntityName = $entityName;
-            } else {
-                $resolvedEntityName = $fallbackName;
-            }
+            $fallbackName       = (string) ($match['entityValue'] ?? '');
+            $resolvedEntityName = $entityName !== '' ? $entityName : $fallbackName;
 
             $missing[] = [
                 'entityId'   => (int) $match['entityId'],
@@ -799,11 +795,9 @@ class AnonymizationService
         $failClosed = $this->getFailClosed();
 
         foreach ($rawEntities as $raw) {
-            if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
-                $entityData = $raw->jsonSerialize();
-            } else {
-                $entityData = (array) $raw;
-            }
+            $entityData = (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true)
+                ? $raw->jsonSerialize()
+                : (array) $raw;
 
             $entityType  = (string) ($entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN');
             $entityValue = (string) ($entityData['entity_value'] ?? $entityData['entityValue'] ?? '');
@@ -1349,18 +1343,18 @@ class AnonymizationService
                 $existing = $this->extractLinkObjectData(candidate: $results[0]);
             }
 
+            $object = [
+                '@self'        => [
+                    'register' => 'document',
+                    'schema'   => 'anonymizationLink',
+                ],
+                'sourceFileId' => $fileId,
+                'runCount'     => 1,
+            ];
+
             if (empty($existing) === false) {
-                $object = $existing;
+                $object             = $existing;
                 $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
-            } else {
-                $object = [
-                    '@self'        => [
-                        'register' => 'document',
-                        'schema'   => 'anonymizationLink',
-                    ],
-                    'sourceFileId' => $fileId,
-                    'runCount'     => 1,
-                ];
             }
 
             $object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
@@ -1563,20 +1557,18 @@ class AnonymizationService
 
         try {
             if ($isPdf === true) {
-                $this->grondslagenSummary->appendSummaryToPdf(
-                    anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
-                );
+                $this->grondslagenSummary->appendSummaryToPdf(node: $anonymisedNode);
                 $resultInfo['summaryAppended'] = true;
-            } else {
-                $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
-                    anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
-                );
-                $resultInfo['summaryAppended'] = false;
-                $resultInfo['summaryFileId']   = $summaryFile->getId();
-                $resultInfo['summaryFilePath'] = $summaryFile->getPath();
+                return $resultInfo;
             }
+
+            $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
+                node: $anonymisedNode,
+                sourceFileId: $sourceFileId
+            );
+            $resultInfo['summaryAppended'] = false;
+            $resultInfo['summaryFileId']   = $summaryFile->getId();
+            $resultInfo['summaryFilePath'] = $summaryFile->getPath();
         } catch (Exception $e) {
             $this->logger->warning(
                 'Grondslagen summary attach failed',

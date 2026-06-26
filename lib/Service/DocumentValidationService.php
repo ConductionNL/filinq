@@ -201,7 +201,7 @@ class DocumentValidationService
         }
 
         // Read content once for the readability / encryption / text-layer checks.
-        $content       = null;
+        $content       = '';
         $contentFailed = false;
         try {
             $content = $file->getContent();
@@ -211,7 +211,7 @@ class DocumentValidationService
 
         // 3. file-unreadable.
         if ($this->checkSeverity(profile: $profile, check: self::CHECK_FILE_UNREADABLE) !== self::SEVERITY_OFF) {
-            if ($contentFailed === true || $content === null) {
+            if ($contentFailed === true) {
                 $findings[] = $this->finding(
                     checkId: self::CHECK_FILE_UNREADABLE,
                     profile: $profile,

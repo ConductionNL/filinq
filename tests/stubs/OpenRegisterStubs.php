@@ -1537,3 +1537,66 @@ class ApprovalStepCompletedEvent extends Event
     }
 }//end class
 
+namespace OCA\OpenRegister\AppHost;
+
+/**
+ * Stub for AppHost Routes — canonical route table builder.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\AppHost
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Routes
+{
+    /**
+     * Return the canonical route array, merging app-specific $extra routes.
+     *
+     * @param array<int, array<string, mixed>> $extra App-specific routes.
+     *
+     * @return array{routes: array<int, array<string, mixed>>}
+     */
+    public static function standard(array $extra=[]): array
+    {
+        $canonical = [
+            ['name' => 'dashboard#page',             'url' => '/',                         'verb' => 'GET'],
+            ['name' => 'settings#index',             'url' => '/api/settings',             'verb' => 'GET'],
+            ['name' => 'settings#create',            'url' => '/api/settings',             'verb' => 'POST'],
+            ['name' => 'settings#load',              'url' => '/api/settings/load',        'verb' => 'POST'],
+            ['name' => 'preferences#getPreference',  'url' => '/api/preferences/{key}',    'verb' => 'GET'],
+            ['name' => 'preferences#setPreference',  'url' => '/api/preferences/{key}',    'verb' => 'PUT'],
+            ['name' => 'metrics#index',              'url' => '/api/metrics',              'verb' => 'GET'],
+            ['name' => 'health#index',               'url' => '/api/health',               'verb' => 'GET'],
+        ];
+
+        $extraNames = [];
+        foreach ($extra as $route) {
+            if (isset($route['name']) === true) {
+                $extraNames[(string) $route['name']] = true;
+            }
+        }
+
+        $merged = [];
+        foreach ($canonical as $route) {
+            if (isset($extraNames[$route['name']]) === false) {
+                $merged[] = $route;
+            }
+        }
+
+        foreach ($extra as $route) {
+            $merged[] = $route;
+        }
+
+        $merged[] = [
+            'name'         => 'dashboard#catchAll',
+            'url'          => '/{path}',
+            'verb'         => 'GET',
+            'requirements' => ['path' => '.+'],
+            'defaults'     => ['path' => ''],
+        ];
+
+        return ['routes' => $merged];
+    }//end standard()
+}//end class
+
