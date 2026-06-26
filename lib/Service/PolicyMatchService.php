@@ -47,8 +47,6 @@ use Exception;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use Transliterator;
-
 /**
  * Detection-time policy matcher.
  *
@@ -87,10 +85,18 @@ class PolicyMatchService
 
     /**
      * Pre-built ASCII transliterator for the `normalized` match type.
+     * Null when PHP intl extension is not loaded (falls back to mb_strtolower).
      *
-     * @var Transliterator|null
+     * @var object|null
      */
-    private ?Transliterator $normaliser = null;
+    private ?object $normaliser = null;
+
+    /**
+     * Whether a Transliterator instance has been attempted (to avoid retrying).
+     *
+     * @var boolean
+     */
+    private bool $normaliserAttempted = false;
 
     /**
      * Constructor.
@@ -309,19 +315,25 @@ class PolicyMatchService
     /**
      * Lower-case + accent-strip a string for `normalized` matching.
      *
+     * Falls back to mb_strtolower when the PHP intl extension is not available
+     * (e.g. in bare-CLI CI environments that do not install ext-intl).
+     *
      * @param string $value Source string.
      *
      * @return string Normalised string.
      */
     private function normalise(string $value): string
     {
-        if ($this->normaliser === null) {
-            $this->normaliser = Transliterator::create(
-                'Any-Latin; Latin-ASCII; Lower'
-            );
+        if ($this->normaliserAttempted === false) {
+            $this->normaliserAttempted = true;
+            if (class_exists('Transliterator') === true) {
+                // @phpstan-ignore-next-line — Transliterator is not always available (no ext-intl in CI)
+                $this->normaliser = \Transliterator::create('Any-Latin; Latin-ASCII; Lower');
+            }
         }
 
         if ($this->normaliser !== null) {
+            // @phpstan-ignore-next-line — method exists when ext-intl is loaded
             $transliterated = $this->normaliser->transliterate($value);
             if (is_string($transliterated) === true) {
                 return trim($transliterated);

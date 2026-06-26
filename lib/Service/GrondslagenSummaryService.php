@@ -795,15 +795,17 @@ class GrondslagenSummaryService
      *
      * @param array<int, array<string, mixed>> $perDocData Per-document entity data
      *
-     * @return array<string, array{name: string, fileCount: int, entityCount: int}> Per-grondslag totals
+     * @return list<array{name: string, fileCount: int, entityCount: int}> Per-grondslag totals (numerically keyed list)
      *
      * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
      */
     private function aggregatePerGrondslag(array $perDocData): array
     {
+        // @phpstan-var array<string, array{name: string, fileCount: int, entityCount: int}> $totals
         $totals = [];
         foreach ($perDocData as $doc) {
             foreach ($doc['bases'] as $baseLabel => $count) {
+                $baseLabel = (string) $baseLabel;
                 if (isset($totals[$baseLabel]) === false) {
                     $totals[$baseLabel] = [
                         'name'        => $baseLabel,
@@ -813,7 +815,7 @@ class GrondslagenSummaryService
                 }
 
                 $totals[$baseLabel]['fileCount']++;
-                $totals[$baseLabel]['entityCount'] += $count;
+                $totals[$baseLabel]['entityCount'] += (int) $count;
             }
         }
 
@@ -886,16 +888,25 @@ class GrondslagenSummaryService
      *
      * @return \OCP\Files\File|null Saved file node, or null on failure
      */
-    private function saveFileToFolder(\OCP\Files\Folder $folder, string $fileName, string $content): mixed
+    private function saveFileToFolder(\OCP\Files\Folder $folder, string $fileName, string $content): ?\OCP\Files\File
     {
         try {
             if ($folder->nodeExists(path: $fileName) === true) {
-                $existingFile = $folder->get(path: $fileName);
-                $existingFile->putContent(data: $content);
-                return $existingFile;
+                $existingNode = $folder->get(path: $fileName);
+                if (($existingNode instanceof \OCP\Files\File) === false) {
+                    return null;
+                }
+
+                $existingNode->putContent(data: $content);
+                return $existingNode;
             }
 
-            return $folder->newFile(path: $fileName, content: $content);
+            $newNode = $folder->newFile(path: $fileName, content: $content);
+            if (($newNode instanceof \OCP\Files\File) === false) {
+                return null;
+            }
+
+            return $newNode;
         } catch (\Throwable $e) {
             $this->logger->error(
                 message: 'Failed to save file '.$fileName.' to NC folder',
@@ -929,100 +940,6 @@ class GrondslagenSummaryService
         return $result;
 
     }//end collectDistinctBases()
-
-    /**
-     * Count the distinct union of raw `bases` refs across a list of entities.
-     *
-     * Each entity may carry a `bases` key holding an array of base refs, an
-     * empty array, or null. Null/empty bases contribute nothing. The result is
-     * the number of unique refs across every entity.
-     *
-     * @param array<int, array<string, mixed>> $entities Entities each with an optional `bases` array
-     *
-     * @return int Count of distinct base refs
-     */
-    private function countDistinctBases(array $entities): int
-    {
-        $seen = [];
-        foreach ($entities as $entity) {
-            $bases = ($entity['bases'] ?? null);
-            if (is_array($bases) === false) {
-                continue;
-            }
-
-            foreach ($bases as $base) {
-                $ref        = (string) $base;
-                $seen[$ref] = true;
-            }
-        }
-
-        return count($seen);
-
-    }//end countDistinctBases()
-
-    /**
-     * Aggregate per-file entity/grondslagen data into the per-dossier shape.
-     *
-     * Produces a flat `rows` array keyed by basis ref (each row carries the
-     * resolved `label` from $labelMap plus an `entityCount`) and a `totals`
-     * block carrying the document count, summed entity count, and the count of
-     * distinct bases across all files.
-     *
-     * @param array<int, array<string, mixed>> $perFile  Per-file entity data
-     * @param array<string, string>            $labelMap Map of basis ref to human label
-     *
-     * @return array<string, mixed> Aggregated dossier summary (rows + totals)
-     */
-    private function aggregateForDossier(array $perFile, array $labelMap): array
-    {
-        // Flatten every entity across all files for counting.
-        $allEntities = [];
-        $entityCount = 0;
-        foreach ($perFile as $file) {
-            $entities = ($file['entities'] ?? []);
-            if (is_array($entities) === false) {
-                $entities = [];
-            }
-
-            foreach ($entities as $entity) {
-                $allEntities[] = $entity;
-                $entityCount  += (int) ($entity['count'] ?? 0);
-            }
-        }
-
-        // Build per-basis rows: one row per distinct ref, with its resolved
-        // label and the number of entities that reference it.
-        $rowsByRef = [];
-        foreach ($allEntities as $entity) {
-            $bases = ($entity['bases'] ?? null);
-            if (is_array($bases) === false) {
-                continue;
-            }
-
-            foreach ($bases as $base) {
-                $ref = (string) $base;
-                if (isset($rowsByRef[$ref]) === false) {
-                    $rowsByRef[$ref] = [
-                        'ref'         => $ref,
-                        'label'       => ($labelMap[$ref] ?? $ref),
-                        'entityCount' => 0,
-                    ];
-                }
-
-                $rowsByRef[$ref]['entityCount']++;
-            }
-        }
-
-        return [
-            'rows'   => array_values($rowsByRef),
-            'totals' => [
-                'documentCount'      => count($perFile),
-                'entityCount'        => $entityCount,
-                'distinctBasesCount' => $this->countDistinctBases(entities: $allEntities),
-            ],
-        ];
-
-    }//end aggregateForDossier()
 
     /**
      * Load Twig template content from the templates directory.

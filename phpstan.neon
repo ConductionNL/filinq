@@ -15,12 +15,15 @@ parameters:
         - vendor-bin
         # Apps that ship a verbatim template snapshot under lib/Resources/template/ (e.g. openbuilt).
         - lib/Resources/template
+        # AppHost-delegator controllers: thin subclasses of OCA\OpenRegister\AppHost classes
+        # that are absent during static analysis (OR is co-installed at runtime only).
+        # PHPStan disallows ignoreErrors for "extends unknown class" — excludePaths is the
+        # mandated approach. No logic lives in these files; the only risk is the parent call.
+        - lib/Controller/DashboardController.php
+        - lib/Controller/HealthController.php
+        - lib/Controller/MetricsController.php
     scanDirectories:
         - vendor/nextcloud/ocp
-        # AppHost controller base classes — OpenRegister is co-installed at runtime.
-        # Scanning its lib/AppHost lets phpstan resolve GenericDashboardController etc.
-        # without needing to include all of OpenRegister in paths.
-        - ../openregister/lib/AppHost
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         # Nextcloud server internals (\OC, OC_App, OC\) not stubbed in nextcloud/ocp
@@ -41,6 +44,16 @@ parameters:
         - '#has invalid return type OCA\\OpenRegister\\#'
         - '#has invalid type OCA\\OpenRegister\\#'
         - '#implements unknown interface OCA\\OpenRegister\\#'
+        # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:
+        # OR events are absent in static analysis — the generic bound check fails
+        # and registerEventListener rejects the class-string as not matching
+        # IEventListener<Event>. Both errors stem from the same missing OR type.
+        - '#is not subtype of template type T of OCP\\\\EventDispatcher\\\\Event#'
+        - '#expects class-string.OCP\\\\EventDispatcher\\\\IEventListener.OCP\\\\EventDispatcher\\\\Event..,.+DossierCheckedOnListener.+given#'
+        # OCA\DocuDesk controllers delegate via parent:: to OR AppHost classes absent here.
+        # Application.php constructs these with named args from the AppHost ctors —
+        # PHPStan cannot see the inherited constructor. These are OR-runtime-only.
+        - '#Class OCA\\DocuDesk\\Controller\\(HealthController|MetricsController) does not have a constructor#'
         # GuzzleHttp is available at runtime via Nextcloud but not in composer require
         - '#unknown class GuzzleHttp\\#'
         - '#GuzzleHttp\\[a-zA-Z\\]+.*not found#'

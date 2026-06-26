@@ -129,8 +129,8 @@ class DocumentComparisonService
     {
         $this->logSubjects(left: $left, right: $right);
 
-        $leftFile  = $this->resolveFile(fileId: (int) ($left['fileId'] ?? 0));
-        $rightFile = $this->resolveFile(fileId: (int) ($right['fileId'] ?? 0));
+        $leftFile  = $this->resolveFile(fileId: $left['fileId']);
+        $rightFile = $this->resolveFile(fileId: $right['fileId']);
 
         $leftText  = $this->extractText(file: $leftFile, side: 'left', versionTimestamp: ($left['versionTimestamp'] ?? null));
         $rightText = $this->extractText(file: $rightFile, side: 'right', versionTimestamp: ($right['versionTimestamp'] ?? null));
@@ -156,7 +156,7 @@ class DocumentComparisonService
         ];
 
         // Redaction annotation: only when right is the anonymised output of left.
-        $sourceFileId      = (int) ($left['fileId'] ?? 0);
+        $sourceFileId      = $left['fileId'];
         $annotation        = $this->annotateRedactions(hunks: $response['hunks'], sourceFileId: $sourceFileId);
         $response['hunks'] = $annotation['hunks'];
         $response['redactionAnnotation'] = $annotation['status'];

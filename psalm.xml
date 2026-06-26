@@ -79,10 +79,30 @@
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <!-- OpenRegister DB types used in signing/approval events -->
+                <referencedClass name="OCA\OpenRegister\Db\ApprovalChain"/>
+                <referencedClass name="OCA\OpenRegister\Db\ApprovalStep"/>
                 <!-- OpenRegister AppHost controller base classes -->
                 <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericDashboardController"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericHealthController"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericMetricsController"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Controller\GenericPreferencesController"/>
+                <!-- OpenRegister Observability classes (AppHost engine) -->
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\ManifestLoader"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\MetricsEngine"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\PrometheusRenderer"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\AppConfigMetricSource"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\ProviderMetricSource"/>
+                <!-- OpenRegister Approval events -->
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepInitiatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepApprovedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepRejectedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ApprovalStepCompletedEvent"/>
+                <!-- OpenRegister Language service -->
+                <referencedClass name="OCA\OpenRegister\Service\LanguageService"/>
                 <!-- Additional OCP infrastructure types used across the fleet -->
                 <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
                 <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
