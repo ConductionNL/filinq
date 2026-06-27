@@ -260,9 +260,9 @@ class Application extends App implements IBootstrap
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {
+        // @psalm-suppress UnusedClosureParam, TooManyArguments
         $context->registerService(
             HealthController::class,
-            /** @psalm-suppress UnusedClosureParam, TooManyArguments */
             static function (ContainerInterface $container): HealthController {
                 return new HealthController(
                     appName: self::APP_ID,
@@ -273,9 +273,9 @@ class Application extends App implements IBootstrap
             }
         );
 
+        // @psalm-suppress TooManyArguments
         $context->registerService(
             MetricsController::class,
-            /** @psalm-suppress TooManyArguments */
             static function (ContainerInterface $container): MetricsController {
                 $engine = new \OCA\OpenRegister\AppHost\Observability\MetricsEngine(
                     objectSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource::class),

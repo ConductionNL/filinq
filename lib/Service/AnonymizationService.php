@@ -734,8 +734,12 @@ class AnonymizationService
 
             $entityName = $this->tryGetEntityCanonicalName(entityId: (int) $match['entityId']);
 
-            $fallbackName       = (string) ($match['entityValue'] ?? '');
-            $resolvedEntityName = $entityName !== '' ? $entityName : $fallbackName;
+            $fallbackName = (string) ($match['entityValue'] ?? '');
+            if ($entityName !== '') {
+                $resolvedEntityName = $entityName;
+            } else {
+                $resolvedEntityName = $fallbackName;
+            }
 
             $missing[] = [
                 'entityId'   => (int) $match['entityId'],
@@ -795,9 +799,11 @@ class AnonymizationService
         $failClosed = $this->getFailClosed();
 
         foreach ($rawEntities as $raw) {
-            $entityData = (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true)
-                ? $raw->jsonSerialize()
-                : (array) $raw;
+            if (is_object($raw) === true && method_exists($raw, 'jsonSerialize') === true) {
+                $entityData = $raw->jsonSerialize();
+            } else {
+                $entityData = (array) $raw;
+            }
 
             $entityType  = (string) ($entityData['entity_type'] ?? $entityData['entityType'] ?? 'UNKNOWN');
             $entityValue = (string) ($entityData['entity_value'] ?? $entityData['entityValue'] ?? '');
@@ -1353,7 +1359,7 @@ class AnonymizationService
             ];
 
             if (empty($existing) === false) {
-                $object             = $existing;
+                $object = $existing;
                 $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
             }
 
