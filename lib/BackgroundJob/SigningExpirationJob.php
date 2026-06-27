@@ -125,9 +125,11 @@ class SigningExpirationJob extends TimedJob
                 );
 
                 foreach ($results as $result) {
-                    $request = (is_object($result) === true && method_exists($result, 'jsonSerialize') === true)
-                        ? $result->jsonSerialize()
-                        : (array) $result;
+                    if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+                        $request = $result->jsonSerialize();
+                    } else {
+                        $request = (array) $result;
+                    }
 
                     $this->maybeExpire(
                         request: $request,
