@@ -356,15 +356,35 @@ export default {
  * highlight semi-transparently regardless, letting the glyph show through.
  * We also drop the base .dd-hl padding/shadow so the tint stays aligned to the
  * glyphs underneath.
+ *
+ * The position/font-size/transform resets are essential: pdfjs' own rules
+ * above (`:is(span, br)` → position: absolute, and the markedContent transform
+ * rule) target *every* span in the layer, written on the assumption that the
+ * only spans present are its positioned glyph runs. Our highlight spans are
+ * nested inside those runs, so without these resets they get pulled out of the
+ * inline flow (absolute, no offsets) and stack on top of each other — breaking
+ * the line so following text renders behind them. Forcing them back to a plain
+ * inline box lets them flow normally while the parent run keeps its transform.
  */
 .pdf-viewer__text-layer .dd-hl {
+	position: static;
+	font-size: inherit;
+	transform: none;
 	padding: 0;
 	box-shadow: none;
 	border-radius: 2px;
 	opacity: 0.45;
 }
 
+/*
+ * Keep the text transparent while selected too. The spans are transparent at
+ * rest, but a browser's ::selection paints selected text in its own colour,
+ * which makes the (slightly misaligned) overlay glyphs visible on top of the
+ * canvas. Forcing the selected colour transparent leaves only the selection
+ * background, so the canvas glyphs stay the single source of visible text.
+ */
 .pdf-viewer__text-layer ::selection {
+	color: transparent;
 	background: rgba(0, 100, 255, 0.4);
 }
 </style>
