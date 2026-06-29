@@ -121,7 +121,7 @@
 				{{ t('docudesk', 'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.') }}
 			</NcNoteCard>
 			<div class="action-bar">
-				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeBatch()">
+				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeFolder()">
 					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
 				</NcButton>
 				<NcButton type="tertiary" @click="store.reset()">
@@ -166,9 +166,14 @@
 			</div>
 
 			<div class="action-bar">
-				<NcButton type="secondary" @click="downloadReport">
-					{{ t('docudesk', 'Download Report') }}
-				</NcButton>
+				<!--
+					The batch CSV "Download Report" button is temporarily removed.
+					The folder flow now anonymises file-by-file via the single-file
+					endpoint and no longer runs the batch-anonymise step, so the
+					batch record is never marked 'completed' and GET /batch/{id}/report
+					would return HTTP 409 / empty. It comes back once per-file results
+					are written back to the batch record (or a client-side summary is built).
+				-->
 				<NcButton type="primary" @click="store.reset()">
 					{{ t('docudesk', 'Analyze Another Folder') }}
 				</NcButton>
@@ -209,9 +214,12 @@ export default {
 				folderAnonymizationStore.startFolderBatch(path)
 			}
 		},
-		downloadReport() {
-			window.open(folderAnonymizationStore.getReportUrl(), '_blank')
-		},
+		// Temporarily removed alongside the batch CSV "Download Report" button —
+		// see the store's getReportUrl() note. Comes back when the batch report
+		// is wired to the per-file anonymisation results.
+		// downloadReport() {
+		// 	window.open(folderAnonymizationStore.getReportUrl(), '_blank')
+		// },
 	},
 }
 </script>
