@@ -186,9 +186,11 @@ export default {
 /* NcAppNavigation defaults to a transparent background since a recent
    @nextcloud/vue update (it hardcodes `background-color: transparent`, not a
    variable). Mirror the app-content panel so the navigation keeps the same
-   white-54 surface. Doubled class beats the lib's (0,2,0) selector. */
+   frosted-glass surface. The theme-aware --dd-glass-bg token is white-ish in
+   light and dark in dark, so the nav stays legible in both themes. Doubled
+   class beats the lib's (0,2,0) selector. */
 :deep(.app-navigation.app-navigation) {
-	background-color: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	background-color: var(--dd-glass-bg, rgba(255, 255, 255, 0.54));
 }
 
 /* Centre the NcEmptyContent when OpenRegister is not installed.
