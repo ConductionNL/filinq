@@ -273,12 +273,19 @@ export default {
 		 * to My Documents host.
 		 *
 		 * @param {object} item Recent item from `loadRecent`.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 */
-		openRecent(item) {
+		async openRecent(item) {
 			if (!item) return
 			if (item.isFolder) {
-				myDocumentsStore.fetchDocuments(item.path)
+				// Await the fetch before routing. `MyDocumentsIndex.mounted`
+				// fires a no-arg `fetchDocuments()` that resolves against
+				// `currentPath`; routing before this fetch sets `currentPath`
+				// to the dossier makes that mount-time refetch load the root
+				// instead, leaving `documents` (root) out of sync with
+				// `currentPath` (dossier) so the dossier sidebar shows the
+				// wrong files.
+				await myDocumentsStore.fetchDocuments(item.path)
 				this.gotoViewer()
 				return
 			}

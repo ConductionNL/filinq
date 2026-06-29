@@ -299,3 +299,167 @@ describe('addManualEntity — add selected text as a new entity', () => {
 			.rejects.toThrow()
 	})
 })
+
+describe('anonymiseAllExtracted — batch run over a dossier', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+		axios.post.mockResolvedValue({
+			data: {
+				anonymizedFileId: 99,
+				anonymizedFileName: 'doc-anon.pdf',
+				anonymizedFilePath: '/files/doc-anon.pdf',
+				replacementCount: 1,
+			},
+		})
+	})
+
+	/**
+	 * Seed the store queue with three `extracted` entries on distinct fileIds.
+	 *
+	 * @param {object} store The active anonymization store.
+	 * @return {void}
+	 */
+	function seedThree(store) {
+		store.files = [
+			{ ...makeEntry(), id: 'file-1', fileId: 1 },
+			{ ...makeEntry(), id: 'file-2', fileId: 2 },
+			{ ...makeEntry(), id: 'file-3', fileId: 3 },
+		]
+	}
+
+	it('anonymises every extracted file when no scope is given', async () => {
+		const store = useAnonymizationStore()
+		seedThree(store)
+
+		await store.anonymiseAllExtracted()
+
+		expect(axios.post).toHaveBeenCalledTimes(3)
+		expect(store.files.every((f) => f.status === 'completed')).toBe(true)
+		expect(store.batch).toEqual({ running: false, total: 3, done: 3, failed: 0 })
+	})
+
+	it('only anonymises files whose fileId is in the scope', async () => {
+		const store = useAnonymizationStore()
+		seedThree(store)
+
+		await store.anonymiseAllExtracted({ fileIds: [1, 3] })
+
+		expect(axios.post).toHaveBeenCalledTimes(2)
+		expect(store.findByFileId(2).status).toBe('extracted')
+		expect(store.batch.total).toBe(2)
+		expect(store.batch.done).toBe(2)
+	})
+
+	it('skips entries that are not in the extracted state', async () => {
+		const store = useAnonymizationStore()
+		seedThree(store)
+		store.files[1].status = 'completed'
+
+		await store.anonymiseAllExtracted()
+
+		expect(axios.post).toHaveBeenCalledTimes(2)
+		expect(store.batch.total).toBe(2)
+	})
+
+	it('counts a failed file without aborting the rest', async () => {
+		const store = useAnonymizationStore()
+		seedThree(store)
+		// Second file's anonymise POST rejects; the run must continue.
+		axios.post
+			.mockResolvedValueOnce({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+			.mockRejectedValueOnce(new Error('boom'))
+			.mockResolvedValueOnce({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+
+		await store.anonymiseAllExtracted()
+
+		expect(store.batch.done).toBe(2)
+		expect(store.batch.failed).toBe(1)
+		expect(store.batch.running).toBe(false)
+	})
+
+	it('extracts dossier files the user never opened before anonymising', async () => {
+		const store = useAnonymizationStore()
+		// Only file 1 is in the queue (the file the user opened); files 2 and 3
+		// were uploaded but never opened, so they must be extracted on the fly
+		// before the batch can anonymise them.
+		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }]
+
+		axios.post.mockImplementation((url) => {
+			if (String(url).includes('/extract/')) {
+				return Promise.resolve({
+					data: {
+						entities: [
+							{ type: 'PERSON', value: 'X', confidence: 0.9, relationIds: [1] },
+						],
+					},
+				})
+			}
+			return Promise.resolve({ data: { anonymizedFileId: 99, replacementCount: 1 } })
+		})
+
+		await store.anonymiseAllExtracted({
+			fileIds: [1, 2, 3],
+			files: [
+				{ fileId: 2, fileName: 'b.pdf', path: '/DocuDesk/D/b.pdf' },
+				{ fileId: 3, fileName: 'c.pdf', path: '/DocuDesk/D/c.pdf' },
+			],
+		})
+
+		expect(store.findByFileId(2)).toBeDefined()
+		expect(store.findByFileId(3)).toBeDefined()
+		expect(store.batch.total).toBe(3)
+		expect(store.batch.done).toBe(3)
+		expect(store.files.every((f) => f.status === 'completed')).toBe(true)
+	})
+
+	it('does not forward the fileIds scope as an anonymise option', async () => {
+		const store = useAnonymizationStore()
+		store.files = [{ ...makeEntry(), id: 'file-1', fileId: 1 }]
+
+		await store.anonymiseAllExtracted({ fileIds: [1], appendBasisSummary: true, outputFormat: 'pdf' })
+
+		const body = axios.post.mock.calls[0][1]
+		expect(body).not.toHaveProperty('fileIds')
+		expect(body.appendBasisSummary).toBe(true)
+		expect(body.outputFormat).toBe('pdf')
+	})
+})
+
+describe('completedInFiles — downloadable results in a dossier', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	/**
+	 * Seed a mixed queue: one completed-with-result, one completed-without-path,
+	 * one still extracted, one completed but outside the dossier scope.
+	 *
+	 * @param {object} store The active anonymization store.
+	 * @return {void}
+	 */
+	function seedMixed(store) {
+		store.files = [
+			{ ...makeEntry(), id: 'a', fileId: 1, status: 'completed', anonymizedFilePath: '/files/a-anon.pdf' },
+			{ ...makeEntry(), id: 'b', fileId: 2, status: 'completed', anonymizedFilePath: null },
+			{ ...makeEntry(), id: 'c', fileId: 3, status: 'extracted', anonymizedFilePath: null },
+			{ ...makeEntry(), id: 'd', fileId: 9, status: 'completed', anonymizedFilePath: '/files/d-anon.pdf' },
+		]
+	}
+
+	it('returns only completed entries with a result path that are in scope', () => {
+		const store = useAnonymizationStore()
+		seedMixed(store)
+
+		const result = store.completedInFiles([1, 2, 3])
+
+		expect(result.map((f) => f.fileId)).toEqual([1])
+	})
+
+	it('returns an empty array when no fileIds are given', () => {
+		const store = useAnonymizationStore()
+		seedMixed(store)
+
+		expect(store.completedInFiles([])).toEqual([])
+	})
+})

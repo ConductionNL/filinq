@@ -152,7 +152,12 @@ export default {
 </script>
 
 <style scoped>
-.content {
+/* NcContent renders the root `.content` div. A recent @nextcloud/vue update
+   added `.content:not(.content--legacy)` (specificity 0,3,0) which paints a
+   semi-transparent blur background, overriding our flat page background.
+   The doubled `.content.content` lifts us above that (0,3,0) so our rule wins
+   regardless of stylesheet order. */
+.content.content:not(.content--legacy) {
 	padding: 8px;
 	background-color: var(--dd-app-bg, #EAE9E6);
 }
@@ -176,6 +181,14 @@ export default {
 	--color-main-background: var(--dd-glass-bg, rgba(255, 255, 255, 0.54));
 	border-radius: var(--dd-radius-panel);
 	box-shadow: var(--dd-shadow-panel);
+}
+
+/* NcAppNavigation defaults to a transparent background since a recent
+   @nextcloud/vue update (it hardcodes `background-color: transparent`, not a
+   variable). Mirror the app-content panel so the navigation keeps the same
+   white-54 surface. Doubled class beats the lib's (0,2,0) selector. */
+:deep(.app-navigation.app-navigation) {
+	background-color: var(--color-white-54, rgba(255, 255, 255, 0.54));
 }
 
 /* Centre the NcEmptyContent when OpenRegister is not installed.

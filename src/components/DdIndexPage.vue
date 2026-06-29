@@ -225,6 +225,7 @@ export default {
 .dd-index-page__toolbar {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: 16px;
 }
 
@@ -233,7 +234,7 @@ export default {
 	align-items: center;
 	gap: 8px;
 	flex: 1;
-	min-width: 0;
+	max-width: 360px;
 }
 
 </style>

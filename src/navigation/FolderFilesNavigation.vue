@@ -1,6 +1,6 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
-import { myDocumentsStore, fileViewerStore } from '../store/store.js'
+import { myDocumentsStore, fileViewerStore, anonymizationStore } from '../store/store.js'
 </script>
 
 <template>
@@ -22,6 +22,16 @@ import { myDocumentsStore, fileViewerStore } from '../store/store.js'
 				@click.prevent="onFileClick(file)">
 				<template #icon>
 					<component :is="iconFor(file)" :size="24" />
+				</template>
+				<template #counter>
+					<CheckCircle v-if="statusFor(file) === 'completed'"
+						:size="20"
+						class="dd-file-status dd-file-status--done"
+						:title="t('docudesk', 'Anonymized')" />
+					<AlertCircleOutline v-else-if="statusFor(file) === 'error'"
+						:size="20"
+						class="dd-file-status dd-file-status--error"
+						:title="t('docudesk', 'Could not be processed')" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
@@ -48,6 +58,8 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
+import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 
 export default {
 	name: 'FolderFilesNavigation',
@@ -60,6 +72,8 @@ export default {
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
+		CheckCircle,
+		AlertCircleOutline,
 	},
 	computed: {
 		/**
@@ -95,7 +109,22 @@ export default {
 			return 'FileDocumentOutline'
 		},
 		/**
+		 * Anonymisation status of a dossier file, read from its queue entry.
+		 * Drives the per-row status icon (done / error).
+		 *
+		 * @param {object} file Document descriptor.
+		 * @return {string|null} The entry status, or null if not tracked.
+		 */
+		statusFor(file) {
+			return anonymizationStore.findByFileId(file.fileId)?.status || null
+		},
+		/**
 		 * Open a file in the in-app viewer.
+		 *
+		 * When the file has already been anonymised (a completed queue entry
+		 * with a result), attach the anonymised counterpart and switch the
+		 * viewer to it, so opening a finished dossier file lands directly on
+		 * the review + download of the result instead of the original (T14).
 		 *
 		 * @param {object} file Document descriptor.
 		 */
@@ -107,6 +136,15 @@ export default {
 				mimeType: file.mimeType,
 				path,
 			})
+			const entry = anonymizationStore.findByFileId(file.fileId)
+			if (entry?.status === 'completed' && entry.anonymizedFileId && entry.anonymizedFilePath) {
+				fileViewerStore.setAnonymizedVariant({
+					fileId: entry.anonymizedFileId,
+					fileName: entry.anonymizedFileName || file.fileName,
+					mimeType: file.mimeType,
+					path: entry.anonymizedFilePath,
+				})
+			}
 		},
 		/**
 		 * Leave the dossier: close any open viewer, return to root path,
@@ -145,5 +183,13 @@ export default {
 	--color-primary-element-hover: var(--dd-active-pill-bg, #fff);
 	--color-primary-element-text: var(--dd-ink);
 	box-shadow: var(--dd-shadow-popout);
+}
+
+.dd-file-status--done {
+	color: var(--color-success);
+}
+
+.dd-file-status--error {
+	color: var(--color-error);
 }
 </style>

@@ -528,10 +528,6 @@ export default {
 	padding: 0;
 }
 
-.my-documents-search {
-	max-width: 280px;
-}
-
 .my-documents-name {
 	display: flex;
 	align-items: center;

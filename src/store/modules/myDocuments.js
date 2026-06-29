@@ -4,6 +4,23 @@ import axios from '@nextcloud/axios'
 import { generateRemoteUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 
+/**
+ * URL-encode each segment of a path while preserving the `/` separators.
+ *
+ * WebDAV URLs are built by interpolating user-supplied names (dossier folders,
+ * file names). Without encoding, a name containing URL-significant characters
+ * such as `?`, `#` or `&` is misread by the browser/axios — e.g. `?` starts the
+ * query string, so a PROPFIND/DELETE silently targets the wrong path and 404s.
+ * Encoding per segment (leaving `/` intact) makes every valid Nextcloud name
+ * round-trip correctly.
+ *
+ * @param {string} path Raw path (segments separated by `/`).
+ * @return {string} Path with each segment URL-encoded.
+ */
+function encodeDavPath(path) {
+	return String(path || '').split('/').map(encodeURIComponent).join('/')
+}
+
 /*
  * Each document entry:
  * {
@@ -59,8 +76,9 @@ export const useMyDocumentsStore = defineStore(
 						throw new Error('User not authenticated')
 					}
 
-					// Use Nextcloud WebDAV API to list folder contents
-					const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${targetPath}`)
+					// Use Nextcloud WebDAV API to list folder contents. Encode the
+					// path so names with `?`/`#`/`&` don't break the request URL.
+					const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${encodeDavPath(targetPath)}`)
 
 					const response = await axios({
 						method: 'PROPFIND',
@@ -154,7 +172,7 @@ export const useMyDocumentsStore = defineStore(
 				}
 
 				const targetPath = `${this.currentPath}/${fileName}`
-				const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${targetPath}`)
+				const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${encodeDavPath(targetPath)}`)
 
 				await axios({
 					method: 'DELETE',
@@ -182,7 +200,7 @@ export const useMyDocumentsStore = defineStore(
 				const results = await Promise.allSettled(
 					fileNames.map((fileName) => axios({
 						method: 'DELETE',
-						url: generateRemoteUrl(`dav/files/${user.uid}${this.currentPath}/${fileName}`),
+						url: generateRemoteUrl(`dav/files/${user.uid}${encodeDavPath(`${this.currentPath}/${fileName}`)}`),
 					})),
 				)
 

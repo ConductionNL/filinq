@@ -29,12 +29,6 @@
 				@toggle="batchAnonymizationStore.toggleEntity($event)"
 				@bulk-select="batchAnonymizationStore.setVisibleEntities($event, true)"
 				@bulk-deselect="batchAnonymizationStore.setVisibleEntities($event, false)" />
-			<!-- Hard warning: the batch is anonymised as one dossier (shared
-				placeholder numbers across files), so it MUST be published as a
-				single publication — not split into separate ones. -->
-			<NcNoteCard type="warning">
-				{{ t('docudesk', 'This batch is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.') }}
-			</NcNoteCard>
 			<NcButton type="primary" @click="batchAnonymizationStore.anonymizeBatch()">
 				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', batchAnonymizationStore.selectedEntityCount) }}
 			</NcButton>
