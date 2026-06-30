@@ -1,0 +1,108 @@
+{
+  "change": "eml-pdf-assembly",
+  "project": "docudesk",
+  "repo": "Conduction/docudesk",
+  "base_branch": "test/anonimiseren-bij-de-bron-dd",
+  "feature_branch": "feature/156/eml-pdf-assembly",
+  "created": "2026-06-30",
+  "tracking_issue": 156,
+  "depends_on": [
+    "text-extraction-eml",
+    "anonymise-eml-structured"
+  ],
+  "depends_on_issues": [
+    "Conduction/openregister#241"
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Confirm OR's `anonymise-eml-structured` anonymise-EML API is present (returns an `AnonymisedEmlStructure`: redacted headers including Reply-To, redacted `AnonymisedEmlBody` `html`/`plain`, `attachments[]` of `AnonymisedEmlAttachment` `{filename,mimeType,redactedContent}` or `{filename,mimeType,unsupported:true}`, and an inline-image map). Smoke-test the method exists and returns the redacted shape for a sample EML. If absent, `EmlBackend.isAvailable()` MUST stay false.",
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "title": "Create `lib/Service/EmlPdfAssemblyService.php` with `assemble(AnonymisedEmlStructure $result, ?string $sourceFilename = null): \\OCP\\Files\\File`. Constructor injects: OR's anonymise-EML service (OR DI lookup pattern, as `AnonymizationService` resolves OR services reflectively), `PdfService`, the conversion-backends list, `IAppConfig`, the logger. Read config keys `append_attachment_pages` (default true), `max_attachment_render_size_bytes` (default 26214400), `divider_template` (default `eml/divider.twig`).",
+      "status": "pending"
+    },
+    {
+      "id": 3,
+      "title": "Create `lib/Resources/templates/eml/email_envelope.twig` \u2014 redacted header block (Van/Antwoord aan/Aan/Cc/Onderwerp/Datum, NL labels; Antwoord aan and Cc only when present; Datum `YYYY-MM-DD HH:MM`) + body section (redacted `html`, else `<pre>`-wrapped redacted `plain`, else empty-body placeholder). Render OR's redacted values as-is.",
+      "status": "pending"
+    },
+    {
+      "id": 4,
+      "title": "Create `lib/Resources/templates/eml/divider.twig` \u2014 divider page (index/filename/MIME/size) AND the placeholder variants: \"geredigeerd maar niet weer te geven\", \"te groot om weer te geven\", \"weggelaten \u2014 geen anonimiseerder beschikbaar\", and the nested-EML depth-limit notice. Verify both templates pass PdfService's Twig sandbox.",
+      "status": "pending"
+    },
+    {
+      "id": 5,
+      "title": "Inline-image resolution: scan the redacted HTML for `<img ... src=\"cid:<id>\">`; for each, look up `<id>` in OR's inline-image map; substitute `data:<mimeType>;base64,<redacted>`; leave unresolved refs in place and debug-log. Substitute only OR's redacted bytes.",
+      "status": "pending"
+    },
+    {
+      "id": 6,
+      "title": "mPDF assembly (multi-pass, PDF/A-3b): instantiate mPDF with `SetPDFAVersion('3-B')`, font embedding on, no JS, no external resources (centralise with PdfService's settings). Write the redacted envelope HTML as the first page(s). NO file-embedding pass (verbatim embedding is dropped).",
+      "status": "pending"
+    },
+    {
+      "id": 7,
+      "title": "Per-attachment handling from OR's `attachments[]`: when `append_attachment_pages` is true and the entry has `redactedContent`, is a renderable MIME, and is within the size cap \u2192 `AddPage()`, render divider, render the REDACTED bytes via the cascade (PDF import / image `<img>` / `<pre>` text / Word via PhpWordBackend / nested EML recurse). Embed NO bytes for any attachment.",
+      "status": "pending"
+    },
+    {
+      "id": 8,
+      "title": "Placeholder pages (no content embedded or rendered): `redactedContent` + non-renderable MIME \u2192 \"geredigeerd maar niet weer te geven\"; over size cap \u2192 \"te groot om weer te geven\"; `unsupported: true` \u2192 \"weggelaten \u2014 geen anonimiseerder beschikbaar\".",
+      "status": "pending"
+    },
+    {
+      "id": 9,
+      "title": "Recursive nested EML: when an attachment is `message/rfc822` with a non-null redacted nested result, recurse with the same template/rules (depth \u2264 3, owned by OR). Beyond depth, OR returns `unsupported` \u2192 render placeholder only.",
+      "status": "pending"
+    },
+    {
+      "id": 10,
+      "title": "Output via `Output('', 'S')`, wrap in a File, return.",
+      "status": "pending"
+    },
+    {
+      "id": 11,
+      "title": "Un-stub `lib/Service/Conversion/EmlBackend.php`: `isAvailable()` returns true when OR's anonymise-EML API is callable AND `EmlPdfAssemblyService` is registered (still read the `eml_enabled` tenant flag for observability). `convert()` calls OR's anonymise-EML API for the source and passes the redacted result to `assemble()`. Surface OR exceptions as `ConversionFailedException` with no raw-parse fallback.",
+      "status": "pending"
+    },
+    {
+      "id": 12,
+      "title": "EML always outputs PDF: in the anonymise path, silently override `outputFormat: \"preserve\"` to the PDF cascade for EML inputs (no error returned; caller gets the assembled PDF). `pdf-only`, `pdf`, and the overridden `preserve` all run the cascade identically for EML \u2014 no native intermediate.",
+      "status": "pending"
+    },
+    {
+      "id": 13,
+      "title": "Error-handling per design D9: OR API throws \u2192 `ConversionFailedException` (NO raw-parse fallback, never emit un-redacted content); Twig throws \u2192 minimal redacted envelope + \"(template rendering failed)\"; per-attachment render failure \u2192 skip page, \"kon niet worden weergegeven\", embed nothing; catastrophic \u2192 `ConversionFailedException`.",
+      "status": "pending"
+    },
+    {
+      "id": 14,
+      "title": "Surface the two config keys in admin settings UI (or document as IAppConfig keys with UI follow-up). Validate `max_attachment_render_size_bytes` as a positive integer and `append_attachment_pages` as boolean.",
+      "status": "pending"
+    },
+    {
+      "id": 15,
+      "title": "Unit tests `tests/unit/Service/EmlPdfAssemblyServiceTest.php` \u2014 fixtures over redacted results: text-only; HTML body; redacted PDF attachment; mixed (redacted renderable + non-renderable + `unsupported`); inline `cid:` from the map; nested redacted EML depth 1/2/3; empty body; both body parts null; unsupported\u2192placeholder; oversize\u2192placeholder; per-attachment render failure recovery; assertion that NO original/redacted bytes are embedded.",
+      "status": "pending"
+    },
+    {
+      "id": 16,
+      "title": "Unit tests `tests/unit/Service/Conversion/EmlBackendTest.php` \u2014 `isAvailable()` reflects both deps; `convert()` calls OR's anonymise-EML API (not `parseEmlStructured`) and delegates to assembly; OR API failure \u2192 `ConversionFailedException` with no raw-parse fallback; `preserve`-for-EML silently overridden to PDF (no error, assembled PDF returned).",
+      "status": "pending"
+    },
+    {
+      "id": 17,
+      "title": "Integration test: anonymise an EML via the per-document endpoint (`pdf-only` default). Verify output is PDF/A-3b, contains the redacted envelope, redacted renderable attachments as appended pages, unsupported attachments as placeholder pages, and NO embedded original files.",
+      "status": "pending"
+    },
+    {
+      "id": 18,
+      "title": "Integration test: PDF/A-3b conformance via `pdfinfo`/`verapdf`; confirm the PDF contains no embedded file attachments; nested-EML depth-2 renders its redacted envelope; `append_attachment_pages:false` yields envelope-only.",
+      "status": "pending"
+    }
+  ]
+}
