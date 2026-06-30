@@ -463,3 +463,119 @@ describe('completedInFiles — downloadable results in a dossier', () => {
 		expect(store.completedInFiles([])).toEqual([])
 	})
 })
+
+describe('prepareReanonymize — re-open an anonymised file for another run', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+	})
+
+	/**
+	 * A completed source entry that already produced an anonymised output,
+	 * with one reviewed entity carrying non-default decisions.
+	 *
+	 * @return {object} Queue entry.
+	 */
+	function completedEntry() {
+		return {
+			id: 'file-1',
+			name: 'doc.pdf',
+			status: 'completed',
+			viewMode: 'anonymized',
+			fileId: 42,
+			filePath: '/DocuDesk/doc.pdf',
+			entities: [
+				{
+					type: 'PERSON',
+					value: 'Claudia Fischer',
+					_decisionBases: ['strafrechtelijk'],
+					_decisionSkip: true,
+				},
+			],
+			entityCount: 1,
+			anonymizedFileId: 99,
+			anonymizedFileName: 'doc_anonymized.pdf',
+			anonymizedFilePath: '/DocuDesk/doc_anonymized.pdf',
+		}
+	}
+
+	it('re-extracts the source and flips the entry back to extracted', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+		})
+
+		await store.prepareReanonymize(entry)
+
+		expect(axios.post).toHaveBeenCalledWith('/apps/docudesk/api/anonymization/extract/42')
+		expect(entry.status).toBe('extracted')
+		expect(entry.viewMode).toBeUndefined()
+		expect(entry.entities).toHaveLength(1)
+	})
+
+	it('preserves prior per-entity decisions across the re-extract', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		// Backend returns the same entity with a DIFFERENT default basis plus a
+		// newly detected one.
+		axios.post.mockResolvedValue({
+			data: {
+				entities: [
+					{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, bases: ['persoonsgegevens'], relationId: 1 },
+					{ type: 'EMAIL', value: 'a@b.nl', confidence: 0.8, relationId: 2 },
+				],
+			},
+		})
+
+		await store.prepareReanonymize(entry)
+
+		const claudia = entry.entities.find((e) => e.value === 'Claudia Fischer')
+		const email = entry.entities.find((e) => e.value === 'a@b.nl')
+		// Prior decision wins over the backend default.
+		expect(claudia._decisionBases).toEqual(['strafrechtelijk'])
+		expect(claudia._decisionSkip).toBe(true)
+		// Newly detected entity takes the extract defaults.
+		expect(email._decisionSkip).toBe(false)
+	})
+
+	it('keeps the existing anonymised output so the viewer toggle still works', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+		})
+
+		await store.prepareReanonymize(entry)
+
+		expect(entry.anonymizedFileId).toBe(99)
+		expect(entry.anonymizedFilePath).toBe('/DocuDesk/doc_anonymized.pdf')
+	})
+
+	it('settles to completed when the source has no detectable entities', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({ data: { entities: [] } })
+
+		await store.prepareReanonymize(entry)
+
+		expect(entry.status).toBe('completed')
+		expect(entry.entities).toHaveLength(0)
+	})
+
+	it('marks the entry as errored when re-extraction fails', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		axios.post.mockRejectedValue({ message: 'boom' })
+
+		await store.prepareReanonymize(entry)
+
+		expect(entry.status).toBe('error')
+		expect(entry.error).toBe('boom')
+	})
+})

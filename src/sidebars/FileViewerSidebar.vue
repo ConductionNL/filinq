@@ -256,6 +256,23 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
 			</NcButton>
 		</div>
+		<!-- Viewing the original of an already-anonymised file: offer another
+		     run. Re-extracts the source (preserving prior decisions) and hands
+		     off to the normal review → anonymise flow, which overwrites the
+		     existing `_anonymized` output. -->
+		<div v-else-if="isAnonymizedSource" class="sidebar-action-bar">
+			<NcButton
+				type="primary"
+				wide
+				:disabled="reanonymising"
+				@click="onReanonymise">
+				<template #icon>
+					<NcLoadingIcon v-if="reanonymising" :size="20" />
+					<ShieldRefreshOutline v-else :size="20" />
+				</template>
+				{{ t('docudesk', 'Re-anonymize') }}
+			</NcButton>
+		</div>
 	</NcAppSidebar>
 </template>
 
@@ -266,6 +283,7 @@ import axios from '@nextcloud/axios'
 import JSZip from 'jszip'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
+import ShieldRefreshOutline from 'vue-material-design-icons/ShieldRefreshOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
@@ -300,6 +318,7 @@ export default {
 		DdSearchBar,
 		Pencil,
 		ShieldLockOutline,
+		ShieldRefreshOutline,
 		Download,
 	},
 	data() {
@@ -320,6 +339,9 @@ export default {
 			zipping: false,
 			// Set when one or more files could not be added to the zip.
 			zipError: '',
+			// True while re-extracting the source for another anonymisation run
+			// (the "Re-anonymize" button shown when viewing the original).
+			reanonymising: false,
 		}
 	},
 	computed: {
@@ -346,6 +368,29 @@ export default {
 				return undefined
 			}
 			return anonymizationStore.findByFileId(file.fileId)
+		},
+		/**
+		 * True when the viewer is showing the ORIGINAL of a file that has
+		 * already been anonymised this session — the state in which the user
+		 * should be offered a "Re-anonymize" action. Gated on viewing the
+		 * original (not the result) so the button never appears on the
+		 * anonymised view, where the download lives instead.
+		 *
+		 * The signal is a completed source entry that carries an anonymised
+		 * output (`anonymizedFilePath`/`anonymizedFileId`). A re-opened
+		 * anonymised file keyed on the output id does not match — toggling to
+		 * its original re-creates the editable source entry directly.
+		 *
+		 * @return {boolean}
+		 */
+		isAnonymizedSource() {
+			if (fileViewerStore.showAnonymized) {
+				return false
+			}
+			const e = this.entry
+			return !!(e
+				&& e.status === 'completed'
+				&& (e.anonymizedFilePath || e.anonymizedFileId))
 		},
 		/**
 		 * True when the open file lives inside a dossier (a subfolder of
@@ -854,6 +899,26 @@ export default {
 				// current folder. Refresh the document list so it shows up in
 				// the dossier navigation instead of only after a re-entry.
 				await myDocumentsStore.fetchDocuments()
+			}
+		},
+		/**
+		 * Re-open the current (already-anonymised) file's source for another
+		 * anonymisation run. Delegates to the store, which re-extracts the
+		 * source and flips the entry back to the editable `extracted` state —
+		 * the review list + "Anonymize" button then take over, and the next
+		 * run overwrites the existing `_anonymized` output.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onReanonymise() {
+			if (!this.entry) {
+				return
+			}
+			this.reanonymising = true
+			try {
+				await anonymizationStore.prepareReanonymize(this.entry)
+			} finally {
+				this.reanonymising = false
 			}
 		},
 		/**

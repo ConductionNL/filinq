@@ -797,6 +797,78 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
+			 * Re-open an already-anonymised file for another anonymisation run.
+			 *
+			 * Re-extraction is the source of truth: an anonymised entry's stored
+			 * entities are the *removed* set (read-only, resolved from
+			 * placeholders / the source link), not a fresh editable review set
+			 * with the relation ids the decision PATCH needs. Re-POSTing
+			 * `extract` on the source rebuilds the editable cards. The backend
+			 * short-circuits on `isSourceUpToDate`, so this is effectively a
+			 * cached lookup.
+			 *
+			 * Prior per-entity decisions (`_decisionBases` / `_decisionSkip`) are
+			 * carried over by `(type, value)` so a re-run does not silently
+			 * discard earlier review work; newly detected entities take the
+			 * extract defaults.
+			 *
+			 * The existing `anonymizedFile*` fields are kept so the viewer's
+			 * "Show anonymised" toggle still flips to the current result while the
+			 * user re-reviews. The next `anonymiseEntry` overwrites that output
+			 * (same `_anonymized` name, new file id) and refreshes the fields.
+			 *
+			 * @param {object} entry Queue entry of an already-anonymised file.
+			 * @return {Promise<object>} The same entry, transitioned to `extracted`.
+			 */
+			async prepareReanonymize(entry) {
+				if (!entry || !entry.fileId) {
+					return entry
+				}
+
+				// Snapshot prior decisions before re-extraction overwrites the
+				// entity list, so grounds / skip choices the user already made
+				// survive the re-run.
+				const priorDecisions = new Map()
+				for (const e of entry.entities || []) {
+					priorDecisions.set(`${e.type} ${e.value}`, {
+						bases: Array.isArray(e._decisionBases) ? [...e._decisionBases] : [],
+						skip: !!e._decisionSkip,
+					})
+				}
+
+				entry.status = 'extracting'
+				entry.error = null
+				try {
+					const extractResponse = await axios.post(
+						generateUrl(`/apps/docudesk/api/anonymization/extract/${entry.fileId}`),
+					)
+					const entities = decorateEntities(extractResponse.data.entities || [])
+					for (const e of entities) {
+						const prior = priorDecisions.get(`${e.type} ${e.value}`)
+						if (prior) {
+							e._decisionBases = prior.bases
+							e._decisionSkip = prior.skip
+						}
+					}
+					entry.entities = entities
+					entry.entityCount = entities.length
+					// Drop the read-only anonymised view so the editable review
+					// list + "Anonymize" button take over. Keep anonymizedFile*
+					// so the viewer toggle can still show the current result until
+					// the re-run lands.
+					entry.viewMode = undefined
+					entry.detailUnavailable = false
+					entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				} catch (err) {
+					console.error(`Failed to re-extract ${entry.name}:`, err)
+					entry.error = err.response?.data?.error || err.message
+					entry.status = 'error'
+				}
+
+				return entry
+			},
+
+			/**
 			 * Resolve the source↔anonymised mapping recorded for a file.
 			 *
 			 * Every successful anonymisation persists an `anonymizationLink`

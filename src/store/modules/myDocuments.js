@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { defineStore } from 'pinia'
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 
 /**
@@ -30,8 +30,16 @@ function encodeDavPath(path) {
  *   fileSize: number,            - Size in bytes.
  *   modified: string | number,   - Timestamp of last modification.
  *   isFolder: boolean,           - True for folders/dossiers.
- *   isAnonymized: boolean,       - True when the file name contains '_anonymized'.
+ *   isAnonymized: boolean,       - True when the file is the anonymized output
+ *                                  of some source, per the anonymizationLink
+ *                                  register (NOT a filename guess).
  * }
+ *
+ * The concept↔anonymized pairing is read from the OpenRegister
+ * `anonymizationLink` register (feat #107), which maps sourceFileId ↔
+ * anonymizedFileId authoritatively. The overview uses it to show only the
+ * anonymized copy once a source has been anonymized; the original stays
+ * reachable through the "Show original" toggle in the file viewer.
  */
 
 export const useMyDocumentsStore = defineStore(
@@ -44,18 +52,95 @@ export const useMyDocumentsStore = defineStore(
 			total: 0,
 			currentPath: '/DocuDesk',
 			breadcrumbs: [{ name: 'DocuDesk', path: '/DocuDesk' }],
+			// anonymizationLink records (sourceFileId ↔ anonymizedFileId) for the
+			// current user, fetched alongside the document listing.
+			anonymizationLinks: [],
 		}),
 		getters: {
 			/**
+			 * Build the source↔anonymized lookups from the `anonymizationLink`
+			 * records. This is the authoritative pairing (feat #107)
+			 *
+			 * @param {object} state Store state.
+			 * @return {{ sourceToAnon: Map<number, number>, anonToSource: Map<number, number>, anonymizedIds: Set<number> }}
+			 */
+			linkMaps: (state) => {
+				const sourceToAnon = new Map()
+				const anonToSource = new Map()
+				const anonymizedIds = new Set()
+				for (const link of state.anonymizationLinks) {
+					const src = Number(link.sourceFileId)
+					const anon = Number(link.anonymizedFileId)
+					if (Number.isFinite(src) && Number.isFinite(anon)) {
+						sourceToAnon.set(src, anon)
+						anonToSource.set(anon, src)
+						anonymizedIds.add(anon)
+					}
+				}
+				return { sourceToAnon, anonToSource, anonymizedIds }
+			},
+			/**
+			 * Documents to show in the overview. Once a file has been anonymized
+			 * the concept (original) is hidden so only the anonymized copy is
+			 * listed — the original stays reachable through the "Show original"
+			 * toggle in the file viewer. A source is only hidden when its
+			 * anonymized output is actually present in this listing, so a deleted
+			 * output never makes the source vanish. Folders and files without a
+			 * link are always shown.
+			 *
+			 * @return {object[]} Filtered document list.
+			 */
+			visibleDocuments() {
+				const { sourceToAnon } = this.linkMaps
+				const presentIds = new Set(this.documents.map((d) => Number(d.fileId)))
+				return this.documents.filter((d) => {
+					if (d.isFolder) return true
+					const anonId = sourceToAnon.get(Number(d.fileId))
+					return !(anonId != null && presentIds.has(anonId))
+				})
+			},
+			/**
+			 * Find the concept (original) counterpart of an anonymized document
+			 * via the link map. Lets the viewer wire up the "Show original" toggle
+			 * when opening an anonymized file straight from the overview.
+			 *
+			 * @return {(doc: object) => (object|undefined)} Lookup function.
+			 */
+			conceptFor() {
+				return (doc) => {
+					if (!doc) return undefined
+					const srcId = this.linkMaps.anonToSource.get(Number(doc.fileId))
+					if (srcId == null) return undefined
+					return this.documents.find((d) => Number(d.fileId) === srcId)
+				}
+			},
+			/**
+			 * Find the anonymized counterpart of a concept document via the link
+			 * map.
+			 *
+			 * @return {(doc: object) => (object|undefined)} Lookup function.
+			 */
+			anonymizedFor() {
+				return (doc) => {
+					if (!doc) return undefined
+					const anonId = this.linkMaps.sourceToAnon.get(Number(doc.fileId))
+					if (anonId == null) return undefined
+					return this.documents.find((d) => Number(d.fileId) === anonId)
+				}
+			},
+			/**
 			 * Aggregate stats for the stats blocks on the My Documents page.
+			 * Counts the overview's visible documents so hidden concept
+			 * originals are not double-counted alongside their anonymized copy.
 			 *
 			 * @param {object} state Store state.
 			 * @return {{ total: number, entitiesDetected: number, highRisk: number }}
 			 */
-			documentStats: (state) => {
-				const total = state.documents.length
-				const entitiesDetected = state.documents.reduce((sum, f) => sum + (f.entityCount || 0), 0)
-				const highRisk = state.documents.filter((f) => f.riskLevel === 'high' || f.riskLevel === 'very_high').length
+			documentStats() {
+				const docs = this.visibleDocuments
+				const total = docs.length
+				const entitiesDetected = docs.reduce((sum, f) => sum + (f.entityCount || 0), 0)
+				const highRisk = docs.filter((f) => f.riskLevel === 'high' || f.riskLevel === 'very_high').length
 				return { total, entitiesDetected, highRisk }
 			},
 		},
@@ -75,6 +160,11 @@ export const useMyDocumentsStore = defineStore(
 					if (!user) {
 						throw new Error('User not authenticated')
 					}
+
+					// Fetch the authoritative source↔anonymized pairing in parallel
+					// with the listing so the loop below can flag anonymized
+					// outputs without guessing from filenames.
+					const linksPromise = this.fetchAnonymizationLinks()
 
 					// Use Nextcloud WebDAV API to list folder contents. Encode the
 					// path so names with `?`/`#`/`&` don't break the request URL.
@@ -105,6 +195,11 @@ export const useMyDocumentsStore = defineStore(
 					const xmlDoc = parser.parseFromString(response.data, 'text/xml')
 					const responses = xmlDoc.querySelectorAll('response')
 
+					// Links are needed to flag anonymized outputs; wait for them
+					// before building the document list.
+					await linksPromise
+					const { anonymizedIds } = this.linkMaps
+
 					this.documents = []
 					responses.forEach((resp, index) => {
 						// Skip first response (it's the folder itself)
@@ -132,7 +227,7 @@ export const useMyDocumentsStore = defineStore(
 								fileSize,
 								modified: new Date(modified).getTime() / 1000,
 								isFolder,
-								isAnonymized: fileName.includes('_anonymized'),
+								isAnonymized: anonymizedIds.has(fileId),
 							})
 						}
 					})
@@ -151,6 +246,29 @@ export const useMyDocumentsStore = defineStore(
 					this.error = err.message || 'Failed to load documents'
 				} finally {
 					this.loading = false
+				}
+			},
+
+			/**
+			 * Fetch the user's `anonymizationLink` records (sourceFileId ↔
+			 * anonymizedFileId) from OpenRegister and store them. Best-effort:
+			 * on failure the list is cleared so the overview degrades to showing
+			 * every file rather than erroring. The register/schema match the
+			 * reverse lookup used by the anonymization store.
+			 *
+			 * @return {Promise<void>}
+			 */
+			async fetchAnonymizationLinks() {
+				try {
+					const r = await axios.get(
+						generateUrl('/apps/openregister/api/objects/document/anonymizationLink'),
+						// High limit: one link per anonymised source file per user.
+						{ params: { _limit: 10000 } },
+					)
+					this.anonymizationLinks = r.data?.results || []
+				} catch (err) {
+					console.error('Failed to fetch anonymization links:', err)
+					this.anonymizationLinks = []
 				}
 			},
 

@@ -230,7 +230,7 @@ export default {
 		},
 		filteredDocuments() {
 			const query = this.searchQuery.trim().toLowerCase()
-			const docs = myDocumentsStore.documents
+			const docs = myDocumentsStore.visibleDocuments
 			if (!query) return docs
 			return docs.filter((d) => (d.fileName || '').toLowerCase().includes(query))
 		},
@@ -358,7 +358,7 @@ export default {
 			if (row.isFolder) {
 				await myDocumentsStore.openFolder(row.fileName)
 				this.currentPage = 1
-				const firstFile = myDocumentsStore.documents.find((d) => !d.isFolder)
+				const firstFile = myDocumentsStore.visibleDocuments.find((d) => !d.isFolder)
 				if (firstFile) {
 					this.viewFile(firstFile)
 				}
@@ -426,17 +426,32 @@ export default {
 		 * Preview the file inline using DocuDesk's own file viewer modal
 		 * (PDF / docx / text). Folders are ignored.
 		 *
+		 * The overview only lists the anonymized copy once a file has been
+		 * anonymized, so opening one wires up both variants: the concept
+		 * (original) is loaded as the base and the anonymized copy is shown on
+		 * top, leaving the "Show original" toggle to switch back to the concept.
+		 *
 		 * @param {object} row Document row from the table.
 		 */
 		viewFile(row) {
 			if (!row || row.isFolder) return
-			const path = `${myDocumentsStore.currentPath}/${row.fileName}`
+			const concept = row.isAnonymized ? myDocumentsStore.conceptFor(row) : row
+			const anonymized = row.isAnonymized ? row : myDocumentsStore.anonymizedFor(row)
+			const base = concept || row
 			fileViewerStore.open({
-				fileId: row.fileId,
-				fileName: row.fileName,
-				mimeType: row.mimeType,
-				path,
+				fileId: base.fileId,
+				fileName: base.fileName,
+				mimeType: base.mimeType,
+				path: `${myDocumentsStore.currentPath}/${base.fileName}`,
 			})
+			if (anonymized && anonymized.fileId !== base.fileId) {
+				fileViewerStore.setAnonymizedVariant({
+					fileId: anonymized.fileId,
+					fileName: anonymized.fileName,
+					mimeType: anonymized.mimeType,
+					path: `${myDocumentsStore.currentPath}/${anonymized.fileName}`,
+				})
+			}
 		},
 		/**
 		 * Download the file via the classic Files app download endpoint.
