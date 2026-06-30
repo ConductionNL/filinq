@@ -276,6 +276,30 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				{{ t('docudesk', 'Re-anonymize') }}
 			</NcButton>
 		</div>
+		<!-- Single anonymised file (outside a dossier): offer a one-click
+		     export of the finished result. Covers both a file just anonymised
+		     this session and one re-opened from the list. In a dossier the batch
+		     footer above already provides the "Download all" bundle. -->
+		<div
+			v-else-if="isViewingAnonymizedResult"
+			class="sidebar-action-bar sidebar-action-bar--stacked">
+			<NcButton
+				wide
+				type="primary"
+				:disabled="exporting"
+				@click="onExport">
+				<template #icon>
+					<NcLoadingIcon v-if="exporting" :size="20" />
+					<Download v-else :size="20" />
+				</template>
+				{{ exporting
+					? t('docudesk', 'Preparing download…')
+					: t('docudesk', 'Export file(s)') }}
+			</NcButton>
+			<p v-if="exportError" class="dossier-batch-summary dossier-batch-summary--error">
+				{{ exportError }}
+			</p>
+		</div>
 	</NcAppSidebar>
 </template>
 
@@ -345,6 +369,10 @@ export default {
 			// True while re-extracting the source for another anonymisation run
 			// (the "Re-anonymize" button shown when viewing the original).
 			reanonymising: false,
+			// True while the single-file "Export files" download is in flight.
+			exporting: false,
+			// Set when the export download could not be produced.
+			exportError: '',
 		}
 	},
 	computed: {
@@ -569,6 +597,28 @@ export default {
 		 */
 		isCompletedResult() {
 			return this.entry?.status === 'completed' && !!this.entry?.anonymizedFilePath
+		},
+		/**
+		 * True when the anonymised result of a standalone (non-dossier) file is
+		 * currently on screen — the state in which the "Export files" footer
+		 * appears. Two paths reach it:
+		 *  - a file just anonymised this session (`isCompletedResult`), but only
+		 *    while its anonymised variant is the one shown (not after toggling
+		 *    back to the original, where "Re-anonymize" takes over);
+		 *  - an already-anonymised file re-opened from the list
+		 *    (`viewMode === 'anonymized'`).
+		 * In a dossier the batch footer's "Download all" covers this instead.
+		 *
+		 * @return {boolean}
+		 */
+		isViewingAnonymizedResult() {
+			if (this.inDossier) {
+				return false
+			}
+			if (this.entry?.viewMode === 'anonymized') {
+				return true
+			}
+			return this.isCompletedResult && fileViewerStore.showAnonymized
 		},
 		/**
 		 * Entities actually removed by the just-finished run, mapped onto the
@@ -1025,6 +1075,42 @@ export default {
 				this.zipError = t('docudesk', 'Preparing the download failed.')
 			} finally {
 				this.zipping = false
+			}
+		},
+		/**
+		 * Export (download) the single anonymised file currently open.
+		 *
+		 * Exports whatever anonymised result is on screen: the viewer's
+		 * `currentFile` is the anonymised file in both cases — the variant
+		 * switched in after a fresh run (`setAnonymizedVariant`) and the
+		 * re-opened anonymised document. Using `entry.filePath` would be wrong
+		 * for a fresh run, where it still points at the original source. Fetched
+		 * over WebDAV and saved via a blob so the download keeps the file name
+		 * instead of opening inline. Mirrors `downloadAll` for one file.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onExport() {
+			if (this.exporting) {
+				return
+			}
+			const file = fileViewerStore.currentFile
+			const url = this.downloadUrlFor(file?.path)
+			if (!url) {
+				this.exportError = t('docudesk', 'Could not locate the file to export.')
+				return
+			}
+			this.exporting = true
+			this.exportError = ''
+			try {
+				const res = await axios.get(url, { responseType: 'blob' })
+				const name = file?.fileName || 'export'
+				this.triggerBlobDownload(res.data, name)
+			} catch (err) {
+				console.error('Export: could not download', url, err)
+				this.exportError = t('docudesk', 'Exporting the file failed.')
+			} finally {
+				this.exporting = false
 			}
 		},
 		/**
