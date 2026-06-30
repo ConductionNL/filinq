@@ -190,6 +190,28 @@
       "spec_ref": "anonymization",
       "acceptance_criteria": [],
       "files_likely_affected": []
+    },
+    {
+      "id": 18,
+      "title": "Admin settings UI: 3-option output-format radio",
+      "description": "Replace the boolean PDF switch in Settings.vue with a pdf-only/pdf/preserve radio group bound to docudesk.anonymisation.default_output_format; default + load fallback pdf-only.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "src/views/settings/Settings.vue"
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Admin settings UI: pass-through save mapping + i18n",
+      "description": "Persist the selected value as-is (validated, default pdf-only) instead of coercing to pdf/preserve; update labels/description i18n for the three modes.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "src/views/settings/Settings.vue"
+      ]
     }
   ]
 }

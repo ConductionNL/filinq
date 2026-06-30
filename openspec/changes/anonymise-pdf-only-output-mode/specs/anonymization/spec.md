@@ -73,3 +73,18 @@ When the anonymised result is already a PDF, the conversion gate (guarded by `mi
 - **THEN** no conversion is attempted
 - **AND** no extra deletion occurs (there is no native intermediate)
 - **AND** the behaviour is identical to `outputFormat: "pdf"` for the same input
+
+### Requirement: The admin settings UI MUST let the operator choose the default among all three modes
+
+The DocuDesk admin settings panel MUST expose the tenant default `docudesk.anonymisation.default_output_format` as a control that can select any of the three values `pdf-only`, `pdf`, `preserve` (not a two-state toggle). The control MUST load the persisted value, default to `pdf-only` when unset, and persist exactly the selected value without coercing an unrecognised/ third value to one of only two. A boolean toggle is insufficient because it cannot represent or preserve `pdf-only`.
+
+#### Scenario: Admin selects pdf-only and it persists
+- **GIVEN** the admin settings panel with the Anonymisation section
+- **WHEN** the operator selects the "PDF only" option and saves
+- **THEN** `docudesk.anonymisation.default_output_format` is persisted as `pdf-only`
+- **AND** re-opening the panel shows "PDF only" selected
+
+#### Scenario: Saving the panel never clobbers pdf-only
+- **GIVEN** the persisted default is `pdf-only`
+- **WHEN** the operator opens the settings panel and saves without changing the output-format control
+- **THEN** the persisted value remains `pdf-only` (it is NOT coerced to `pdf` or `preserve`)

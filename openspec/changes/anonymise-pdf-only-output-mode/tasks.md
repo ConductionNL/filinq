@@ -30,6 +30,11 @@
 - [x] 5.3 Run `composer check:strict` — clean (fix any pre-existing issues only in touched files per the workflow rule).
 - [x] 5.4 Run `openspec validate anonymise-pdf-only-output-mode` — clean.
 
+## 6. Admin settings UI
+
+- [x] 6.1 In `src/views/settings/Settings.vue`, replace the boolean PDF switch with a three-option radio group (`pdf-only` / `pdf` / `preserve`) bound to `docudesk.anonymisation.default_output_format`; default the in-component value to `pdf-only` and load the persisted value with a `pdf-only` fallback.
+- [x] 6.2 Fix the save mapping so the selected value is persisted as-is (validated against the three allowed values, defaulting to `pdf-only`) instead of being coerced to `pdf`/`preserve`; update labels/description i18n strings to describe the three modes.
+
 ## Acceptance criteria
 
 - Resolved mode `pdf-only` with a non-PDF input writes a PDF/A-3b and leaves NO native anonymised intermediate in Nextcloud Files.
