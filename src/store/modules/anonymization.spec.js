@@ -109,7 +109,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		expect(axios.post).toHaveBeenCalledTimes(1)
 		expect(axios.post).toHaveBeenCalledWith(
 			'/apps/docudesk/api/anonymization/anonymize/42',
-			{ entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }] },
+			{ entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }], scope: 'document' },
 		)
 		expect(entry.status).toBe('completed')
 		expect(entry.anonymizedFilePath).toBe('/files/doc-anon.pdf')
@@ -125,7 +125,7 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 
 		expect(axios.post).toHaveBeenCalledWith(
 			'/apps/docudesk/api/anonymization/anonymize/42',
-			{ entities: [] },
+			{ entities: [], scope: 'document' },
 		)
 	})
 

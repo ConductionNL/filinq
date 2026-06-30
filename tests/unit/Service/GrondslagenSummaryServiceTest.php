@@ -21,6 +21,7 @@ use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCA\DocuDesk\Service\PdfService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
+use OCP\IL10N;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -145,15 +146,14 @@ class GrondslagenSummaryServiceTest extends TestCase
     /**
      * `resolveBaseLabels` produces a placeholder entry for every input ref.
      *
-     * Phase 1 stub behaviour — the dossier register's `base` schema lookup
-     * lives in a follow-up (the dossier-side resolution path runs through
-     * `getObjectService`). For now every input maps to a "⟨grondslag
-     * verwijderd: …⟩" placeholder. This test pins that contract so the
-     * follow-up replacement is a clean diff.
+     * When OpenRegister's ObjectService is unavailable (the case here — the
+     * test stubs no installed apps), `resolveBaseLabels` is best-effort: it
+     * returns one `{name, description}` entry per ref with `name` set to the
+     * raw ref (so the operator sees the slug rather than a dangling label).
      *
      * @return void
      */
-    public function testResolveBaseLabelsProducesPlaceholders(): void
+    public function testResolveBaseLabelsFallsBackToRawRef(): void
     {
         $method = new ReflectionMethod(
             objectOrMethod: GrondslagenSummaryService::class,
@@ -166,9 +166,11 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->assertCount(expectedCount: 2, haystack: $result);
         $this->assertArrayHasKey(key: 'persoonsgegevens', array: $result);
         $this->assertArrayHasKey(key: 'long-uuid-12345', array: $result);
-        $this->assertStringStartsWith(prefix: '⟨grondslag verwijderd:', string: $result['persoonsgegevens']);
+        // ObjectService unavailable → each ref maps to {name: <raw ref>, description: ''}.
+        $this->assertSame(expected: 'persoonsgegevens', actual: $result['persoonsgegevens']['name']);
+        $this->assertSame(expected: '', actual: $result['persoonsgegevens']['description']);
 
-    }//end testResolveBaseLabelsProducesPlaceholders()
+    }//end testResolveBaseLabelsFallsBackToRawRef()
 
 
     /**
@@ -200,8 +202,10 @@ class GrondslagenSummaryServiceTest extends TestCase
 
 
     /**
-     * `aggregateForDossier` produces per-document, per-basis, and totals
-     * tables matching the per-dossier template's expected shape.
+     * `aggregateForDossier` DEDUPS to one row per distinct entity
+     * (entityType:entityId): the same entity across files yields a single row
+     * with the occurrence count summed, the files comma-joined, and the
+     * grondslagen unioned. Rows are ordered by TYPE then NUMERIC id ascending.
      *
      * @return void
      */
@@ -213,73 +217,137 @@ class GrondslagenSummaryServiceTest extends TestCase
         );
         $method->setAccessible(accessible: true);
 
+        // PERSON:1 appears in BOTH files (must dedup to one row); DATE:2 and
+        // LOCATION:10 are distinct. Numbers chosen so a lexical sort (10<2)
+        // would mis-order — the numeric sort must put 2 before 10.
         $perFile = [
             [
                 'fileId'   => 10,
                 'filename' => 'verslag-1.pdf',
                 'entities' => [
-                    ['bases' => ['persoonsgegevens']],
-                    ['bases' => ['persoonsgegevens', 'strafrechtelijk']],
+                    [
+                        'placeholder' => '[PERSOON: 1]',
+                        'entityType'  => 'PERSON',
+                        'entityId'    => 1,
+                        'count'       => 1,
+                        'bases'       => ['persoonsgegevens'],
+                        'baseLabels'  => ['Persoonsgegevens'],
+                    ],
+                    [
+                        'placeholder' => '[DATUM: 2]',
+                        'entityType'  => 'DATE',
+                        'entityId'    => 2,
+                        'count'       => 1,
+                        'bases'       => ['strafrechtelijk'],
+                        'baseLabels'  => ['Strafrechtelijke gegevens'],
+                    ],
                 ],
             ],
             [
                 'fileId'   => 11,
                 'filename' => 'verslag-2.pdf',
                 'entities' => [
-                    ['bases' => ['nationale-veiligheid']],
-                    ['bases' => ['persoonsgegevens']],
+                    [
+                        'placeholder' => '[PERSOON: 1]',
+                        'entityType'  => 'PERSON',
+                        'entityId'    => 1,
+                        'count'       => 2,
+                        'bases'       => ['persoonsgegevens'],
+                        'baseLabels'  => ['Persoonsgegevens'],
+                    ],
+                    [
+                        'placeholder' => '[LOCATIE: 10]',
+                        'entityType'  => 'LOCATION',
+                        'entityId'    => 10,
+                        'count'       => 1,
+                        'bases'       => ['nationale-veiligheid'],
+                        'baseLabels'  => ['Nationale veiligheid'],
+                    ],
                 ],
             ],
         ];
 
-        $labelMap = [
-            'persoonsgegevens'     => 'Persoonsgegevens',
-            'strafrechtelijk'      => 'Strafrechtelijke gegevens',
-            'nationale-veiligheid' => 'Nationale veiligheid',
-        ];
+        $result = $method->invoke($this->service, $perFile, []);
 
-        $result = $method->invoke($this->service, $perFile, $labelMap);
-
+        // Totals.
         $this->assertSame(expected: 2, actual: $result['totals']['documentCount']);
-        $this->assertSame(expected: 4, actual: $result['totals']['entityCount']);
+        // Total occurrences across files: 1 + 1 (file 10) + 2 + 1 (file 11) = 5.
+        $this->assertSame(expected: 5, actual: $result['totals']['entityCount']);
+        $this->assertSame(expected: 3, actual: $result['totals']['distinctEntityCount']);
         $this->assertSame(expected: 3, actual: $result['totals']['distinctBasesCount']);
 
-        $this->assertCount(expectedCount: 2, haystack: $result['perDocument']);
-        $this->assertSame(expected: 'verslag-1.pdf', actual: $result['perDocument'][0]['filename']);
-        $this->assertSame(expected: 2, actual: $result['perDocument'][0]['entityCount']);
+        // Deduped: one row per distinct entity, numeric order DATE 2 → LOCATION 10 → PERSON 1.
+        $rows = $result['rows'];
+        $this->assertCount(expectedCount: 3, haystack: $rows);
+        $this->assertSame(expected: '[DATUM: 2]', actual: $rows[0]['placeholder']);
+        $this->assertSame(expected: '[LOCATIE: 10]', actual: $rows[1]['placeholder']);
+        $this->assertSame(expected: '[PERSOON: 1]', actual: $rows[2]['placeholder']);
 
-        $perBasis = $result['perBasis'];
-        $this->assertCount(expectedCount: 3, haystack: $perBasis);
-
-        // Persoonsgegevens appears in both documents, three times total.
-        $persoonsgegevens = $this->findBasisRow(rows: $perBasis, ref: 'persoonsgegevens');
-        $this->assertNotNull(actual: $persoonsgegevens);
-        $this->assertSame(expected: 'Persoonsgegevens', actual: $persoonsgegevens['name']);
-        $this->assertSame(expected: 2, actual: $persoonsgegevens['documentCount']);
-        $this->assertSame(expected: 3, actual: $persoonsgegevens['entityCount']);
+        // PERSON:1 merged across both files: count summed, files joined.
+        $this->assertSame(expected: 3, actual: $rows[2]['count']);
+        $this->assertSame(expected: 'verslag-1.pdf, verslag-2.pdf', actual: $rows[2]['filename']);
 
     }//end testAggregateForDossier()
 
 
     /**
-     * Find a per-basis row by its `ref`. Returns null when missing.
+     * The summary localises the placeholder TYPE to the acting user's language
+     * (PERSON → PERSOON) so the legend matches OpenRegister's redacted output;
+     * an unknown type falls back to its raw label.
      *
-     * @param array<int, array<string, mixed>> $rows Per-basis rows.
-     * @param string                           $ref  Basis ref to locate.
-     *
-     * @return array<string, mixed>|null
+     * @return void
      */
-    private function findBasisRow(array $rows, string $ref): ?array
+    public function testLocalizeEntityTypeTranslatesKnownTypesAndFallsBack(): void
     {
-        foreach ($rows as $row) {
-            if (($row['ref'] ?? null) === $ref) {
-                return $row;
+        $l10n = $this->createMock(originalClassName: IL10N::class);
+        $l10n->method('t')->willReturnCallback(
+            static function (string $text): string {
+                $map = ['PERSON' => 'PERSOON', 'ORGANIZATION' => 'ORGANISATIE'];
+                return ($map[$text] ?? $text);
             }
-        }
+        );
 
-        return null;
+        $service = new GrondslagenSummaryService(
+            logger: $this->mockLogger,
+            pdfService: $this->mockPdfService,
+            rootFolder: $this->mockRootFolder,
+            userSession: $this->mockUserSession,
+            appManager: $this->mockAppManager,
+            container: $this->mockContainer,
+            l10n: $l10n
+        );
 
-    }//end findBasisRow()
+        $method = new ReflectionMethod(
+            objectOrMethod: GrondslagenSummaryService::class,
+            method: 'localizeEntityType'
+        );
+        $method->setAccessible(accessible: true);
+
+        $this->assertSame(expected: 'PERSOON', actual: $method->invoke($service, 'PERSON'));
+        $this->assertSame(expected: 'ORGANISATIE', actual: $method->invoke($service, 'ORGANIZATION'));
+        // Unknown / free-form type → raw label unchanged.
+        $this->assertSame(expected: 'CUSTOM_THING', actual: $method->invoke($service, 'CUSTOM_THING'));
+
+    }//end testLocalizeEntityTypeTranslatesKnownTypesAndFallsBack()
+
+
+    /**
+     * With no IL10N injected the raw English label is emitted.
+     *
+     * @return void
+     */
+    public function testLocalizeEntityTypeWithoutL10nReturnsRaw(): void
+    {
+        // $this->service was constructed without an IL10N (l10n defaults null).
+        $method = new ReflectionMethod(
+            objectOrMethod: GrondslagenSummaryService::class,
+            method: 'localizeEntityType'
+        );
+        $method->setAccessible(accessible: true);
+
+        $this->assertSame(expected: 'PERSON', actual: $method->invoke($this->service, 'PERSON'));
+
+    }//end testLocalizeEntityTypeWithoutL10nReturnsRaw()
 
 
 }//end class

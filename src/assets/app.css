@@ -1,3 +1,5 @@
+/* DO NOT OVERWRITE THE DEFAULT NEXTCLOUD CSS VARIABLES, BAD IDEA, WILL BREAK A LOT OF VISUAL PARTS */
+
 /**
  * Global (unscoped) styles for DocuDesk.
  *
@@ -7,30 +9,54 @@
  * style genuinely needs to be unscoped (e.g. resets that must apply
  * regardless of which component is mounted).
  *
- * Prefer overriding via Nextcloud CSS variables over selector + !important.
- * Only fall back to direct property overrides when no NC variable exists,
- * and only add !important when the lib itself sets the property with
- * !important on a higher-specificity (`[data-v-…]`) selector.
+ * Theming rules (read before adding colours):
+ *   1. NEVER override a Nextcloud token (`--color-*`, `--border-radius-*`, …)
+ *      on `:root`. `:root` is the document root shared with the page chrome
+ *      (header, profile menu, modals teleported to <body>), so a `:root`
+ *      remap leaks DocuDesk's brand into Nextcloud itself. Scope any NC-token
+ *      override to `.app-docudesk` (the app content root) or a component class.
+ *   2. Define DocuDesk's own colours as `--dd-*` tokens here. The tokens are
+ *      theme-aware: light values live in `:root`, dark values are re-declared
+ *      under Nextcloud's dark-theme selectors below. Components reference the
+ *      `--dd-*` token and flip automatically — they must NOT hard-code a hex
+ *      value or force an NC token to a light-only colour.
+ *   3. Prefer an adaptive NC token (`--color-main-background`, `--color-border`,
+ *      `--color-warning`, …) over a `--dd-*` token when the surface has no
+ *      brand requirement — those already track the theme.
  */
 
-/* DocuDesk design tokens. This stylesheet is only loaded inside the
-   DocuDesk bundle (see main.js), so a `:root` override applies to this
-   app only and does not leak into other Nextcloud apps. */
+/* DocuDesk design tokens. This stylesheet is only loaded inside the DocuDesk
+   bundle (see main.js); the `--dd-*` tokens are namespaced so they are inert
+   anywhere they are not referenced, and may safely live on `:root`. */
 :root {
+	/* Raw brand palette — fixed light-mode constants. Use the semantic,
+	   theme-aware tokens below for anything that must survive dark mode;
+	   reach for a raw colour only when the value is genuinely fixed (e.g.
+	   text that always sits on the brand-blue button, or a light-background
+	   status chip). */
 	--dd-color-dark-blue: #02162E;
 	--dd-color-blue: #2874D1;
+	--dd-color-blue-bright: #4698fc;
 	--dd-color-white: #FFF;
 	--dd-color-white-70: rgba(255, 255, 255, 0.70);
 	--dd-color-light-grey: rgba(247, 247, 247, 0.70);
 
-	/* Remap Nextcloud's `--color-main-text` token so all components that
-	   honour it — including @nextcloud/vue internals — pick up the brand
-	   colour for default text. */
-	--color-main-text: var(--dd-color-dark-blue, #02162E);
+	/* Semantic, theme-aware tokens (light values; dark values re-declared
+	   under the dark-theme selectors at the bottom of this file). These are
+	   what components should consume. */
+	--dd-ink: var(--dd-color-dark-blue);            /* primary foreground text */
+	--dd-glass-bg: rgba(255, 255, 255, 0.54);       /* frosted nav/sidebar/content glass */
+	--dd-surface: #fff;                             /* opaque card / header surface */
+	--dd-surface-hover: #efefef;                    /* nav-entry hover fill */
+	--dd-surface-subtle: var(--dd-color-light-grey);/* tertiary button / soft fill */
+	--dd-elevated-highlight: var(--dd-color-white); /* inset highlight on raised surfaces */
+	--dd-border: #d9d9d9;                           /* card / control borders */
+	--dd-app-bg: #EAE9E6;                           /* backdrop behind floating cards */
+	--dd-active-pill-bg: #fff;                      /* active navigation-entry pill */
+	--dd-on-primary: var(--dd-color-white);         /* text/border on the brand-blue button */
 
-	/* Remap Nextcloud's `--border-radius-pill` token so all components that
-	   honour it pick up the brand radius. */
-	--border-radius-pill: var(--dd-border-radius-pill, 6px);
+	/* Brand pill radius. Scoped to `.app-docudesk` below (not `:root`) so it
+	   does not reshape the Nextcloud header's pills. */
 
 	/* Shared elevation + radius scale. Bare 4px / 12px values map to NC's
 	   native --border-radius / --border-radius-large and are not duplicated
@@ -43,12 +69,20 @@
 	--dd-shadow-doc: 0 2px 8px rgba(0, 0, 0, 0.15);                                    /* document viewers */
 	--dd-shadow-popout: 0 0 10px 0 rgba(0, 0, 0, 0.12), 0 0 2px 0 rgba(0, 0, 0, 0.24); /* menu pop-out */
 
+	/* Button drop shadow (the OUTER lift, not the on-fill inset gloss). A faint
+	   black reads as elevation over a light surface; the same alpha vanishes
+	   over a dark one, so the dark values (below) deepen it. */
+	--dd-shadow-button: 0 4px 20px 0 rgba(0, 0, 0, 0.09);
+	--dd-shadow-button-hover: 0 6px 22px 0 rgba(0, 0, 0, 0.13);
+
 	/* Entity-type colours. One colour per detected entity type, used for both
 	   the sidebar type badge and the in-document highlight (see
-	   src/services/entityTypes.js). Definitive per-type colours are TBD — every
-	   type currently points at the shared default so the palette can be tuned
-	   later by editing only these vars. `--dd-entity-color-text` is the badge
-	   foreground; revisit contrast when the backgrounds diverge. */
+	   src/services/entityTypes.js). The badge sits on a fixed light background
+	   in both themes (it reads as a chip, matching the white-paper document
+	   viewers), so the foreground stays the fixed dark-blue brand ink rather
+	   than the theme-aware --dd-ink. Definitive per-type colours are TBD —
+	   every type currently points at the shared default so the palette can be
+	   tuned later by editing only these vars. */
 	--dd-entity-color-default: #e8eef7;
 	--dd-entity-color-text: var(--dd-color-dark-blue, #02162E);
 	--dd-entity-color-person: var(--dd-entity-color-default);
@@ -61,8 +95,53 @@
 	--dd-entity-color-other: var(--dd-entity-color-default);
 }
 
-#content {
-	color: var(--color-main-text);
+/* Dark-theme values for the semantic tokens. Nextcloud applies a theme via a
+   `[data-theme-<id>]` attribute, except the "default" theme which follows the
+   OS preference through a media query. Cover all dark states:
+     - user explicitly chose Dark / Dark (high contrast)
+     - user left it on Default and the OS is in dark mode
+   Only the `--dd-*` tokens are re-declared here — no NC token is touched. */
+[data-theme-dark],
+[data-theme-dark-highcontrast] {
+	--dd-ink: #e9edf3;
+	--dd-glass-bg: rgba(23, 23, 23, 0.54);
+	--dd-surface: #1c1f24;
+	--dd-surface-hover: rgba(255, 255, 255, 0.08);
+	--dd-surface-subtle: rgba(255, 255, 255, 0.06);
+	--dd-elevated-highlight: rgba(255, 255, 255, 0.06);
+	--dd-border: rgba(255, 255, 255, 0.13);
+	--dd-app-bg: #121316;
+	--dd-active-pill-bg: rgba(255, 255, 255, 0.11);
+	/* Deepen the drop shadow so the lift still reads against a dark surface. */
+	--dd-shadow-button: 0 4px 18px -2px rgba(0, 0, 0, 0.55);
+	--dd-shadow-button-hover: 0 8px 24px -2px rgba(0, 0, 0, 0.65);
+}
+
+@media (prefers-color-scheme: dark) {
+	[data-theme-default] {
+		--dd-ink: #e9edf3;
+		--dd-glass-bg: rgba(23, 23, 23, 0.54);
+		--dd-surface: #1c1f24;
+		--dd-surface-hover: rgba(255, 255, 255, 0.08);
+		--dd-surface-subtle: rgba(255, 255, 255, 0.06);
+		--dd-elevated-highlight: rgba(255, 255, 255, 0.06);
+		--dd-border: rgba(255, 255, 255, 0.13);
+		--dd-app-bg: #121316;
+		--dd-active-pill-bg: rgba(255, 255, 255, 0.11);
+		--dd-shadow-button: 0 4px 18px -2px rgba(0, 0, 0, 0.55);
+		--dd-shadow-button-hover: 0 8px 24px -2px rgba(0, 0, 0, 0.65);
+	}
+}
+
+/* App content root (the element NcContent renders, `<div class="content
+   app-docudesk">`). Scope brand text + pill radius here, NOT on `:root`, so
+   the Nextcloud header and profile menu keep their own theming. Remapping
+   `--color-main-text` to the brand ink makes @nextcloud/vue children pick up
+   the brand colour; --dd-ink is theme-aware so this stays legible in dark. */
+.app-docudesk {
+	color: var(--dd-ink);
+	--color-main-text: var(--dd-ink);
+	--border-radius-pill: var(--dd-border-radius-pill, 6px);
 }
 
 /* Entity highlight spans injected into the document viewers (T09). The
@@ -100,8 +179,10 @@
 /* CnStatusBadge: each variant resolves its text colour through a Nextcloud
    token (--color-success, --color-warning-text, etc.). Remap those tokens
    on the badge itself so every variant picks up the dark-blue brand colour
-   without overriding `color` directly. Background tokens use distinct
-   `*-light` vars and remain untouched. */
+   without overriding `color` directly. The badge backgrounds are fixed light
+   `*-light` colours in both themes, so the foreground stays the fixed
+   dark-blue brand ink (not the theme-aware --dd-ink). This is a scoped
+   component override, not a global one. */
 .cn-status-badge {
 	--color-main-text: var(--dd-color-dark-blue, #02162E);
 	--color-primary-element: var(--dd-color-dark-blue, #02162E);
@@ -110,7 +191,6 @@
 	--color-warning-text: var(--dd-color-dark-blue, #02162E);
 	--color-error: var(--dd-color-dark-blue, #02162E);
 	--color-info: var(--dd-color-dark-blue, #02162E);
-
 	border: 1px solid var(--dd-badge-border-color, var(--color-primary-element));
 }
 

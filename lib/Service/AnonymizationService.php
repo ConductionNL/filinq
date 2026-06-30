@@ -158,15 +158,28 @@ class AnonymizationService
      *                                                        the anonymise — a structured
      *                                                        `warning` is attached to the result
      *                                                        instead.
-     * @param string                      $outputFormat       Output format gate. `"pdf"` (default)
-     *                                                        runs the post-anonymise PDF conversion
-     *                                                        cascade and rolls back the intermediate
-     *                                                        if conversion fails (re-throws
+     * @param string                      $outputFormat       Output format gate. `"pdf-only"`
+     *                                                        (default) and `"pdf"` both run the
+     *                                                        post-anonymise PDF conversion cascade
+     *                                                        and roll back the intermediate if
+     *                                                        conversion fails (re-throws
      *                                                        ConversionFailedException for the
      *                                                        controller to surface as HTTP 422).
+     *                                                        `"pdf-only"` additionally best-effort
+     *                                                        deletes the native anonymised
+     *                                                        intermediate after a successful
+     *                                                        conversion so only the PDF remains;
+     *                                                        `"pdf"` keeps the native intermediate.
      *                                                        `"preserve"` skips conversion and
      *                                                        returns the anonymised file in its
      *                                                        native format.
+     * @param string                      $scope              Placeholder-numbering scope forwarded to
+     *                                                        OpenRegister: `"document"` (default) or
+     *                                                        `"dossier"` (consistent numbering across
+     *                                                        the dossier folder's files).
+     * @param string|null                 $dossierKey         Stable folder id for the dossier when
+     *                                                        $scope='dossier'; null lets OpenRegister
+     *                                                        fall back to the file's parent folder.
      *
      * @return array<string, mixed> Anonymization result. Adds the optional `warning` field when
      *                              the grondslagen-summary step failed but the anonymise itself
@@ -182,13 +195,24 @@ class AnonymizationService
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf-only',
+        string $scope='document',
+        ?string $dossierKey=null
     ): array {
         try {
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
-            $result         = $fileService->anonymizeDocument($node, $mappedEntities);
+
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // 'document' (default) numbers entities locally to this file;
+            // 'dossier' makes the number consistent across the dossier folder's
+            // files. OpenRegister derives the dossier from $dossierKey (a stable
+            // folder id) or falls back to the file's parent folder when null —
+            // so a folder anonymise only needs to signal scope=dossier. Passed
+            // positionally for compatibility with the reflectively-resolved
+            // OpenRegister FileService.
+            $result = $fileService->anonymizeDocument($node, $mappedEntities, $scope, $dossierKey);
 
             // Best-effort policy: OpenRegister now produces the anonymised file
             // even when some entity text could not be removed (e.g. the ExApp
@@ -202,6 +226,18 @@ class AnonymizationService
                 $residualEntities = $fileService->getLastResidualEntities();
             }
 
+            // Per-entity placeholder map (anonymisation-placeholder-id-scope):
+            // the EXACT placeholder OpenRegister emitted per global entity id
+            // (e.g. `"7" => "[PERSOON: 1]"`), so the grondslagen-summary renders
+            // the same scope-local number + localized label the document carries
+            // instead of re-deriving `[<TYPE>: <entity_id>]`. Defensive
+            // method_exists() for older OpenRegister versions (summary then
+            // falls back to the global id).
+            $placeholderMap = [];
+            if (method_exists($fileService, 'getLastPlaceholderMap') === true) {
+                $placeholderMap = $fileService->getLastPlaceholderMap();
+            }
+
             $this->logger->info(
                 'Document anonymized',
                 [
@@ -212,15 +248,25 @@ class AnonymizationService
                 ]
             );
 
-            // PDF conversion gate: when outputFormat is 'pdf' AND the
-            // anonymised result is not already a PDF, run the cascade.
+            // PDF conversion gate: when outputFormat requests a PDF
+            // ('pdf-only' or 'pdf') AND the anonymised result is not
+            // already a PDF, run the cascade.
             // On failure: delete the un-converted intermediate (the
             // operator must NOT see a half-finished native-format
             // output when they asked for PDF) and re-throw the typed
             // exception so the controller maps it to 422.
-            if ($outputFormat === 'pdf' && $result instanceof File === true) {
+            // On success in 'pdf-only' mode: best-effort delete the native
+            // anonymised intermediate so only the PDF remains.
+            if (in_array($outputFormat, ['pdf-only', 'pdf'], true) === true && $result instanceof File === true) {
                 $resultMime = (string) $result->getMimeType();
                 if ($resultMime !== 'application/pdf') {
+                    // Capture the native anonymised node BEFORE $result is
+                    // reassigned to the converted PDF — 'pdf-only' deletes it
+                    // after a successful conversion. When the result is
+                    // already a PDF the cascade is skipped, so there is no
+                    // native intermediate to delete and 'pdf-only' behaves
+                    // identically to 'pdf'.
+                    $nativeIntermediate = $result;
                     try {
                         $result = $this->pdfConversion->convertToPdf($result);
                     } catch (ConversionFailedException $e) {
@@ -234,9 +280,11 @@ class AnonymizationService
                         // Best-effort rollback. If delete fails, log
                         // and continue — re-throwing is more important
                         // than leaving the operator in a partial state
-                        // that they CAN inspect (they sent
-                        // outputFormat: "pdf" and got 422, so the
-                        // expectation is "no file written").
+                        // that they CAN inspect (they sent a PDF
+                        // outputFormat and got 422, so the expectation
+                        // is "no file written"). $result still points at
+                        // the un-converted native intermediate here, as
+                        // the reassignment above only runs on success.
                         try {
                             $result->delete();
                         } catch (Throwable $deleteError) {
@@ -252,6 +300,27 @@ class AnonymizationService
 
                         throw $e;
                     }//end try
+
+                    // 'pdf-only': the conversion succeeded and the PDF is the
+                    // referenced output, so the native intermediate is now
+                    // un-redactable leftover. Best-effort delete it; a failure
+                    // here MUST NOT fail an otherwise-successful run (mirrors
+                    // the rollback above). PII-free log (file id + exception
+                    // metadata only).
+                    if ($outputFormat === 'pdf-only') {
+                        try {
+                            $nativeIntermediate->delete();
+                        } catch (Throwable $deleteError) {
+                            $this->logger->warning(
+                                'pdf-only: failed to delete native anonymised intermediate; orphaned file remains.',
+                                [
+                                    'fileId'    => $fileId,
+                                    'exception' => get_class($deleteError),
+                                    'message'   => $deleteError->getMessage(),
+                                ]
+                            );
+                        }
+                    }//end if
                 }//end if
             }//end if
 
@@ -269,7 +338,8 @@ class AnonymizationService
                 $resultInfo = $this->attachGrondslagenSummary(
                     anonymisedNode: $result,
                     sourceFileId: $fileId,
-                    resultInfo: $resultInfo
+                    resultInfo: $resultInfo,
+                    placeholderMap: $placeholderMap
                 );
             }
 
@@ -545,13 +615,18 @@ class AnonymizationService
      * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
      * @param int                  $sourceFileId   The pre-anonymisation source file id (used to look
      *                                             up the EntityRelation rows that carry the bases).
-     * @param array<string, mixed> $resultInfo     The current result info — extended with the
-     *                                             summary's `summaryFileId` / `warning` fields and
-     *                                             returned.
+     * @param array<string, mixed>  $resultInfo     The current result info — extended with the
+     *                                              summary's `summaryFileId` / `warning` fields and
+     *                                              returned.
+     * @param array<string, string> $placeholderMap OpenRegister's per-entity placeholder map
+     *                                              (global entity id → emitted placeholder, e.g.
+     *                                              `"7" => "[PERSOON: 1]"`) so the summary renders
+     *                                              the SAME placeholder the document carries. Empty
+     *                                              → summary falls back to `[<TYPE>: <entity_id>]`.
      *
      * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo, array $placeholderMap=[]): array
     {
         if (($anonymisedNode instanceof \OCP\Files\File) === false) {
             $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
@@ -565,13 +640,15 @@ class AnonymizationService
             if ($isPdf === true) {
                 $this->grondslagenSummary->appendSummaryToPdf(
                     anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
                 );
                 $resultInfo['summaryAppended'] = true;
             } else {
                 $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
                     anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
                 );
                 $resultInfo['summaryAppended'] = false;
                 $resultInfo['summaryFileId']   = $summaryFile->getId();

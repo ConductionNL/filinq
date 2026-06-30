@@ -69,7 +69,8 @@ class BatchAnonymizeService
      *                                                             `summaryFileId` outcomes propagate
      *                                                             to that file's batch entry.
      * @param string                           $outputFormat       Per-batch output format gate
-     *                                                             ('pdf'|'preserve'). Passed
+     *                                                             ('pdf-only'|'pdf'|'preserve',
+     *                                                             default 'pdf-only'). Passed
      *                                                             through to each per-file
      *                                                             anonymise call. Per-file
      *                                                             ConversionFailedException is
@@ -77,6 +78,10 @@ class BatchAnonymizeService
      *                                                             file's batch entry and the
      *                                                             batch continues with the
      *                                                             next file.
+     * @param string                           $scope              Placeholder-numbering scope forwarded to OpenRegister for every file in
+     *                                                             the batch. Defaults to `"dossier"` because a batch IS a folder/dossier:
+     *                                                             a person gets the SAME scope-local number across all the batch's files
+     *                                                             (OpenRegister derives the dossier from each file's parent folder).
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -93,7 +98,8 @@ class BatchAnonymizeService
         string $batchId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf'
+        string $outputFormat='pdf-only',
+        string $scope='dossier'
     ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -115,11 +121,16 @@ class BatchAnonymizeService
             }
 
             try {
+                // A null dossierKey makes OpenRegister fall back to each file's
+                // parent folder as the dossier, which is exactly the batch's
+                // folder, so a person is numbered consistently across the batch.
                 $result = $this->anonService->anonymizeDocument(
                     (int) $file['fileId'],
                     $entities,
                     $appendBasisSummary,
-                    $outputFormat
+                    $outputFormat,
+                    $scope,
+                    null
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;

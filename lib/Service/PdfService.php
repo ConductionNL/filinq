@@ -260,8 +260,21 @@ class PdfService
         padding: 0;
         font-family: "DejaVu Sans", sans-serif;
     }
-    table, figure, img, pre, blockquote {
+    figure, img, pre, blockquote {
         page-break-inside: avoid;
+    }
+    /*
+     * Let large data tables flow across pages instead of being crammed
+     * onto one page. `page-break-inside: avoid` is applied to each ROW so
+     * rows are never split mid-cell, while the table itself may break at
+     * row boundaries. `thead { table-header-group }` makes mPDF repeat the
+     * column header on every page the table spans.
+     */
+    tr {
+        page-break-inside: avoid;
+    }
+    thead {
+        display: table-header-group;
     }
     h1, h2, h3, h4, h5, h6 {
         page-break-after: avoid;

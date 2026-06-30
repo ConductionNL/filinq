@@ -657,6 +657,10 @@ export const useAnonymizationStore = defineStore(
 								confidence: e.confidence,
 							}))
 							.sort((a, b) => (b.value || '').length - (a.value || '').length),
+						// Placeholder-numbering scope: a single-document anonymise
+						// numbers entities locally to this file. Folder/dossier
+						// consistency is handled by the batch path (scope=dossier).
+						scope: 'document',
 					}
 
 					// Grondslagen summary. The backend only generates and appends

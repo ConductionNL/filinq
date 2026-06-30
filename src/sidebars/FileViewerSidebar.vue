@@ -1221,7 +1221,7 @@ export default {
  * translucent background. Lib does not expose a variable for radius/shadow,
  * so override directly. */
 .app-sidebar {
-	--color-main-background: var(--color-white-54, rgba(255, 255, 255, 0.54));
+	--color-main-background: var(--dd-glass-bg, rgba(255, 255, 255, 0.54));
 	border-radius: var(--dd-radius-panel);
 	box-shadow: var(--dd-shadow-panel);
 	margin-left: 8px;
@@ -1235,9 +1235,9 @@ export default {
 	display: none !important;
 }
 
-/* Solid white header to match the viewer's DdFileViewerHeader. The sidebar
+/* Solid header band to match the viewer's DdFileViewerHeader. The sidebar
  * body keeps the translucent card background (set above); only the header
- * band is opaque white so the two headers read as one toolbar row. */
+ * band is opaque so the two headers read as one toolbar row. */
 :deep(.app-sidebar-header) {
 	/* `.app-sidebar` re-points --color-main-background to white-54, so a var
 	 * reference here would stay translucent. The card design is white-on-white
@@ -1246,7 +1246,7 @@ export default {
 	gap: 20px;
 	padding-block: 16px 20px;
 	padding-inline: 20px;
-	background: #fff;
+	background: var(--dd-surface, #fff);
 	border-top-left-radius: 20px;
 	border-top-right-radius: 20px;
 	border-bottom: 1px solid var(--color-border);
@@ -1407,7 +1407,9 @@ export default {
 	padding: 12px 16px;
 	margin-top: 12px;
 	border-top: 1px solid var(--color-border);
-	background-color: var(--color-main-background);
+	/* opaque (the sidebar re-points --color-main-background to translucent
+	 * glass) and theme-aware, so the scrolling list is hidden behind it. */
+	background-color: var(--dd-surface);
 	display: flex;
 	gap: 8px;
 

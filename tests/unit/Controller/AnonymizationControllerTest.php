@@ -117,9 +117,9 @@ class AnonymizationControllerTest extends TestCase
             'Controller must expose a VALID_OUTPUT_FORMATS allow-list'
         );
         $this->assertMatchesRegularExpression(
-            "/'pdf'\\s*,\\s*'preserve'/",
+            "/'pdf-only'\\s*,\\s*'pdf'\\s*,\\s*'preserve'/",
             $content,
-            'VALID_OUTPUT_FORMATS must contain pdf and preserve'
+            'VALID_OUTPUT_FORMATS must contain pdf-only, pdf and preserve'
         );
         $this->assertStringContainsString(
             'resolveOutputFormat',
@@ -128,6 +128,33 @@ class AnonymizationControllerTest extends TestCase
         );
 
     }//end testControllerAcceptsAndValidatesOutputFormat()
+
+
+    /**
+     * anonymise-pdf-only-output-mode: when no per-call outputFormat is
+     * supplied (and no/invalid tenant config), the controller resolves to
+     * the new 'pdf-only' default (task 4.5).
+     *
+     * @return void
+     */
+    public function testControllerDefaultsToPdfOnly(): void
+    {
+        $content = file_get_contents(__DIR__ . '/../../../lib/Controller/AnonymizationController.php');
+
+        // Both the IAppConfig read default and the malformed-tenant fallback
+        // must resolve to 'pdf-only'; 'pdf' must NOT be the resolved default.
+        $this->assertMatchesRegularExpression(
+            "/self::DEFAULT_OUTPUT_FORMAT_KEY\\s*,\\s*'pdf-only'/s",
+            $content,
+            'tenant default read must fall back to pdf-only'
+        );
+        $this->assertStringContainsString(
+            "return 'pdf-only';",
+            $content,
+            'malformed tenant setting must fall back to pdf-only'
+        );
+
+    }//end testControllerDefaultsToPdfOnly()
 
 
     /**

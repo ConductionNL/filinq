@@ -90,7 +90,7 @@ export default {
 	padding: 12px 20px;
 	border: 1px solid transparent;
 	border-radius: var(--dd-radius-pill-full);
-	color: var(--color-main-text, #02162e);
+	color: var(--dd-ink, #02162e);
 	font-size: 14px;
 	font-weight: 500;
 	line-height: 140%;
@@ -108,15 +108,17 @@ export default {
 	color: currentColor;
 }
 
-/* Primary: blue fill, translucent-white border, inset highlight, white text */
+/* Primary: blue fill, translucent-white border, inset highlight, white text.
+   The fill stays brand-blue in both themes, so the border/text/highlights
+   that sit on it remain fixed light colours (not theme-aware). */
 .dd-button--primary {
 	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.70));
 	background: var(--dd-color-blue, #2874d1);
-	color: var(--dd-color-white, #fff);
+	color: var(--dd-on-primary, #fff);
 	box-shadow:
-		0 -2px 7px 0 #4698fc inset,
+		0 -2px 7px 0 var(--dd-color-blue-bright, #4698fc) inset,
 		0 5px 8px 0 rgba(255, 255, 255, 0.26) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09);
+		var(--dd-shadow-button);
 }
 
 /* Interactive states use !important to override Nextcloud core
@@ -127,11 +129,11 @@ export default {
 .dd-button--primary:focus {
 	background: var(--dd-color-blue, #2874d1) !important;
 	border-color: var(--dd-color-white-70, rgba(255, 255, 255, 0.70)) !important;
-	color: var(--dd-color-white, #fff) !important;
+	color: var(--dd-on-primary, #fff) !important;
 	box-shadow:
-		0 -2px 7px 0 #4698fc inset,
+		0 -2px 7px 0 var(--dd-color-blue-bright, #4698fc) inset,
 		0 5px 8px 0 rgba(255, 255, 255, 0.26) inset,
-		0 6px 22px 0 rgba(0, 0, 0, 0.13) !important;
+		var(--dd-shadow-button-hover) !important;
 }
 
 .dd-button--primary:focus-visible {
@@ -139,54 +141,56 @@ export default {
 	outline-offset: 2px;
 }
 
-/* Secondary: transparent fill, dark-blue outline + text */
+/* Secondary: transparent fill, brand-ink outline + text (theme-aware) */
 .dd-button--secondary {
-	border-color: var(--dd-color-dark-blue, #02162e);
+	border-color: var(--dd-ink, #02162e);
 	background: transparent;
-	color: var(--dd-color-dark-blue, #02162e);
+	color: var(--dd-ink, #02162e);
 }
 
 .dd-button--secondary:hover,
 .dd-button--secondary:focus {
-	border-color: var(--dd-color-dark-blue, #02162e) !important;
-	background: var(--dd-color-light-grey, rgba(247, 247, 247, 0.70)) !important;
-	color: var(--dd-color-dark-blue, #02162e) !important;
+	border-color: var(--dd-ink, #02162e) !important;
+	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.70)) !important;
+	color: var(--dd-ink, #02162e) !important;
 }
 
 .dd-button--secondary:focus-visible {
-	outline: 2px solid var(--dd-color-dark-blue, #02162e) !important;
+	outline: 2px solid var(--dd-ink, #02162e) !important;
 	outline-offset: 2px;
 	box-shadow: none !important;
 }
 
-/* Tertiary: light-grey fill, white border, inset-white + soft drop shadow */
+/* Tertiary: soft raised neutral surface — subtle fill, light edge + inset
+   highlight, soft drop shadow. Surface/edge tokens are theme-aware so the
+   raised look reads correctly on a dark background too. */
 .dd-button--tertiary {
-	border-color: var(--dd-color-white, #fff);
-	background: var(--dd-color-light-grey, rgba(247, 247, 247, 0.70));
+	border-color: var(--dd-surface, #fff);
+	background: var(--dd-surface-subtle, rgba(247, 247, 247, 0.70));
 	box-shadow:
-		0 -2px 7px 0 var(--dd-color-white, #fff) inset,
-		0 5px 8px 0 var(--dd-color-white, #fff) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09);
+		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
+		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
+		var(--dd-shadow-button);
 }
 
-/* Hover: solid white fill, border stays white (no dark outline). */
+/* Hover: solid surface fill, border matches (no dark outline). */
 .dd-button--tertiary:hover {
-	background: var(--dd-color-white, #fff) !important;
-	border-color: var(--dd-color-white, #fff) !important;
+	background: var(--dd-surface, #fff) !important;
+	border-color: var(--dd-surface, #fff) !important;
 	box-shadow:
-		0 -2px 7px 0 var(--dd-color-white, #fff) inset,
-		0 5px 8px 0 var(--dd-color-white, #fff) inset,
-		0 6px 22px 0 rgba(0, 0, 0, 0.13) !important;
+		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
+		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
+		var(--dd-shadow-button-hover) !important;
 }
 
-/* Focus: dark border, no NC ring (suppress NC's forced outline + shadow). */
+/* Focus: brand-ink border, no NC ring (suppress NC's forced outline + shadow). */
 .dd-button--tertiary:focus-visible {
-	border-color: var(--dd-color-dark-blue, #02162e) !important;
+	border-color: var(--dd-ink, #02162e) !important;
 	outline: none !important;
 	box-shadow:
-		0 -2px 7px 0 var(--dd-color-white, #fff) inset,
-		0 5px 8px 0 var(--dd-color-white, #fff) inset,
-		0 4px 20px 0 rgba(0, 0, 0, 0.09) !important;
+		0 -2px 7px 0 var(--dd-elevated-highlight, #fff) inset,
+		0 5px 8px 0 var(--dd-elevated-highlight, #fff) inset,
+		var(--dd-shadow-button) !important;
 }
 
 .dd-button:disabled {

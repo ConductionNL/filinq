@@ -1,6 +1,16 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"PERSON": "PERSOON",
+		"ORGANIZATION": "ORGANISATIE",
+		"LOCATION": "LOCATIE",
+		"EMAIL": "E-MAILADRES",
+		"PHONE": "TELEFOONNUMMER",
+		"ADDRESS": "ADRES",
+		"DATE": "DATUM",
+		"IBAN": "IBAN",
+		"SSN": "BSN",
+		"IP_ADDRESS": "IP-ADRES",
 		"(no relation ids — grondslagen will not persist)": "(geen relatie-id's — grondslagen worden niet bewaard)",
 		"{selected} of {total} entities selected across {files} files": "{selected} van {total} entiteiten geselecteerd over {files} bestanden",
 		"{found} unique data found": "{found} unieke gegevens gevonden",

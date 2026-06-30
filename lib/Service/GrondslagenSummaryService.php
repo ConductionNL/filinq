@@ -47,6 +47,7 @@ use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
+use OCP\IL10N;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -87,6 +88,30 @@ class GrondslagenSummaryService
      */
     private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
+    /**
+     * Entity-type labels localised in the placeholder, mirroring
+     * OpenRegister's `DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES`
+     * (the `EntityRecognitionHandler::ENTITY_TYPE_*` values). Only these are
+     * translated so the summary legend reads the same as the labels
+     * OpenRegister wrote into the redacted document; an unknown type falls
+     * back to its raw string. DocuDesk's `l10n/` carries the same Dutch
+     * translations so the two apps resolve identically for a given language.
+     *
+     * @var array<int, string>
+     */
+    private const LOCALIZABLE_ENTITY_TYPES = [
+        'PERSON',
+        'ORGANIZATION',
+        'LOCATION',
+        'EMAIL',
+        'PHONE',
+        'ADDRESS',
+        'DATE',
+        'IBAN',
+        'SSN',
+        'IP_ADDRESS',
+    ];
+
 
     /**
      * Constructor.
@@ -98,6 +123,11 @@ class GrondslagenSummaryService
      * @param IAppManager        $appManager  App-availability check for OpenRegister.
      * @param ContainerInterface $container   DI container for OpenRegister-side services
      *                                        (EntityRelationMapper, ObjectService).
+     * @param IL10N|null         $l10n        Acting-user localisation, used to translate the
+     *                                        placeholder TYPE label (PERSON → PERSOON on a Dutch
+     *                                        instance) so the summary legend matches the localized
+     *                                        labels OpenRegister wrote into the redacted document.
+     *                                        Nullable: when absent the raw English label is used.
      */
     public function __construct(
         private readonly LoggerInterface $logger,
@@ -105,7 +135,8 @@ class GrondslagenSummaryService
         private readonly IRootFolder $rootFolder,
         private readonly IUserSession $userSession,
         private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container
+        private readonly ContainerInterface $container,
+        private readonly ?IL10N $l10n=null
     ) {
 
     }//end __construct()
@@ -124,20 +155,24 @@ class GrondslagenSummaryService
      * gracefully (the spec calls for returning HTTP 200 with a `warning`
      * field rather than failing the entire anonymise call).
      *
-     * @param File $anonymisedFile The anonymised PDF file (must already be a PDF).
-     * @param int  $sourceFileId   The Nextcloud file ID of the original (pre-anonymisation)
-     *                             source — used to read the EntityRelation rows that
-     *                             record the redactions performed against it.
+     * @param File                  $anonymisedFile The anonymised PDF file (must already be a PDF).
+     * @param int                   $sourceFileId   The Nextcloud file ID of the original (pre-anonymisation)
+     *                                              source — used to read the EntityRelation rows that
+     *                                              record the redactions performed against it.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map (e.g. "7" => "[PERSOON: 1]"); when set the summary renders the
+     *                                              SAME placeholder the document carries instead of re-deriving it.
      *
      * @return File The same anonymised file, with the summary page appended.
      *
      * @throws RuntimeException When template rendering, PDF merging, or file write fails.
      */
-    public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId): File
+    public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
         $summaryBytes = $this->renderPerDocumentSummary(
             anonymisedFile: $anonymisedFile,
-            sourceFileId: $sourceFileId
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
         );
 
         $combinedBytes = $this->mergeSummaryIntoPdf(
@@ -175,18 +210,21 @@ class GrondslagenSummaryService
      * place, so we write it as `<anonymised-base>_grondslagen.pdf` in the
      * same parent folder.
      *
-     * @param File $anonymisedFile The anonymised file (any format).
-     * @param int  $sourceFileId   The pre-anonymisation source file ID.
+     * @param File                  $anonymisedFile The anonymised file (any format).
+     * @param int                   $sourceFileId   The pre-anonymisation source file ID.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map so the summary renders the SAME placeholder the document carries.
      *
      * @return File The newly-written summary PDF.
      *
      * @throws RuntimeException When rendering or write fails.
      */
-    public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId): File
+    public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
         $summaryBytes = $this->renderPerDocumentSummary(
             anonymisedFile: $anonymisedFile,
-            sourceFileId: $sourceFileId
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
         );
 
         $parent          = $anonymisedFile->getParent();
@@ -250,7 +288,13 @@ class GrondslagenSummaryService
 
         $folder = $this->resolveDossierFolder(folderRef: ($dossier['folderRef'] ?? null));
 
-        $perFile = $this->walkDossierFiles(folder: $folder);
+        // Recompute the dossier's scope-local placeholder map up-front so every
+        // file's rows render the SAME scope-local number the documents carry
+        // (e.g. [DATUM: 6]) instead of the global entity_id fallback (the
+        // 1600+ ids). Reuses OpenRegister's deterministic dossier ranking.
+        $placeholderMap = $this->computeDossierPlaceholderMap(folder: $folder);
+
+        $perFile = $this->walkDossierFiles(folder: $folder, placeholderMap: $placeholderMap);
 
         // The loadAnonymisedEntitiesForFile call already resolves base labels per
         // file. aggregateForDossier just unfolds those rows across files
@@ -454,11 +498,15 @@ class GrondslagenSummaryService
      * (`anonymised/`) is skipped — it contains the redacted *outputs*,
      * whereas the EntityRelation rows are keyed by the source file ids.
      *
-     * @param Folder $folder The dossier folder.
+     * @param Folder                $folder         The dossier folder.
+     * @param array<string, string> $placeholderMap Dossier scope-local placeholder map
+     *                                              (global entity id → "[DATUM: 6]")
+     *                                              so each file's rows render the
+     *                                              dossier number, not the global id.
      *
      * @return array<int, array{fileId: int, filename: string, entities: array<int, array<string, mixed>>}>
      */
-    private function walkDossierFiles(Folder $folder): array
+    private function walkDossierFiles(Folder $folder, array $placeholderMap=[]): array
     {
         $rows = [];
         foreach ($folder->getDirectoryListing() as $node) {
@@ -467,7 +515,7 @@ class GrondslagenSummaryService
                     continue;
                 }
 
-                $rows = array_merge($rows, $this->walkDossierFiles(folder: $node));
+                $rows = array_merge($rows, $this->walkDossierFiles(folder: $node, placeholderMap: $placeholderMap));
                 continue;
             }
 
@@ -475,7 +523,7 @@ class GrondslagenSummaryService
                 continue;
             }
 
-            $entities = $this->loadAnonymisedEntitiesForFile(fileId: $node->getId());
+            $entities = $this->loadAnonymisedEntitiesForFile(fileId: $node->getId(), placeholderMap: $placeholderMap);
             if (count($entities) === 0) {
                 continue;
             }
@@ -493,19 +541,137 @@ class GrondslagenSummaryService
 
 
     /**
-     * Build the flat row set the per-dossier template renders.
+     * Recompute the dossier's scope-local placeholder map on demand.
      *
-     * Produces one row per `(entity, file)` pair. Same entity appearing
-     * in 3 files yields 3 rows — same placeholder, three different
-     * filenames. Rows are sorted primary-by-placeholder, secondary-by-
-     * filename so all occurrences of a given entity stay adjacent in
-     * the rendered table.
+     * The per-dossier report is regenerated without a live anonymise run, so
+     * there is no placeholder map from OpenRegister to reuse — without one,
+     * each entity falls back to its GLOBAL entity_id (the 1600+ numbers).
+     * This reproduces OpenRegister's deterministic dossier numbering for the
+     * folder's files (rank distinct entity_ids by first appearance under the
+     * total order file_id, position_start, entity_id) so the report shows the
+     * SAME scope-local number the documents carry, and combines it with the
+     * localized TYPE label → `e.id → "[DATUM: 6]"`.
+     *
+     * Reuses OpenRegister's own `PlaceholderIdTranslator::rankByFirstAppearance`
+     * (so the ranking can never drift from the anonymise path) plus the
+     * EntityRelationMapper. Returns an empty map when OpenRegister is absent or
+     * too old; callers then fall back to the global-id behaviour.
+     *
+     * @param Folder $folder The dossier folder.
+     *
+     * @return array<string, string> Map of global entity id → "[<localizedTYPE>: <dossier number>]".
+     */
+    private function computeDossierPlaceholderMap(Folder $folder): array
+    {
+        $mapper = $this->getEntityRelationMapper();
+        if ($mapper === null
+            || method_exists($mapper, 'findEntityIdsByValueForFiles') === false
+            || method_exists($mapper, 'findEntityIdsByValueForFile') === false
+            || class_exists(\OCA\OpenRegister\Service\File\PlaceholderIdTranslator::class) === false
+        ) {
+            return [];
+        }
+
+        $fileIds = $this->collectFileIds(folder: $folder);
+        if ($fileIds === []) {
+            return [];
+        }
+
+        try {
+            $rows = $mapper->findEntityIdsByValueForFiles(fileIds: $fileIds);
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: dossier placeholder recompute failed; falling back to global ids',
+                ['error' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        // Deterministic dossier ranking — identical to the anonymise path.
+        $ranks = \OCA\OpenRegister\Service\File\PlaceholderIdTranslator::rankByFirstAppearance(rows: $rows);
+        if ($ranks === []) {
+            return [];
+        }
+
+        // Resolve each entity id's TYPE (for the localized label) from the
+        // per-file value→{id,type} maps.
+        $types = [];
+        foreach ($fileIds as $fileId) {
+            try {
+                foreach ($mapper->findEntityIdsByValueForFile($fileId) as $entry) {
+                    $types[(string) ($entry['id'] ?? '')] = (string) ($entry['type'] ?? '');
+                }
+            } catch (Exception $e) {
+                continue;
+            }
+        }
+
+        $map = [];
+        foreach ($ranks as $entityId => $rank) {
+            $type = ($types[(string) $entityId] ?? '');
+            $map[(string) $entityId] = '['.$this->localizeEntityType(entityType: $type).': '.$rank.']';
+        }
+
+        return $map;
+
+    }//end computeDossierPlaceholderMap()
+
+
+    /**
+     * Collect the descendant file ids of a dossier folder (recursive), skipping
+     * the redacted-output subfolders — mirrors {@see walkDossierFiles} so the
+     * recompute ranks over the same source-file set the rows come from.
+     *
+     * @param Folder $folder The dossier folder.
+     *
+     * @return array<int, int> Distinct descendant source file ids.
+     */
+    private function collectFileIds(Folder $folder): array
+    {
+        $ids = [];
+        try {
+            foreach ($folder->getDirectoryListing() as $node) {
+                if ($node instanceof Folder) {
+                    if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
+                        continue;
+                    }
+
+                    foreach ($this->collectFileIds(folder: $node) as $nestedId) {
+                        $ids[] = $nestedId;
+                    }
+
+                    continue;
+                }
+
+                if (($node instanceof File) === true) {
+                    $ids[] = (int) $node->getId();
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: dossier file enumeration failed',
+                ['error' => $e->getMessage()]
+            );
+        }//end try
+
+        return array_values(array_unique($ids));
+
+    }//end collectFileIds()
+
+
+    /**
+     * Build the row set the per-dossier template renders.
+     *
+     * Produces ONE row per distinct entity (`entityType:entityId`). Because the
+     * dossier number is consistent across the dossier's files, the same
+     * person/date appears once — its occurrence `count` is summed, the files it
+     * appears in are collected into a comma-joined `filename` list, and its
+     * grondslagen are unioned. Rows are sorted by TYPE then NUMERIC id ascending
+     * so the type blocks read 1,2,…,10,11.
      *
      * Per-file entities arrive pre-aggregated from
      * {@see loadAnonymisedEntitiesForFile}: each entry already has
      * `placeholder`, `count`, and `basesText` (Dutch labels joined).
-     * This method just unfolds them across files and adds the filename
-     * column.
      *
      * @param array<int, mixed>     $perFile  Per-file rows from {@see walkDossierFiles}
      *                                        — each entry shaped as `{fileId, filename,
@@ -519,7 +685,7 @@ class GrondslagenSummaryService
      *
      * @return array<string, mixed> Shape:
      *                              `{ rows: array<int, {placeholder, filename,
-     *                                 fileId, count, baseLabels, basesText,
+     *                                 fileCount, count, baseLabels, basesText,
      *                                 entityType, entityId}>,
      *                                totals: { documentCount, entityCount,
      *                                  distinctEntityCount, distinctBasesCount } }`.
@@ -528,50 +694,80 @@ class GrondslagenSummaryService
     {
         unset($labelMap);
 
-        $rows = [];
-        $totalOccurrences   = 0;
-        $distinctEntityKeys = [];
-        $distinctBasisRefs  = [];
+        $grouped           = [];
+        $totalOccurrences  = 0;
+        $distinctBasisRefs = [];
 
         foreach ($perFile as $fileRow) {
-            $fileId   = ($fileRow['fileId'] ?? 0);
             $filename = (string) ($fileRow['filename'] ?? '');
 
             foreach (($fileRow['entities'] ?? []) as $entity) {
-                $placeholder = (string) ($entity['placeholder'] ?? '');
-                $count       = (int) ($entity['count'] ?? 0);
-                $basesText   = (string) ($entity['basesText'] ?? '');
-                $baseLabels  = ($entity['baseLabels'] ?? []);
+                $count      = (int) ($entity['count'] ?? 0);
+                $baseLabels = ($entity['baseLabels'] ?? []);
                 if (is_array($baseLabels) === false) {
                     $baseLabels = [];
                 }
 
                 $totalOccurrences += $count;
 
-                $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
-                $distinctEntityKeys[$entityKey] = true;
-
                 foreach (($entity['bases'] ?? []) as $ref) {
                     $distinctBasisRefs[(string) $ref] = true;
                 }
 
-                $rows[] = [
-                    'placeholder' => $placeholder,
-                    'fileId'      => $fileId,
-                    'filename'    => $filename,
-                    'count'       => $count,
-                    'baseLabels'  => $baseLabels,
-                    'basesText'   => $basesText,
-                    'entityType'  => (string) ($entity['entityType'] ?? ''),
-                    'entityId'    => (int) ($entity['entityId'] ?? 0),
-                ];
+                // Dedup to ONE row per distinct entity (entityType:entityId).
+                // The dossier number is consistent across files, so the same
+                // person/date appears once — aggregating its occurrence count,
+                // the files it appears in, and the union of its grondslagen —
+                // instead of repeating the same placeholder once per file.
+                $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
+                if (isset($grouped[$entityKey]) === false) {
+                    $grouped[$entityKey] = [
+                        'placeholder' => (string) ($entity['placeholder'] ?? ''),
+                        'entityType'  => (string) ($entity['entityType'] ?? ''),
+                        'entityId'    => (int) ($entity['entityId'] ?? 0),
+                        'count'       => 0,
+                        'filenames'   => [],
+                        'baseLabels'  => [],
+                    ];
+                }
+
+                $grouped[$entityKey]['count'] += $count;
+                if ($filename !== '') {
+                    $grouped[$entityKey]['filenames'][$filename] = true;
+                }
+
+                foreach ($baseLabels as $label) {
+                    $grouped[$entityKey]['baseLabels'][(string) $label] = true;
+                }
             }//end foreach
         }//end foreach
+
+        $rows = [];
+        foreach ($grouped as $group) {
+            $files = array_keys($group['filenames']);
+            sort($files);
+            $labels = array_keys($group['baseLabels']);
+
+            $rows[] = [
+                'placeholder' => $group['placeholder'],
+                'count'       => $group['count'],
+                // Joined distinct filenames — the entity may span several files
+                // in the dossier; the twig renders this list in the "Bestanden"
+                // column.
+                'filename'    => implode(', ', $files),
+                'fileCount'   => count($files),
+                'baseLabels'  => $labels,
+                'basesText'   => implode(', ', $labels),
+                'entityType'  => $group['entityType'],
+                'entityId'    => $group['entityId'],
+            ];
+        }
 
         usort(
             $rows,
             static function (array $a, array $b): int {
-                $cmp = strcmp($a['placeholder'], $b['placeholder']);
+                // By TYPE then NUMERIC id ascending (1,2,…,10,11), then files.
+                $cmp = (self::placeholderSortKey(placeholder: $a['placeholder']) <=> self::placeholderSortKey(placeholder: $b['placeholder']));
                 if ($cmp !== 0) {
                     return $cmp;
                 }
@@ -585,7 +781,7 @@ class GrondslagenSummaryService
             'totals' => [
                 'documentCount'       => count($perFile),
                 'entityCount'         => $totalOccurrences,
-                'distinctEntityCount' => count($distinctEntityKeys),
+                'distinctEntityCount' => count($grouped),
                 'distinctBasesCount'  => count($distinctBasisRefs),
             ],
         ];
@@ -866,6 +1062,7 @@ class GrondslagenSummaryService
 
     }//end resolveBaseLabels()
 
+
     /**
      * Collect the distinct grondslagen assigned across the given entities,
      * each with its name + description (the Woo Art. 5 toelichting), for the
@@ -912,6 +1109,7 @@ class GrondslagenSummaryService
         usort($bases, static fn(array $a, array $b): int => strcmp($a['name'], $b['name']));
 
         return $bases;
+
     }//end collectAssignedBases()
 
 
@@ -978,12 +1176,17 @@ class GrondslagenSummaryService
      * out of scope) and attaches the resolved base-label list onto each
      * row for the template to render.
      *
-     * @param int $fileId The Nextcloud file ID.
+     * @param int                   $fileId         The Nextcloud file ID.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted
+     *                                              placeholder map; when set, each row uses that
+     *                                              placeholder (scope-local number + localized
+     *                                              label) instead of re-deriving `[<TYPE>:
+     *                                              <entity_id>]` from the global id.
      *
      * @return array<int, array<string, mixed>> Rows shaped as
      *         `{relationId, entityText, entityType, anonymizedValue, bases, baseLabels}`.
      */
-    private function loadAnonymisedEntitiesForFile(int $fileId): array
+    private function loadAnonymisedEntitiesForFile(int $fileId, array $placeholderMap=[]): array
     {
         $mapper = $this->getEntityRelationMapper();
         if ($mapper === null) {
@@ -1027,14 +1230,18 @@ class GrondslagenSummaryService
         // Group raw relation rows by (entity_type, entity_id) so the
         // template sees one row per entity rather than one row per
         // occurrence. Each group carries:
-        // - placeholder: `[<TYPE>: <entity_id>]` — matches the in-file
-        // substitution produced by OR's `DocumentProcessingHandler`.
-        // - count: number of EntityRelation rows in the group (i.e.
-        // how many times this entity got redacted in this file).
-        // - bases: set-union of `bases` arrays across the group.
-        // - baseLabels: bases resolved to human-readable Dutch names,
-        // comma-joined for direct render.
+        // - placeholder: the SCOPE-LOCAL placeholder, resolved from either
+        // (1) the relation's stored `anonymized_value` when it IS a real
+        // placeholder (OpenRegister persists each entity's exact emitted
+        // placeholder there at anonymise time — authoritative), or
+        // (2) the recomputed/live `$placeholderMap` for this entity id
+        // (dossier on-demand recompute / live anonymise map).
+        // There is NO global-id fallback: an entity for which neither yields
+        // a scope-local placeholder is OMITTED (a global id is relatable).
+        // - count: number of EntityRelation rows in the group.
+        // - bases / baseLabels: set-union of bases across the group.
         $grouped = [];
+        $omitted = 0;
         foreach ($rawRows as $row) {
             $entityId   = (int) ($row['entity_id'] ?? 0);
             $entityType = (string) ($row['entity_type'] ?? '');
@@ -1042,15 +1249,43 @@ class GrondslagenSummaryService
             $key        = $entityType.':'.$entityId;
 
             if (isset($grouped[$key]) === false) {
+                // Resolve the SCOPE-LOCAL placeholder. We NEVER fall back to the
+                // global entity_id: a global id is a relatable cross-disclosure
+                // handle, so an entity for which we cannot establish a
+                // scope-local placeholder is OMITTED from the summary entirely
+                // rather than leaked.
+                //
+                // The caller-supplied map wins: it is computed for THIS report's
+                // scope (dossier-wide for the per-dossier report, per-document
+                // for the single-file report), so it carries the numbering the
+                // reader expects. The placeholder OpenRegister persisted in
+                // anonymized_value is per-document; it is only a fallback for
+                // when no live map is available (e.g. a report regenerated long
+                // after anonymisation).
+                $stored      = (string) ($row['anonymized_value'] ?? '');
+                $placeholder = null;
+                if (isset($placeholderMap[(string) $entityId]) === true) {
+                    // Tier 1 — scope-correct map from the caller.
+                    $placeholder = $placeholderMap[(string) $entityId];
+                } else if (preg_match('/^\[[^:\]]+:\s*\d+\]$/u', $stored) === 1) {
+                    // Tier 2 — the per-document placeholder OpenRegister persisted.
+                    $placeholder = $stored;
+                }
+
+                if ($placeholder === null) {
+                    $omitted++;
+                    continue;
+                }
+
                 $grouped[$key] = [
                     'entityId'    => $entityId,
                     'entityType'  => $entityType,
                     'entityText'  => $entityText,
-                    'placeholder' => '['.$entityType.': '.$entityId.']',
+                    'placeholder' => $placeholder,
                     'count'       => 0,
                     'basesSet'    => [],
                 ];
-            }
+            }//end if
 
             $grouped[$key]['count']++;
 
@@ -1061,6 +1296,15 @@ class GrondslagenSummaryService
                 }
             }
         }//end foreach
+
+        if ($omitted > 0) {
+            // PII-free: count only. Surfaces stale relations with no recoverable
+            // scope-local placeholder, deliberately left out of the summary.
+            $this->logger->info(
+                'GrondslagenSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
+                ['fileId' => $fileId, 'omitted' => $omitted]
+            );
+        }
 
         $shaped = [];
         foreach ($grouped as $group) {
@@ -1082,13 +1326,65 @@ class GrondslagenSummaryService
             ];
         }
 
-        // Stable order — placeholder asc — so re-renders produce
-        // diff-friendly output.
-        usort($shaped, static fn(array $a, array $b): int => strcmp($a['placeholder'], $b['placeholder']));
+        // Stable order — by TYPE then NUMERIC id ascending — so the blocks of
+        // each type are grouped and ordered 1,2,3,…,10,11 (not the lexical
+        // 1,10,11,2 a plain string sort produces). Diff-friendly across re-runs.
+        usort(
+            $shaped,
+            static function (array $a, array $b): int {
+                return (self::placeholderSortKey(placeholder: $a['placeholder']) <=> self::placeholderSortKey(placeholder: $b['placeholder']));
+            }
+        );
 
         return $shaped;
 
     }//end loadAnonymisedEntitiesForFile()
+
+
+    /**
+     * Sort key for a `[<TYPE>: <number>]` placeholder: [type, number] so a
+     * spaceship compare orders by type alphabetically then by number
+     * NUMERICALLY ascending (1,2,…,10,11 — not the lexical 1,10,11,2). A
+     * placeholder that doesn't match the shape sorts last, by its raw string.
+     *
+     * @param string $placeholder The placeholder string.
+     *
+     * @return array{0: string, 1: int} The [type, number] sort key.
+     */
+    private static function placeholderSortKey(string $placeholder): array
+    {
+        if (preg_match('/^\[(.+):\s*(\d+)\]\s*$/u', $placeholder, $m) === 1) {
+            return [$m[1], (int) $m[2]];
+        }
+
+        return [$placeholder, PHP_INT_MAX];
+
+    }//end placeholderSortKey()
+
+
+    /**
+     * Localise an entity-type label for the summary placeholder so it reads
+     * the same as the label OpenRegister wrote into the redacted document
+     * (anonymisation-placeholder-id-scope). Only the enumerated
+     * `LOCALIZABLE_ENTITY_TYPES` set is translated; an unknown / free-form type
+     * is returned unchanged. When no `IL10N` is injected the raw label is
+     * returned (the `en` / untranslated behaviour).
+     *
+     * @param string $entityType The raw entity type (e.g. 'PERSON').
+     *
+     * @return string The localised label (e.g. 'PERSOON' on nl), or the raw type.
+     */
+    private function localizeEntityType(string $entityType): string
+    {
+        if ($this->l10n === null
+            || in_array($entityType, self::LOCALIZABLE_ENTITY_TYPES, true) === false
+        ) {
+            return $entityType;
+        }
+
+        return $this->l10n->t($entityType);
+
+    }//end localizeEntityType()
 
 
     /**
@@ -1098,16 +1394,18 @@ class GrondslagenSummaryService
      * {@see renderSummaryBesideFile} — both produce the same summary
      * content; only the destination differs.
      *
-     * @param File $anonymisedFile The anonymised file (for header context).
-     * @param int  $sourceFileId   The pre-anonymisation source file id.
+     * @param File                  $anonymisedFile The anonymised file (for header context).
+     * @param int                   $sourceFileId   The pre-anonymisation source file id.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map, threaded to loadAnonymisedEntitiesForFile.
      *
      * @return string The rendered PDF (PDF/A-3b) as raw bytes.
      *
      * @throws RuntimeException When template or PDF rendering fails.
      */
-    private function renderPerDocumentSummary(File $anonymisedFile, int $sourceFileId): string
+    private function renderPerDocumentSummary(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): string
     {
-        $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId);
+        $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId, placeholderMap: $placeholderMap);
         $distinctBases = $this->countDistinctBases(entities: $entities);
 
         $totalOccurrences = 0;
@@ -1345,7 +1643,10 @@ class GrondslagenSummaryService
      */
     private function isOpenRegisterAvailable(): bool
     {
-        return in_array('openregister', $this->appManager->getInstalledApps(), true);
+        // Defensive `?? []`: getInstalledApps() is array-typed in production but
+        // a bare mock returns null, and PHP 8.4 makes in_array(x, null) a fatal
+        // TypeError rather than a warning.
+        return in_array('openregister', ($this->appManager->getInstalledApps() ?? []), true);
 
     }//end isOpenRegisterAvailable()
 

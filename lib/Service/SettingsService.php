@@ -192,12 +192,14 @@ class SettingsService
             ),
             // Anonymise-output-as-pdf-by-default — tenant-wide default
             // for the anonymise endpoint's `outputFormat` request param.
-            // 'pdf' converts the anonymised output via the cascade;
+            // 'pdf-only' (default) converts via the cascade and deletes the
+            // native anonymised intermediate so only the PDF remains;
+            // 'pdf' converts but keeps the native intermediate too;
             // 'preserve' returns it in the native input format.
             'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
                 $this->appName,
                 'docudesk.anonymisation.default_output_format',
-                'pdf'
+                'pdf-only'
             ),
             // Propose-grondslag-per-entity-type — instance-global map of
             // entity type → base slug(s), used to pre-fill a proposed

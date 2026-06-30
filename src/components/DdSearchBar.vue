@@ -158,7 +158,7 @@ export default {
 .dd-search-bar__input {
 	width: 100%;
 	padding: 10px 40px 10px 48px;
-	border: 1px solid var(--dd-search-bar-border, #D9D9D9);
+	border: 1px solid var(--dd-search-bar-border, var(--dd-border, #D9D9D9));
 	border-radius: var(--dd-radius-pill-full);
 	background: var(--color-main-background, #FFF);
 	font-size: 14px;
