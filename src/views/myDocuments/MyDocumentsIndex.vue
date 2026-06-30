@@ -57,12 +57,17 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						:color-map="kindColorMap" />
 				</template>
 
+				<!-- TODO: re-enable the Status column once a real per-document
+				     checked/reviewed status is available from the backend. The
+				     label is hardcoded ("Not checked") for now, so the column is
+				     hidden rather than showing a placeholder for every row.
 				<template #column-status="{ row }">
 					<span class="my-documents-status">
 						<EyeOffOutline :size="16" class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>
+				-->
 
 				<template #column-modified="{ row }">
 					{{ formatDate(row.modified) }}
@@ -154,7 +159,9 @@ import DdIcon from '../../components/DdIcon.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
-import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
+// TODO: re-enable with the Status column (commented out until a real
+// per-document checked status exists).
+// import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
@@ -196,7 +203,8 @@ export default {
 		FileViewerPage,
 		DotsHorizontal,
 		Eye,
-		EyeOffOutline,
+		// TODO: re-enable with the Status column (see import above).
+		// EyeOffOutline,
 		Download,
 		Delete,
 		Cog,
@@ -222,7 +230,9 @@ export default {
 			return [
 				{ key: 'fileName', label: t('docudesk', 'Name') },
 				{ key: 'kind', label: t('docudesk', 'Kind') },
-				{ key: 'status', label: t('docudesk', 'Status') },
+				// TODO: re-enable once a real per-document checked/reviewed status
+				// is available from the backend (label is hardcoded for now).
+				// { key: 'status', label: t('docudesk', 'Status') },
 				{ key: 'modified', label: t('docudesk', 'Date') },
 				{ key: 'fileSize', label: t('docudesk', 'Size') },
 			]
@@ -498,10 +508,13 @@ export default {
 			}
 			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
 		},
-		/** Placeholder status until the app has a real "checked" signal. */
-		statusLabel() {
-			return t('docudesk', 'Not checked')
-		},
+		// TODO: re-enable when the app has a real per-document checked/reviewed
+		// status. The Status column is commented out for now (both its column
+		// definition and template) because this was hardcoded to "Not checked".
+		// /** Placeholder status until the app has a real "checked" signal. */
+		// statusLabel() {
+		// 	return t('docudesk', 'Not checked')
+		// },
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.
 		 *
@@ -558,6 +571,8 @@ export default {
 	transition: color 0.15s ease;
 }
 
+/* TODO: re-enable with the Status column (commented out until a real
+   per-document checked status exists).
 .my-documents-status {
 	display: inline-flex;
 	align-items: center;
@@ -569,6 +584,7 @@ export default {
 .my-documents-status__icon {
 	color: var(--color-text-maxcontrast);
 }
+*/
 
 /* Options menu in the actions-column header (bulk-selection / bulk actions). */
 .my-documents-options {
