@@ -232,6 +232,14 @@ export const useMyDocumentsStore = defineStore(
 						}
 					})
 
+					// Flag each dossier (folder) as fully anonymized or not, so the
+					// overview can tag it "Anonymized" once every source inside has
+					// an anonymized output, and "Concept" otherwise. Needs a child
+					// listing per folder (the Depth:1 listing above carries no
+					// grandchildren), so it runs before assigning to keep the first
+					// paint correct.
+					await this.annotateDossiers(targetPath, user)
+
 					// Sort by modified date (newest first)
 					this.documents.sort((a, b) => b.modified - a.modified)
 
@@ -247,6 +255,84 @@ export const useMyDocumentsStore = defineStore(
 				} finally {
 					this.loading = false
 				}
+			},
+
+			/**
+			 * Annotate every folder (dossier) in the current listing with
+			 * `allChildrenAnonymized`: true when the dossier holds at least one
+			 * source file and every source has an anonymized output present
+			 * inside it. Drives the dossier's "Anonymized" vs "Concept" tag in
+			 * the overview. Folders are listed (Depth:1 PROPFIND) in parallel;
+			 * a failed listing degrades the folder to `false` (Concept) rather
+			 * than blocking the overview.
+			 *
+			 * @param {string} parentPath Path whose folders are being annotated.
+			 * @param {object} user       Current user (for the WebDAV URL).
+			 * @return {Promise<void>}
+			 */
+			async annotateDossiers(parentPath, user) {
+				const { sourceToAnon, anonymizedIds } = this.linkMaps
+				const folders = this.documents.filter((d) => d.isFolder)
+				await Promise.all(folders.map(async (folder) => {
+					try {
+						const children = await this.listFolderChildren(`${parentPath}/${folder.fileName}`, user)
+						const childIds = new Set(children.map((c) => c.fileId))
+						// Sources are the non-folder children that are not themselves
+						// an anonymized output. The dossier is "anonymized" when every
+						// source has its output present alongside it.
+						const sources = children.filter((c) => !c.isFolder && !anonymizedIds.has(c.fileId))
+						folder.allChildrenAnonymized = sources.length > 0
+							&& sources.every((c) => {
+								const anon = sourceToAnon.get(c.fileId)
+								return anon != null && childIds.has(anon)
+							})
+					} catch (err) {
+						console.error(`Failed to read dossier ${folder.fileName}:`, err)
+						folder.allChildrenAnonymized = false
+					}
+				}))
+			},
+
+			/**
+			 * List the direct children of a folder via a Depth:1 WebDAV PROPFIND,
+			 * returning the minimal shape needed to judge anonymization status.
+			 *
+			 * @param {string} folderPath Absolute path of the folder.
+			 * @param {object} user       Current user (for the WebDAV URL).
+			 * @return {Promise<Array<{fileId: number, isFolder: boolean}>>}
+			 */
+			async listFolderChildren(folderPath, user) {
+				const webdavUrl = generateRemoteUrl(`dav/files/${user.uid}${encodeDavPath(folderPath)}`)
+				const response = await axios({
+					method: 'PROPFIND',
+					url: webdavUrl,
+					headers: {
+						Depth: '1',
+						'Content-Type': 'application/xml',
+					},
+					data: `<?xml version="1.0"?>
+						<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
+							<d:prop>
+								<d:resourcetype />
+								<oc:fileid />
+							</d:prop>
+						</d:propfind>`,
+				})
+				const parser = new DOMParser()
+				const xmlDoc = parser.parseFromString(response.data, 'text/xml')
+				const responses = xmlDoc.querySelectorAll('response')
+				const children = []
+				responses.forEach((resp, index) => {
+					// Skip the folder itself (the first PROPFIND entry).
+					if (index === 0) {
+						return
+					}
+					const resourceType = resp.querySelector('resourcetype')
+					const isFolder = resourceType?.querySelector('collection') !== null
+					const fileId = parseInt(resp.querySelector('fileid')?.textContent || '0', 10)
+					children.push({ fileId, isFolder })
+				})
+				return children
 			},
 
 			/**

@@ -212,7 +212,6 @@ export default {
 			bulkSelect: false,
 			selectedIds: [],
 			kindColorMap: {
-				[t('docudesk', 'Dossier')]: 'info',
 				[t('docudesk', 'Concept')]: 'warning',
 				[t('docudesk', 'Anonymized')]: 'success',
 			},
@@ -486,13 +485,17 @@ export default {
 			return row.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
 		/**
-		 * Badge label for the "Soort" column: folder/dossier, original, or anonymized copy.
+		 * Badge label for the "Soort" column. Files are tagged by their own
+		 * state; a dossier (folder) reflects its contents — "Anonymized" once
+		 * every source inside has an anonymized output, "Concept" otherwise.
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} Badge label.
 		 */
 		kindLabel(row) {
-			if (row.isFolder) return t('docudesk', 'Dossier')
+			if (row.isFolder) {
+				return row.allChildrenAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
+			}
 			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
 		},
 		/** Placeholder status until the app has a real "checked" signal. */
