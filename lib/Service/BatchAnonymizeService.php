@@ -69,7 +69,8 @@ class BatchAnonymizeService
      *                                                             `summaryFileId` outcomes propagate
      *                                                             to that file's batch entry.
      * @param string                           $outputFormat       Per-batch output format gate
-     *                                                             ('pdf'|'preserve'). Passed
+     *                                                             ('pdf-only'|'pdf'|'preserve',
+     *                                                             default 'pdf-only'). Passed
      *                                                             through to each per-file
      *                                                             anonymise call. Per-file
      *                                                             ConversionFailedException is
@@ -97,7 +98,7 @@ class BatchAnonymizeService
         string $batchId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf',
+        string $outputFormat='pdf-only',
         string $scope='dossier'
     ): array {
         $batch = $this->stateService->getBatch($batchId);

@@ -69,26 +69,29 @@ file for viewing must stay read-only.
 
 ## Output format (PDF by default)
 
-Since the `anonymise-output-as-pdf-by-default` change, the anonymise endpoints produce **PDF/A-3b** output by default. PDF flattens the redaction into a glyph stream and strips most metadata channels that would otherwise still name the original entities — making the anonymisation harder to revert by editing the file.
+Since the `anonymise-output-as-pdf-by-default` change, the anonymise endpoints produce **PDF/A-3b** output by default. PDF flattens the redaction into a glyph stream and strips most metadata channels that would otherwise still name the original entities — making the anonymisation harder to revert by editing the file. Since the `anonymise-pdf-only-output-mode` change, the default additionally **deletes the native-format anonymised intermediate** so a re-editable copy of the redacted document is not left behind.
 
 ### Per-call override: `outputFormat`
 
-The `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batch/{batchId}/anonymize` endpoints accept an optional top-level `outputFormat` field:
+The `POST /api/anonymization/anonymize/{fileId}` and `POST /api/anonymization/batch/{batchId}/anonymize` endpoints accept an optional top-level `outputFormat` field with three values:
 
-| Value | Behaviour |
-|---|---|
-| `"pdf"` (default) | The anonymised intermediate is converted to PDF via the conversion cascade (see below) before being written to Nextcloud Files. |
-| `"preserve"` | The anonymised file is written in its native input format (DOCX in → DOCX out, etc.). Legacy behaviour. |
+| Value | Convert to PDF? | Keep native anonymised file? | Notes |
+|---|---|---|---|
+| `"pdf-only"` (default) | yes | no — deleted after a successful conversion | the privacy-correct default; only the PDF remains |
+| `"pdf"` | yes | yes | converts but keeps the native intermediate alongside the PDF |
+| `"preserve"` | no | yes (native is the only file) | native input format out (DOCX in → DOCX out, etc.). Legacy behaviour |
 
-If `outputFormat` is supplied but is not `"pdf"` or `"preserve"`, the endpoint returns `HTTP 400`.
+`pdf-only` is `pdf` plus a **best-effort** delete of the native intermediate on the success path: a cleanup-delete failure is logged at warning level and never fails the run. When the anonymised result is already a PDF, the conversion cascade is skipped, so no native intermediate is created and `pdf-only` behaves identically to `pdf`.
+
+If `outputFormat` is supplied but is not `"pdf-only"`, `"pdf"`, or `"preserve"`, the endpoint returns `HTTP 400`.
 
 ### Tenant default
 
-The tenant-wide default is configurable via the **Anonymisation → Always export anonymised documents as PDF** switch in the admin settings panel. The underlying `IAppConfig` key is `docudesk.anonymisation.default_output_format` (values: `"pdf"` | `"preserve"`, default `"pdf"`). A per-call `outputFormat` always overrides the tenant default.
+The tenant-wide default is configurable via the **Anonymisation → Always export anonymised documents as PDF** switch in the admin settings panel. The underlying `IAppConfig` key is `docudesk.anonymisation.default_output_format` (values: `"pdf-only"` | `"pdf"` | `"preserve"`, default `"pdf-only"`). A per-call `outputFormat` always overrides the tenant default. To restore the previous keep-both behaviour tenant-wide, set the key to `"pdf"`.
 
 ### Conversion cascade
 
-When `outputFormat === "pdf"` and the anonymised file isn't already a PDF, the `PdfConversionService` walks an ordered list of backends. First success wins; total failure aggregates into an `HTTP 422` response with the per-backend attempt records.
+When `outputFormat` is `"pdf-only"` or `"pdf"` and the anonymised file isn't already a PDF, the `PdfConversionService` walks an ordered list of backends. First success wins; total failure aggregates into an `HTTP 422` response with the per-backend attempt records.
 
 1. **`OfficeAppBackend`** — uses Nextcloud's `OCP\Files\Conversion\IConversionManager` (NC 31+). Collabora, OnlyOffice, and Euro Office integrations register as conversion providers under this single API; the backend dispatches to whichever app is installed and configured. Highest fidelity for Word-family documents.
 2. **`PhpWordBackend`** — in-process. Reads DOC (MsDoc), DOCX (Word2007), ODT (ODText), RTF, and HTML via `PhpOffice\PhpWord`; emits PDF/A-3b via the PdfWriter (mPDF-backed). Lower fidelity than a real Office engine but covers all Word-family formats without external dependencies.

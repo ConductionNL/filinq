@@ -158,12 +158,18 @@ class AnonymizationService
      *                                                        the anonymise — a structured
      *                                                        `warning` is attached to the result
      *                                                        instead.
-     * @param string                      $outputFormat       Output format gate. `"pdf"` (default)
-     *                                                        runs the post-anonymise PDF conversion
-     *                                                        cascade and rolls back the intermediate
-     *                                                        if conversion fails (re-throws
+     * @param string                      $outputFormat       Output format gate. `"pdf-only"`
+     *                                                        (default) and `"pdf"` both run the
+     *                                                        post-anonymise PDF conversion cascade
+     *                                                        and roll back the intermediate if
+     *                                                        conversion fails (re-throws
      *                                                        ConversionFailedException for the
      *                                                        controller to surface as HTTP 422).
+     *                                                        `"pdf-only"` additionally best-effort
+     *                                                        deletes the native anonymised
+     *                                                        intermediate after a successful
+     *                                                        conversion so only the PDF remains;
+     *                                                        `"pdf"` keeps the native intermediate.
      *                                                        `"preserve"` skips conversion and
      *                                                        returns the anonymised file in its
      *                                                        native format.
@@ -189,7 +195,7 @@ class AnonymizationService
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf',
+        string $outputFormat='pdf-only',
         string $scope='document',
         ?string $dossierKey=null
     ): array {
@@ -242,15 +248,25 @@ class AnonymizationService
                 ]
             );
 
-            // PDF conversion gate: when outputFormat is 'pdf' AND the
-            // anonymised result is not already a PDF, run the cascade.
+            // PDF conversion gate: when outputFormat requests a PDF
+            // ('pdf-only' or 'pdf') AND the anonymised result is not
+            // already a PDF, run the cascade.
             // On failure: delete the un-converted intermediate (the
             // operator must NOT see a half-finished native-format
             // output when they asked for PDF) and re-throw the typed
             // exception so the controller maps it to 422.
-            if ($outputFormat === 'pdf' && $result instanceof File === true) {
+            // On success in 'pdf-only' mode: best-effort delete the native
+            // anonymised intermediate so only the PDF remains.
+            if (in_array($outputFormat, ['pdf-only', 'pdf'], true) === true && $result instanceof File === true) {
                 $resultMime = (string) $result->getMimeType();
                 if ($resultMime !== 'application/pdf') {
+                    // Capture the native anonymised node BEFORE $result is
+                    // reassigned to the converted PDF — 'pdf-only' deletes it
+                    // after a successful conversion. When the result is
+                    // already a PDF the cascade is skipped, so there is no
+                    // native intermediate to delete and 'pdf-only' behaves
+                    // identically to 'pdf'.
+                    $nativeIntermediate = $result;
                     try {
                         $result = $this->pdfConversion->convertToPdf($result);
                     } catch (ConversionFailedException $e) {
@@ -264,9 +280,11 @@ class AnonymizationService
                         // Best-effort rollback. If delete fails, log
                         // and continue — re-throwing is more important
                         // than leaving the operator in a partial state
-                        // that they CAN inspect (they sent
-                        // outputFormat: "pdf" and got 422, so the
-                        // expectation is "no file written").
+                        // that they CAN inspect (they sent a PDF
+                        // outputFormat and got 422, so the expectation
+                        // is "no file written"). $result still points at
+                        // the un-converted native intermediate here, as
+                        // the reassignment above only runs on success.
                         try {
                             $result->delete();
                         } catch (Throwable $deleteError) {
@@ -282,6 +300,27 @@ class AnonymizationService
 
                         throw $e;
                     }//end try
+
+                    // 'pdf-only': the conversion succeeded and the PDF is the
+                    // referenced output, so the native intermediate is now
+                    // un-redactable leftover. Best-effort delete it; a failure
+                    // here MUST NOT fail an otherwise-successful run (mirrors
+                    // the rollback above). PII-free log (file id + exception
+                    // metadata only).
+                    if ($outputFormat === 'pdf-only') {
+                        try {
+                            $nativeIntermediate->delete();
+                        } catch (Throwable $deleteError) {
+                            $this->logger->warning(
+                                'pdf-only: failed to delete native anonymised intermediate; orphaned file remains.',
+                                [
+                                    'fileId'    => $fileId,
+                                    'exception' => get_class($deleteError),
+                                    'message'   => $deleteError->getMessage(),
+                                ]
+                            );
+                        }
+                    }//end if
                 }//end if
             }//end if
 

@@ -81,8 +81,13 @@ class AnonymizationController extends Controller
     /**
      * Supported values for the `outputFormat` request param + tenant
      * config. Anything else from the request results in HTTP 400.
+     *
+     * - `pdf-only` (default): convert to PDF and delete the native
+     *   anonymised intermediate so only the PDF remains.
+     * - `pdf`: convert to PDF but keep the native intermediate too.
+     * - `preserve`: skip conversion; native format is the only output.
      */
-    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
+    private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
 
 
     /**
@@ -342,15 +347,15 @@ class AnonymizationController extends Controller
      * Resolve the effective `outputFormat` for this request.
      *
      * Order: per-call value (when supplied and valid) → tenant default
-     * from IAppConfig → hard-coded `"pdf"` fallback.
+     * from IAppConfig → hard-coded `"pdf-only"` fallback.
      *
      * Returns `null` when the per-call value is supplied but invalid;
      * the caller maps that to HTTP 400.
      *
      * @param array<string,mixed> $params Request params.
      *
-     * @return string|null Resolved outputFormat ('pdf'|'preserve'), or
-     *                     null when an invalid value was supplied.
+     * @return string|null Resolved outputFormat ('pdf-only'|'pdf'|'preserve'),
+     *                     or null when an invalid value was supplied.
      */
     private function resolveOutputFormat(array $params): ?string
     {
@@ -368,13 +373,13 @@ class AnonymizationController extends Controller
         $tenantDefault = $this->appConfig->getValueString(
             'docudesk',
             self::DEFAULT_OUTPUT_FORMAT_KEY,
-            'pdf'
+            'pdf-only'
         );
 
         if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
             // Malformed tenant setting falls back to spec default
             // rather than rejecting the call.
-            return 'pdf';
+            return 'pdf-only';
         }
 
         return $tenantDefault;

@@ -1,0 +1,195 @@
+{
+  "change": "anonymise-pdf-only-output-mode",
+  "project": "docudesk",
+  "repo": "Conduction/docudesk",
+  "base_branch": "test/anonimiseren-bij-de-bron-dd",
+  "feature_branch": "feature/155/anonymise-pdf-only-output-mode",
+  "created": "2026-06-30",
+  "tracking_issue": 155,
+  "tasks": [
+    {
+      "id": 1,
+      "title": "AnonymizationController VALID_OUTPUT_FORMATS adds pdf-only",
+      "description": "Change VALID_OUTPUT_FORMATS to ['pdf-only', 'pdf', 'preserve']; confirm the 400 body (resolveOutputFormat invalid path) cites all three values.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Controller/AnonymizationController.php"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "BatchAnonymizationController VALID_OUTPUT_FORMATS adds pdf-only",
+      "description": "Change VALID_OUTPUT_FORMATS to ['pdf-only', 'pdf', 'preserve']; confirm the 400 body cites all three values.",
+      "status": "done",
+      "spec_ref": "batch-anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Controller/BatchAnonymizationController.php"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "SettingsService default flips to pdf-only",
+      "description": "Change the docudesk.anonymisation.default_output_format fallback from 'pdf' to 'pdf-only'; update the adjacent comment to describe the three modes.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/SettingsService.php"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "anonymizeDocument() default param flips to pdf-only",
+      "description": "Change the anonymizeDocument() default param from $outputFormat='pdf' to $outputFormat='pdf-only'; update its docblock.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/AnonymizationService.php"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Capture native node before convertToPdf reassignment",
+      "description": "Make the conversion gate fire for both pdf-only and pdf (guarded by mime !== application/pdf); capture the native node into a local (e.g. $nativeIntermediate) BEFORE $result is reassigned by convertToPdf().",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/AnonymizationService.php"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Best-effort delete native intermediate after successful convert",
+      "description": "After a successful convertToPdf(), when the resolved mode is pdf-only, best-effort delete() the captured native intermediate inside try/catch Throwable, logging a PII-free warning on failure (mirror the rollback at lines 270-281). Never re-throw; never alter the success response.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/AnonymizationService.php"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Verify already-a-PDF path is a no-op",
+      "description": "When mime === application/pdf the gate is skipped, so pdf-only creates no intermediate and deletes nothing.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/AnonymizationService.php"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Verify conversion-failure rollback branch unchanged",
+      "description": "The rollback still deletes the converted/intermediate node and re-throws ConversionFailedException.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "lib/Service/AnonymizationService.php"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Unit test: pdf-only success deletes native, keeps PDF",
+      "description": "In tests/unit/Service/AnonymizationServiceTest.php, add a pdf-only success case asserting: converted PDF written, native intermediate is the deleted node, converted PDF NOT deleted.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "tests/unit/Service/AnonymizationServiceTest.php"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Unit test: pdf-only cleanup failure swallowed",
+      "description": "delete() throws -> warning logged, run still returns success, relation unchanged.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "tests/unit/Service/AnonymizationServiceTest.php"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Unit test: already-a-PDF pdf-only no-op",
+      "description": "Assert no conversion and no delete occur (identical to pdf).",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "tests/unit/Service/AnonymizationServiceTest.php"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Unit test: pdf and preserve regression",
+      "description": "Assert pdf (keep native) and preserve (no convert) paths are unchanged.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "tests/unit/Service/AnonymizationServiceTest.php"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Controller tests: widened enum and new default",
+      "description": "Assert pdf-only accepted, omitted outputFormat resolves to pdf-only via tenant default, and the 400 body for an invalid value lists all three allowed values (both AnonymizationController and BatchAnonymizationController).",
+      "status": "done",
+      "spec_ref": "batch-anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "tests/unit/Controller/AnonymizationControllerTest.php",
+        "tests/unit/Controller/BatchAnonymizationControllerTest.php"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "CHANGELOG entry",
+      "description": "Add an Added entry for the pdf-only outputFormat value and a Behavior changes entry noting the default flip from pdf to pdf-only, plus the config-only rollback note (default_output_format = pdf).",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Update feature docs with three-mode table",
+      "description": "Update docs/features/anonymization.md (the outputFormat section) with the three-mode semantics table. Create the file if missing.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": [
+        "docs/features/anonymization.md"
+      ]
+    },
+    {
+      "id": 16,
+      "title": "composer check:strict clean",
+      "description": "Run composer check:strict; fix any pre-existing issues only in touched files per the workflow rule.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    },
+    {
+      "id": 17,
+      "title": "openspec validate clean",
+      "description": "Run openspec validate anonymise-pdf-only-output-mode; must be clean.",
+      "status": "done",
+      "spec_ref": "anonymization",
+      "acceptance_criteria": [],
+      "files_likely_affected": []
+    }
+  ]
+}
