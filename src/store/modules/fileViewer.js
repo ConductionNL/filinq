@@ -24,9 +24,9 @@ export const useFileViewerStore = defineStore(
 			originalFile: null,
 			anonymizedFile: null,
 			showAnonymized: false,
-			// Latest text selection from the viewer surface. In edit mode this
+			// Latest text selection from the viewer surface. In add mode this
 			// doubles as the pending candidate text for a new manual entity
-			// (see setEditMode / T10).
+			// (see setAddMode / T10).
 			selection: '',
 			// Whether the user may edit the detected entities (set legal
 			// grounds / toggle inclusion) before anonymising. Set by the
@@ -36,7 +36,7 @@ export const useFileViewerStore = defineStore(
 			grondslagen: true,
 			// "Add new data" mode: the sidebar swaps to the add-entity panel
 			// and the viewer enables text selection for highlighting (T10).
-			editMode: false,
+			addMode: false,
 			// Entities the viewer should highlight in the rendered document,
 			// as `{ value, type }`. Pushed by the sidebar from the current
 			// entity list; consumed by the viewers (T09).
@@ -75,7 +75,7 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = false
 				this.selection = ''
 				this.grondslagen = options.grondslagen ?? true
-				this.editMode = false
+				this.addMode = false
 				this.highlightEntities = []
 			},
 			/**
@@ -91,7 +91,7 @@ export const useFileViewerStore = defineStore(
 				this.currentFile = file
 				this.showAnonymized = true
 				this.selection = ''
-				this.editMode = false
+				this.addMode = false
 				this.highlightEntities = []
 			},
 			/**
@@ -104,7 +104,7 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = false
 				this.selection = ''
 				this.grondslagen = true
-				this.editMode = false
+				this.addMode = false
 				this.highlightEntities = []
 			},
 			/**
@@ -118,7 +118,7 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = !this.showAnonymized
 				this.currentFile = this.showAnonymized ? this.anonymizedFile : this.originalFile
 				this.selection = ''
-				this.editMode = false
+				this.addMode = false
 				this.highlightEntities = []
 			},
 			/**
@@ -144,7 +144,7 @@ export const useFileViewerStore = defineStore(
 			},
 			/**
 			 * Record the latest text selection from the viewer surface. In
-			 * edit mode this is the pending candidate value for a new manual
+			 * add mode this is the pending candidate value for a new manual
 			 * entity (T10/T11).
 			 *
 			 * @param {string} text Selected text.
@@ -153,14 +153,14 @@ export const useFileViewerStore = defineStore(
 				this.selection = text || ''
 			},
 			/**
-			 * Toggle the "Add new data" edit mode. Turning it off clears the
+			 * Toggle the "Add new data" mode. Turning it off clears the
 			 * pending selection so a stale highlight does not linger.
 			 *
 			 * @param {boolean} value `true` enters the add-entity panel; `false` leaves it.
 			 */
-			setEditMode(value) {
-				this.editMode = Boolean(value)
-				if (!this.editMode) {
+			setAddMode(value) {
+				this.addMode = Boolean(value)
+				if (!this.addMode) {
 					this.selection = ''
 				}
 			},

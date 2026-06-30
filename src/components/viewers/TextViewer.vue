@@ -1,5 +1,5 @@
 <template>
-	<div class="text-viewer" @mouseup="captureSelection">
+	<div class="text-viewer" :class="{ 'dd-marking-cursor': isAddMode }" @mouseup="captureSelection">
 		<div v-if="loading" class="text-viewer__loading">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('docudesk', 'Loading document…') }}</span>
@@ -45,17 +45,26 @@ export default {
 		/**
 		 * The document text split into highlight segments. Combines the
 		 * entities the sidebar asked to mark with the pending selection
-		 * (edit mode only), so the user sees both detected values and the
+		 * (add mode only), so the user sees both detected values and the
 		 * text they are about to add.
 		 *
 		 * @return {Array<{text: string, type: (string|null)}>}
 		 */
 		segments() {
 			const entities = fileViewerStore.highlightEntities || []
-			const pending = fileViewerStore.editMode && fileViewerStore.selection
+			const pending = fileViewerStore.addMode && fileViewerStore.selection
 				? [{ value: fileViewerStore.selection, type: PENDING_TYPE }]
 				: []
 			return buildHighlightSegments(this.content, [...pending, ...entities])
+		},
+		/**
+		 * Whether the viewer is in add mode — drives the marking (highlighter)
+		 * cursor so it is obvious the user can select text to add an entity.
+		 *
+		 * @return {boolean}
+		 */
+		isAddMode() {
+			return fileViewerStore.addMode
 		},
 	},
 	watch: {

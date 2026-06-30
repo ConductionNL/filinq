@@ -1,5 +1,5 @@
 <template>
-	<div class="pdf-viewer" @mouseup="captureSelection">
+	<div class="pdf-viewer" :class="{ 'dd-marking-cursor': isAddMode }" @mouseup="captureSelection">
 		<div v-if="loading" class="pdf-viewer__loading">
 			<NcLoadingIcon :size="48" />
 			<span>{{ t('docudesk', 'Loading document…') }}</span>
@@ -78,12 +78,21 @@ export default {
 			return fileViewerStore.highlightEntities || []
 		},
 		/**
-		 * Pending selection to mark distinctly — only while in edit mode.
+		 * Pending selection to mark distinctly — only while in add mode.
 		 *
 		 * @return {string}
 		 */
 		pendingValue() {
-			return fileViewerStore.editMode ? (fileViewerStore.selection || '') : ''
+			return fileViewerStore.addMode ? (fileViewerStore.selection || '') : ''
+		},
+		/**
+		 * Whether the viewer is in add mode — drives the marking (highlighter)
+		 * cursor so it is obvious the user can select text to add an entity.
+		 *
+		 * @return {boolean}
+		 */
+		isAddMode() {
+			return fileViewerStore.addMode
 		},
 	},
 	watch: {

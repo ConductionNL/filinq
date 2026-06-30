@@ -60,32 +60,32 @@ describe('fileViewer store — grondslagen state', () => {
 	})
 })
 
-describe('fileViewer store — edit mode & highlight state', () => {
+describe('fileViewer store — add mode & highlight state', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
 	})
 
-	it('defaults editMode to false and highlightEntities to empty', () => {
+	it('defaults addMode to false and highlightEntities to empty', () => {
 		const store = useFileViewerStore()
-		expect(store.editMode).toBe(false)
+		expect(store.addMode).toBe(false)
 		expect(store.highlightEntities).toEqual([])
 	})
 
-	it('setEditMode() coerces to a boolean', () => {
+	it('setAddMode() coerces to a boolean', () => {
 		const store = useFileViewerStore()
-		store.setEditMode(1)
-		expect(store.editMode).toBe(true)
-		store.setEditMode('')
-		expect(store.editMode).toBe(false)
+		store.setAddMode(1)
+		expect(store.addMode).toBe(true)
+		store.setAddMode('')
+		expect(store.addMode).toBe(false)
 	})
 
-	it('leaving edit mode clears the pending selection', () => {
+	it('leaving add mode clears the pending selection', () => {
 		const store = useFileViewerStore()
-		store.setEditMode(true)
+		store.setAddMode(true)
 		store.setSelection('Kuipers')
 		expect(store.selection).toBe('Kuipers')
 
-		store.setEditMode(false)
+		store.setAddMode(false)
 		expect(store.selection).toBe('')
 	})
 
@@ -99,30 +99,30 @@ describe('fileViewer store — edit mode & highlight state', () => {
 		expect(store.highlightEntities).toEqual([])
 	})
 
-	it('open() / close() reset edit mode and highlights', () => {
+	it('open() / close() reset add mode and highlights', () => {
 		const store = useFileViewerStore()
-		store.setEditMode(true)
+		store.setAddMode(true)
 		store.setHighlightEntities([{ value: 'x', type: 'OTHER' }])
 
 		store.open(sampleFile())
-		expect(store.editMode).toBe(false)
+		expect(store.addMode).toBe(false)
 		expect(store.highlightEntities).toEqual([])
 
-		store.setEditMode(true)
+		store.setAddMode(true)
 		store.setHighlightEntities([{ value: 'x', type: 'OTHER' }])
 		store.close()
-		expect(store.editMode).toBe(false)
+		expect(store.addMode).toBe(false)
 		expect(store.highlightEntities).toEqual([])
 	})
 
-	it('switching to the anonymised variant resets edit mode', () => {
+	it('switching to the anonymised variant resets add mode', () => {
 		const store = useFileViewerStore()
 		store.open(sampleFile())
-		store.setEditMode(true)
+		store.setAddMode(true)
 		store.setHighlightEntities([{ value: 'x', type: 'OTHER' }])
 
 		store.setAnonymizedVariant({ ...sampleFile(), fileId: 99 })
-		expect(store.editMode).toBe(false)
+		expect(store.addMode).toBe(false)
 		expect(store.highlightEntities).toEqual([])
 	})
 })

@@ -27,8 +27,8 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					class="entity-search"
 					:placeholder="t('docudesk', 'Search by letter or type')"
 					:clear-label="t('docudesk', 'Clear')" />
-				<!-- Toggle (left) + Edit button (right). The toggle switches the
-				     cards between editable review and read-only defaults; Edit
+				<!-- Toggle (left) + Add button (right). The toggle switches the
+				     cards between editable review and read-only defaults; Add
 				     opens the add-entity panel. -->
 				<div class="review-controls__row">
 					<DdToggle
@@ -39,9 +39,9 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					</DdToggle>
 					<NcButton type="secondary" @click="onEdit">
 						<template #icon>
-							<Pencil :size="20" />
+							<Plus :size="20" />
 						</template>
-						{{ t('docudesk', 'Edit') }}
+						{{ t('docudesk', 'Add') }}
 					</NcButton>
 				</div>
 			</div>
@@ -126,10 +126,11 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				v-else-if="entry && entry.viewMode === 'anonymized'"
 				:items="entry.entities" />
 
-			<!-- Add new data panel — edit mode. The user selects text in the
-			     document (highlighted as pending), picks a type and optionally
-			     grondslagen, then saves it as one new entity. -->
-			<div v-else-if="entry && isEditing" class="add-entity-panel">
+			<!-- Add new data panel. The user selects text in the document
+			     (highlighted as pending), picks a type and optionally
+			     grondslagen, then adds it as one new entity (which closes
+			     the panel). Cancel leaves without adding. -->
+			<div v-else-if="entry && isAdding" class="add-entity-panel">
 				<NcNoteCard :type="selectedText ? 'info' : 'warning'">
 					{{ selectedText
 						? t('docudesk', 'This text will be added to the anonymisation list.')
@@ -187,8 +188,10 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		<!-- Sticky action bar — `NcAppSidebar` v8 has no `footer` slot, so
 		     the button rides inside the default slot and stays glued to
 		     the viewport bottom via `position: sticky`. -->
-		<!-- Edit mode: cancel / save the new entity (review step only). -->
-		<div v-if="entry && entry.status === 'extracted' && isEditing" class="sidebar-action-bar">
+		<!-- Adding process. The user selects text and picks a type, then "Add
+		     entity" adds it and closes the panel; "Cancel" leaves without
+		     adding. -->
+		<div v-if="entry && entry.status === 'extracted' && isAdding" class="sidebar-action-bar">
 			<NcButton type="tertiary" :disabled="savingNew" @click="onCancelEdit">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
@@ -199,7 +202,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 				<template v-if="savingNew" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ t('docudesk', 'Save change') }}
+				{{ t('docudesk', 'Add entity') }}
 			</NcButton>
 		</div>
 		<!-- Dossier mode: the whole batch footer (anonymise-all + progress
@@ -281,7 +284,7 @@ import { NcAppSidebar, NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@ne
 import { generateRemoteUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
 import JSZip from 'jszip'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldRefreshOutline from 'vue-material-design-icons/ShieldRefreshOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
@@ -316,7 +319,7 @@ export default {
 		DdEntityCard,
 		DdRemovedEntitiesList,
 		DdSearchBar,
-		Pencil,
+		Plus,
 		ShieldLockOutline,
 		ShieldRefreshOutline,
 		Download,
@@ -326,7 +329,7 @@ export default {
 			basesOptions: BASES_OPTIONS,
 			typeOptions: ENTITY_TYPES,
 			loadingFileId: null,
-			// "Add new data" panel state (edit mode). The chosen type and
+			// "Add new data" panel state (add mode). The chosen type and
 			// grondslagen for the entity about to be added from the selection.
 			newType: '',
 			newBases: [],
@@ -667,13 +670,13 @@ export default {
 			return fileViewerStore.grondslagen
 		},
 		/**
-		 * Whether the "Add new data" panel is active — the edit mode set by the
+		 * Whether the "Add new data" panel is active — the add mode set by the
 		 * Bewerken button. Only meaningful during the review step.
 		 *
 		 * @return {boolean}
 		 */
-		isEditing() {
-			return fileViewerStore.editMode && this.entry?.status === 'extracted'
+		isAdding() {
+			return fileViewerStore.addMode && this.entry?.status === 'extracted'
 		},
 		/**
 		 * The text the user selected in the document viewer — the candidate
@@ -719,7 +722,7 @@ export default {
 		 * @return {boolean}
 		 */
 		showGrondslagenToggle() {
-			return this.entry?.status === 'extracted' && !this.isEditing
+			return this.entry?.status === 'extracted' && !this.isAdding
 		},
 		/**
 		 * Sidebar header title — detected-entity count once extraction has
@@ -728,7 +731,7 @@ export default {
 		 * @return {string}
 		 */
 		sidebarTitle() {
-			if (this.isEditing) {
+			if (this.isAdding) {
 				return t('docudesk', 'Add new data')
 			}
 			// Anonymised result — re-opened document or the just-finished run:
@@ -757,7 +760,7 @@ export default {
 		 * @return {string}
 		 */
 		sidebarSubtitle() {
-			if (this.isEditing) {
+			if (this.isAdding) {
 				return t('docudesk', 'Select text in the document, then choose a type.')
 			}
 			if (this.entry?.viewMode === 'anonymized') {
@@ -1064,23 +1067,23 @@ export default {
 			URL.revokeObjectURL(url)
 		},
 		/**
-		 * Enter the "Add new data" panel: switch the viewer into edit mode so
+		 * Enter the "Add new data" panel: switch the viewer into add mode so
 		 * text selection drives a pending highlight, and reset the form.
 		 *
 		 * @return {void}
 		 */
 		onEdit() {
 			this.resetNewEntityForm()
-			fileViewerStore.setEditMode(true)
+			fileViewerStore.setAddMode(true)
 		},
 		/**
-		 * Leave the add-entity panel without saving — back to the review list.
-		 * `setEditMode(false)` also clears the pending selection.
+		 * Leave the adding process without adding — back to the review list.
+		 * `setAddMode(false)` also clears the pending selection.
 		 *
 		 * @return {void}
 		 */
 		onCancelEdit() {
-			fileViewerStore.setEditMode(false)
+			fileViewerStore.setAddMode(false)
 			this.resetNewEntityForm()
 		},
 		/**
@@ -1094,10 +1097,9 @@ export default {
 			this.saveError = null
 		},
 		/**
-		 * Save the current selection as a new manual entity via the store.
-		 * Persists it, prepends it to the list, then clears the selection and
-		 * form so the user can add the next one (one entity at a time). Stays
-		 * in edit mode so adding several in a row needs no re-click.
+		 * Add the current selection as a new manual entity via the store.
+		 * Persists it, prepends it to the list, then closes the adding process
+		 * (back to the review list) — adding one entity completes the process.
 		 *
 		 * @return {Promise<void>}
 		 */
@@ -1113,9 +1115,10 @@ export default {
 					type: this.newTypeValue,
 					bases: this.grondslagen ? this.newBases : [],
 				})
-				// Clear the selection + form; the new entity now highlights as
-				// its own type and the pending mark is gone.
-				fileViewerStore.setSelection('')
+				// Close the adding process: the new entity now highlights as its
+				// own type and the pending mark is gone. `setAddMode(false)`
+				// clears the selection.
+				fileViewerStore.setAddMode(false)
 				this.resetNewEntityForm()
 			} catch (err) {
 				this.saveError = err?.message || t('docudesk', 'Failed to add the selected text')
@@ -1213,7 +1216,7 @@ export default {
 	flex-direction: column;
 }
 
-/* Add new data panel (edit mode). */
+/* Add new data panel (add mode). */
 .add-entity-panel {
 	display: flex;
 	flex-direction: column;

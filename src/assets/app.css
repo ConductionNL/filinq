@@ -82,6 +82,21 @@
 	box-shadow: 0 0 0 2px var(--color-warning-text, #8a6d3b);
 }
 
+/* Marking cursor — applied to a document viewer's root while it is in add
+   mode, so the highlighter signals "select text here to add an entity". The
+   glyph is the Material Symbols "Ink Highlighter" icon, inlined as a data URI
+   (no asset round-trip); the hotspot (3 21) sits on the marker tip. A white
+   silhouette (the filled icon variant) sits under the dark outline so the
+   marker body reads solid rather than see-through. `text` is
+   the fallback where custom cursors are capped (some browsers cap at 32px or
+   ignore data URIs). Because `cursor` inherits, setting it on the root reaches
+   plain text children; viewers that paint their own cursor (the PDF text
+   layer) re-assert this rule on their spans. */
+.dd-marking-cursor,
+.dd-marking-cursor .pdf-viewer__text-layer :is(span, br) {
+	cursor: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%20-960%20960%20960'%3E%3Cpath%20fill='%23fff'%20d='m384-560%20216%20216-200%20200q-24%2024-56%2024t-56-24l-2-2-26%2026H60l126-126-2-2q-24-24-24-56t24-56l200-200Zm57-57%20199-199q24-24%2056-24t56%2024l104%20104q24%2024%2024%2056t-24%2056L657-401%20441-617Z'/%3E%3Cpath%20fill='%23222'%20d='M544-400%20440-504%20240-304l104%20104%20200-200Zm-47-161%20104%20104%20199-199-104-104-199%20199Zm-84-28%20216%20216-229%20229q-24%2024-56%2024t-56-24l-2-2-26%2026H60l126-126-2-2q-24-24-24-56t24-56l229-229Zm0%200%20227-227q24-24%2056-24t56%2024l104%20104q24%2024%2024%2056t-24%2056L629-373%20413-589Z'/%3E%3C/svg%3E") 3 21, text;
+}
+
 /* CnStatusBadge: each variant resolves its text colour through a Nextcloud
    token (--color-success, --color-warning-text, etc.). Remap those tokens
    on the badge itself so every variant picks up the dark-blue brand colour
