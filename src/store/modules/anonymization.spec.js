@@ -172,6 +172,7 @@ describe('anonymiseEntry — grondslagen summary flags', () => {
 			'/apps/docudesk/api/anonymization/anonymize/42',
 			{
 				entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9 }],
+				scope: 'document',
 				appendBasisSummary: true,
 				outputFormat: 'pdf',
 			},

@@ -298,7 +298,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 								// and outputFormat travel together, so send the format
 								// alongside the flag (omit both when summarising is off).
 								...(this.appendBasisSummary
-									? { appendBasisSummary: true, outputFormat: 'pdf' }
+									? { appendBasisSummary: true, outputFormat: 'pdf-only' }
 									: {}),
 							},
 						)

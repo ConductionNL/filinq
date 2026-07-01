@@ -939,7 +939,7 @@ export default {
 			// summary to the output. Both flags must travel together (see
 			// anonymiseEntry) or the summary is silently skipped.
 			await anonymizationStore.anonymiseEntry(this.entry, this.grondslagen
-				? { appendBasisSummary: true, outputFormat: 'pdf' }
+				? { appendBasisSummary: true, outputFormat: 'pdf-only' }
 				: {})
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
@@ -998,7 +998,7 @@ export default {
 			// When grondslagen are on, append the basis summary and render to
 			// PDF — both flags must travel together (see anonymiseEntry).
 			const options = this.grondslagen
-				? { files, fileIds, appendBasisSummary: true, outputFormat: 'pdf' }
+				? { files, fileIds, appendBasisSummary: true, outputFormat: 'pdf-only' }
 				: { files, fileIds }
 			await anonymizationStore.anonymiseAllExtracted(options)
 			// Each run writes a new `_anonymized` file into the dossier folder;
