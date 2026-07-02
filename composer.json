@@ -67,7 +67,7 @@
 		"php": "^8.2",
 		"adbario/php-dot-notation": "^3.3.0",
 		"bamarni/composer-bin-plugin": "^1.8",
-		"mpdf/mpdf": "^8.2",
+		"mpdf/mpdf": "^8.3",
 		"opis/json-schema": "^2.3",
 		"phpoffice/phpword": "^1.2",
 		"psr/log": "^1.1.4 || ^2.0 || ^3.0",

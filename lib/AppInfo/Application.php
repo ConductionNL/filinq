@@ -143,6 +143,9 @@ class Application extends App implements IBootstrap
                         ),
                         new EmlBackend(
                             appConfig: $c->get(\OCP\IAppConfig::class),
+                            appManager: $c->get(\OCP\App\IAppManager::class),
+                            container: $c,
+                            assembly: $c->get(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
                             logger: $c->get(LoggerInterface::class),
                         ),
                     ],

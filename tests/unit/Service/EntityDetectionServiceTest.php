@@ -127,6 +127,33 @@ class EntityDetectionServiceTest extends TestCase
 
 
     /**
+     * A digits-only value tagged as a specific PII type (e.g. a BSN detected as
+     * SSN) MUST survive mapping and be redacted, while a generic numeric type
+     * (NUMBER/CARDINAL/…) is still dropped as noise.
+     *
+     * @return void
+     */
+    public function testMapEntitiesForAnonymizationKeepsNumericPii(): void
+    {
+        $entities = [
+            ['value' => '111222333', 'type' => 'SSN'],
+            ['value' => '0612345678', 'type' => 'PHONE'],
+            ['value' => '2026', 'type' => 'NUMBER'],
+            ['value' => '42', 'type' => 'CARDINAL'],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization($entities);
+
+        $texts = array_column($result, 'text');
+        $this->assertContains('111222333', $texts, 'a BSN (SSN type) must be kept');
+        $this->assertContains('0612345678', $texts, 'a numeric phone must be kept');
+        $this->assertNotContains('2026', $texts, 'a generic NUMBER must be dropped');
+        $this->assertNotContains('42', $texts, 'a generic CARDINAL must be dropped');
+
+    }//end testMapEntitiesForAnonymizationKeepsNumericPii()
+
+
+    /**
      * Test mapEntitiesForAnonymization deduplicates
      *
      * @return void

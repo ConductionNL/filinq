@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Bijlage {{ index|default('') }}</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  .divider-wrap { border: 1pt solid #999; padding: 16pt; margin-top: 4pt; }
+  h2.divider-title { font-size: 14pt; margin: 0 0 8pt 0; }
+  table.divider-meta { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.divider-meta td { padding: 2pt 6pt 2pt 0; vertical-align: top; }
+  table.divider-meta td.label { color: #666; width: 24%; white-space: nowrap; font-weight: bold; }
+  .divider-note { margin-top: 12pt; font-size: 10pt; color: #444; }
+  .divider-note.omitted { color: #b00; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="divider-wrap">
+  <h2 class="divider-title">Bijlage {{ index|default('?') }}: {{ filename|default('(onbekend)')|escape }}</h2>
+  <table class="divider-meta">
+    <tr>
+      <td class="label">Bestandsnaam:</td>
+      <td>{{ filename|default('—')|escape }}</td>
+    </tr>
+    <tr>
+      <td class="label">Type:</td>
+      <td>{{ mimeType|default('—')|escape }}</td>
+    </tr>
+    {% if size is defined and size is not null %}
+    <tr>
+      <td class="label">Grootte:</td>
+      <td>{{ size }} bytes</td>
+    </tr>
+    {% endif %}
+  </table>
+
+  {% if variant == 'non_renderable' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — geredigeerd maar niet weer te geven</p>
+  {% elseif variant == 'too_large' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — te groot om weer te geven</p>
+  {% elseif variant == 'unsupported' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} ({{ mimeType|escape }}) weggelaten — geen anonimiseerder beschikbaar</p>
+  {% elseif variant == 'depth_limit' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — geneste e-mail weggelaten op de maximale nestdiepte</p>
+  {% elseif variant == 'render_failed' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — kon niet worden weergegeven</p>
+  {% else %}
+    <p class="divider-note">De geredigeerde inhoud van deze bijlage volgt op de volgende pagina('s).</p>
+  {% endif %}
+</div>
+
+</body>
+</html>

@@ -22,6 +22,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use RuntimeException;
 use Throwable;
 use OCP\App\IAppManager;
@@ -55,6 +56,11 @@ class AnonymizationService
      * @param PdfConversionService      $pdfConversion      Cascade orchestrator that converts the
      *                                                      anonymised intermediate to PDF when
      *                                                      `outputFormat: "pdf"` is in effect.
+     * @param EmlPdfAssemblyService     $emlAssembly        Assembles OR's redacted anonymise-EML
+     *                                                      result into a PDF/A-3b. EML inputs are
+     *                                                      routed here directly because OR's
+     *                                                      `anonymizeDocument()` throws on
+     *                                                      `message/rfc822`.
      *
      * @return void
      */
@@ -64,7 +70,8 @@ class AnonymizationService
         private readonly IAppManager $appManager,
         private readonly EntityDetectionService $entityDetection,
         private readonly GrondslagenSummaryService $grondslagenSummary,
-        private readonly PdfConversionService $pdfConversion
+        private readonly PdfConversionService $pdfConversion,
+        private readonly EmlPdfAssemblyService $emlAssembly
     ) {
 
     }//end __construct()
@@ -203,6 +210,27 @@ class AnonymizationService
             $fileService    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Service\FileService');
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
+
+            // EML branch (eml-pdf-assembly): OR's anonymizeDocument() THROWS on
+            // message/rfc822 (it no longer leaks a raw-text body). EML inputs
+            // are therefore routed to OR's dedicated anonymise-EML API
+            // (anonymizeEmlStructured) and assembled into a PDF/A-3b here,
+            // BEFORE the standard anonymizeDocument + convertToPdf path. This
+            // REPLACES that path for EML. `outputFormat: "preserve"` is
+            // silently overridden to PDF for EML (design D8) — handled inside
+            // anonymizeEmlToPdf because EML has no reliably-redacted native
+            // form to preserve.
+            if ($this->isEmlInput(node: $node) === true) {
+                return $this->anonymizeEmlToPdf(
+                    fileId: $fileId,
+                    node: $node,
+                    fileService: $fileService,
+                    mappedEntities: $mappedEntities,
+                    appendBasisSummary: $appendBasisSummary,
+                    scope: $scope,
+                    dossierKey: $dossierKey
+                );
+            }
 
             // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
             // 'document' (default) numbers entities locally to this file;
@@ -368,6 +396,210 @@ class AnonymizationService
         }//end try
 
     }//end anonymizeDocument()
+
+
+    /**
+     * Whether a file node is an EML (email) input.
+     *
+     * Detected by MIME `message/rfc822` or a `.eml` extension. EML inputs are
+     * routed to the dedicated anonymise-EML + assembly path.
+     *
+     * @param mixed $node The source file node.
+     *
+     * @return bool True when the node is an EML message.
+     */
+    private function isEmlInput(mixed $node): bool
+    {
+        if (is_object($node) === false) {
+            return false;
+        }
+
+        if (method_exists($node, 'getMimeType') === true
+            && (string) $node->getMimeType() === 'message/rfc822'
+        ) {
+            return true;
+        }
+
+        if (method_exists($node, 'getName') === true) {
+            $name = (string) $node->getName();
+            $dot  = strrpos($name, '.');
+            if ($dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml') {
+                return true;
+            }
+        }
+
+        return false;
+
+    }//end isEmlInput()
+
+
+    /**
+     * Anonymise an EML input via OR's anonymise-EML API and assemble the
+     * redacted result into a PDF/A-3b written beside the source.
+     *
+     * This is the EML replacement for the standard anonymizeDocument +
+     * convertToPdf path. EML always produces a PDF — `outputFormat:
+     * "preserve"` is silently overridden here (the caller is never told;
+     * design D8), because OR redacts components, not a re-serialised native
+     * `.eml`, so there is no native intermediate to keep. On OR API failure a
+     * `ConversionFailedException` is raised with NO raw-parse fallback (design
+     * D9), so the controller maps it to HTTP 422 and no un-redacted content is
+     * ever written.
+     *
+     * @param int          $fileId             Source Nextcloud file ID.
+     * @param mixed        $node               Source EML file node.
+     * @param mixed        $fileService        OR FileService (resolved reflectively).
+     * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
+     * @param bool         $appendBasisSummary Append the grondslagen summary to the PDF.
+     * @param string       $scope              Placeholder-numbering scope.
+     * @param string|null  $dossierKey         Stable dossier folder id, or null.
+     *
+     * @return array<string, mixed> The anonymisation result info (same shape the
+     *                              controller expects: anonymizedFileId/Name/Path,
+     *                              replacementCount, complete, residualEntities).
+     *
+     * @throws ConversionFailedException On OR API failure or assembly failure.
+     */
+    private function anonymizeEmlToPdf(
+        int $fileId,
+        mixed $node,
+        mixed $fileService,
+        array $mappedEntities,
+        bool $appendBasisSummary,
+        string $scope,
+        ?string $dossierKey
+    ): array {
+        if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
+            throw new ConversionFailedException(
+                message: 'OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.',
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => false,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured not present on OpenRegister FileService',
+                    ],
+                ]
+            );
+        }
+
+        try {
+            $structure = $fileService->anonymizeEmlStructured($node, $mappedEntities, $scope, $dossierKey);
+        } catch (ConversionFailedException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            // NO raw-parse fallback — leaking un-redacted EML is the worse
+            // failure. Surface as a typed conversion failure (HTTP 422).
+            $this->logger->warning(
+                'EML anonymise-API failed; no raw-parse fallback.',
+                ['fileId' => $fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
+            );
+            throw new ConversionFailedException(
+                message: 'OpenRegister anonymise-EML API failed: '.$e->getMessage(),
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => true,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured threw: '.$e->getMessage(),
+                    ],
+                ],
+                previous: $e
+            );
+        }//end try
+
+        if (is_object($structure) === false) {
+            throw new ConversionFailedException(
+                message: 'OpenRegister anonymise-EML API returned no structure.',
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => true,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured returned non-object',
+                    ],
+                ]
+            );
+        }
+
+        $sourceName = '';
+        if (method_exists($node, 'getName') === true) {
+            $sourceName = (string) $node->getName();
+        }
+
+        // assemble() throws ConversionFailedException on unrecoverable
+        // failure; let it propagate so the controller surfaces 422.
+        $pdfBytes = $this->emlAssembly->assemble(result: $structure, sourceFilename: $sourceName);
+
+        $parent     = $node->getParent();
+        $baseName   = $this->stripExtension(name: $sourceName === '' ? 'email' : $sourceName);
+        $outputName = $baseName.'_anonymized.pdf';
+        if ($parent->nodeExists($outputName) === true) {
+            $parent->get($outputName)->delete();
+        }
+
+        $pdfNode = $parent->newFile($outputName, $pdfBytes);
+
+        $this->logger->info(
+            'EML anonymised and assembled to PDF',
+            [
+                'fileId'      => $fileId,
+                'entityCount' => count($mappedEntities),
+            ]
+        );
+
+        $resultInfo = $this->entityDetection->parseAnonymizationResult($pdfNode);
+        $resultInfo['replacementCount'] = count($mappedEntities);
+        // OR's anonymise-EML path does not surface a residual list; the
+        // assembled PDF is the authoritative redacted output.
+        $resultInfo['complete']         = true;
+        $resultInfo['residualCount']    = 0;
+        $resultInfo['residualEntities'] = [];
+
+        if ($appendBasisSummary === true) {
+            $placeholderMap = [];
+            if (method_exists($fileService, 'getLastPlaceholderMap') === true) {
+                $placeholderMap = $fileService->getLastPlaceholderMap();
+            }
+
+            $resultInfo = $this->attachGrondslagenSummary(
+                anonymisedNode: $pdfNode,
+                sourceFileId: $fileId,
+                resultInfo: $resultInfo,
+                placeholderMap: $placeholderMap
+            );
+        }
+
+        if (empty($resultInfo['anonymizedFileId']) === false) {
+            $resultInfo = $this->recordAnonymizationLink(
+                fileId: $fileId,
+                sourceNode: $node,
+                resultInfo: $resultInfo
+            );
+        }
+
+        return $resultInfo;
+
+    }//end anonymizeEmlToPdf()
+
+
+    /**
+     * Return $name without its trailing `.ext`.
+     *
+     * @param string $name File name with extension.
+     *
+     * @return string Name without extension.
+     */
+    private function stripExtension(string $name): string
+    {
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            return $name;
+        }
+
+        return substr($name, 0, $dotPos);
+
+    }//end stripExtension()
 
 
     /**
