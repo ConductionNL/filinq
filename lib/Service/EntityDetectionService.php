@@ -33,24 +33,6 @@ class EntityDetectionService
 
 
     /**
-     * Generic numeric entity types that carry no PII on their own — a bare
-     * count, year, ordinal or unclassified number the recogniser over-captured.
-     * A digits-only value of one of these types is dropped as noise, while a
-     * digits-only value of a specific PII type (SSN/BSN, PHONE, IBAN, …) is
-     * kept and redacted. Compared case-insensitively.
-     *
-     * @var array<int, string>
-     */
-    private const GENERIC_NUMERIC_TYPES = [
-        'NUMBER',
-        'CARDINAL',
-        'ORDINAL',
-        'QUANTITY',
-        'UNKNOWN',
-    ];
-
-
-    /**
      * Constructor for EntityDetectionService
      *
      * @param AnonymizationResultParser $resultParser Anonymization result parser
@@ -114,17 +96,6 @@ class EntityDetectionService
             $type = (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN');
 
             if ($text === '' || strlen($text) < 3) {
-                continue;
-            }
-
-            // Drop stray numeric noise ONLY when the detector did not classify
-            // it as a specific PII type. A digits-only value tagged NUMBER /
-            // CARDINAL / etc. is almost always a count/year the recogniser
-            // over-captured; a digits-only value tagged as PII (SSN/BSN, PHONE,
-            // …) is exactly what must be redacted and MUST survive here.
-            if (is_numeric($text) === true
-                && in_array(strtoupper($type), self::GENERIC_NUMERIC_TYPES, true) === true
-            ) {
                 continue;
             }
 
