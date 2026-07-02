@@ -34,7 +34,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
-					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
+					accept=".docx,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
@@ -125,16 +125,18 @@ import uploadIcon from '../../assets/upload.png'
 
 // Anonymisation only produces real redactions for formats the backend can
 // edit in place: Word via PHPWord, plain text via byte-level replace, PDF
-// via the SAPP byte-replace pipeline. Other binary formats fall through to
-// the str_ireplace path that returns a byte-identical copy — see
-// project-anonymization-pipeline for the upstream OR limitation. Restrict
-// the upload widget so users can't accidentally pick a format that won't
-// actually redact.
-const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
+// via the SAPP byte-replace pipeline. EML is anonymised by OpenRegister and
+// assembled into a redacted PDF/A-3b by EmlPdfAssemblyService (eml-pdf-assembly).
+// Other binary formats fall through to the str_ireplace path that returns a
+// byte-identical copy — see project-anonymization-pipeline for the upstream OR
+// limitation. Restrict the upload widget so users can't accidentally pick a
+// format that won't actually redact.
+const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf', 'eml']
 const ALLOWED_MIMES = new Set([
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 	'text/plain',
 	'application/pdf',
+	'message/rfc822',
 ])
 
 /**

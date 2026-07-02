@@ -1,200 +1,195 @@
 ## Context
 
-`anonymise-output-as-pdf-by-default` (Change A) introduced a conversion cascade that flattens any anonymisation output to PDF/A-3b. Its `EmlBackend` was specced as a thin path: extract email body, wrap in HTML, render via mPDF. That path produces a PDF containing only the body — sender / recipient / subject / date metadata is lost, attachments are not represented at all. For real correspondence (Wob/Woo email threads, complaint dossiers), the rendered artifact has to carry the full visible structure of the email plus the attachments that came with it.
+`anonymise-output-as-pdf-by-default` (Change A) introduced a conversion cascade that flattens any anonymisation output to PDF/A-3b. Its `EmlBackend` (`lib/Service/Conversion/EmlBackend.php`) is currently a permanent-false stub: `isAvailable()` returns `false`, `convert()` throws `ConversionFailedException` as a defensive backstop. EML inputs therefore fall through to the cascade's 422 terminus.
 
-This change upgrades that backend to consume OR's structured-parse API (from the paired `text-extraction-eml` change) and assemble a richer PDF/A-3b that:
+This change un-stubs that backend. The crux is **anonymisation**: an email leaks PII from headers, body, AND every attachment. A previous draft of this change parsed the EML as-is, rendered the original headers/body, and embedded original attachment bytes verbatim as PDF/A-3 files. For anonymised output that is wrong — it would leak the un-redacted email. The architecture is therefore reframed:
 
-- Renders a header block with From / To / Cc / Subject / Date.
-- Renders the email body — preferring HTML for fidelity (preserved layout, fonts, inline images), falling back to plain-text wrapped in `<pre>` when only the plain part is available.
-- Embeds every attachment as a PDF/A-3 file attachment (the "/3" allows arbitrary embedded files alongside the rendered content — auditable, preserved, archivally complete).
-- For renderable attachments (PDF, image, plain-text, nested EML, Word docs via PhpWord), additionally renders them as appended pages prefixed by a divider that names the attachment.
+> **OpenRegister redacts every component; DocuDesk only assembles the redacted result.**
 
-PDF/A-3b is the archival-grade target — already chosen for the per-document anonymisation output. By embedding the original attachment bytes, we satisfy the "self-contained" criterion: a reviewer with only the resulting PDF can extract the original PDF/DOCX/etc. attachments unchanged. By rendering them as pages, we give human reviewers immediate visibility without juggling external files.
-
-The rendering subsystem is fully reused — `PdfService` from `pdf-generation`, the conversion-backends list from Change A's pdf-conversion, mPDF's PDF import/embed paths. No new rendering primitives.
+OR's paired `anonymise-eml-structured` change (built on `text-extraction-eml`) exposes an **anonymise-EML API** that returns an `AnonymisedEmlStructure`. DocuDesk consumes that and assembles a PDF/A-3b purely from already-redacted parts. DocuDesk performs no redaction of its own. The assembly mechanics — Twig envelope template, mPDF multi-pass, divider pages, recursive nested-EML rendering, the `PdfService`/cascade reuse — are preserved from the prior draft; what changes is the **input** (redacted, not raw) and the **attachment policy** (render redacted bytes or drop to a placeholder; never embed originals).
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Produce a single PDF/A-3b that combines an email's headers + body + attachments into one artifact.
-- Use HTML body when the EML provides one (fidelity); plain-text fallback when only that exists.
-- Embed every attachment as a PDF/A-3 embedded file (always — operators get the original bytes back).
-- Render renderable attachments as appended pages (configurable; default on).
-- Reuse the existing pdf-conversion cascade for per-attachment rendering — recursive but bounded.
+- Assemble a single PDF/A-3b from OR's **redacted** anonymise-EML result: redacted header block + redacted body + redacted attachments.
+- Use the redacted HTML body when present (fidelity); redacted plain-text fallback otherwise.
+- Render each redactable attachment's **redacted bytes** as appended pages via the existing pdf-conversion cascade (configurable; default on).
+- For attachments OR could not redact (`unsupported`), append a placeholder page and drop the content entirely.
+- Always produce a PDF for EML inputs; `outputFormat: "preserve"` is silently overridden to PDF for EML (no error).
 - Honour OR's depth-3 cap on nested EML chains.
 
 **Non-Goals:**
 
-- Render calendar invites (`.ics`) inline. Calendar attachments are embedded only.
-- Decrypt encrypted EML bodies. Encrypted content is rendered as an "Encrypted body" notice; the encrypted blob is preserved as an embedded file.
-- Strip signatures, quoted reply chains, or other body content. Body renders as-is.
-- Provide an interactive preview of the assembled PDF before saving. Synchronous, save-and-return.
-- Add a separate "render this EML to PDF" endpoint. Assembly happens via the existing anonymise endpoint when the EmlBackend wins the cascade.
-- Backfill rendering for historical EMLs that were never anonymised. Only new anonymise calls trigger this.
+- Perform any redaction in DocuDesk. All redaction is OR's.
+- Embed original attachment bytes verbatim (dropped — would leak un-redacted PII).
+- Embed redacted attachment bytes as PDF/A-3 files (deferred to a possible future change).
+- Decrypt encrypted EML bodies. OR decides redactability; DocuDesk renders the placeholders OR's result implies.
+- Strip signatures or quoted reply chains. The redacted body renders as-is.
+- Interactive preview before saving. Synchronous, save-and-return.
 
 ## Decisions
 
-### D1. HTML body preferred; plain-text fallback; both-null shows a notice
+### D1. Consume OR's redacted anonymise-EML result — not the raw parse
 
-Body rendering priority:
+The `EmlBackend.convert()` calls OR's anonymise-EML API (from `anonymise-eml-structured`) for the source file and receives an **`AnonymisedEmlStructure`**:
 
-1. If `EmlStructure.body.html` is non-null and non-empty: render the HTML directly into the Twig envelope. Inline images referenced by `cid:` URLs are resolved via the `attachments[].contentId` index and embedded as `data:` URLs in the HTML before mPDF renders.
-2. Else if `EmlStructure.body.plainText` is non-null and non-empty: render in a `<pre>`-wrapped block to preserve whitespace/linebreaks.
-3. Else: render the localised string `(Bericht zonder body — alleen bijlagen)` as a placeholder.
+- redacted display headers: From / Reply-To / To / Cc / Subject / Date (already anonymised by OR),
+- redacted body: an `AnonymisedEmlBody` with `html` and/or `plain` (either may be null),
+- `attachments[]` of `AnonymisedEmlAttachment`, each either `{filename, mimeType, redactedContent}` (OR supports and redacted the format) or `{filename, mimeType, unsupported: true}` (no anonymiser available),
+- an inline-image map (`contentId → redacted bytes`) for `cid:` resolution.
 
-**Rationale:**
+DocuDesk passes that result straight to `EmlPdfAssemblyService::assemble()`. It does NOT call `parseEmlStructured()` directly and does NOT redact anything. This is the single most important change from the prior draft: OR is the source of all redaction.
 
-- HTML preserves the way the recipient saw the email — formatting, fonts, embedded images. mPDF renders modern HTML reasonably well.
-- Plain-text fallback covers EMLs that have no HTML part (older systems, automated notifications).
-- The placeholder for "no body at all" distinguishes a deliberately-empty email from a parse failure.
+**Rationale:** redaction logic (NER, placeholder numbering, per-format anonymisers) already lives in OR. Duplicating it in DocuDesk would diverge and risk leaking PII. Keeping DocuDesk a pure assembler means a single audited redaction path.
 
-**Trade-off:** mPDF's HTML rendering isn't pixel-perfect — complex CSS (display:flex, modern grid layouts) may render imperfectly. Acceptable for archival rendering; the document is informational, not a re-creation of the email-client view.
+### D2. Body rendering — redacted HTML preferred, redacted plain-text fallback
 
-### D2. Inline image resolution via `cid:` lookup
+Body rendering priority, operating on OR's **redacted** body:
 
-When the HTML body references inline images (`<img src="cid:image1@example.com">`), the assembly walks `EmlStructure.attachments[]` looking for `contentId === 'image1@example.com'`. Found attachments are converted to `data:image/png;base64,<base64>` URLs and substituted in the HTML before mPDF renders. The same attachments still appear in the attachments list AND are embedded as PDF/A-3 files (no deduplication — operators see them in both places).
+1. redacted `html` non-null/non-empty → render directly into the Twig envelope; resolve `cid:` inline images via OR's inline-image map (D3).
+2. else redacted `plain` non-null/non-empty → render in a `<pre>`-wrapped block.
+3. else → render the localised `(Bericht zonder body — alleen bijlagen)` placeholder.
 
-**Rationale:**
+**Trade-off:** mPDF's HTML rendering isn't pixel-perfect; acceptable for archival rendering. The content is already redacted, so fidelity loss never risks PII.
 
-- mPDF can resolve `data:` URLs natively. Substituting the `cid:` reference at HTML-build time avoids needing a custom mPDF resource resolver.
-- Listing the inline image in the regular attachments + embedded files is intentional: the inline image IS an attachment of the EML; it should appear in both views.
+### D3. Inline image resolution via OR's inline-image map
 
-**Edge case:** broken `cid:` references (the EML referenced an image that wasn't attached). The HTML's `<img>` tag is left in place; mPDF logs a warning about the unresolvable resource and renders a placeholder. Operator sees a broken image in the rendered page — same way the email recipient would have seen it.
+When the redacted HTML references `<img src="cid:<contentId>">`, the assembly looks up `<contentId>` in OR's inline-image map (`contentId → redacted bytes`) and substitutes a `data:<mimeType>;base64,<redacted>` URL. Unresolved references are left in place (mPDF renders a placeholder) and logged at debug level.
 
-### D3. PDF/A-3 file embedding for every attachment
+**Rationale:** the bytes in the map are already redacted by OR. DocuDesk only base64-substitutes; it never touches original inline-image bytes.
 
-Every attachment in `EmlStructure.attachments[]` is embedded as a PDF/A-3 file attachment in the resulting PDF. The PDF/A-3 spec allows arbitrary files inside a PDF; the embedded files are extractable by any PDF/A-3-aware viewer (Adobe Acrobat, foxit, the PDF/A reference tools, etc.).
+### D4. Attachment policy — render redacted bytes, or placeholder. No verbatim embedding.
 
-mPDF supports embedded files via:
+For each entry in the redacted `attachments[]`:
 
-```php
-$mpdf->WriteHTML($html);
-foreach ($attachments as $att) {
-    $mpdf->Annotation(...)->setEmbeddedFile($att->filename, $att->mimeType, $att->content);
-}
-$mpdf->SetPDFAVersion('3-B'); // PDF/A-3b
-```
+- **`{redactedContent}` + renderable MIME + within size cap** → divider page, then render the **redacted bytes** via the existing cascade backends:
 
-(Exact API surface confirmed during apply — the mPDF docs cover `setEmbeddedFile` and the PDF/A-3 mode.)
+  ```
+  application/pdf   → import pages from the redacted PDF
+  image/*           → one page with <img src="data:...;base64,<redacted>">
+  text/plain etc.   → one page with <pre>-wrapped redacted text
+  message/rfc822    → recurse: assemble OR's redacted nested EML result (D5)
+  DOCX/ODT/RTF/HTML → Change A's PhpWordBackend on the redacted bytes, then import pages
+  ```
 
-**Rationale:** archival completeness. The redacted PDF carries every byte of the original email's attachments. Reviewers / archivists can extract them losslessly.
+- **`{redactedContent}` + non-renderable MIME** → divider/placeholder page only: `Bijlage <N>: <filename> — geredigeerd maar niet weer te geven`. No bytes embedded.
+- **`{unsupported: true}`** → placeholder page: `Bijlage <N>: <filename> (<mimeType>) weggelaten — geen anonimiseerder beschikbaar`. **No bytes embedded or rendered.** This is the agreed privacy-safety policy — un-anonymisable content is dropped, never leaked.
+- **over `max_attachment_render_size_bytes`** → placeholder page: `Bijlage <N>: <filename> — te groot om weer te geven`. No bytes embedded.
 
-**Trade-off:** PDF size grows with the total attachment size. Acceptable; large attachments are rare in real-world correspondence (typical EML payloads are well under 10 MB total).
+**Change from prior draft:** the prior draft embedded EVERY attachment's ORIGINAL bytes as a PDF/A-3 file attachment. That is removed. Embedding originals leaks the un-redacted email. No verbatim embedding happens in this change. (A future change MAY embed *redacted* bytes for archival self-containment.)
 
-### D4. Renderable attachments append as pages — recursive via the conversion cascade
+**Configurability:** `docudesk.conversion.eml.append_attachment_pages` (default true). When false, only the redacted envelope renders; redactable attachments are not rendered as pages. Unsupported/oversize placeholder pages still appear (they carry no content).
 
-For each attachment whose MIME is in the renderable set:
+### D5. Recursive nested EML — depth-3 budget owned by OR
 
-```
-PDF              → use mPDF.setSourceFile + importPage to import existing pages
-image/*          → render an HTML page with <img src="data:image/...;base64,..."> sized to fit
-text/plain etc.  → render an HTML page with <pre>-wrapped content
-message/rfc822   → recursive — call EmlPdfAssemblyService for the nested EML's structure
-DOCX/ODT/RTF/HTML → reuse Change A's PhpWordBackend to convert to PDF/A-3b, then import pages
-```
+When a renderable attachment is `message/rfc822`, OR's result carries a **redacted** nested `AnonymisedEmlStructure` (up to depth 3). The assembly recurses with the same template + rules. Beyond depth 3, OR returns the nested EML as an `unsupported`/placeholder entry; DocuDesk renders the placeholder page only.
 
-Each renderable attachment is preceded by a divider page rendered from a Twig template:
-
-```
-─────────────────────────────────
-Bijlage <N>: <filename>
-<mimeType>
-<size>
-─────────────────────────────────
-```
-
-Then the rendered pages follow.
-
-**Configurability:** `docudesk.conversion.eml.append_attachment_pages` (default true). When false, attachments are only embedded (D3), not rendered as pages. Useful for tenants where the embedded file is sufficient and rendering noise is unwanted.
-
-**Size cap:** `docudesk.conversion.eml.max_attachment_render_size_bytes` (default 25 MB). Attachments larger than this are embedded but not rendered. The divider page in that case shows "Bijlage <N>: <filename> — te groot om weer te geven; zie ingebed bestand".
-
-### D5. Recursive nested EML — depth-3 budget shared with OR
-
-OR's `parseEmlStructured` caps recursion at depth 3 (`EmlStructure.attachments[].nestedEml` is null beyond depth 3). DocuDesk's assembly inherits the structure as-is. When recursively assembling a nested EML, the depth-3 limit is naturally enforced — beyond it, the nested EML attachment carries `nestedEml: null` and is rendered as "Bijlage N: <filename> (genest e-mail, niet weergegeven — diepte-limiet)".
-
-**Trade-off:** legitimate forwarded-forwarded-forwarded chains beyond depth 3 are embedded but not rendered. Operators can manually open the embedded EML if they need to see it.
+**Rationale:** the depth cap and the redaction both live in OR. DocuDesk inherits whatever OR returns at each level — it never re-parses or re-redacts.
 
 ### D6. Twig template — single envelope template, recursive renders share it
 
-`lib/Resources/templates/eml/email_envelope.twig` renders one EML's envelope: header block + body. Recursive nested-EML rendering uses the same template (Twig include / extends pattern not needed; the assembly service builds each level's HTML and concatenates pages via mPDF's `AddPage()`).
+`lib/Resources/templates/eml/email_envelope.twig` renders one redacted EML envelope: header block + body. Recursive nested renders reuse it; the assembly service concatenates pages via mPDF `AddPage()`.
 
 NL-only labels in v1 (consistent with `anonymisation-grondslagen-summary`):
 
 ```
-Van:        <from>
-Aan:        <to (comma-joined)>
-Cc:         <cc> (only if present)
-Onderwerp:  <subject>
-Datum:      <date formatted as YYYY-MM-DD HH:MM>
+Van:           <redacted from>
+Antwoord aan:  <redacted reply-to> (only if present)
+Aan:           <redacted to (comma-joined)>
+Cc:            <redacted cc> (only if present)
+Onderwerp:     <redacted subject>
+Datum:         <date formatted YYYY-MM-DD HH:MM>
 
-<body content>
+<redacted body content>
 ```
 
 EN translations follow `register-i18n` landing.
 
-### D7. PdfService reuse with PDF/A-3b mode
+### D7. PdfService / cascade reuse, PDF/A-3b mode
 
-The existing `PdfService` (used by `pdf-generation` and `print-preview`) renders Twig → HTML → PDF via mPDF. For this change, the assembly creates an mPDF instance directly (not via `PdfService::renderPdf` — which returns a single-pass binary). Rationale: the assembly does multi-pass mPDF work (write envelope HTML → import attachment pages → embed files), which doesn't fit the single-pass renderPdf API.
+The assembly creates an mPDF instance directly (multi-pass: write redacted envelope HTML → append rendered attachment pages), configured with the SAME PDF/A-3b settings `PdfService` uses (font embedding, no JS, no external resources, `SetPDFAVersion('3-B')`). Per-attachment rendering reuses the cascade backends so the redacted bytes go through the same PDF/image/text/Word paths the rest of the cascade uses. There is **no** file-embedding pass (verbatim embedding is dropped), which also simplifies the mPDF surface versus the prior draft (no `setEmbeddedFile` dependency).
 
-**Alternative considered:** extend `PdfService` with a multi-pass API. Rejected for v1 — the multi-pass work is EML-assembly-specific; pushing it into PdfService would couple a generic renderer to a specific use case.
+**Alternative considered:** extend `PdfService` with a multi-pass API. Rejected for v1 — the multi-pass work is EML-assembly-specific.
 
-The mPDF instance is configured with the SAME PDF/A-3b settings PdfService uses (font embedding, no JS, etc.). Configuration is centralised in a small helper to avoid drift.
+### D8. EML always outputs PDF — `preserve` silently overridden to PDF for EML
 
-### D8. Error handling — assembly failures fall through to a degraded result
+`outputFormat: "preserve"` means "keep the native anonymised file". For EML there is no reliably-redacted native `.eml`: OR redacts components (headers/body/attachments), not a re-serialised EML. So `preserve` cannot deliver a redacted EML and would either leak the original or return nothing useful.
 
-If a step in the assembly fails:
+Decision: **EML inputs always resolve to a PDF output.** When the anonymise request targets an EML input with `outputFormat: "preserve"`, the format is silently overridden to the PDF cascade — no error is returned; the caller receives the assembled PDF. For `pdf-only` and `pdf` (the other two modes from `anonymise-pdf-only-output-mode`), the EML cascade runs normally and produces the assembled PDF; there is no native EML intermediate to keep or delete, so all three modes (`pdf-only`, `pdf`, and the overridden `preserve`) behave identically for EML.
 
-| Failure | Recovery |
+**Rationale:** the three-mode model (`pdf-only` / `pdf` / `preserve`) is sound for re-editable native formats (DOCX/ODT). EML is structurally different — its redacted form only exists as the assembled PDF. Forcing PDF is the only privacy-correct outcome.
+
+### D9. Error handling — degrade gracefully, never leak
+
+| Failure | Recovery (privacy-safe) |
 |---|---|
-| OR's `parseEmlStructured` throws `EmlParseException` | Fall back to OR's flat `extractEml` result; render it as a single plain-text page. No attachments visible. |
-| Twig render throws | Render a minimal envelope with available headers + a notice "(template rendering failed)". |
-| Inline image can't be resolved | Leave the broken `cid:` reference; mPDF renders a placeholder. |
-| Renderable attachment fails to render | Skip the page (still embed the bytes). Add a divider with "Bijlage <N>: <filename> — kon niet worden weergegeven; zie ingebed bestand". |
-| File embedding (mPDF setEmbeddedFile) fails | Log; embed as much as possible; add a notice in the document footer "Niet alle bijlagen konden worden ingebed: <list>". |
+| OR anonymise-EML API throws | Throw `ConversionFailedException` → cascade falls through (422 for EML). Do NOT fall back to a raw/unredacted parse — that would leak PII. (This differs from the prior draft, which fell back to flat `extractEml`.) |
+| Twig render throws | Render a minimal envelope with the redacted headers + `(template rendering failed)` notice. |
+| Inline image unresolved in OR's map | Leave the `cid:` reference; mPDF renders a placeholder; debug log. |
+| A renderable redacted attachment fails to render | Skip the page; divider says `kon niet worden weergegeven`. No bytes embedded. |
+| Catastrophic (no output possible) | Throw `ConversionFailedException` per Change A's contract; cascade 422s. |
 
-Total failure (the assembly cannot produce ANY output) raises a `ConversionFailedException` per the existing pdf-conversion contract → cascade falls through to the next backend (which there isn't one for EML, so it 422s).
+The key invariant: **no failure path ever emits un-redacted content.** The prior draft's flat-text fallback is removed precisely because it bypassed redaction.
 
-### D9. Configuration
+### D10. Configuration
 
 | Key | Default | Purpose |
 |---|---|---|
-| `docudesk.conversion.eml.append_attachment_pages` | `true` | When false, attachments are only embedded; no appended pages. |
-| `docudesk.conversion.eml.max_attachment_render_size_bytes` | `26214400` (25 MB) | Per-attachment size cap for rendering. Larger files are embedded only. |
-| `docudesk.conversion.eml.divider_template` | `eml/divider.twig` | Optional override for the per-attachment divider template. |
+| `docudesk.conversion.eml.append_attachment_pages` | `true` | When false, only the redacted envelope renders; redactable attachments are not appended as pages. |
+| `docudesk.conversion.eml.max_attachment_render_size_bytes` | `26214400` (25 MB) | Redacted attachments larger than this get a placeholder page instead of rendering. |
+| `docudesk.conversion.eml.divider_template` | `eml/divider.twig` | Optional override for the divider/placeholder template. |
 
 Standard `IAppConfig` pattern.
 
+### D11. Declarative-vs-imperative (ADR-031) — justified imperative
+
+ADR-031 prefers declarative configuration over imperative service code where a declarative mechanism exists (e.g. notification dialects, register settings JSON). This change is **document rendering and PDF assembly** — multi-pass mPDF instantiation, page concatenation, per-attachment cascade dispatch, Twig templating. There is no declarative mechanism for "assemble a PDF/A-3b from redacted email components"; this is inherently imperative orchestration code in `EmlPdfAssemblyService`. **Conclusion: justified imperative.** The only declarative surface is the Twig templates (envelope + divider) and the three `IAppConfig` keys, which are kept declarative/config-driven. No imperative notification dispatch or cross-app RPC is introduced (the OR call is the documented anonymise-EML API consumption, a Hard cross-app dependency, not a phantom RPC).
+
+## Cross-app Contract (consumed)
+
+This change depends on OR's anonymise-EML API shape (from `anonymise-eml-structured`):
+
+```
+anonymiseEml(file) -> AnonymisedEmlStructure {
+  headers: { from, replyTo, to[], cc[], subject, date }   // all already redacted
+  body:    AnonymisedEmlBody { html: ?string, plain: ?string }   // either/both may be null, redacted
+  attachments: Array<AnonymisedEmlAttachment =
+      { filename, mimeType, redactedContent: bytes }
+    | { filename, mimeType, unsupported: true }
+  >
+  inlineImages: Map<contentId, redactedBytes>     // for cid: resolution
+  nested EML attachments carry a recursive AnonymisedEmlStructure (depth ≤ 3)
+}
+```
+
+DocuDesk consumes this contract read-only. If OR's actual method name / shape differs at apply time, the `EmlBackend`/`EmlPdfAssemblyService` adapt to OR's published signature — but the redaction-in-OR, assembly-in-DocuDesk split is fixed.
+
 ## Risks / Trade-offs
 
-- **[mPDF's HTML rendering fidelity for modern emails]** → Mitigation: documented limitation; operators that need pixel-perfect rendering can disable HTML preference via a future config flag (or by keeping `outputFormat: "preserve"` on the anonymise call — but then the EML stays as native EML in NC, which defeats the privacy default). Acceptable trade-off.
-- **[PDF size with many large attachments]** → Mitigation per D3 + D4: the embedded-file count is unbounded but per-attachment is bounded by the source EML's size; rendering is bounded by `max_attachment_render_size_bytes`. Worst case: large EML → large PDF. Same tradeoff as the source data.
-- **[Recursive nesting CPU cost]** → Mitigation per D5: depth-3 cap (inherited from OR). Each level's processing is the same per-EML cost. Worst case: depth-3 chain × N attachments = bounded.
-- **[mPDF setEmbeddedFile API stability]** → mPDF's PDF/A-3 file-embedding API is documented and stable. Confirm at apply time the version pin (`mpdf/mpdf ^8.2`) supports this surface.
-- **[Inline images doubled — once in body, once in attachment list]** → Mitigation: documented; this is intentional. The inline image IS an attachment per RFC 822; both presentations are correct.
-- **[NL-only template]** → Mitigation: same as `anonymisation-grondslagen-summary`. EN follows `register-i18n`.
-- **[Rendering time on large dossiers]** → Each EML's assembly is synchronous. For a batch of many EMLs each with large attachments, total time compounds. Documented in design; async is a follow-up if it becomes a real bottleneck.
-- **[Encrypted EML body — opaque]** → Documented; "Encrypted body — content not extracted" notice in the rendered envelope. Decryption is its own change.
+- **[Dropping verbatim embedding loses archival self-containment]** → Accepted: leaking un-redacted originals is the worse failure. A future change can embed *redacted* bytes.
+- **[mPDF HTML fidelity for modern emails]** → Documented limitation; content is redacted so fidelity loss never risks PII.
+- **[OR contract not yet final]** → `EmlBackend.isAvailable()` stays false until OR's API is present; this change adapts to OR's published signature at apply time.
+- **[Recursive nesting CPU]** → depth-3 cap owned by OR; bounded.
+- **[NL-only template]** → same as `anonymisation-grondslagen-summary`; EN follows `register-i18n`.
+- **[`preserve` silently overridden for EML]** → documented; a caller who sends `preserve` for an EML still gets a PDF rather than an error. The only privacy-correct outcome for EML, and the least surprising (the request still succeeds).
 
 ## Migration Plan
 
-1. Wait for OR's `text-extraction-eml` to land (or land in the same release window). Until OR exposes `parseEmlStructured`, this change's assembly cannot run.
-2. Land `EmlPdfAssemblyService`, the Twig templates, the config keys.
-3. Update Change A's `EmlBackend.isAvailable()` to reflect the new dependency: returns true when both OR's parse method exists AND this change's assembly service is registered.
-4. Land the mPDF helper for PDF/A-3b instantiation + file embedding.
-5. Release. Operators see EML inputs converted to assembled PDFs by default (assuming Change A's `outputFormat: "pdf"` default is in effect).
+1. Land OR's `text-extraction-eml` then `anonymise-eml-structured` (the anonymise-EML API). Until OR exposes it, this change's backend stays unavailable.
+2. Land `EmlPdfAssemblyService`, the Twig templates, the config keys, and the mPDF PDF/A-3b helper.
+3. Un-stub `EmlBackend`: `isAvailable()` true when OR's anonymise-EML API is callable AND the assembly service is registered; `convert()` calls OR and assembles.
+4. Add the EML-specific `preserve`→PDF override in the anonymise path (silent, no error).
+5. Release. EML inputs are anonymised by OR and assembled to PDF/A-3b by DocuDesk.
 
-**Rollback:** disable the EmlBackend via Change A's `docudesk.conversion.backends.eml_enabled = false`. EML inputs return 422 in default mode. Operators with EMLs to anonymise use `outputFormat: "preserve"` (keep native EML as the redacted output — a coherent choice).
+**Rollback:** disable the backend via Change A's `docudesk.conversion.backends.eml_enabled = false`. EML inputs return 422 in PDF modes.
 
 ## Seed Data
 
-Not applicable — this change introduces no new schemas. EML files are processed at runtime via the conversion cascade.
+Not applicable — this change introduces no new schemas and no seed data. EML files are processed at runtime via the conversion cascade; all redaction is OR's.
 
 ## Open Questions
 
-- **mPDF version supports `setEmbeddedFile` for PDF/A-3?** Confirm at apply time. If the pinned version doesn't, either bump the dependency or implement a thin embedded-file writer using mPDF's lower-level API.
-- **Divider template extensibility** — operators may want custom dividers (logo, organisation header). Provisional: ship the default; expose `docudesk.conversion.eml.divider_template` config key for an override; full template-customisation UI is a follow-up.
-- **Inline image deduplication** — current spec keeps inline images in both the body and the attachment list. If operators find this confusing, a follow-up adds an `excludeInline` flag for the attachments list. Defer until real feedback.
-- **HTML body rendering quality** — for hard-to-render emails (complex layouts, modern CSS), should we fall back to plain-text rendering automatically? Provisional: no; render as-is and accept fidelity loss. Operators can use `outputFormat: "preserve"` if pixel-perfect rendering matters more than archival format.
-- **Embedded font subset** — for HTML body rendering, mPDF embeds the configured font set. Default is acceptable; if a tenant needs specific fonts (e.g. emoji rendering), a follow-up exposes the font-config knob.
+- **OR anonymise-EML method name / exact shape** — consumed as specified above; adapt to OR's published signature at apply time. The redaction-in-OR / assembly-in-DocuDesk split is fixed.
+- **Divider template extensibility** — ship the default; expose `docudesk.conversion.eml.divider_template` for an override; full customisation UI is a follow-up.
+- **Future: embed redacted attachment bytes as PDF/A-3 files** — deferred. This change renders redacted attachments as pages only.

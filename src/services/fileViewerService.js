@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
+import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
 
 /**
@@ -55,6 +55,30 @@ export async function fetchFileAsArrayBuffer(path) {
 	const url = buildWebdavUrl(path)
 	const response = await axios.get(url, { responseType: 'arraybuffer' })
 	return response.data
+}
+
+/**
+ * Fetch an arbitrary same-origin URL as an ArrayBuffer (for pdfjs).
+ *
+ * Used for content that isn't a plain WebDAV file — e.g. the server-rendered
+ * EML preview PDF served by DocuDesk's `eml_preview#preview` endpoint.
+ *
+ * @param {string} url Absolute or app-relative URL returning binary data.
+ * @return {Promise<ArrayBuffer>}
+ */
+export async function fetchUrlAsArrayBuffer(url) {
+	const response = await axios.get(url, { responseType: 'arraybuffer' })
+	return response.data
+}
+
+/**
+ * Build the URL of the server-rendered PDF preview for an original EML file.
+ *
+ * @param {number} fileId Nextcloud file id of the source .eml.
+ * @return {string} App-relative URL of the preview endpoint.
+ */
+export function emlPreviewUrl(fileId) {
+	return generateUrl('/apps/docudesk/api/anonymization/eml-preview/{fileId}', { fileId })
 }
 
 /**

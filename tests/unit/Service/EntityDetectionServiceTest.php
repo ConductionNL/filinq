@@ -103,11 +103,12 @@ class EntityDetectionServiceTest extends TestCase
 
 
     /**
-     * Test mapEntitiesForAnonymization filters short and numeric values
+     * Test mapEntitiesForAnonymization filters empty and too-short values, but
+     * keeps numeric values — DocuDesk holds no opinion on numeric-ness.
      *
      * @return void
      */
-    public function testMapEntitiesForAnonymizationFiltersShortAndNumeric(): void
+    public function testMapEntitiesForAnonymizationFiltersShortAndEmpty(): void
     {
         $entities = [
             ['value' => 'John Doe', 'type' => 'PERSON'],
@@ -118,12 +119,42 @@ class EntityDetectionServiceTest extends TestCase
 
         $result = $this->service->mapEntitiesForAnonymization($entities);
 
-        $this->assertCount(1, $result);
-        $this->assertEquals('John Doe', $result[0]['text']);
-        $this->assertEquals('PERSON', $result[0]['entityType']);
-        $this->assertNotEmpty($result[0]['key']);
+        $texts = array_column($result, 'text');
+        $this->assertCount(2, $result);
+        $this->assertContains('John Doe', $texts);
+        $this->assertContains('123', $texts, 'a numeric value is no longer filtered');
+        $this->assertNotContains('ab', $texts, 'a too-short value is dropped');
 
-    }//end testMapEntitiesForAnonymizationFiltersShortAndNumeric()
+    }//end testMapEntitiesForAnonymizationFiltersShortAndEmpty()
+
+
+    /**
+     * DocuDesk holds no opinion on numeric-ness: a numeric value is mapped for
+     * redaction like any other, whatever type the recogniser assigned. Numbers
+     * are frequently sensitive (a BSN, a phone number, a granted-benefit
+     * amount), so the redaction decision is left to OpenRegister — DocuDesk
+     * only drops empty and too-short values.
+     *
+     * @return void
+     */
+    public function testMapEntitiesForAnonymizationKeepsNumericValues(): void
+    {
+        $entities = [
+            ['value' => '111222333', 'type' => 'SSN'],
+            ['value' => '0612345678', 'type' => 'PHONE'],
+            ['value' => '25000', 'type' => 'NUMBER'],
+            ['value' => '2026', 'type' => 'CARDINAL'],
+        ];
+
+        $result = $this->service->mapEntitiesForAnonymization($entities);
+
+        $texts = array_column($result, 'text');
+        $this->assertContains('111222333', $texts, 'a BSN (SSN type) must be kept');
+        $this->assertContains('0612345678', $texts, 'a numeric phone must be kept');
+        $this->assertContains('25000', $texts, 'a numeric benefit amount must be kept');
+        $this->assertContains('2026', $texts, 'a numeric value is kept regardless of type');
+
+    }//end testMapEntitiesForAnonymizationKeepsNumericValues()
 
 
     /**

@@ -290,6 +290,92 @@ class PdfService
 
 
     /**
+     * Create a configured mPDF instance for multi-pass assembly.
+     *
+     * Exposes the SAME mPDF configuration (temp dir, PDF/A-3b mode, font
+     * embedding, margins) that the single-pass `generatePdf` path uses, so
+     * callers that need to build a document across several `WriteHTML` /
+     * `AddPage` / FPDI-import passes (e.g. `EmlPdfAssemblyService`) stay in
+     * lockstep with print-preview's PDF/A-3b settings instead of
+     * re-implementing them.
+     *
+     * The returned instance has title/author/creator metadata applied when
+     * provided; the caller is responsible for writing content and calling
+     * `Output()`.
+     *
+     * @param array<string,mixed> $options PDF configuration options; same shape as
+     *                                      {@see renderPdf} (`format`, `orientation`,
+     *                                      `margin`, `title`, `pdfa`).
+     *
+     * @return Mpdf The configured mPDF instance.
+     *
+     * @throws Exception When mPDF cannot be instantiated.
+     */
+    public function createMpdfInstance(array $options=[]): Mpdf
+    {
+        $tempDir = '/tmp/mpdf';
+        $this->ensureTempDirectory(tempDir: $tempDir);
+
+        $config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+        $title  = $options['title'] ?? '';
+        $isPdfA = ($options['pdfa'] ?? false) === true;
+
+        try {
+            $mpdf = new Mpdf(config: $config);
+
+            if ($title !== '') {
+                $mpdf->SetTitle($title);
+            }
+
+            if ($isPdfA === true) {
+                $mpdf->SetAuthor('DocuDesk');
+                $mpdf->SetCreator('DocuDesk PDF/A Generator');
+            }
+
+            return $mpdf;
+        } catch (MpdfException $e) {
+            $this->logger->error(
+                message: 'mPDF instantiation failed: '.$e->getMessage(),
+                context: ['exception' => $e]
+            );
+            throw new Exception(
+                message: 'PDF generation failed: '.$e->getMessage(),
+                code: 500,
+                previous: $e
+            );
+        }//end try
+
+    }//end createMpdfInstance()
+
+
+    /**
+     * Build the print-optimised CSS prefix for an HTML fragment when PDF/A
+     * mode is in effect, mirroring the prefix `generatePdf` injects.
+     *
+     * Used by multi-pass callers that render fragments through a shared mPDF
+     * instance and want each fragment to carry the same print CSS the
+     * single-pass path applies.
+     *
+     * @param string              $html    HTML fragment.
+     * @param array<string,mixed> $options PDF options (`pdfa`, `format`, `orientation`).
+     *
+     * @return string The HTML fragment, prefixed with print CSS when `pdfa` is true.
+     */
+    public function applyPrintCss(string $html, array $options=[]): string
+    {
+        $isPdfA = ($options['pdfa'] ?? false) === true;
+        if ($isPdfA === false) {
+            return $html;
+        }
+
+        $format      = $options['format'] ?? 'A4';
+        $orientation = $options['orientation'] ?? 'P';
+        return $this->buildPrintCss(format: $format, orientation: $orientation).$html;
+
+    }//end applyPrintCss()
+
+
+    /**
      * Generate a PDF from rendered HTML content
      *
      * Creates the mPDF temp directory if it does not exist,

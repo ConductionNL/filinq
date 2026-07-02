@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>{{ headers.subject|default('E-mail')|escape }}</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  table.eml-headers { width: 100%; border-collapse: collapse; margin: 0 0 12pt 0; border-bottom: 1pt solid #999; }
+  table.eml-headers td { padding: 2pt 6pt 2pt 0; vertical-align: top; font-size: 9pt; }
+  table.eml-headers td.label { color: #666; width: 24%; white-space: nowrap; font-weight: bold; }
+  .eml-body { font-size: 10pt; line-height: 1.4; }
+  .eml-body pre { font-family: 'DejaVu Sans Mono', monospace; font-size: 9pt; white-space: pre-wrap; word-wrap: break-word; }
+  .eml-empty-body { font-style: italic; color: #888; }
+  .eml-render-failed { color: #b00; font-style: italic; }
+</style>
+</head>
+<body>
+
+<table class="eml-headers">
+  <tr>
+    <td class="label">Van:</td>
+    <td>{{ headers.from|default('—')|escape }}</td>
+  </tr>
+  {% if headers.replyTo|default('') != '' %}
+  <tr>
+    <td class="label">Antwoord aan:</td>
+    <td>{{ headers.replyTo|escape }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Aan:</td>
+    <td>{{ headers.to|default('—')|escape }}</td>
+  </tr>
+  {% if headers.cc|default('') != '' %}
+  <tr>
+    <td class="label">Cc:</td>
+    <td>{{ headers.cc|escape }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Onderwerp:</td>
+    <td>{{ headers.subject|default('—')|escape }}</td>
+  </tr>
+  <tr>
+    <td class="label">Datum:</td>
+    <td>{{ headers.date|default('—')|escape }}</td>
+  </tr>
+</table>
+
+<div class="eml-body">
+{% if templateFailed|default(false) %}
+  <p class="eml-render-failed">(template rendering failed)</p>
+{% elseif bodyMode == 'html' %}
+  {{ bodyHtml|raw }}
+{% elseif bodyMode == 'plain' %}
+  <pre>{{ bodyPlain|escape }}</pre>
+{% else %}
+  <p class="eml-empty-body">(Bericht zonder body — alleen bijlagen)</p>
+{% endif %}
+</div>
+
+</body>
+</html>

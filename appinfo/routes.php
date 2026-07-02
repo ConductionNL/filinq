@@ -46,6 +46,9 @@ return [
 		['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
 		['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
 
+		// Original-EML preview (renders the source message to a PDF for the viewer)
+		['name' => 'eml_preview#preview', 'url' => 'api/anonymization/eml-preview/{fileId}', 'verb' => 'GET'],
+
 		// Dossier-level grondslagen summary regeneration (Wave 4a)
 		['name' => 'dossier#generateGrondslagenSummary', 'url' => 'api/anonymization/dossier/{dossierId}/grondslagen-pdf', 'verb' => 'POST'],
 

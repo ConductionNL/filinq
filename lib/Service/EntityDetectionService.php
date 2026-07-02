@@ -93,8 +93,9 @@ class EntityDetectionService
         $seen           = [];
         foreach ($entities as $entity) {
             $text = (string) ($entity['value'] ?? $entity['text'] ?? '');
+            $type = (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN');
 
-            if ($text === '' || strlen($text) < 3 || is_numeric($text) === true) {
+            if ($text === '' || strlen($text) < 3) {
                 continue;
             }
 
@@ -105,10 +106,10 @@ class EntityDetectionService
             $seen[$text]      = true;
             $mappedEntities[] = [
                 'text'       => $text,
-                'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
+                'entityType' => $type,
                 'key'        => $this->generateUuid(),
             ];
-        }
+        }//end foreach
 
         return $mappedEntities;
 

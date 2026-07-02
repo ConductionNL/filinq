@@ -20,7 +20,7 @@
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
-import { fetchFileAsArrayBuffer } from '../../services/fileViewerService.js'
+import { fetchFileAsArrayBuffer, fetchUrlAsArrayBuffer } from '../../services/fileViewerService.js'
 import { fileViewerStore } from '../../store/store.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
 
@@ -56,6 +56,13 @@ export default {
 		path: {
 			type: String,
 			required: true,
+		},
+		// Optional: fetch the PDF bytes from this URL instead of deriving a
+		// WebDAV URL from `path`. Used for server-rendered content that isn't a
+		// plain file — e.g. the EML original preview endpoint.
+		url: {
+			type: String,
+			default: '',
 		},
 	},
 	data() {
@@ -102,6 +109,9 @@ export default {
 				this.load()
 			},
 		},
+		url() {
+			this.load()
+		},
 		highlightEntities: {
 			deep: true,
 			handler() {
@@ -143,7 +153,7 @@ export default {
 			try {
 				const [pdfjsLib, data] = await Promise.all([
 					loadPdfjs(),
-					fetchFileAsArrayBuffer(this.path),
+					this.url ? fetchUrlAsArrayBuffer(this.url) : fetchFileAsArrayBuffer(this.path),
 				])
 				const loadingTask = pdfjsLib.getDocument({ data })
 				this.pdfDoc = await loadingTask.promise
