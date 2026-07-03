@@ -278,7 +278,20 @@ class PhpWordBackend implements ConversionBackendInterface
         }
 
         try {
-            $pdfBytes = $this->pdfService->generatePdfFromHtml(html: $html);
+            // Mirror MpdfBackend: request PDF/A-3b output and a known page
+            // format so the docx PDF carries the same normalization print
+            // CSS (PdfService::buildPrintCss) and archival container as every
+            // other anonymised output. Without these options the renderer
+            // skips the PDF/A + print-CSS branch entirely, leaving the docx
+            // PDF non-conformant and un-normalized.
+            $pdfBytes = $this->pdfService->generatePdfFromHtml(
+                html: $html,
+                options: [
+                    'pdfa'   => true,
+                    'format' => 'A4',
+                    'title'  => $this->stripExtension(name: $name),
+                ]
+            );
         } catch (Throwable $e) {
             throw new ConversionFailedException(
                 message: 'PdfService failed to render PhpWord-HTML: '.$e->getMessage(),
