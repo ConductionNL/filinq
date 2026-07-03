@@ -834,7 +834,7 @@ export const useAnonymizationStore = defineStore(
 				// survive the re-run.
 				const priorDecisions = new Map()
 				for (const e of entry.entities || []) {
-					priorDecisions.set(`${e.type} ${e.value}`, {
+					priorDecisions.set(`${e.type}\u0000${e.value}`, {
 						bases: Array.isArray(e._decisionBases) ? [...e._decisionBases] : [],
 						skip: !!e._decisionSkip,
 					})
@@ -848,7 +848,7 @@ export const useAnonymizationStore = defineStore(
 					)
 					const entities = decorateEntities(extractResponse.data.entities || [])
 					for (const e of entities) {
-						const prior = priorDecisions.get(`${e.type} ${e.value}`)
+						const prior = priorDecisions.get(`${e.type}\u0000${e.value}`)
 						if (prior) {
 							e._decisionBases = prior.bases
 							e._decisionSkip = prior.skip
