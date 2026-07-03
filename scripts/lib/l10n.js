@@ -1,9 +1,12 @@
 /* eslint-disable jsdoc/require-param */
 /**
- * Shared l10n helpers used by check-l10n.js, clean-l10n.js, and l10n-ai.js.
+ * Shared l10n helpers used by check-l10n.js, clean-l10n.js, l10n-ai.js, and
+ * sync-l10n-json.js.
  *
- * Operates on l10n/*.js (frontend translation files). Backend .json files are
- * a separate concern and are not handled here.
+ * l10n/*.js (the frontend translation files) are the source of truth. The
+ * backend l10n/*.json twins are derived from them by sync-l10n-json.js via
+ * serializeJson — they must never be hand-edited independently or they drift
+ * out of sync (which is exactly the bug sync-l10n-json.js exists to prevent).
  */
 
 const fs = require('fs')
@@ -62,6 +65,28 @@ function serializeJs({ app, translations, pluralForm }) {
 		return `\t\t${JSON.stringify(k)}: ${JSON.stringify(value)},`
 	})
 	return `OC.L10N.register(\n\t${JSON.stringify(app)},\n\t{\n${lines.join('\n')}\n\t},\n\t${JSON.stringify(pluralForm)},\n)\n`
+}
+
+/**
+ * Serialize a backend l10n/*.json file (the format Nextcloud's IL10N/PHP side
+ * reads) from the same {translations, pluralForm} shape loadJsTranslations
+ * returns. Matches the existing project convention: 4-space indent, keys sorted
+ * case-insensitively (identical ordering to serializeJs so the .js/.json twins
+ * stay in lockstep), plural values kept as inline arrays, and a trailing
+ * `pluralForm` sibling of `translations` so the backend can resolve plurals.
+ */
+function serializeJson({ translations, pluralForm }) {
+	const keys = Object.keys(translations).sort((a, b) =>
+		a.toLowerCase().localeCompare(b.toLowerCase()),
+	)
+	const serializeValue = (value) => {
+		if (Array.isArray(value)) {
+			return `[${value.map((v) => JSON.stringify(v)).join(', ')}]`
+		}
+		return JSON.stringify(value)
+	}
+	const entries = keys.map((k) => `        ${JSON.stringify(k)}: ${serializeValue(translations[k])}`)
+	return `{\n    "translations": {\n${entries.join(',\n')}\n    },\n    "pluralForm": ${JSON.stringify(pluralForm)}\n}\n`
 }
 
 /**
@@ -238,6 +263,7 @@ function localeNameOf(file) {
 module.exports = {
 	loadJsTranslations,
 	serializeJs,
+	serializeJson,
 	walk,
 	collectUsedKeys,
 	findKeyReferences,
