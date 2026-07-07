@@ -1065,6 +1065,15 @@ interface File extends Node
 {
     public function getContent(): string;
 
+    /**
+     * Write content to the file (creates a new file version).
+     *
+     * @param string $data The bytes to write.
+     *
+     * @return void
+     */
+    public function putContent($data): void;
+
     public function getParent(): \OCP\Files\Folder;
 
     public function delete(): void;

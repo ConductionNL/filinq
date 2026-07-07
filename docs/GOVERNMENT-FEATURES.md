@@ -5,7 +5,7 @@
 
 **Product:** DocuDesk
 **Categorie:** Documentbeheer, publicatie-instemming & GDPR-compliance
-**Licentie:** AGPL (vrije open source)
+**Licentie:** EUPL-1.2 (vrije open source)
 **Leverancier:** Conduction B.V.
 **Platform:** Nextcloud + Open Register (self-hosted / on-premise / cloud)
 
@@ -45,7 +45,7 @@
 | F-11 | Minimale bezwaartermijn van 4 weken (WOO) | Beschikbaar | Wettelijk minimum ingebouwd |
 | F-12 | GDPR-anonimisering (PII-redactie) | Beschikbaar | Persoonsgegevens verwijderen uit documenten |
 | F-12a | Verwerkingsregister (AVG Art. 30) | In ontwikkeling | DocuDesk levert vier verwerkingsactiviteiten als catalogus; per-toegang logging via OpenRegister beschikbaar; geaggregeerde Art. 30-export volgt met OpenRegister |
-| F-13 | Digitale ondertekening | Beschikbaar | Elektronische handtekeningen |
+| F-13 | Digitale ondertekening | Beschikbaar | Ondertekenworkflow + auditspoor beschikbaar; SES-handtekening-embedding via de native provider (verifieerbaar `/DocuDesk-Signature`-merk + HMAC, opgeslagen als nieuwe Nextcloud-bestandsversie) — [#304](https://github.com/ConductionNL/docudesk/issues/304). AdES/QES via externe provider (ValidSign) in ontwikkeling |
 | F-14 | PKIoverheid-ondersteuning | Gepland | Overheidscertificaten voor ondertekening |
 
 ### Integratie & Automatisering
@@ -63,7 +63,7 @@
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
 | T-01 | On-premise / self-hosted installatie | Beschikbaar | Nextcloud-app |
-| T-02 | Open source (broncode beschikbaar) | Beschikbaar | AGPL, GitHub |
+| T-02 | Open source (broncode beschikbaar) | Beschikbaar | EUPL-1.2, Codeberg |
 | T-03 | RESTful API | Via platform | OpenRegister REST API |
 | T-04 | Event-driven architectuur | Beschikbaar | Luistert op OpenRegister events |
 | T-05 | Database-onafhankelijkheid | Via platform | PostgreSQL, MySQL, SQLite |
