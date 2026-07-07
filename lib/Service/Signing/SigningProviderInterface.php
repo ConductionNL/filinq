@@ -103,4 +103,33 @@ interface SigningProviderInterface
      * @spec openspec/changes/digital-signing-integration/tasks.md#2-1
      */
     public function supportsLevel(string $level): bool;
+
+    /**
+     * Produce a verifiable signed artifact from the original document bytes.
+     *
+     * Given the original document content (already a writeable PDF), the
+     * provider returns the signed document bytes. The native provider embeds a
+     * `/DocuDesk-Signature(...)` marker carrying an HMAC over the document
+     * content-hash so the artifact passes
+     * `SigningVerificationService::verifyDocument()`. External providers return
+     * the file their remote signing service produced.
+     *
+     * Honest-completion gate: a provider that cannot currently produce a signed
+     * artifact (native writer disabled, `signing_verification_secret` unset, or
+     * an external provider unconfigured/stubbed) MUST throw a descriptive
+     * exception rather than return the unsigned original — so the completing
+     * signature fails loudly instead of mislabelling the original as signed.
+     *
+     * @param string               $documentContent The original document bytes.
+     * @param array<string, mixed> $context         Signing context: signer,
+     *                                              signers, timestamp, ip,
+     *                                              level.
+     *
+     * @return string The signed document bytes.
+     *
+     * @throws \RuntimeException When no signed artifact can be produced.
+     *
+     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     */
+    public function produceSignedArtifact(string $documentContent, array $context): string;
 }//end interface

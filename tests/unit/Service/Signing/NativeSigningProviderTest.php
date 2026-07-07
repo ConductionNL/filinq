@@ -44,17 +44,23 @@ use RuntimeException;
 class NativeSigningProviderTest extends TestCase
 {
     /**
-     * Build a minimal NativeSigningProvider for testing the guard paths.
+     * Build a minimal NativeSigningProvider for testing.
+     *
+     * @param string $secret The signing_verification_secret to return ('' = unset).
      *
      * @return NativeSigningProvider
      */
-    private function buildProvider(): NativeSigningProvider
+    private function buildProvider(string $secret=''): NativeSigningProvider
     {
         $logger = $this->createMock(LoggerInterface::class);
 
         $config = $this->createMock(IAppConfig::class);
         $config->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default=''): string {
+            function (string $app, string $key, string $default='') use ($secret): string {
+                if ($key === 'signing_verification_secret') {
+                    return $secret;
+                }
+
                 return $default;
             }
         );
@@ -92,45 +98,103 @@ class NativeSigningProviderTest extends TestCase
     }//end setUp()
 
     /**
-     * C1 mitigation (issue #304): initiateSigning throws immediately with a
-     * descriptive error because the signing pipeline is not yet wired.
-     * Admins who enable signing_enabled=1 see the gap at once.
+     * initiateSigning now creates a session (issue #304 writer wired) rather
+     * than throwing — it returns a success envelope with an externalId.
      *
      * @return void
      */
-    public function testInitiateThrowsBecausePipelineNotIntegrated(): void
+    public function testInitiateCreatesSession(): void
     {
         $provider = $this->buildProvider();
 
-        $this->expectException(exception: RuntimeException::class);
-        $this->expectExceptionMessage(message: 'ConductionNL/docudesk#304');
-
-        $provider->initiateSigning(
+        $result = $provider->initiateSigning(
             documentPath: '/foo.pdf',
             documentName: 'foo.pdf',
             signers: [['userId' => 'alice']],
             level: 'SES'
         );
 
-    }//end testInitiateThrowsBecausePipelineNotIntegrated()
+        $this->assertTrue($result['success']);
+        $this->assertStringStartsWith('native-', $result['externalId']);
+
+    }//end testInitiateCreatesSession()
 
     /**
-     * C1 mitigation (issue #304): downloadSignedDocument throws immediately
-     * with a descriptive error because no session can ever reach 'completed'
-     * while the pipeline is not yet wired.
+     * produceSignedArtifact embeds a verifiable /DocuDesk-Signature marker whose
+     * HMAC the SigningVerificationService recomputes and accepts (issue #304).
      *
      * @return void
      */
-    public function testDownloadThrowsBecausePipelineNotIntegrated(): void
+    public function testProduceSignedArtifactPassesVerifier(): void
+    {
+        $secret   = 'unit-test-signing-secret';
+        $provider = $this->buildProvider(secret: $secret);
+
+        $original = "%PDF-1.4\noriginal besluit content\n%%EOF\n";
+        $signed   = $provider->produceSignedArtifact(
+            documentContent: $original,
+            context: ['signer' => 'Alice', 'ip' => '127.0.0.1', 'level' => 'SES']
+        );
+
+        $this->assertStringContainsString('/Type /Sig', $signed);
+        $this->assertStringContainsString('/DocuDesk-Signature(', $signed);
+
+        // Acceptance oracle: the existing verifier's extractSignatures() must
+        // report the produced artifact as valid=true for the same secret.
+        $verifierConfig = $this->createMock(IAppConfig::class);
+        $verifierConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default='') use ($secret): string {
+                return $key === 'signing_verification_secret' ? $secret : $default;
+            }
+        );
+
+        $verifier = new \OCA\DocuDesk\Service\SigningVerificationService(
+            rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
+            config: $verifierConfig
+        );
+
+        $ref    = new \ReflectionClass($verifier);
+        $method = $ref->getMethod('extractSignatures');
+        $method->setAccessible(true);
+        $signatures = $method->invoke($verifier, $signed);
+
+        $this->assertCount(1, $signatures);
+        $this->assertTrue($signatures[0]['valid'], 'Produced artifact must verify against the existing verifier.');
+        $this->assertSame('Alice', $signatures[0]['signer']);
+
+    }//end testProduceSignedArtifactPassesVerifier()
+
+    /**
+     * Honest-completion gate: produceSignedArtifact throws when the signing
+     * secret is unset rather than emitting an unverifiable artifact.
+     *
+     * @return void
+     */
+    public function testProduceSignedArtifactThrowsWhenSecretUnset(): void
+    {
+        $provider = $this->buildProvider(secret: '');
+
+        $this->expectException(exception: RuntimeException::class);
+        $this->expectExceptionMessage(message: 'signing_verification_secret is unset');
+
+        $provider->produceSignedArtifact(documentContent: "%PDF-1.4\n", context: []);
+
+    }//end testProduceSignedArtifactThrowsWhenSecretUnset()
+
+    /**
+     * downloadSignedDocument throws for an unknown session (no silent fallback).
+     *
+     * @return void
+     */
+    public function testDownloadThrowsForMissingSession(): void
     {
         $provider = $this->buildProvider();
 
         $this->expectException(exception: RuntimeException::class);
-        $this->expectExceptionMessage(message: 'ConductionNL/docudesk#304');
 
-        $provider->downloadSignedDocument(externalId: 'native-any-id');
+        $provider->downloadSignedDocument(externalId: 'native-does-not-exist');
 
-    }//end testDownloadThrowsBecausePipelineNotIntegrated()
+    }//end testDownloadThrowsForMissingSession()
 
     /**
      * CheckStatus on an unknown externalId throws (not silently returns).

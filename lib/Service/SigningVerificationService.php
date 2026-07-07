@@ -192,15 +192,49 @@ class SigningVerificationService
             return false;
         }
 
-        // Recompute the MAC over the document with the asserted `mac` field
-        // removed, so the MAC cannot cover itself. Strip the literal blob's
-        // mac value out of the byte stream before hashing.
-        $contentHash = hash('sha256', $this->stripAssertionMac(pdfContent: $pdfContent, mac: $mac));
+        // Recompute the MAC over the *canonical* form of the document — the
+        // bytes with every `/DocuDesk-Signature(...)` marker payload blanked —
+        // so the self-asserted blob (which carries the mac) cannot cover
+        // itself. The writer (NativeSigningProvider::produceSignedArtifact)
+        // computes the HMAC over the identical canonical form, so a genuine
+        // artifact matches. Stripping only the literal mac substring (its
+        // previous behaviour) could never work: the mac lives base64-encoded
+        // inside the marker payload, so it never appears literally and the hash
+        // stayed self-referential — no writer could satisfy it.
+        $canonical = $this->canonicaliseForAssertion(pdfContent: $pdfContent);
+        // Defensive: also strip any literal occurrence of the mac (a no-op on
+        // the canonical form, retained for the finding #284 fail-closed intent).
+        $canonical   = $this->stripAssertionMac(pdfContent: $canonical, mac: $mac);
+        $contentHash = hash('sha256', $canonical);
         $expected    = hash_hmac('sha256', $contentHash, $secret);
 
         return hash_equals($expected, $mac);
 
     }//end verifyAssertion()
+
+    /**
+     * Blank every DocuDesk signature marker payload to recover the canonical form
+     *
+     * The signed artifact is the original document plus a
+     * `/DocuDesk-Signature(base64-json)` marker. The marker's own `mac` field
+     * cannot be part of the hashed content, so verification (and the writer)
+     * hash the document with every marker payload emptied. This yields the exact
+     * bytes the writer hashed before it knew the mac, making writer and verifier
+     * symmetric.
+     *
+     * @param string $pdfContent The full PDF content
+     *
+     * @return string The content with all marker payloads blanked
+     */
+    private function canonicaliseForAssertion(string $pdfContent): string
+    {
+        return preg_replace(
+            '/\/DocuDesk-Signature\s*\([^)]*\)/',
+            '/DocuDesk-Signature()',
+            $pdfContent
+        ) ?? $pdfContent;
+
+    }//end canonicaliseForAssertion()
 
     /**
      * Remove the asserted MAC value from the PDF byte stream before hashing

@@ -74,7 +74,7 @@
   {
     "slug": "document-signing",
     "title": "document-signing",
-    "summary": "Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. This gives DocuDesk a legally meaningful, auditable signature process.",
+    "summary": "Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. At the SES level the native provider embeds a verifiable `/DocuDesk-Signature` marker (HMAC over the document content-hash) on completion and stores the signed artifact as a new Nextcloud file version; the request references that artifact rather than the unsigned original. AdES/QES signature embedding via an external provider (ValidSign) is in progress — a level whose provider cannot yet produce a signed artifact fails loudly rather than presenting the original as signed (issue #304).",
     "docsUrl": "openspec/specs/document-signing/spec.md"
   },
   {
