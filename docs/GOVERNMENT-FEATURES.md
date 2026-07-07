@@ -35,6 +35,7 @@
 | F-06 | Tekstextractie (OCR/NLP) | Beschikbaar | Tekst uit PDF, afbeeldingen, etc. |
 | F-07 | Documentvergelijking | Beschikbaar | Server-side structuurvergelijking van twee documenten of versies, met redactie-annotatie voor origineel-vs-geanonimiseerd ([document-comparison](features/document-comparison.md)) |
 | F-08 | Batchverwerking | Beschikbaar | Bulk-documentoperaties |
+| F-08a | Versiegeschiedenis | Beschikbaar | `Versies`-tab die de Nextcloud-bestandsversies van een document toont, opent, herstelt en vergelijkt — thin consumer van `files_versions`, geen eigen versieopslag ([document-versions](features/document-versions.md)) |
 | F-09 | Rapportage-interface | Beschikbaar | Documentoverzichten en statistieken |
 
 ### Publicatie & WOO-compliance

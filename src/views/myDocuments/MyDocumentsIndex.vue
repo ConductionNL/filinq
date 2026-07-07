@@ -140,6 +140,12 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 							</template>
 							{{ t('docudesk', 'Compare…') }}
 						</NcActionButton>
+						<NcActionButton v-if="!row.isFolder" close-after-click @click="openVersions(row)">
+							<template #icon>
+								<History :size="20" />
+							</template>
+							{{ t('docudesk', 'Versions') }}
+						</NcActionButton>
 						<NcActionButton close-after-click @click="confirmDelete(row)">
 							<template #icon>
 								<Delete :size="20" />
@@ -180,6 +186,7 @@ import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
+import History from 'vue-material-design-icons/History.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
@@ -228,6 +235,7 @@ export default {
 		Download,
 		ShieldCheckOutline,
 		Compare,
+		History,
 		Delete,
 		Cog,
 		CheckboxMultipleMarkedOutline,
@@ -559,6 +567,17 @@ export default {
 				query.right = String(row.anonymizedFileId)
 			}
 			this.$router.push({ name: 'Comparison', query })
+		},
+		/**
+		 * Open the document's Nextcloud file versions (Versies) view.
+		 *
+		 * @param {object} row Document row.
+		 * @return {void}
+		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 */
+		openVersions(row) {
+			if (!row || !row.fileId) return
+			this.$router.push({ name: 'Versions', query: { fileId: String(row.fileId) } })
 		},
 		/**
 		 * Pick an icon component name based on the file's MIME type / extension.

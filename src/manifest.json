@@ -184,6 +184,14 @@
 			"_note": "Side-by-side document comparison (original vs anonymised output). Standalone page; no nav item; deep-linked with ?left=&right= file-id query params."
 		},
 		{
+			"id": "Versions",
+			"route": "/versions",
+			"type": "custom",
+			"title": "Versions",
+			"component": "VersionsView",
+			"_note": "Document versions (Versies) — thin consumer of Nextcloud files_versions. Part of the ADR-001 document-detail family; standalone deep-linked page (?fileId=) like Comparison, no nav item. Lists/opens/downloads/restores/compares a document's file versions."
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",

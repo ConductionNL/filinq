@@ -1049,6 +1049,12 @@ interface Node
     public function getPermissions(): int;
 
     public function getMimeType(): string;
+
+    public function getMTime(): int;
+
+    public function getSize();
+
+    public function getOwner(): ?\OCP\IUser;
 }//end interface
 
 
