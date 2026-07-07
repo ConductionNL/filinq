@@ -94,9 +94,9 @@ docudesk/
 
 | Dependency | Version |
 |-----------|---------|
-| Nextcloud | 28 – 32 |
-| PHP | 8.1+ |
-| [OpenRegister](https://codeberg.org/Conduction/openregister) | v0.2.10+ |
+| Nextcloud | 30 – 34 |
+| PHP | 8.3+ |
+| [OpenRegister](https://codeberg.org/Conduction/openregister) | v0.2.14+ |
 | Presidio / OpenAnonymiser | optional — for entity recognition |
 
 ## Installation
@@ -170,7 +170,7 @@ npm run build
 |-------|-----------|
 | Frontend | Vue 2.7, Pinia, @nextcloud/vue |
 | Build | Webpack 5, @nextcloud/webpack-vue-config |
-| Backend | PHP 8.1+, Nextcloud App Framework |
+| Backend | PHP 8.3+, Nextcloud App Framework |
 | Data | OpenRegister (PostgreSQL JSON objects) |
 | PDF | mPDF 8 |
 | Templates | Twig 3 |

@@ -29,18 +29,18 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
     <version>0.0.34-unstable.18</version>
-    <licence>agpl</licence>
+    <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>DocuDesk</namespace>
-    <category>organization</category>
-    <website>https://codeberg.org/Conduction/docudesk</website>
-    <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
-    <repository>https://codeberg.org/Conduction/docudesk</repository>
     <documentation>
         <user>https://conduction.gitbook.io/docudesk-nextcloud/</user>
         <admin>https://conduction.gitbook.io/docudesk-nextcloud/</admin>
         <developer>https://conduction.gitbook.io/docudesk-nextcloud/</developer>
     </documentation>
+    <category>organization</category>
+    <website>https://codeberg.org/Conduction/docudesk</website>
+    <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
+    <repository>https://codeberg.org/Conduction/docudesk</repository>
     <!--
         Processing-activity export (AVG Art. 30) consumes OpenRegister's
         per-access read-logging capability (x-openregister-processing dialect,
@@ -55,6 +55,13 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <database min-version="8.0">mysql</database>
         <nextcloud min-version="30" max-version="34"/>
     </dependencies>
+    <background-jobs>
+        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
+    </background-jobs>
+    <settings>
+        <admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
+        <admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
+    </settings>
     <navigations>
         <navigation>
             <id>docudesk</id>
@@ -63,11 +70,4 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
             <icon>app.svg</icon>
         </navigation>
     </navigations>
-	<settings>
-		<admin>OCA\DocuDesk\Settings\DocuDeskAdmin</admin>
-		<admin-section>OCA\DocuDesk\Sections\DocuDeskAdmin</admin-section>
-	</settings>
-    <background-jobs>
-        <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
-    </background-jobs>
 </info>
