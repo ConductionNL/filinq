@@ -1,3 +1,5 @@
+> **Superseded (prohibition-gate portion):** the prohibition-gate capability specced here — the per-request re-resolving gate on the anonymise endpoint, `acknowledgedOverrides`, the `PolicyOverrideAuditService`, and the `prohibitionOverrideAudit` schema — is **superseded by `anonymise-prohibition-consent-guard`**, which enforces prohibitions with a lighter compute-at-guard design (a guarded per-relation skip endpoint + a threshold-tiered `force`, plus standing-consent auto-skip) and no OpenRegister change. The grondslagen/bases portion of this change is unaffected.
+
 ## Why
 
 Today the anonymisation pipeline runs end-to-end without surfacing per-entity legal bases (grondslagen) or guarding against missed prohibition-listed entities. Two concrete problems:
