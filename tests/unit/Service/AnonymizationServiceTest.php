@@ -96,6 +96,23 @@ class AnonymizationServiceTest extends TestCase
 
 
     /**
+     * The analysis call scopes automatic detection to the operator's enabled
+     * entity types by passing the resolved whitelist to OpenRegister's
+     * extractFile(). Guards against a regression that drops the whitelist
+     * argument and silently reverts to detecting every type.
+     *
+     * @return void
+     */
+    public function testExtractAndDetectPassesEntityTypeWhitelist(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('getEntityTypeWhitelist', $content);
+        $this->assertStringContainsString('extractFile($fileId, true, $entityTypes)', $content);
+
+    }//end testExtractAndDetectPassesEntityTypeWhitelist()
+
+
+    /**
      * anonymise-pdf-only-output-mode: AnonymizationService must accept an
      * `$outputFormat` argument on anonymizeDocument so the controller can
      * pass through the per-call gate, and its default is now 'pdf-only'.

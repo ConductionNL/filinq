@@ -114,6 +114,14 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('docudesk', 'Entity types to detect')"
+			:description="t('docudesk', 'Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.')">
+			<EntityTypeSelector
+				v-model="enabledEntityTypes"
+				:options="grondslagEntityTypes" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('docudesk', 'Metadata Enrichment')"
 			:description="t('docudesk', 'Configure automatic metadata enrichment for documents')">
 			<div class="setting-item">
@@ -312,6 +320,7 @@ import { CnVersionInfoCard } from '@conduction/nextcloud-vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
+import EntityTypeSelector from './EntityTypeSelector.vue'
 
 export default {
 	name: 'Settings',
@@ -325,6 +334,7 @@ export default {
 		CnVersionInfoCard,
 		Plus,
 		Restart,
+		EntityTypeSelector,
 	},
 	data() {
 		return {
@@ -344,6 +354,9 @@ export default {
 			grondslagEntityTypes: [],
 			grondslagBases: [],
 			entityTypeBases: {},
+			// Entity types enabled for automatic detection (all-on by default).
+			// An empty or complete selection means "detect all types".
+			enabledEntityTypes: [],
 			settings: {
 				publication_objection_period_days: 28,
 				enable_language_detection: true,
@@ -428,6 +441,7 @@ export default {
 					this.grondslagEntityTypes = data.grondslagEntityTypes || []
 					this.grondslagBases = data.grondslagBases || []
 					this.entityTypeBases = data['docudesk.grondslagen.entity_type_bases'] || {}
+					this.enabledEntityTypes = data['docudesk.anonymisation.enabled_entity_types'] || []
 
 					// Parse OCR languages
 					const ocrLangStr = data.ocr_languages || 'nld+eng'
@@ -544,6 +558,8 @@ export default {
 				'docudesk.anonymisation.default_output_format': ['pdf-only', 'pdf', 'preserve'].includes(this.settings['docudesk.anonymisation.default_output_format']) ? this.settings['docudesk.anonymisation.default_output_format'] : 'pdf-only',
 				// Sent as an object; the backend json-encodes it for storage.
 				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
+				// Sent as an array; the backend json-encodes it for storage.
+				'docudesk.anonymisation.enabled_entity_types': this.enabledEntityTypes,
 			}
 
 			// Add register/schema configs

@@ -62,6 +62,14 @@ class GrondslagProposalService
     public const CONFIG_KEY = 'docudesk.grondslagen.entity_type_bases';
 
     /**
+     * App config key holding the JSON array of entity types left enabled for
+     * automatic detection. Unset or empty means "all types" (the default).
+     *
+     * @var string
+     */
+    public const ENABLED_TYPES_CONFIG_KEY = 'docudesk.anonymisation.enabled_entity_types';
+
+    /**
      * The DocuDesk app id, used as the app-config namespace.
      *
      * @var string
@@ -140,6 +148,92 @@ class GrondslagProposalService
         return self::CURATED_ENTITY_TYPES;
 
     }//end getSelectableEntityTypes()
+
+
+    /**
+     * Return the entity types currently enabled for automatic detection.
+     *
+     * Backs the settings selector, which is all-on by default: when nothing has
+     * been stored yet every curated type is returned so the UI shows them all
+     * checked. A stored selection is sanitised against the curated list so an
+     * unknown/stale type can never surface in the UI.
+     *
+     * @return array<int, string> Enabled entity type identifiers.
+     */
+    public function getEnabledEntityTypes(): array
+    {
+        $stored = $this->readEnabledEntityTypes();
+        if ($stored === null) {
+            return self::CURATED_ENTITY_TYPES;
+        }
+
+        return $stored;
+
+    }//end getEnabledEntityTypes()
+
+
+    /**
+     * Return the entity-type whitelist to hand to OpenRegister's analysis call.
+     *
+     * Null means "do not constrain detection" (detect every type) and is
+     * returned whenever the operator has everything enabled — either because
+     * nothing was stored or because the stored selection covers the full
+     * curated set. Only a genuine subset yields a whitelist, keeping the
+     * default behaviour identical to today and avoiding a filter that would
+     * needlessly narrow the detector's vocabulary.
+     *
+     * @return array<int, string>|null Entity type whitelist, or null for "all".
+     */
+    public function getEntityTypeWhitelist(): ?array
+    {
+        $stored = $this->readEnabledEntityTypes();
+        if ($stored === null || count($stored) === count(self::CURATED_ENTITY_TYPES)) {
+            return null;
+        }
+
+        return $stored;
+
+    }//end getEntityTypeWhitelist()
+
+
+    /**
+     * Read and sanitise the stored enabled-types selection.
+     *
+     * Returns null when unset, empty, malformed, or reduced to nothing after
+     * sanitisation — every one of those cases means "all types". Otherwise the
+     * stored ids are intersected with the curated list and returned in curated
+     * order, dropping unknown/stale/duplicate entries.
+     *
+     * @return array<int, string>|null Sanitised enabled subset, or null for "all".
+     */
+    private function readEnabledEntityTypes(): ?array
+    {
+        $raw = $this->config->getValueString(self::APP_ID, self::ENABLED_TYPES_CONFIG_KEY, '');
+        if ($raw === '') {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            return null;
+        }
+
+        $enabled = array_values(
+            array_filter(
+                self::CURATED_ENTITY_TYPES,
+                static function (string $type) use ($decoded): bool {
+                    return in_array($type, $decoded, true);
+                }
+            )
+        );
+
+        if (count($enabled) === 0) {
+            return null;
+        }
+
+        return $enabled;
+
+    }//end readEnabledEntityTypes()
 
 
     /**

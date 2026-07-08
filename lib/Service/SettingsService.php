@@ -206,6 +206,11 @@ class SettingsService
             // grondslag onto freshly-detected entities. Decoded to an
             // object so the settings UI can bind it directly.
             'docudesk.grondslagen.entity_type_bases'       => $this->grondslagProposal->getMapping(),
+            // Entity types left enabled for automatic detection. Returned as an
+            // explicit list (all curated types when unset) so the settings UI
+            // renders the selector all-on by default; an empty/complete
+            // selection is treated as "all types" at detection time.
+            'docudesk.anonymisation.enabled_entity_types'  => $this->grondslagProposal->getEnabledEntityTypes(),
         ];
 
     }//end loadFeatureToggles()

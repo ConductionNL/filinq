@@ -112,9 +112,24 @@ class AnonymizationService
             $textExtractor = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
-            $textExtractor->extractFile($fileId, true);
 
-            $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
+            // Resolve DocuDesk's grondslag service up front (via the container,
+            // string class name, to keep this class's coupling in check). It
+            // also owns the operator's enabled-entity-type selection, used to
+            // scope automatic detection just below.
+            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+
+            // Scope automatic detection to the enabled entity types (null = all
+            // types). Manual entities are added through a separate path, so a
+            // manually-added type is still anonymised even when its automatic
+            // detection is disabled here.
+            $entityTypes = $grondslagProposal->getEntityTypeWhitelist();
+            $textExtractor->extractFile($fileId, true, $entityTypes);
+
+            $this->logger->debug(
+                'Text extracted from file',
+                ['fileId' => $fileId, 'entityTypes' => $entityTypes]
+            );
 
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
@@ -124,10 +139,8 @@ class AnonymizationService
             // Pre-fill a proposed grondslag per entity type onto the
             // freshly-detected relations (fill-only-when-empty), then enrich
             // the returned rows with their current bases so the review UI can
-            // show the proposal. Resolved via the container (string class
-            // name) to keep this class's coupling in check; both calls are
-            // internally best-effort and never block detection.
-            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+            // show the proposal. Both calls are internally best-effort and
+            // never block detection.
             $grondslagProposal->applyProposals(fileId: $fileId);
             $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
 
