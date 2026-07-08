@@ -72,11 +72,18 @@
 				</tr>
 			</tbody>
 		</table>
+		<ProhibitionBlockedDialog
+			:open="blockOpen"
+			:block="blockInfo"
+			@update:open="blockOpen = $event"
+			@force="onForceSkip" />
 	</div>
 </template>
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
+import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
+import { anonymizationStore } from '../../store/store.js'
 
 // Woo Art. 5 grondslagen seeded by the dossier register (Wave 1.1).
 // Hardcoded here to match AnonymizationWidget — a production page
@@ -93,7 +100,7 @@ const BASES_OPTIONS = [
 
 export default {
 	name: 'EntityReviewTable',
-	components: { NcButton, NcCheckboxRadioSwitch, NcSelect },
+	components: { NcButton, NcCheckboxRadioSwitch, NcSelect, ProhibitionBlockedDialog },
 	props: {
 		entities: { type: Array, required: true },
 		fileCount: { type: Number, default: 0 },
@@ -110,6 +117,9 @@ export default {
 			sf: 'highestConfidence',
 			sa: false,
 			basesOptions: BASES_OPTIONS,
+			blockOpen: false,
+			blockInfo: null,
+			pendingSkipIdx: null,
 		}
 	},
 	computed: {
@@ -128,8 +138,53 @@ export default {
 		onBasesChange(idx, value) {
 			this.$emit('bases-change', { idx, bases: Array.isArray(value) ? value : [] })
 		},
-		onSkipChange(idx, checked) {
-			this.$emit('skip-change', { idx, skip: !!checked })
+		async onSkipChange(idx, checked) {
+			const entity = this.entities[idx]
+			if (!entity) {
+				return
+			}
+			const res = await this.persistSkip(entity, !!checked, false)
+			if (!res.ok && res.status === 422) {
+				this.pendingSkipIdx = idx
+				this.blockInfo = res.body
+				this.blockOpen = true
+			}
+		},
+		// Persist one entity's skip/include across all its relations through
+		// the guarded endpoint; only mutate local state on success so a blocked
+		// skip leaves the toggle reverted.
+		persistSkip(entity, skip, force) {
+			const relationIds = Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+				? entity.relationIds
+				: (entity.relationId != null ? [entity.relationId] : [])
+			if (relationIds.length === 0) {
+				return Promise.resolve({ ok: false, status: 0, body: {} })
+			}
+			return Promise.all(relationIds.map((rid) => anonymizationStore.setRelationSkip(rid, skip, force)))
+				.then((results) => {
+					const bad = results.find((r) => !r.ok)
+					if (bad) {
+						return bad
+					}
+					entity._decisionSkip = skip
+					entity.skipAnonymization = skip
+					entity._patchError = null
+					this.$emit('skip-change', { idx: this.entities.indexOf(entity), skip })
+					return { ok: true, status: 200, body: {} }
+				})
+		},
+		// Dialog force action: retry the pending skip with force=true.
+		onForceSkip() {
+			const idx = this.pendingSkipIdx
+			if (idx == null || !this.entities[idx]) {
+				return
+			}
+			this.persistSkip(this.entities[idx], true, true).then((res) => {
+				if (!res.ok) {
+					this.blockInfo = res.body
+					this.blockOpen = res.status === 422
+				}
+			})
 		},
 		applyDefaultBasesToVisible() {
 			const visibleIdx = this.filteredEntities.map(i => i.idx)

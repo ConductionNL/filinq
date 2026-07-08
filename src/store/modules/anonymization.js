@@ -1262,6 +1262,28 @@ export const useAnonymizationStore = defineStore(
 			},
 
 			/**
+			 * Persist one relation's skip/include decision through DocuDesk's
+			 * guarded endpoint. Returns {ok, status, body}; a 422 body carries
+			 * {threshold, prohibitionMatch} so the caller can offer a force retry.
+			 *
+			 * @param {number} relationId The EntityRelation id.
+			 * @param {boolean} skip Whether to skip (true) or include (false).
+			 * @param {boolean} force Release a sub-threshold prohibition match.
+			 * @return {Promise<{ok: boolean, status: number, body: object}>}
+			 */
+			async setRelationSkip(relationId, skip, force = false) {
+				try {
+					const res = await axios.patch(
+						generateUrl(`/apps/docudesk/api/anonymization/relations/${relationId}`),
+						{ skipAnonymization: !!skip, force: !!force },
+					)
+					return { ok: true, status: res.status, body: res.data }
+				} catch (err) {
+					return { ok: false, status: err.response?.status ?? 0, body: err.response?.data ?? {} }
+				}
+			},
+
+			/**
 			 * Add a manually-selected piece of text as a new entity on the file.
 			 *
 			 * POSTs to the existing OpenRegister manual-entities endpoint, which
