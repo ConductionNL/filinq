@@ -299,6 +299,22 @@ class AnonymizationController extends Controller
                 $dossierKey = (string) $dossierKeyParam;
             }
 
+            // Defence-in-depth backstop: refuse if an absolute-tier prohibition
+            // entity would be left un-redacted (e.g. skipped by bypassing the
+            // guarded skip endpoint and PATCHing OpenRegister directly).
+            $violations = $this->anonymizationService->absoluteProhibitionViolations($fileId);
+            if (empty($violations) === false) {
+                return new JSONResponse(
+                    [
+                        'error'                     => $this->l10n->t(
+                            'Anonymisation blocked: prohibition-listed entities would be left un-redacted.'
+                        ),
+                        'missingProhibitionMatches' => $violations,
+                    ],
+                    422
+                );
+            }
+
             try {
                 $result = $this->anonymizationService->anonymizeDocument(
                     $fileId,
@@ -341,6 +357,68 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
+
+
+    /**
+     * Record a per-entity skip/include decision, guarded by the prohibition policy.
+     *
+     * Called by the review UI on skip-toggle in place of PATCHing OpenRegister's
+     * relation endpoint directly. Skipping a prohibition-matched entity is
+     * rejected with HTTP 422 (absolute at/above the threshold; below it only
+     * unless `force`). Include / non-skip decisions are always allowed and
+     * forwarded to OpenRegister.
+     *
+     * @param int $id The EntityRelation id.
+     *
+     * @return JSONResponse Success, or 422 with `{threshold, prohibitionMatch}`.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function updateRelation(int $id): JSONResponse
+    {
+        try {
+            $params = $this->request->getParams();
+
+            $skip = false;
+            if (array_key_exists('skipAnonymization', $params) === true) {
+                if (is_bool($params['skipAnonymization']) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Invalid skipAnonymization: must be a boolean')],
+                        400
+                    );
+                }
+
+                $skip = $params['skipAnonymization'];
+            }
+
+            $bases = null;
+            if (array_key_exists('bases', $params) === true && is_array($params['bases']) === true) {
+                $bases = array_values($params['bases']);
+            }
+
+            $force = filter_var(($params['force'] ?? false), FILTER_VALIDATE_BOOLEAN);
+
+            $result = $this->anonymizationService->applyRelationSkipDecision(
+                relationId: $id,
+                skip: $skip,
+                bases: $bases,
+                force: $force
+            );
+
+            return new JSONResponse($result['body'], $result['status']);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to update entity relation decision: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to update entity relation decision')],
+                500
+            );
+        }//end try
+
+    }//end updateRelation()
 
 
     /**

@@ -264,6 +264,235 @@ class AnonymizationService
 
 
     /**
+     * Classify a skip attempt on a prohibition-matched entity.
+     *
+     * Pure tier logic (callers have already established it is a skip AND a
+     * prohibition match): at or above the threshold the match is absolute and
+     * cannot be released; below the threshold it is releasable only with force.
+     *
+     * @param float $confidence Detection confidence for the occurrence.
+     * @param float $threshold  High-confidence threshold in effect.
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return string One of 'block_absolute', 'block_releasable', 'allow'.
+     */
+    public static function classifyProhibitionSkip(float $confidence, float $threshold, bool $force): string
+    {
+        if ($confidence >= $threshold) {
+            return 'block_absolute';
+        }
+
+        if ($force === false) {
+            return 'block_releasable';
+        }
+
+        return 'allow';
+
+    }//end classifyProhibitionSkip()
+
+
+    /**
+     * Guard + apply a per-relation skip/include decision from the review UI.
+     *
+     * Setting `skipAnonymization = true` on a prohibition-matched relation is
+     * guarded per {@see classifyProhibitionSkip}. Include / non-skip decisions
+     * are always allowed. Allowed decisions are forwarded to OpenRegister via
+     * `updateDecisionMetadata` (so OR's audit-trail records the flip). A blocked
+     * decision performs no OpenRegister write.
+     *
+     * @param int        $relationId The EntityRelation id.
+     * @param bool       $skip       The requested skipAnonymization value.
+     * @param array|null $bases      Optional bases to set alongside the decision.
+     * @param bool       $force      Release a sub-threshold prohibition match.
+     *
+     * @return array{status:int, body:array<string,mixed>} HTTP status + response body.
+     */
+    public function applyRelationSkipDecision(int $relationId, bool $skip, ?array $bases, bool $force): array
+    {
+        $mapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+
+        try {
+            $relation = $mapper->find($relationId);
+        } catch (Exception $e) {
+            return ['status' => 404, 'body' => ['error' => 'Entity relation not found']];
+        }
+
+        if ($skip === true) {
+            $block = $this->evaluateProhibitionSkip(
+                mapper: $mapper,
+                relation: $relation,
+                relationId: $relationId,
+                force: $force
+            );
+            if ($block !== null) {
+                return ['status' => 422, 'body' => $block];
+            }
+        }
+
+        $fields = ['skipAnonymization' => $skip];
+        if ($bases !== null) {
+            $fields['bases'] = $bases;
+        }
+
+        $mapper->updateDecisionMetadata($relation, $fields);
+
+        return ['status' => 200, 'body' => ['status' => 'ok', 'skipAnonymization' => $skip]];
+
+    }//end applyRelationSkipDecision()
+
+
+    /**
+     * Evaluate the prohibition guard for a skip on one relation.
+     *
+     * Resolves the occurrence's entity value/type/confidence via the file join,
+     * matches it against the prohibition cache, and classifies the skip. Returns
+     * the 422 body when the skip is blocked, or null when it is allowed (not a
+     * prohibition match, released by force, or the match cannot be resolved).
+     *
+     * @param mixed $mapper     OpenRegister EntityRelationMapper (DI).
+     * @param mixed $relation   The EntityRelation being decided.
+     * @param int   $relationId The relation id (for the file-join lookup + logs).
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return array<string, mixed>|null The 422 body when blocked, else null.
+     */
+    private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force): ?array
+    {
+        $row = null;
+        foreach ($mapper->findEntitiesForFile((int) $relation->getFileId()) as $candidate) {
+            if ((int) ($candidate['relation_id'] ?? 0) === $relationId) {
+                $row = $candidate;
+                break;
+            }
+        }
+
+        if ($row === null) {
+            return null;
+        }
+
+        $value = (string) ($row['entity_value'] ?? '');
+        $type  = (string) ($row['entity_type'] ?? 'OTHER');
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning('Policy matcher unavailable; skip guard is a no-op', ['exception' => $e->getMessage()]);
+            return null;
+        }
+
+        $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+        if ($match === null) {
+            return null;
+        }
+
+        $confidence = (float) ($row['confidence'] ?? 0.0);
+        $threshold  = (float) $matcher->highConfidenceThreshold();
+        $decision   = self::classifyProhibitionSkip($confidence, $threshold, $force);
+        if ($decision === 'allow') {
+            return null;
+        }
+
+        $this->logger->warning(
+            'Prohibition guard blocked a skip decision',
+            [
+                'ruleId'     => $match['uuid'],
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'relationId' => $relationId,
+            ]
+        );
+
+        return [
+            'error'            => 'Entity is on the publication prohibition list; skipping is not allowed.',
+            'threshold'        => $threshold,
+            'prohibitionMatch' => [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => $confidence,
+                'absolute'   => ($decision === 'block_absolute'),
+            ],
+        ];
+
+    }//end evaluateProhibitionSkip()
+
+
+    /**
+     * Defence-in-depth backstop: absolute prohibition matches left un-redacted.
+     *
+     * OpenRegister's generic relation PATCH stays open, so a caller could skip a
+     * prohibited relation directly, bypassing the DocuDesk skip endpoint. Before
+     * redaction, this returns any prohibition-matched occurrence at confidence
+     * >= threshold that is being left un-redacted (skipped). Only the absolute
+     * tier is enforced here — the primary decision-time guard covers the rest.
+     *
+     * "Skipped" = detected for the file but absent from the anonymise set
+     * (`findEntitiesForAnonymization`, which already excludes skipAnonymization).
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array<int, array<string, mixed>> Absolute-tier violations (may be empty).
+     */
+    public function absoluteProhibitionViolations(int $fileId): array
+    {
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning('Policy matcher unavailable; prohibition backstop is a no-op', ['exception' => $e->getMessage()]);
+            return [];
+        }
+
+        $mapper    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+        $threshold = (float) $matcher->highConfidenceThreshold();
+
+        $redactIds = [];
+        foreach ($mapper->findEntitiesForAnonymization($fileId) as $row) {
+            $redactIds[(int) ($row['relation_id'] ?? 0)] = true;
+        }
+
+        $violations = [];
+        foreach ($mapper->findEntitiesForFile($fileId) as $row) {
+            $relationId = (int) ($row['relation_id'] ?? 0);
+            if (isset($redactIds[$relationId]) === true) {
+                // Being redacted — fine.
+                continue;
+            }
+
+            $value = (string) ($row['entity_value'] ?? '');
+            $type  = (string) ($row['entity_type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+            if ($match === null || ((float) ($row['confidence'] ?? 0.0)) < $threshold) {
+                continue;
+            }
+
+            $this->logger->warning(
+                'Prohibition backstop caught an un-redacted absolute match',
+                ['ruleId' => $match['uuid'], 'entityId' => (int) ($row['entity_id'] ?? 0), 'fileId' => $fileId]
+            );
+
+            $violations[] = [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => (float) ($row['confidence'] ?? 0.0),
+                'absolute'   => true,
+            ];
+        }//end foreach
+
+        return $violations;
+
+    }//end absoluteProhibitionViolations()
+
+
+    /**
      * Anonymize entities in a document
      *
      * @param int                         $fileId             The Nextcloud file ID
