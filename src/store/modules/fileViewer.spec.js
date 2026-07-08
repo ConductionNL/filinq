@@ -125,4 +125,29 @@ describe('fileViewer store — add mode & highlight state', () => {
 		expect(store.addMode).toBe(false)
 		expect(store.highlightEntities).toEqual([])
 	})
+
+	it('setAnonymizedVariant() switches the view to the anonymised file by default', () => {
+		const store = useFileViewerStore()
+		store.open(sampleFile())
+		const anon = { ...sampleFile(), fileId: 99, fileName: 'doc_anonymized.pdf' }
+
+		store.setAnonymizedVariant(anon)
+		expect(store.showAnonymized).toBe(true)
+		expect(store.currentFile).toBe(anon)
+		expect(store.canToggleVariant).toBe(true)
+	})
+
+	it('setAnonymizedVariant({ show: false }) links the pair but keeps the original on screen', () => {
+		const store = useFileViewerStore()
+		const original = sampleFile()
+		store.open(original)
+		const anon = { ...sampleFile(), fileId: 99, fileName: 'doc_anonymized.pdf' }
+
+		store.setAnonymizedVariant(anon, { show: false })
+		// Linked (toggle available) but still showing the file the user opened.
+		expect(store.canToggleVariant).toBe(true)
+		expect(store.showAnonymized).toBe(false)
+		expect(store.currentFile).toBe(original)
+		expect(store.anonymizedFile).toBe(anon)
+	})
 })

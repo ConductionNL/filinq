@@ -129,3 +129,133 @@ describe('myDocuments store — concept/anonymized collapsing (via links)', () =
 		expect(store.documentStats.total).toBe(2)
 	})
 })
+
+describe('myDocuments store — duplicate anonymized outputs (feat #107, dedupe)', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('hides both the concept and the superseded (older) output when a source was re-anonymized', () => {
+		const store = useMyDocumentsStore()
+		store.documents = [
+			doc('report.pdf', { fileId: 1, modified: 10 }),
+			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
+			doc('report_anonymized (2).pdf', { fileId: 3, isAnonymized: true, modified: 200 }),
+		]
+		// Two runs of the same source left two outputs behind.
+		store.anonymizationLinks = [link(1, 2), link(1, 3)]
+		const names = store.visibleDocuments.map((d) => d.fileName)
+		expect(names).toEqual(['report_anonymized (2).pdf'])
+	})
+
+	it('anonymizedFor() resolves the newest present output of a re-anonymized source', () => {
+		const store = useMyDocumentsStore()
+		const source = doc('report.pdf', { fileId: 1, modified: 10 })
+		const oldOutput = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 })
+		const newOutput = doc('report_anonymized (2).pdf', { fileId: 3, isAnonymized: true, modified: 200 })
+		store.documents = [source, oldOutput, newOutput]
+		store.anonymizationLinks = [link(1, 2), link(1, 3)]
+		expect(store.anonymizedFor(source)).toBe(newOutput)
+	})
+
+	it('ignores a degenerate self-referential link so a file is not masked as its own output', () => {
+		const store = useMyDocumentsStore()
+		const file = doc('report.pdf', { fileId: 5 })
+		store.documents = [file]
+		store.anonymizationLinks = [link(5, 5)]
+		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual(['report.pdf'])
+		expect(store.anonymizedFor(file)).toBeUndefined()
+	})
+})
+
+describe('myDocuments store — orphaned outputs after a re-upload', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('hides an anonymized output whose source is no longer present (moved to trash by a re-upload)', () => {
+		const store = useMyDocumentsStore()
+		// Re-upload scenario: fresh source (319/318) replaced the old sources
+		// (305/304, now in trash), leaving their _anonymized outputs (316/313)
+		// orphaned in the dossier.
+		store.documents = [
+			doc('example-anonymization.pdf', { fileId: 319, modified: 200 }),
+			doc('example-anonymization-docx.docx', { fileId: 318, modified: 200 }),
+			doc('example-anonymization_anonymized.pdf', { fileId: 316, isAnonymized: true, modified: 100 }),
+			doc('example-anonymization-docx_anonymized.pdf', { fileId: 313, isAnonymized: true, modified: 100 }),
+		]
+		store.anonymizationLinks = [
+			{ sourceFileId: 305, anonymizedFileId: 316, sourceFileName: 'example-anonymization.pdf' },
+			{ sourceFileId: 304, anonymizedFileId: 313, sourceFileName: 'example-anonymization-docx.docx' },
+		]
+		// The fresh re-uploads are shown as concepts; the orphaned outputs are not.
+		expect(store.visibleDocuments.map((d) => d.fileName).sort()).toEqual([
+			'example-anonymization-docx.docx',
+			'example-anonymization.pdf',
+		])
+		expect([...store.orphanedOutputIds].sort((a, b) => a - b)).toEqual([313, 316])
+	})
+
+	it('keeps a standalone anonymized output (source deleted, NOT re-uploaded)', () => {
+		const store = useMyDocumentsStore()
+		// The source is absent and there is no fresh file under its name, so the
+		// output is a legitimate standalone result — it must stay visible.
+		store.documents = [
+			doc('draft.pdf', { fileId: 1 }),
+			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true }),
+		]
+		store.anonymizationLinks = [
+			{ sourceFileId: 9, anonymizedFileId: 2, sourceFileName: 'report.pdf' },
+		]
+		expect(store.orphanedOutputIds.size).toBe(0)
+		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual(['draft.pdf', 'report_anonymized.pdf'])
+	})
+
+	it('keeps a live source↔output pair (source present) untouched', () => {
+		const store = useMyDocumentsStore()
+		store.documents = [
+			doc('report.pdf', { fileId: 302, modified: 10 }),
+			doc('report_anonymized.pdf', { fileId: 306, isAnonymized: true, modified: 100 }),
+		]
+		store.anonymizationLinks = [link(302, 306)]
+		// Source present → not an orphan; overview collapses to the output as usual.
+		expect(store.orphanedOutputIds.size).toBe(0)
+		expect(store.visibleDocuments.map((d) => d.fileName)).toEqual(['report_anonymized.pdf'])
+	})
+
+	it('keeps a standalone output when an unrelated file shares the source name but predates it', () => {
+		const store = useMyDocumentsStore()
+		// The source (id 9) was deleted, leaving a legitimate standalone output
+		// (id 2, produced at modified 100). A completely unrelated file that
+		// happens to share the source name exists but is OLDER (modified 50) —
+		// it cannot be the re-upload that replaced the source, so the output
+		// must stay visible.
+		store.documents = [
+			doc('report.pdf', { fileId: 1, modified: 50 }),
+			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
+		]
+		store.anonymizationLinks = [
+			{ sourceFileId: 9, anonymizedFileId: 2, sourceFileName: 'report.pdf' },
+		]
+		expect(store.orphanedOutputIds.size).toBe(0)
+		expect(store.visibleDocuments.map((d) => d.fileName).sort()).toEqual([
+			'report.pdf',
+			'report_anonymized.pdf',
+		])
+	})
+
+	it('does not treat an anonymized output as the re-uploaded source when names collide', () => {
+		const store = useMyDocumentsStore()
+		// A standalone output (id 2, source 9 deleted) whose recorded source name
+		// coincides with ANOTHER anonymized output present in the listing. That
+		// output is not a concept re-upload, so it must not trigger a hide.
+		store.documents = [
+			doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true, modified: 100 }),
+			doc('report.pdf', { fileId: 3, isAnonymized: true, modified: 200 }),
+		]
+		store.anonymizationLinks = [
+			{ sourceFileId: 9, anonymizedFileId: 2, sourceFileName: 'report.pdf' },
+		]
+		expect(store.orphanedOutputIds.size).toBe(0)
+	})
+})
