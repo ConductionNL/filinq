@@ -17,7 +17,19 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\OpenRegister\Db\EntityRelation;
+use OCA\OpenRegister\Db\EntityRelationMapper;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use ReflectionMethod;
 
 /**
  * Unit tests for AnonymizationService
@@ -249,6 +261,102 @@ class AnonymizationServiceTest extends TestCase
         );
 
     }//end testServiceWiresPdfConversionAndRollback()
+
+
+    /**
+     * Build an AnonymizationService whose container resolves the given policy
+     * matcher, with all other constructor deps mocked.
+     *
+     * @param PolicyMatchService $matcher The matcher the container returns.
+     *
+     * @return AnonymizationService The service under test.
+     */
+    private function makeServiceWithMatcher(PolicyMatchService $matcher): AnonymizationService
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(
+            static function (string $id) use ($matcher) {
+                if ($id === 'OCA\DocuDesk\Service\PolicyMatchService') {
+                    return $matcher;
+                }
+
+                return null;
+            }
+        );
+
+        return new AnonymizationService(
+            $this->createMock(LoggerInterface::class),
+            $container,
+            $this->createMock(IAppManager::class),
+            $this->createMock(EntityDetectionService::class),
+            $this->createMock(GrondslagenSummaryService::class),
+            $this->createMock(PdfConversionService::class),
+            $this->createMock(EmlPdfAssemblyService::class)
+        );
+
+    }//end makeServiceWithMatcher()
+
+
+    /**
+     * The policy pass flags prohibition matches (with the correct high/low
+     * tier), auto-skips standing-consent matches on their relation, and leaves
+     * unmatched entities untouched.
+     *
+     * @return void
+     */
+    public function testApplyPolicyDecisionsFlagsProhibitionsAndSkipsStandingConsents(): void
+    {
+        $matcher = $this->createMock(PolicyMatchService::class);
+        $matcher->method('highConfidenceThreshold')->willReturn(0.85);
+        $matcher->method('match')->willReturnCallback(
+            static function (string $text, string $type): ?array {
+                return match ($text) {
+                    'Jansen' => ['uuid' => 'R-P', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => $type, 'primaryName' => 'Undercover'],
+                    'LowP'   => ['uuid' => 'R-L', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => $type, 'primaryName' => 'Maybe'],
+                    'Kuiper' => ['uuid' => 'R-SC', 'kind' => PolicyMatchService::KIND_STANDING_CONSENT, 'entityType' => $type, 'primaryName' => 'Woordvoerder'],
+                    default  => null,
+                };
+            }
+        );
+
+        // Standing-consent match must auto-skip exactly relation 8.
+        $relation = $this->createMock(EntityRelation::class);
+        $mapper   = $this->createMock(EntityRelationMapper::class);
+        $mapper->expects($this->once())->method('find')->with(8)->willReturn($relation);
+        $mapper->expects($this->once())->method('updateDecisionMetadata')
+            ->with($relation, ['skipAnonymization' => true])->willReturn($relation);
+
+        $entities = [
+            ['type' => 'PERSON', 'value' => 'Jansen', 'confidence' => 0.97, 'relationId' => 7, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'Kuiper', 'confidence' => 0.90, 'relationId' => 8, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'LowP',   'confidence' => 0.62, 'relationId' => 9, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'De Vries','confidence' => 0.50, 'relationId' => 10, 'skipAnonymization' => false],
+        ];
+
+        $service = $this->makeServiceWithMatcher($matcher);
+        $method  = new ReflectionMethod(AnonymizationService::class, 'applyPolicyDecisions');
+        $method->setAccessible(true);
+        $result  = $method->invoke($service, $entities, $mapper);
+
+        // High-confidence prohibition: flagged, absolute, not skipped.
+        $this->assertSame(
+            ['ruleId' => 'R-P', 'ruleName' => 'Undercover', 'highConfidence' => true],
+            $result[0]['prohibitionMatch']
+        );
+        $this->assertFalse($result[0]['skipAnonymization']);
+
+        // Standing consent: not flagged, auto-skipped.
+        $this->assertNull($result[1]['prohibitionMatch']);
+        $this->assertTrue($result[1]['skipAnonymization']);
+
+        // Sub-threshold prohibition: flagged with highConfidence false.
+        $this->assertFalse($result[2]['prohibitionMatch']['highConfidence']);
+
+        // No match: null, untouched.
+        $this->assertNull($result[3]['prohibitionMatch']);
+        $this->assertFalse($result[3]['skipAnonymization']);
+
+    }//end testApplyPolicyDecisionsFlagsProhibitionsAndSkipsStandingConsents()
 
 
 }//end class

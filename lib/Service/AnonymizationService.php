@@ -144,8 +144,19 @@ class AnonymizationService
             $grondslagProposal->applyProposals(fileId: $fileId);
             $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
 
+            $normalized = $this->entityDetection->normalizeEntities($entities);
+
+            // Apply publication policy: standing-consent winners are auto-skipped
+            // on their relation; prohibition winners get a read-only
+            // `prohibitionMatch` hint for the review UI. Best-effort — a policy
+            // failure never blocks detection.
+            $normalized = $this->applyPolicyDecisions(
+                entities: $normalized,
+                entityRelationMapper: $entityRelationMapper
+            );
+
             return [
-                'entities'    => $this->entityDetection->normalizeEntities($entities),
+                'entities'    => $normalized,
                 'entityCount' => count($entities),
             ];
         } catch (Exception $e) {
@@ -161,6 +172,95 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
+
+
+    /**
+     * Apply publication policy to freshly-detected, normalized entities.
+     *
+     * Runs `PolicyMatchService::match()` (prohibition precedence) per entity:
+     *  - a standing-consent winner is auto-skipped (`skip_anonymization = true`
+     *    on the relation, via OpenRegister) unless it is already skipped;
+     *  - a prohibition winner gets a read-only `prohibitionMatch`
+     *    (`{ruleId, ruleName, highConfidence}`) for the review UI and is never
+     *    auto-skipped.
+     *
+     * Every returned entity gains a `prohibitionMatch` key (null when none).
+     * Best-effort: policy failures are logged and never block detection.
+     *
+     * @param array<int, array<string, mixed>> $entities             Normalized entities.
+     * @param mixed                             $entityRelationMapper OpenRegister EntityRelationMapper (DI).
+     *
+     * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
+     */
+    private function applyPolicyDecisions(array $entities, mixed $entityRelationMapper): array
+    {
+        try {
+            $matcher   = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+            $threshold = (float) $matcher->highConfidenceThreshold();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Policy matcher unavailable; skipping publication-policy pass',
+                ['exception' => $e->getMessage()]
+            );
+            foreach ($entities as &$plain) {
+                $plain['prohibitionMatch'] = ($plain['prohibitionMatch'] ?? null);
+            }
+
+            unset($plain);
+            return $entities;
+        }//end try
+
+        foreach ($entities as &$entity) {
+            $entity['prohibitionMatch'] = null;
+            $value = (string) ($entity['value'] ?? '');
+            $type  = (string) ($entity['type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            try {
+                $match = $matcher->match(entityText: $value, entityType: $type);
+            } catch (Exception $e) {
+                $this->logger->warning('Policy match failed for entity', ['exception' => $e->getMessage()]);
+                continue;
+            }
+
+            if ($match === null) {
+                continue;
+            }
+
+            if ($match['kind'] === PolicyMatchService::KIND_PROHIBITION) {
+                $entity['prohibitionMatch'] = [
+                    'ruleId'         => $match['uuid'],
+                    'ruleName'       => $match['primaryName'],
+                    'highConfidence' => (((float) ($entity['confidence'] ?? 0.0)) >= $threshold),
+                ];
+                continue;
+            }
+
+            // Standing consent → auto-skip this occurrence unless already skipped.
+            if ($match['kind'] === PolicyMatchService::KIND_STANDING_CONSENT
+                && ((bool) ($entity['skipAnonymization'] ?? false)) === false
+                && ($entity['relationId'] ?? null) !== null
+            ) {
+                try {
+                    $relation = $entityRelationMapper->find((int) $entity['relationId']);
+                    $entityRelationMapper->updateDecisionMetadata($relation, ['skipAnonymization' => true]);
+                    $entity['skipAnonymization'] = true;
+                } catch (Exception $e) {
+                    $this->logger->warning(
+                        'Failed to auto-skip standing-consent entity',
+                        ['relationId' => $entity['relationId'], 'exception' => $e->getMessage()]
+                    );
+                }
+            }
+        }//end foreach
+
+        unset($entity);
+
+        return $entities;
+
+    }//end applyPolicyDecisions()
 
 
     /**
