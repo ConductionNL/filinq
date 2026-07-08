@@ -45,7 +45,7 @@
 			<tbody>
 				<tr v-for="item in filteredEntities" :key="item.idx">
 					<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
-					<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}</td>
+					<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}<span v-if="item.e.prohibitionMatch" class="warn-text" :title="item.e.prohibitionMatch.ruleName" style="margin-inline-start:6px">🔒</span></td>
 					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
@@ -66,7 +66,7 @@
 					<td>
 						<NcCheckboxRadioSwitch
 							:checked="!!item.e._decisionSkip"
-							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0"
+							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0 || !!(item.e.prohibitionMatch && item.e.prohibitionMatch.highConfidence)"
 							@update:checked="onSkipChange(item.idx, $event)" />
 					</td>
 				</tr>

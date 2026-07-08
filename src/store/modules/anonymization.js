@@ -282,6 +282,9 @@ function decorateEntities(entities) {
 			relationId,
 			relationIds: relationId != null ? [relationId] : [],
 			bases: Array.isArray(e.bases) ? [...e.bases] : (e.bases ?? null),
+			// Read-only prohibition hint from the extract response: null, or
+			// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
+			prohibitionMatch: e.prohibitionMatch ?? null,
 			_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
 			_decisionSkip: !!e.skipAnonymization,
 			_patchError: null,
@@ -623,7 +626,7 @@ export const useAnonymizationStore = defineStore(
 							// Apply the decision to every duplicate relation so a
 							// re-extracted copy can't slip through unredacted.
 							await Promise.all(relationIds.map((rid) => axios.patch(
-								generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+								generateUrl(`/apps/docudesk/api/anonymization/relations/${rid}`),
 								{ bases: newBases, skipAnonymization: !!entity._decisionSkip },
 							)))
 							entity.bases = newBases
