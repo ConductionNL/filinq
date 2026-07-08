@@ -27,8 +27,8 @@
 
 - [x] 4.1 `EntityReviewTable.vue`: use `prohibitionMatch` to render the skip toggle locked — high-confidence hard-locked ON; sub-threshold lockable with a `force` affordance/warning.
 - [x] 4.2 Standing-consent entities render pre-skipped (they arrive with `skip_anonymization=true`).
-- [ ] 4.3 On skip-toggle, call the DocuDesk skip endpoint (not OR's PATCH) immediately; catch its 422 into an error dialog showing the blocked occurrence (canonical name + rule name), and offer a `force` retry only when `absolute` is false.
-- [ ] 4.4 Store wiring: route skip decisions through the new endpoint; carry `force`; surface the 422 body.
+- [x] 4.3 On skip-toggle, call the DocuDesk skip endpoint (not OR's PATCH) immediately; catch its 422 into an error dialog showing the blocked occurrence (canonical name + rule name), and offer a `force` retry only when `absolute` is false.
+- [x] 4.4 Store wiring: route skip decisions through the new endpoint; carry `force`; surface the 422 body.
 
 ## 5. Spec bookkeeping + docs
 
