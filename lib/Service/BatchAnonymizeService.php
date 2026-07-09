@@ -82,6 +82,11 @@ class BatchAnonymizeService
      *                                                             file's batch entry and the
      *                                                             batch continues with the
      *                                                             next file.
+     * @param string                           $scope              Placeholder-numbering scope forwarded to
+     *                                                             OpenRegister for every file. Defaults to
+     *                                                             'dossier' because a batch IS a folder/dossier:
+     *                                                             a person gets the SAME scope-local number
+     *                                                             across all the batch's files.
      *
      * @return array Summary of the run, with shape:
      *   {
@@ -104,7 +109,8 @@ class BatchAnonymizeService
         array $entities,
         bool $appendBasisSummary=false,
         array $unredactedEntities=[],
-        string $outputFormat='pdf'
+        string $outputFormat='pdf',
+        string $scope='dossier'
     ): array {
         $batch = $this->stateService->getBatch($batchId);
         if ($batch === null) {
@@ -145,12 +151,17 @@ class BatchAnonymizeService
             }
 
             try {
+                // dossierKey: null → OpenRegister falls back to each file's
+                // parent folder as the dossier (= the batch's folder), so a
+                // person is numbered consistently across the batch.
                 $result = $this->anonService->anonymizeDocument(
                     fileId: (int) $file['fileId'],
                     entities: $entities,
                     appendBasisSummary: $appendBasisSummary,
                     unredactedEntities: $unredactedEntities,
-                    outputFormat: $outputFormat
+                    outputFormat: $outputFormat,
+                    scope: $scope,
+                    dossierKey: null
                 );
                 $batch['files'][$i]['status']           = 'anonymized';
                 $batch['files'][$i]['replacementCount'] = $result['replacementCount'] ?? 0;

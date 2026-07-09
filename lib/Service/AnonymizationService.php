@@ -378,6 +378,12 @@ class AnonymizationService
      * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?} that
      *                                                                release low-confidence prohibition matches.
      * @param string                           $userId                UID of the acting user (for override audit entries).
+     * @param string                           $scope                 Placeholder-numbering scope forwarded to
+     *                                                                OpenRegister: 'document' (default) or 'dossier'
+     *                                                                (consistent numbering across the dossier folder).
+     * @param string|null                      $dossierKey            Stable folder id for the dossier when
+     *                                                                $scope='dossier'; null lets OpenRegister fall
+     *                                                                back to the file's parent folder.
      *
      * @return array<string, mixed> Anonymization result with optional warning/summaryFileId/createdConsents fields
      *
@@ -402,7 +408,9 @@ class AnonymizationService
         string $outputFormat='pdf',
         array $unredactedEntities=[],
         array $acknowledgedOverrides=[],
-        string $userId=''
+        string $userId='',
+        string $scope='document',
+        ?string $dossierKey=null
     ): array {
         // Prohibition gate — runs BEFORE any OR interaction.
         // Throws ProhibitionGateException when gate fires; passes through otherwise.
@@ -425,7 +433,25 @@ class AnonymizationService
             // DocumentProcessingHandler). Closes #286.
             $originalText = $this->readNodeTextSafely(node: $node);
 
-            $result = $fileService->anonymizeDocument($node, $mappedEntities);
+            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
+            // 'document' numbers entities locally to this file; 'dossier' makes
+            // the number consistent across the dossier folder's files.
+            // OpenRegister derives the dossier from $dossierKey (a stable folder
+            // id) or falls back to the file's parent folder when null. Passed
+            // positionally for the reflectively-resolved OpenRegister FileService.
+            $result = $fileService->anonymizeDocument($node, $mappedEntities, $scope, $dossierKey);
+
+            // Per-entity placeholder map (anonymisation-placeholder-id-scope):
+            // the EXACT placeholder OpenRegister emitted per global entity id
+            // (e.g. `"7" => "[PERSOON: 1]"`), so the grondslagen-summary renders
+            // the same scope-local number + localized label the document carries
+            // instead of re-deriving `[<TYPE>: <entity_id>]`. Defensive
+            // method_exists() for older OpenRegister versions (summary then
+            // falls back to the scope-local map or omits the entity).
+            $placeholderMap = [];
+            if (method_exists($fileService, 'getLastPlaceholderMap') === true) {
+                $placeholderMap = $fileService->getLastPlaceholderMap();
+            }
 
             // Derive the REAL replacement-stats from the original text:
             // an entity counts as "applied" iff its literal value
@@ -545,7 +571,8 @@ class AnonymizationService
                 $resultInfo = $this->attachGrondslagenSummary(
                     anonymisedNode: $result,
                     sourceFileId: $fileId,
-                    resultInfo: $resultInfo
+                    resultInfo: $resultInfo,
+                    placeholderMap: $placeholderMap
                 );
             }
 
@@ -1552,16 +1579,21 @@ class AnonymizationService
      * caller can surface the issue to the operator without rolling back the
      * anonymisation.
      *
-     * @param mixed                $anonymisedNode The Node/File returned by OR's anonymizeDocument.
-     * @param int                  $sourceFileId   The pre-anonymisation source file id (used to look
-     *                                             up the EntityRelation rows that carry the bases).
-     * @param array<string, mixed> $resultInfo     The current result info — extended with the
-     *                                             summary's `summaryFileId` / `warning` fields and
-     *                                             returned.
+     * @param mixed                 $anonymisedNode The Node/File returned by OR's anonymizeDocument.
+     * @param int                   $sourceFileId   The pre-anonymisation source file id (used to look
+     *                                              up the EntityRelation rows that carry the bases).
+     * @param array<string, mixed>  $resultInfo     The current result info — extended with the
+     *                                              summary's `summaryFileId` / `warning` fields and
+     *                                              returned.
+     * @param array<string, string> $placeholderMap OpenRegister's per-entity placeholder map
+     *                                              (global entity id → emitted placeholder, e.g.
+     *                                              `"7" => "[PERSOON: 1]"`) so the summary renders
+     *                                              the SAME placeholder the document carries. Empty
+     *                                              → summary uses its own scope-local map or omits.
      *
      * @return array<string, mixed> The (possibly-extended) result info.
      */
-    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo): array
+    private function attachGrondslagenSummary(mixed $anonymisedNode, int $sourceFileId, array $resultInfo, array $placeholderMap=[]): array
     {
         if (($anonymisedNode instanceof \OCP\Files\File) === false) {
             $resultInfo['warning'] = 'grondslagen_summary_skipped: anonymised result is not a File node';
@@ -1573,18 +1605,22 @@ class AnonymizationService
 
         try {
             if ($isPdf === true) {
-                $this->grondslagenSummary->appendSummaryToPdf(node: $anonymisedNode);
+                $this->grondslagenSummary->appendSummaryToPdf(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
+                );
                 $resultInfo['summaryAppended'] = true;
-                return $resultInfo;
+            } else {
+                $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
+                    anonymisedFile: $anonymisedNode,
+                    sourceFileId: $sourceFileId,
+                    placeholderMap: $placeholderMap
+                );
+                $resultInfo['summaryAppended'] = false;
+                $resultInfo['summaryFileId']   = $summaryFile->getId();
+                $resultInfo['summaryFilePath'] = $summaryFile->getPath();
             }
-
-            $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
-                node: $anonymisedNode,
-                sourceFileId: $sourceFileId
-            );
-            $resultInfo['summaryAppended'] = false;
-            $resultInfo['summaryFileId']   = $summaryFile->getId();
-            $resultInfo['summaryFilePath'] = $summaryFile->getPath();
         } catch (Exception $e) {
             $this->logger->warning(
                 'Grondslagen summary attach failed',

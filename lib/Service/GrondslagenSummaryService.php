@@ -1,32 +1,40 @@
 <?php
-
 /**
  * Grondslagen Summary Service
  *
- * Renders per-document and per-dossier grondslagen summary PDFs.
- * Per-document summaries append a grondslag page to an anonymised PDF (PDF/A-3b)
- * or save a separate summary PDF for preserve-mode output. Per-dossier summaries
- * aggregate entity-grondslag data across all files and write a standalone PDF/A-3b
- * to the dossier folder.
+ * Renders per-document and per-dossier grondslagen summary PDFs. Reads
+ * EntityRelation.bases (OpenRegister, Wave 1.3 — entity-relation-grondslagen)
+ * and resolves the bases against the `base` schema (DocuDesk, Wave 1.1 —
+ * add-dossier-schema) to produce an auditable record of "what was redacted
+ * under which Woo Art. 5 grondslag" for the file or dossier.
  *
- * @category Service
- * @package  OCA\DocuDesk\Service
+ * Two rendering surfaces:
  *
+ *   - **Per-document append.** When the anonymise endpoint is called with
+ *     `appendBasisSummary: true`, this service renders the summary as a single
+ *     extra page and appends it to the anonymised PDF using mPDF + FPDI. When
+ *     the output isn't PDF (operator opted for `outputFormat: "preserve"`),
+ *     the summary is saved as a separate `_grondslagen.pdf` file in the same
+ *     folder as the anonymised file.
+ *
+ *   - **Per-dossier on-demand.** A dedicated endpoint regenerates the
+ *     per-dossier summary PDF aggregating every file under the dossier's
+ *     folder. The same render also fires automatically when the dossier's
+ *     `checkedOn` review timestamp is updated.
+ *
+ * No new persistence beyond the existing dossier object's `configuration`
+ * JSON field, which records the generated file's UUID and timestamp so the
+ * dossier UI can badge the report as fresh / stale.
+ *
+ * @category  Service
+ * @package   OCA\DocuDesk\Service
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.DocuDesk.app
  *
- * @link https://conduction.nl
- *
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-2
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-3
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-4
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-5
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/changes/anonymisation-grondslagen-summary/specs/anonymisation-grondslagen-summary/spec.md
  */
 
 declare(strict_types=1);
@@ -34,274 +42,249 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use Mpdf\Mpdf;
-use Mpdf\MpdfException;
 use OCP\App\IAppManager;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
+use OCP\Files\NotFoundException;
+use OCP\IL10N;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use setasign\Fpdi\Fpdi;
 
 /**
- * Service for rendering grondslagen summary PDFs
- *
- * Handles both per-document append flow (for PDF/A-3b anonymised output)
- * and per-dossier standalone summary generation. Uses PdfService (Twig + mPDF)
- * for rendering and mPDF + FPDI for appending pages to existing PDFs.
+ * Renderer for the per-document and per-dossier grondslagen summary PDFs.
  *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://conduction.nl
- *
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
- * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-3
+ * @link     https://www.DocuDesk.app
  */
 class GrondslagenSummaryService
 {
 
     /**
-     * DocuDesk register slug for OR object lookups.
-     *
-     * @var string
+     * Relative path (from the app root) where the Twig templates live.
      */
-    private const REGISTER = 'docudesk';
+    private const TEMPLATE_DIR = '/Resources/templates/grondslagen/';
 
     /**
-     * Dossier schema slug.
-     *
-     * @var string
+     * Template file for the per-document summary page.
      */
-    private const DOSSIER_SCHEMA = 'dossier';
+    private const TEMPLATE_PER_DOC = 'summary_per_doc.twig';
 
     /**
-     * Base schema slug (grondslagen catalogue entries).
-     *
-     * @var string
+     * Template file for the per-dossier summary PDF.
      */
-    private const BASE_SCHEMA = 'base';
+    private const TEMPLATE_PER_DOSSIER = 'summary_per_dossier.twig';
 
     /**
-     * Destination filename inside the anonymised subfolder.
-     *
-     * @var string
+     * Suffix applied to the source file's base name when the per-document
+     * append falls back to a separate-PDF file (operator chose to preserve
+     * the native output format and the anonymised file isn't a PDF).
      */
-    private const DOSSIER_SUMMARY_FILENAME = 'grondslagen.pdf';
+    private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
     /**
-     * Primary destination subfolder (per anonymisation-output-folder-layout).
+     * Entity-type labels localised in the placeholder, mirroring
+     * OpenRegister's `DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES`
+     * (the `EntityRecognitionHandler::ENTITY_TYPE_*` values). Only these are
+     * translated so the summary legend reads the same as the labels
+     * OpenRegister wrote into the redacted document; an unknown type falls
+     * back to its raw string. DocuDesk's `l10n/` carries the same Dutch
+     * translations so the two apps resolve identically for a given language.
      *
-     * @var string
+     * @var array<int, string>
      */
-    private const ANONYMISED_SUBFOLDER = 'anonymised';
+    private const LOCALIZABLE_ENTITY_TYPES = [
+        'PERSON',
+        'ORGANIZATION',
+        'LOCATION',
+        'EMAIL',
+        'PHONE',
+        'ADDRESS',
+        'DATE',
+        'IBAN',
+        'SSN',
+        'IP_ADDRESS',
+    ];
 
     /**
-     * Constructor for GrondslagenSummaryService
+     * Constructor.
      *
-     * @param PdfService         $pdfService  PDF rendering service (Twig + mPDF)
-     * @param ContainerInterface $container   DI container for lazy OR service resolution
-     * @param IAppManager        $appManager  App manager for OR availability check
-     * @param LoggerInterface    $logger      Logger for diagnostics
-     * @param IRootFolder        $rootFolder  Nextcloud root folder for file operations
-     * @param IUserSession       $userSession User session for operator identification
-     *
-     * @return void
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
+     * @param LoggerInterface    $logger      Structured logger.
+     * @param PdfService         $pdfService  Twig + mPDF renderer.
+     * @param IRootFolder        $rootFolder  Nextcloud file API entry point.
+     * @param IUserSession       $userSession Session-user lookup for the "operator" header field.
+     * @param IAppManager        $appManager  App-availability check for OpenRegister.
+     * @param ContainerInterface $container   DI container for OpenRegister-side services
+     *                                        (EntityRelationMapper, ObjectService).
+     * @param IL10N|null         $l10n        Acting-user localisation, used to translate the
+     *                                        placeholder TYPE label (PERSON → PERSOON on a Dutch
+     *                                        instance) so the summary legend matches the localized
+     *                                        labels OpenRegister wrote into the redacted document.
+     *                                        Nullable: when absent the raw English label is used.
      */
     public function __construct(
-        private readonly PdfService $pdfService,
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
+        private readonly PdfService $pdfService,
         private readonly IRootFolder $rootFolder,
         private readonly IUserSession $userSession,
+        private readonly IAppManager $appManager,
+        private readonly ContainerInterface $container,
+        private readonly ?IL10N $l10n=null
     ) {
 
     }//end __construct()
 
     /**
-     * Append a grondslagen summary page to an anonymised PDF in-place.
+     * Append a grondslagen summary page to an already-anonymised PDF file.
      *
-     * Renders the per-document summary template and appends it to the existing
-     * PDF/A-3b anonymised file using mPDF + FPDI. Writes the result back to the
-     * same NC file node atomically. Throws on render/append failure so the caller
-     * (AnonymizationService::tryAppendBasisSummary) can surface a non-fatal warning.
+     * Loads the anonymised file's entity relations from OR, resolves their
+     * `bases` to human-readable `base.name` labels, renders the per-document
+     * template, and appends the resulting PDF page to the anonymised file.
      *
-     * @param mixed $node Nextcloud file node of the anonymised PDF
+     * The append is atomic — on any rendering or PDF-merge failure the
+     * anonymised file is left untouched and the caller receives a warning
+     * via the thrown exception. The caller MUST handle the failure
+     * gracefully (the spec calls for returning HTTP 200 with a `warning`
+     * field rather than failing the entire anonymise call).
      *
-     * @return void
+     * @param File                  $anonymisedFile The anonymised PDF file (must already be a PDF).
+     * @param int                   $sourceFileId   The Nextcloud file ID of the original (pre-anonymisation)
+     *                                              source — used to read the EntityRelation rows that
+     *                                              record the redactions performed against it.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map (e.g. "7" => "[PERSOON: 1]"); when set the summary renders the
+     *                                              SAME placeholder the document carries instead of re-deriving it.
      *
-     * @throws Exception On rendering or file-write failure
+     * @return File The same anonymised file, with the summary page appended.
      *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-3
+     * @throws RuntimeException When template rendering, PDF merging, or file write fails.
      */
-    public function appendSummaryToPdf(mixed $node): void
+    public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
-        $fileId   = (int) $node->getId();
-        $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
-        $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
+        $summaryBytes = $this->renderPerDocumentSummary(
+            anonymisedFile: $anonymisedFile,
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
+        );
 
-        $tempInput = tempnam(directory: '/tmp/mpdf', prefix: 'grondsl_in_');
+        $combinedBytes = $this->mergeSummaryIntoPdf(
+            originalPdfBytes: (string) $anonymisedFile->getContent(),
+            summaryPdfBytes: $summaryBytes
+        );
 
         try {
-            // Write current file content to a temp file for FPDI to read.
-            $sourceContent = $node->getContent();
-            file_put_contents(filename: $tempInput, data: $sourceContent);
-
-            $pdfContent = $this->buildAppendedPdf(
-                sourcePath: $tempInput,
-                summaryHtml: $html
+            $anonymisedFile->putContent($combinedBytes);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to write combined PDF to '.$anonymisedFile->getPath().': '.$e->getMessage(),
+                previous: $e
             );
+        }
 
-            // Atomically replace the file content in NC.
-            $node->putContent(data: $pdfContent);
-        } finally {
-            if (file_exists(filename: $tempInput) === true) {
-                unlink(filename: $tempInput);
-            }
-        }//end try
+        $this->logger->info(
+            'GrondslagenSummaryService: appended summary to anonymised PDF',
+            [
+                'fileId'       => $anonymisedFile->getId(),
+                'sourceFileId' => $sourceFileId,
+            ]
+        );
+
+        return $anonymisedFile;
 
     }//end appendSummaryToPdf()
 
     /**
-     * Render a summary as a separate PDF alongside the anonymised preserve-mode file.
+     * Produce a separate grondslagen-summary PDF beside the anonymised file.
      *
-     * Saves a file `<original-base>_anonymized_grondslagen.pdf` in the same folder
-     * as the anonymised file. Returns file metadata (fileId + filePath).
+     * Used when the operator chose `outputFormat: "preserve"` and the
+     * anonymised file is not a PDF — the summary cannot be appended in
+     * place, so we write it as `<anonymised-base>_grondslagen.pdf` in the
+     * same parent folder.
      *
-     * @param mixed $node Nextcloud file node of the anonymised preserve-mode file
+     * @param File                  $anonymisedFile The anonymised file (any format).
+     * @param int                   $sourceFileId   The pre-anonymisation source file ID.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map so the summary renders the SAME placeholder the document carries.
      *
-     * @return array{fileId: int|null, filePath: string|null} Saved file metadata
+     * @return File The newly-written summary PDF.
      *
-     * @throws Exception On rendering or file-write failure
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-4
+     * @throws RuntimeException When rendering or write fails.
      */
-    public function appendSummaryAsSeparatePdf(mixed $node): array
+    public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
-        $fileId   = (int) $node->getId();
-        $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
-        $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
-
-        $pdfContent = $this->pdfService->renderPdf(
-            templateContent: $html,
-            data: [],
-            options: ['pdfa' => true, 'title' => 'Grondslagen samenvatting']
+        $summaryBytes = $this->renderPerDocumentSummary(
+            anonymisedFile: $anonymisedFile,
+            sourceFileId: $sourceFileId,
+            placeholderMap: $placeholderMap
         );
 
-        // Derive summary filename from the anonymised file's name.
-        $originalName = $node->getName();
-        // phpcs:disable CustomSn.Functions.NamedParameters - pathinfo() has no named params in PHP 8.3
-        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
-        // phpcs:enable CustomSn.Functions.NamedParameters
-        $summaryName = $baseName.'_grondslagen.pdf';
+        $parent          = $anonymisedFile->getParent();
+        $baseName        = pathinfo($anonymisedFile->getName(), PATHINFO_FILENAME);
+        $summaryFileName = $baseName.self::SUMMARY_FILE_SUFFIX;
 
-        $parentFolder = $node->getParent();
-        $savedNode    = $this->saveFileToFolder(
-            folder: $parentFolder,
-            fileName: $summaryName,
-            content: $pdfContent
-        );
+        try {
+            if ($parent->nodeExists($summaryFileName) === true) {
+                $existing = $parent->get($summaryFileName);
+                if ($existing instanceof File) {
+                    $existing->putContent($summaryBytes);
+                    $this->logger->info(
+                        'GrondslagenSummaryService: refreshed beside-file summary',
+                        ['fileId' => $existing->getId(), 'path' => $existing->getPath()]
+                    );
+                    return $existing;
+                }
+            }
 
-        $savedFileId   = null;
-        $savedFilePath = null;
-        if ($savedNode !== null) {
-            $savedFileId   = $savedNode->getId();
-            $savedFilePath = $savedNode->getPath();
-        }
-
-        return [
-            'fileId'   => $savedFileId,
-            'filePath' => $savedFilePath,
-        ];
-
-    }//end appendSummaryAsSeparatePdf()
-
-    /**
-     * Render a grondslagen summary as a separate PDF beside the anonymised file.
-     *
-     * Used when the anonymised result is NOT a PDF (preserve-mode non-PDF files)
-     * so that the summary cannot be appended inline. The summary is saved as a
-     * sibling file in the same NC folder. Returns the saved NC file node so the
-     * caller can record its fileId and path.
-     *
-     * @param mixed $node         Nextcloud file node of the anonymised preserve-mode file.
-     * @param int   $sourceFileId Source file id (used to look up EntityRelation rows). Currently
-     *                            passed for future use; the entities are loaded from the anonymised
-     *                            node's id (same as appendSummaryAsSeparatePdf).
-     *
-     * @return \OCP\Files\Node The saved summary file node.
-     *
-     * @throws \RuntimeException When the file cannot be saved.
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-4
-     */
-    public function renderSummaryBesideFile(mixed $node, int $sourceFileId): \OCP\Files\Node
-    {
-        $fileId   = (int) $node->getId();
-        $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
-        $html     = $this->renderPerDocSummaryHtml(node: $node, entities: $entities);
-
-        $pdfContent = $this->pdfService->renderPdf(
-            templateContent: $html,
-            data: [],
-            options: ['pdfa' => true, 'title' => 'Grondslagen samenvatting']
-        );
-
-        $originalName = $node->getName();
-        // phpcs:disable CustomSn.Functions.NamedParameters - pathinfo() has no named params in PHP 8.3
-        $baseName = pathinfo($originalName, PATHINFO_FILENAME);
-        // phpcs:enable CustomSn.Functions.NamedParameters
-        $summaryName  = $baseName.'_grondslagen.pdf';
-        $parentFolder = $node->getParent();
-
-        $savedNode = $this->saveFileToFolder(
-            folder: $parentFolder,
-            fileName: $summaryName,
-            content: $pdfContent
-        );
-
-        if ($savedNode === null) {
-            throw new \RuntimeException(
-                'Failed to save grondslagen summary beside anonymised file: '.$node->getPath()
+            $newFile = $parent->newFile(path: $summaryFileName, content: $summaryBytes);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary write failed: '.$summaryFileName.' — '.$e->getMessage(),
+                previous: $e
             );
         }
 
-        return $savedNode;
+        $this->logger->info(
+            'GrondslagenSummaryService: wrote beside-file summary',
+            ['fileId' => $newFile->getId(), 'path' => $newFile->getPath()]
+        );
+
+        return $newFile;
 
     }//end renderSummaryBesideFile()
 
     /**
-     * Authorise the session user for the given dossier before rendering.
+     * Authorize the acting user to (re)generate a dossier's summary.
      *
      * Resolves the dossier through OpenRegister's ObjectService under the
-     * caller's view; OR's standard RBAC governs visibility. A dossier the
-     * caller may not read resolves to null and we deny by throwing. Throwing
-     * here is caught by the controller and surfaced as an HTTP error.
+     * session user's view, so OR's standard RBAC governs visibility: a dossier
+     * the caller may not read resolves to null and we deny by throwing. A
+     * successful resolution means the operator is permitted. The HTTP layer
+     * (`DossierController`) calls this before `renderDossierSummary` (which
+     * itself runs the render as a system operation with RBAC disabled).
      *
-     * @param string $dossierId Dossier UUID
+     * @param string $dossierId The OR dossier object UUID.
      *
      * @return void
      *
-     * @throws RuntimeException When the caller may not access the dossier
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+     * @throws RuntimeException 403 when the dossier is not readable / not found.
      */
     public function authorizeAccess(string $dossierId): void
     {
-        // Resolve the dossier through OpenRegister's ObjectService. The lookup
-        // runs under the session user's view, so OR's standard RBAC governs
-        // visibility: a dossier the caller may not read resolves to null (or
-        // raises), and we deny by throwing. A successful resolution means the
-        // operator is permitted to (re)generate the dossier summary.
         $objectService = $this->getObjectService();
-        $dossier       = $objectService->find(
+        if ($objectService === null) {
+            throw new RuntimeException('Access denied: OpenRegister ObjectService unavailable.', 403);
+        }
+
+        $dossier = $objectService->find(
             id: $dossierId,
-            register: self::REGISTER,
-            schema: self::DOSSIER_SCHEMA
+            register: 'dossier',
+            schema: 'dossier'
         );
 
         if ($dossier === null) {
@@ -311,119 +294,790 @@ class GrondslagenSummaryService
     }//end authorizeAccess()
 
     /**
-     * Render the per-dossier grondslagen summary PDF and write it to the dossier folder.
+     * Render the per-dossier summary PDF for one dossier.
      *
-     * Walks all files under the dossier's folder, loads anonymised entities for each,
-     * aggregates per-document and per-grondslag tables, renders the summary, and saves
-     * the result to `<dossier-folder>/anonymised/grondslagen.pdf` (fallback:
-     * `<dossier-folder>/grondslagen.pdf`). Updates `configuration.grondslagen.fileId`
-     * and `configuration.grondslagen.lastGeneratedAt` on the dossier object.
+     * Aggregates anonymisation data across every file under the dossier's
+     * folder. The resulting PDF is written to a deterministic location
+     * (per Wave 2's `anonymisation-output-folder-layout` when shipped:
+     * `<dossier-folder>/anonymised/grondslagen.pdf`; until then:
+     * `<dossier-folder>/grondslagen.pdf`).
      *
-     * An empty dossier (no anonymised files) produces a valid near-empty PDF.
+     * On success the method also updates the dossier object's
+     * `configuration.grondslagen.{fileId, lastGeneratedAt}` so the dossier
+     * UI can badge the summary's freshness.
      *
-     * @param string $dossierUuid Dossier UUID
+     * @param string $dossierUuid The OR UUID of the dossier object.
      *
-     * @return \OCA\OpenRegister\Db\ObjectEntity|null Saved dossier object
+     * @return File The generated summary PDF.
      *
-     * @throws Exception On fatal render failure (dossier-not-found, save error)
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+     * @throws RuntimeException When the dossier can't be loaded, the folder
+     *                          isn't accessible, or rendering fails.
      */
-    public function renderDossierSummary(string $dossierUuid): mixed
+    public function renderDossierSummary(string $dossierUuid): File
     {
-        $objectService = $this->getObjectService();
-        $dossier       = $objectService->find(
-            id: $dossierUuid,
-            register: self::REGISTER,
-            schema: self::DOSSIER_SCHEMA
-        );
+        $dossier = $this->loadDossierContext(dossierUuid: $dossierUuid);
 
-        if ($dossier === null) {
-            throw new RuntimeException('Dossier not found: '.$dossierUuid, 404);
+        $folder = $this->resolveDossierFolder(folderRef: ($dossier['folderRef'] ?? null));
+
+        // Recompute the dossier's scope-local placeholder map up-front so every
+        // file's rows render the SAME scope-local number the documents carry
+        // (e.g. [DATUM: 6]) instead of the global entity_id fallback (the
+        // 1600+ ids). Reuses OpenRegister's deterministic dossier ranking.
+        $placeholderMap = $this->computeDossierPlaceholderMap(folder: $folder);
+
+        $perFile = $this->walkDossierFiles(folder: $folder, placeholderMap: $placeholderMap);
+
+        // The loadAnonymisedEntitiesForFile call already resolves base labels per
+        // file. aggregateForDossier just unfolds those rows across files
+        // and sorts. No second label-resolution pass needed here.
+        $aggregated = $this->aggregateForDossier(perFile: $perFile, labelMap: []);
+
+        // Distinct grondslagen assigned across every file in the dossier, with
+        // their Woo Art. 5 toelichting — rendered as a legend under the table.
+        $allEntities = [];
+        foreach ($perFile as $fileRow) {
+            foreach (($fileRow['entities'] ?? []) as $entity) {
+                $allEntities[] = $entity;
+            }
         }
 
-        $dossierData   = $dossier->getObject();
-        $dossierFolder = $dossier->getFolder();
-        $perDocData    = $this->collectDossierEntityData(dossierFolder: $dossierFolder);
-        $perGrondslag  = $this->aggregatePerGrondslag(perDocData: $perDocData);
-        $generatedAt   = gmdate('Y-m-d\TH:i:s\Z');
-
-        $templateContent = $this->getTemplateContent(filename: 'summary_per_dossier.twig');
-        $html            = $this->pdfService->renderPdf(
-            templateContent: $templateContent,
-            data: [
-                'dossierName'        => $dossierData['name'] ?? $dossierData['title'] ?? '',
-                'dossierDescription' => $dossierData['description'] ?? '',
-                'checkedOn'          => $dossierData['checkedOn'] ?? null,
-                'generatedAt'        => $generatedAt,
-                'documents'          => $perDocData,
-                'perGrondslag'       => $perGrondslag,
-                'totalEntities'      => array_sum(array_column(array: $perDocData, column_key: 'entityCount')),
-                'totalBases'         => count($perGrondslag),
+        $data = [
+            'dossier'     => [
+                'name'        => (string) ($dossier['name'] ?? ''),
+                'description' => (string) ($dossier['description'] ?? ''),
+                'checkedOn'   => (string) ($dossier['checkedOn'] ?? ''),
             ],
-            options: ['pdfa' => true, 'title' => 'Grondslagen overzicht']
-        );
+            'generatedAt' => date('c'),
+            'rows'        => $aggregated['rows'],
+            'totals'      => $aggregated['totals'],
+            'bases'       => $this->collectAssignedBases(entities: $allEntities),
+        ];
 
-        // Write summary PDF to dossier folder.
-        $savedNode   = $this->writeDossierSummaryFile(
-            dossierFolder: $dossierFolder,
-            content: $html
-        );
-        $savedFileId = null;
-        if ($savedNode !== null) {
-            $savedFileId = $savedNode->getId();
+        $template = $this->loadTemplate(name: self::TEMPLATE_PER_DOSSIER);
+
+        try {
+            $pdfBytes = $this->pdfService->renderPdf(
+                templateContent: $template,
+                data: $data,
+                options: ['pdfa' => true, 'title' => 'Grondslagen-rapportage']
+            );
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: per-dossier render failed for '.$dossierUuid.': '.$e->getMessage(),
+                previous: $e
+            );
         }
 
-        // Update dossier configuration.grondslagen fields.
-        $configuration = $dossierData['configuration'] ?? [];
-        if (is_array($configuration) === false) {
-            $configuration = [];
-        }
+        $summaryFile = $this->saveDossierSummary(folder: $folder, pdfBytes: $pdfBytes);
 
-        if (isset($configuration['grondslagen']) === false || is_array($configuration['grondslagen']) === false) {
-            $configuration['grondslagen'] = [];
-        }
-
-        $configuration['grondslagen']['fileId']          = $savedFileId;
-        $configuration['grondslagen']['lastGeneratedAt'] = $generatedAt;
-
-        $dossierData['configuration'] = $configuration;
-
-        return $objectService->saveObject(
-            object: $dossierData,
-            register: self::REGISTER,
-            schema: self::DOSSIER_SCHEMA
+        $this->updateDossierConfiguration(
+            dossierUuid: $dossierUuid,
+            summaryFileId: $summaryFile->getId()
         );
+
+        $this->logger->info(
+            'GrondslagenSummaryService: rendered per-dossier summary',
+            [
+                'dossierUuid'   => $dossierUuid,
+                'summaryFileId' => $summaryFile->getId(),
+                'fileCount'     => count($perFile),
+                'totalEntities' => $aggregated['totals']['entityCount'],
+            ]
+        );
+
+        return $summaryFile;
 
     }//end renderDossierSummary()
 
     /**
-     * Resolve an array of base UUIDs to human-readable names.
+     * Load the minimum dossier context the renderer needs.
      *
-     * Queries DocuDesk's `dossier` register's `base` schema via ObjectService.
-     * Unresolvable UUIDs produce a labelled placeholder. Null input produces a
-     * "no grondslag recorded" placeholder.
+     * @param string $dossierUuid The OR object UUID.
      *
-     * @param array<string>|null $baseUuids Array of base UUIDs, or null
+     * @return array<string, mixed> `{name, description, checkedOn, folderRef, configuration}`.
      *
-     * @return array<string> Resolved base names or placeholder strings
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
+     * @throws RuntimeException When the dossier cannot be resolved.
      */
-    public function resolveBaseLabels(?array $baseUuids): array
+    private function loadDossierContext(string $dossierUuid): array
     {
-        if ($baseUuids === null) {
-            return ['⟨geen grondslag vastgelegd⟩'];
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            throw new RuntimeException('Grondslagen summary: OpenRegister ObjectService unavailable.');
         }
 
-        if (empty($baseUuids) === true) {
-            return ['⟨geen grondslag vastgelegd⟩'];
+        try {
+            $object = $objectService->find(
+                id: $dossierUuid,
+                register: 'dossier',
+                schema: 'dossier',
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to load dossier '.$dossierUuid.': '.$e->getMessage(),
+                previous: $e
+            );
         }
 
+        if ($object === null) {
+            throw new RuntimeException('Grondslagen summary: dossier not found: '.$dossierUuid);
+        }
+
+        $payload = (array) $object;
+        if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+            $payload = $object->getObject();
+        }
+
+        // The `@self.folder` reference is stored on the ObjectEntity's
+        // `folder` column, NOT inside the schema-typed payload returned by
+        // `getObject()`. OR's renderer reconstructs the `@self` block from
+        // the entity's columns when serialising for the API, but in-process
+        // callers must read the columns directly. Read the entity-level
+        // getter first; fall back to a payload-embedded `@self.folder` for
+        // future-compat in case the renderer ever inlines it.
+        //
+        // NOTE: `getFolder` is a magic method on Nextcloud's `Entity` base
+        // class (auto-generated via `__call`, declared only as `@method`),
+        // so `method_exists` returns false even when the call works. Probe
+        // via `ObjectEntity` instanceof, then invoke directly.
+        // OpenRegister's ObjectEntity is the expected runtime type, but
+        // Psalm doesn't see OR's lib (it's an optional dep). Probe by
+        // class_exists + instanceof + a runtime-safe `getFolder()` call.
+        $folderRef         = null;
+        $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+        if (is_object($object) === true
+            && class_exists($objectEntityClass) === true
+            && $object instanceof $objectEntityClass
+        ) {
+            try {
+                $folderRef = $object->getFolder();
+            } catch (\Throwable $e) {
+                $folderRef = null;
+            }
+        }
+
+        if ($folderRef === null || $folderRef === '') {
+            $self      = ($payload['@self'] ?? []);
+            $folderRef = ($self['folder'] ?? null);
+        }
+
+        return [
+            'name'          => (string) ($payload['name'] ?? ''),
+            'description'   => (string) ($payload['description'] ?? ''),
+            'checkedOn'     => (string) ($payload['checkedOn'] ?? ''),
+            'folderRef'     => $folderRef,
+            'configuration' => ($payload['configuration'] ?? []),
+        ];
+
+    }//end loadDossierContext()
+
+    /**
+     * Resolve the dossier's `@self.folder` reference to a Nextcloud Folder node.
+     *
+     * @param mixed $folderRef The raw reference value — typically a file-node id (int/string).
+     *
+     * @return Folder The dossier's folder.
+     *
+     * @throws RuntimeException When the reference cannot be resolved.
+     */
+    private function resolveDossierFolder(mixed $folderRef): Folder
+    {
+        if ($folderRef === null || $folderRef === '') {
+            throw new RuntimeException('Grondslagen summary: dossier has no @self.folder reference.');
+        }
+
+        try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                throw new RuntimeException('Grondslagen summary: no session user to resolve folder.');
+            }
+
+            $userFolder = $this->rootFolder->getUserFolder($user->getUID());
+            $nodes      = $userFolder->getById((int) $folderRef);
+            $node       = ($nodes[0] ?? null);
+            if ($node === null) {
+                throw new RuntimeException(
+                    'Grondslagen summary: folder node id '.((string) $folderRef).' not found for user '.$user->getUID()
+                );
+            }
+        } catch (NotFoundException $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: dossier folder not found ('.((string) $folderRef).'): '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        if (($node instanceof Folder) === false) {
+            throw new RuntimeException(
+                'Grondslagen summary: dossier @self.folder ('.((string) $folderRef).') is not a folder node.'
+            );
+        }
+
+        return $node;
+
+    }//end resolveDossierFolder()
+
+    /**
+     * Walk every file under the dossier folder and collect its anonymised entities.
+     *
+     * Folders found inside the dossier folder are recursed; the summary
+     * subfolder produced by Wave 2's `anonymisation-output-folder-layout`
+     * (`anonymised/`) is skipped — it contains the redacted *outputs*,
+     * whereas the EntityRelation rows are keyed by the source file ids.
+     *
+     * @param Folder                $folder         The dossier folder.
+     * @param array<string, string> $placeholderMap Dossier scope-local placeholder map
+     *                                              (global entity id → "[DATUM: 6]")
+     *                                              so each file's rows render the
+     *                                              dossier number, not the global id.
+     *
+     * @return array<int, array{fileId: int, filename: string, entities: array<int, array<string, mixed>>}>
+     */
+    private function walkDossierFiles(Folder $folder, array $placeholderMap=[]): array
+    {
+        $rows = [];
+        foreach ($folder->getDirectoryListing() as $node) {
+            if ($node instanceof Folder) {
+                if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
+                    continue;
+                }
+
+                $rows = array_merge($rows, $this->walkDossierFiles(folder: $node, placeholderMap: $placeholderMap));
+                continue;
+            }
+
+            if (($node instanceof File) === false) {
+                continue;
+            }
+
+            $entities = $this->loadAnonymisedEntitiesForFile(fileId: $node->getId(), placeholderMap: $placeholderMap);
+            if (count($entities) === 0) {
+                continue;
+            }
+
+            $rows[] = [
+                'fileId'   => $node->getId(),
+                'filename' => $node->getName(),
+                'entities' => $entities,
+            ];
+        }//end foreach
+
+        return $rows;
+
+    }//end walkDossierFiles()
+
+    /**
+     * Recompute the dossier's scope-local placeholder map on demand.
+     *
+     * The per-dossier report is regenerated without a live anonymise run, so
+     * there is no placeholder map from OpenRegister to reuse — without one,
+     * each entity falls back to its GLOBAL entity_id (the 1600+ numbers).
+     * This reproduces OpenRegister's deterministic dossier numbering for the
+     * folder's files (rank distinct entity_ids by first appearance under the
+     * total order file_id, position_start, entity_id) so the report shows the
+     * SAME scope-local number the documents carry, and combines it with the
+     * localized TYPE label → `e.id → "[DATUM: 6]"`.
+     *
+     * Reuses OpenRegister's own `PlaceholderIdTranslator::rankByFirstAppearance`
+     * (so the ranking can never drift from the anonymise path) plus the
+     * EntityRelationMapper. Returns an empty map when OpenRegister is absent or
+     * too old; callers then fall back to the global-id behaviour.
+     *
+     * @param Folder $folder The dossier folder.
+     *
+     * @return array<string, string> Map of global entity id → "[<localizedTYPE>: <dossier number>]".
+     */
+    private function computeDossierPlaceholderMap(Folder $folder): array
+    {
+        $mapper = $this->getEntityRelationMapper();
+        if ($mapper === null
+            || method_exists($mapper, 'findEntityIdsByValueForFiles') === false
+            || method_exists($mapper, 'findEntityIdsByValueForFile') === false
+            || class_exists(\OCA\OpenRegister\Service\File\PlaceholderIdTranslator::class) === false
+        ) {
+            return [];
+        }
+
+        $fileIds = $this->collectFileIds(folder: $folder);
+        if ($fileIds === []) {
+            return [];
+        }
+
+        try {
+            $rows = $mapper->findEntityIdsByValueForFiles(fileIds: $fileIds);
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: dossier placeholder recompute failed; falling back to global ids',
+                ['error' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        // Deterministic dossier ranking — identical to the anonymise path.
+        $ranks = \OCA\OpenRegister\Service\File\PlaceholderIdTranslator::rankByFirstAppearance(rows: $rows);
+        if ($ranks === []) {
+            return [];
+        }
+
+        // Resolve each entity id's TYPE (for the localized label) from the
+        // per-file value→{id,type} maps.
+        $types = [];
+        foreach ($fileIds as $fileId) {
+            try {
+                foreach ($mapper->findEntityIdsByValueForFile($fileId) as $entry) {
+                    $types[(string) ($entry['id'] ?? '')] = (string) ($entry['type'] ?? '');
+                }
+            } catch (Exception $e) {
+                continue;
+            }
+        }
+
+        $map = [];
+        foreach ($ranks as $entityId => $rank) {
+            $type = ($types[(string) $entityId] ?? '');
+            $map[(string) $entityId] = '['.$this->localizeEntityType(entityType: $type).': '.$rank.']';
+        }
+
+        return $map;
+
+    }//end computeDossierPlaceholderMap()
+
+    /**
+     * Collect the descendant file ids of a dossier folder (recursive), skipping
+     * the redacted-output subfolders — mirrors {@see walkDossierFiles} so the
+     * recompute ranks over the same source-file set the rows come from.
+     *
+     * @param Folder $folder The dossier folder.
+     *
+     * @return array<int, int> Distinct descendant source file ids.
+     */
+    private function collectFileIds(Folder $folder): array
+    {
+        $ids = [];
+        try {
+            foreach ($folder->getDirectoryListing() as $node) {
+                if ($node instanceof Folder) {
+                    if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
+                        continue;
+                    }
+
+                    foreach ($this->collectFileIds(folder: $node) as $nestedId) {
+                        $ids[] = $nestedId;
+                    }
+
+                    continue;
+                }
+
+                if (($node instanceof File) === true) {
+                    $ids[] = (int) $node->getId();
+                }
+            }
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: dossier file enumeration failed',
+                ['error' => $e->getMessage()]
+            );
+        }//end try
+
+        return array_values(array_unique($ids));
+
+    }//end collectFileIds()
+
+    /**
+     * Build the row set the per-dossier template renders.
+     *
+     * Produces ONE row per distinct entity (`entityType:entityId`). Because the
+     * dossier number is consistent across the dossier's files, the same
+     * person/date appears once — its occurrence `count` is summed, the files it
+     * appears in are collected into a comma-joined `filename` list, and its
+     * grondslagen are unioned. Rows are sorted by TYPE then NUMERIC id ascending
+     * so the type blocks read 1,2,…,10,11.
+     *
+     * Per-file entities arrive pre-aggregated from
+     * {@see loadAnonymisedEntitiesForFile}: each entry already has
+     * `placeholder`, `count`, and `basesText` (Dutch labels joined).
+     *
+     * @param array<int, mixed>     $perFile  Per-file rows from {@see walkDossierFiles}
+     *                                        — each entry shaped as `{fileId, filename,
+     *                                        entities[]}` where `entities[]` is the
+     *                                        per-entity-aggregated output of
+     *                                        loadAnonymisedEntitiesForFile.
+     * @param array<string, string> $labelMap Map of base-ref → human-readable label
+     *                                        (unused here — labels are already
+     *                                        resolved upstream; kept for signature
+     *                                        compat).
+     *
+     * @return array<string, mixed> Shape:
+     *                              `{ rows: array<int, {placeholder, filename,
+     *                                 fileCount, count, baseLabels, basesText,
+     *                                 entityType, entityId}>,
+     *                                totals: { documentCount, entityCount,
+     *                                  distinctEntityCount, distinctBasesCount } }`.
+     */
+    private function aggregateForDossier(array $perFile, array $labelMap): array
+    {
+        unset($labelMap);
+
+        $grouped           = [];
+        $totalOccurrences  = 0;
+        $distinctBasisRefs = [];
+
+        foreach ($perFile as $fileRow) {
+            $filename = (string) ($fileRow['filename'] ?? '');
+
+            foreach (($fileRow['entities'] ?? []) as $entity) {
+                $count      = (int) ($entity['count'] ?? 0);
+                $baseLabels = ($entity['baseLabels'] ?? []);
+                if (is_array($baseLabels) === false) {
+                    $baseLabels = [];
+                }
+
+                $totalOccurrences += $count;
+
+                foreach (($entity['bases'] ?? []) as $ref) {
+                    $distinctBasisRefs[(string) $ref] = true;
+                }
+
+                // Dedup to ONE row per distinct entity (entityType:entityId).
+                // The dossier number is consistent across files, so the same
+                // person/date appears once — aggregating its occurrence count,
+                // the files it appears in, and the union of its grondslagen —
+                // instead of repeating the same placeholder once per file.
+                $entityKey = (string) ($entity['entityType'] ?? '').':'.(string) ($entity['entityId'] ?? '');
+                if (isset($grouped[$entityKey]) === false) {
+                    $grouped[$entityKey] = [
+                        'placeholder' => (string) ($entity['placeholder'] ?? ''),
+                        'entityType'  => (string) ($entity['entityType'] ?? ''),
+                        'entityId'    => (int) ($entity['entityId'] ?? 0),
+                        'count'       => 0,
+                        'filenames'   => [],
+                        'baseLabels'  => [],
+                    ];
+                }
+
+                $grouped[$entityKey]['count'] += $count;
+                if ($filename !== '') {
+                    $grouped[$entityKey]['filenames'][$filename] = true;
+                }
+
+                foreach ($baseLabels as $label) {
+                    $grouped[$entityKey]['baseLabels'][(string) $label] = true;
+                }
+            }//end foreach
+        }//end foreach
+
+        $rows = [];
+        foreach ($grouped as $group) {
+            $files = array_keys($group['filenames']);
+            sort($files);
+            $labels = array_keys($group['baseLabels']);
+
+            $rows[] = [
+                'placeholder' => $group['placeholder'],
+                'count'       => $group['count'],
+                // Joined distinct filenames — the entity may span several files
+                // in the dossier; the twig renders this list in the "Bestanden"
+                // column.
+                'filename'    => implode(', ', $files),
+                'fileCount'   => count($files),
+                'baseLabels'  => $labels,
+                'basesText'   => implode(', ', $labels),
+                'entityType'  => $group['entityType'],
+                'entityId'    => $group['entityId'],
+            ];
+        }
+
+        usort(
+            $rows,
+            static function (array $a, array $b): int {
+                // By TYPE then NUMERIC id ascending (1,2,…,10,11), then files.
+                $cmp = (self::placeholderSortKey(placeholder: $a['placeholder']) <=> self::placeholderSortKey(placeholder: $b['placeholder']));
+                if ($cmp !== 0) {
+                    return $cmp;
+                }
+
+                return strcmp($a['filename'], $b['filename']);
+            }
+        );
+
+        return [
+            'rows'   => $rows,
+            'totals' => [
+                'documentCount'       => count($perFile),
+                'entityCount'         => $totalOccurrences,
+                'distinctEntityCount' => count($grouped),
+                'distinctBasesCount'  => count($distinctBasisRefs),
+            ],
+        ];
+
+    }//end aggregateForDossier()
+
+    /**
+     * Save the rendered per-dossier summary PDF.
+     *
+     * Destination convention: `<dossier-folder>/grondslagen.pdf`. Wave 2
+     * (`anonymisation-output-folder-layout`) will introduce a
+     * `<dossier-folder>/anonymised/` subfolder; this method will follow
+     * that convention once the helper from Wave 2 lands. For v1, we use
+     * the flat path inside the dossier folder.
+     *
+     * @param Folder $folder   The dossier folder.
+     * @param string $pdfBytes The freshly-rendered PDF bytes.
+     *
+     * @return File The newly-written / refreshed summary file.
+     *
+     * @throws RuntimeException On write failure.
+     */
+    private function saveDossierSummary(Folder $folder, string $pdfBytes): File
+    {
+        $name = 'grondslagen.pdf';
+
+        try {
+            if ($folder->nodeExists($name) === true) {
+                $existing = $folder->get($name);
+                if ($existing instanceof File) {
+                    $existing->putContent($pdfBytes);
+                    return $existing;
+                }
+            }
+
+            $newFile = $folder->newFile(path: $name, content: $pdfBytes);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: failed to write '.$name.' to dossier folder: '.$e->getMessage(),
+                previous: $e
+            );
+        }
+
+        return $newFile;
+
+    }//end saveDossierSummary()
+
+    /**
+     * Update the dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}`.
+     *
+     * Failure is logged but does not roll back the rendered file — the PDF
+     * is on disk and the operator can find it; the metadata refresh is
+     * convenience for the dossier UI's freshness-badge.
+     *
+     * @param string $dossierUuid   The OR dossier object UUID.
+     * @param int    $summaryFileId The newly-written summary file's NC node id.
+     *
+     * @return void
+     */
+    private function updateDossierConfiguration(string $dossierUuid, int $summaryFileId): void
+    {
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: cannot update dossier configuration — ObjectService unavailable',
+                ['dossierUuid' => $dossierUuid]
+            );
+            return;
+        }
+
+        try {
+            $object = $objectService->find(
+                id: $dossierUuid,
+                register: 'dossier',
+                schema: 'dossier',
+                _rbac: false,
+                _multitenancy: false
+            );
+            if ($object === null) {
+                return;
+            }
+
+            $payload = (array) $object;
+            if (is_object($object) === true && method_exists($object, 'getObject') === true) {
+                $payload = $object->getObject();
+            }
+
+            $configuration = [];
+            if (is_array(($payload['configuration'] ?? null)) === true) {
+                $configuration = $payload['configuration'];
+            }
+
+            $grondslagen = [];
+            if (is_array(($configuration['grondslagen'] ?? null)) === true) {
+                $grondslagen = $configuration['grondslagen'];
+            }
+
+            $grondslagen['fileId']          = $summaryFileId;
+            $grondslagen['lastGeneratedAt'] = date('c');
+            $configuration['grondslagen']   = $grondslagen;
+            $payload['configuration']       = $configuration;
+
+            // Preserve the dossier's `@self.folder` across this save.
+            // `getObject()` returns the schema-typed payload only — the
+            // `folder` column lives on the ObjectEntity itself. Without
+            // explicit re-injection, OR's save path sees no folder ref
+            // on the incoming payload, hands the object to
+            // `ensureObjectFolderExists`, and that helper auto-creates
+            // a brand-new folder under the register's storage tree —
+            // overwriting `_folder` with the auto-folder's id. Operators
+            // see their original dossier folder mysteriously replaced
+            // by a generated one in OR's `Open Registers` folder.
+            //
+            // Read the existing folder ref off the entity (the magic
+            // `getFolder()` method on NC's `Entity` base class) and
+            // inject it back into the payload's `@self.folder`. OR's
+            // `setSelfMetadata` reads `@self.folder` and re-applies it
+            // via `setFolder()` on save (per the
+            // `validate-self-folder-access` change), so the original
+            // folder binding is preserved.
+            $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+            if (is_object($object) === true
+                && class_exists($objectEntityClass) === true
+                && $object instanceof $objectEntityClass
+            ) {
+                try {
+                    $existingFolder = $object->getFolder();
+                    if (is_string($existingFolder) === true && $existingFolder !== '') {
+                        $self = ($payload['@self'] ?? []);
+                        if (is_array($self) === false) {
+                            $self = [];
+                        }
+
+                        $self['folder']   = $existingFolder;
+                        $payload['@self'] = $self;
+                    }
+                } catch (\Throwable $e) {
+                    // Folder probe failure must not abort the
+                    // configuration update — log and proceed with the
+                    // save (the user-visible PDF is already on disk).
+                    $this->logger->warning(
+                        'GrondslagenSummaryService: could not read existing folder ref before save',
+                        ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
+                    );
+                }
+            }//end if
+
+            $objectService->saveObject(
+                object: $payload,
+                register: 'dossier',
+                schema: 'dossier',
+                uuid: $dossierUuid,
+                _rbac: false,
+                _multitenancy: false
+            );
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: failed to update dossier configuration.grondslagen',
+                ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
+            );
+        }//end try
+
+    }//end updateDossierConfiguration()
+
+    /**
+     * Resolve a list of `base` references (slugs or UUIDs) to human-readable labels.
+     *
+     * Looks each reference up in the dossier register's `base` schema and
+     * returns a map `{ref => name}`. Unresolved references (rule deleted,
+     * malformed reference, etc.) get a placeholder of the form
+     * `⟨grondslag verwijderd: <short-ref>⟩` so the rendered report flags
+     * the data gap rather than silently dropping the row.
+     *
+     * Wave 1.1's `add-dossier-schema` ships `bases` as plain slug strings
+     * (per the v1 trade-off documented in its design.md §D1), so this
+     * method primarily resolves by slug; UUID fallback is supported for
+     * forward-compatibility with a future `$ref` enforcement story.
+     *
+     * @param array<int, string> $baseRefs Slugs or UUIDs of base records.
+     *
+     * @return array<string, string> Map from each reference to its display name.
+     */
+    private function resolveBaseLabels(array $baseRefs): array
+    {
         $labels = [];
-        foreach ($baseUuids as $uuid) {
-            $ref          = (string) $uuid;
-            $labels[$ref] = $this->resolveSingleBase(uuid: $ref);
+        if (count($baseRefs) === 0) {
+            return $labels;
+        }
+
+        $objectService = $this->getObjectService();
+        if ($objectService === null) {
+            // ObjectService unavailable — best-effort: show the raw ref so
+            // the operator at least sees the slug, not a dangling
+            // placeholder. Better than masking the failure entirely.
+            foreach ($baseRefs as $ref) {
+                $labels[(string) $ref] = ['name' => (string) $ref, 'description' => ''];
+            }
+
+            return $labels;
+        }
+
+        // Pull every `base` object in one shot — the canonical set is six
+        // Woo Art. 5 grondslagen plus any tenant-added entries; very small
+        // cardinality. Build slug→name AND uuid→name lookups so the
+        // resolver works regardless of which reference shape the `bases`
+        // column carries (Wave 1.1's v1 trade-off stores slugs, but a
+        // future shape might switch to UUIDs).
+        //
+        // searchObjectsBySlug is the path that resolves slug filters to
+        // numeric IDs and reaches the magic-mapped `dossier` register;
+        // findAll with slug filters returns nothing because the magic
+        // tables aren't visible to the generic getHandler path.
+        $slugToName = [];
+        $uuidToName = [];
+        $slugToDesc = [];
+        $uuidToDesc = [];
+        try {
+            $result = $objectService->searchObjectsBySlug(
+                registerSlug: 'dossier',
+                schemaSlug: 'base',
+                filters: [],
+                _rbac: false,
+                _multitenancy: false
+            );
+
+            $bases = $this->extractObjects(result: $result);
+            foreach ($bases as $base) {
+                $self = ($base['@self'] ?? []);
+                $name = (string) ($base['name'] ?? '');
+                if ($name === '') {
+                    continue;
+                }
+
+                // `description` is the Woo Art. 5 toelichting (schema `base`,
+                // property "Omschrijving") — the explanatory text shown under
+                // the summary table.
+                $desc = (string) ($base['description'] ?? '');
+
+                $slug = '';
+                $uuid = '';
+                if (is_array($self) === true) {
+                    $slug = (string) ($self['slug'] ?? '');
+                    $uuid = (string) ($self['id'] ?? ($self['uuid'] ?? ''));
+                }
+
+                if ($slug !== '') {
+                    $slugToName[$slug] = $name;
+                    $slugToDesc[$slug] = $desc;
+                }
+
+                if ($uuid !== '') {
+                    $uuidToName[$uuid] = $name;
+                    $uuidToDesc[$uuid] = $desc;
+                }
+            }//end foreach
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: failed to load `base` objects for label resolution',
+                ['error' => $e->getMessage()]
+            );
+        }//end try
+
+        foreach ($baseRefs as $ref) {
+            $refString = (string) $ref;
+            if (isset($slugToName[$refString]) === true) {
+                $labels[$refString] = ['name' => $slugToName[$refString], 'description' => ($slugToDesc[$refString] ?? '')];
+            } else if (isset($uuidToName[$refString]) === true) {
+                $labels[$refString] = ['name' => $uuidToName[$refString], 'description' => ($uuidToDesc[$refString] ?? '')];
+            } else {
+                $labels[$refString] = ['name' => $refString, 'description' => ''];
+            }
         }
 
         return $labels;
@@ -431,645 +1085,479 @@ class GrondslagenSummaryService
     }//end resolveBaseLabels()
 
     /**
-     * Load anonymised entities for a single NC file.
+     * Collect the distinct grondslagen assigned across the given entities,
+     * each with its name + description (the Woo Art. 5 toelichting), for the
+     * explanatory legend rendered under the summary table.
      *
-     * Queries OR's EntityRelationMapper for the file, filters rows where
-     * `anonymized = true`, and returns a structured array for template use.
-     * Bases are read defensively (entity-relation-grondslagen may not have landed).
+     * @param array<int, array{bases?: array<int, string>}> $entities Shaped entities (each carrying a `bases` ref list).
      *
-     * @param int $fileId Nextcloud file ID
-     *
-     * @return array<int, array{entityType: string, anonymizedValue: string, bases: array<string>|null, count: int}> Entity data
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
+     * @return array<int, array{name: string, description: string}> Distinct bases, sorted by name.
      */
-    public function loadAnonymisedEntitiesForFile(int $fileId): array
+    private function collectAssignedBases(array $entities): array
     {
-        $mapper = $this->getEntityRelationMapper();
-
-        // FindEntitiesForFile joins entity table for type + value data.
-        $joined = $mapper->findEntitiesForFile(fileId: $fileId);
-
-        // FindByFileId returns EntityRelation objects with anonymized + bases fields.
-        $relations = $mapper->findByFileId(fileId: $fileId);
-
-        // Index EntityRelation objects by entity_id; keep last (highest position).
-        // Also count the anonymised relations per entity_id — one relation row
-        // per redacted position, so this is "how many times the entity was
-        // replaced" in the document.
-        $anonymizedByEntityId = [];
-        $countByEntityId      = [];
-        foreach ($relations as $rel) {
-            if ($rel->getAnonymized() !== true) {
-                continue;
+        $refs = [];
+        foreach ($entities as $entity) {
+            foreach (($entity['bases'] ?? []) as $ref) {
+                $refs[(string) $ref] = true;
             }
-
-            $eid = (int) $rel->getEntityId();
-            $anonymizedByEntityId[$eid] = $rel;
-            $countByEntityId[$eid]      = (($countByEntityId[$eid] ?? 0) + 1);
         }
 
-        // Merge join data + anonymized flag; deduplicate by entity_id.
-        $seenEntityIds = [];
-        $result        = [];
+        if (count($refs) === 0) {
+            return [];
+        }
 
-        foreach ($joined as $row) {
-            $entityId = (int) ($row['entity_id'] ?? 0);
-            if ($entityId === 0 || isset($anonymizedByEntityId[$entityId]) === false) {
+        $detail = $this->resolveBaseLabels(baseRefs: array_keys($refs));
+
+        // Dedup by name (distinct refs may resolve to the same grondslag) and
+        // drop nameless entries; keep the first non-empty description.
+        $byName = [];
+        foreach ($detail as $entry) {
+            $name = (string) ($entry['name'] ?? '');
+            if ($name === '') {
                 continue;
             }
 
-            if (isset($seenEntityIds[$entityId]) === true) {
-                continue;
+            if (isset($byName[$name]) === false || $byName[$name] === '') {
+                $byName[$name] = (string) ($entry['description'] ?? '');
+            }
+        }
+
+        $bases = [];
+        foreach ($byName as $name => $description) {
+            $bases[] = ['name' => $name, 'description' => $description];
+        }
+
+        usort($bases, static fn(array $a, array $b): int => strcmp($a['name'], $b['name']));
+
+        return $bases;
+
+    }//end collectAssignedBases()
+
+    /**
+     * Coerce an ObjectService findAll result into a plain array of object payloads.
+     *
+     * `findAll` may return ObjectEntity instances, plain associative
+     * arrays, or a `{results: [...]}` envelope depending on the path that
+     * served it. Normalise to a flat array of `array<string, mixed>` so
+     * callers can iterate uniformly.
+     *
+     * @param mixed $result The raw findAll return value.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function extractObjects(mixed $result): array
+    {
+        if (is_array($result) === true && isset($result['results']) === true && is_array($result['results']) === true) {
+            $result = $result['results'];
+        }
+
+        $out = [];
+        if (is_iterable($result) === false) {
+            return $out;
+        }
+
+        $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
+        foreach ($result as $item) {
+            // ObjectEntity::jsonSerialize() returns a flat payload that
+            // includes a synthetic `@self` block (id, slug, register,
+            // schema, …) reconstructed from the entity's columns. That's
+            // the shape resolveBaseLabels needs, so prefer it when the
+            // item is a real ObjectEntity.
+            if (is_object($item) === true
+                && class_exists($objectEntityClass) === true
+                && $item instanceof $objectEntityClass
+            ) {
+                try {
+                    $payload = $item->jsonSerialize();
+                    if (is_array($payload) === true) {
+                        $out[] = $payload;
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    // Fall through to other branches.
+                }
             }
 
-            $seenEntityIds[$entityId] = true;
-            $relation = $anonymizedByEntityId[$entityId];
-            $bases    = $this->getBasesFromRelation(relation: $relation);
-
-            // PII-safe: the summary travels with the anonymised artifact, so it
-            // MUST NOT carry the original entity value ($row['entity_value']).
-            $result[] = [
-                'entityType'      => (string) ($row['entity_type'] ?? ''),
-                'anonymizedValue' => (string) ($relation->getAnonymizedValue() ?? ''),
-                'bases'           => $bases,
-                'count'           => ($countByEntityId[$entityId] ?? 1),
-            ];
+            if (is_array($item) === true) {
+                $out[] = $item;
+            }
         }//end foreach
 
-        return $result;
+        return $out;
 
-    }//end loadAnonymisedEntitiesForFile()
+    }//end extractObjects()
 
     /**
-     * Read bases from an EntityRelation object defensively.
+     * Load the EntityRelation rows that this service cares about for a file.
      *
-     * Returns the bases array when entity-relation-grondslagen has landed
-     * (getBases() method exists), null otherwise (no grondslag recorded).
+     * Filters to relations where `anonymized = true` (the report is "what
+     * was redacted under which grondslag" — non-anonymised relations are
+     * out of scope) and attaches the resolved base-label list onto each
+     * row for the template to render.
      *
-     * @param \OCA\OpenRegister\Db\EntityRelation $relation The entity relation
+     * @param int                   $fileId         The Nextcloud file ID.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted
+     *                                              placeholder map; when set, each row uses that
+     *                                              placeholder (scope-local number + localized
+     *                                              label) instead of re-deriving `[<TYPE>:
+     *                                              <entity_id>]` from the global id.
      *
-     * @return array<string>|null Bases array or null
+     * @return array<int, array<string, mixed>> Rows shaped as
+     *         `{relationId, entityText, entityType, anonymizedValue, bases, baseLabels}`.
      */
-    private function getBasesFromRelation(mixed $relation): ?array
+    private function loadAnonymisedEntitiesForFile(int $fileId, array $placeholderMap=[]): array
     {
-        if (method_exists(object_or_class: $relation, method: 'getBases') === true) {
-            $bases = $relation->getBases();
-            if (is_array($bases) === true) {
-                return $bases;
+        $mapper = $this->getEntityRelationMapper();
+        if ($mapper === null) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: EntityRelationMapper unavailable; producing empty entity set',
+                ['fileId' => $fileId]
+            );
+            return [];
+        }
+
+        try {
+            $rawRows = $mapper->findAnonymisedEntitiesWithBasesForFile($fileId);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'GrondslagenSummaryService: findAnonymisedEntitiesWithBasesForFile failed',
+                ['fileId' => $fileId, 'error' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        if (is_array($rawRows) === false || count($rawRows) === 0) {
+            return [];
+        }
+
+        // Collect distinct base references across all rows so we resolve
+        // labels in one batch.
+        $allRefs = [];
+        foreach ($rawRows as $row) {
+            $bases = ($row['bases'] ?? null);
+            if (is_array($bases) === false) {
+                continue;
+            }
+
+            foreach ($bases as $ref) {
+                $allRefs[(string) $ref] = true;
             }
         }
 
-        return null;
+        $labelMap = $this->resolveBaseLabels(baseRefs: array_keys($allRefs));
 
-    }//end getBasesFromRelation()
+        // Group raw relation rows by (entity_type, entity_id) so the
+        // template sees one row per entity rather than one row per
+        // occurrence. Each group carries:
+        // - placeholder: the SCOPE-LOCAL placeholder, resolved from either
+        // (1) the relation's stored `anonymized_value` when it IS a real
+        // placeholder (OpenRegister persists each entity's exact emitted
+        // placeholder there at anonymise time — authoritative), or
+        // (2) the recomputed/live `$placeholderMap` for this entity id
+        // (dossier on-demand recompute / live anonymise map).
+        // There is NO global-id fallback: an entity for which neither yields
+        // a scope-local placeholder is OMITTED (a global id is relatable).
+        // - count: number of EntityRelation rows in the group.
+        // - bases / baseLabels: set-union of bases across the group.
+        $grouped = [];
+        $omitted = 0;
+        foreach ($rawRows as $row) {
+            $entityId   = (int) ($row['entity_id'] ?? 0);
+            $entityType = (string) ($row['entity_type'] ?? '');
+            $entityText = (string) ($row['entity_value'] ?? '');
+            $key        = $entityType.':'.$entityId;
 
-    /**
-     * Resolve a single base UUID to its human-readable name.
-     *
-     * @param string $uuid Base UUID
-     *
-     * @return string Resolved name or placeholder
-     */
-    private function resolveSingleBase(string $uuid): string
-    {
-        try {
-            $objectService = $this->getObjectService();
-            $base          = $objectService->find(
-                id: $uuid,
-                register: self::REGISTER,
-                schema: self::BASE_SCHEMA
-            );
+            if (isset($grouped[$key]) === false) {
+                // Resolve the SCOPE-LOCAL placeholder. We NEVER fall back to the
+                // global entity_id: a global id is a relatable cross-disclosure
+                // handle, so an entity for which we cannot establish a
+                // scope-local placeholder is OMITTED from the summary entirely
+                // rather than leaked.
+                //
+                // The caller-supplied map wins: it is computed for THIS report's
+                // scope (dossier-wide for the per-dossier report, per-document
+                // for the single-file report), so it carries the numbering the
+                // reader expects. The placeholder OpenRegister persisted in
+                // anonymized_value is per-document; it is only a fallback for
+                // when no live map is available (e.g. a report regenerated long
+                // after anonymisation).
+                $stored      = (string) ($row['anonymized_value'] ?? '');
+                $placeholder = null;
+                if (isset($placeholderMap[(string) $entityId]) === true) {
+                    // Tier 1 — scope-correct map from the caller.
+                    $placeholder = $placeholderMap[(string) $entityId];
+                } else if (preg_match('/^\[[^:\]]+:\s*\d+\]$/u', $stored) === 1) {
+                    // Tier 2 — the per-document placeholder OpenRegister persisted.
+                    $placeholder = $stored;
+                }
 
-            if ($base === null) {
-                return $this->buildUnresolvedPlaceholder(uuid: $uuid);
-            }
+                if ($placeholder === null) {
+                    $omitted++;
+                    continue;
+                }
 
-            $data = $base->getObject();
-            $name = $data['name'] ?? $data['title'] ?? null;
+                $grouped[$key] = [
+                    'entityId'    => $entityId,
+                    'entityType'  => $entityType,
+                    'entityText'  => $entityText,
+                    'placeholder' => $placeholder,
+                    'count'       => 0,
+                    'basesSet'    => [],
+                ];
+            }//end if
 
-            if ($name === null || (string) $name === '') {
-                return $this->buildUnresolvedPlaceholder(uuid: $uuid);
-            }
+            $grouped[$key]['count']++;
 
-            return (string) $name;
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                message: 'Could not resolve base UUID: '.$uuid,
-                context: ['exception' => $e->getMessage()]
-            );
-            return $this->buildUnresolvedPlaceholder(uuid: $uuid);
-        }//end try
-
-    }//end resolveSingleBase()
-
-    /**
-     * Build the "grondslag verwijderd" placeholder for an unresolvable UUID.
-     *
-     * @param string $uuid The UUID that could not be resolved
-     *
-     * @return string Placeholder string carrying the unresolved ref
-     */
-    private function buildUnresolvedPlaceholder(string $uuid): string
-    {
-        $message = '⟨grondslag verwijderd: '.$uuid.'⟩';
-
-        $this->logger->warning(
-            message: 'Unresolved base UUID in grondslagen summary',
-            context: ['uuid' => $uuid]
-        );
-
-        return $message;
-
-    }//end buildUnresolvedPlaceholder()
-
-    /**
-     * Render the per-document summary HTML — PII-safe.
-     *
-     * Aggregates anonymised entities by replacement placeholder (with an
-     * occurrence count), resolves their legal bases to labels, and renders the
-     * summary. The page travels with the anonymised artifact, so it MUST NOT
-     * contain the original entity text — rows are keyed by the placeholder only.
-     *
-     * @param mixed $node     File node (for header metadata)
-     * @param array $entities Anonymised entities (entityType, anonymizedValue, bases, count)
-     *
-     * @return string Rendered HTML (ready for PdfService)
-     *
-     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
-     */
-    private function renderPerDocSummaryHtml(mixed $node, array $entities): string
-    {
-        // Aggregate by placeholder (the replacement value): sum occurrence
-        // counts and union the legal bases. Never key on the original text.
-        $rows        = [];
-        $allBaseRefs = [];
-        $occurrences = 0;
-        foreach ($entities as $entity) {
-            $placeholder = (string) ($entity['anonymizedValue'] ?? '');
-            if ($placeholder === '') {
-                $placeholder = '⟨onbekende vervanging⟩';
-            }
-
-            $count        = (int) ($entity['count'] ?? 1);
-            $occurrences += $count;
-
-            if (isset($rows[$placeholder]) === false) {
-                $rows[$placeholder] = ['placeholder' => $placeholder, 'count' => 0, 'bases' => []];
-            }
-
-            $rows[$placeholder]['count'] += $count;
-
-            $bases = $entity['bases'];
+            $bases = ($row['bases'] ?? null);
             if (is_array($bases) === true) {
                 foreach ($bases as $ref) {
-                    $rows[$placeholder]['bases'][(string) $ref] = true;
-                    $allBaseRefs[(string) $ref] = true;
+                    $grouped[$key]['basesSet'][(string) $ref] = true;
                 }
             }
         }//end foreach
 
-        // Resolve each row's bases to labels; drop the "no grondslag recorded"
-        // sentinel so the template renders its own "geen grondslag" note.
-        $entitiesOut = [];
-        foreach ($rows as $row) {
-            $labels = $this->resolveBaseLabels(baseUuids: array_keys($row['bases']));
-            $labels = array_values(
-                array_filter(
-                    $labels,
-                    static fn(string $label): bool => $label !== '⟨geen grondslag vastgelegd⟩'
-                )
+        if ($omitted > 0) {
+            // PII-free: count only. Surfaces stale relations with no recoverable
+            // scope-local placeholder, deliberately left out of the summary.
+            $this->logger->info(
+                'GrondslagenSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
+                ['fileId' => $fileId, 'omitted' => $omitted]
             );
-            $entitiesOut[] = [
-                'placeholder' => $row['placeholder'],
-                'count'       => $row['count'],
+        }
+
+        $shaped = [];
+        foreach ($grouped as $group) {
+            $basesRefs = array_keys($group['basesSet']);
+            $labels    = [];
+            foreach ($basesRefs as $ref) {
+                $labels[] = ($labelMap[$ref]['name'] ?? $ref);
+            }
+
+            $shaped[] = [
+                'placeholder' => $group['placeholder'],
+                'entityId'    => $group['entityId'],
+                'entityType'  => $group['entityType'],
+                'entityText'  => $group['entityText'],
+                'count'       => $group['count'],
+                'bases'       => $basesRefs,
+                'baseLabels'  => $labels,
                 'basesText'   => implode(', ', $labels),
             ];
         }
 
+        // Stable order — by TYPE then NUMERIC id ascending — so the blocks of
+        // each type are grouped and ordered 1,2,3,…,10,11 (not the lexical
+        // 1,10,11,2 a plain string sort produces). Diff-friendly across re-runs.
         usort(
-            $entitiesOut,
-            static fn(array $a, array $b): int => strcmp($a['placeholder'], $b['placeholder'])
+            $shaped,
+            static function (array $a, array $b): int {
+                return (self::placeholderSortKey(placeholder: $a['placeholder']) <=> self::placeholderSortKey(placeholder: $b['placeholder']));
+            }
         );
 
-        $templateContent = $this->getTemplateContent(filename: 'summary_per_doc.twig');
-        if ($templateContent === '') {
-            return '';
+        return $shaped;
+
+    }//end loadAnonymisedEntitiesForFile()
+
+    /**
+     * Sort key for a `[<TYPE>: <number>]` placeholder: [type, number] so a
+     * spaceship compare orders by type alphabetically then by number
+     * NUMERICALLY ascending (1,2,…,10,11 — not the lexical 1,10,11,2). A
+     * placeholder that doesn't match the shape sorts last, by its raw string.
+     *
+     * @param string $placeholder The placeholder string.
+     *
+     * @return array{0: string, 1: int} The [type, number] sort key.
+     */
+    private static function placeholderSortKey(string $placeholder): array
+    {
+        if (preg_match('/^\[(.+):\s*(\d+)\]\s*$/u', $placeholder, $m) === 1) {
+            return [$m[1], (int) $m[2]];
         }
 
-        $user        = $this->userSession->getUser();
-        $operatorUid = 'unknown';
+        return [$placeholder, PHP_INT_MAX];
+
+    }//end placeholderSortKey()
+
+    /**
+     * Localise an entity-type label for the summary placeholder so it reads
+     * the same as the label OpenRegister wrote into the redacted document
+     * (anonymisation-placeholder-id-scope). Only the enumerated
+     * `LOCALIZABLE_ENTITY_TYPES` set is translated; an unknown / free-form type
+     * is returned unchanged. When no `IL10N` is injected the raw label is
+     * returned (the `en` / untranslated behaviour).
+     *
+     * @param string $entityType The raw entity type (e.g. 'PERSON').
+     *
+     * @return string The localised label (e.g. 'PERSOON' on nl), or the raw type.
+     */
+    private function localizeEntityType(string $entityType): string
+    {
+        if ($this->l10n === null
+            || in_array($entityType, self::LOCALIZABLE_ENTITY_TYPES, true) === false
+        ) {
+            return $entityType;
+        }
+
+        return $this->l10n->t($entityType);
+
+    }//end localizeEntityType()
+
+    /**
+     * Render the per-document summary template into PDF bytes.
+     *
+     * Shared between {@see appendSummaryToPdf} and
+     * {@see renderSummaryBesideFile} — both produce the same summary
+     * content; only the destination differs.
+     *
+     * @param File                  $anonymisedFile The anonymised file (for header context).
+     * @param int                   $sourceFileId   The pre-anonymisation source file id.
+     * @param array<string, string> $placeholderMap Optional global entity id → emitted placeholder
+     *                                              map, threaded to loadAnonymisedEntitiesForFile.
+     *
+     * @return string The rendered PDF (PDF/A-3b) as raw bytes.
+     *
+     * @throws RuntimeException When template or PDF rendering fails.
+     */
+    private function renderPerDocumentSummary(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): string
+    {
+        $entities      = $this->loadAnonymisedEntitiesForFile(fileId: $sourceFileId, placeholderMap: $placeholderMap);
+        $distinctBases = $this->countDistinctBases(entities: $entities);
+
+        $totalOccurrences = 0;
+        foreach ($entities as $entity) {
+            $totalOccurrences += (int) ($entity['count'] ?? 0);
+        }
+
+        $operator = 'system';
+        $user     = $this->userSession->getUser();
         if ($user !== null) {
-            $operatorUid = $user->getUID();
+            $operator = $user->getDisplayName();
         }
 
-        return $this->pdfService->renderHtmlPreview(
-            templateContent: $templateContent,
-            data: [
-                'document' => [
-                    'filename'     => $node->getName(),
-                    'anonymisedAt' => gmdate('Y-m-d\TH:i:s\Z'),
-                    'operator'     => $operatorUid,
-                    'tool'         => 'OpenAnonymiser via OpenRegister',
-                ],
-                'entities' => $entitiesOut,
-                'totals'   => [
-                    'distinctEntityCount' => count($entitiesOut),
-                    'entityCount'         => $occurrences,
-                    'distinctBasesCount'  => count($allBaseRefs),
-                ],
-                'bases'    => $this->collectAssignedBaseDetails(baseRefs: array_keys($allBaseRefs)),
-            ]
-        );
-
-    }//end renderPerDocSummaryHtml()
-
-
-    /**
-     * Resolve base references to `{name, description}` for the summary legend.
-     *
-     * @param array<int, string> $baseRefs Distinct base UUIDs/slugs used in the document.
-     *
-     * @return array<int, array{name: string, description: string}> Bases, sorted by name.
-     */
-    private function collectAssignedBaseDetails(array $baseRefs): array
-    {
-        $bases = [];
-        foreach ($baseRefs as $ref) {
-            $detail = $this->resolveBaseDetail(uuid: (string) $ref);
-            if ($detail !== null) {
-                $bases[] = $detail;
-            }
-        }
-
-        usort(
-            $bases,
-            static fn(array $a, array $b): int => strcmp($a['name'], $b['name'])
-        );
-
-        return $bases;
-
-    }//end collectAssignedBaseDetails()
-
-
-    /**
-     * Resolve a single base reference to `{name, description}`, or null.
-     *
-     * Mirrors {@see resolveSingleBase} but returns the Woo Art. 5 description
-     * alongside the name for the legend. Best-effort: unresolvable references
-     * (deleted base, lookup failure) are dropped from the legend.
-     *
-     * @param string $uuid Base UUID/slug.
-     *
-     * @return array{name: string, description: string}|null Base detail, or null.
-     */
-    private function resolveBaseDetail(string $uuid): ?array
-    {
-        try {
-            $base = $this->getObjectService()->find(
-                id: $uuid,
-                register: self::REGISTER,
-                schema: self::BASE_SCHEMA
-            );
-            if ($base === null) {
-                return null;
-            }
-
-            $data = $base->getObject();
-            $name = (string) ($data['name'] ?? $data['title'] ?? '');
-            if ($name === '') {
-                return null;
-            }
-
-            return [
-                'name'        => $name,
-                'description' => (string) ($data['description'] ?? ''),
-            ];
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                message: 'Could not resolve base detail: '.$uuid,
-                context: ['exception' => $e->getMessage()]
-            );
-            return null;
-        }//end try
-
-    }//end resolveBaseDetail()
-
-    /**
-     * Build the appended PDF: existing pages + summary page.
-     *
-     * Uses mPDF + FPDI to import pages from the source PDF and append
-     * a new page with the summary HTML content.
-     *
-     * @param string $sourcePath  Absolute path to the existing anonymised PDF
-     * @param string $summaryHtml HTML content for the summary page
-     *
-     * @return string Combined PDF binary content
-     *
-     * @throws MpdfException On mPDF/FPDI failure
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-3
-     */
-    private function buildAppendedPdf(string $sourcePath, string $summaryHtml): string
-    {
-        $tempDir = '/tmp/mpdf';
-        if (file_exists(filename: $tempDir) === false) {
-            mkdir(directory: $tempDir, permissions: 0777, recursive: true);
-        }
-
-        $fontDir = dirname(path: __DIR__).'/Fonts';
-        $config  = [
-            'tempDir'  => $tempDir,
-            'PDFA'     => true,
-            'PDFAauto' => true,
+        $data = [
+            'document' => [
+                'filename'     => $anonymisedFile->getName(),
+                'anonymisedAt' => date('c'),
+                'operator'     => $operator,
+                'tool'         => 'OpenAnonymiser via OpenRegister',
+            ],
+            'entities' => $entities,
+            'totals'   => [
+                'entityCount'         => $totalOccurrences,
+                'distinctEntityCount' => count($entities),
+                'distinctBasesCount'  => $distinctBases,
+            ],
+            // Distinct grondslagen assigned in this document, each with its
+            // Woo Art. 5 toelichting — rendered as a legend under the table.
+            'bases'    => $this->collectAssignedBases(entities: $entities),
         ];
 
-        if (is_dir(filename: $fontDir) === true) {
-            $config['fontDir']      = [$fontDir];
-            $config['fontdata']     = [
-                'dejavusans' => [
-                    'R'  => 'DejaVuSans.ttf',
-                    'B'  => 'DejaVuSans-Bold.ttf',
-                    'I'  => 'DejaVuSans-Oblique.ttf',
-                    'BI' => 'DejaVuSans-BoldOblique.ttf',
-                ],
-            ];
-            $config['default_font'] = 'dejavusans';
-        }
-
-        $mpdf      = new Mpdf(config: $config);
-        $pageCount = $mpdf->setSourceFile(file: $sourcePath);
-
-        for ($i = 1; $i <= $pageCount; $i++) {
-            $tplId       = $mpdf->importPage(pageNumber: $i);
-            $size        = $mpdf->getTemplateSize(tpl: $tplId);
-            $orientation = 'P';
-            if ($size['width'] > $size['height']) {
-                $orientation = 'L';
-            }
-
-            $mpdf->addPage(
-                orientation: $orientation,
-                newformat: [$size['width'], $size['height']]
+        try {
+            return $this->pdfService->renderPdf(
+                templateContent: $this->loadTemplate(name: self::TEMPLATE_PER_DOC),
+                data: $data,
+                options: ['pdfa' => true, 'title' => 'Anonimisatie-samenvatting']
             );
-            $mpdf->useTemplate(tpl: $tplId);
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: per-doc render failed for fileId '.$sourceFileId.': '.$e->getMessage(),
+                previous: $e
+            );
         }
 
-        // Add summary page.
-        $mpdf->addPage();
-        $mpdf->WriteHTML(html: $summaryHtml);
-
-        return $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
-
-    }//end buildAppendedPdf()
+    }//end renderPerDocumentSummary()
 
     /**
-     * Collect entity data for all files in the dossier folder.
+     * Merge an anonymised PDF + the freshly-rendered summary PDF into one PDF.
      *
-     * @param string|null $dossierFolder NC file path of the dossier folder
+     * Uses FPDI to import every page of both inputs and emit them as a
+     * single combined PDF. The result is **not strictly PDF/A** (FPDI
+     * doesn't enforce that on import — the upstream PDF's compliance
+     * isn't guaranteed); the per-dossier render path uses pure mPDF and
+     * IS PDF/A-3b. This trade-off is documented in design.md.
      *
-     * @return array<int, array{fileName: string, fileId: int, entityCount: int, bases: array<string, int>, entities: array}> Per-document data
+     * @param string $originalPdfBytes Anonymised PDF bytes.
+     * @param string $summaryPdfBytes  Summary PDF bytes (from `renderPerDocumentSummary`).
      *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
+     * @return string Combined PDF bytes.
+     *
+     * @throws RuntimeException When FPDI import or output fails.
+     *
+     * @psalm-suppress UndefinedMethod FPDI extends FPDF; Output() is inherited from FPDF
+     *                                 and Psalm lacks stubs for it.
      */
-    private function collectDossierEntityData(?string $dossierFolder): array
+    private function mergeSummaryIntoPdf(string $originalPdfBytes, string $summaryPdfBytes): string
     {
-        if ($dossierFolder === null || $dossierFolder === '') {
-            return [];
+        $originalTemp = tempnam(sys_get_temp_dir(), 'grondslagen-orig-');
+        $summaryTemp  = tempnam(sys_get_temp_dir(), 'grondslagen-summary-');
+
+        if ($originalTemp === false || $summaryTemp === false) {
+            throw new RuntimeException('Grondslagen summary: could not allocate temp files for FPDI merge');
         }
 
         try {
-            $folder = $this->rootFolder->get(path: $dossierFolder);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                message: 'Could not access dossier folder: '.$dossierFolder,
-                context: ['exception' => $e->getMessage()]
+            file_put_contents($originalTemp, $originalPdfBytes);
+            file_put_contents($summaryTemp, $summaryPdfBytes);
+
+            $pdf = new Fpdi();
+            $pdf->setSourceFile($originalTemp);
+            $pageCount = $pdf->setSourceFile($originalTemp);
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tplId = $pdf->importPage($i);
+                $size  = $pdf->getTemplateSize($tplId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tplId);
+            }
+
+            $summaryPages = $pdf->setSourceFile($summaryTemp);
+            for ($i = 1; $i <= $summaryPages; $i++) {
+                $tplId = $pdf->importPage($i);
+                $size  = $pdf->getTemplateSize($tplId);
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->useTemplate($tplId);
+            }
+
+            // FPDI inherits Output() from FPDF. Calling 'S' returns the PDF bytes.
+            // @phpstan-ignore-next-line method.notFound (FPDF stubs are not loaded for static analysis).
+            return (string) $pdf->Output('S');
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                'Grondslagen summary: FPDI merge failed: '.$e->getMessage(),
+                previous: $e
             );
-            return [];
-        }
-
-        if (($folder instanceof \OCP\Files\Folder) === false) {
-            return [];
-        }
-
-        $docData = [];
-        $this->collectFromFolder(folder: $folder, result: $docData);
-
-        return $docData;
-
-    }//end collectDossierEntityData()
-
-    /**
-     * Recursively collect entity data from a folder's files.
-     *
-     * @param \OCP\Files\Folder                $folder NC folder node
-     * @param array<int, array<string, mixed>> $result Accumulator for per-document data
-     *
-     * @return void
-     */
-    private function collectFromFolder(\OCP\Files\Folder $folder, array &$result): void
-    {
-        $nodes = $folder->getDirectoryListing();
-        foreach ($nodes as $node) {
-            if ($node instanceof \OCP\Files\Folder) {
-                // Skip the anonymised output subfolder to avoid double-counting
-                // redacted entity data (the output files are scanned separately).
-                if (in_array($node->getName(), ['anonymised', 'anonymized', 'redacted'], true) === true) {
-                    continue;
-                }
-
-                $this->collectFromFolder(folder: $node, result: $result);
-                continue;
+        } finally {
+            if (file_exists($originalTemp) === true) {
+                unlink($originalTemp);
             }
 
-            if (($node instanceof \OCP\Files\File) === false) {
-                continue;
+            if (file_exists($summaryTemp) === true) {
+                unlink($summaryTemp);
             }
-
-            $fileId = (int) $node->getId();
-            try {
-                $entities = $this->loadAnonymisedEntitiesForFile(fileId: $fileId);
-            } catch (\Throwable $e) {
-                $this->logger->debug(
-                    message: 'Could not load entities for file '.$fileId,
-                    context: ['exception' => $e->getMessage()]
-                );
-                $entities = [];
-            }
-
-            if (empty($entities) === true) {
-                continue;
-            }
-
-            // Build per-basis count for this file.
-            $basesCount = [];
-            foreach ($entities as $entity) {
-                foreach ($this->resolveBaseLabels(baseUuids: $entity['bases']) as $label) {
-                    $basesCount[$label] = ($basesCount[$label] ?? 0) + 1;
-                }
-            }
-
-            $result[] = [
-                'fileName'    => $node->getName(),
-                'fileId'      => $fileId,
-                'entityCount' => count($entities),
-                'bases'       => $basesCount,
-                'entities'    => $entities,
-            ];
-        }//end foreach
-
-    }//end collectFromFolder()
-
-    /**
-     * Aggregate a per-grondslag summary from per-document data.
-     *
-     * @param array<int, array<string, mixed>> $perDocData Per-document entity data
-     *
-     * @return list<array{name: string, fileCount: int, entityCount: int}> Per-grondslag totals (numerically keyed list)
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-6
-     */
-    private function aggregatePerGrondslag(array $perDocData): array
-    {
-        // @phpstan-var array<string, array{name: string, fileCount: int, entityCount: int}> $totals
-        $totals = [];
-        foreach ($perDocData as $doc) {
-            foreach ($doc['bases'] as $baseLabel => $count) {
-                $baseLabel = (string) $baseLabel;
-                if (isset($totals[$baseLabel]) === false) {
-                    $totals[$baseLabel] = [
-                        'name'        => $baseLabel,
-                        'fileCount'   => 0,
-                        'entityCount' => 0,
-                    ];
-                }
-
-                $totals[$baseLabel]['fileCount']++;
-                $totals[$baseLabel]['entityCount'] += (int) $count;
-            }
-        }
-
-        return array_values($totals);
-
-    }//end aggregatePerGrondslag()
-
-    /**
-     * Write the dossier summary PDF to the correct destination path.
-     *
-     * Tries `<dossier-folder>/anonymised/grondslagen.pdf` first; falls back to
-     * `<dossier-folder>/grondslagen.pdf` when the anonymised subfolder does not
-     * exist (before anonymisation-output-folder-layout lands).
-     *
-     * @param string|null $dossierFolder NC folder path of the dossier
-     * @param string      $content       PDF binary content
-     *
-     * @return \OCP\Files\File|null Saved file node or null on failure
-     *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-5
-     */
-    private function writeDossierSummaryFile(?string $dossierFolder, string $content): mixed
-    {
-        if ($dossierFolder === null || $dossierFolder === '') {
-            return null;
-        }
-
-        try {
-            $folder = $this->rootFolder->get(path: $dossierFolder);
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                message: 'Dossier folder not found: '.$dossierFolder,
-                context: ['exception' => $e->getMessage()]
-            );
-            return null;
-        }
-
-        if (($folder instanceof \OCP\Files\Folder) === false) {
-            return null;
-        }
-
-        // Try canonical path with anonymised subfolder first.
-        $targetFolder = null;
-        if ($folder->nodeExists(path: self::ANONYMISED_SUBFOLDER) === true) {
-            $sub = $folder->get(path: self::ANONYMISED_SUBFOLDER);
-            if ($sub instanceof \OCP\Files\Folder) {
-                $targetFolder = $sub;
-            }
-        }
-
-        // Fallback: write directly to the dossier folder.
-        if ($targetFolder === null) {
-            $targetFolder = $folder;
-        }
-
-        return $this->saveFileToFolder(
-            folder: $targetFolder,
-            fileName: self::DOSSIER_SUMMARY_FILENAME,
-            content: $content
-        );
-
-    }//end writeDossierSummaryFile()
-
-    /**
-     * Save a file to a Nextcloud folder, overwriting if it exists.
-     *
-     * @param \OCP\Files\Folder $folder   Target NC folder
-     * @param string            $fileName File name within the folder
-     * @param string            $content  File content (binary or text)
-     *
-     * @return \OCP\Files\File|null Saved file node, or null on failure
-     */
-    private function saveFileToFolder(\OCP\Files\Folder $folder, string $fileName, string $content): ?\OCP\Files\File
-    {
-        try {
-            if ($folder->nodeExists(path: $fileName) === true) {
-                $existingNode = $folder->get(path: $fileName);
-                if (($existingNode instanceof \OCP\Files\File) === false) {
-                    return null;
-                }
-
-                $existingNode->putContent(data: $content);
-                return $existingNode;
-            }
-
-            $newNode = $folder->newFile(path: $fileName, content: $content);
-            if (($newNode instanceof \OCP\Files\File) === false) {
-                return null;
-            }
-
-            return $newNode;
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                message: 'Failed to save file '.$fileName.' to NC folder',
-                context: ['exception' => $e]
-            );
-            return null;
         }//end try
 
-    }//end saveFileToFolder()
+    }//end mergeSummaryIntoPdf()
 
     /**
-     * Count the distinct union of raw `bases` refs across a list of entities.
+     * Count distinct base references across a set of shaped entity rows.
      *
-     * Each entity may carry a `bases` key holding an array of base refs, an
-     * empty array, or null. Null/empty bases contribute nothing. The result is
-     * the number of unique refs across every entity.
+     * Used by the per-doc template's footer total.
      *
-     * @param array<int, array<string, mixed>> $entities Entities each with an optional `bases` array
+     * @param array<int, array<string, mixed>> $entities Output of {@see loadAnonymisedEntitiesForFile}.
      *
-     * @return int Count of distinct base refs
+     * @return int Distinct base count.
      */
     private function countDistinctBases(array $entities): int
     {
         $seen = [];
         foreach ($entities as $entity) {
-            $bases = ($entity['bases'] ?? null);
+            $bases = ($entity['bases'] ?? []);
             if (is_array($bases) === false) {
                 continue;
             }
 
-            foreach ($bases as $base) {
-                $ref        = (string) $base;
-                $seen[$ref] = true;
+            foreach ($bases as $ref) {
+                $seen[(string) $ref] = true;
             }
         }
 
@@ -1078,150 +1566,97 @@ class GrondslagenSummaryService
     }//end countDistinctBases()
 
     /**
-     * Aggregate per-file entity/grondslagen data into the per-dossier shape.
+     * Load a Twig template's source from disk.
      *
-     * Produces a flat `rows` array keyed by basis ref (each row carries the
-     * resolved `label` from $labelMap plus an `entityCount`) and a `totals`
-     * block carrying the document count, summed entity count, and the count of
-     * distinct bases across all files.
+     * The templates live under `lib/Resources/templates/grondslagen/`. This
+     * helper reads the file as a string so it can be passed to
+     * `PdfService::renderPdf($templateContent, ...)`. Throws if the file
+     * is missing — every release MUST ship both templates.
      *
-     * @param array<int, array<string, mixed>> $perFile  Per-file entity data
-     * @param array<string, string>            $labelMap Map of basis ref to human label
+     * @param string $name The template file name (e.g. `summary_per_doc.twig`).
      *
-     * @return array<string, mixed> Aggregated dossier summary (rows + totals)
+     * @return string The template's UTF-8 source.
+     *
+     * @throws RuntimeException When the template file is missing or unreadable.
      */
-    private function aggregateForDossier(array $perFile, array $labelMap): array
+    private function loadTemplate(string $name): string
     {
-        // Flatten every entity across all files for counting.
-        $allEntities = [];
-        $entityCount = 0;
-        foreach ($perFile as $file) {
-            $entities = ($file['entities'] ?? []);
-            if (is_array($entities) === false) {
-                $entities = [];
-            }
-
-            foreach ($entities as $entity) {
-                $allEntities[] = $entity;
-                $entityCount  += (int) ($entity['count'] ?? 0);
-            }
+        $path     = __DIR__.'/..'.self::TEMPLATE_DIR.$name;
+        $resolved = realpath($path);
+        if ($resolved === false || is_readable($resolved) === false) {
+            throw new RuntimeException(
+                sprintf('Grondslagen summary template not found or unreadable: %s', $path)
+            );
         }
 
-        // Build per-basis rows: one row per distinct ref, with its resolved
-        // label and the number of entities that reference it.
-        $rowsByRef = [];
-        foreach ($allEntities as $entity) {
-            $bases = ($entity['bases'] ?? null);
-            if (is_array($bases) === false) {
-                continue;
-            }
-
-            foreach ($bases as $base) {
-                $ref = (string) $base;
-                if (isset($rowsByRef[$ref]) === false) {
-                    $rowsByRef[$ref] = [
-                        'ref'         => $ref,
-                        'label'       => ($labelMap[$ref] ?? $ref),
-                        'entityCount' => 0,
-                    ];
-                }
-
-                $rowsByRef[$ref]['entityCount']++;
-            }
+        $contents = file_get_contents($resolved);
+        if ($contents === false) {
+            throw new RuntimeException(
+                sprintf('Grondslagen summary template read failed: %s', $resolved)
+            );
         }
 
-        return [
-            'rows'   => array_values($rowsByRef),
-            'totals' => [
-                'documentCount'      => count($perFile),
-                'entityCount'        => $entityCount,
-                'distinctBasesCount' => $this->countDistinctBases(entities: $allEntities),
-            ],
-        ];
+        return $contents;
 
-    }//end aggregateForDossier()
+    }//end loadTemplate()
 
     /**
-     * Collect distinct resolved base names from a list of enriched entities.
+     * Get the OpenRegister EntityRelationMapper, or null when unavailable.
      *
-     * @param array<int, array<string, mixed>> $entities Entities with baseLabels
-     *
-     * @return array<string> Unique base names
+     * @return \OCA\OpenRegister\Db\EntityRelationMapper|null
      */
-    private function collectDistinctBases(array $entities): array
+    private function getEntityRelationMapper(): ?object
     {
-        $seen   = [];
-        $result = [];
-        foreach ($entities as $entity) {
-            foreach ($entity['baseLabels'] as $label) {
-                if (isset($seen[$label]) === false) {
-                    $seen[$label] = true;
-                    $result[]     = $label;
-                }
-            }
+        if ($this->isOpenRegisterAvailable() === false) {
+            return null;
         }
 
-        return $result;
-
-    }//end collectDistinctBases()
-
-    /**
-     * Load Twig template content from the templates directory.
-     *
-     * @param string $filename Template filename (relative to grondslagen dir)
-     *
-     * @return string Template content
-     *
-     * @throws RuntimeException When the template file cannot be read
-     */
-    private function getTemplateContent(string $filename): string
-    {
-        $path = dirname(path: __DIR__).'/Resources/templates/grondslagen/'.$filename;
-
-        if (file_exists(filename: $path) === false) {
-            throw new RuntimeException('Template not found: '.$path);
-        }
-
-        $content = file_get_contents(filename: $path);
-        if ($content === false) {
-            throw new RuntimeException('Could not read template: '.$path);
-        }
-
-        return $content;
-
-    }//end getTemplateContent()
-
-    /**
-     * Get the OR EntityRelationMapper from the container.
-     *
-     * @return \OCA\OpenRegister\Db\EntityRelationMapper The mapper instance
-     *
-     * @throws RuntimeException If OpenRegister is not available
-     */
-    private function getEntityRelationMapper(): mixed
-    {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
+        try {
             return $this->container->get('OCA\OpenRegister\Db\EntityRelationMapper');
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: EntityRelationMapper unavailable',
+                ['error' => $e->getMessage()]
+            );
+            return null;
         }
-
-        throw new RuntimeException('OpenRegister is not available.');
 
     }//end getEntityRelationMapper()
 
     /**
-     * Get the OR ObjectService from the container.
+     * Get the OpenRegister ObjectService, or null when unavailable.
      *
-     * @return \OCA\OpenRegister\Service\ObjectService The service instance
-     *
-     * @throws RuntimeException If OpenRegister is not available
+     * @return \OCA\OpenRegister\Service\ObjectService|null
      */
-    private function getObjectService(): mixed
+    private function getObjectService(): ?object
     {
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === true) {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        if ($this->isOpenRegisterAvailable() === false) {
+            return null;
         }
 
-        throw new RuntimeException('OpenRegister is not available.');
+        try {
+            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'GrondslagenSummaryService: ObjectService unavailable',
+                ['error' => $e->getMessage()]
+            );
+            return null;
+        }
 
     }//end getObjectService()
+
+    /**
+     * True when the OpenRegister app is installed and enabled.
+     *
+     * @return bool
+     */
+    private function isOpenRegisterAvailable(): bool
+    {
+        // Defensive `?? []`: getInstalledApps() is array-typed in production but
+        // a bare mock returns null, and PHP 8.4 makes in_array(x, null) a fatal
+        // TypeError rather than a warning.
+        return in_array('openregister', ($this->appManager->getInstalledApps() ?? []), true);
+
+    }//end isOpenRegisterAvailable()
 }//end class

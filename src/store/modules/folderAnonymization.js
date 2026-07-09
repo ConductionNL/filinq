@@ -257,6 +257,10 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 						// Wave 4a flag — when true, each per-file anonymise call
 						// gets a grondslagen-summary page appended to its output.
 						appendBasisSummary: this.appendBasisSummary,
+						// scope=dossier: this folder IS the dossier, so a person
+						// gets the SAME scope-local placeholder number across every
+						// file in it (OpenRegister recomputes it per dossier).
+						scope: 'dossier',
 					},
 				)
 				this.batchStatus = 'completed'
