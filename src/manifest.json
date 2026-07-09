@@ -184,6 +184,14 @@
 			"_note": "Side-by-side document comparison (original vs anonymised output). Standalone page; no nav item; deep-linked with ?left=&right= file-id query params."
 		},
 		{
+			"id": "Versions",
+			"route": "/versions",
+			"type": "custom",
+			"title": "Versions",
+			"component": "VersionsView",
+			"_note": "Document versions (Versies) — thin consumer of Nextcloud files_versions. Part of the ADR-001 document-detail family; standalone deep-linked page (?fileId=) like Comparison, no nav item. Lists/opens/downloads/restores/compares a document's file versions."
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",
@@ -246,6 +254,119 @@
 					"kind": "appConfig",
 					"key": "anonymizations_total"
 				}
+			}
+		]
+	},
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_completed_version",
+		"tours": [
+			{
+				"id": "docudesk:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "0.0.34-unstable.17",
+				"steps": [
+					{
+						"id": "welcome",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "Welcome to DocuDesk",
+						"body": "Let's take a quick spin through your document workspace — we'll set up a template and a signing request together so you can see how the pieces fit. You'll add each record yourself.",
+						"target": {
+							"kind": "page",
+							"ref": "Dashboard"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					},
+					{
+						"id": "go-templates",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Templates are the reusable documents you generate, anonymise and send. Open Templates from the menu to get started.",
+						"task": "Click Templates in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "Templates"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "Templates"
+						}
+					},
+					{
+						"id": "create-template",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Add your first template — give it a name and save. You can edit its content and reuse it for documents and signing requests later.",
+						"task": "Click New and save a template",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "docudesk",
+							"schema": "template",
+							"capture": {
+								"templateId": ":id"
+							}
+						}
+					},
+					{
+						"id": "go-signing",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Signing requests track documents sent out for signature. Open Signing Requests from the menu.",
+						"task": "Click Signing Requests in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "SigningRequests"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "SigningRequests"
+						}
+					},
+					{
+						"id": "create-signing-request",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Create your first signing request — name it and save. From here you can attach a document and track its signatures.",
+						"task": "Click New and save a signing request",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "docudesk",
+							"schema": "signingRequest",
+							"capture": {
+								"signingRequestId": ":id"
+							}
+						}
+					},
+					{
+						"id": "done",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "You're all set",
+						"body": "Nicely done — you have your first template and signing request. Head back to the Dashboard to watch your document workspace grow, and reopen this tour anytime from the … menu.",
+						"target": {
+							"kind": "page",
+							"ref": "Dashboard"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					}
+				]
 			}
 		]
 	}

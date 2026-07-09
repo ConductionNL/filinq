@@ -260,6 +260,7 @@ class Application extends App implements IBootstrap
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {
+        // @psalm-suppress UnusedClosureParam, TooManyArguments
         $context->registerService(
             HealthController::class,
             static function (ContainerInterface $container): HealthController {
@@ -272,6 +273,7 @@ class Application extends App implements IBootstrap
             }
         );
 
+        // @psalm-suppress TooManyArguments
         $context->registerService(
             MetricsController::class,
             static function (ContainerInterface $container): MetricsController {

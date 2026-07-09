@@ -34,6 +34,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use InvalidArgumentException;
 use OCA\DocuDesk\Service\ConsentScopeValidator;
+use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -52,6 +53,23 @@ use PHPUnit\Framework\TestCase;
  */
 final class ConsentScopeValidatorTest extends TestCase
 {
+    /**
+     * Create a ConsentScopeValidator with a no-op IGroupManager stub.
+     *
+     * All tests in this file exercise assertValid() which does not consult
+     * the group manager. The stub satisfies the constructor requirement
+     * without any side-effects.
+     *
+     * @return ConsentScopeValidator
+     */
+    private function makeValidator(): ConsentScopeValidator
+    {
+        $groupManager = $this->createMock(IGroupManager::class);
+        return new ConsentScopeValidator(groupManager: $groupManager);
+
+    }//end makeValidator()
+
+
 
 
     /**
@@ -62,7 +80,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testDocumentScopeRejectsMissingDocumentId(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid(['scope' => 'document']);
+        $this->makeValidator()->assertValid(['scope' => 'document']);
 
     }//end testDocumentScopeRejectsMissingDocumentId()
 
@@ -74,7 +92,7 @@ final class ConsentScopeValidatorTest extends TestCase
      */
     public function testDocumentScopeAcceptsValidPayload(): void
     {
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'       => 'document',
             'documentId'  => 'doc-uuid-1',
             'entityType'  => 'PERSON',
@@ -93,7 +111,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsDocumentId(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'documentId'    => 'doc-uuid-1',
             'matchRules'    => [['type' => 'exact', 'value' => 'Mayor']],
@@ -111,7 +129,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsMissingMatchRules(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'consentMethod' => 'paper',
         ]);
@@ -127,7 +145,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsEmptyMatchRules(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'matchRules'    => [],
             'consentMethod' => 'paper',
@@ -144,7 +162,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsUnknownMatchRuleType(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'matchRules'    => [['type' => 'made-up', 'value' => 'Mayor']],
             'consentMethod' => 'paper',
@@ -161,7 +179,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsMissingConsentMethod(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'      => 'entity',
             'matchRules' => [['type' => 'exact', 'value' => 'Mayor']],
         ]);
@@ -177,7 +195,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testEntityScopeRejectsPolicyMatch(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'matchRules'    => [['type' => 'exact', 'value' => 'Mayor']],
             'consentMethod' => 'paper',
@@ -194,7 +212,7 @@ final class ConsentScopeValidatorTest extends TestCase
      */
     public function testEntityScopeAcceptsValidPayload(): void
     {
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'         => 'entity',
             'matchRules'    => [
                 ['type' => 'exact', 'value' => 'Mayor of Den Haag'],
@@ -217,7 +235,7 @@ final class ConsentScopeValidatorTest extends TestCase
     public function testUnknownScopeIsRejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        (new ConsentScopeValidator())->assertValid([
+        $this->makeValidator()->assertValid([
             'scope'      => 'tenant',
             'documentId' => 'doc-1',
         ]);

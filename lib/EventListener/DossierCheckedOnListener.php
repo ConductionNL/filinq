@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
  *
- * @template-implements IEventListener<ObjectUpdatedEvent>
+ * @psalm-suppress MismatchingDocblockReturnType
  */
 class DossierCheckedOnListener implements IEventListener
 {

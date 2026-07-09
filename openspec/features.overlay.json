@@ -1,0 +1,213 @@
+[
+  {
+    "slug": "anonymization",
+    "title": "Local document anonymisation",
+    "title_nl": "Lokale documentanonimisatie",
+    "summary": "Detect and redact personal data on your own instance, never in the cloud.",
+    "summary_nl": "Detecteer en lak persoonsgegevens lokaal weg, nooit in de cloud.",
+    "status": "stable",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/anonymization/spec.md"
+  },
+  {
+    "slug": "consent-management",
+    "title": "WOO publication consent",
+    "title_nl": "WOO-publicatieconsent",
+    "summary": "Track the objection period and the decision with a tight audit trail.",
+    "summary_nl": "Volg de bezwaartermijn en het besluit met een sluitend audit-spoor.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/consent-management/spec.md"
+  },
+  {
+    "slug": "anonymisation-grondslagen-summary",
+    "title": "Grondslagen summary",
+    "title_nl": "Grondslagenoverzicht",
+    "summary": "Show per redacted entity on which legal ground, as a PDF/A.",
+    "summary_nl": "Laat per gelakte entiteit zien op welke grond, in een PDF/A.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymisation-grondslagen-summary/spec.md"
+  },
+  {
+    "slug": "anonymisation-prohibition-gate",
+    "title": "Publication prohibition gate",
+    "title_nl": "Publicatieverbod-controle",
+    "summary": "Keep protected entities out of publication every time, with audit.",
+    "summary_nl": "Houd beschermde entiteiten altijd uit publicatie, met audit.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymisation-prohibition-gate/spec.md"
+  },
+  {
+    "slug": "anonymization-entity-review",
+    "title": "Entity review per document",
+    "title_nl": "Entiteitcontrole per document",
+    "summary": "Confirm yourself what gets redacted before it becomes final.",
+    "summary_nl": "Bevestig zelf wat wordt weggelakt voordat het definitief is.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymization-entity-review/spec.md"
+  },
+  {
+    "slug": "ocr-document-scanning",
+    "title": "OCR for scanned documents",
+    "title_nl": "OCR voor gescande documenten",
+    "summary": "Anonymise scanned PDFs and images too, with graceful fallback.",
+    "summary_nl": "Anonimiseer ook gescande PDFs en afbeeldingen, met nette terugval.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/ocr-document-scanning/spec.md"
+  },
+  {
+    "slug": "document-creatie-sjablonen",
+    "title": "Template document generation",
+    "title_nl": "Documentgeneratie uit sjablonen",
+    "summary": "Generate decisions from case data in your own house style.",
+    "summary_nl": "Genereer beschikkingen uit zaakdata in je eigen huisstijl.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-creatie-sjablonen/spec.md"
+  },
+  {
+    "slug": "letter-correspondence-generation",
+    "title": "Correspondence generation",
+    "title_nl": "Correspondentiegeneratie",
+    "summary": "Compose letters with merged data and your house style.",
+    "summary_nl": "Stel brieven samen met samengevoegde gegevens en huisstijl.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/letter-correspondence-generation/spec.md"
+  },
+  {
+    "slug": "template-management",
+    "title": "Template management",
+    "title_nl": "Sjabloonbeheer",
+    "summary": "Manage templates with versions in Dutch and English.",
+    "summary_nl": "Beheer sjablonen met versies in Nederlands en Engels.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/template-management/spec.md"
+  },
+  {
+    "slug": "document-comparison",
+    "title": "Document comparison",
+    "title_nl": "Documentvergelijking",
+    "summary": "See exactly what changed between two versions of a document.",
+    "summary_nl": "Zie precies wat er tussen twee versies is veranderd.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-comparison/spec.md"
+  },
+  {
+    "slug": "document-validation-checks",
+    "title": "Document validation",
+    "title_nl": "Documentvalidatie",
+    "summary": "Flag unreadable, encrypted or incomplete documents up front.",
+    "summary_nl": "Signaleer onleesbare, versleutelde of incomplete documenten vooraf.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-validation-checks/spec.md"
+  },
+  {
+    "slug": "pdf-generation",
+    "title": "PDF and PDF/A generation",
+    "title_nl": "PDF- en PDF/A-generatie",
+    "summary": "Deliver documents archive-ready as PDF/A-3b.",
+    "summary_nl": "Lever documenten archiefklaar af als PDF/A-3b.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pdf-generation/spec.md"
+  },
+  {
+    "slug": "print-preview",
+    "title": "Print preview and download",
+    "title_nl": "Afdrukvoorbeeld en download",
+    "summary": "Review and download the document before you print it.",
+    "summary_nl": "Bekijk en download het document voor je het print.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/print-preview/spec.md"
+  },
+  {
+    "slug": "document-signing",
+    "title": "Native document signing",
+    "title_nl": "Documenten ondertekenen",
+    "summary": "Sign documents with a multi-party flow and full audit.",
+    "summary_nl": "Onderteken documenten met een meervoudige ondertekenflow en audit.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-signing/spec.md"
+  },
+  {
+    "slug": "signing-audit-via-or",
+    "title": "Signing audit trail",
+    "title_nl": "Ondertekenaudit-spoor",
+    "summary": "Keep every signing step in a tamper-evident audit trail.",
+    "summary_nl": "Bewaar elke ondertekenstap in een fraudebestendig audit-spoor.",
+    "status": "stable",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/signing-audit-via-or/spec.md"
+  },
+  {
+    "slug": "folder-batch-analysis",
+    "title": "Folder and batch anonymisation",
+    "title_nl": "Map- en batchanonimisatie",
+    "summary": "Anonymise a whole folder in a background job.",
+    "summary_nl": "Anonimiseer een hele map in een achtergrondklus.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/batch-anonymization/spec.md"
+  },
+  {
+    "slug": "metadata-enrichment",
+    "title": "Metadata enrichment",
+    "title_nl": "Metadataverrijking",
+    "summary": "Enrich documents automatically with language and keywords.",
+    "summary_nl": "Verrijk documenten automatisch met taal en trefwoorden.",
+    "status": "beta",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/metadata-enrichment/spec.md"
+  },
+  {
+    "slug": "processing-activity-export",
+    "title": "AVG Art. 30 register",
+    "title_nl": "AVG art. 30-register",
+    "summary": "Keep your processing register from DocuDesk and OpenRegister.",
+    "summary_nl": "Houd je verwerkingsregister bij vanuit DocuDesk en OpenRegister.",
+    "status": "beta",
+    "providedBy": "openregister",
+    "docsUrl": "openspec/specs/processing-activity-export/spec.md"
+  },
+  {
+    "slug": "dashboard",
+    "title": "Dashboard and widgets",
+    "title_nl": "Dashboard en widgets",
+    "summary": "See consent and anonymisation at a glance.",
+    "summary_nl": "Zie consent en anonimisatie in een oogopslag.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/dashboard/spec.md"
+  },
+  {
+    "slug": "admin-settings",
+    "title": "Admin settings",
+    "title_nl": "Beheerinstellingen",
+    "summary": "Connect OpenRegister and set deadlines in one place.",
+    "summary_nl": "Koppel OpenRegister en stel termijnen in een keer in.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/admin-settings/spec.md"
+  },
+  {
+    "slug": "prometheus-metrics",
+    "title": "Prometheus metrics and health",
+    "title_nl": "Prometheus-metrics en health",
+    "summary": "Monitor DocuDesk with your own observability stack.",
+    "summary_nl": "Monitor DocuDesk met je eigen observability-stack.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
+  },
+  {
+    "slug": "batch-entity-review",
+    "title": "Batch entity review",
+    "title_nl": "Batchgewijze entiteitcontrole",
+    "summary": "Review detected entities across a whole stack at once.",
+    "summary_nl": "Beoordeel ontdekte entiteiten over een hele stapel in een keer.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/anonymization-entity-review/spec.md"
+  },
+  {
+    "slug": "signing-qes-validsign",
+    "title": "eIDAS QES signing",
+    "title_nl": "eIDAS QES-ondertekening",
+    "summary": "Sign with a qualified signature through a trusted provider, soon.",
+    "summary_nl": "Onderteken straks gekwalificeerd via een vertrouwde aanbieder.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md"
+  }
+]
