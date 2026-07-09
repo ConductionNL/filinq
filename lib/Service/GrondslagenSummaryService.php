@@ -439,7 +439,7 @@ class GrondslagenSummaryService
      *
      * @param int $fileId Nextcloud file ID
      *
-     * @return array<int, array{entityText: string, entityType: string, anonymizedValue: string, bases: array<string>|null}> Entity data
+     * @return array<int, array{entityType: string, anonymizedValue: string, bases: array<string>|null, count: int}> Entity data
      *
      * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-1
      */
@@ -454,7 +454,11 @@ class GrondslagenSummaryService
         $relations = $mapper->findByFileId(fileId: $fileId);
 
         // Index EntityRelation objects by entity_id; keep last (highest position).
+        // Also count the anonymised relations per entity_id — one relation row
+        // per redacted position, so this is "how many times the entity was
+        // replaced" in the document.
         $anonymizedByEntityId = [];
+        $countByEntityId      = [];
         foreach ($relations as $rel) {
             if ($rel->getAnonymized() !== true) {
                 continue;
@@ -462,6 +466,7 @@ class GrondslagenSummaryService
 
             $eid = (int) $rel->getEntityId();
             $anonymizedByEntityId[$eid] = $rel;
+            $countByEntityId[$eid]      = (($countByEntityId[$eid] ?? 0) + 1);
         }
 
         // Merge join data + anonymized flag; deduplicate by entity_id.
@@ -482,11 +487,13 @@ class GrondslagenSummaryService
             $relation = $anonymizedByEntityId[$entityId];
             $bases    = $this->getBasesFromRelation(relation: $relation);
 
+            // PII-safe: the summary travels with the anonymised artifact, so it
+            // MUST NOT carry the original entity value ($row['entity_value']).
             $result[] = [
-                'entityText'      => (string) ($row['entity_value'] ?? ''),
                 'entityType'      => (string) ($row['entity_type'] ?? ''),
                 'anonymizedValue' => (string) ($relation->getAnonymizedValue() ?? ''),
                 'bases'           => $bases,
+                'count'           => ($countByEntityId[$entityId] ?? 1),
             ];
         }//end foreach
 
@@ -577,27 +584,78 @@ class GrondslagenSummaryService
     }//end buildUnresolvedPlaceholder()
 
     /**
-     * Render the per-document summary HTML with resolved base labels.
+     * Render the per-document summary HTML — PII-safe.
+     *
+     * Aggregates anonymised entities by replacement placeholder (with an
+     * occurrence count), resolves their legal bases to labels, and renders the
+     * summary. The page travels with the anonymised artifact, so it MUST NOT
+     * contain the original entity text — rows are keyed by the placeholder only.
      *
      * @param mixed $node     File node (for header metadata)
-     * @param array $entities Anonymised entities (entityText, entityType, anonymizedValue, bases)
+     * @param array $entities Anonymised entities (entityType, anonymizedValue, bases, count)
      *
      * @return string Rendered HTML (ready for PdfService)
      *
-     * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-2
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
      */
     private function renderPerDocSummaryHtml(mixed $node, array $entities): string
     {
-        // Resolve base labels for each entity.
-        $enriched = [];
+        // Aggregate by placeholder (the replacement value): sum occurrence
+        // counts and union the legal bases. Never key on the original text.
+        $rows        = [];
+        $allBaseRefs = [];
+        $occurrences = 0;
         foreach ($entities as $entity) {
-            $entity['baseLabels'] = $this->resolveBaseLabels(baseUuids: $entity['bases']);
-            $enriched[]           = $entity;
+            $placeholder = (string) ($entity['anonymizedValue'] ?? '');
+            if ($placeholder === '') {
+                $placeholder = '⟨onbekende vervanging⟩';
+            }
+
+            $count        = (int) ($entity['count'] ?? 1);
+            $occurrences += $count;
+
+            if (isset($rows[$placeholder]) === false) {
+                $rows[$placeholder] = ['placeholder' => $placeholder, 'count' => 0, 'bases' => []];
+            }
+
+            $rows[$placeholder]['count'] += $count;
+
+            $bases = $entity['bases'];
+            if (is_array($bases) === true) {
+                foreach ($bases as $ref) {
+                    $rows[$placeholder]['bases'][(string) $ref] = true;
+                    $allBaseRefs[(string) $ref] = true;
+                }
+            }
+        }//end foreach
+
+        // Resolve each row's bases to labels; drop the "no grondslag recorded"
+        // sentinel so the template renders its own "geen grondslag" note.
+        $entitiesOut = [];
+        foreach ($rows as $row) {
+            $labels = $this->resolveBaseLabels(baseUuids: array_keys($row['bases']));
+            $labels = array_values(
+                array_filter(
+                    $labels,
+                    static fn(string $label): bool => $label !== '⟨geen grondslag vastgelegd⟩'
+                )
+            );
+            $entitiesOut[] = [
+                'placeholder' => $row['placeholder'],
+                'count'       => $row['count'],
+                'basesText'   => implode(', ', $labels),
+            ];
         }
 
-        $distinctBases = $this->collectDistinctBases(entities: $enriched);
+        usort(
+            $entitiesOut,
+            static fn(array $a, array $b): int => strcmp($a['placeholder'], $b['placeholder'])
+        );
 
         $templateContent = $this->getTemplateContent(filename: 'summary_per_doc.twig');
+        if ($templateContent === '') {
+            return '';
+        }
 
         $user        = $this->userSession->getUser();
         $operatorUid = 'unknown';
@@ -605,25 +663,97 @@ class GrondslagenSummaryService
             $operatorUid = $user->getUID();
         }
 
-        if ($templateContent === '') {
-            return '';
-        }
-
         return $this->pdfService->renderHtmlPreview(
             templateContent: $templateContent,
             data: [
-                'fileName'           => $node->getName(),
-                'anonymisedAt'       => gmdate('Y-m-d\TH:i:s\Z'),
-                'operator'           => $operatorUid,
-                'toolName'           => 'OpenAnonymiser via OpenRegister',
-                'entities'           => $enriched,
-                'entityCount'        => count($enriched),
-                'distinctBases'      => $distinctBases,
-                'distinctBasesCount' => count($distinctBases),
+                'document' => [
+                    'filename'     => $node->getName(),
+                    'anonymisedAt' => gmdate('Y-m-d\TH:i:s\Z'),
+                    'operator'     => $operatorUid,
+                    'tool'         => 'OpenAnonymiser via OpenRegister',
+                ],
+                'entities' => $entitiesOut,
+                'totals'   => [
+                    'distinctEntityCount' => count($entitiesOut),
+                    'entityCount'         => $occurrences,
+                    'distinctBasesCount'  => count($allBaseRefs),
+                ],
+                'bases'    => $this->collectAssignedBaseDetails(baseRefs: array_keys($allBaseRefs)),
             ]
         );
 
     }//end renderPerDocSummaryHtml()
+
+
+    /**
+     * Resolve base references to `{name, description}` for the summary legend.
+     *
+     * @param array<int, string> $baseRefs Distinct base UUIDs/slugs used in the document.
+     *
+     * @return array<int, array{name: string, description: string}> Bases, sorted by name.
+     */
+    private function collectAssignedBaseDetails(array $baseRefs): array
+    {
+        $bases = [];
+        foreach ($baseRefs as $ref) {
+            $detail = $this->resolveBaseDetail(uuid: (string) $ref);
+            if ($detail !== null) {
+                $bases[] = $detail;
+            }
+        }
+
+        usort(
+            $bases,
+            static fn(array $a, array $b): int => strcmp($a['name'], $b['name'])
+        );
+
+        return $bases;
+
+    }//end collectAssignedBaseDetails()
+
+
+    /**
+     * Resolve a single base reference to `{name, description}`, or null.
+     *
+     * Mirrors {@see resolveSingleBase} but returns the Woo Art. 5 description
+     * alongside the name for the legend. Best-effort: unresolvable references
+     * (deleted base, lookup failure) are dropped from the legend.
+     *
+     * @param string $uuid Base UUID/slug.
+     *
+     * @return array{name: string, description: string}|null Base detail, or null.
+     */
+    private function resolveBaseDetail(string $uuid): ?array
+    {
+        try {
+            $base = $this->getObjectService()->find(
+                id: $uuid,
+                register: self::REGISTER,
+                schema: self::BASE_SCHEMA
+            );
+            if ($base === null) {
+                return null;
+            }
+
+            $data = $base->getObject();
+            $name = (string) ($data['name'] ?? $data['title'] ?? '');
+            if ($name === '') {
+                return null;
+            }
+
+            return [
+                'name'        => $name,
+                'description' => (string) ($data['description'] ?? ''),
+            ];
+        } catch (\Throwable $e) {
+            $this->logger->debug(
+                message: 'Could not resolve base detail: '.$uuid,
+                context: ['exception' => $e->getMessage()]
+            );
+            return null;
+        }//end try
+
+    }//end resolveBaseDetail()
 
     /**
      * Build the appended PDF: existing pages + summary page.
@@ -916,6 +1046,100 @@ class GrondslagenSummaryService
         }//end try
 
     }//end saveFileToFolder()
+
+    /**
+     * Count the distinct union of raw `bases` refs across a list of entities.
+     *
+     * Each entity may carry a `bases` key holding an array of base refs, an
+     * empty array, or null. Null/empty bases contribute nothing. The result is
+     * the number of unique refs across every entity.
+     *
+     * @param array<int, array<string, mixed>> $entities Entities each with an optional `bases` array
+     *
+     * @return int Count of distinct base refs
+     */
+    private function countDistinctBases(array $entities): int
+    {
+        $seen = [];
+        foreach ($entities as $entity) {
+            $bases = ($entity['bases'] ?? null);
+            if (is_array($bases) === false) {
+                continue;
+            }
+
+            foreach ($bases as $base) {
+                $ref        = (string) $base;
+                $seen[$ref] = true;
+            }
+        }
+
+        return count($seen);
+
+    }//end countDistinctBases()
+
+    /**
+     * Aggregate per-file entity/grondslagen data into the per-dossier shape.
+     *
+     * Produces a flat `rows` array keyed by basis ref (each row carries the
+     * resolved `label` from $labelMap plus an `entityCount`) and a `totals`
+     * block carrying the document count, summed entity count, and the count of
+     * distinct bases across all files.
+     *
+     * @param array<int, array<string, mixed>> $perFile  Per-file entity data
+     * @param array<string, string>            $labelMap Map of basis ref to human label
+     *
+     * @return array<string, mixed> Aggregated dossier summary (rows + totals)
+     */
+    private function aggregateForDossier(array $perFile, array $labelMap): array
+    {
+        // Flatten every entity across all files for counting.
+        $allEntities = [];
+        $entityCount = 0;
+        foreach ($perFile as $file) {
+            $entities = ($file['entities'] ?? []);
+            if (is_array($entities) === false) {
+                $entities = [];
+            }
+
+            foreach ($entities as $entity) {
+                $allEntities[] = $entity;
+                $entityCount  += (int) ($entity['count'] ?? 0);
+            }
+        }
+
+        // Build per-basis rows: one row per distinct ref, with its resolved
+        // label and the number of entities that reference it.
+        $rowsByRef = [];
+        foreach ($allEntities as $entity) {
+            $bases = ($entity['bases'] ?? null);
+            if (is_array($bases) === false) {
+                continue;
+            }
+
+            foreach ($bases as $base) {
+                $ref = (string) $base;
+                if (isset($rowsByRef[$ref]) === false) {
+                    $rowsByRef[$ref] = [
+                        'ref'         => $ref,
+                        'label'       => ($labelMap[$ref] ?? $ref),
+                        'entityCount' => 0,
+                    ];
+                }
+
+                $rowsByRef[$ref]['entityCount']++;
+            }
+        }
+
+        return [
+            'rows'   => array_values($rowsByRef),
+            'totals' => [
+                'documentCount'      => count($perFile),
+                'entityCount'        => $entityCount,
+                'distinctBasesCount' => $this->countDistinctBases(entities: $allEntities),
+            ],
+        ];
+
+    }//end aggregateForDossier()
 
     /**
      * Collect distinct resolved base names from a list of enriched entities.

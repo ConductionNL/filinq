@@ -67,19 +67,30 @@ The flag is per-call only in v1. There is no dossier-level or tenant-level defau
 
 ### Requirement: The per-document summary MUST list anonymised entities and their bases
 
-The summary template MUST display, for each entity where `EntityRelation.anonymized = true` AND `bases IS NOT NULL`, the rows: `entityText` (or canonical entity name), `entityType` (PERSON/ORGANIZATION), `anonymizedValue` (replacement placeholder), and the resolved `base.name` values for the entity's bases.
+The summary travels with the anonymised artifact, so it MUST be **PII-free**: it MUST NOT contain the original (pre-anonymisation) entity text/value (e.g. `EntityRelation.entity_value`), nor any other reproduction of the redacted source content. Including the original text alongside the placeholder would turn the summary into a re-identification key, defeating the anonymisation.
+
+The summary template MUST aggregate anonymised entities by replacement placeholder. For each distinct placeholder (across entities where `EntityRelation.anonymized = true`), it MUST display: the `anonymizedValue` (replacement placeholder), the **count** of times that placeholder was applied in the document, and the resolved `base.name` values for the placeholder's bases. The entity type is NOT shown as a separate column — it is already encoded in the placeholder.
 
 The summary MUST NOT display entities released via `acknowledgedOverrides` from the prohibition gate. The summary's scope is "what was redacted under what grondslag", not "all decisions about all detected entities".
 
-The summary MUST include in its header: filename, anonymisation timestamp, operator identifier (Nextcloud user ID), anonymisation tool name ("OpenAnonymiser via OpenRegister"). The summary MUST include in its footer: total count of entities anonymised, count of distinct bases used.
+The summary MUST include in its header: filename, anonymisation timestamp, operator identifier (Nextcloud user ID), anonymisation tool name ("OpenAnonymiser via OpenRegister"). The summary MUST include in its footer: count of distinct placeholders, total number of replacements, and count of distinct bases used.
 
-#### Scenario: Summary includes all anonymised entities, regardless of bases value
+The summary MAY include a "Toegepaste grondslagen" legend listing each applied `base.name` with its `base.description` (Woo Art. 5 toelichting).
 
-- **GIVEN** a file with anonymised entities, some with bases populated and some with `bases: null`
+#### Scenario: Summary aggregates by placeholder with a replacement count
+
+- **GIVEN** a file where the placeholder `[PERSON_1]` was applied 3 times and `[LOCATION_1]` once
 - **WHEN** the summary is rendered
-- **THEN** every anonymised entity appears
-- **AND** entities with bases show resolved `base.name` values
-- **AND** entities with `bases: null` show the `⟨geen grondslag vastgelegd⟩` placeholder
+- **THEN** there is one row for `[PERSON_1]` with count 3 and one row for `[LOCATION_1]` with count 1
+- **AND** each row shows the resolved `base.name` values (or "geen grondslag" when none)
+- **AND** rows with no recorded bases render the empty-grondslag note
+
+#### Scenario: Summary does not leak the original entity text
+
+- **GIVEN** a file where "Jan Jansen" (PERSON) was anonymised to `[PERSON_1]` under grondslag "persoonsgegevens"
+- **WHEN** the summary is rendered
+- **THEN** the summary shows the placeholder `[PERSON_1]`, its replacement count, and the base "persoonsgegevens"
+- **AND** the rendered summary does NOT contain the string "Jan Jansen" (nor any other original entity value)
 
 #### Scenario: Released-via-override entities are excluded
 
