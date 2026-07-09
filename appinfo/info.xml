@@ -46,6 +46,9 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
     <website>https://codeberg.org/Conduction/docudesk</website>
     <bugs>https://codeberg.org/Conduction/docudesk/issues</bugs>
     <repository>https://codeberg.org/Conduction/docudesk</repository>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-consent.png</screenshot>
+    <screenshot>https://codeberg.org/Conduction/docudesk/raw/branch/main/img/screenshot-anonymization.png</screenshot>
     <!--
         Processing-activity export (AVG Art. 30) consumes OpenRegister's
         per-access read-logging capability (x-openregister-processing dialect,
