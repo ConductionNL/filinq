@@ -39,7 +39,7 @@ Users can toggle individual entities on or off. The final selection is sent to t
 | `GET` | `/api/anonymization/batch/{batchId}/entities` | Retrieve consolidated entity list for review (batch must be in "review" status) |
 | `POST` | `/api/anonymization/batch/{batchId}/anonymize` | Start anonymization with the reviewed entity list |
 
-### GET /api/anonymization/batch/{batchId}/entities — response shape
+### GET `/api/anonymization/batch/{batchId}/entities` response shape
 
 Each entry in the `entities` array carries the following fields:
 

@@ -27,6 +27,8 @@ use Exception;
 use OCA\DocuDesk\Event\SigningConcludedEvent;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Files\File;
+use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -45,6 +47,9 @@ use RuntimeException;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ *
+ * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
  */
 class SigningService
 {
@@ -76,6 +81,7 @@ class SigningService
      * @param LoggerInterface        $logger              Logger
      * @param IRequest               $request             HTTP request
      * @param IEventDispatcher       $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
+     * @param IRootFolder            $rootFolder          Root folder (reads the document, stores the signed version)
      *
      * @return void
      */
@@ -88,7 +94,8 @@ class SigningService
         private readonly INotificationManager $notificationManager,
         private readonly LoggerInterface $logger,
         private readonly IRequest $request,
-        private readonly IEventDispatcher $eventDispatcher
+        private readonly IEventDispatcher $eventDispatcher,
+        private readonly IRootFolder $rootFolder
     ) {
 
     }//end __construct()
@@ -704,26 +711,170 @@ class SigningService
             $freshRequest = (array) $freshObj;
         }
 
-        $freshRequest['status'] = 'IN_PROGRESS';
-        if ($allSigned === true) {
-            $freshRequest['status'] = 'COMPLETED';
+        if ($allSigned === false) {
+            $freshRequest['status'] = 'IN_PROGRESS';
+            $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
+            return;
         }
 
+        // All signers have signed — the request completes only if the active
+        // provider can produce a verifiable signed artifact. This is the
+        // honest-completion gate (issue #304): the request is NEVER marked
+        // COMPLETED with the unsigned original as its signed reference. If the
+        // artifact cannot be produced, the request stays IN_PROGRESS and the
+        // failure surfaces loudly to the completing signer.
+        $signedDocumentRef = $this->produceAndStoreSignedArtifact(request: $freshRequest);
+
+        $freshRequest['status']            = 'COMPLETED';
+        $freshRequest['signedDocumentRef'] = $signedDocumentRef;
         $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema);
 
-        // Cross-app delegated-signing contract: when all signers have signed the
-        // request is COMPLETED — emit the terminal SigningConcludedEvent
-        // (status=signed) for a delegated (provenance-carrying) request. The
-        // signed document reference is the persisted documentFileId.
-        if ($allSigned === true) {
-            $this->emitConclusionIfDelegated(
-                request: $freshRequest,
-                status: 'signed',
-                signedDocumentRef: ($freshRequest['documentFileId'] ?? null)
-            );
-        }
+        // Cross-app delegated-signing contract: emit the terminal
+        // SigningConcludedEvent (status=signed) for a delegated request. The
+        // signed reference is the stored artifact (file id + version), never
+        // the unsigned original documentFileId.
+        $this->emitConclusionIfDelegated(
+            request: $freshRequest,
+            status: 'signed',
+            signedDocumentRef: $signedDocumentRef
+        );
 
     }//end updateRequestStatus()
+
+    /**
+     * Produce the signed artifact and store it as a new Nextcloud file version.
+     *
+     * Resolves the active provider (via SigningProviderFactory), reads the
+     * original document bytes, asks the provider to produce the signed artifact,
+     * and writes the result back to the same Nextcloud file — which creates a
+     * new file version of the prior content via `files_versions`. Returns a
+     * reference to the stored artifact (`<fileId>:<versionMtime>`).
+     *
+     * Honest-completion gate: any failure (no file, unreadable, provider cannot
+     * produce an artifact) throws, so the caller never marks the request
+     * COMPLETED without a real signed document.
+     *
+     * @param array<string, mixed> $request The completing signing-request array.
+     *
+     * @return string The stored signed-artifact reference (file id + version).
+     *
+     * @throws RuntimeException When no verifiable artifact can be produced/stored.
+     *
+     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     */
+    private function produceAndStoreSignedArtifact(array $request): string
+    {
+        $fileId = (int) ($request['documentFileId'] ?? 0);
+        if ($fileId <= 0) {
+            throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
+        }
+
+        $file = $this->resolveDocumentFile(fileId: $fileId, request: $request);
+
+        try {
+            $originalContent = $file->getContent();
+        } catch (\Throwable $e) {
+            throw new RuntimeException('Cannot read the document to sign: '.$e->getMessage());
+        }
+
+        $providerName = (string) ($request['provider'] ?? 'native');
+        try {
+            $provider = $this->providerFactory->getProvider(identifier: $providerName);
+        } catch (\Throwable $e) {
+            $provider = $this->providerFactory->getActiveProvider();
+        }
+
+        $signedBytes = $provider->produceSignedArtifact(
+            documentContent: $originalContent,
+            context: [
+                'signer'    => $this->resolveSignerLabel(),
+                'signers'   => ($request['signerIds'] ?? []),
+                'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+                'ip'        => $this->getClientIp(),
+                'level'     => (string) ($request['signatureLevel'] ?? 'SES'),
+            ]
+        );
+
+        // Writing new content to the existing file creates a new Nextcloud file
+        // version of the prior (unsigned) content automatically (files_versions).
+        try {
+            $file->putContent($signedBytes);
+        } catch (\Throwable $e) {
+            throw new RuntimeException('Cannot store the signed artifact as a new file version: '.$e->getMessage());
+        }
+
+        // The signed-artifact reference is the file id plus a content-derived
+        // version tag identifying this specific signed version — never the bare
+        // original file id.
+        return $fileId.':signed:'.substr(hash('sha256', $signedBytes), 0, 16);
+
+    }//end produceAndStoreSignedArtifact()
+
+    /**
+     * Resolve the document File node for the signing request.
+     *
+     * Resolves through the initiator's user folder (the request owner), falling
+     * back to the current signer's folder — either way a node that is not a
+     * readable/writeable file throws rather than silently skipping the artifact.
+     *
+     * @param int                  $fileId  The Nextcloud file id.
+     * @param array<string, mixed> $request The signing-request array.
+     *
+     * @return File The resolved file node.
+     *
+     * @throws RuntimeException When the file cannot be resolved.
+     */
+    private function resolveDocumentFile(int $fileId, array $request): File
+    {
+        $candidates = [];
+        $initiator  = (string) ($request['initiatorUserId'] ?? '');
+        if ($initiator !== '') {
+            $candidates[] = $initiator;
+        }
+
+        $current = $this->userSession->getUser();
+        if ($current !== null) {
+            $candidates[] = $current->getUID();
+        }
+
+        foreach (array_unique($candidates) as $uid) {
+            try {
+                $nodes = $this->rootFolder->getUserFolder($uid)->getById($fileId);
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            foreach ($nodes as $node) {
+                if ($node instanceof File) {
+                    return $node;
+                }
+            }
+        }
+
+        throw new RuntimeException('Cannot resolve the document file to sign: '.$fileId);
+
+    }//end resolveDocumentFile()
+
+    /**
+     * Resolve a human label for the completing signer.
+     *
+     * @return string The signer display name or UID, or 'Unknown'.
+     */
+    private function resolveSignerLabel(): string
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return 'Unknown';
+        }
+
+        $name = $user->getDisplayName();
+        if ($name !== '') {
+            return $name;
+        }
+
+        return $user->getUID();
+
+    }//end resolveSignerLabel()
 
     /**
      * Emit a terminal SigningConcludedEvent for an expired request.

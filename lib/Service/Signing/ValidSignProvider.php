@@ -172,6 +172,32 @@ class ValidSignProvider implements SigningProviderInterface
     }//end supportsLevel()
 
     /**
+     * Produce a signed artifact (not yet implemented — honest-completion gate).
+     *
+     * The ValidSign external integration cannot yet return a signed file, so
+     * this throws rather than presenting the unsigned original as signed. A QES
+     * request routed here fails the honest-completion gate loudly (issue #304
+     * scope: an unfinished provider must never mislabel the original).
+     *
+     * @param string               $documentContent The original document bytes.
+     * @param array<string, mixed> $context         Signing context.
+     *
+     * @return string The signed document bytes.
+     *
+     * @throws RuntimeException Always — the ValidSign artifact flow is not wired.
+     *
+     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     */
+    public function produceSignedArtifact(string $documentContent, array $context): string
+    {
+        throw new RuntimeException(
+            'ValidSign cannot yet produce a signed artifact — the external signing integration is '
+            .'not implemented. The request must not complete with the unsigned original as its signed document.'
+        );
+
+    }//end produceSignedArtifact()
+
+    /**
      * Get the provider configuration from app config
      *
      * @return array<string, mixed> The provider configuration

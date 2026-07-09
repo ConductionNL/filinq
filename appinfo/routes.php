@@ -15,18 +15,17 @@
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
-    'routes' => [
+// The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
+// catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
+// `Routes::standard()`; both resolve to docudesk's `DashboardController`
+// (which extends the AppHost `GenericDashboardController`), so the route name
+// `docudesk.dashboard.page` that the navigation (info.xml) and the dashboard
+// widgets link to is defined. The app-specific API routes below are passed
+// through as `$extra` and inserted before the catch-all.
+return \OCA\OpenRegister\AppHost\Routes::standard([
         // Metrics and health.
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
-
-        // Dashboard SPA page — served by OpenRegister's AppHost
-        // GenericDashboardController (aliased at
-        // AppHost\Controller\GenericDashboardController in Application::register,
-        // mirroring the Health/Metrics adoption precedent). URL + auth posture
-        // unchanged.
-        ['name' => 'AppHost\Controller\GenericDashboard#page', 'url' => '/', 'verb' => 'GET'],
 
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
@@ -47,6 +46,11 @@ return [
 
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
+
+        // Document version routes (Versies detail tab — thin files_versions consumer).
+        ['name' => 'version#index', 'url' => 'api/documents/{fileId}/versions', 'verb' => 'GET'],
+        ['name' => 'version#download', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/download', 'verb' => 'GET'],
+        ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
         // Anonymization routes.
         ['name' => 'anonymization#files', 'url' => 'api/anonymization/files', 'verb' => 'GET'],
@@ -145,13 +149,4 @@ return [
         // GenericPreferencesController (aliased in Application::register).
         ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
-
-        // SPA catch-all — serves the Vue app shell for any frontend deep
-        // link (vue-router HTML5 history mode). Must come LAST so it
-        // doesn't shadow specific routes above. Served by the AppHost
-        // GenericDashboardController (aliased in Application::register);
-        // GenericDashboard#catchAll delegates to page(). A distinct route
-        // name keeps it from shadowing the `/` index route.
-        ['name' => 'AppHost\Controller\GenericDashboard#catchAll', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => '']],
-    ],
-];
+]);

@@ -137,10 +137,18 @@ final class PolicyMatchServiceTest extends TestCase
     /**
      * Normalized-type rule matches case-folded and accent-stripped variants.
      *
+     * Requires PHP ext-intl for Transliterator-based accent stripping.
+     * In bare CI environments without ext-intl the normaliser degrades to
+     * mb_strtolower, which cannot strip accents — skip rather than false-fail.
+     *
      * @return void
      */
     public function testNormalizedRuleStripsCaseAndAccents(): void
     {
+        if (extension_loaded('intl') === false) {
+            self::markTestSkipped('ext-intl not available — accent-stripping normalizer not functional');
+        }
+
         $svc = $this->buildService([
             [
                 '@self'       => ['id' => 'rule-b'],

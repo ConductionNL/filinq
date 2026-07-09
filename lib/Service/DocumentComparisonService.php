@@ -90,7 +90,6 @@ class DocumentComparisonService
         'text/xml',
     ];
 
-
     /**
      * Constructor.
      *
@@ -114,7 +113,6 @@ class DocumentComparisonService
 
     }//end __construct()
 
-
     /**
      * Compare two document subjects.
      *
@@ -129,18 +127,18 @@ class DocumentComparisonService
      */
     public function compare(array $left, array $right): array
     {
-        $this->logSubjects($left, $right);
+        $this->logSubjects(left: $left, right: $right);
 
-        $leftFile  = $this->resolveFile((int) ($left['fileId'] ?? 0));
-        $rightFile = $this->resolveFile((int) ($right['fileId'] ?? 0));
+        $leftFile  = $this->resolveFile(fileId: $left['fileId']);
+        $rightFile = $this->resolveFile(fileId: $right['fileId']);
 
-        $leftText  = $this->extractText($leftFile, 'left', ($left['versionTimestamp'] ?? null));
-        $rightText = $this->extractText($rightFile, 'right', ($right['versionTimestamp'] ?? null));
+        $leftText  = $this->extractText(file: $leftFile, side: 'left', versionTimestamp: ($left['versionTimestamp'] ?? null));
+        $rightText = $this->extractText(file: $rightFile, side: 'right', versionTimestamp: ($right['versionTimestamp'] ?? null));
 
         $leftMime  = $leftFile->getMimeType();
         $rightMime = $rightFile->getMimeType();
 
-        $hunks   = $this->diff($leftText, $rightText);
+        $hunks   = $this->diff(leftText: $leftText, rightText: $rightText);
         $changed = 0;
         foreach ($hunks as $hunk) {
             if ($hunk['type'] !== 'unchanged') {
@@ -158,9 +156,9 @@ class DocumentComparisonService
         ];
 
         // Redaction annotation: only when right is the anonymised output of left.
-        $sourceFileId = (int) ($left['fileId'] ?? 0);
-        $annotation   = $this->annotateRedactions($response['hunks'], $sourceFileId);
-        $response['hunks']               = $annotation['hunks'];
+        $sourceFileId      = $left['fileId'];
+        $annotation        = $this->annotateRedactions(hunks: $response['hunks'], sourceFileId: $sourceFileId);
+        $response['hunks'] = $annotation['hunks'];
         $response['redactionAnnotation'] = $annotation['status'];
         if ($annotation['status'] === 'annotated') {
             $response['unredactedEntities'] = $annotation['unredactedEntities'];
@@ -169,7 +167,6 @@ class DocumentComparisonService
         return $response;
 
     }//end compare()
-
 
     /**
      * Resolve a file through the requesting user's folder.
@@ -187,28 +184,27 @@ class DocumentComparisonService
     {
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new ComparisonException(404, 'not-found', 'Subject not found.');
+            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Subject not found.');
         }
 
         if ($fileId <= 0) {
-            throw new ComparisonException(404, 'not-found', 'Subject not found.');
+            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Subject not found.');
         }
 
         $userFolder = $this->rootFolder->getUserFolder($user->getUID());
         $nodes      = $userFolder->getById($fileId);
         if (empty($nodes) === true) {
-            throw new ComparisonException(404, 'not-found', 'Subject not found.');
+            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Subject not found.');
         }
 
         $node = $nodes[0];
         if (($node instanceof File) === false) {
-            throw new ComparisonException(404, 'not-found', 'Subject not found.');
+            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'Subject not found.');
         }
 
         return $node;
 
     }//end resolveFile()
-
 
     /**
      * Extract normalised text from a subject (current content or a version).
@@ -224,29 +220,28 @@ class DocumentComparisonService
     private function extractText(File $file, string $side, ?int $versionTimestamp): string
     {
         $mime = $file->getMimeType();
-        if ($this->isTextExtractable($mime) === false) {
-            throw new ComparisonException(415, 'unsupported-format', $side);
+        if ($this->isTextExtractable(mime: $mime) === false) {
+            throw new ComparisonException(statusCode: 415, reason: 'unsupported-format', message: $side);
         }
 
         if ($versionTimestamp !== null) {
-            $raw = $this->readVersionContent($file, (int) $versionTimestamp);
+            $raw = $this->readVersionContent(file: $file, versionTimestamp: (int) $versionTimestamp);
         } else {
             try {
                 $raw = $file->getContent();
             } catch (Throwable $e) {
-                throw new ComparisonException(404, 'not-found', $side);
+                throw new ComparisonException(statusCode: 404, reason: 'not-found', message: $side);
             }
         }
 
         $maxBytes = $this->getMaxTextBytes();
         if (strlen($raw) > $maxBytes) {
-            throw new ComparisonException(413, 'too-large', $side);
+            throw new ComparisonException(statusCode: 413, reason: 'too-large', message: $side);
         }
 
-        return $this->normaliseWhitespace($raw);
+        return $this->normaliseWhitespace(text: $raw);
 
     }//end extractText()
-
 
     /**
      * Read a prior version's content via the files_versions integration.
@@ -264,18 +259,18 @@ class DocumentComparisonService
     private function readVersionContent(File $file, int $versionTimestamp): string
     {
         if ($this->appManager->isEnabledForUser('files_versions') === false) {
-            throw new ComparisonException(422, 'versions-unavailable', 'files_versions disabled');
+            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'files_versions disabled');
         }
 
         try {
             $versionManager = $this->container->get('OCA\Files_Versions\Versions\IVersionManager');
         } catch (Throwable $e) {
-            throw new ComparisonException(422, 'versions-unavailable', 'version manager unavailable');
+            throw new ComparisonException(statusCode: 422, reason: 'versions-unavailable', message: 'version manager unavailable');
         }
 
         $user = $this->userSession->getUser();
         if ($user === null) {
-            throw new ComparisonException(404, 'not-found', 'version');
+            throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
         }
 
         try {
@@ -294,10 +289,9 @@ class DocumentComparisonService
             $this->logger->debug('Version read failed', ['exception' => $e->getMessage()]);
         }
 
-        throw new ComparisonException(404, 'not-found', 'version');
+        throw new ComparisonException(statusCode: 404, reason: 'not-found', message: 'version');
 
     }//end readVersionContent()
-
 
     /**
      * Determine whether the extractor can read a mime type as text.
@@ -322,7 +316,6 @@ class DocumentComparisonService
 
     }//end isTextExtractable()
 
-
     /**
      * Normalise whitespace: collapse runs to single spaces, trim.
      *
@@ -341,7 +334,6 @@ class DocumentComparisonService
 
     }//end normaliseWhitespace()
 
-
     /**
      * Compute a word-level structured diff coalesced into hunks.
      *
@@ -355,12 +347,21 @@ class DocumentComparisonService
      */
     private function diff(string $leftText, string $rightText): array
     {
-        $leftWords  = ($leftText === '') ? [] : explode(' ', $leftText);
-        $rightWords = ($rightText === '') ? [] : explode(' ', $rightText);
+        if ($leftText === '') {
+            $leftWords = [];
+        } else {
+            $leftWords = explode(' ', $leftText);
+        }
 
-        $ops = $this->lcsDiff($leftWords, $rightWords);
+        if ($rightText === '') {
+            $rightWords = [];
+        } else {
+            $rightWords = explode(' ', $rightText);
+        }
 
-        $hunks      = [];
+        $ops = $this->lcsDiff(a: $leftWords, b: $rightWords);
+
+        $hunks       = [];
         $leftOffset  = 0;
         $rightOffset = 0;
         $i           = 0;
@@ -377,12 +378,12 @@ class DocumentComparisonService
                     $i++;
                 }
 
-                $text       = implode(' ', $words);
-                $leftLen    = strlen($text);
-                $hunks[]    = [
-                    'type' => 'unchanged',
-                    'left'  => ['offset' => $leftOffset, 'length' => $leftLen],
-                    'right' => ['offset' => $rightOffset, 'length' => $leftLen],
+                $text         = implode(' ', $words);
+                $leftLen      = strlen($text);
+                $hunks[]      = [
+                    'type'      => 'unchanged',
+                    'left'      => ['offset' => $leftOffset, 'length' => $leftLen],
+                    'right'     => ['offset' => $rightOffset, 'length' => $leftLen],
                     'leftText'  => $text,
                     'rightText' => $text,
                 ];
@@ -439,7 +440,6 @@ class DocumentComparisonService
         return $hunks;
 
     }//end diff()
-
 
     /**
      * Compute an LCS-based op list over two word arrays.
@@ -501,7 +501,6 @@ class DocumentComparisonService
         return $ops;
 
     }//end lcsDiff()
-
 
     /**
      * Annotate change hunks with redaction metadata + completeness signal.
@@ -566,7 +565,7 @@ class DocumentComparisonService
         // Build the anonymise set: non-skip relations with their replacement keys.
         $anonymiseSet = [];
         foreach ($relations as $relation) {
-            if ($this->isSkipFlagged($relation) === true) {
+            if ($this->isSkipFlagged(relation: $relation) === true) {
                 continue;
             }
 
@@ -580,7 +579,7 @@ class DocumentComparisonService
         // Annotate hunks: match inserted (replacement key) or removed (value) spans.
         $annotatedHunks = [];
         foreach ($result['hunks'] as $hunk) {
-            $match = $this->matchHunkToEntity($hunk, $anonymiseSet, $entityMeta);
+            $match = $this->matchHunkToEntity(hunk: $hunk, anonymiseSet: $anonymiseSet, entityMeta: $entityMeta);
             if ($match !== null) {
                 $hunk['redaction'] = [
                     'entityId'   => $match['entityId'],
@@ -613,13 +612,12 @@ class DocumentComparisonService
 
     }//end annotateRedactions()
 
-
     /**
      * Match a hunk to an entity by replacement-key (insert) or value (delete).
      *
-     * @param array<string, mixed>                                       $hunk         A diff hunk.
-     * @param array<int, array{replacement:string, matched:bool}>        $anonymiseSet The anonymise set.
-     * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta Entity metadata.
+     * @param array<string, mixed>                                                  $hunk         A diff hunk.
+     * @param array<int, array{replacement:string, matched:bool}>                   $anonymiseSet The anonymise set.
+     * @param array<int, array{entityType:string, entityName:string, value:string}> $entityMeta   Entity metadata.
      *
      * @return array{entityId:int, entityType:string, matchedBy:string}|null The match or null.
      */
@@ -663,7 +661,6 @@ class DocumentComparisonService
 
     }//end matchHunkToEntity()
 
-
     /**
      * Determine whether a relation is skip-flagged (operator-released override).
      *
@@ -681,7 +678,6 @@ class DocumentComparisonService
 
     }//end isSkipFlagged()
 
-
     /**
      * Whether OpenRegister is installed/available.
      *
@@ -692,7 +688,6 @@ class DocumentComparisonService
         return in_array('openregister', $this->appManager->getInstalledApps(), true);
 
     }//end isOpenRegisterAvailable()
-
 
     /**
      * Try to resolve the OR EntityRelationMapper, returning null on failure.
@@ -710,7 +705,6 @@ class DocumentComparisonService
 
     }//end tryGetEntityRelationMapper()
 
-
     /**
      * Read the configured maximum text size in bytes.
      *
@@ -727,7 +721,6 @@ class DocumentComparisonService
 
     }//end getMaxTextBytes()
 
-
     /**
      * Log a comparison request with identifiers only (no content).
      *
@@ -741,10 +734,10 @@ class DocumentComparisonService
         $this->logger->info(
             'Document comparison requested',
             [
-                'leftFileId'        => (int) ($left['fileId'] ?? 0),
-                'leftVersion'       => ($left['versionTimestamp'] ?? null),
-                'rightFileId'       => (int) ($right['fileId'] ?? 0),
-                'rightVersion'      => ($right['versionTimestamp'] ?? null),
+                'leftFileId'   => (int) ($left['fileId'] ?? 0),
+                'leftVersion'  => ($left['versionTimestamp'] ?? null),
+                'rightFileId'  => (int) ($right['fileId'] ?? 0),
+                'rightVersion' => ($right['versionTimestamp'] ?? null),
             ]
         );
 

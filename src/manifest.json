@@ -118,10 +118,16 @@
 		{
 			"id": "Templates",
 			"route": "/templates",
-			"type": "custom",
+			"type": "index",
 			"title": "Templates",
-			"component": "TemplateIndex",
-			"_note": "Templates are managed by docudesk's own template controller. Future ADR may migrate to OR-backed index if a template schema is registered."
+			"config": {
+				"register": "docudesk",
+				"schema": "template",
+				"columns": ["name", "category", "format", "namespace", "description"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://docudesk.conduction.nl"
+			},
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered (register docudesk), so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail."
 		},
 		{
 			"id": "TemplateDetail",
@@ -134,10 +140,16 @@
 		{
 			"id": "SigningRequests",
 			"route": "/signing",
-			"type": "custom",
+			"type": "index",
 			"title": "Signing Requests",
-			"component": "SigningRequestList",
-			"_note": "Signing requests are managed by docudesk's signing controller; type:custom preserves the existing data path."
+			"config": {
+				"register": "docudesk",
+				"schema": "signingRequest",
+				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
+				"sidebar": { "enabled": true, "showMetadata": true },
+				"documentationUrl": "https://docudesk.conduction.nl"
+			},
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail."
 		},
 		{
 			"id": "SigningRequestDetail",
@@ -170,6 +182,14 @@
 			"title": "Document comparison",
 			"component": "ComparisonView",
 			"_note": "Side-by-side document comparison (original vs anonymised output). Standalone page; no nav item; deep-linked with ?left=&right= file-id query params."
+		},
+		{
+			"id": "Versions",
+			"route": "/versions",
+			"type": "custom",
+			"title": "Versions",
+			"component": "VersionsView",
+			"_note": "Document versions (Versies) — thin consumer of Nextcloud files_versions. Part of the ADR-001 document-detail family; standalone deep-linked page (?fileId=) like Comparison, no nav item. Lists/opens/downloads/restores/compares a document's file versions."
 		},
 		{
 			"id": "FeaturesRoadmap",
@@ -234,6 +254,119 @@
 					"kind": "appConfig",
 					"key": "anonymizations_total"
 				}
+			}
+		]
+	},
+	"walkthrough": {
+		"enabled": true,
+		"version": 1,
+		"completionConfigKey": "walkthrough_completed_version",
+		"tours": [
+			{
+				"id": "docudesk:getting-started",
+				"title": "Getting started",
+				"trigger": "first-visit",
+				"minAppVersion": "0.0.34-unstable.17",
+				"steps": [
+					{
+						"id": "welcome",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "Welcome to DocuDesk",
+						"body": "Let's take a quick spin through your document workspace — we'll set up a template and a signing request together so you can see how the pieces fit. You'll add each record yourself.",
+						"target": {
+							"kind": "page",
+							"ref": "Dashboard"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					},
+					{
+						"id": "go-templates",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Templates are the reusable documents you generate, anonymise and send. Open Templates from the menu to get started.",
+						"task": "Click Templates in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "Templates"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "Templates"
+						}
+					},
+					{
+						"id": "create-template",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Add your first template — give it a name and save. You can edit its content and reuse it for documents and signing requests later.",
+						"task": "Click New and save a template",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "docudesk",
+							"schema": "template",
+							"capture": {
+								"templateId": ":id"
+							}
+						}
+					},
+					{
+						"id": "go-signing",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "right",
+						"body": "Signing requests track documents sent out for signature. Open Signing Requests from the menu.",
+						"task": "Click Signing Requests in the menu",
+						"target": {
+							"kind": "nav-item",
+							"ref": "SigningRequests"
+						},
+						"advanceOn": {
+							"type": "route-match",
+							"route": "SigningRequests"
+						}
+					},
+					{
+						"id": "create-signing-request",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Create your first signing request — name it and save. From here you can attach a document and track its signatures.",
+						"task": "Click New and save a signing request",
+						"target": {
+							"kind": "element",
+							"ref": "index-add"
+						},
+						"advanceOn": {
+							"type": "object-created",
+							"register": "docudesk",
+							"schema": "signingRequest",
+							"capture": {
+								"signingRequestId": ":id"
+							}
+						}
+					},
+					{
+						"id": "done",
+						"sinceVersion": "0.0.34-unstable.17",
+						"placement": "center",
+						"title": "You're all set",
+						"body": "Nicely done — you have your first template and signing request. Head back to the Dashboard to watch your document workspace grow, and reopen this tour anytime from the … menu.",
+						"target": {
+							"kind": "page",
+							"ref": "Dashboard"
+						},
+						"advanceOn": {
+							"type": "manual"
+						}
+					}
+				]
 			}
 		]
 	}

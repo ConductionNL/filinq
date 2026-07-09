@@ -145,6 +145,48 @@ class SigningVerificationServiceTest extends TestCase
 
 
     /**
+     * A natively-produced SES artifact verifies against the marker+HMAC path.
+     *
+     * Builds the same canonical-form marker the NativeSigningProvider writer
+     * emits and confirms extractSignatures() reports valid=true when the secret
+     * matches, and valid=false for a wrong secret or tampered content
+     * (native-ses-signature-embedding acceptance oracle, issue #304).
+     *
+     * @return void
+     */
+    public function testNativeArtifactVerifiesAgainstMarkerHmac(): void
+    {
+        $secret = 'e2e-verification-secret';
+        $this->mockConfig->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default='') use ($secret): string {
+                return $key === 'signing_verification_secret' ? $secret : $default;
+            }
+        );
+
+        // Reproduce the writer's canonical-form marker embedding.
+        $original  = "%PDF-1.4\ngovernment besluit content\n%%EOF\n";
+        $assemble  = static function (string $doc, string $payload): string {
+            return $doc."\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(".$payload.")\nendobj\n";
+        };
+        $canonical = $assemble($original, '');
+        $mac       = hash_hmac('sha256', hash('sha256', $canonical), $secret);
+        $payload   = base64_encode((string) json_encode(['signer' => 'Alice', 'level' => 'SES', 'method' => 'native', 'mac' => $mac]));
+        $signed    = $assemble($original, $payload);
+
+        $ref    = new ReflectionClass($this->service);
+        $method = $ref->getMethod('extractSignatures');
+        $method->setAccessible(true);
+
+        $valid = $method->invoke($this->service, $signed);
+        $this->assertTrue($valid[0]['valid'], 'A correctly signed artifact must verify.');
+
+        // Tampering the document content invalidates the assertion.
+        $tampered = $method->invoke($this->service, str_replace('besluit', 'FORGED', $signed));
+        $this->assertFalse($tampered[0]['valid'], 'Tampered content must not verify.');
+
+    }//end testNativeArtifactVerifiesAgainstMarkerHmac()
+
+    /**
      * stripAssertionMac() removes a plain MAC value from the content (finding L1).
      *
      * @return void

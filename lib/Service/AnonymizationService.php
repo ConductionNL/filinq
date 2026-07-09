@@ -202,7 +202,17 @@ class AnonymizationService
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
-            $entities   = $entityRelationMapper->findEntitiesForFile($fileId);
+            $entities = $entityRelationMapper->findEntitiesForFile($fileId);
+
+            // Pre-fill a proposed grondslag per entity type onto the freshly-
+            // detected relations (fill-only-when-empty), then enrich the rows
+            // with their bases so the review UI shows the proposal. Resolved
+            // via the container to keep this class's coupling in check; both
+            // calls are internally best-effort and never block detection.
+            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+            $grondslagProposal->applyProposals(fileId: $fileId);
+            $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+
             $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
             $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
@@ -1349,18 +1359,18 @@ class AnonymizationService
                 $existing = $this->extractLinkObjectData(candidate: $results[0]);
             }
 
+            $object = [
+                '@self'        => [
+                    'register' => 'document',
+                    'schema'   => 'anonymizationLink',
+                ],
+                'sourceFileId' => $fileId,
+                'runCount'     => 1,
+            ];
+
             if (empty($existing) === false) {
                 $object = $existing;
                 $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
-            } else {
-                $object = [
-                    '@self'        => [
-                        'register' => 'document',
-                        'schema'   => 'anonymizationLink',
-                    ],
-                    'sourceFileId' => $fileId,
-                    'runCount'     => 1,
-                ];
             }
 
             $object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
@@ -1563,20 +1573,18 @@ class AnonymizationService
 
         try {
             if ($isPdf === true) {
-                $this->grondslagenSummary->appendSummaryToPdf(
-                    anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
-                );
+                $this->grondslagenSummary->appendSummaryToPdf(node: $anonymisedNode);
                 $resultInfo['summaryAppended'] = true;
-            } else {
-                $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
-                    anonymisedFile: $anonymisedNode,
-                    sourceFileId: $sourceFileId
-                );
-                $resultInfo['summaryAppended'] = false;
-                $resultInfo['summaryFileId']   = $summaryFile->getId();
-                $resultInfo['summaryFilePath'] = $summaryFile->getPath();
+                return $resultInfo;
             }
+
+            $summaryFile = $this->grondslagenSummary->renderSummaryBesideFile(
+                node: $anonymisedNode,
+                sourceFileId: $sourceFileId
+            );
+            $resultInfo['summaryAppended'] = false;
+            $resultInfo['summaryFileId']   = $summaryFile->getId();
+            $resultInfo['summaryFilePath'] = $summaryFile->getPath();
         } catch (Exception $e) {
             $this->logger->warning(
                 'Grondslagen summary attach failed',

@@ -94,6 +94,16 @@ class SigningServiceTest extends TestCase
     private IRequest|MockObject $request;
 
     /**
+     * @var SigningProviderFactory|MockObject
+     */
+    private SigningProviderFactory|MockObject $providerFactory;
+
+    /**
+     * @var \OCP\Files\IRootFolder|MockObject
+     */
+    private \OCP\Files\IRootFolder|MockObject $rootFolder;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -141,21 +151,23 @@ class SigningServiceTest extends TestCase
         $this->request = $this->createMock(IRequest::class);
         $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
 
-        $providerFactory     = $this->createMock(SigningProviderFactory::class);
-        $notificationManager = $this->createMock(INotificationManager::class);
+        $this->providerFactory = $this->createMock(SigningProviderFactory::class);
+        $notificationManager   = $this->createMock(INotificationManager::class);
         $logger          = $this->createMock(LoggerInterface::class);
         $eventDispatcher = $this->createMock(IEventDispatcher::class);
+        $this->rootFolder = $this->createMock(\OCP\Files\IRootFolder::class);
 
         $this->service = new SigningService(
             settingsService: $this->settingsService,
             auditService: $this->auditService,
-            providerFactory: $providerFactory,
+            providerFactory: $this->providerFactory,
             config: $this->config,
             userSession: $this->userSession,
             notificationManager: $notificationManager,
             logger: $logger,
             request: $this->request,
-            eventDispatcher: $eventDispatcher
+            eventDispatcher: $eventDispatcher,
+            rootFolder: $this->rootFolder
         );
 
     }//end setUp()
@@ -573,6 +585,135 @@ class SigningServiceTest extends TestCase
         $this->assertArrayHasKey('signedAt', $result);
 
     }//end testSignHappyPath()
+
+    /**
+     * The completing signature produces + stores a signed artifact and sets
+     * signedDocumentRef to that artifact (native-ses-signature-embedding).
+     *
+     * @return void
+     */
+    public function testCompletingSignatureStoresArtifactAndSetsRef(): void
+    {
+        $request = [
+            'id'              => 'req-001',
+            'status'          => 'IN_PROGRESS',
+            'signatureLevel'  => 'SES',
+            'provider'        => 'native',
+            'initiatorUserId' => 'alice',
+            'documentFileId'  => '42',
+            'signerIds'       => ['signer-001'],
+        ];
+        $signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+        $signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+
+        $this->objectService->method('find')->willReturnOnConsecutiveCalls(
+            $request,
+            $signerPending,
+            $signerSigned,
+            $request
+        );
+
+        $captured = [];
+        $this->objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$captured): array {
+                if (($object['status'] ?? '') === 'COMPLETED') {
+                    $captured = $object;
+                }
+
+                return $object;
+            }
+        );
+
+        // Provider produces signed bytes.
+        $provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+        $provider->method('produceSignedArtifact')->willReturn("SIGNED-BYTES");
+        $this->providerFactory->method('getProvider')->willReturn($provider);
+
+        // File resolves through the initiator folder; putContent creates the version.
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getContent')->willReturn("original-bytes");
+        $stored = null;
+        $file->method('putContent')->willReturnCallback(function ($bytes) use (&$stored): void {
+            $stored = $bytes;
+        });
+
+        $folder = $this->createMock(\OCP\Files\Folder::class);
+        $folder->method('getById')->willReturn([$file]);
+        $this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+        $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+        $this->assertSame('SIGNED-BYTES', $stored, 'The signed bytes must be stored as a new file version.');
+        $this->assertSame('COMPLETED', $captured['status'] ?? null);
+        $expectedRef = '42:signed:'.substr(hash('sha256', 'SIGNED-BYTES'), 0, 16);
+        $this->assertSame($expectedRef, $captured['signedDocumentRef'] ?? null);
+        $this->assertStringStartsWith('42:signed:', $captured['signedDocumentRef'] ?? '');
+        $this->assertNotSame('42', $captured['signedDocumentRef'] ?? null, 'Ref must not be the unsigned original file id.');
+
+    }//end testCompletingSignatureStoresArtifactAndSetsRef()
+
+    /**
+     * Honest-completion gate: when the provider cannot produce an artifact the
+     * completing signature fails and the request is NOT marked COMPLETED.
+     *
+     * @return void
+     */
+    public function testHonestCompletionGateWhenProviderCannotProduce(): void
+    {
+        $request = [
+            'id'              => 'req-001',
+            'status'          => 'IN_PROGRESS',
+            'signatureLevel'  => 'SES',
+            'provider'        => 'native',
+            'initiatorUserId' => 'alice',
+            'documentFileId'  => '42',
+            'signerIds'       => ['signer-001'],
+        ];
+        $signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+        $signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+
+        $this->objectService->method('find')->willReturnOnConsecutiveCalls(
+            $request,
+            $signerPending,
+            $signerSigned,
+            $request
+        );
+
+        $sawCompleted = false;
+        $this->objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$sawCompleted): array {
+                if (($object['status'] ?? '') === 'COMPLETED') {
+                    $sawCompleted = true;
+                }
+
+                return $object;
+            }
+        );
+
+        $provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+        $provider->method('produceSignedArtifact')->willThrowException(
+            new RuntimeException('signing_verification_secret is unset')
+        );
+        $this->providerFactory->method('getProvider')->willReturn($provider);
+
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getContent')->willReturn("original-bytes");
+        $folder = $this->createMock(\OCP\Files\Folder::class);
+        $folder->method('getById')->willReturn([$file]);
+        $this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+        $threw = false;
+        try {
+            $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+        } catch (RuntimeException $e) {
+            $threw = true;
+            $this->assertStringContainsString('secret', $e->getMessage());
+        }
+
+        $this->assertTrue($threw, 'The completing signature must fail loudly.');
+        $this->assertFalse($sawCompleted, 'The request must NOT be marked COMPLETED without an artifact.');
+
+    }//end testHonestCompletionGateWhenProviderCannotProduce()
 
     /**
      * sign() throws when signer record belongs to a different request.

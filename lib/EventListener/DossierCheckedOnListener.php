@@ -48,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymisation-grondslagen-summary-rendering/tasks.md#task-7
  *
- * @template-implements IEventListener<ObjectUpdatedEvent>
+ * @psalm-suppress MismatchingDocblockReturnType
  */
 class DossierCheckedOnListener implements IEventListener
 {
@@ -163,7 +163,7 @@ class DossierCheckedOnListener implements IEventListener
                 context: ['dossierId' => $dossierId]
             );
 
-            $this->grondslagenSummaryService->renderDossierSummary(dossierId: (string) $dossierId);
+            $this->grondslagenSummaryService->renderDossierSummary(dossierUuid: (string) $dossierId);
         } catch (\Throwable $e) {
             // Log but do NOT rethrow — the dossier update must succeed.
             $this->logError(

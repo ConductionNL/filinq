@@ -1,76 +1,28 @@
 ---
 id: wcag-compliance
-title: WCAG Compliance
-sidebar_label: WCAG Compliance
+title: Accessibility
+sidebar_label: Accessibility
 sidebar_position: 4
-description: Ensure document accessibility with WCAG guidelines
+description: Accessibility posture of the DocuDesk application UI
 keywords:
   - accessibility
   - WCAG
-  - PDF/UA
-  - compliance
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-# ♿ WCAG Compliance
+# ♿ Accessibility
 
 ## Overview
-Ensure your documents are accessible to everyone by automatically checking and enforcing WCAG guidelines. All processing happens locally while maintaining document integrity.
+DocuDesk's application UI is built on standard Nextcloud and `@conduction/nextcloud-vue` components, which target WCAG 2.1 AA at the component level, and supports the NL Design System theme for Dutch government branding.
 
-## Features
+DocuDesk does **not** implement its own document-content accessibility checker (no automated WCAG/PDF-UA scanning or auto-fix of generated document content). [Document Validation](document-validation.md) checks document format, integrity, encryption, text-layer presence, and metadata completeness — it does not assess accessibility of the rendered content itself.
 
-### Compliance Checks
-- WCAG 2.1 Level AAA compliance
-- PDF/UA validation
-- Automated fixes
-- Detailed reporting
-- Custom compliance profiles
+## What's actually available
+- Keyboard navigation and screen-reader support inherited from Nextcloud/nc-vue components
+- NL Design System theming for Dutch government branding
+- Full Dutch/English translation of the application UI
 
-## Quick Start
+## Not implemented
+- Automated WCAG/PDF-UA compliance scanning of generated documents
+- Automated accessibility fixes to document content (alt text, contrast, heading structure)
 
-<Tabs>
-<TabItem value="check" label="Check Compliance" default>
-
-```php
-// Check document accessibility
-$report = $wcagService->checkCompliance(
-    documentId: 123,
-    standard: 'WCAG2.1',
-    level: 'AAA'
-);
-```
-
-</TabItem>
-<TabItem value="fix" label="Auto-Fix Issues">
-
-```php
-// Automatically fix common issues
-$fixed = $wcagService->autoFix(
-    documentId: 123,
-    options: [
-        'addAltText' => true,
-        'improveContrast' => true,
-        'fixHeadings' => true
-    ]
-);
-```
-
-</TabItem>
-</Tabs>
-
-:::tip Automated Improvements
-Our system can automatically fix common accessibility issues while preserving document layout and content.
-:::
-
-:::info Standards Support
-Supports latest WCAG guidelines and PDF/UA requirements for maximum accessibility compliance.
-:::
-
-## Use Cases
-- Government document compliance
-- Educational material preparation
-- Public sector documentation
-- Corporate communications
-- Website content preparation 
+If document-content accessibility validation is a hard requirement for your organisation, treat it as an open gap rather than a shipped feature. 

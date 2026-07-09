@@ -101,17 +101,10 @@ class NativeSigningProvider implements SigningProviderInterface
         string $level,
         array $options=[]
     ): array {
-        // C1 mitigation (issue #304): the signing pipeline is not yet wired —
-        // SigningService::sign() never invokes the provider, so no document is
-        // ever signed or marked completed. Throw immediately so administrators
-        // who enable signing see the gap at once rather than silently getting a
-        // no-op. Remove this guard when the provider↔request wiring ships.
-        throw new RuntimeException(
-            'Native signing pipeline is not yet integrated — see ConductionNL/docudesk#304. '
-            .'Disable signing_enabled until the request↔provider wiring is complete.'
-        );
-
-        // @phpstan-ignore-next-line (dead code until #304 is resolved)
+        // The native SES artifact writer is now wired (issue #304): the
+        // completing signature produces a verifiable artifact via
+        // produceSignedArtifact(). This session-oriented entry point creates the
+        // persisted session used by the async status/download flow.
         if ($this->supportsLevel(level: $level) === false) {
             throw new RuntimeException(
                 'Native provider only supports SES signature level, got: '.$level
@@ -195,15 +188,6 @@ class NativeSigningProvider implements SigningProviderInterface
      */
     public function downloadSignedDocument(string $externalId): string
     {
-        // C1 mitigation (issue #304): the signing pipeline is not yet wired —
-        // no code sets session status to 'completed'. Throw a descriptive error
-        // so the failure mode is loud rather than silently returning an unsigned file.
-        throw new RuntimeException(
-            'Native signing pipeline is not yet integrated — see ConductionNL/docudesk#304. '
-            .'No signed document is available until the request↔provider wiring ships.'
-        );
-
-        // @phpstan-ignore-next-line (dead code until #304 is resolved)
         $session = $this->loadSessionByExternalId(externalId: $externalId);
 
         if (($session['status'] ?? '') !== 'completed') {
@@ -263,6 +247,83 @@ class NativeSigningProvider implements SigningProviderInterface
         return $level === 'SES';
 
     }//end supportsLevel()
+
+    /**
+     * Produce a verifiable native SES signed artifact.
+     *
+     * Embeds a `/DocuDesk-Signature(base64-json)` marker binding the signer
+     * identity, timestamp and IP, carrying an HMAC (`mac`) over the document
+     * content-hash computed with the server-held `signing_verification_secret`.
+     * The HMAC is computed over the *canonical* form of the produced document —
+     * the bytes with every `/DocuDesk-Signature(...)` marker payload blanked —
+     * so the assertion cannot cover itself and
+     * `SigningVerificationService::verifyAssertion()` recomputes the identical
+     * value and validates the artifact.
+     *
+     * Honest-completion gate (issue #304): when the secret is unset the writer
+     * throws rather than emit an unverifiable artifact, so the completing
+     * signature fails loudly instead of mislabelling the original as signed.
+     *
+     * @param string               $documentContent The original document bytes.
+     * @param array<string, mixed> $context         Signing context.
+     *
+     * @return string The signed document bytes.
+     *
+     * @throws RuntimeException When the signing secret is unset.
+     *
+     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     */
+    public function produceSignedArtifact(string $documentContent, array $context): string
+    {
+        $secret = $this->config->getValueString('docudesk', 'signing_verification_secret', '');
+        if ($secret === '') {
+            throw new RuntimeException(
+                'Cannot produce a native SES artifact: signing_verification_secret is unset. '
+                .'Configure the signing secret in DocuDesk admin settings before enabling signing.'
+            );
+        }
+
+        $assertion = [
+            'signer'    => (string) ($context['signer'] ?? 'Unknown'),
+            'signers'   => ($context['signers'] ?? []),
+            'timestamp' => (string) ($context['timestamp'] ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM)),
+            'level'     => (string) ($context['level'] ?? 'SES'),
+            'method'    => 'native',
+            'ip'        => (string) ($context['ip'] ?? ''),
+        ];
+
+        // Build the canonical (unsigned-marker) form the verifier will recompute:
+        // the produced document with an empty marker payload. The HMAC is taken
+        // over the hash of that canonical form so the MAC cannot cover itself.
+        $canonical   = $this->assembleSignedBytes(documentContent: $documentContent, payload: '');
+        $contentHash = hash('sha256', $canonical);
+        $mac         = hash_hmac('sha256', $contentHash, $secret);
+
+        $assertion['mac'] = $mac;
+        $payload          = base64_encode((string) json_encode($assertion));
+
+        return $this->assembleSignedBytes(documentContent: $documentContent, payload: $payload);
+
+    }//end produceSignedArtifact()
+
+    /**
+     * Assemble the signed document bytes with the given marker payload.
+     *
+     * Appending the marker as a trailing PDF object keeps the original bytes
+     * intact and lets the verifier recover the canonical form by blanking the
+     * marker payload. An empty payload yields the canonical (hashed) form.
+     *
+     * @param string $documentContent The original document bytes.
+     * @param string $payload         The base64 marker payload ('' for canonical).
+     *
+     * @return string The assembled bytes.
+     */
+    private function assembleSignedBytes(string $documentContent, string $payload): string
+    {
+        return $documentContent
+            ."\n1 0 obj\n<< /Type /Sig /SubFilter /DocuDesk.SES >>\n/DocuDesk-Signature(".$payload.")\nendobj\n";
+
+    }//end assembleSignedBytes()
 
     /**
      * Persist a signing session as an OpenRegister object

@@ -511,6 +511,12 @@ export const useAnonymizationStore = defineStore(
 					entry.anonymizedFileName = anonymizeResponse.data.anonymizedFileName
 					entry.anonymizedFilePath = anonymizeResponse.data.anonymizedFilePath
 					entry.replacementCount = anonymizeResponse.data.replacementCount || 0
+					// Best-effort: the file is produced even if some entities could not
+					// be fully removed. `complete === false` drives a warning so the
+					// operator can refine entities (manual / skip unselected) and re-run.
+					entry.complete = anonymizeResponse.data.complete !== false
+					entry.residualCount = anonymizeResponse.data.residualCount || 0
+					entry.residualEntities = anonymizeResponse.data.residualEntities || []
 					entry.status = 'completed'
 				} catch (err) {
 					console.error(`Failed to anonymise ${entry.name}:`, err)

@@ -24,8 +24,8 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 				{{ entry.error || t('docudesk', 'Failed to load entities') }}
 			</NcNoteCard>
 
-			<!-- Success state for files that finished anonymising. -->
-			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath" type="success">
+			<!-- Success state: file finished anonymising and everything was removed. -->
+			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath && entry.complete !== false" type="success">
 				<div>{{ t('docudesk', 'Anonymisation complete') }}</div>
 				<div class="muted">
 					{{ n('docudesk', '%n entity replaced', '%n entities replaced', entry.replacementCount || 0) }}
@@ -35,6 +35,27 @@ import { fileViewerStore, anonymizationStore } from '../store/store.js'
 				</a>
 			</NcNoteCard>
 
+			<!-- Best-effort warning: the file was produced, but some entities could
+			     not be fully removed (e.g. text recognised across table cells that
+			     is not contiguous in the document). The operator can refine the
+			     entities (add a manual entity, skip an occurrence) and re-run. -->
+			<NcNoteCard v-else-if="entry && entry.status === 'completed' && entry.anonymizedFilePath && entry.complete === false" type="warning">
+				<div>{{ t('docudesk', 'Anonymisation incomplete') }}</div>
+				<div class="muted">
+					{{ n('docudesk',
+						'%n entity could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.',
+						'%n entities could not be fully removed. Review the file and refine the entities (add a manual entity or skip an occurrence), then anonymise again.',
+						entry.residualCount || 0) }}
+				</div>
+				<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">
+					<li v-for="(r, idx) in entry.residualEntities" :key="'res-' + idx">
+						<span class="residual-type">{{ r.type }}</span>: {{ r.text }}
+					</li>
+				</ul>
+				<a :href="downloadUrl" download class="download-link">
+					{{ t('docudesk', 'Download anonymised file') }}
+				</a>
+			</NcNoteCard>
 			<!-- Anonymised-document view: a read-only list resolved from the
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
@@ -385,6 +406,23 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.85rem;
 	margin-top: 4px;
+}
+
+.residual-list {
+	margin: 6px 0 0;
+	padding-left: 18px;
+	font-size: 0.85rem;
+	max-height: 160px;
+	overflow-y: auto;
+
+	li {
+		margin: 2px 0;
+	}
+
+	.residual-type {
+		font-weight: 600;
+		color: var(--color-text-maxcontrast);
+	}
 }
 
 .download-link {

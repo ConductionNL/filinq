@@ -19,42 +19,50 @@ import { consentStore } from '../../store/store.js'
 			:loading="consentStore.loading">
 			<!-- KPI: Total Consents -->
 			<template #widget-total-consents>
-				<CnStatsBlock
-					:title="t('docudesk', 'Total Consents')"
-					:count="consentStore.consentStats.total"
-					:count-label="t('docudesk', 'records')"
-					variant="default"
-					show-zero-count />
+				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+					<CnStatsBlock
+						:title="t('docudesk', 'Total Consents')"
+						:count="consentStore.consentStats.total"
+						:count-label="t('docudesk', 'records')"
+						variant="default"
+						show-zero-count />
+				</div>
 			</template>
 
 			<!-- KPI: Pending -->
 			<template #widget-pending>
-				<CnStatsBlock
-					:title="t('docudesk', 'Pending')"
-					:count="consentStore.consentStats.pending"
-					:count-label="t('docudesk', 'pending')"
-					variant="warning"
-					show-zero-count />
+				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+					<CnStatsBlock
+						:title="t('docudesk', 'Pending')"
+						:count="consentStore.consentStats.pending"
+						:count-label="t('docudesk', 'pending')"
+						variant="warning"
+						show-zero-count />
+				</div>
 			</template>
 
 			<!-- KPI: Approved -->
 			<template #widget-approved>
-				<CnStatsBlock
-					:title="t('docudesk', 'Approved')"
-					:count="consentStore.consentStats.approved"
-					:count-label="t('docudesk', 'approved')"
-					variant="success"
-					show-zero-count />
+				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+					<CnStatsBlock
+						:title="t('docudesk', 'Approved')"
+						:count="consentStore.consentStats.approved"
+						:count-label="t('docudesk', 'approved')"
+						variant="success"
+						show-zero-count />
+				</div>
 			</template>
 
 			<!-- KPI: Objected -->
 			<template #widget-objected>
-				<CnStatsBlock
-					:title="t('docudesk', 'Objected')"
-					:count="consentStore.consentStats.objected"
-					:count-label="t('docudesk', 'objected')"
-					variant="error"
-					show-zero-count />
+				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+					<CnStatsBlock
+						:title="t('docudesk', 'Objected')"
+						:count="consentStore.consentStats.objected"
+						:count-label="t('docudesk', 'objected')"
+						variant="error"
+						show-zero-count />
+				</div>
 			</template>
 
 			<!-- Pending Consents table -->
@@ -63,10 +71,12 @@ import { consentStore } from '../../store/store.js'
 					v-if="!consentStore.loading && pendingConsents.length === 0"
 					:name="t('docudesk', 'No pending consents')"
 					:description="t('docudesk', 'All consents have been handled.')" />
-				<CnTableWidget
+				<CnDataTable
 					v-else
 					:rows="pendingConsents"
-					:columns="consentColumns" />
+					:columns="consentColumns"
+					borderless
+					@row-click="navigateToPendingConsent" />
 			</template>
 
 			<!-- Quick Anonymization -->
@@ -79,7 +89,7 @@ import { consentStore } from '../../store/store.js'
 
 <script>
 import { NcEmptyContent } from '@nextcloud/vue'
-import { CnDashboardPage, CnStatsBlock, CnTableWidget } from '@conduction/nextcloud-vue'
+import { CnDashboardPage, CnStatsBlock, CnDataTable } from '@conduction/nextcloud-vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
 import AnonymizationDashboardWidget from '../widgets/AnonymizationDashboardWidget.vue'
 
@@ -88,7 +98,7 @@ export default {
 	components: {
 		CnDashboardPage,
 		CnStatsBlock,
-		CnTableWidget,
+		CnDataTable,
 		NcEmptyContent,
 		AnonymizationDashboardWidget,
 		AnonymiserBackendWarning,
@@ -129,7 +139,7 @@ export default {
 			]
 		},
 		/**
-		 * Column definitions for the Pending Consents CnTableWidget.
+		 * Column definitions for the Pending Consents CnDataTable.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
@@ -140,6 +150,7 @@ export default {
 		},
 		/**
 		 * Consent records with status "pending", capped at 10 rows.
+		 * The `id` field is retained so row-click can navigate to ConsentDetail.
 		 *
 		 * @spec openspec/specs/dashboard/spec.md#requirement-docudesk-dashboard-view-req-dash-01
 		 */
@@ -147,7 +158,7 @@ export default {
 			return consentStore.consents
 				.filter((c) => c.consentStatus === 'pending')
 				.slice(0, 10)
-				.map((c) => ({ entity: c.entityText || '—' }))
+				.map((c) => ({ id: c.id || c.uuid, entity: c.entityText || '—' }))
 		},
 	},
 	mounted() {
@@ -178,6 +189,19 @@ export default {
 				}
 			} catch (_err) {
 				// Non-critical — dashboard still works without the warning.
+			}
+		},
+
+		/**
+		 * Navigate to ConsentDetail when a pending-consents table row is clicked.
+		 *
+		 * @param {object} row - The clicked row object (contains id + entity fields).
+		 */
+		navigateToPendingConsent(row) {
+			if (row && row.id) {
+				this.$router.push({ name: 'ConsentDetail', params: { id: row.id } })
+			} else {
+				this.$router.push({ name: 'Consent' })
 			}
 		},
 

@@ -36,6 +36,9 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use InvalidArgumentException;
+use RuntimeException;
+use OCP\IGroupManager;
+use OCP\IUser;
 
 /**
  * Stateless validator for publicationConsent writes — service-layer
@@ -51,6 +54,116 @@ use InvalidArgumentException;
  */
 class ConsentScopeValidator
 {
+    /**
+     * Group whose members may write scope=entity (standing-consent) records.
+     *
+     * Mirrored from PolicyCrudService to keep the validator self-contained.
+     */
+    private const STANDING_CONSENT_GROUP = 'docudesk-standing-consent-admins';
+
+    /**
+     * Constructor.
+     *
+     * @param IGroupManager $groupManager Group manager for RBAC checks.
+     */
+    public function __construct(
+        private readonly IGroupManager $groupManager
+    ) {
+
+    }//end __construct()
+
+    /**
+     * Assert that the given user is a member of the standing-consent admin group
+     * (or is a Nextcloud admin, who implicitly bypasses all group gates).
+     *
+     * Called by ConsentService before any scope=entity write operation.
+     *
+     * @param IUser $user The acting user.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the user lacks the required group membership.
+     *
+     * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
+     */
+    public function requireStandingConsentAdminGroup(IUser $user): void
+    {
+        if ($this->groupManager->isAdmin($user->getUID()) === true) {
+            return;
+        }
+
+        if ($this->groupManager->isInGroup($user->getUID(), self::STANDING_CONSENT_GROUP) === true) {
+            return;
+        }
+
+        throw new RuntimeException(
+            sprintf(
+                'Standing-consent write requires membership in the "%s" group.',
+                self::STANDING_CONSENT_GROUP
+            )
+        );
+
+    }//end requireStandingConsentAdminGroup()
+
+    /**
+     * Validate a candidate write payload before persisting a publicationConsent record.
+     *
+     * Delegates to assertValid() which enforces the scope-based field-set contract.
+     *
+     * @param array<string, mixed> $data The candidate write payload.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When the scope contract is violated.
+     *
+     * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
+     */
+    public function validateWrite(array $data): void
+    {
+        $this->assertValid(consent: $data);
+
+    }//end validateWrite()
+
+    /**
+     * Validate a state transition on an existing publicationConsent record.
+     *
+     * Ensures that the update payload does not violate any transition rules
+     * relative to the persisted record. Currently enforces:
+     *   - The `scope` field MUST NOT change once set.
+     *   - The updated record (merged) must satisfy the same scope contract as
+     *     assertValid().
+     *
+     * @param array<string, mixed> $existing The persisted record.
+     * @param array<string, mixed> $update   The incoming update payload.
+     *
+     * @return void
+     *
+     * @throws InvalidArgumentException When the transition is not allowed.
+     *
+     * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
+     */
+    public function validateTransition(array $existing, array $update): void
+    {
+        $existingScope = (string) ($existing['scope'] ?? 'document');
+        $updateScope   = (string) ($update['scope'] ?? $existingScope);
+
+        if ($existingScope !== $updateScope) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'publicationConsent.scope cannot change from "%s" to "%s" after creation.',
+                    $existingScope,
+                    $updateScope
+                )
+            );
+        }
+
+        // Validate the merged record against the scope contract.
+        $merged          = array_merge($existing, $update);
+        $merged['scope'] = $existingScope;
+        $this->assertValid(consent: $merged);
+
+    }//end validateTransition()
+
     /**
      * Validate a candidate publicationConsent write.
      *
