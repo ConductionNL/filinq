@@ -5,7 +5,7 @@
 
 **Product:** DocuDesk
 **Categorie:** Documentbeheer, publicatie-instemming & GDPR-compliance
-**Licentie:** AGPL (vrije open source)
+**Licentie:** EUPL-1.2 (vrije open source)
 **Leverancier:** Conduction B.V.
 **Platform:** Nextcloud + Open Register (self-hosted / on-premise / cloud)
 
@@ -99,12 +99,12 @@
 
 | # | Eis | Status | Toelichting |
 |---|-----|--------|-------------|
-| A-01 | WCAG 2.1 AA | Beschikbaar | Nextcloud-componenten + eigen WCAG-checks |
-| A-02 | EN 301 549 | Beschikbaar | Via WCAG AA |
-| A-03 | Toetsenbordnavigatie | Beschikbaar | Volledig navigeerbaar |
+| A-01 | WCAG 2.1 AA (applicatie-UI) | Via platform | Standaard Nextcloud/nc-vue-componenten; geen aanvullende eigen WCAG-audit uitgevoerd |
+| A-02 | EN 301 549 | Via platform | Via Nextcloud-platform, niet apart voor DocuDesk getoetst |
+| A-03 | Toetsenbordnavigatie | Beschikbaar | Volledig navigeerbaar via standaard Nextcloud-componenten |
 | A-04 | NL Design System | Beschikbaar | Via NL Design app |
 | A-05 | Meertalig (NL/EN) | Beschikbaar | Volledige vertaling |
-| A-06 | WCAG-compliance checking van documenten | Beschikbaar | Controle op toegankelijkheid van gegenereerde documenten |
+| A-06 | WCAG-compliance checking van gegenereerde documenten | N.v.t. | Niet geïmplementeerd — DocuDesk voert geen toegankelijkheidscontrole op documentinhoud uit |
 
 ---
 
