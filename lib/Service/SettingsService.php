@@ -87,13 +87,14 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig               $config           App configuration interface
-     * @param ContainerInterface       $container        Container for DI
-     * @param IAppManager              $appManager       App manager interface
-     * @param LoggerInterface          $logger           Logger interface
-     * @param RegisterDiscoveryService $discoveryService Register discovery service
-     * @param SettingsInitializer      $initializer      Settings initializer
-     * @param OcrService               $ocrService       OCR service for Tesseract status
+     * @param IAppConfig               $config            App configuration interface
+     * @param ContainerInterface       $container         Container for DI
+     * @param IAppManager              $appManager        App manager interface
+     * @param LoggerInterface          $logger            Logger interface
+     * @param RegisterDiscoveryService $discoveryService  Register discovery service
+     * @param SettingsInitializer      $initializer       Settings initializer
+     * @param OcrService               $ocrService        OCR service for Tesseract status
+     * @param GrondslagProposalService $grondslagProposal Grondslag-per-entity-type proposal service
      *
      * @return void
      *
@@ -106,7 +107,8 @@ class SettingsService
         private readonly LoggerInterface $logger,
         private readonly RegisterDiscoveryService $discoveryService,
         private readonly SettingsInitializer $initializer,
-        private readonly OcrService $ocrService
+        private readonly OcrService $ocrService,
+        private readonly GrondslagProposalService $grondslagProposal
     ) {
         $this->appName = 'docudesk';
 
@@ -278,6 +280,10 @@ class SettingsService
                 'ocr_dpi',
                 '300'
             ),
+            // Propose-grondslag-per-entity-type — instance-global map of
+            // entity type → base slug(s), used to pre-fill a proposed
+            // grondslag onto freshly-detected entities.
+            'docudesk.grondslagen.entity_type_bases'       => $this->grondslagProposal->getMapping(),
         ];
 
     }//end loadFeatureToggles()
@@ -334,6 +340,11 @@ class SettingsService
             );
             $data = array_merge($data, $this->loadFeatureToggles());
             $data['ocrStatus'] = $this->getOcrStatus();
+
+            // Data for the grondslag-per-entity-type selector: the curated
+            // entity types and the available `base` records (slug + name).
+            $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
+            $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
 
             return $data;
         } catch (Exception $e) {

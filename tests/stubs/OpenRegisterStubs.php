@@ -126,6 +126,18 @@ class ObjectService
         return [];
 
     }//end searchObjects()
+
+
+    /**
+     * Search objects by register/schema slug.
+     *
+     * @return array
+     */
+    public function searchObjectsBySlug()
+    {
+        return [];
+
+    }//end searchObjectsBySlug()
 }//end class
 
 /**
@@ -875,6 +887,118 @@ class EntityRelationMapper
         return [];
 
     }//end findByFileId()
+
+
+    /**
+     * Find a single relation by id.
+     *
+     * @param int $id Relation id.
+     *
+     * @return mixed
+     */
+    public function find(int $id)
+    {
+        return new EntityRelation();
+
+    }//end find()
+
+
+    /**
+     * Update decision metadata (bases / skipAnonymization) on a relation.
+     *
+     * @param mixed $relation   Relation row.
+     * @param array $fields     Whitelisted fields to update.
+     * @param mixed $actingUser Optional acting user.
+     *
+     * @return mixed
+     */
+    public function updateDecisionMetadata($relation, array $fields, $actingUser=null)
+    {
+        return $relation;
+
+    }//end updateDecisionMetadata()
+}//end class
+
+
+/**
+ * Stub for EntityRelation entity.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class EntityRelation
+{
+
+    /**
+     * Relation row id.
+     *
+     * @var int|null
+     */
+    private $id = null;
+
+    /**
+     * Legal bases (grondslagen) assigned to the relation.
+     *
+     * @var array|null
+     */
+    private $bases = null;
+
+
+    /**
+     * Get the relation id.
+     *
+     * @return int|null
+     */
+    public function getId()
+    {
+        return $this->id;
+
+    }//end getId()
+
+
+    /**
+     * Set the relation id.
+     *
+     * @param int|null $id Relation id.
+     *
+     * @return void
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+    }//end setId()
+
+
+    /**
+     * Get the assigned bases.
+     *
+     * @return array|null
+     */
+    public function getBases()
+    {
+        return $this->bases;
+
+    }//end getBases()
+
+
+    /**
+     * Set the assigned bases.
+     *
+     * @param array|null $bases Bases to assign.
+     *
+     * @return void
+     */
+    public function setBases($bases)
+    {
+        $this->bases = $bases;
+
+    }//end setBases()
+
+
 }//end class
 
 
