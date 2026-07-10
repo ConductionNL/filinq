@@ -26,6 +26,7 @@ export const ENTITY_TYPES = Object.freeze([
 	'IBAN_CODE',
 	'IP_ADDRESS',
 	'LOCATION',
+	'KENTEKEN',
 	'OTHER',
 ])
 

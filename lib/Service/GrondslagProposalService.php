@@ -106,6 +106,7 @@ class GrondslagProposalService
         'DATE',
         'BSN',
         'IBAN',
+        'KENTEKEN',
         // Additional GLiNER targets emitted by the GPU flavor.
         'STREET_ADDRESS',
         'NORP',
