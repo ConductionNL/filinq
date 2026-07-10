@@ -1,6 +1,13 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Add publish-always rule": "Add publish-always rule",
+		"Add publish-never rule": "Add publish-never rule",
+		"Edit publish-always rule": "Edit publish-always rule",
+		"Edit publish-never rule": "Edit publish-never rule",
+		"Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.": "Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.",
+		"Publish always": "Publish always",
+		"Publish never": "Publish never",
 		"(no relation ids — grondslagen will not persist)": "(no relation ids — grondslagen will not persist)",
 		"{selected} of {total} entities selected across {files} files": "{selected} of {total} entities selected across {files} files",
 		"{found} unique data found": "{found} unique data found",

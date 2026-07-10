@@ -1,6 +1,13 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Add publish-always rule": "Altijd-publiceren-regel toevoegen",
+		"Add publish-never rule": "Nooit-publiceren-regel toevoegen",
+		"Edit publish-always rule": "Altijd-publiceren-regel bewerken",
+		"Edit publish-never rule": "Nooit-publiceren-regel bewerken",
+		"Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.": "Regels op entiteitniveau. Een overeenkomende entiteit mag worden gepubliceerd zonder de bezwaarprocedure per document, tenzij ook een nooit-publiceren-regel overeenkomt.",
+		"Publish always": "Altijd publiceren",
+		"Publish never": "Nooit publiceren",
 		"PERSON": "PERSOON",
 		"ORGANIZATION": "ORGANISATIE",
 		"LOCATION": "LOCATIE",
