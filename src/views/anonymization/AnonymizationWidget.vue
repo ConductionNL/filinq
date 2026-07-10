@@ -24,7 +24,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{ t('docudesk', 'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
 					<DdButton
 						icon="add"
@@ -34,7 +34,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
-					accept=".docx,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf,message/rfc822"
+					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
@@ -122,46 +122,7 @@ import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdButton from '../../components/DdButton.vue'
 import uploadIcon from '../../assets/upload.png'
-
-// Anonymisation only produces real redactions for formats the backend can
-// edit in place: Word via PHPWord, plain text via byte-level replace, PDF
-// via the SAPP byte-replace pipeline. EML is anonymised by OpenRegister and
-// assembled into a redacted PDF/A-3b by EmlPdfAssemblyService (eml-pdf-assembly).
-// Other binary formats fall through to the str_ireplace path that returns a
-// byte-identical copy — see project-anonymization-pipeline for the upstream OR
-// limitation. Restrict the upload widget so users can't accidentally pick a
-// format that won't actually redact.
-const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf', 'eml']
-const ALLOWED_MIMES = new Set([
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-	'text/plain',
-	'application/pdf',
-	'message/rfc822',
-])
-
-/**
- * Split a FileList into accepted (docx/txt/pdf) and rejected files.
- *
- * Matches on both MIME and filename extension because drag-and-drop sometimes
- * omits MIME (e.g. for .docx on certain browsers) and the input's `accept`
- * attribute is advisory only.
- *
- * @param {FileList | File[]} files Incoming files.
- * @return {{ accepted: File[], rejected: File[] }}
- */
-function partitionFiles(files) {
-	const accepted = []
-	const rejected = []
-	for (const file of Array.from(files)) {
-		const ext = (file.name.split('.').pop() || '').toLowerCase()
-		if (ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.includes(ext)) {
-			accepted.push(file)
-		} else {
-			rejected.push(file)
-		}
-	}
-	return { accepted, rejected }
-}
+import { partitionFiles } from '../../services/anonymizationUpload.js'
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -345,7 +306,7 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(t('docudesk', 'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}', { names }))
 			}
 			return accepted
 		},

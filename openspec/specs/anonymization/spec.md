@@ -1,8 +1,11 @@
 ---
-status: implemented
+status: in-progress
 ---
 
 # Anonymization Pipeline
+
+<!-- OpenSpec changes: odt-anonymisation-frontend (ODT accepted by the upload widget) -->
+
 
 ## Purpose
 

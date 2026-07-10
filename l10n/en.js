@@ -275,6 +275,8 @@ OC.L10N.register(
 		"OCR Document Scanning": "OCR Document Scanning",
 		"OCR DPI": "OCR DPI",
 		"OCR Languages": "OCR Languages",
+		"Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}": "Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}",
+		"Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.": "Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.",
 		"Only Word (.docx), PDF and TXT files are supported. Skipped: {names}": "Only Word (.docx), PDF and TXT files are supported. Skipped: {names}",
 		"Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.": "Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.",
 		"Open": "Open",
