@@ -799,8 +799,11 @@
                         ]
                     },
                     "caseReference": {
-                        "description": "UUID verwijzing naar de bron zaak/case",
+                        "description": "UUID verwijzing naar de bron zaak/case in Procest",
                         "type": "string",
+                        "format": "uuid",
+                        "$ref": "case",
+                        "x-external-register": "procest",
                         "visible": true,
                         "order": 5,
                         "facetable": false,
@@ -1017,6 +1020,9 @@
                     "zaakId": {
                         "description": "UUID van de gekoppelde zaak in Procest (optioneel)",
                         "type": "string",
+                        "format": "uuid",
+                        "$ref": "case",
+                        "x-external-register": "procest",
                         "visible": true,
                         "order": 9,
                         "facetable": false,
