@@ -928,7 +928,7 @@
                 "uri": null,
                 "slug": "base",
                 "title": "Grondslag",
-                "description": "Een Woo Art. 5 uitzonderingsgrond waaronder gegevens geanonimiseerd worden voordat een document wordt gepubliceerd. OpenRegister bewaart de UUID's; de zes canonieke grondslagen worden meegeleverd als seed-data.",
+                "description": "Een Woo Art. 5 uitzonderingsgrond waaronder gegevens geanonimiseerd worden voordat een document wordt gepubliceerd. OpenRegister bewaart de UUID's; de Woo Art. 5 uitzonderingsgronden (legenda A–S) worden meegeleverd als seed-data.",
                 "version": "1.0.0",
                 "summary": "Legal basis (grondslag) for anonymisation under Woo Art. 5",
                 "icon": "Gavel",
@@ -1167,61 +1167,126 @@
         },
         "objects": [
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "persoonsgegevens"},
-                "name": "Persoonsgegevens",
-                "description": "Herleidbare gegevens van een natuurlijke persoon (Art. 5.1 Woo jo. AVG Art. 4 lid 1). Denk aan namen, adressen, BSN, contactgegevens, functie gekoppeld aan persoon."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-1-a"},
+                "name": "A — Eenheid van de Kroon",
+                "description": "Openbaarmaking kan de eenheid van de Kroon in gevaar brengen (art. 5.1 lid 1 a Woo — absolute uitzonderingsgrond)."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "bijzondere-persoonsgegevens"},
-                "name": "Bijzondere persoonsgegevens",
-                "description": "Gegevens over ras/etniciteit, politieke opvattingen, religie, lidmaatschap vakbond, genetica/biometrie, gezondheid, seksueel leven of geaardheid (Art. 5.1 Woo jo. AVG Art. 9). Strikte anonimiseringsplicht."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-1-b"},
+                "name": "B — Veiligheid van de Staat",
+                "description": "Openbaarmaking kan de veiligheid van de Staat schaden (art. 5.1 lid 1 b Woo — absolute uitzonderingsgrond)."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "strafrechtelijk"},
-                "name": "Strafrechtelijke gegevens",
-                "description": "Gegevens over strafrechtelijke veroordelingen en strafbare feiten (Art. 5.1 Woo jo. AVG Art. 10). Alleen onder wettelijke grondslag verwerkbaar; in openbaarmaking altijd geanonimiseerd."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-1-c"},
+                "name": "C — Bedrijfs- en fabricagegegevens",
+                "description": "Betreft bedrijfs- en fabricagegegevens die vertrouwelijk aan de overheid zijn meegedeeld (art. 5.1 lid 1 c Woo — absolute uitzonderingsgrond)."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "bedrijfs-fabricagegegevens"},
-                "name": "Bedrijfs- en fabricagegegevens",
-                "description": "Vertrouwelijk meegedeelde bedrijfs- en fabricagegegevens (Art. 5.1 sub c Woo). Beschermt concurrentiepositie — bijv. offertebedragen, receptuur, leveranciersafspraken."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-1-d"},
+                "name": "D — Bijzondere en strafrechtelijke persoonsgegevens",
+                "description": "Betreft bijzondere persoonsgegevens (par. 3.1) of persoonsgegevens van strafrechtelijke aard (par. 3.2) van de Uitvoeringswet AVG, waarvoor geen toestemming is gegeven of die de betrokkene niet kennelijk zelf openbaar heeft gemaakt (art. 5.1 lid 1 d Woo — absolute uitzonderingsgrond)."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "onevenredige-benadeling"},
-                "name": "Onevenredige benadeling",
-                "description": "Openbaarmaking zou leiden tot onevenredige benadeling van betrokkenen of derden (Art. 5.2 Woo). Brede restcategorie; belangenafweging per geval gedocumenteerd."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-1-e"},
+                "name": "E — Identificatienummers",
+                "description": "Betreft nummers die dienen ter identificatie van personen, bij wet of AMvB voorgeschreven als bedoeld in art. 46 Uitvoeringswet AVG, tenzij de verstrekking kennelijk geen inbreuk op de levenssfeer maakt (art. 5.1 lid 1 e Woo — absolute uitzonderingsgrond)."
             },
             {
-                "@self": {"register": "dossier", "schema": "base", "slug": "nationale-veiligheid"},
-                "name": "Nationale veiligheid",
-                "description": "Gegevens waarvan openbaarmaking de veiligheid van de Staat of de opsporing en vervolging van strafbare feiten schaadt (Art. 5.1 sub a/b Woo). Zelden van toepassing bij gemeenten."
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-a"},
+                "name": "F — Betrekkingen met andere staten",
+                "description": "Het belang van openbaarmaking weegt niet op tegen het belang van de betrekkingen van Nederland met andere staten en met internationale organisaties (art. 5.1 lid 2 a Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-b"},
+                "name": "G — Economische of financiële belangen van de Staat",
+                "description": "Het belang van openbaarmaking weegt niet op tegen de economische of financiële belangen van de Staat, andere publiekrechtelijke lichamen of bestuursorganen (art. 5.1 lid 2 b Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-c"},
+                "name": "H — Opsporing en vervolging van strafbare feiten",
+                "description": "Het belang van openbaarmaking weegt niet op tegen het belang van de opsporing en vervolging van strafbare feiten (art. 5.1 lid 2 c Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-d"},
+                "name": "I — Inspectie, controle en toezicht",
+                "description": "Het belang van openbaarmaking weegt niet op tegen het belang van de inspectie, controle en toezicht door bestuursorganen (art. 5.1 lid 2 d Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-e"},
+                "name": "J — Persoonlijke levenssfeer",
+                "description": "Het belang van openbaarmaking weegt niet op tegen het belang van de eerbiediging van de persoonlijke levenssfeer van betrokkenen (art. 5.1 lid 2 e Woo — relatieve uitzonderingsgrond). Grondslag voor gewone persoonsgegevens."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-f"},
+                "name": "K — Concurrentiegevoelige bedrijfsgegevens",
+                "description": "Het belang van openbaarmaking weegt niet op tegen de bescherming van andere dan in art. 5.1 lid 1 sub c genoemde concurrentiegevoelige bedrijfs- en fabricagegegevens (art. 5.1 lid 2 f Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-g"},
+                "name": "L — Bescherming van het milieu",
+                "description": "Het belang van openbaarmaking weegt niet op tegen de bescherming van het milieu waar deze informatie betrekking op heeft (art. 5.1 lid 2 g Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-h"},
+                "name": "M — Beveiliging van personen en bedrijven",
+                "description": "Het belang van openbaarmaking weegt niet op tegen de beveiliging van personen en bedrijven en het voorkomen van sabotage (art. 5.1 lid 2 h Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-2-i"},
+                "name": "N — Goed functioneren van de Staat",
+                "description": "Het belang van openbaarmaking weegt niet op tegen het goed functioneren van de Staat, andere publiekrechtelijke lichamen of bestuursorganen (art. 5.1 lid 2 i Woo — relatieve uitzonderingsgrond)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-4"},
+                "name": "O — Geadresseerde eerst kennisnemen",
+                "description": "Het belang dat de geadresseerde erbij heeft om als eerste kennis te kunnen nemen van de informatie (tijdelijke beperking) (art. 5.1 lid 4 Woo)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-5"},
+                "name": "P — Onevenredige benadeling",
+                "description": "De onevenredige benadeling die, in uitzonderlijke gevallen, wordt toegebracht aan een ander belang dan genoemd in art. 5.1 leden 1 en 2, bij andere informatie dan milieu-informatie (art. 5.1 lid 5 Woo)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-1-6"},
+                "name": "Q — Milieu-informatie, ernstige schade",
+                "description": "Het belang genoemd in art. 5.1 lid 1 c, waarbij het milieu-informatie betreft waardoor bij openbaarmaking ernstige schade wordt toegebracht aan dat belang (art. 5.1 lid 6 Woo)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-2-1"},
+                "name": "R — Persoonlijke beleidsopvattingen",
+                "description": "Persoonlijke beleidsopvattingen: ambtelijke adviezen, visies, standpunten en overwegingen t.b.v. intern beraad, niet zijnde feiten, prognoses, beleidsalternatieven of onderdelen met een overwegend objectief karakter (art. 5.2 lid 1 Woo)."
+            },
+            {
+                "@self": {"register": "dossier", "schema": "base", "slug": "art-5-2-2"},
+                "name": "S — Tot personen herleidbare beleidsopvattingen",
+                "description": "Tot personen te herleiden gegevens met betrekking tot door het bestuursorgaan, met het oog op goede en democratische bestuursvoering, verstrekte informatie die kwalificeert als persoonlijke beleidsopvattingen (art. 5.2 lid 2 Woo)."
             },
             {
                 "@self": {"register": "dossier", "schema": "dossier", "slug": "demostad-woo-2025-017", "folder": "seed-folder-demostad-woo-2025-017"},
                 "name": "Woo-verzoek 2025-017 — Subsidietoekenningen cultuur",
                 "description": "Woo-verzoek van lokale krant over alle subsidietoekenningen cultuur 2022–2024. Folder bevat 47 beschikkingen, 12 bezwaarschriften en bijbehorende correspondentie. Anonimiseren vóór publicatie op overheid.nl.",
-                "bases": ["persoonsgegevens", "onevenredige-benadeling"],
+                "bases": ["art-5-1-2-e", "art-5-1-5"],
                 "checkedOn": "2026-03-14T10:22:00+00:00"
             },
             {
                 "@self": {"register": "dossier", "schema": "dossier", "slug": "demostad-wmo-2024", "folder": "seed-folder-demostad-wmo-2024"},
                 "name": "Bezwaarschriften WMO 2024",
                 "description": "Geanonimiseerd archief van WMO-bezwaarschriften 2024 ten behoeve van kwartaalrapportage Raad. Bevat medische onderbouwing — alles met AVG Art. 9-grondslag.",
-                "bases": ["persoonsgegevens", "bijzondere-persoonsgegevens"],
+                "bases": ["art-5-1-2-e", "art-5-1-1-d"],
                 "checkedOn": "2026-02-28T15:45:00+00:00"
             },
             {
                 "@self": {"register": "dossier", "schema": "dossier", "slug": "conduction-demo", "folder": "seed-folder-conduction-demo"},
                 "name": "Referentieproject — Anonimiseringsvoorbeelden",
                 "description": "Werkvoorbeelden voor klantendemonstraties. Alle persoonsgegevens zijn synthetisch maar behandeld alsof echt, om anonimiseringsflow end-to-end te tonen.",
-                "bases": ["persoonsgegevens"],
+                "bases": ["art-5-1-2-e"],
                 "checkedOn": "2026-04-01T09:00:00+00:00"
             },
             {
                 "@self": {"register": "dossier", "schema": "dossier", "slug": "zonnestraal-klachten-2025", "folder": "seed-folder-zonnestraal-klachten-2025"},
                 "name": "Klachtendossier zomerseizoen 2025",
                 "description": "Interne behandeling van klantklachten zomer 2025 t.b.v. verbetertraject. Gedeeld met verzekeraar en branchevereniging — namen klanten + accommodaties anonimiseren.",
-                "bases": ["persoonsgegevens", "bedrijfs-fabricagegegevens"],
+                "bases": ["art-5-1-2-e", "art-5-1-1-c"],
                 "checkedOn": "2026-01-20T11:00:00+00:00"
             },
             {
