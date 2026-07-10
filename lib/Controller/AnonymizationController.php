@@ -203,7 +203,10 @@ class AnonymizationController extends Controller
     public function extract(int $fileId): JSONResponse
     {
         try {
-            $result = $this->anonymizationService->extractAndDetectEntities($fileId);
+            // Default: resume (cached) — reuse existing entities when the file
+            // is unchanged. `force=true` requests an explicit re-analysis.
+            $force  = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
+            $result = $this->anonymizationService->extractAndDetectEntities($fileId, $force);
 
             return new JSONResponse($result);
         } catch (Exception $e) {

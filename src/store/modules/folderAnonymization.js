@@ -27,7 +27,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			uuid: null,
 			name: '',
 			description: '',
-			bases: ['persoonsgegevens'],
+			bases: ['art-5-1-2-e'],
 			creating: false,
 			error: null,
 		},
@@ -83,7 +83,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 * Issues a POST to OR's generic object-create endpoint, with
 		 * `@self.folder` set to the folder's node id so subsequent
 		 * `renderDossierSummary` calls find the right files. Bases are
-		 * defaulted to ['persoonsgegevens'] but the operator can multi-select
+		 * defaulted to ['art-5-1-2-e'] (J — persoonlijke levenssfeer) but the operator can multi-select
 		 * from the six canonical Woo Art. 5 grondslagen.
 		 */
 		async createDossier() {
@@ -392,7 +392,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 					uuid: null,
 					name: '',
 					description: '',
-					bases: ['persoonsgegevens'],
+					bases: ['art-5-1-2-e'],
 					creating: false,
 					error: null,
 				},

@@ -51,6 +51,7 @@ import { entityTypeColor } from '../services/entityTypes.js'
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
+				:disabled="!!(item.prohibitionMatch && item.prohibitionMatch.highConfidence)"
 				@change="$emit('toggle')">
 			<span
 				class="dd-entity-card__type"
@@ -58,6 +59,10 @@ import { entityTypeColor } from '../services/entityTypes.js'
 			<span class="dd-entity-card__confidence">
 				{{ ((item.confidence || 0) * 100).toFixed(0) }}%
 			</span>
+			<span
+				v-if="item.prohibitionMatch"
+				class="dd-entity-card__lock"
+				:title="item.prohibitionMatch.ruleName">🔒</span>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value">
 			{{ item.value }}
@@ -67,6 +72,8 @@ import { entityTypeColor } from '../services/entityTypes.js'
 				class="dd-entity-card__bases"
 				:value="item._decisionBases || []"
 				:options="basesOptions"
+				label="label"
+				:reduce="(o) => o.value"
 				:multiple="true"
 				:input-label="t('docudesk', 'Grondslagen')"
 				:placeholder="t('docudesk', 'Pick grondslagen…')"

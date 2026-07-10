@@ -35,9 +35,9 @@
 - [x] 5.1 Mark the prohibition-gate portion of `anonimisation-grondslagen-and-prohibition-gate` superseded by this change (note in that change; do not delete its grondslagen/bases portion).
 - [x] 5.2 `openspec validate anonymise-prohibition-consent-guard` — clean.
 - [x] 5.3 CHANGELOG: prohibition guard (422 + `force`) and standing-consent auto-skip on anonymise; `prohibitionMatch` on the extract response.
-- [ ] 5.4 Feature doc note under `docs/features/` (prohibition guard + standing-consent auto-skip, the threshold config, the 422 shape).
+- [x] 5.4 Feature doc note under `docs/features/` (prohibition guard + standing-consent auto-skip, the threshold config, the 422 shape).
 
 ## 6. Verification
 
-- [ ] 6.1 `composer check` (PHPCS/PHPMD/Psalm/PHPStan/unit) clean on touched files.
+- [x] 6.1 `composer check` (PHPCS/PHPMD/Psalm/PHPStan/unit) clean on touched files.
 - [ ] 6.2 Manual smoke: configure a prohibition + a standing consent; analyse a doc containing both; standing-consent entity pre-skipped; skip the prohibited entity → 422 in the error dialog; sub-threshold releases with force, high-confidence does not.

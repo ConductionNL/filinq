@@ -100,13 +100,26 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
-     * @param int $fileId The Nextcloud file ID
+     * By default this is a resume-friendly, DB-cached lookup: when the file is
+     * unchanged, OpenRegister's `isSourceUpToDate` short-circuit returns the
+     * existing chunks and `EntityRelation` rows (with their skip/bases
+     * decisions) instead of re-detecting — so re-opening a concept picks up
+     * where the operator left off and does not append duplicate relations.
+     * Pass `$force = true` for an explicit re-analysis (e.g. after changing the
+     * enabled entity types); the file's mtime already triggers a re-extract
+     * when the source itself changed.
+     *
+     * @param int  $fileId The Nextcloud file ID
+     * @param bool $force  Force a fresh extraction + detection even when the
+     *                     file is unchanged (default false = resume/cached).
      *
      * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Force flag mirrors the OR API.
      */
-    public function extractAndDetectEntities(int $fileId): array
+    public function extractAndDetectEntities(int $fileId, bool $force=false): array
     {
         try {
             $textExtractor = $this->getOpenRegisterService(
@@ -124,7 +137,7 @@ class AnonymizationService
             // manually-added type is still anonymised even when its automatic
             // detection is disabled here.
             $entityTypes = $grondslagProposal->getEntityTypeWhitelist();
-            $textExtractor->extractFile($fileId, true, $entityTypes);
+            $textExtractor->extractFile($fileId, $force, $entityTypes);
 
             $this->logger->debug(
                 'Text extracted from file',
@@ -188,7 +201,7 @@ class AnonymizationService
      * Best-effort: policy failures are logged and never block detection.
      *
      * @param array<int, array<string, mixed>> $entities             Normalized entities.
-     * @param mixed                             $entityRelationMapper OpenRegister EntityRelationMapper (DI).
+     * @param mixed                            $entityRelationMapper OpenRegister EntityRelationMapper (DI).
      *
      * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
      */
@@ -305,7 +318,7 @@ class AnonymizationService
      * @param array|null $bases      Optional bases to set alongside the decision.
      * @param bool       $force      Release a sub-threshold prohibition match.
      *
-     * @return array{status:int, body:array<string,mixed>} HTTP status + response body.
+     * @return array{status: 200|404|422, body: array<string, mixed>} HTTP status + response body.
      */
     public function applyRelationSkipDecision(int $relationId, bool $skip, ?array $bases, bool $force): array
     {
@@ -390,7 +403,7 @@ class AnonymizationService
 
         $confidence = (float) ($row['confidence'] ?? 0.0);
         $threshold  = (float) $matcher->highConfidenceThreshold();
-        $decision   = self::classifyProhibitionSkip($confidence, $threshold, $force);
+        $decision   = self::classifyProhibitionSkip(confidence: $confidence, threshold: $threshold, force: $force);
         if ($decision === 'allow') {
             return null;
         }
@@ -441,7 +454,10 @@ class AnonymizationService
         try {
             $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
         } catch (Exception $e) {
-            $this->logger->warning('Policy matcher unavailable; prohibition backstop is a no-op', ['exception' => $e->getMessage()]);
+            $this->logger->warning(
+                'Policy matcher unavailable; prohibition backstop is a no-op',
+                ['exception' => $e->getMessage()]
+            );
             return [];
         }
 

@@ -119,9 +119,27 @@ class AnonymizationServiceTest extends TestCase
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
         $this->assertStringContainsString('getEntityTypeWhitelist', $content);
-        $this->assertStringContainsString('extractFile($fileId, true, $entityTypes)', $content);
+        $this->assertStringContainsString('extractFile($fileId, $force, $entityTypes)', $content);
 
     }//end testExtractAndDetectPassesEntityTypeWhitelist()
+
+
+    /**
+     * Opening a concept resumes by default: extractAndDetectEntities defaults
+     * $force to false (OpenRegister's isSourceUpToDate short-circuit returns
+     * the existing relations) and only re-analyses when force is requested.
+     * Guards against a regression that hardcodes force=true and re-runs
+     * detection — appending duplicate relations — on every open.
+     *
+     * @return void
+     */
+    public function testExtractResumesByDefault(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('extractAndDetectEntities(int $fileId, bool $force=false)', $content);
+        $this->assertStringNotContainsString('extractFile($fileId, true', $content);
+
+    }//end testExtractResumesByDefault()
 
 
     /**

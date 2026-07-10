@@ -44,13 +44,15 @@
 			</thead>
 			<tbody>
 				<tr v-for="item in filteredEntities" :key="item.idx">
-					<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
+					<td><input type="checkbox" :checked="item.e.included" :disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0 || !!(item.e.prohibitionMatch && item.e.prohibitionMatch.highConfidence)" @change="onIncludedChange(item.idx, $event.target.checked)"></td>
 					<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}<span v-if="item.e.prohibitionMatch" class="warn-text" :title="item.e.prohibitionMatch.ruleName" style="margin-inline-start:6px">🔒</span></td>
 					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
 							:value="item.e._decisionBases || []"
 							:options="basesOptions"
+							label="label"
+							:reduce="(o) => o.value"
 							:multiple="true"
 							:input-label="t('docudesk', 'Grondslagen')"
 							:placeholder="t('docudesk', 'Pick grondslagen…')"
@@ -84,19 +86,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
 import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
 import { anonymizationStore } from '../../store/store.js'
-
-// Woo Art. 5 grondslagen seeded by the dossier register (Wave 1.1).
-// Hardcoded here to match AnonymizationWidget — a production page
-// would fetch /apps/openregister/api/objects/dossier/base so that
-// custom bases added by tenants surface too.
-const BASES_OPTIONS = [
-	'persoonsgegevens',
-	'bijzondere-persoonsgegevens',
-	'strafrechtelijk',
-	'bedrijfs-fabricagegegevens',
-	'onevenredige-benadeling',
-	'nationale-veiligheid',
-]
+import { fetchBaseOptions } from '../../services/bases.js'
 
 export default {
 	name: 'EntityReviewTable',
@@ -116,7 +106,7 @@ export default {
 			typeFilter: '',
 			sf: 'highestConfidence',
 			sa: false,
-			basesOptions: BASES_OPTIONS,
+			basesOptions: [],
 			blockOpen: false,
 			blockInfo: null,
 			pendingSkipIdx: null,
@@ -132,11 +122,47 @@ export default {
 				.sort((a, b) => { const va = a.e[this.sf]; const vb = b.e[this.sf]; const c = typeof va === 'string' ? va.localeCompare(vb) : (va || 0) - (vb || 0); return this.sa ? c : -c })
 		},
 	},
+	async created() {
+		// Grondslagen options come from the register (label = name, value = slug),
+		// with a slug fallback on error. See services/bases.js.
+		this.basesOptions = await fetchBaseOptions()
+	},
 	methods: {
 		t,
 		sortBy(f) { if (this.sf === f) { this.sa = !this.sa } else { this.sf = f; this.sa = false } },
 		onBasesChange(idx, value) {
-			this.$emit('bases-change', { idx, bases: Array.isArray(value) ? value : [] })
+			const entity = this.entities[idx]
+			if (!entity) {
+				return
+			}
+			this.persistBases(entity, Array.isArray(value) ? value : [])
+		},
+		// Persist a bases change on every relation immediately (bases are never
+		// prohibition-guarded); skipAnonymization is left at its current value.
+		persistBases(entity, bases) {
+			entity._decisionBases = bases
+			this.$emit('bases-change', { idx: this.entities.indexOf(entity), bases })
+			const relationIds = Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+				? entity.relationIds
+				: (entity.relationId != null ? [entity.relationId] : [])
+			if (relationIds.length === 0) {
+				return Promise.resolve({ ok: false, status: 0, body: {} })
+			}
+			return Promise.all(relationIds.map((rid) => anonymizationStore.setRelationSkip(rid, !!entity._decisionSkip, false, bases)))
+				.then((results) => {
+					const bad = results.find((r) => !r.ok)
+					if (bad) {
+						entity._patchError = bad.body?.error || 'Failed to save grondslagen'
+						return bad
+					}
+					entity.bases = [...bases]
+					entity._patchError = null
+					return { ok: true, status: 200, body: {} }
+				})
+		},
+		// The "included" checkbox is the skip control: unchecking = skip.
+		onIncludedChange(idx, checked) {
+			return this.onSkipChange(idx, !checked)
 		},
 		async onSkipChange(idx, checked) {
 			const entity = this.entities[idx]
@@ -168,6 +194,7 @@ export default {
 					}
 					entity._decisionSkip = skip
 					entity.skipAnonymization = skip
+					entity.included = !skip
 					entity._patchError = null
 					this.$emit('skip-change', { idx: this.entities.indexOf(entity), skip })
 					return { ok: true, status: 200, body: {} }

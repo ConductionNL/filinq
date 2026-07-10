@@ -430,10 +430,20 @@ class PolicyMatchService
             'OCA\OpenRegister\Service\ObjectService'
         );
 
-        $result = $objectService->findAll(
-            config: ['filters' => ['register' => 'consent', 'schema' => 'publicationProhibition']],
-            _rbac: false
+        // OR's findAll/searchObjects require NUMERIC register/schema ids and
+        // silently return nothing for slugs; searchObjectsBySlug resolves the
+        // slugs first (same call PolicyCrudService uses for the admin list).
+        // _multitenancy is off so this safety policy is not scoped away by the
+        // active organisation.
+        $result = $objectService->searchObjectsBySlug(
+            registerSlug: 'consent',
+            schemaSlug: 'publicationProhibition',
+            _rbac: false,
+            _multitenancy: false
         );
+        if (is_int($result) === true) {
+            $result = [];
+        }
 
         $rules = [];
         foreach ($this->extractObjects(result: $result) as $obj) {
@@ -469,17 +479,16 @@ class PolicyMatchService
         // bounds the result to standing-consent rows and lets ObjectService
         // index on the column. The defensive PHP scope check is retained as
         // a belt-and-braces in case the filter is later dropped.
-        $result = $objectService->findAll(
-            config: [
-                'filters' => [
-                    'register' => 'consent',
-                    'schema'   => 'publicationConsent',
-                    'scope'    => 'entity',
-                    'active'   => true,
-                ],
-            ],
-            _rbac: false
+        $result = $objectService->searchObjectsBySlug(
+            registerSlug: 'consent',
+            schemaSlug: 'publicationConsent',
+            filters: ['scope' => 'entity', 'active' => true],
+            _rbac: false,
+            _multitenancy: false
         );
+        if (is_int($result) === true) {
+            $result = [];
+        }
 
         $rules = [];
         foreach ($this->extractObjects(result: $result) as $obj) {
