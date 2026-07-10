@@ -2,6 +2,7 @@
 import axios from '@nextcloud/axios'
 import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { getCurrentUser } from '@nextcloud/auth'
+import { odfXmlToText } from './odfToHtml.js'
 
 /**
  * Build the WebDAV URL for a file inside the current user's storage.
@@ -98,6 +99,7 @@ export async function fetchFileAsText(path) {
 // PdfViewer.vue / WordViewer.vue so we don't double-bundle.
 let pdfjsLibPromise = null
 let mammothPromise = null
+let jsZipPromise = null
 
 /**
  * Lazy-load pdfjs-dist plus its worker.
@@ -132,6 +134,18 @@ async function loadMammoth() {
 }
 
 /**
+ * Lazy-load JSZip (odt is a ZIP container).
+ *
+ * @return {Promise<object>} JSZip module.
+ */
+async function loadJsZip() {
+	if (!jsZipPromise) {
+		jsZipPromise = import('jszip')
+	}
+	return jsZipPromise
+}
+
+/**
  * Whether a MIME type / file name looks like a PDF.
  *
  * @param {string} mime MIME type.
@@ -154,12 +168,25 @@ function isWord(mime, name) {
 }
 
 /**
+ * Whether a MIME type / file name looks like an OpenDocument Text (.odt).
+ *
+ * @param {string} mime MIME type.
+ * @param {string} name File name.
+ * @return {boolean}
+ */
+function isOdt(mime, name) {
+	return mime.includes('opendocument.text') || /\.odt$/i.test(name)
+}
+
+/**
  * Extract the plain-text layer of a document regardless of format. Used to
  * scan an anonymised file for `[<TYPE>: <entity_id>]` placeholders.
  *
  * - text/* (and json/xml/markdown): fetched verbatim over WebDAV.
  * - PDF: every page's text content concatenated via pdfjs.
  * - Word (.docx): raw text via mammoth.
+ * - ODT: content.xml + styles.xml text via JSZip (the ZIP's transport bytes
+ *   would otherwise be fetched as garbage text).
  * - Anything else: best-effort WebDAV text fetch.
  *
  * @param {object} file File descriptor.
@@ -195,6 +222,23 @@ export async function extractDocumentText(file) {
 		const mammoth = mammothModule.default || mammothModule
 		const result = await mammoth.extractRawText({ arrayBuffer })
 		return result.value || ''
+	}
+
+	if (isOdt(mime, name)) {
+		const [jsZipModule, arrayBuffer] = await Promise.all([
+			loadJsZip(),
+			fetchFileAsArrayBuffer(file.path),
+		])
+		const JSZip = jsZipModule.default || jsZipModule
+		const zip = await JSZip.loadAsync(arrayBuffer)
+		const parts = []
+		for (const part of ['content.xml', 'styles.xml']) {
+			const entry = zip.file(part)
+			if (entry) {
+				parts.push(odfXmlToText(await entry.async('string')))
+			}
+		}
+		return parts.filter((p) => p !== '').join('\n')
 	}
 
 	// text/plain, markdown, json, xml, or unknown — fetch verbatim.
