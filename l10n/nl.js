@@ -323,7 +323,10 @@ OC.L10N.register(
     "Compare with current" : "Vergelijk met huidige",
     "Restore" : "Herstellen",
     "Restore version" : "Versie herstellen",
-    "Restore to version {n}? The current state will be saved as a new version first." : "Herstellen naar versie {n}? De huidige staat wordt eerst als nieuwe versie opgeslagen."
+    "Restore to version {n}? The current state will be saved as a new version first." : "Herstellen naar versie {n}? De huidige staat wordt eerst als nieuwe versie opgeslagen.",
+    "Financial extraction complete" : "Financiële extractie voltooid",
+    "Review low-confidence fields" : "Controleer velden met lage betrouwbaarheid",
+    "Correction saved" : "Correctie opgeslagen"
 },
 "nplurals=2; plural=(n != 1);"
 );

@@ -1675,3 +1675,165 @@ interface IConversionManager
     public function getProviders(): array;
     public function convert(\OCP\Files\File $file, string $targetMimeType, ?string $path = null): string;
 }//end interface
+
+namespace OCP\TaskProcessing;
+
+/**
+ * Stub for OCP\TaskProcessing\IManager (financial-document-field-extraction
+ * REQ-FIN-06 optional AI-enhancement seam). Mirrors the real NC 30+ surface:
+ * `runTask()` executes synchronously and returns the completed Task.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IManager
+{
+    public function runTask(Task $task): Task;
+    public function scheduleTask(Task $task): void;
+    public function getTask(int $id): Task;
+}//end interface
+
+/**
+ * Stub for OCP\TaskProcessing\Task.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Task implements \JsonSerializable
+{
+    public const STATUS_UNKNOWN    = 0;
+    public const STATUS_SCHEDULED  = 1;
+    public const STATUS_RUNNING    = 2;
+    public const STATUS_SUCCESSFUL = 3;
+    public const STATUS_FAILED     = 4;
+    public const STATUS_CANCELLED  = 5;
+
+    private ?array $output = null;
+
+    private int $status = self::STATUS_UNKNOWN;
+
+    private ?string $errorMessage = null;
+
+    public function __construct(
+        protected readonly string $taskTypeId,
+        protected array $input,
+        protected readonly string $appId,
+        protected readonly ?string $userId,
+        protected readonly ?string $customId = ''
+    ) {
+    }//end __construct()
+
+    public function getStatus(): int
+    {
+        return $this->status;
+    }//end getStatus()
+
+    public function setStatus(int $status): void
+    {
+        $this->status = $status;
+    }//end setStatus()
+
+    public function getOutput(): ?array
+    {
+        return $this->output;
+    }//end getOutput()
+
+    public function setOutput(?array $output): void
+    {
+        $this->output = $output;
+    }//end setOutput()
+
+    public function getErrorMessage(): ?string
+    {
+        return $this->errorMessage;
+    }//end getErrorMessage()
+
+    public function getInput(): array
+    {
+        return $this->input;
+    }//end getInput()
+
+    public function jsonSerialize(): array
+    {
+        return ['taskTypeId' => $this->taskTypeId, 'input' => $this->input];
+    }//end jsonSerialize()
+}//end class
+
+namespace OCP\TaskProcessing\TaskTypes;
+
+/**
+ * Stub for OCP\TaskProcessing\TaskTypes\TextToText.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class TextToText
+{
+    public const ID = 'core:text2text';
+}//end class
+
+namespace OCP\TextProcessing;
+
+/**
+ * Stub for OCP\TextProcessing\IManager (legacy fallback AI-enhancement seam).
+ * Mirrors the real (deprecated) NC surface: `runTask()` executes
+ * synchronously and returns the output string directly.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IManager
+{
+    public function runTask(Task $task): string;
+}//end interface
+
+/**
+ * Stub for OCP\TextProcessing\Task.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Task implements \JsonSerializable
+{
+    public function __construct(
+        protected string $type,
+        protected string $input,
+        protected string $appId,
+        protected ?string $userId,
+        protected string $identifier = ''
+    ) {
+    }//end __construct()
+
+    public function jsonSerialize(): array
+    {
+        return ['type' => $this->type, 'input' => $this->input];
+    }//end jsonSerialize()
+}//end class
+
+/**
+ * Stub for OCP\TextProcessing\FreePromptTaskType.
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class FreePromptTaskType
+{
+}//end class
