@@ -37,6 +37,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
  */
 class EnrichmentRunner
 {
@@ -102,11 +104,15 @@ class EnrichmentRunner
                 return;
             }
 
+            // Event listeners run without a user session in webcron/background
+            // contexts; persist as a trusted system operation so OpenRegister
+            // RBAC does not deny the write as 'Anonymous'.
             $metadataService->saveEnrichedMetadata(
                 $objectId,
                 (string) $object->getRegister(),
                 (string) $object->getSchema(),
-                $metadata
+                $metadata,
+                asSystem: true
             );
 
             $logger->info(
