@@ -140,6 +140,10 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Financial extraction routes (scan-en-herken).
+        ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
+        ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
+
         // Anonymiser warning dismissal routes (admin-only, per-user).
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],

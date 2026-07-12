@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.8.0 — declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "5.8.0"
+        "description": "DocuDesk register v5.9.0 — adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "5.9.0"
     },
     "x-openregister": {
         "type": "application",
@@ -54,14 +54,15 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "2.0.0",
-                "description": "Register voor correspondentie logging, gegenereerde documenten en huisstijl configuratie",
+                "version": "2.1.0",
+                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie en financiële veldextractie",
                 "schemas": [
                     "correspondence",
                     "huisstijl",
                     "batchCorrespondenceJob",
                     "anonymizationLink",
-                    "generatedDocument"
+                    "generatedDocument",
+                    "financialExtraction"
                 ]
             },
             "dossier": {
@@ -1065,6 +1066,133 @@
                     "autoPublish": false
                 },
                 "searchable": true
+            },
+            "financialExtraction": {
+                "uri": null,
+                "slug": "financialExtraction",
+                "title": "Financial Extraction",
+                "description": "Structured financial field-extraction result for a receipt or supplier-invoice document (scan-en-herken): supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items, per-field confidence, and an additive corrections[] tuning corpus. Canonical home of the nl.conduction.docudesk.extraction.completed event payload shape.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FileDocumentCheck",
+                "x-schema-org": "schema:Invoice",
+                "required": [
+                    "documentUri",
+                    "docType",
+                    "requestedBy",
+                    "sourceApp",
+                    "fields",
+                    "fieldConfidence",
+                    "overallConfidence"
+                ],
+                "properties": {
+                    "documentUri": {
+                        "description": "URI van het bronbestand/-document waarop de extractie is uitgevoerd",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Document URI",
+                        "maxLength": 2048
+                    },
+                    "docType": {
+                        "description": "Type brondocument",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Documenttype",
+                        "enum": [
+                            "receipt",
+                            "supplier-invoice"
+                        ]
+                    },
+                    "requestedBy": {
+                        "description": "Nextcloud gebruikers-ID dat de extractie heeft aangevraagd",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Aangevraagd door",
+                        "maxLength": 64
+                    },
+                    "sourceApp": {
+                        "description": "App-ID van de aanvragende consumer (bijv. 'shillinq')",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Bron-app",
+                        "maxLength": 64
+                    },
+                    "fields": {
+                        "description": "Geëxtraheerde velden: supplierName, supplierIban, supplierKvk, supplierVatId, invoiceNumber, issueDate, dueDate, currency, totalExcl, totalVat, totalIncl, vatBreakdown[], lines[]. Onbepaalde velden zijn null, nooit weggelaten.",
+                        "type": "object",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Velden"
+                    },
+                    "fieldConfidence": {
+                        "description": "Betrouwbaarheidsscore (0..1) per geëxtraheerd veld",
+                        "type": "object",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Veld-betrouwbaarheid"
+                    },
+                    "overallConfidence": {
+                        "description": "Geaggregeerde betrouwbaarheidsscore (0..1) over alle ingevulde velden",
+                        "type": "number",
+                        "required": true,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Totale betrouwbaarheid"
+                    },
+                    "corrections": {
+                        "description": "Additieve lijst van door mensen gecorrigeerde veldwaarden (field, original, corrected, correctedBy, correctedAt), gekoppeld aan de oorspronkelijke extractie voor toekomstige model-tuning. De oorspronkelijke extractie blijft ongewijzigd.",
+                        "type": "array",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Correcties",
+                        "default": []
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-07-12T00:00:00+00:00",
+                "created": "2026-07-12T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "documentUri",
+                    "objectDescriptionField": "docType",
+                    "autoPublish": false
+                },
+                "searchable": true,
+                "x-openregister-archival": {
+                    "retention": {
+                        "default": "P7Y"
+                    },
+                    "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                }
             },
             "huisstijl": {
                 "uri": null,
