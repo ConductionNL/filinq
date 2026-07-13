@@ -144,6 +144,9 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
         ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
 
+        // GL-account ("grootboekrekening") suggestion route (ai-gl-account-suggestion).
+        ['name' => 'glAccountSuggestion#suggestAccount', 'url' => 'api/extraction/{id}/suggest-account', 'verb' => 'POST'],
+
         // Anonymiser warning dismissal routes (admin-only, per-user).
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],

@@ -27,6 +27,7 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use OCA\DocuDesk\Service\FinancialExtractionService;
+use OCA\DocuDesk\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -54,6 +55,7 @@ class ExtractionController extends Controller
      * @param string                     $appName           The application name.
      * @param IRequest                   $request           The request object.
      * @param FinancialExtractionService $extractionService Extraction orchestration service.
+     * @param GlAccountSuggestionService $suggestionService GL-account suggestion service (booking-history feed).
      * @param IUserSession               $userSession       User session for authentication.
      * @param IL10N                      $l10n              Localization service.
      * @param LoggerInterface            $logger            Logger.
@@ -64,6 +66,7 @@ class ExtractionController extends Controller
         string $appName,
         IRequest $request,
         private readonly FinancialExtractionService $extractionService,
+        private readonly GlAccountSuggestionService $suggestionService,
         private readonly IUserSession $userSession,
         private readonly IL10N $l10n,
         private readonly LoggerInterface $logger,
@@ -109,6 +112,11 @@ class ExtractionController extends Controller
     /**
      * Store human-corrected field values for a prior extraction (REQ-FIN-07).
      *
+     * When the posted `fields` map includes a `glAccountCode` key, this also
+     * feeds the GL-account booking-history corpus for the extraction's
+     * resolved supplier identity (ai-gl-account-suggestion, REQ-GLS-05) — no
+     * new endpoint is introduced for this; it extends this existing one.
+     *
      * @param string $id The `financialExtraction` object id.
      *
      * @return JSONResponse The updated extraction object.
@@ -117,6 +125,7 @@ class ExtractionController extends Controller
      * @NoCSRFRequired
      *
      * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
      */
     public function corrections(string $id): JSONResponse
     {
@@ -140,12 +149,56 @@ class ExtractionController extends Controller
                 correctedBy: $user->getUID()
             );
 
+            $this->recordGlAccountBookingIfPresent(id: $id, fields: $fields, correctedBy: $user->getUID());
+
             return new JSONResponse($result);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to store correction', exception: $e);
         }
 
     }//end corrections()
+
+    /**
+     * Feed the GL-account booking history when a correction includes a
+     * `glAccountCode` (ai-gl-account-suggestion, REQ-GLS-05). Best-effort:
+     * never turns a successful correction into a failed response.
+     *
+     * @param string               $id          The `financialExtraction` object id.
+     * @param array<string, mixed> $fields      The posted corrected-fields map.
+     * @param string               $correctedBy Nextcloud user id submitting the correction.
+     *
+     * @return void
+     */
+    private function recordGlAccountBookingIfPresent(string $id, array $fields, string $correctedBy): void
+    {
+        if (array_key_exists('glAccountCode', $fields) === false) {
+            return;
+        }
+
+        $accountCode = trim((string) $fields['glAccountCode']);
+        if ($accountCode === '') {
+            return;
+        }
+
+        $accountLabel = null;
+        if (isset($fields['glAccountLabel']) === true) {
+            $accountLabel = (string) $fields['glAccountLabel'];
+        }
+
+        try {
+            $this->suggestionService->recordBooking(
+                extractionId: $id,
+                accountCode: $accountCode,
+                accountLabel: $accountLabel,
+                correctedBy: $correctedBy
+            );
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'DocuDesk: correction stored but GL-account booking-history recording failed: '.$e->getMessage()
+            );
+        }
+
+    }//end recordGlAccountBookingIfPresent()
 
     /**
      * Build an error JSON response with logging (mirrors

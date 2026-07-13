@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v5.9.0 — adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "5.9.0"
+        "description": "DocuDesk register v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "5.10.0"
     },
     "x-openregister": {
         "type": "application",
@@ -54,15 +54,17 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "2.1.0",
-                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie en financiële veldextractie",
+                "version": "2.2.0",
+                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie en grootboekrekening-suggesties",
                 "schemas": [
                     "correspondence",
                     "huisstijl",
                     "batchCorrespondenceJob",
                     "anonymizationLink",
                     "generatedDocument",
-                    "financialExtraction"
+                    "financialExtraction",
+                    "glAccountBooking",
+                    "glAccountMappingRule"
                 ]
             },
             "dossier": {
@@ -1193,6 +1195,210 @@
                     "action": "destroy",
                     "responsibleParty": "docudesk-privacy-officer"
                 }
+            },
+            "glAccountBooking": {
+                "uri": null,
+                "slug": "glAccountBooking",
+                "title": "GL Account Booking",
+                "description": "Eén opgeslagen boeking van een leverancier-identiteit naar een grootboekrekening-code, gevoed door de correctie-feedback van een financiële extractie. De rekeningcode/-label zijn ondoorzichtige strings die de consumer-app aanlevert — DocuDesk kent en valideert geen rekeningschema (bijv. RGS). Vormt samen de geschiedenis waarop ai-gl-account-suggestion rangschikt.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "BookOpenVariant",
+                "required": [
+                    "supplierIdentity",
+                    "identityType",
+                    "accountCode",
+                    "bookedAt",
+                    "source"
+                ],
+                "properties": {
+                    "supplierIdentity": {
+                        "description": "Opgeloste leverancier-identiteit (KvK, IBAN, of genormaliseerde naam) waarop geschiedenis gegroepeerd wordt",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Leverancier-identiteit",
+                        "maxLength": 255
+                    },
+                    "identityType": {
+                        "description": "Type van de opgeloste leverancier-identiteit",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Identiteitstype",
+                        "enum": [
+                            "kvk",
+                            "iban",
+                            "name"
+                        ]
+                    },
+                    "accountCode": {
+                        "description": "Ondoorzichtige grootboekrekening-code zoals aangeleverd door de consumer-app (DocuDesk interpreteert of valideert deze niet)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Rekeningcode",
+                        "maxLength": 64
+                    },
+                    "accountLabel": {
+                        "description": "Optioneel leesbaar label bij de rekeningcode, eveneens ondoorzichtig aangeleverd door de consumer-app",
+                        "type": "string",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Rekeninglabel",
+                        "maxLength": 255
+                    },
+                    "bookedAt": {
+                        "description": "Tijdstip waarop deze boeking is vastgelegd",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Geboekt op"
+                    },
+                    "source": {
+                        "description": "Herkomst van deze boeking",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Bron",
+                        "enum": [
+                            "correction",
+                            "suggestion-accepted"
+                        ]
+                    },
+                    "extractionId": {
+                        "description": "ID van de financialExtraction waaruit deze boeking voortkomt",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Extractie-ID",
+                        "maxLength": 255
+                    },
+                    "sourceApp": {
+                        "description": "App-ID van de aanleverende consumer (bijv. 'shillinq')",
+                        "type": "string",
+                        "visible": true,
+                        "order": 8,
+                        "facetable": true,
+                        "title": "Bron-app",
+                        "maxLength": 64
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-07-13T00:00:00+00:00",
+                "created": "2026-07-13T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "supplierIdentity",
+                    "objectDescriptionField": "accountCode",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "glAccountMappingRule": {
+                "uri": null,
+                "slug": "glAccountMappingRule",
+                "title": "GL Account Mapping Rule",
+                "description": "Door de tenant-beheerder onderhouden trefwoord/categorie → grootboekrekening regel, gebruikt als cold-start fallback wanneer een leverancier nog geen boekingsgeschiedenis heeft. DocuDesk levert geen vooraf ingevulde regels — de tabel start leeg; er wordt geen rekeningschema (bijv. RGS) meegeleverd.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "TagMultiple",
+                "required": [
+                    "keywords",
+                    "accountCode"
+                ],
+                "properties": {
+                    "keywords": {
+                        "description": "Trefwoorden die, indien gevonden in de leveranciersnaam/documenttekst, deze regel doen matchen",
+                        "type": "array",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Trefwoorden",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "accountCode": {
+                        "description": "Ondoorzichtige grootboekrekening-code die bij een match wordt voorgesteld (DocuDesk interpreteert of valideert deze niet)",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Rekeningcode",
+                        "maxLength": 64
+                    },
+                    "accountLabel": {
+                        "description": "Optioneel leesbaar label bij de rekeningcode",
+                        "type": "string",
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Rekeninglabel",
+                        "maxLength": 255
+                    },
+                    "priority": {
+                        "description": "Voorrang bij meerdere matchende regels (hoger = eerder toegepast)",
+                        "type": "number",
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Prioriteit",
+                        "default": 0
+                    },
+                    "enabled": {
+                        "description": "Of deze regel actief is",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-07-13T00:00:00+00:00",
+                "created": "2026-07-13T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "accountCode",
+                    "objectDescriptionField": "accountLabel",
+                    "autoPublish": false
+                },
+                "searchable": true
             },
             "huisstijl": {
                 "uri": null,
