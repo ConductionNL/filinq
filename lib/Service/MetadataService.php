@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
  */
 class MetadataService
 {
@@ -165,22 +167,35 @@ class MetadataService
     /**
      * Enrich a document object with metadata and save it back via ObjectService
      *
+     * When `$asSystem` is true the read + write run inside OpenRegister's
+     * `ObjectService::runAsSystem()` scoped elevation. This is for
+     * app-initiated maintenance without a user session (event listeners
+     * reacting to webcron-created objects), where RBAC would otherwise deny
+     * every write as 'Anonymous'. Controller/user-request callers MUST keep
+     * the default `false` so the requesting user's RBAC applies. On released
+     * OpenRegister versions without `runAsSystem()` the call falls back to
+     * the direct (non-elevated) path.
+     *
      * @param string               $objectId The object UUID in OpenRegister
      * @param string               $register The register ID
      * @param string               $schema   The schema ID
      * @param array<string, mixed> $metadata The metadata to merge into the object
+     * @param bool                 $asSystem Run the read+write as a trusted system
+     *                                       operation (background/event contexts only)
      *
      * @return array<string, mixed> Updated object data
      *
      * @throws Exception If saving fails
      *
      * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
+     * @spec exclude system-context adoption
      */
     public function saveEnrichedMetadata(
         string $objectId,
         string $register,
         string $schema,
-        array $metadata
+        array $metadata,
+        bool $asSystem=false
     ): array {
         try {
             $objectService = $this->getObjectService();
@@ -188,22 +203,32 @@ class MetadataService
             // Security (C2): _rbac:false / _multitenancy:false removed — OR's
             // per-object RBAC and multitenancy guards must apply so callers
             // cannot read or overwrite objects in other tenants/users.
-            $object = $objectService->find(
-                id: $objectId,
-                register: $register,
-                schema: $schema
-            );
+            // System-context (event-listener/webcron) callers elevate via
+            // runAsSystem() below instead of disabling the guards wholesale.
+            $persist = function () use ($objectService, $objectId, $register, $schema, $metadata) {
+                $object = $objectService->find(
+                    id: $objectId,
+                    register: $register,
+                    schema: $schema
+                );
 
-            if ($object === null) {
-                throw new Exception('Object not found: '.$objectId);
+                if ($object === null) {
+                    throw new Exception('Object not found: '.$objectId);
+                }
+
+                $objectData = array_merge($object->getObject(), $metadata);
+                return $objectService->saveObject(
+                    object: $objectData,
+                    register: $register,
+                    schema: $schema
+                );
+            };
+
+            if ($asSystem === true && method_exists($objectService, 'runAsSystem') === true) {
+                $savedObject = $objectService->runAsSystem($persist);
+            } else {
+                $savedObject = $persist();
             }
-
-            $objectData  = array_merge($object->getObject(), $metadata);
-            $savedObject = $objectService->saveObject(
-                object: $objectData,
-                register: $register,
-                schema: $schema
-            );
 
             $this->logger->info(
                 'Enriched metadata saved for object',

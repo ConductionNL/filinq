@@ -42,6 +42,8 @@ use Throwable;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
  */
 class ValidationRunner
 {
@@ -89,6 +91,9 @@ class ValidationRunner
                 documentType: ($data['documentType'] ?? null)
             );
 
+            // Event listeners run without a user session in webcron/background
+            // contexts; persist as a trusted system operation so OpenRegister
+            // RBAC does not deny the write as 'Anonymous'.
             $metadataService->saveEnrichedMetadata(
                 $object->getUuid(),
                 (string) $object->getRegister(),
@@ -96,7 +101,8 @@ class ValidationRunner
                 [
                     'validationStatus'   => $verdict['validationStatus'],
                     'validationFindings' => $verdict['validationFindings'],
-                ]
+                ],
+                asSystem: true
             );
 
             $logger->info(
