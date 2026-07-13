@@ -85,6 +85,9 @@ class GrondslagProposalServiceTest extends TestCase
         $this->assertContains('EMAIL', $types);
         $this->assertContains('BSN', $types);
         $this->assertContains('LOCATION', $types);
+        // KENTEKEN (Dutch license plate) is selectable/toggleable and carried
+        // in the whitelist sent to the detector (enable-kenteken-entity-type).
+        $this->assertContains('KENTEKEN', $types);
 
     }//end testGetSelectableEntityTypesReturnsCuratedList()
 
