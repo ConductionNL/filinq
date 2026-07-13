@@ -146,6 +146,8 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					v-model="newType"
 					class="add-entity-panel__select"
 					:options="typeOptions"
+					label="label"
+					:reduce="(o) => o.value"
 					:input-label="t('docudesk', 'Type')"
 					:placeholder="t('docudesk', 'Pick a type…')" />
 				<NcSelect
@@ -348,7 +350,6 @@ export default {
 	data() {
 		return {
 			basesOptions: [],
-			typeOptions: ENTITY_TYPES,
 			// Prohibition-guard dialog state for a blocked skip decision.
 			prohibitionOpen: false,
 			prohibitionBlock: null,
@@ -630,6 +631,17 @@ export default {
 		 *
 		 * @return {Array<object>}
 		 */
+		/**
+		 * Options for the manual "add entity" type picker. Pairs the raw
+		 * entity-type token (the value, kept unchanged for logic) with its
+		 * translated label (shown to the user). The select reduces back to the
+		 * raw value, so `newTypeValue` still yields the machine token.
+		 *
+		 * @return {Array<{label: string, value: string}>}
+		 */
+		typeOptions() {
+			return ENTITY_TYPES.map((type) => ({ label: entityTypeLabel(type), value: type }))
+		},
 		removedEntities() {
 			if (!this.isCompletedResult) {
 				return []
