@@ -188,9 +188,11 @@
 	--color-primary-element: var(--dd-color-dark-blue, #02162E);
 	--color-success: var(--dd-color-dark-blue, #02162E);
 	--color-warning: var(--dd-color-dark-blue, #02162E);
-	--color-warning-text: var(--dd-color-dark-blue, #02162E);
 	--color-error: var(--dd-color-dark-blue, #02162E);
 	--color-info: var(--dd-color-dark-blue, #02162E);
+	--color-success-text: var(--dd-color-dark-blue, #02162E);
+	--color-warning-text: var(--dd-color-dark-blue, #02162E);
+	--color-info-text: var(--dd-color-dark-blue, #02162E);
 	border: 1px solid var(--dd-badge-border-color, var(--color-primary-element));
 }
 
@@ -207,4 +209,22 @@
 .cn-status-badge--info {
 	--dd-badge-border-color: #8ABCE0;
 	--color-info-light: var(--dd-bg-info-light, #A0D7FF);
+}
+
+/* pdfjs text-measurement canvas. pdfjs' TextLayer appends a scratch
+   <canvas class="hiddenCanvasElement"> to <body> for glyph metrics (see
+   TextLayer.#getCtx in pdfjs-dist) and relies on this rule from its own
+   pdf_viewer.css to keep it invisible. We don't ship pdf_viewer.css (the
+   text-layer rules DocuDesk needs are mirrored in PdfViewer.vue), so without
+   this the canvas renders at its default 300x150 as a black box in the
+   top-left corner. It lands on <body> whenever pdfjs touches text — including
+   the /my-documents "Anonymize" flow, which extracts text without mounting the
+   PDF viewer — so the rule must be global, not scoped to PdfViewer.vue. */
+.hiddenCanvasElement {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	display: none;
 }
