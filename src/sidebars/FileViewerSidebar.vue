@@ -103,7 +103,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					</div>
 					<ul v-if="entry.residualEntities && entry.residualEntities.length" class="residual-list">
 						<li v-for="(r, idx) in entry.residualEntities" :key="'res-' + idx">
-							<span class="residual-type">{{ r.type }}</span>: {{ r.text }}
+							<span class="residual-type">{{ entityTypeLabel(r.type) }}</span>: {{ r.text }}
 						</li>
 					</ul>
 					<a :href="downloadUrl" download class="download-link">
@@ -324,8 +324,8 @@ import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdToggle from '../components/DdToggle.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
-import { ENTITY_TYPES } from '../services/entityTypes.js'
 import { fetchBaseOptions } from '../services/bases.js'
+import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -892,6 +892,7 @@ export default {
 		this.basesOptions = await fetchBaseOptions()
 	},
 	methods: {
+		entityTypeLabel,
 		/**
 		 * Toggle an entity's inclusion (= skip decision) through the guarded
 		 * store action. A 422 (prohibited) opens the block dialog instead of

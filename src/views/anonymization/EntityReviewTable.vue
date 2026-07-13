@@ -9,7 +9,7 @@
 				<option value="">
 					{{ t('docudesk', 'All types') }}
 				</option><option v-for="t in availableTypes" :key="t" :value="t">
-					{{ t }}
+					{{ entityTypeLabel(t) }}
 				</option>
 			</select>
 		</div>
@@ -44,8 +44,8 @@
 			</thead>
 			<tbody>
 				<tr v-for="item in filteredEntities" :key="item.idx">
-					<td><input type="checkbox" :checked="item.e.included" :disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0 || !!(item.e.prohibitionMatch && item.e.prohibitionMatch.highConfidence)" @change="onIncludedChange(item.idx, $event.target.checked)"></td>
-					<td><span class="badge">{{ item.e.type }}</span></td><td>{{ item.e.value }}<span v-if="item.e.prohibitionMatch" class="warn-text" :title="item.e.prohibitionMatch.ruleName" style="margin-inline-start:6px">🔒</span></td>
+					<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
+					<td><span class="badge">{{ entityTypeLabel(item.e.type) }}</span></td><td>{{ item.e.value }}</td>
 					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
@@ -84,6 +84,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcCheckboxRadioSwitch, NcSelect } from '@nextcloud/vue'
+import { entityTypeLabel } from '../../services/entityTypes.js'
 import ProhibitionBlockedDialog from '../../dialogs/ProhibitionBlockedDialog.vue'
 import { anonymizationStore } from '../../store/store.js'
 import { fetchBaseOptions } from '../../services/bases.js'
@@ -129,6 +130,7 @@ export default {
 	},
 	methods: {
 		t,
+		entityTypeLabel,
 		sortBy(f) { if (this.sf === f) { this.sa = !this.sa } else { this.sf = f; this.sa = false } },
 		onBasesChange(idx, value) {
 			const entity = this.entities[idx]

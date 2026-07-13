@@ -11,6 +11,8 @@
  * those variables need to change — no JS edit required.
  */
 
+import { translate as t } from '@nextcloud/l10n'
+
 /**
  * Detectable entity types. Sourced from the OpenRegister detector vocabulary
  * (presidio + openanonymiser tags); kept as a flat list so the frontend has a
@@ -59,4 +61,44 @@ export function entityTypeColor(type) {
 		return 'var(--dd-entity-color-default)'
 	}
 	return `var(--dd-entity-color-${key}, var(--dd-entity-color-default))`
+}
+
+/**
+ * Human-readable, translated label for an entity type — display only.
+ *
+ * The raw type (`PERSON`, `EMAIL`, …) is a stable machine key: it drives the
+ * anonymisation placeholders, dedup keys, colour lookup and the OpenRegister
+ * mapping, so it must never be mutated. This helper leaves that key untouched
+ * and only produces the string shown to the user, translated into their own
+ * locale at render time. Unknown / custom types fall back to the raw value so
+ * nothing ever renders blank.
+ *
+ * @param {string} type Raw entity type (any casing).
+ * @return {string} Translated label, or the raw type when it is not in the vocabulary.
+ */
+export function entityTypeLabel(type) {
+	const upper = String(type || '').trim().toUpperCase()
+	switch (upper) {
+	case 'PERSON':
+		return t('docudesk', 'Person')
+	case 'ORGANIZATION':
+		return t('docudesk', 'Organisation')
+	case 'EMAIL':
+		return t('docudesk', 'Email address')
+	case 'PHONE_NUMBER':
+		return t('docudesk', 'Phone number')
+	case 'IBAN_CODE':
+		return t('docudesk', 'IBAN')
+	case 'IP_ADDRESS':
+		return t('docudesk', 'IP address')
+	case 'LOCATION':
+		return t('docudesk', 'Location')
+	case 'OTHER':
+		return t('docudesk', 'Other')
+	case 'UNKNOWN':
+		return t('docudesk', 'Unknown')
+	default:
+		// Custom / unrecognised types keep their raw label untouched.
+		return String(type || '')
+	}
 }

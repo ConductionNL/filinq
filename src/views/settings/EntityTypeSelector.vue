@@ -10,7 +10,7 @@
 				:checked="isEnabled(type)"
 				type="switch"
 				@update:checked="toggle(type, $event)">
-				{{ type }}
+				{{ entityTypeLabel(type) }}
 			</NcCheckboxRadioSwitch>
 		</div>
 	</div>
@@ -19,6 +19,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { entityTypeLabel } from '../../services/entityTypes.js'
 
 // Self-contained selector for the entity types detected automatically.
 //
@@ -62,6 +63,7 @@ export default {
 		},
 	},
 	methods: {
+		entityTypeLabel,
 		isEnabled(type) {
 			return this.value.includes(type)
 		},

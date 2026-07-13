@@ -2,7 +2,7 @@
 import { translate as t } from '@nextcloud/l10n'
 import { NcSelect } from '@nextcloud/vue'
 import DdSkeleton from './DdSkeleton.vue'
-import { entityTypeColor } from '../services/entityTypes.js'
+import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 </script>
 
 <template>
@@ -21,7 +21,7 @@ import { entityTypeColor } from '../services/entityTypes.js'
 		<div class="dd-entity-card__header">
 			<span
 				class="dd-entity-card__type"
-				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ item.type }}</span>
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
 			<span class="dd-entity-card__count">{{ item.count }}x</span>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value || ''">
@@ -55,7 +55,7 @@ import { entityTypeColor } from '../services/entityTypes.js'
 				@change="$emit('toggle')">
 			<span
 				class="dd-entity-card__type"
-				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ item.type }}</span>
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
 			<span class="dd-entity-card__confidence">
 				{{ ((item.confidence || 0) * 100).toFixed(0) }}%
 			</span>
