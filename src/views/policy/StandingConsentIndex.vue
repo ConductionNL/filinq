@@ -7,8 +7,8 @@ import { standingConsentStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Standing Publication Consents')"
-			:description="t('docudesk', 'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a prohibition rule also matches.')"
+			:title="t('docudesk', 'Publish always')"
+			:description="t('docudesk', 'Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.')"
 			:show-title="true"
 			:objects="standingConsentStore.standingConsents"
 			:columns="tableColumns"
@@ -295,8 +295,8 @@ export default {
 		},
 		dialogTitle() {
 			return this.editing
-				? t('docudesk', 'Edit standing consent')
-				: t('docudesk', 'Add standing consent')
+				? t('docudesk', 'Edit publish-always rule')
+				: t('docudesk', 'Add publish-always rule')
 		},
 		canSubmit() {
 			return this.form.entityText.trim() !== ''

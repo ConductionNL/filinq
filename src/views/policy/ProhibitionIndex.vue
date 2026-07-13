@@ -7,7 +7,7 @@ import { prohibitionStore } from '../../store/store.js'
 	<div>
 		<CnIndexPage
 			ref="indexPage"
-			:title="t('docudesk', 'Publication Prohibitions')"
+			:title="t('docudesk', 'Publish never')"
 			:description="t('docudesk', 'Entity-level deny rules. A matched entity is always anonymised, regardless of the per-document consent workflow.')"
 			:show-title="true"
 			:objects="prohibitionStore.prohibitions"

@@ -19,40 +19,8 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationSpacer />
 			<NcAppNavigationItem
-				:active="isActive('Dashboard')"
-				:name="t('docudesk', 'Dashboard')"
-				:to="{ name: 'Dashboard' }">
-				<template #icon>
-					<MonitorDashboard :size="24" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem
-				:active="isActive('FolderAnonymization')"
-				:name="t('docudesk', 'Folder Analysis')"
-				:to="{ name: 'FolderAnonymization' }">
-				<template #icon>
-					<FolderSearchOutline :size="24" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem
-				:active="isActive('Consent')"
-				:name="t('docudesk', 'Consent Management')"
-				:to="{ name: 'Consent' }">
-				<template #icon>
-					<AccountCheckOutline :size="24" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem
-				:active="isActive('Templates')"
-				:name="t('docudesk', 'Templates')"
-				:to="{ name: 'Templates' }">
-				<template #icon>
-					<FileDocumentMultipleOutline :size="24" />
-				</template>
-			</NcAppNavigationItem>
-			<NcAppNavigationItem
 				:active="isActive('StandingConsents')"
-				:name="t('docudesk', 'Standing Consents')"
+				:name="t('docudesk', 'Publish always')"
 				:to="{ name: 'StandingConsents' }">
 				<template #icon>
 					<AccountStar :size="20" />
@@ -60,7 +28,7 @@
 			</NcAppNavigationItem>
 			<NcAppNavigationItem
 				:active="isActive('Prohibitions')"
-				:name="t('docudesk', 'Prohibitions')"
+				:name="t('docudesk', 'Publish never')"
 				:to="{ name: 'Prohibitions' }">
 				<template #icon>
 					<AlertOctagon :size="20" />
@@ -88,20 +56,14 @@ import {
 	NcAppNavigationSpacer,
 } from '@nextcloud/vue'
 
-import MonitorDashboard from 'vue-material-design-icons/MonitorDashboard.vue'
-import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
-import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
-import FolderSearchOutline from 'vue-material-design-icons/FolderSearchOutline.vue'
 // Icons
 import AccountStar from 'vue-material-design-icons/AccountStar.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 
 const ACTIVE_GROUPS = {
-	Consent: ['Consent', 'ConsentDetail'],
-	Templates: ['Templates', 'TemplateDetail', 'TemplateNew'],
 	Anonymization: ['Anonymization'],
 }
 
@@ -112,12 +74,8 @@ export default {
 		NcAppNavigationList,
 		NcAppNavigationItem,
 		NcAppNavigationSpacer,
-		MonitorDashboard,
-		AccountCheckOutline,
 		LockOutline,
-		FileDocumentMultipleOutline,
 		TextBoxOutline,
-		FolderSearchOutline,
 		AccountStar,
 		AlertOctagon,
 		Palette,

@@ -1,6 +1,13 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Add publish-always rule": "Add publish-always rule",
+		"Add publish-never rule": "Add publish-never rule",
+		"Edit publish-always rule": "Edit publish-always rule",
+		"Edit publish-never rule": "Edit publish-never rule",
+		"Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.": "Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.",
+		"Publish always": "Publish always",
+		"Publish never": "Publish never",
 		"(no relation ids — grondslagen will not persist)": "(no relation ids — grondslagen will not persist)",
 		"{selected} of {total} entities selected across {files} files": "{selected} of {total} entities selected across {files} files",
 		"{found} unique data found": "{found} unique data found",
@@ -275,6 +282,8 @@ OC.L10N.register(
 		"OCR Document Scanning": "OCR Document Scanning",
 		"OCR DPI": "OCR DPI",
 		"OCR Languages": "OCR Languages",
+		"Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}": "Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}",
+		"Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.": "Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.",
 		"Only Word (.docx), PDF and TXT files are supported. Skipped: {names}": "Only Word (.docx), PDF and TXT files are supported. Skipped: {names}",
 		"Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.": "Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.",
 		"Open": "Open",

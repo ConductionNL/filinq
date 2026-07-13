@@ -57,13 +57,14 @@ import { emlPreviewUrl } from '../../services/fileViewerService.js'
 import DdFileViewerHeader from '../../components/DdFileViewerHeader.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
+import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 
 /**
  * Match a file (by MIME + name) to one of the supported in-app viewers.
  *
  * @param {object} file Current file descriptor from the store.
- * @return {string|null} 'pdf' | 'word' | 'text' | 'eml' | null when unsupported.
+ * @return {string|null} 'pdf' | 'word' | 'odt' | 'text' | 'eml' | null when unsupported.
  */
 function detectViewer(file) {
 	if (!file) return null
@@ -74,6 +75,7 @@ function detectViewer(file) {
 		mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 		|| name.endsWith('.docx')
 	) return 'word'
+	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt')) return 'odt'
 	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
 	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/)) return 'text'
 	return null
@@ -93,6 +95,7 @@ export default {
 		DdFileViewerHeader,
 		PdfViewer,
 		WordViewer,
+		OdtViewer,
 		TextViewer,
 	},
 	data() {
@@ -126,6 +129,7 @@ export default {
 			switch (this.viewerKind) {
 			case 'pdf': return 'PdfViewer'
 			case 'word': return 'WordViewer'
+			case 'odt': return 'OdtViewer'
 			case 'text': return 'TextViewer'
 			// EML is rendered as a server-side PDF preview via PdfViewer.
 			case 'eml': return 'PdfViewer'
@@ -156,6 +160,7 @@ export default {
 			switch (this.viewerKind) {
 			case 'pdf': return 'FilePdfBox'
 			case 'word': return 'FileWordBox'
+			case 'odt': return 'FileWordBox'
 			default: return 'FileDocumentOutline'
 			}
 		},

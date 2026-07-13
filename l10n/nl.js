@@ -1,6 +1,13 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Add publish-always rule": "Altijd-publiceren-regel toevoegen",
+		"Add publish-never rule": "Nooit-publiceren-regel toevoegen",
+		"Edit publish-always rule": "Altijd-publiceren-regel bewerken",
+		"Edit publish-never rule": "Nooit-publiceren-regel bewerken",
+		"Entity-level allow rules. A matched entity may be published without per-document objection workflow, unless a publish-never rule also matches.": "Regels op entiteitniveau. Een overeenkomende entiteit mag worden gepubliceerd zonder de bezwaarprocedure per document, tenzij ook een nooit-publiceren-regel overeenkomt.",
+		"Publish always": "Altijd publiceren",
+		"Publish never": "Nooit publiceren",
 		"PERSON": "PERSOON",
 		"ORGANIZATION": "ORGANISATIE",
 		"LOCATION": "LOCATIE",
@@ -319,6 +326,8 @@ OC.L10N.register(
 		"OCR Languages": "OCR-talen",
 		"Only Word (.docx) and TXT files are supported. Skipped: {names}": "Alleen Word (.docx) en TXT bestanden zijn ondersteund. Overgeslagen: {names}",
 		"Only Word (.docx) or TXT files are supported. Maximum file size 500 MB.": "Alleen Word (.docx) of TXT bestanden zijn ondersteund. Maximale bestandsgrootte 500 MB.",
+		"Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}": "Alleen Word (.docx)-, ODT-, PDF- en TXT-bestanden worden ondersteund. Overgeslagen: {names}",
+		"Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.": "Alleen Word (.docx)-, ODT-, PDF- of TXT-bestanden worden ondersteund. Maximale bestandsgrootte 500 MB.",
 		"Only Word (.docx), PDF and TXT files are supported. Skipped: {names}": "Alleen Word (.docx)-, PDF- en TXT-bestanden worden ondersteund. Overgeslagen: {names}",
 		"Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.": "Alleen Word (.docx)-, PDF- of TXT-bestanden worden ondersteund. Maximale bestandsgrootte 500 MB.",
 		"Open": "Openen",
