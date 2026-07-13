@@ -20,6 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\GrondslagProposalService;
 use OCA\DocuDesk\Service\OcrService;
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
 use OCA\DocuDesk\Service\SettingsInitializer;
@@ -86,6 +87,11 @@ class SettingsServiceTest extends TestCase
      */
     private OcrService|MockObject $mockOcrService;
 
+    /**
+     * @var GrondslagProposalService|MockObject
+     */
+    private GrondslagProposalService|MockObject $mockGrondslagProposal;
+
 
     /**
      * Set up test environment
@@ -96,13 +102,14 @@ class SettingsServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockConfig           = $this->createMock(IAppConfig::class);
-        $this->mockContainer        = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager       = $this->createMock(IAppManager::class);
-        $this->mockLogger           = $this->createMock(LoggerInterface::class);
-        $this->mockDiscoveryService = $this->createMock(RegisterDiscoveryService::class);
-        $this->mockInitializer      = $this->createMock(SettingsInitializer::class);
-        $this->mockOcrService       = $this->createMock(OcrService::class);
+        $this->mockConfig            = $this->createMock(IAppConfig::class);
+        $this->mockContainer         = $this->createMock(ContainerInterface::class);
+        $this->mockAppManager        = $this->createMock(IAppManager::class);
+        $this->mockLogger            = $this->createMock(LoggerInterface::class);
+        $this->mockDiscoveryService  = $this->createMock(RegisterDiscoveryService::class);
+        $this->mockInitializer       = $this->createMock(SettingsInitializer::class);
+        $this->mockOcrService        = $this->createMock(OcrService::class);
+        $this->mockGrondslagProposal = $this->createMock(GrondslagProposalService::class);
 
         $this->settingsService = new SettingsService(
             $this->mockConfig,
@@ -111,7 +118,8 @@ class SettingsServiceTest extends TestCase
             $this->mockLogger,
             $this->mockDiscoveryService,
             $this->mockInitializer,
-            $this->mockOcrService
+            $this->mockOcrService,
+            $this->mockGrondslagProposal
         );
 
     }//end setUp()

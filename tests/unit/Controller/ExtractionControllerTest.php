@@ -22,6 +22,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\ExtractionController;
 use OCA\DocuDesk\Service\FinancialExtractionService;
+use OCA\DocuDesk\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -46,6 +47,8 @@ class ExtractionControllerTest extends TestCase
 
     private FinancialExtractionService|MockObject $extractionService;
 
+    private GlAccountSuggestionService|MockObject $suggestionService;
+
     private IUserSession|MockObject $userSession;
 
     /**
@@ -57,6 +60,7 @@ class ExtractionControllerTest extends TestCase
 
         $this->request           = $this->createMock(IRequest::class);
         $this->extractionService = $this->createMock(FinancialExtractionService::class);
+        $this->suggestionService = $this->createMock(GlAccountSuggestionService::class);
 
         $l10n = $this->createMock(IL10N::class);
         $l10n->method('t')->willReturnCallback(static fn ($text, $params=[]): string => vsprintf($text, $params));
@@ -73,6 +77,7 @@ class ExtractionControllerTest extends TestCase
             'docudesk',
             $this->request,
             $this->extractionService,
+            $this->suggestionService,
             $this->userSession,
             $l10n,
             $logger,
@@ -142,6 +147,7 @@ class ExtractionControllerTest extends TestCase
             'docudesk',
             $this->request,
             $this->extractionService,
+            $this->suggestionService,
             $this->userSession,
             $l10n,
             $this->createMock(LoggerInterface::class),
@@ -192,4 +198,65 @@ class ExtractionControllerTest extends TestCase
         $this->assertSame('extraction-3', $result->getData()['id']);
 
     }//end testCorrectionsReturnsUpdatedObject()
+
+    /**
+     * A correction whose `fields` includes `glAccountCode` delegates to
+     * GlAccountSuggestionService::recordBooking() (ai-gl-account-suggestion,
+     * REQ-GLS-05).
+     *
+     * @return void
+     */
+    public function testCorrectionsWithGlAccountCodeDelegatesToRecordBooking(): void
+    {
+        $this->request->method('getParam')->with('fields', [])->willReturn([
+            'glAccountCode'  => '4300',
+            'glAccountLabel' => 'Kantoorkosten',
+        ]);
+        $this->extractionService->method('addCorrection')->willReturn(['id' => 'extraction-3']);
+
+        $this->suggestionService->expects($this->once())
+            ->method('recordBooking')
+            ->with('extraction-3', '4300', 'Kantoorkosten', 'annemarie');
+
+        $result = $this->controller->corrections('extraction-3');
+
+        $this->assertSame(200, $result->getStatus());
+
+    }//end testCorrectionsWithGlAccountCodeDelegatesToRecordBooking()
+
+    /**
+     * A correction without `glAccountCode` does NOT call recordBooking().
+     *
+     * @return void
+     */
+    public function testCorrectionsWithoutGlAccountCodeDoesNotRecordBooking(): void
+    {
+        $this->request->method('getParam')->with('fields', [])->willReturn(['supplierName' => 'ACME B.V.']);
+        $this->extractionService->method('addCorrection')->willReturn(['id' => 'extraction-3']);
+
+        $this->suggestionService->expects($this->never())->method('recordBooking');
+
+        $result = $this->controller->corrections('extraction-3');
+
+        $this->assertSame(200, $result->getStatus());
+
+    }//end testCorrectionsWithoutGlAccountCodeDoesNotRecordBooking()
+
+    /**
+     * A failure recording the GL-account booking history is logged but does
+     * not turn a successful correction into an error response.
+     *
+     * @return void
+     */
+    public function testCorrectionsToleratesRecordBookingFailure(): void
+    {
+        $this->request->method('getParam')->with('fields', [])->willReturn(['glAccountCode' => '4300']);
+        $this->extractionService->method('addCorrection')->willReturn(['id' => 'extraction-3']);
+        $this->suggestionService->method('recordBooking')->willThrowException(new RuntimeException('boom'));
+
+        $result = $this->controller->corrections('extraction-3');
+
+        $this->assertSame(200, $result->getStatus());
+
+    }//end testCorrectionsToleratesRecordBookingFailure()
 }//end class
