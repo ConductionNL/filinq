@@ -634,6 +634,14 @@ export default {
 			if (!this.isCompletedResult) {
 				return []
 			}
+			// Prefer the entities resolved from the produced document: they carry
+			// the real emitted marker (localized TYPE + scope-local number) that
+			// the file actually contains. Fall back to the pre-anonymise detected
+			// set with a reconstructed `[<TYPE>]` marker (translated, but without a
+			// number) when resolution was unavailable.
+			if (Array.isArray(this.entry.resolvedEntities) && this.entry.resolvedEntities.length) {
+				return this.entry.resolvedEntities
+			}
 			return (this.entry.entities || [])
 				.filter((e) => e.included !== false)
 				.map((e) => ({
@@ -641,7 +649,7 @@ export default {
 					value: e.value,
 					count: e.count || 1,
 					bases: Array.isArray(e.bases) ? e.bases : [],
-					placeholder: `[${e.type}]`,
+					placeholder: `[${entityTypeLabel(e.type)}]`,
 					_resolveError: null,
 				}))
 		},

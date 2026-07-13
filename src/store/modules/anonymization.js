@@ -690,6 +690,29 @@ export const useAnonymizationStore = defineStore(
 					entry.residualCount = anonymizeResponse.data.residualCount || 0
 					entry.residualEntities = anonymizeResponse.data.residualEntities || []
 					entry.status = 'completed'
+
+					// Faithful markers: resolve the produced file so the finished
+					// result cards show the SAME placeholder the document carries
+					// (`[<localized-TYPE>: <scope-local-number>]`) rather than the
+					// reconstructed `[<TYPE>]`. Reuse the anonymised-document
+					// resolver on the output file, but with push:false so it does
+					// not append a second card for this entry. Best-effort — on a
+					// read/parse failure the cards keep the reconstructed fallback.
+					try {
+						const resolved = await this.loadAnonymizedEntities(
+							{
+								fileId: entry.anonymizedFileId,
+								fileName: entry.anonymizedFileName,
+								path: entry.anonymizedFilePath,
+							},
+							{ push: false },
+						)
+						if (resolved && Array.isArray(resolved.entities) && resolved.entities.length > 0) {
+							entry.resolvedEntities = resolved.entities
+						}
+					} catch (err) {
+						console.error(`Failed to resolve anonymised placeholders for ${entry.name}:`, err)
+					}
 				} catch (err) {
 					console.error(`Failed to anonymise ${entry.name}:`, err)
 					entry.error = err.response?.data?.error || err.message
@@ -974,9 +997,14 @@ export const useAnonymizationStore = defineStore(
 			 * @param {string} fileMeta.fileName File name with extension.
 			 * @param {string} fileMeta.path     Absolute path.
 			 * @param {string} [fileMeta.mimeType] MIME type (picks the text extractor).
+			 * @param {object} [opts] Options.
+			 * @param {boolean} [opts.push] Append the resolved entry to the queue
+			 *   (default true). Pass false to reuse the resolution for an entry
+			 *   already in the queue (e.g. a just-finished run) without creating a
+			 *   duplicate card.
 			 * @return {Promise<object|null>} The review entry, or null when not anonymised.
 			 */
-			async loadAnonymizedEntities(fileMeta) {
+			async loadAnonymizedEntities(fileMeta, { push = true } = {}) {
 				// Authoritative signal: the source↔anonymised DB mapping. A hit
 				// means this file IS an anonymised output regardless of whether
 				// its text yields parseable placeholders.
@@ -1007,7 +1035,7 @@ export const useAnonymizationStore = defineStore(
 				// PDF): resolve the removed entities from the linked source file
 				// and map them onto the anonymised-card shape.
 				if (placeholders.length === 0) {
-					return this.buildLinkedAnonymizedEntry(fileMeta, link)
+					return this.buildLinkedAnonymizedEntry(fileMeta, link, { push })
 				}
 
 				// Resolve every distinct entity id in parallel. A failed lookup
@@ -1078,7 +1106,9 @@ export const useAnonymizationStore = defineStore(
 					runCount: link?.runCount ?? null,
 					dossier: inferDossier(fileMeta.path),
 				}
-				this.files.push(entry)
+				if (push) {
+					this.files.push(entry)
+				}
 				return entry
 			},
 
@@ -1100,9 +1130,13 @@ export const useAnonymizationStore = defineStore(
 			 *
 			 * @param {object} fileMeta File descriptor of the opened (anonymised) file.
 			 * @param {object} link The resolved `anonymizationLink` object.
+			 * @param {object} [opts] Options.
+			 * @param {boolean} [opts.push] Append the entry to the queue (default true).
+			 *   Pass false to reuse the resolution for an existing entry without
+			 *   creating a duplicate card.
 			 * @return {object} The read-only summary entry.
 			 */
-			buildLinkedAnonymizedEntry(fileMeta, link) {
+			buildLinkedAnonymizedEntry(fileMeta, link, { push = true } = {}) {
 				const entry = {
 					id: `file-${++fileCounter}`,
 					name: fileMeta.fileName,
@@ -1127,7 +1161,9 @@ export const useAnonymizationStore = defineStore(
 					runCount: link?.runCount ?? null,
 					dossier: inferDossier(fileMeta.path),
 				}
-				this.files.push(entry)
+				if (push) {
+					this.files.push(entry)
+				}
 				return entry
 			},
 

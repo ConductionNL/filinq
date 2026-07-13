@@ -70,36 +70,24 @@ export function entityTypeColor(type) {
  * The raw type (`PERSON`, `EMAIL`, …) is a stable machine key: it drives the
  * anonymisation placeholders, dedup keys, colour lookup and the OpenRegister
  * mapping, so it must never be mutated. This helper leaves that key untouched
- * and only produces the string shown to the user, translated into their own
- * locale at render time. Unknown / custom types fall back to the raw value so
- * nothing ever renders blank.
+ * and only produces the string shown to the user.
+ *
+ * The raw uppercase token IS the translation msgid — deliberately the same
+ * scheme the DocuDesk backend uses (`GrondslagenSummaryService::localizeEntityType`
+ * → `IL10N::t($entityType)`) and that OpenRegister writes into redacted
+ * documents (`DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES`). Translating
+ * by the raw token means the sidebar label, the summary legend and the redacted
+ * document all resolve to the same string for a given language. `t()` returns
+ * the msgid unchanged when no translation exists, so unknown / free-form types
+ * fall back to their raw label and nothing ever renders blank.
  *
  * @param {string} type Raw entity type (any casing).
- * @return {string} Translated label, or the raw type when it is not in the vocabulary.
+ * @return {string} Translated label, or the raw uppercase token when untranslated.
  */
 export function entityTypeLabel(type) {
 	const upper = String(type || '').trim().toUpperCase()
-	switch (upper) {
-	case 'PERSON':
-		return t('docudesk', 'Person')
-	case 'ORGANIZATION':
-		return t('docudesk', 'Organisation')
-	case 'EMAIL':
-		return t('docudesk', 'Email address')
-	case 'PHONE_NUMBER':
-		return t('docudesk', 'Phone number')
-	case 'IBAN_CODE':
-		return t('docudesk', 'IBAN')
-	case 'IP_ADDRESS':
-		return t('docudesk', 'IP address')
-	case 'LOCATION':
-		return t('docudesk', 'Location')
-	case 'OTHER':
-		return t('docudesk', 'Other')
-	case 'UNKNOWN':
-		return t('docudesk', 'Unknown')
-	default:
-		// Custom / unrecognised types keep their raw label untouched.
-		return String(type || '')
+	if (upper === '') {
+		return ''
 	}
+	return t('docudesk', upper)
 }
