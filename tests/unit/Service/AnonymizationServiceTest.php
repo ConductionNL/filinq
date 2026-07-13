@@ -17,7 +17,19 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCA\DocuDesk\Service\EntityDetectionService;
+use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\PdfConversionService;
+use OCA\DocuDesk\Service\PolicyMatchService;
+use OCA\OpenRegister\Db\EntityRelation;
+use OCA\OpenRegister\Db\EntityRelationMapper;
+use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
+use ReflectionMethod;
 
 /**
  * Unit tests for AnonymizationService
@@ -107,9 +119,27 @@ class AnonymizationServiceTest extends TestCase
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
         $this->assertStringContainsString('getEntityTypeWhitelist', $content);
-        $this->assertStringContainsString('extractFile($fileId, true, $entityTypes)', $content);
+        $this->assertStringContainsString('extractFile($fileId, $force, $entityTypes)', $content);
 
     }//end testExtractAndDetectPassesEntityTypeWhitelist()
+
+
+    /**
+     * Opening a concept resumes by default: extractAndDetectEntities defaults
+     * $force to false (OpenRegister's isSourceUpToDate short-circuit returns
+     * the existing relations) and only re-analyses when force is requested.
+     * Guards against a regression that hardcodes force=true and re-runs
+     * detection — appending duplicate relations — on every open.
+     *
+     * @return void
+     */
+    public function testExtractResumesByDefault(): void
+    {
+        $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
+        $this->assertStringContainsString('extractAndDetectEntities(int $fileId, bool $force=false)', $content);
+        $this->assertStringNotContainsString('extractFile($fileId, true', $content);
+
+    }//end testExtractResumesByDefault()
 
 
     /**
@@ -249,6 +279,268 @@ class AnonymizationServiceTest extends TestCase
         );
 
     }//end testServiceWiresPdfConversionAndRollback()
+
+
+    /**
+     * Build an AnonymizationService whose container resolves the given policy
+     * matcher, with all other constructor deps mocked.
+     *
+     * @param PolicyMatchService $matcher The matcher the container returns.
+     *
+     * @return AnonymizationService The service under test.
+     */
+    private function makeServiceWithMatcher(PolicyMatchService $matcher, ?EntityRelationMapper $mapper=null): AnonymizationService
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->method('get')->willReturnCallback(
+            static function (string $id) use ($matcher, $mapper) {
+                return match ($id) {
+                    'OCA\DocuDesk\Service\PolicyMatchService'   => $matcher,
+                    'OCA\OpenRegister\Db\EntityRelationMapper'  => $mapper,
+                    default                                     => null,
+                };
+            }
+        );
+
+        $appManager = $this->createMock(IAppManager::class);
+        $appManager->method('getInstalledApps')->willReturn(['openregister']);
+
+        return new AnonymizationService(
+            $this->createMock(LoggerInterface::class),
+            $container,
+            $appManager,
+            $this->createMock(EntityDetectionService::class),
+            $this->createMock(GrondslagenSummaryService::class),
+            $this->createMock(PdfConversionService::class),
+            $this->createMock(EmlPdfAssemblyService::class)
+        );
+
+    }//end makeServiceWithMatcher()
+
+
+    /**
+     * The pure tier classifier: absolute at/above threshold, releasable-with-
+     * force below, allow when forced sub-threshold.
+     *
+     * @return void
+     */
+    public function testClassifyProhibitionSkipTiers(): void
+    {
+        $this->assertSame('block_absolute', AnonymizationService::classifyProhibitionSkip(0.90, 0.85, true));
+        $this->assertSame('block_absolute', AnonymizationService::classifyProhibitionSkip(0.85, 0.85, false));
+        $this->assertSame('block_releasable', AnonymizationService::classifyProhibitionSkip(0.62, 0.85, false));
+        $this->assertSame('allow', AnonymizationService::classifyProhibitionSkip(0.62, 0.85, true));
+
+    }//end testClassifyProhibitionSkipTiers()
+
+
+    /**
+     * Build a mapper whose find()/findEntitiesForFile() resolve one prohibited
+     * occurrence with the given confidence.
+     *
+     * @param float $confidence Detection confidence for the occurrence.
+     *
+     * @return EntityRelationMapper The mock mapper.
+     */
+    private function mapperWithProhibitedRelation(float $confidence): EntityRelationMapper
+    {
+        // EntityRelation uses magic getters (can't be mocked); use a real one.
+        $relation = new EntityRelation();
+
+        $mapper = $this->createMock(EntityRelationMapper::class);
+        $mapper->method('find')->with(7)->willReturn($relation);
+        $mapper->method('findEntitiesForFile')->willReturn(
+            [['relation_id' => 7, 'entity_id' => 42, 'entity_value' => 'Jansen', 'entity_type' => 'PERSON', 'confidence' => $confidence]]
+        );
+
+        return $mapper;
+    }//end mapperWithProhibitedRelation()
+
+
+    /**
+     * A prohibition matcher that flags any entity as a prohibition.
+     *
+     * @return PolicyMatchService The mock matcher.
+     */
+    private function prohibitionMatcher(): PolicyMatchService
+    {
+        $matcher = $this->createMock(PolicyMatchService::class);
+        $matcher->method('highConfidenceThreshold')->willReturn(0.85);
+        $matcher->method('matchProhibition')->willReturn(
+            ['uuid' => 'R-X', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => 'PERSON', 'primaryName' => 'Undercover']
+        );
+
+        return $matcher;
+    }//end prohibitionMatcher()
+
+
+    /**
+     * Skipping a high-confidence prohibited entity is rejected 422 (absolute),
+     * even with force, and performs no OpenRegister write.
+     *
+     * @return void
+     */
+    public function testSkipHighConfidenceProhibitedIsBlockedEvenWithForce(): void
+    {
+        $mapper = $this->mapperWithProhibitedRelation(0.97);
+        $mapper->expects($this->never())->method('updateDecisionMetadata');
+
+        $result = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
+            ->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+
+        $this->assertSame(422, $result['status']);
+        $this->assertTrue($result['body']['prohibitionMatch']['absolute']);
+        $this->assertSame('Jansen', $result['body']['prohibitionMatch']['entityName']);
+        $this->assertSame('R-X', $result['body']['prohibitionMatch']['ruleId']);
+
+    }//end testSkipHighConfidenceProhibitedIsBlockedEvenWithForce()
+
+
+    /**
+     * A sub-threshold prohibited skip is 422 without force and allowed with it.
+     *
+     * @return void
+     */
+    public function testSkipSubThresholdProhibitedNeedsForce(): void
+    {
+        $blocked = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $this->mapperWithProhibitedRelation(0.62))
+            ->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: false);
+        $this->assertSame(422, $blocked['status']);
+        $this->assertFalse($blocked['body']['prohibitionMatch']['absolute']);
+
+        $mapper = $this->mapperWithProhibitedRelation(0.62);
+        $mapper->expects($this->once())->method('updateDecisionMetadata')
+            ->with($this->anything(), ['skipAnonymization' => true]);
+        $allowed = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
+            ->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
+        $this->assertSame(200, $allowed['status']);
+
+    }//end testSkipSubThresholdProhibitedNeedsForce()
+
+
+    /**
+     * Including an entity (skip=false) is always allowed and forwarded, with no
+     * prohibition match lookup.
+     *
+     * @return void
+     */
+    public function testIncludeDecisionIsAlwaysForwarded(): void
+    {
+        $relation = new EntityRelation();
+        $mapper   = $this->createMock(EntityRelationMapper::class);
+        $mapper->method('find')->with(7)->willReturn($relation);
+        $mapper->expects($this->once())->method('updateDecisionMetadata')
+            ->with($relation, ['skipAnonymization' => false]);
+
+        $result = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
+            ->applyRelationSkipDecision(relationId: 7, skip: false, bases: null, force: false);
+
+        $this->assertSame(200, $result['status']);
+
+    }//end testIncludeDecisionIsAlwaysForwarded()
+
+
+    /**
+     * The policy pass flags prohibition matches (with the correct high/low
+     * tier), auto-skips standing-consent matches on their relation, and leaves
+     * unmatched entities untouched.
+     *
+     * @return void
+     */
+    public function testApplyPolicyDecisionsFlagsProhibitionsAndSkipsStandingConsents(): void
+    {
+        $matcher = $this->createMock(PolicyMatchService::class);
+        $matcher->method('highConfidenceThreshold')->willReturn(0.85);
+        $matcher->method('match')->willReturnCallback(
+            static function (string $text, string $type): ?array {
+                return match ($text) {
+                    'Jansen' => ['uuid' => 'R-P', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => $type, 'primaryName' => 'Undercover'],
+                    'LowP'   => ['uuid' => 'R-L', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => $type, 'primaryName' => 'Maybe'],
+                    'Kuiper' => ['uuid' => 'R-SC', 'kind' => PolicyMatchService::KIND_STANDING_CONSENT, 'entityType' => $type, 'primaryName' => 'Woordvoerder'],
+                    default  => null,
+                };
+            }
+        );
+
+        // Standing-consent match must auto-skip exactly relation 8.
+        $relation = $this->createMock(EntityRelation::class);
+        $mapper   = $this->createMock(EntityRelationMapper::class);
+        $mapper->expects($this->once())->method('find')->with(8)->willReturn($relation);
+        $mapper->expects($this->once())->method('updateDecisionMetadata')
+            ->with($relation, ['skipAnonymization' => true])->willReturn($relation);
+
+        $entities = [
+            ['type' => 'PERSON', 'value' => 'Jansen', 'confidence' => 0.97, 'relationId' => 7, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'Kuiper', 'confidence' => 0.90, 'relationId' => 8, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'LowP',   'confidence' => 0.62, 'relationId' => 9, 'skipAnonymization' => false],
+            ['type' => 'PERSON', 'value' => 'De Vries','confidence' => 0.50, 'relationId' => 10, 'skipAnonymization' => false],
+        ];
+
+        $service = $this->makeServiceWithMatcher($matcher);
+        $method  = new ReflectionMethod(AnonymizationService::class, 'applyPolicyDecisions');
+        $method->setAccessible(true);
+        $result  = $method->invoke($service, $entities, $mapper);
+
+        // High-confidence prohibition: flagged, absolute, not skipped.
+        $this->assertSame(
+            ['ruleId' => 'R-P', 'ruleName' => 'Undercover', 'highConfidence' => true],
+            $result[0]['prohibitionMatch']
+        );
+        $this->assertFalse($result[0]['skipAnonymization']);
+
+        // Standing consent: not flagged, auto-skipped.
+        $this->assertNull($result[1]['prohibitionMatch']);
+        $this->assertTrue($result[1]['skipAnonymization']);
+
+        // Sub-threshold prohibition: flagged with highConfidence false.
+        $this->assertFalse($result[2]['prohibitionMatch']['highConfidence']);
+
+        // No match: null, untouched.
+        $this->assertNull($result[3]['prohibitionMatch']);
+        $this->assertFalse($result[3]['skipAnonymization']);
+
+    }//end testApplyPolicyDecisionsFlagsProhibitionsAndSkipsStandingConsents()
+
+
+    /**
+     * The backstop reports an absolute prohibition match that was left
+     * un-redacted (skipped), and reports nothing when it is being redacted.
+     *
+     * @return void
+     */
+    public function testAbsoluteProhibitionBackstop(): void
+    {
+        $matcher = $this->createMock(PolicyMatchService::class);
+        $matcher->method('highConfidenceThreshold')->willReturn(0.85);
+        $matcher->method('matchProhibition')->willReturnCallback(
+            static function (string $text, string $type): ?array {
+                return $text === 'Jansen'
+                    ? ['uuid' => 'R-X', 'kind' => PolicyMatchService::KIND_PROHIBITION, 'entityType' => $type, 'primaryName' => 'Undercover']
+                    : null;
+            }
+        );
+
+        $all = [
+            ['relation_id' => 7, 'entity_id' => 42, 'entity_value' => 'Jansen', 'entity_type' => 'PERSON', 'confidence' => 0.97],
+            ['relation_id' => 8, 'entity_id' => 43, 'entity_value' => 'Bob', 'entity_type' => 'PERSON', 'confidence' => 0.90],
+        ];
+
+        // Only relation 8 is being redacted → relation 7 (Jansen) is skipped.
+        $skipMapper = $this->createMock(EntityRelationMapper::class);
+        $skipMapper->method('findEntitiesForFile')->willReturn($all);
+        $skipMapper->method('findEntitiesForAnonymization')->willReturn([['relation_id' => 8]]);
+        $violations = $this->makeServiceWithMatcher($matcher, $skipMapper)->absoluteProhibitionViolations(100);
+        $this->assertCount(1, $violations);
+        $this->assertSame('Jansen', $violations[0]['entityName']);
+        $this->assertTrue($violations[0]['absolute']);
+
+        // Jansen is in the redaction set → no violation.
+        $okMapper = $this->createMock(EntityRelationMapper::class);
+        $okMapper->method('findEntitiesForFile')->willReturn($all);
+        $okMapper->method('findEntitiesForAnonymization')->willReturn([['relation_id' => 7], ['relation_id' => 8]]);
+        $this->assertSame([], $this->makeServiceWithMatcher($matcher, $okMapper)->absoluteProhibitionViolations(100));
+
+    }//end testAbsoluteProhibitionBackstop()
 
 
 }//end class

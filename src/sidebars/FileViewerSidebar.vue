@@ -153,6 +153,8 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					v-model="newBases"
 					class="add-entity-panel__select"
 					:options="basesOptions"
+					label="label"
+					:reduce="(o) => o.value"
 					:multiple="true"
 					:input-label="t('docudesk', 'Grondslagen')"
 					:placeholder="t('docudesk', 'Pick grondslagen…')" />
@@ -180,9 +182,14 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					mode="review"
 					:editable="grondslagen"
 					:bases-options="basesOptions"
-					@toggle="anonymizationStore.toggleEntity(entry, idx)"
+					@toggle="onToggleEntity(idx)"
 					@set-bases="anonymizationStore.setEntityBases(entry, idx, $event)" />
 			</div>
+			<ProhibitionBlockedDialog
+				:open="prohibitionOpen"
+				:block="prohibitionBlock"
+				@update:open="prohibitionOpen = $event"
+				@force="onForceSkip" />
 		</div>
 
 		<!-- Sticky action bar — `NcAppSidebar` v8 has no `footer` slot, so
@@ -316,20 +323,9 @@ import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdToggle from '../components/DdToggle.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
+import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import { ENTITY_TYPES } from '../services/entityTypes.js'
-
-// Woo Art. 5 grondslagen — duplicated from EntityReviewTable so we don't
-// reach into a sibling component's internals. Both lists must stay in
-// sync until a production page fetches the bases register from the
-// dossier register (Wave 1.1 plumbing).
-const BASES_OPTIONS = [
-	'persoonsgegevens',
-	'bijzondere-persoonsgegevens',
-	'strafrechtelijk',
-	'bedrijfs-fabricagegegevens',
-	'onevenredige-benadeling',
-	'nationale-veiligheid',
-]
+import { fetchBaseOptions } from '../services/bases.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -343,6 +339,7 @@ export default {
 		DdEntityCard,
 		DdRemovedEntitiesList,
 		DdSearchBar,
+		ProhibitionBlockedDialog,
 		Plus,
 		ShieldLockOutline,
 		ShieldRefreshOutline,
@@ -350,8 +347,12 @@ export default {
 	},
 	data() {
 		return {
-			basesOptions: BASES_OPTIONS,
+			basesOptions: [],
 			typeOptions: ENTITY_TYPES,
+			// Prohibition-guard dialog state for a blocked skip decision.
+			prohibitionOpen: false,
+			prohibitionBlock: null,
+			pendingToggleIdx: null,
 			loadingFileId: null,
 			// "Add new data" panel state (add mode). The chosen type and
 			// grondslagen for the entity about to be added from the selection.
@@ -885,7 +886,46 @@ export default {
 			immediate: true,
 		},
 	},
+	async created() {
+		// Grondslagen options come from the register (label = name, value = slug),
+		// with a slug fallback on error. See services/bases.js.
+		this.basesOptions = await fetchBaseOptions()
+	},
 	methods: {
+		/**
+		 * Toggle an entity's inclusion (= skip decision) through the guarded
+		 * store action. A 422 (prohibited) opens the block dialog instead of
+		 * flipping the checkbox.
+		 *
+		 * @param {number} idx Index of the entity in the entry.
+		 * @return {Promise<void>}
+		 */
+		async onToggleEntity(idx) {
+			const res = await anonymizationStore.toggleEntity(this.entry, idx)
+			if (res && !res.ok && res.status === 422) {
+				this.pendingToggleIdx = idx
+				this.prohibitionBlock = res.body
+				this.prohibitionOpen = true
+			}
+		},
+		/**
+		 * Dialog force action: retry the pending skip with force=true. Only
+		 * releases sub-threshold matches; absolute ones are refused again.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async onForceSkip() {
+			const idx = this.pendingToggleIdx
+			if (idx == null) {
+				return
+			}
+			const res = await anonymizationStore.setEntitySkip(this.entry, idx, true, true)
+			if (res && res.ok) {
+				this.prohibitionOpen = false
+			} else if (res) {
+				this.prohibitionBlock = res.body
+			}
+		},
 		/**
 		 * Ensure the store has entities for the currently open file.
 		 * Skips when the entry is already loaded or being loaded.

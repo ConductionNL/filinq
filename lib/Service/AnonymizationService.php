@@ -100,13 +100,26 @@ class AnonymizationService
     /**
      * Extract text from a file and detect entities
      *
-     * @param int $fileId The Nextcloud file ID
+     * By default this is a resume-friendly, DB-cached lookup: when the file is
+     * unchanged, OpenRegister's `isSourceUpToDate` short-circuit returns the
+     * existing chunks and `EntityRelation` rows (with their skip/bases
+     * decisions) instead of re-detecting — so re-opening a concept picks up
+     * where the operator left off and does not append duplicate relations.
+     * Pass `$force = true` for an explicit re-analysis (e.g. after changing the
+     * enabled entity types); the file's mtime already triggers a re-extract
+     * when the source itself changed.
+     *
+     * @param int  $fileId The Nextcloud file ID
+     * @param bool $force  Force a fresh extraction + detection even when the
+     *                     file is unchanged (default false = resume/cached).
      *
      * @return array<string, mixed> Extraction result with entities, entityCount
      *
      * @throws Exception If extraction or detection fails
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Force flag mirrors the OR API.
      */
-    public function extractAndDetectEntities(int $fileId): array
+    public function extractAndDetectEntities(int $fileId, bool $force=false): array
     {
         try {
             $textExtractor = $this->getOpenRegisterService(
@@ -124,7 +137,7 @@ class AnonymizationService
             // manually-added type is still anonymised even when its automatic
             // detection is disabled here.
             $entityTypes = $grondslagProposal->getEntityTypeWhitelist();
-            $textExtractor->extractFile($fileId, true, $entityTypes);
+            $textExtractor->extractFile($fileId, $force, $entityTypes);
 
             $this->logger->debug(
                 'Text extracted from file',
@@ -144,8 +157,19 @@ class AnonymizationService
             $grondslagProposal->applyProposals(fileId: $fileId);
             $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
 
+            $normalized = $this->entityDetection->normalizeEntities($entities);
+
+            // Apply publication policy: standing-consent winners are auto-skipped
+            // on their relation; prohibition winners get a read-only
+            // `prohibitionMatch` hint for the review UI. Best-effort — a policy
+            // failure never blocks detection.
+            $normalized = $this->applyPolicyDecisions(
+                entities: $normalized,
+                entityRelationMapper: $entityRelationMapper
+            );
+
             return [
-                'entities'    => $this->entityDetection->normalizeEntities($entities),
+                'entities'    => $normalized,
                 'entityCount' => count($entities),
             ];
         } catch (Exception $e) {
@@ -161,6 +185,327 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
+
+
+    /**
+     * Apply publication policy to freshly-detected, normalized entities.
+     *
+     * Runs `PolicyMatchService::match()` (prohibition precedence) per entity:
+     *  - a standing-consent winner is auto-skipped (`skip_anonymization = true`
+     *    on the relation, via OpenRegister) unless it is already skipped;
+     *  - a prohibition winner gets a read-only `prohibitionMatch`
+     *    (`{ruleId, ruleName, highConfidence}`) for the review UI and is never
+     *    auto-skipped.
+     *
+     * Every returned entity gains a `prohibitionMatch` key (null when none).
+     * Best-effort: policy failures are logged and never block detection.
+     *
+     * @param array<int, array<string, mixed>> $entities             Normalized entities.
+     * @param mixed                            $entityRelationMapper OpenRegister EntityRelationMapper (DI).
+     *
+     * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
+     */
+    private function applyPolicyDecisions(array $entities, mixed $entityRelationMapper): array
+    {
+        try {
+            $matcher   = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+            $threshold = (float) $matcher->highConfidenceThreshold();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Policy matcher unavailable; skipping publication-policy pass',
+                ['exception' => $e->getMessage()]
+            );
+            foreach ($entities as &$plain) {
+                $plain['prohibitionMatch'] = ($plain['prohibitionMatch'] ?? null);
+            }
+
+            unset($plain);
+            return $entities;
+        }//end try
+
+        foreach ($entities as &$entity) {
+            $entity['prohibitionMatch'] = null;
+            $value = (string) ($entity['value'] ?? '');
+            $type  = (string) ($entity['type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            try {
+                $match = $matcher->match(entityText: $value, entityType: $type);
+            } catch (Exception $e) {
+                $this->logger->warning('Policy match failed for entity', ['exception' => $e->getMessage()]);
+                continue;
+            }
+
+            if ($match === null) {
+                continue;
+            }
+
+            if ($match['kind'] === PolicyMatchService::KIND_PROHIBITION) {
+                $entity['prohibitionMatch'] = [
+                    'ruleId'         => $match['uuid'],
+                    'ruleName'       => $match['primaryName'],
+                    'highConfidence' => (((float) ($entity['confidence'] ?? 0.0)) >= $threshold),
+                ];
+                continue;
+            }
+
+            // Standing consent → auto-skip this occurrence unless already skipped.
+            if ($match['kind'] === PolicyMatchService::KIND_STANDING_CONSENT
+                && ((bool) ($entity['skipAnonymization'] ?? false)) === false
+                && ($entity['relationId'] ?? null) !== null
+            ) {
+                try {
+                    $relation = $entityRelationMapper->find((int) $entity['relationId']);
+                    $entityRelationMapper->updateDecisionMetadata($relation, ['skipAnonymization' => true]);
+                    $entity['skipAnonymization'] = true;
+                } catch (Exception $e) {
+                    $this->logger->warning(
+                        'Failed to auto-skip standing-consent entity',
+                        ['relationId' => $entity['relationId'], 'exception' => $e->getMessage()]
+                    );
+                }
+            }
+        }//end foreach
+
+        unset($entity);
+
+        return $entities;
+
+    }//end applyPolicyDecisions()
+
+
+    /**
+     * Classify a skip attempt on a prohibition-matched entity.
+     *
+     * Pure tier logic (callers have already established it is a skip AND a
+     * prohibition match): at or above the threshold the match is absolute and
+     * cannot be released; below the threshold it is releasable only with force.
+     *
+     * @param float $confidence Detection confidence for the occurrence.
+     * @param float $threshold  High-confidence threshold in effect.
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return string One of 'block_absolute', 'block_releasable', 'allow'.
+     */
+    public static function classifyProhibitionSkip(float $confidence, float $threshold, bool $force): string
+    {
+        if ($confidence >= $threshold) {
+            return 'block_absolute';
+        }
+
+        if ($force === false) {
+            return 'block_releasable';
+        }
+
+        return 'allow';
+
+    }//end classifyProhibitionSkip()
+
+
+    /**
+     * Guard + apply a per-relation skip/include decision from the review UI.
+     *
+     * Setting `skipAnonymization = true` on a prohibition-matched relation is
+     * guarded per {@see classifyProhibitionSkip}. Include / non-skip decisions
+     * are always allowed. Allowed decisions are forwarded to OpenRegister via
+     * `updateDecisionMetadata` (so OR's audit-trail records the flip). A blocked
+     * decision performs no OpenRegister write.
+     *
+     * @param int        $relationId The EntityRelation id.
+     * @param bool       $skip       The requested skipAnonymization value.
+     * @param array|null $bases      Optional bases to set alongside the decision.
+     * @param bool       $force      Release a sub-threshold prohibition match.
+     *
+     * @return array{status: 200|404|422, body: array<string, mixed>} HTTP status + response body.
+     */
+    public function applyRelationSkipDecision(int $relationId, bool $skip, ?array $bases, bool $force): array
+    {
+        $mapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+
+        try {
+            $relation = $mapper->find($relationId);
+        } catch (Exception $e) {
+            return ['status' => 404, 'body' => ['error' => 'Entity relation not found']];
+        }
+
+        if ($skip === true) {
+            $block = $this->evaluateProhibitionSkip(
+                mapper: $mapper,
+                relation: $relation,
+                relationId: $relationId,
+                force: $force
+            );
+            if ($block !== null) {
+                return ['status' => 422, 'body' => $block];
+            }
+        }
+
+        $fields = ['skipAnonymization' => $skip];
+        if ($bases !== null) {
+            $fields['bases'] = $bases;
+        }
+
+        $mapper->updateDecisionMetadata($relation, $fields);
+
+        return ['status' => 200, 'body' => ['status' => 'ok', 'skipAnonymization' => $skip]];
+
+    }//end applyRelationSkipDecision()
+
+
+    /**
+     * Evaluate the prohibition guard for a skip on one relation.
+     *
+     * Resolves the occurrence's entity value/type/confidence via the file join,
+     * matches it against the prohibition cache, and classifies the skip. Returns
+     * the 422 body when the skip is blocked, or null when it is allowed (not a
+     * prohibition match, released by force, or the match cannot be resolved).
+     *
+     * @param mixed $mapper     OpenRegister EntityRelationMapper (DI).
+     * @param mixed $relation   The EntityRelation being decided.
+     * @param int   $relationId The relation id (for the file-join lookup + logs).
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return array<string, mixed>|null The 422 body when blocked, else null.
+     */
+    private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force): ?array
+    {
+        $row = null;
+        foreach ($mapper->findEntitiesForFile((int) $relation->getFileId()) as $candidate) {
+            if ((int) ($candidate['relation_id'] ?? 0) === $relationId) {
+                $row = $candidate;
+                break;
+            }
+        }
+
+        if ($row === null) {
+            return null;
+        }
+
+        $value = (string) ($row['entity_value'] ?? '');
+        $type  = (string) ($row['entity_type'] ?? 'OTHER');
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning('Policy matcher unavailable; skip guard is a no-op', ['exception' => $e->getMessage()]);
+            return null;
+        }
+
+        $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+        if ($match === null) {
+            return null;
+        }
+
+        $confidence = (float) ($row['confidence'] ?? 0.0);
+        $threshold  = (float) $matcher->highConfidenceThreshold();
+        $decision   = self::classifyProhibitionSkip(confidence: $confidence, threshold: $threshold, force: $force);
+        if ($decision === 'allow') {
+            return null;
+        }
+
+        $this->logger->warning(
+            'Prohibition guard blocked a skip decision',
+            [
+                'ruleId'     => $match['uuid'],
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'relationId' => $relationId,
+            ]
+        );
+
+        return [
+            'error'            => 'Entity is on the publication prohibition list; skipping is not allowed.',
+            'threshold'        => $threshold,
+            'prohibitionMatch' => [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => $confidence,
+                'absolute'   => ($decision === 'block_absolute'),
+            ],
+        ];
+
+    }//end evaluateProhibitionSkip()
+
+
+    /**
+     * Defence-in-depth backstop: absolute prohibition matches left un-redacted.
+     *
+     * OpenRegister's generic relation PATCH stays open, so a caller could skip a
+     * prohibited relation directly, bypassing the DocuDesk skip endpoint. Before
+     * redaction, this returns any prohibition-matched occurrence at confidence
+     * >= threshold that is being left un-redacted (skipped). Only the absolute
+     * tier is enforced here — the primary decision-time guard covers the rest.
+     *
+     * "Skipped" = detected for the file but absent from the anonymise set
+     * (`findEntitiesForAnonymization`, which already excludes skipAnonymization).
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array<int, array<string, mixed>> Absolute-tier violations (may be empty).
+     */
+    public function absoluteProhibitionViolations(int $fileId): array
+    {
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Policy matcher unavailable; prohibition backstop is a no-op',
+                ['exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $mapper    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+        $threshold = (float) $matcher->highConfidenceThreshold();
+
+        $redactIds = [];
+        foreach ($mapper->findEntitiesForAnonymization($fileId) as $row) {
+            $redactIds[(int) ($row['relation_id'] ?? 0)] = true;
+        }
+
+        $violations = [];
+        foreach ($mapper->findEntitiesForFile($fileId) as $row) {
+            $relationId = (int) ($row['relation_id'] ?? 0);
+            if (isset($redactIds[$relationId]) === true) {
+                // Being redacted — fine.
+                continue;
+            }
+
+            $value = (string) ($row['entity_value'] ?? '');
+            $type  = (string) ($row['entity_type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+            if ($match === null || ((float) ($row['confidence'] ?? 0.0)) < $threshold) {
+                continue;
+            }
+
+            $this->logger->warning(
+                'Prohibition backstop caught an un-redacted absolute match',
+                ['ruleId' => $match['uuid'], 'entityId' => (int) ($row['entity_id'] ?? 0), 'fileId' => $fileId]
+            );
+
+            $violations[] = [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => (float) ($row['confidence'] ?? 0.0),
+                'absolute'   => true,
+            ];
+        }//end foreach
+
+        return $violations;
+
+    }//end absoluteProhibitionViolations()
 
 
     /**

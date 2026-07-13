@@ -267,6 +267,7 @@ function decorateEntities(entities) {
 			if (e.skipAnonymization) {
 				existing.skipAnonymization = true
 				existing._decisionSkip = true
+				existing.included = false
 			}
 			continue
 		}
@@ -274,7 +275,7 @@ function decorateEntities(entities) {
 			...e,
 			type,
 			value,
-			included: true,
+			included: !e.skipAnonymization,
 			confidence: e.confidence ?? 0,
 			highestConfidence: e.confidence ?? 0,
 			fileCount: 1,
@@ -282,6 +283,9 @@ function decorateEntities(entities) {
 			relationId,
 			relationIds: relationId != null ? [relationId] : [],
 			bases: Array.isArray(e.bases) ? [...e.bases] : (e.bases ?? null),
+			// Read-only prohibition hint from the extract response: null, or
+			// { ruleId, ruleName, highConfidence }. Drives the skip-toggle lock.
+			prohibitionMatch: e.prohibitionMatch ?? null,
 			_decisionBases: Array.isArray(e.bases) ? [...e.bases] : [],
 			_decisionSkip: !!e.skipAnonymization,
 			_patchError: null,
@@ -623,7 +627,7 @@ export const useAnonymizationStore = defineStore(
 							// Apply the decision to every duplicate relation so a
 							// re-extracted copy can't slip through unredacted.
 							await Promise.all(relationIds.map((rid) => axios.patch(
-								generateUrl(`/apps/openregister/api/entity-relations/${rid}`),
+								generateUrl(`/apps/docudesk/api/anonymization/relations/${rid}`),
 								{ bases: newBases, skipAnonymization: !!entity._decisionSkip },
 							)))
 							entity.bases = newBases
@@ -797,6 +801,38 @@ export const useAnonymizationStore = defineStore(
 					entry.status = 'error'
 				}
 
+				return entry
+			},
+
+			/**
+			 * Force a fresh re-analysis of an already-known file, discarding the
+			 * resume/cached path. Use when the operator explicitly asks to
+			 * re-analyse (e.g. after changing the enabled entity types). Normal
+			 * opens go through `ensureExtracted`, which resumes from the existing
+			 * EntityRelations.
+			 *
+			 * @param {number} fileId Nextcloud file id of a file already in the queue.
+			 * @return {Promise<object|null>} The refreshed entry, or null if unknown.
+			 */
+			async reanalyseEntry(fileId) {
+				const entry = this.findByFileId(fileId)
+				if (!entry) {
+					return null
+				}
+				entry.status = 'extracting'
+				try {
+					const res = await axios.post(
+						generateUrl(`/apps/docudesk/api/anonymization/extract/${fileId}`),
+						{ force: true },
+					)
+					const entities = res.data.entities || []
+					entry.entities = decorateEntities(entities)
+					entry.entityCount = entry.entities.length
+					entry.status = entities.length === 0 ? 'completed' : 'extracted'
+				} catch (err) {
+					entry.error = err.response?.data?.error || err.message
+					entry.status = 'error'
+				}
 				return entry
 			},
 
@@ -1196,11 +1232,14 @@ export const useAnonymizationStore = defineStore(
 			 * @param {number} idx Index of the entity in `entry.entities`.
 			 * @return {void}
 			 */
-			toggleEntity(entry, idx) {
-				if (entry?.entities?.[idx] === undefined) {
-					return
+			async toggleEntity(entry, idx, force = false) {
+				const entity = entry?.entities?.[idx]
+				if (entity === undefined) {
+					return { ok: false, status: 0, body: {} }
 				}
-				entry.entities[idx].included = !entry.entities[idx].included
+				// The include checkbox is the skip decision: currently included =>
+				// exclude (skip=true). Fires a guarded PATCH immediately.
+				return this._persistEntityDecision(entity, { skip: entity.included, force })
 			},
 
 			/**
@@ -1233,11 +1272,14 @@ export const useAnonymizationStore = defineStore(
 			 * @param {string[]} bases New bases array.
 			 * @return {void}
 			 */
-			setEntityBases(entry, idx, bases) {
-				if (entry?.entities?.[idx] === undefined) {
-					return
+			async setEntityBases(entry, idx, bases) {
+				const entity = entry?.entities?.[idx]
+				if (entity === undefined) {
+					return { ok: false, status: 0, body: {} }
 				}
-				entry.entities[idx]._decisionBases = Array.isArray(bases) ? bases : []
+				const clean = Array.isArray(bases) ? bases : []
+				entity._decisionBases = clean
+				return this._persistEntityDecision(entity, { skip: !!entity._decisionSkip, bases: clean })
 			},
 
 			/**
@@ -1251,11 +1293,73 @@ export const useAnonymizationStore = defineStore(
 			 * @param {boolean} skip New skip state.
 			 * @return {void}
 			 */
-			setEntitySkip(entry, idx, skip) {
-				if (entry?.entities?.[idx] === undefined) {
-					return
+			async setEntitySkip(entry, idx, skip, force = false) {
+				const entity = entry?.entities?.[idx]
+				if (entity === undefined) {
+					return { ok: false, status: 0, body: {} }
 				}
-				entry.entities[idx]._decisionSkip = !!skip
+				return this._persistEntityDecision(entity, { skip: !!skip, force })
+			},
+
+			/**
+			 * Persist an entity's skip/bases decision across all its relations via
+			 * the guarded endpoint, immediately. Local state is updated only on
+			 * success, so a blocked skip reverts and surfaces `_patchError`.
+			 * Returns {ok, status, body}; a 422 body carries {threshold,
+			 * prohibitionMatch} for a dialog.
+			 *
+			 * @param {object} entity The entity row (mutated on success).
+			 * @param {object} opts Decision: { skip, bases?, force? }.
+			 * @return {Promise<{ok: boolean, status: number, body: object}>}
+			 */
+			async _persistEntityDecision(entity, { skip, bases = undefined, force = false }) {
+				const relationIds = Array.isArray(entity.relationIds) && entity.relationIds.length > 0
+					? entity.relationIds
+					: (entity.relationId != null ? [entity.relationId] : [])
+				if (relationIds.length === 0) {
+					return { ok: false, status: 0, body: {} }
+				}
+				const results = await Promise.all(relationIds.map((rid) => this.setRelationSkip(rid, skip, force, bases)))
+				const bad = results.find((r) => !r.ok)
+				if (bad) {
+					entity._patchError = bad.body?.error || 'Kon de wijziging niet opslaan'
+					return bad
+				}
+				entity._decisionSkip = skip
+				entity.skipAnonymization = skip
+				entity.included = !skip
+				if (Array.isArray(bases)) {
+					entity._decisionBases = bases
+					entity.bases = [...bases]
+				}
+				entity._patchError = null
+				return { ok: true, status: 200, body: {} }
+			},
+
+			/**
+			 * Persist one relation's skip/include decision through DocuDesk's
+			 * guarded endpoint. Returns {ok, status, body}; a 422 body carries
+			 * {threshold, prohibitionMatch} so the caller can offer a force retry.
+			 *
+			 * @param {number} relationId The EntityRelation id.
+			 * @param {boolean} skip Whether to skip (true) or include (false).
+			 * @param {boolean} force Release a sub-threshold prohibition match.
+			 * @return {Promise<{ok: boolean, status: number, body: object}>}
+			 */
+			async setRelationSkip(relationId, skip, force = false, bases = undefined) {
+				try {
+					const body = { skipAnonymization: !!skip, force: !!force }
+					if (Array.isArray(bases)) {
+						body.bases = bases
+					}
+					const res = await axios.patch(
+						generateUrl(`/apps/docudesk/api/anonymization/relations/${relationId}`),
+						body,
+					)
+					return { ok: true, status: res.status, body: res.data }
+				} catch (err) {
+					return { ok: false, status: err.response?.status ?? 0, body: err.response?.data ?? {} }
+				}
 			},
 
 			/**
