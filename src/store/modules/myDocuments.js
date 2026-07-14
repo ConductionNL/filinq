@@ -66,18 +66,118 @@ export const useMyDocumentsStore = defineStore(
 			 */
 			linkMaps: (state) => {
 				const sourceToAnon = new Map()
+				const sourceToAnons = new Map()
 				const anonToSource = new Map()
 				const anonymizedIds = new Set()
 				for (const link of state.anonymizationLinks) {
 					const src = Number(link.sourceFileId)
 					const anon = Number(link.anonymizedFileId)
-					if (Number.isFinite(src) && Number.isFinite(anon)) {
-						sourceToAnon.set(src, anon)
-						anonToSource.set(anon, src)
-						anonymizedIds.add(anon)
+					// Guard against degenerate links (missing/self-referential ids)
+					// that could otherwise mask a source as its own output.
+					if (!Number.isFinite(src) || !Number.isFinite(anon) || src === anon) {
+						continue
+					}
+					sourceToAnon.set(src, anon)
+					anonToSource.set(anon, src)
+					anonymizedIds.add(anon)
+					// A source can accumulate several outputs across re-anonymise
+					// runs. Keep the full set so the overview can collapse stale
+					// duplicates down to the newest output (feat #107, dedupe).
+					let anons = sourceToAnons.get(src)
+					if (!anons) {
+						anons = new Set()
+						sourceToAnons.set(src, anons)
+					}
+					anons.add(anon)
+				}
+				return { sourceToAnon, sourceToAnons, anonToSource, anonymizedIds }
+			},
+			/**
+			 * The newest still-present anonymized output for each source, keyed by
+			 * source file id. A source re-anonymised several times leaves multiple
+			 * `_anonymized` outputs behind; the overview shows only the newest and
+			 * hides the older duplicates. "Newest" is decided by the file's
+			 * modification time (falling back to 0), scoped to outputs that are
+			 * actually present in the current listing.
+			 *
+			 * @return {Map<number, object>} sourceFileId → newest output document.
+			 */
+			newestOutputBySource() {
+				const { anonToSource } = this.linkMaps
+				const newest = new Map()
+				for (const d of this.documents) {
+					if (d.isFolder) continue
+					const src = anonToSource.get(Number(d.fileId))
+					if (src == null) continue
+					const prev = newest.get(src)
+					if (!prev || (d.modified || 0) > (prev.modified || 0)) {
+						newest.set(src, d)
 					}
 				}
-				return { sourceToAnon, anonToSource, anonymizedIds }
+				return newest
+			},
+			/**
+			 * File ids of anonymized outputs left stranded by a RE-UPLOAD. When a
+			 * file is re-uploaded into a dossier, the upload replaces the old source
+			 * (moved to trash) but leaves its `_anonymized` output behind, so the
+			 * output lingers as a stale "anonymized version" with no live original —
+			 * making the fresh re-upload look already anonymized.
+			 *
+			 * The signature is narrow on purpose, so a legitimately standalone
+			 * anonymized file (whose source the user simply removed) is NOT hidden:
+			 * an output qualifies only when (a) its linked source is absent from
+			 * this listing AND (b) a fresh CONCEPT file carrying that same recorded
+			 * source name is present AND (c) that fresh file is newer than the
+			 * output — i.e. it was uploaded to replace the original, not an
+			 * unrelated file that merely shares the name. When timestamps are
+			 * missing/unreliable the comparison fails closed and we keep the output
+			 * visible, biasing toward "show" over wrongly hiding a real result.
+			 * (Cleaning up the leftover file itself is backend work; here we only
+			 * stop surfacing it.)
+			 *
+			 * @return {Set<number>} File ids of re-upload-orphaned anonymized outputs.
+			 */
+			orphanedOutputIds() {
+				const { anonToSource } = this.linkMaps
+				const presentIds = new Set(this.documents.map((d) => Number(d.fileId)))
+				// Newest upload time of each present CONCEPT (non-output) file name.
+				// Anonymized outputs are excluded so an output's own name can't be
+				// mistaken for a re-uploaded source.
+				const conceptModifiedByName = new Map()
+				for (const d of this.documents) {
+					if (d.isFolder || d.isAnonymized) continue
+					const mod = d.modified || 0
+					const prev = conceptModifiedByName.get(d.fileName)
+					if (prev == null || mod > prev) {
+						conceptModifiedByName.set(d.fileName, mod)
+					}
+				}
+				// anonymizedFileId → recorded source file name, from the links.
+				const anonToSourceName = new Map()
+				for (const l of this.anonymizationLinks) {
+					const anon = Number(l.anonymizedFileId)
+					if (Number.isFinite(anon) && l.sourceFileName) {
+						anonToSourceName.set(anon, l.sourceFileName)
+					}
+				}
+				const orphans = new Set()
+				for (const d of this.documents) {
+					if (d.isFolder) continue
+					const fileId = Number(d.fileId)
+					const src = anonToSource.get(fileId)
+					// No link, or the source is still here (a live pair) → not stale.
+					if (src == null || presentIds.has(src)) continue
+					// Source gone. Only stale when a fresh concept file under the same
+					// recorded name exists AND it is newer than this output — i.e. it
+					// replaced the original rather than merely sharing its name.
+					const srcName = anonToSourceName.get(fileId)
+					if (!srcName) continue
+					const freshModified = conceptModifiedByName.get(srcName)
+					if (freshModified != null && freshModified > (d.modified || 0)) {
+						orphans.add(fileId)
+					}
+				}
+				return orphans
 			},
 			/**
 			 * Documents to show in the overview. Once a file has been anonymized
@@ -91,12 +191,39 @@ export const useMyDocumentsStore = defineStore(
 			 * @return {object[]} Filtered document list.
 			 */
 			visibleDocuments() {
-				const { sourceToAnon } = this.linkMaps
+				const { sourceToAnons, anonToSource } = this.linkMaps
 				const presentIds = new Set(this.documents.map((d) => Number(d.fileId)))
+				const newestOutputBySource = this.newestOutputBySource
+				const orphanedOutputIds = this.orphanedOutputIds
 				return this.documents.filter((d) => {
 					if (d.isFolder) return true
-					const anonId = sourceToAnon.get(Number(d.fileId))
-					return !(anonId != null && presentIds.has(anonId))
+					const fileId = Number(d.fileId)
+					// Hide orphaned anonymized outputs: a leftover `_anonymized` file
+					// whose source was replaced by a re-upload (and moved to trash)
+					// is not a live pair — showing it makes the fresh re-upload look
+					// already anonymized.
+					if (orphanedOutputIds.has(fileId)) {
+						return false
+					}
+					// Hide the concept once any of its anonymized outputs is present
+					// — the original stays reachable through the "Show original"
+					// toggle in the file viewer.
+					const anonIds = sourceToAnons.get(fileId)
+					if (anonIds && [...anonIds].some((anon) => presentIds.has(anon))) {
+						return false
+					}
+					// Hide superseded duplicate outputs: when a source has several
+					// `_anonymized` outputs left over from earlier runs, keep only
+					// the newest so stale copies don't linger as extra "anonymized"
+					// files in the overview.
+					const src = anonToSource.get(fileId)
+					if (src != null) {
+						const newest = newestOutputBySource.get(src)
+						if (newest && Number(newest.fileId) !== fileId) {
+							return false
+						}
+					}
+					return true
 				})
 			},
 			/**
@@ -123,6 +250,10 @@ export const useMyDocumentsStore = defineStore(
 			anonymizedFor() {
 				return (doc) => {
 					if (!doc) return undefined
+					// Prefer the newest present output so a re-anonymised source
+					// links to its latest result rather than a stale duplicate.
+					const newest = this.newestOutputBySource.get(Number(doc.fileId))
+					if (newest) return newest
 					const anonId = this.linkMaps.sourceToAnon.get(Number(doc.fileId))
 					if (anonId == null) return undefined
 					return this.documents.find((d) => Number(d.fileId) === anonId)

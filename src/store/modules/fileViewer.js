@@ -79,17 +79,27 @@ export const useFileViewerStore = defineStore(
 				this.highlightEntities = []
 			},
 			/**
-			 * Attach the anonymised counterpart of the currently-open file and
-			 * switch the viewer to it. Used by the sidebar after a successful
-			 * anonymise so the user sees the result inline without losing the
-			 * link back to the original.
+			 * Attach the anonymised counterpart of the currently-open file.
+			 * Used by the sidebar after a successful anonymise so the user sees
+			 * the result inline without losing the link back to the original.
+			 *
+			 * By default the viewer switches to the anonymised file (the common
+			 * case: show the freshly produced result). Pass `{ show: false }` to
+			 * keep the original on screen — e.g. when the user explicitly opened
+			 * the original from the dossier navigation: the pair is still linked
+			 * (the toggle works), we just don't hijack the view to the anonymised
+			 * side of the file they clicked.
 			 *
 			 * @param {object} file Anonymised file descriptor (same shape as `open`).
+			 * @param {object} [options]      Behaviour options.
+			 * @param {boolean} [options.show] Whether to switch the viewer to the
+			 *        anonymised file. Defaults to `true`.
 			 */
-			setAnonymizedVariant(file) {
+			setAnonymizedVariant(file, options = {}) {
+				const show = options.show ?? true
 				this.anonymizedFile = file
-				this.currentFile = file
-				this.showAnonymized = true
+				this.showAnonymized = show
+				this.currentFile = show ? file : (this.originalFile || file)
 				this.selection = ''
 				this.addMode = false
 				this.highlightEntities = []

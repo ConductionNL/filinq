@@ -219,7 +219,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		     and the navigation footer. Shown whenever the dossier has files to
 		     process or already-anonymised results. -->
 		<div
-			v-else-if="inDossier && (batchCount > 0 || batchState.running || completedCount > 0)"
+			v-else-if="inDossier && (batchCount > 0 || batchState.running || completedCount > 0 || isReanonymizable || reanonReviewActive)"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
 				v-if="batchCount > 0 || batchState.running"
@@ -236,6 +236,34 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			<p v-if="batchSummary" class="dossier-batch-summary">
 				{{ batchSummary }}
 			</p>
+			<!-- Re-anonymise the currently open file (its original is on screen),
+			     alongside the dossier batch action. Recognised via the durable link
+			     register, so it works for dossiers anonymised in an earlier session. -->
+			<NcButton
+				v-if="isReanonymizable"
+				wide
+				type="secondary"
+				:disabled="reanonymising"
+				@click="onReanonymise">
+				<template #icon>
+					<NcLoadingIcon v-if="reanonymising" :size="20" />
+					<ShieldRefreshOutline v-else :size="20" />
+				</template>
+				{{ t('docudesk', 'Re-anonymize') }}
+			</NcButton>
+			<!-- Second step of a re-anonymise: the source is re-extracted, run the
+			     new anonymisation for just this file (overwrites its output). -->
+			<NcButton
+				v-if="reanonReviewActive"
+				wide
+				type="primary"
+				:disabled="includedCount === 0 || isAnonymising"
+				@click="onAnonymise">
+				<template v-if="isAnonymising" #icon>
+					<NcLoadingIcon :size="20" />
+				</template>
+				{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', includedCount) }}
+			</NcButton>
 			<!-- Once files are anonymised, offer a one-click download of every
 			     result in the dossier, bundled as a single zip. -->
 			<NcButton
@@ -426,6 +454,43 @@ export default {
 				&& (e.anonymizedFilePath || e.anonymizedFileId))
 		},
 		/**
+		 * True when the viewer shows the ORIGINAL of a file that has an
+		 * anonymised output, so a "Re-anonymize" action should be offered —
+		 * including inside a dossier, where the batch footer would otherwise
+		 * shadow the per-file button.
+		 *
+		 * Recognised two ways: the session queue (`isAnonymizedSource`, a file
+		 * anonymised this session), and — crucially for dossiers anonymised in
+		 * an earlier session — the durable `anonymizationLink` register via
+		 * `myDocumentsStore.anonymizedFor`. Suppressed while a re-run is already
+		 * being reviewed (`reanonReviewActive` takes over with the "Anonymize"
+		 * button).
+		 *
+		 * @return {boolean}
+		 */
+		isReanonymizable() {
+			if (fileViewerStore.showAnonymized || this.reanonReviewActive) {
+				return false
+			}
+			if (this.isAnonymizedSource) {
+				return true
+			}
+			const file = fileViewerStore.currentFile
+			return !!(file && myDocumentsStore.anonymizedFor(file))
+		},
+		/**
+		 * True while a re-anonymise sub-flow is mid-review: `prepareReanonymize`
+		 * re-extracted the source and flagged the entry, so the per-file review
+		 * list + "Anonymize" button should show even in a dossier (where the
+		 * batch footer otherwise hides the single-file button). Cleared when the
+		 * re-run completes.
+		 *
+		 * @return {boolean}
+		 */
+		reanonReviewActive() {
+			return !!(this.entry && this.entry.reanonymize && this.entry.status === 'extracted')
+		},
+		/**
 		 * True when the open file lives inside a dossier (a subfolder of
 		 * /DocuDesk). Mirrors App.vue's `inDossier`: in this mode the action
 		 * bar offers the dossier-wide batch button instead of the per-file one.
@@ -434,17 +499,6 @@ export default {
 		 */
 		inDossier() {
 			return myDocumentsStore.currentPath !== '/DocuDesk'
-		},
-		/**
-		 * File ids of every file in the current dossier — scopes the batch run
-		 * to this dossier. Folders are skipped (dossiers are flat by design).
-		 *
-		 * @return {number[]}
-		 */
-		dossierFileIds() {
-			return myDocumentsStore.documents
-				.filter((d) => !d.isFolder)
-				.map((d) => d.fileId)
 		},
 		/**
 		 * The dossier's source files: every listed file that isn't a folder
@@ -461,15 +515,25 @@ export default {
 			)
 		},
 		/**
-		 * Dossier source files still awaiting anonymisation — a file is
-		 * pending unless its store entry is already `completed` or `error`.
-		 * Drives the batch button count, so it reflects the whole dossier
-		 * straight after upload instead of only the files opened so far.
+		 * Dossier source files still awaiting anonymisation. Drives the batch
+		 * button count and visibility, so it must reflect the whole dossier —
+		 * including files never opened this session.
+		 *
+		 * A source is done when it already has an anonymised output on disk,
+		 * read from the durable `anonymizationLink` register
+		 * (`myDocumentsStore.anonymizedFor`) rather than the in-memory queue —
+		 * otherwise a dossier anonymised in an earlier session (empty queue)
+		 * would count every source as pending and wrongly show "Anonymize all
+		 * files". Files with no output yet are pending unless a session run has
+		 * already finished or errored them (covers a fresh upload mid-flow).
 		 *
 		 * @return {Array<object>}
 		 */
 		pendingSourceFiles() {
 			return this.dossierSourceFiles.filter((d) => {
+				if (myDocumentsStore.anonymizedFor(d)) {
+					return false
+				}
 				const entry = anonymizationStore.findByFileId(d.fileId)
 				return !entry
 					|| (entry.status !== 'completed' && entry.status !== 'error')
@@ -505,13 +569,28 @@ export default {
 			return this.pendingSourceFiles.length
 		},
 		/**
-		 * Completed (anonymised) dossier files with a downloadable result —
-		 * drives the "Download all" button count and visibility.
+		 * Anonymised outputs in the current dossier, ready to bundle into the
+		 * "Download all" zip. Read from the durable listing
+		 * (`myDocumentsStore.visibleDocuments`) rather than the in-memory queue,
+		 * so results anonymised in an earlier session are still downloadable and
+		 * a fully-anonymised dossier offers "Download all" instead of an empty
+		 * footer. `visibleDocuments` already collapses superseded duplicate
+		 * outputs, so each source contributes only its newest result.
 		 *
-		 * @return {Array<object>}
+		 * Shaped to match what `downloadAll` / `uniqueZipName` expect: a
+		 * `files`-rooted path (`downloadUrlFor` splits on the `files` segment,
+		 * mirroring the backend storage path) plus the output's name/id.
+		 *
+		 * @return {Array<{anonymizedFileId: number, anonymizedFileName: string, anonymizedFilePath: string}>}
 		 */
 		completedEntries() {
-			return anonymizationStore.completedInFiles(this.dossierFileIds)
+			return myDocumentsStore.visibleDocuments
+				.filter((d) => !d.isFolder && d.isAnonymized)
+				.map((d) => ({
+					anonymizedFileId: d.fileId,
+					anonymizedFileName: d.fileName,
+					anonymizedFilePath: `files${myDocumentsStore.currentPath}/${d.fileName}`,
+				}))
 		},
 		/**
 		 * Number of anonymised dossier files available to download.

@@ -359,22 +359,6 @@ export const useAnonymizationStore = defineStore(
 					(f) => f.status === 'extracted' && set.has(Number(f.fileId)),
 				)
 			},
-			/**
-			 * Completed queue entries (anonymised, with a downloadable result)
-			 * whose original fileId is in the given set. Drives the dossier
-			 * "Download all" action in `FolderFilesNavigation` (T14).
-			 *
-			 * @param {object} state Store state.
-			 * @return {(fileIds: Array<number>) => Array<object>}
-			 */
-			completedInFiles: (state) => (fileIds) => {
-				const set = new Set((fileIds || []).map(Number))
-				return state.files.filter(
-					(f) => f.status === 'completed'
-						&& f.anonymizedFilePath
-						&& set.has(Number(f.fileId)),
-				)
-			},
 			allDone: (state) => state.files.length > 0
 				&& state.files.every((f) => f.status === 'completed' || f.status === 'error'),
 			isProcessing: (state) => state.processing,
@@ -689,6 +673,9 @@ export const useAnonymizationStore = defineStore(
 					entry.complete = anonymizeResponse.data.complete !== false
 					entry.residualCount = anonymizeResponse.data.residualCount || 0
 					entry.residualEntities = anonymizeResponse.data.residualEntities || []
+					// The re-anonymise sub-flow (if any) is done — clear the marker
+					// so the dossier footer returns to its batch state.
+					entry.reanonymize = false
 					entry.status = 'completed'
 
 					// Faithful markers: resolve the produced file so the finished
@@ -921,6 +908,11 @@ export const useAnonymizationStore = defineStore(
 					// the re-run lands.
 					entry.viewMode = undefined
 					entry.detailUnavailable = false
+					// Mark the re-anonymise sub-flow so the dossier sidebar can
+					// surface the per-file review + "Anonymize" button alongside the
+					// batch footer (which otherwise shadows the single-file button).
+					// Cleared once the re-run completes in `anonymiseEntry`.
+					entry.reanonymize = true
 					entry.status = entities.length === 0 ? 'completed' : 'extracted'
 				} catch (err) {
 					console.error(`Failed to re-extract ${entry.name}:`, err)

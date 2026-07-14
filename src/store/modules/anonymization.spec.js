@@ -86,6 +86,18 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		expect(entry.status).toBe('completed')
 	})
 
+	it('clears the re-anonymise flag once the run completes', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry({ bases: null })
+		// Mid re-anonymise sub-flow: the entry was flagged by prepareReanonymize.
+		entry.reanonymize = true
+
+		await store.anonymiseEntry(entry)
+
+		expect(entry.status).toBe('completed')
+		expect(entry.reanonymize).toBe(false)
+	})
+
 	it('sends no PATCH when backend bases exist but the user changed nothing', async () => {
 		const store = useAnonymizationStore()
 		// _decisionBases is a value-copy of bases — JSON compare must match.
@@ -427,44 +439,6 @@ describe('anonymiseAllExtracted — batch run over a dossier', () => {
 	})
 })
 
-describe('completedInFiles — downloadable results in a dossier', () => {
-	beforeEach(() => {
-		setActivePinia(createPinia())
-	})
-
-	/**
-	 * Seed a mixed queue: one completed-with-result, one completed-without-path,
-	 * one still extracted, one completed but outside the dossier scope.
-	 *
-	 * @param {object} store The active anonymization store.
-	 * @return {void}
-	 */
-	function seedMixed(store) {
-		store.files = [
-			{ ...makeEntry(), id: 'a', fileId: 1, status: 'completed', anonymizedFilePath: '/files/a-anon.pdf' },
-			{ ...makeEntry(), id: 'b', fileId: 2, status: 'completed', anonymizedFilePath: null },
-			{ ...makeEntry(), id: 'c', fileId: 3, status: 'extracted', anonymizedFilePath: null },
-			{ ...makeEntry(), id: 'd', fileId: 9, status: 'completed', anonymizedFilePath: '/files/d-anon.pdf' },
-		]
-	}
-
-	it('returns only completed entries with a result path that are in scope', () => {
-		const store = useAnonymizationStore()
-		seedMixed(store)
-
-		const result = store.completedInFiles([1, 2, 3])
-
-		expect(result.map((f) => f.fileId)).toEqual([1])
-	})
-
-	it('returns an empty array when no fileIds are given', () => {
-		const store = useAnonymizationStore()
-		seedMixed(store)
-
-		expect(store.completedInFiles([])).toEqual([])
-	})
-})
-
 describe('prepareReanonymize — re-open an anonymised file for another run', () => {
 	beforeEach(() => {
 		setActivePinia(createPinia())
@@ -514,6 +488,19 @@ describe('prepareReanonymize — re-open an anonymised file for another run', ()
 		expect(entry.status).toBe('extracted')
 		expect(entry.viewMode).toBeUndefined()
 		expect(entry.entities).toHaveLength(1)
+	})
+
+	it('flags the re-anonymise sub-flow so the dossier sidebar can offer the per-file button', async () => {
+		const store = useAnonymizationStore()
+		const entry = completedEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [{ type: 'PERSON', value: 'Claudia Fischer', confidence: 0.9, relationId: 1 }] },
+		})
+
+		await store.prepareReanonymize(entry)
+
+		expect(entry.reanonymize).toBe(true)
 	})
 
 	it('preserves prior per-entity decisions across the re-extract', async () => {

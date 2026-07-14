@@ -78,11 +78,31 @@ export default {
 	computed: {
 		/**
 		 * Files only — dossiers are flat by design, but defensively skip folders.
+		 * Orphaned anonymized outputs (a leftover `_anonymized` whose source was
+		 * replaced by a re-upload and moved to trash) are skipped too, so a fresh
+		 * re-upload isn't shadowed by a stale "anonymized version". Superseded
+		 * duplicate outputs (older `_anonymized` copies left by earlier re-runs)
+		 * are collapsed to the newest as well, matching the main overview
+		 * (`visibleDocuments`) so the dossier doesn't list stale duplicates.
 		 *
 		 * @return {Array}
 		 */
 		files() {
-			return myDocumentsStore.documents.filter((d) => !d.isFolder)
+			const orphanedOutputIds = myDocumentsStore.orphanedOutputIds
+			const newestOutputBySource = myDocumentsStore.newestOutputBySource
+			const { anonToSource } = myDocumentsStore.linkMaps
+			return myDocumentsStore.documents.filter((d) => {
+				if (d.isFolder) return false
+				const fileId = Number(d.fileId)
+				if (orphanedOutputIds.has(fileId)) return false
+				// Hide non-newest outputs of a re-anonymised source.
+				const src = anonToSource.get(fileId)
+				if (src != null) {
+					const newest = newestOutputBySource.get(src)
+					if (newest && Number(newest.fileId) !== fileId) return false
+				}
+				return true
+			})
 		},
 		/**
 		 * Display name of the current dossier (last path segment).
@@ -121,29 +141,40 @@ export default {
 		/**
 		 * Open a file in the in-app viewer.
 		 *
-		 * When the file has already been anonymised (a completed queue entry
-		 * with a result), attach the anonymised counterpart and switch the
-		 * viewer to it, so opening a finished dossier file lands directly on
-		 * the review + download of the result instead of the original (T14).
+		 * The concept (original) is always the viewer base and the anonymised
+		 * copy is attached as its variant, so both are linked and the "Show
+		 * original / anonymised" toggle works. The viewer then shows whichever
+		 * file the user actually clicked: click the anonymised row → show the
+		 * result; click the original row → show the original. The pair stays
+		 * linked either way — we don't hijack the view to the other side.
+		 *
+		 * The pairing is read from the durable `anonymizationLink` register
+		 * (`conceptFor` / `anonymizedFor`), mirroring `MyDocumentsIndex.viewFile`.
+		 * Reading it from the in-memory anonymisation queue instead would only
+		 * work for files anonymised in the current session, so a dossier
+		 * anonymised earlier would open without its counterpart and lose the
+		 * toggle until a file happened to seed the queue.
 		 *
 		 * @param {object} file Document descriptor.
 		 */
 		onFileClick(file) {
-			const path = `${myDocumentsStore.currentPath}/${file.fileName}`
+			if (!file) return
+			const concept = file.isAnonymized ? myDocumentsStore.conceptFor(file) : file
+			const anonymized = file.isAnonymized ? file : myDocumentsStore.anonymizedFor(file)
+			const base = concept || file
 			fileViewerStore.open({
-				fileId: file.fileId,
-				fileName: file.fileName,
-				mimeType: file.mimeType,
-				path,
+				fileId: base.fileId,
+				fileName: base.fileName,
+				mimeType: base.mimeType,
+				path: `${myDocumentsStore.currentPath}/${base.fileName}`,
 			})
-			const entry = anonymizationStore.findByFileId(file.fileId)
-			if (entry?.status === 'completed' && entry.anonymizedFileId && entry.anonymizedFilePath) {
+			if (anonymized && anonymized.fileId !== base.fileId) {
 				fileViewerStore.setAnonymizedVariant({
-					fileId: entry.anonymizedFileId,
-					fileName: entry.anonymizedFileName || file.fileName,
-					mimeType: file.mimeType,
-					path: entry.anonymizedFilePath,
-				})
+					fileId: anonymized.fileId,
+					fileName: anonymized.fileName,
+					mimeType: anonymized.mimeType,
+					path: `${myDocumentsStore.currentPath}/${anonymized.fileName}`,
+				}, { show: file.isAnonymized })
 			}
 		},
 		/**
