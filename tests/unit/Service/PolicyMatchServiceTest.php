@@ -151,6 +151,71 @@ class PolicyMatchServiceTest extends TestCase
 
 
     /**
+     * A standing consent with entityType OTHER is type-agnostic: it matches a
+     * detected entity regardless of the type the detector assigned. This backs
+     * the generic-term standing-consent seed (e.g. "woonplaats" detected as
+     * LOCATION, "u"/"uw" detected as PERSON) — all left in place via a single
+     * OTHER rule.
+     *
+     * @return void
+     */
+    public function testOtherTypedStandingConsentMatchesAnyDetectedType(): void
+    {
+        $service = $this->makeService(
+            [
+                [
+                    'uuid'        => 'R-SC-GENERIC',
+                    'kind'        => PolicyMatchService::KIND_STANDING_CONSENT,
+                    'entityType'  => 'OTHER',
+                    'primaryName' => 'woonplaats',
+                    'matchRules'  => [['type' => 'normalized', 'value' => 'woonplaats']],
+                ],
+            ]
+        );
+
+        // LOCATION detection is matched by the OTHER rule.
+        $this->assertSame('R-SC-GENERIC', $service->match('woonplaats', 'LOCATION')['uuid']);
+        // Same rule also matches a PERSON detection (type-agnostic).
+        $this->assertSame('R-SC-GENERIC', $service->match('woonplaats', 'PERSON')['uuid']);
+        // Non-matching token is left alone (exact token match, not substring).
+        $this->assertNull($service->match('Amsterdam', 'LOCATION'));
+
+    }//end testOtherTypedStandingConsentMatchesAnyDetectedType()
+
+
+    /**
+     * The `normalized` match type collapses casing, so a single lower-cased
+     * rule value covers every casing variant ("u", "U", "Uw" → "u"/"uw"). This
+     * is why the aanspreekvorm seed needs only two normalized rules.
+     *
+     * @return void
+     */
+    public function testNormalizedMatchCollapsesCasing(): void
+    {
+        $service = $this->makeService(
+            [
+                [
+                    'uuid'        => 'R-SC-AANSPREEK',
+                    'kind'        => PolicyMatchService::KIND_STANDING_CONSENT,
+                    'entityType'  => 'OTHER',
+                    'primaryName' => 'aanspreekvorm',
+                    'matchRules'  => [
+                        ['type' => 'normalized', 'value' => 'u'],
+                        ['type' => 'normalized', 'value' => 'uw'],
+                    ],
+                ],
+            ]
+        );
+
+        $this->assertSame('R-SC-AANSPREEK', $service->match('U', 'PERSON')['uuid']);
+        $this->assertSame('R-SC-AANSPREEK', $service->match('Uw', 'PERSON')['uuid']);
+        // "Utrecht" must NOT match "u" — normalized comparison is equality, not prefix.
+        $this->assertNull($service->match('Utrecht', 'LOCATION'));
+
+    }//end testNormalizedMatchCollapsesCasing()
+
+
+    /**
      * The threshold defaults to 0.85 and honours a configured override.
      *
      * @return void

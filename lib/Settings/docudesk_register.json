@@ -3,7 +3,7 @@
     "info": {
         "title": "DocuDesk Register",
         "description": "Register containing the PublicationConsent schema for GDPR-compliant publication consent tracking. Documents and anonymization are handled natively by Open Register. DocuDesk focuses on consent management and metadata enrichment.",
-        "version": "7.1.0"
+        "version": "7.2.0"
     },
     "x-openregister": {
         "type": "application",
@@ -94,7 +94,7 @@
                         "title": "Document ID"
                     },
                     "entityType": {
-                        "description": "Type entiteit (PERSON of ORGANIZATION)",
+                        "description": "Type entiteit (PERSON, ORGANIZATION of OTHER). OTHER maakt een standing-consent type-agnostisch: de regel matcht ongeacht welk type de detectie toekent (bijv. generieke termen die als PERSON of LOCATION herkend kunnen worden).",
                         "type": "string",
                         "required": true,
                         "visible": true,
@@ -103,7 +103,8 @@
                         "title": "Entiteitstype",
                         "enum": [
                             "PERSON",
-                            "ORGANIZATION"
+                            "ORGANIZATION",
+                            "OTHER"
                         ]
                     },
                     "entityText": {
@@ -1459,6 +1460,216 @@
                 "consentMethod": "verbal_recorded",
                 "consentDocument": "seed-recording-bakker-2025-02-10.mp3",
                 "consentScope": "Beperkt tot het specifieke onderwerp (subsidieaanvraag bedrijvenpark Zuid).",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-aanspreekvorm"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "u / uw (aanspreekvorm)",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke aanspreekvorm — niet tot een persoon herleidbaar. Wordt door entiteitsdetectie soms als PERSON gemarkeerd maar is niet-identificerend; standing-consent zodat de tekst niet wordt vervangen.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "u"},
+                    {"type": "normalized", "value": "uw"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-betrokkene"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "betrokkene",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "betrokkene"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-verzoeker"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "verzoeker",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "verzoeker"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-aanvrager"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "aanvrager",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "aanvrager"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-belanghebbende"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "belanghebbende",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "belanghebbende"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-gemachtigde"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "gemachtigde",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "gemachtigde"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-klager"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "klager",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "klager"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-melder"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "melder",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "melder"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-indiener"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "indiener",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "indiener"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-wederpartij"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "wederpartij",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generieke processuele hoedanigheid — niet-identificerend. Standing-consent zodat de term niet wordt geanonimiseerd.",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "wederpartij"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen langere spans die deze term bevatten.",
+                "policyMatch": null
+            },
+            {
+                "@self": {"register": "consent", "schema": "publicationConsent", "slug": "standing-consent-generic-woonplaats"},
+                "documentId": null,
+                "entityType": "OTHER",
+                "entityText": "woonplaats",
+                "entityKey": null,
+                "consentStatus": "consent_given",
+                "notificationStatus": "skipped",
+                "legalBasis": "Generiek veldlabel — niet tot een persoon herleidbaar. Wordt door entiteitsdetectie doorgaans als LOCATION gemarkeerd; entityType OTHER maakt de regel type-agnostisch zodat de LOCATION-detectie van dit label wordt overgeslagen (echte plaatsnamen zoals 'Amsterdam' matchen niet, want de match is exact op token-niveau).",
+                "scope": "entity",
+                "matchRules": [
+                    {"type": "normalized", "value": "woonplaats"}
+                ],
+                "validFrom": "2024-01-01T00:00:00+00:00",
+                "validUntil": "2099-01-01T00:00:00+00:00",
+                "active": true,
+                "consentScope": "Alleen exacte, genormaliseerde token-match; raakt geen echte plaatsnamen of langere spans.",
                 "policyMatch": null
             },
             {
