@@ -51,6 +51,8 @@ use OCP\IUser;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.nl
+ *
+ * @spec openspec/changes/revive-dead-capabilities/tasks.md#task-2
  */
 class ConsentScopeValidator
 {
@@ -104,25 +106,6 @@ class ConsentScopeValidator
         );
 
     }//end requireStandingConsentAdminGroup()
-
-    /**
-     * Validate a candidate write payload before persisting a publicationConsent record.
-     *
-     * Delegates to assertValid() which enforces the scope-based field-set contract.
-     *
-     * @param array<string, mixed> $data The candidate write payload.
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException When the scope contract is violated.
-     *
-     * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
-     */
-    public function validateWrite(array $data): void
-    {
-        $this->assertValid(consent: $data);
-
-    }//end validateWrite()
 
     /**
      * Validate a state transition on an existing publicationConsent record.
