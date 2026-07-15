@@ -305,17 +305,4 @@ class DataResolverService
         return preg_match(pattern: $pattern, subject: $value) === 1;
 
     }//end isUuid()
-
-    /**
-     * Clear the per-request resolved object cache
-     *
-     * @return void
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
-     */
-    public function clearCache(): void
-    {
-        $this->resolvedCache = [];
-
-    }//end clearCache()
 }//end class

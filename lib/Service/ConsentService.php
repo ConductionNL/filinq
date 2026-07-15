@@ -266,39 +266,6 @@ class ConsentService
     }//end createConsentRequest()
 
     /**
-     * Create a standing-consent (scope:entity) record
-     *
-     * @param array<string, mixed> $data     The entity consent record data
-     * @param string               $register The register ID
-     * @param string               $schema   The schema ID
-     * @param IUser                $user     The authenticated user
-     *
-     * @return array<string, mixed> The created entity consent record
-     *
-     * @throws \OCP\AppFramework\OCS\OCSForbiddenException When user lacks admin group membership
-     * @throws \InvalidArgumentException When scope validation fails
-     * @throws Exception When the save operation fails
-     *
-     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-9
-     * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-10
-     */
-    public function createEntityConsent(array $data, string $register, string $schema, IUser $user): array
-    {
-        $this->scopeValidator->requireStandingConsentAdminGroup(user: $user);
-        $this->scopeValidator->validateWrite(data: $data);
-
-        $objectService = $this->getObjectService();
-        $savedObject   = $objectService->saveObject(
-            object: $data,
-            register: $register,
-            schema: $schema
-        );
-
-        return $savedObject->getObject();
-
-    }//end createEntityConsent()
-
-    /**
      * Validate and update a consent record, enforcing policy-transition rules
      *
      * @param string               $consentId The consent object UUID
@@ -339,7 +306,7 @@ class ConsentService
         // Standing-consent (scope=entity) records carry policy-level
         // authority for whole classes of documents — revoke/expire on
         // such a record MUST be gated on the same admin group as the
-        // create path (createEntityConsent above). Without this check
+        // create path (PolicyCrudService::createStandingConsent). Without this check
         // a regular consent officer could revoke a standing consent
         // directly via the update API. Backwards-compat: skip the
         // check when no user was plumbed through (existing callers
