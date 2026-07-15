@@ -279,27 +279,39 @@ The frontend MUST provide three distinct admin pages, each addressing one operat
 
 ### Requirement: RBAC MUST govern writes to both policy surfaces
 
-Writes to `publicationProhibition` records and to `scope: "entity"` `publicationConsent` records MUST be governed by OpenRegister's standard schema-level authorization, augmented by service-level enforcement for the scope-discriminated case. There MUST be no formal approval workflow at this version — privileged users MAY write directly. A separate change is tracked for adding two-eyes approval semantics.
+The system MUST govern writes to `publicationProhibition` records and to
+`scope: "entity"` `publicationConsent` records by OpenRegister's standard
+schema-level authorization, augmented by service-level enforcement for the
+scope-discriminated case. There MUST be no formal approval workflow at this
+version — privileged users MAY write directly.
 
-#### Scenario: Unprivileged user cannot write to prohibitions
-
-- **GIVEN** a user without write permission on the `publicationProhibition` schema
-- **WHEN** they attempt to POST a new record
-- **THEN** the request is rejected with a 403 (or equivalent) per existing OpenRegister RBAC behavior
-
-#### Scenario: Privileged user can write to prohibitions directly
-
-- **GIVEN** a user with write permission on the `publicationProhibition` schema
-- **WHEN** they POST a valid record
-- **THEN** the record is created
-- **AND** the rule cache is invalidated and rebuilt
+Standing-consent creation MUST flow through exactly one service entry point,
+`PolicyCrudService::createStandingConsent()` (reached over HTTP via
+`PolicyController::createStandingConsent`). There MUST NOT be a second,
+divergent create path for the same records: any superseded duplicate (e.g. a
+never-called `ConsentService::createEntityConsent()`) MUST be removed so the
+scope-write RBAC contract is enforced in exactly one place.
 
 #### Scenario: Standing-consent write requires standing-consent permission
 
-- **GIVEN** a user with write permission on `publicationConsent` for `scope: "document"` only (i.e., the consent-officer role) and NOT for `scope: "entity"`
-- **WHEN** they attempt to POST a `publicationConsent` record with `scope: "entity"`
-- **THEN** the consent service rejects the write with a 403-equivalent error citing missing standing-consent permission
+- **GIVEN** a user with write permission on `publicationConsent` for
+  `scope: "document"` only (i.e., the consent-officer role) and NOT for
+  `scope: "entity"`
+- **WHEN** they attempt to POST a `publicationConsent` record with
+  `scope: "entity"`
+- **THEN** the create path (`PolicyCrudService::createStandingConsent`) rejects
+  the write with a 403-equivalent error citing missing standing-consent
+  permission
 - **AND** the same user CAN still write `scope: "document"` records normally
+
+#### Scenario: No orphaned duplicate create path exists
+
+- **GIVEN** the docudesk service layer
+- **WHEN** the codebase is scanned for scope=entity consent create methods
+- **THEN** exactly one wired create path exists
+  (`PolicyCrudService::createStandingConsent`)
+- **AND** no unreferenced duplicate create method (such as
+  `ConsentService::createEntityConsent`) remains in `lib/Service/`
 
 ### Requirement: Out-of-scope behaviors MUST remain unchanged
 
