@@ -92,6 +92,10 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
         ['name' => 'pdf#renderPdfA', 'url' => 'api/pdf/render-pdfa', 'verb' => 'POST'],
 
+        // PDF/A-3 archival conversion route (MDTO/e-depot; consumed by
+        // procest's beschikking pipeline and OpenRegister's TMLO/MDTO SIP builder).
+        ['name' => 'pdfa3Conversion#convert', 'url' => 'api/pdfa3/convert', 'verb' => 'POST'],
+
         // Print preview and PDF/A download routes.
         ['name' => 'print#preview', 'url' => 'api/print/preview', 'verb' => 'POST'],
         ['name' => 'print#downloadPdfA', 'url' => 'api/print/pdf-a', 'verb' => 'POST'],

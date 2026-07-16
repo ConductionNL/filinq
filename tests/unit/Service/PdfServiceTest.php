@@ -152,5 +152,27 @@ class PdfServiceTest extends TestCase
 
     }//end testRenderPdfThrowsOnRendererFailure()
 
+    /**
+     * Test that pdfa=true produces genuine PDF/A-3b output — regression
+     * guard for a pre-existing bug where buildMpdfConfig() enabled
+     * PDFA/PDFAauto but never set PDFAversion, so mPDF silently defaulted
+     * to PDF/A-1B even though this class's docblock has always promised
+     * PDF/A-3b (see also Pdfa3ConversionService, which shares this
+     * requirement for real archival compliance).
+     *
+     * @return void
+     */
+    public function testRenderPdfWithPdfaOptionProducesPdfA3b(): void
+    {
+        $this->mockRenderer->method('renderTemplate')
+            ->willReturn('<html><body><h1>Archival</h1></body></html>');
+
+        $result = $this->service->renderPdf('<h1>{{ title }}</h1>', ['title' => 'Archival'], ['pdfa' => true]);
+
+        $this->assertStringStartsWith('%PDF', $result);
+        $this->assertStringContainsString('<pdfaid:part>3</pdfaid:part>', $result);
+        $this->assertStringContainsString('<pdfaid:conformance>B</pdfaid:conformance>', $result);
+
+    }//end testRenderPdfWithPdfaOptionProducesPdfA3b()
 
 }//end class
