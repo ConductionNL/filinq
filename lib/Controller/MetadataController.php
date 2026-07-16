@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
+ * @spec openspec/specs/metadata-enrichment/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -78,7 +78,7 @@ class MetadataController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-20
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function enrich(): JSONResponse
     {

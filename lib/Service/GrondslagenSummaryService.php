@@ -34,7 +34,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/anonymisation-grondslagen-summary/specs/anonymisation-grondslagen-summary/spec.md
+ * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
  */
 
 declare(strict_types=1);

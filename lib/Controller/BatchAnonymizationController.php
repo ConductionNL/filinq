@@ -19,13 +19,13 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 
@@ -129,7 +129,7 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     public function batchUpload(): JSONResponse
     {
@@ -168,7 +168,7 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     public function folderBatch(): JSONResponse
     {
@@ -214,7 +214,7 @@ class BatchAnonymizationController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
      */
     public function batchExtract(string $batchId): JSONResponse
     {
@@ -240,7 +240,7 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
      */
     public function batchStatus(string $batchId): JSONResponse
     {
@@ -295,7 +295,7 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+     * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
      */
     public function batchEntities(string $batchId): JSONResponse
     {
@@ -354,7 +354,7 @@ class BatchAnonymizationController extends Controller
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
      */
     public function batchAnonymize(string $batchId): JSONResponse
     {
@@ -538,7 +538,7 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
      */
     public function batchReport(string $batchId): JSONResponse|DataDownloadResponse
     {
@@ -563,7 +563,7 @@ class BatchAnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
     public function getProfiles(): JSONResponse
     {
@@ -580,7 +580,7 @@ class BatchAnonymizationController extends Controller
      *
      * @return JSONResponse Success message, or an error payload when the body is malformed.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
     public function updateProfiles(): JSONResponse
     {
@@ -756,7 +756,7 @@ class BatchAnonymizationController extends Controller
      *
      * @return JSONResponse|null Error response when validation fails, null when OK.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     private function validateFolderParams(?int $folderId, ?string $folderPath): ?JSONResponse
     {

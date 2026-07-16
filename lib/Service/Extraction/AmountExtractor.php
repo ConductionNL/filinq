@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -61,7 +61,7 @@ class AmountExtractor
      *
      * @return float|null The parsed numeric value, or null when unparseable.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function parseAmount(string $raw): ?float
     {
@@ -182,7 +182,7 @@ class AmountExtractor
      * @return array{value: float|null, confidence: float} The amount and its
      *         confidence, or a null value with confidence 0.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function extractLabelled(string $text, array $labels): array
     {

@@ -19,10 +19,10 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-5
  * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-6
  * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
@@ -58,7 +58,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+ * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-1
  */
 class ConsentService
@@ -163,7 +163,7 @@ class ConsentService
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-2
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-4
      * @spec openspec/changes/consent-create-idempotency-and-notes/tasks.md#task-5
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+     * @spec openspec/specs/consent-management/spec.md
      * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-6
      */
     public function createConsentRequest(
@@ -660,7 +660,7 @@ class ConsentService
      *
      * @throws Exception If update fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function updateConsentStatus(
         string $consentId,
@@ -688,7 +688,7 @@ class ConsentService
      *
      * @throws Exception If check fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function checkObjectionDeadline(
         string $consentId,
@@ -715,7 +715,7 @@ class ConsentService
      *
      * @throws Exception If query fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getConsentsByDocument(
         string $documentId,

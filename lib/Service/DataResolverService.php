@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
+ * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -113,7 +113,7 @@ class DataResolverService
      *
      * @return array{data: array, errors: array, warnings: array} Resolved data and any errors
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
      */
     public function resolve(array $dataRefs, array $adHocData=[]): array
     {
@@ -247,7 +247,7 @@ class DataResolverService
      *
      * @return array The data with nested references resolved
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-38
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
      */
     private function resolveNestedReferences(array $data, int $depth): array
     {

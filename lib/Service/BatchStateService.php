@@ -14,8 +14,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -138,7 +138,7 @@ class BatchStateService
      *
      * @return array<string, mixed> The newly created batch record.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     public function createBatch(string $userId, array $files): array
     {
@@ -163,7 +163,7 @@ class BatchStateService
      *
      * @return array<string, mixed>|null The decoded batch record, or null when missing or corrupt.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-7
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
      */
     public function getBatch(string $batchId): ?array
     {

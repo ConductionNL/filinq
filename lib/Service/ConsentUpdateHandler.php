@@ -13,8 +13,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  */
 
 declare(strict_types=1);
@@ -85,7 +85,7 @@ class ConsentUpdateHandler
      *
      * @throws Exception If update fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function updateConsentStatus(
         string $consentId,
@@ -335,7 +335,7 @@ class ConsentUpdateHandler
      *
      * @throws Exception If query fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getConsentsByDocument(
         string $documentId,

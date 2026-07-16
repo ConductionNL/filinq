@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -81,7 +81,7 @@ class ValidationController extends Controller
      *
      * @return JSONResponse The verdict + findings, or an error.
      *
-     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     * @spec openspec/specs/document-validation-checks/spec.md
      */
     #[NoAdminRequired]
     public function validate(): JSONResponse

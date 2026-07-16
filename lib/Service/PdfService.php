@@ -14,11 +14,11 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+ * @spec openspec/specs/pdf-generation/spec.md
+ * @spec openspec/specs/print-preview/spec.md
+ * @spec openspec/specs/pdf-generation/spec.md
+ * @spec openspec/specs/pdf-generation/spec.md
+ * @spec openspec/specs/pdf-generation/spec.md
  * @spec openspec/changes/print-functionality/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class PdfService
 {
@@ -85,7 +85,7 @@ class PdfService
      *
      * @throws Exception If Twig rendering or PDF generation fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-57
+     * @spec openspec/specs/pdf-generation/spec.md
      * @spec openspec/changes/print-functionality/tasks.md#task-1
      */
     public function renderPdf(string $templateContent, array $data=[], array $options=[]): string
@@ -116,7 +116,7 @@ class PdfService
      *
      * @throws Exception If Twig rendering fails
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function renderTemplateToHtml(string $templateContent, array $data=[]): string
     {
@@ -145,7 +145,7 @@ class PdfService
      *
      * @throws Exception When mPDF rendering fails.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     public function generatePdfFromHtml(string $html, array $options=[]): string
     {
@@ -164,7 +164,7 @@ class PdfService
      *
      * @return string Rendered HTML with print-optimized CSS injected
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
+     * @spec openspec/specs/print-preview/spec.md
      */
     public function renderHtmlPreview(string $templateContent, array $data=[], array $options=[]): string
     {
@@ -249,7 +249,7 @@ class PdfService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-59
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     private function ensureTempDirectory(string $tempDir): void
     {
@@ -272,7 +272,7 @@ class PdfService
      *
      * @return array<string, mixed> mPDF configuration
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-60
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     private function buildMpdfConfig(string $tempDir, array $options): array
     {
@@ -333,7 +333,7 @@ class PdfService
      *
      * @return string|null The font directory path, or null if not found
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function getFontDirectory(): ?string
     {
@@ -357,7 +357,7 @@ class PdfService
      *
      * @return string HTML style block with print-optimized CSS
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-58
+     * @spec openspec/specs/print-preview/spec.md
      */
     public function buildPrintCss(string $format, string $orientation): string
     {
@@ -413,7 +413,7 @@ class PdfService
      *
      * @throws Exception If mPDF fails to generate the PDF
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     private function generatePdf(string $html, array $options): string
     {

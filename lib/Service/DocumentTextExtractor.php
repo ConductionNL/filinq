@@ -13,8 +13,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-43
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-44
+ * @spec openspec/specs/metadata-enrichment/spec.md
+ * @spec openspec/specs/metadata-enrichment/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -59,7 +59,7 @@ class DocumentTextExtractor
      *
      * @return string The text content, empty string if not found
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-43
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function extractTextContent(array $objectData): string
     {
@@ -80,7 +80,7 @@ class DocumentTextExtractor
      *
      * @return array<string, string> Normalized date fields
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-44
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function normalizeDateFields(array $objectData): array
     {

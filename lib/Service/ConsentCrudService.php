@@ -14,10 +14,10 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+ * @spec openspec/specs/consent-management/spec.md
  */
 class ConsentCrudService
 {
@@ -62,7 +62,7 @@ class ConsentCrudService
      *
      * @return array{register: string, schema: string}|null Config or null if not configured
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-36
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getConsentConfig(): ?array
     {
@@ -101,7 +101,7 @@ class ConsentCrudService
      *
      * @throws Exception If listing fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function listConsents(string $register, string $schema, ?string $ownerUid=null): array
     {
@@ -143,7 +143,7 @@ class ConsentCrudService
      *
      * @throws Exception If retrieval fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getConsent(string $consentId, string $register, string $schema): ?array
     {
@@ -245,7 +245,7 @@ class ConsentCrudService
      *
      * @throws Exception If creation fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function createFromRequest(array $data, string $register, string $schema): array
     {
@@ -305,7 +305,7 @@ class ConsentCrudService
      *
      * @throws Exception If query fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getConsentsByDocument(
         string $documentId,
@@ -333,7 +333,7 @@ class ConsentCrudService
      *
      * @throws Exception If update fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/specs/consent-management/spec.md
      * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-7
      * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-8
      */

@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -79,7 +79,7 @@ class BatchExtractionService
      *
      * @throws Exception When the batch cannot be found.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-6
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
      */
     public function extractNext(string $batchId): array
     {

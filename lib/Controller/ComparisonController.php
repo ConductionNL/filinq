@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -80,7 +80,7 @@ class ComparisonController extends Controller
      *
      * @return JSONResponse The structured comparison or an error.
      *
-     * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+     * @spec openspec/specs/document-comparison/spec.md
      */
     #[NoAdminRequired]
     public function compare(): JSONResponse

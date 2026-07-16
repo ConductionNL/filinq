@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -16,7 +16,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {string} [documentType] Optional document-type hint.
  * @return {Promise<{validationStatus: string, validationFindings: Array}>} The verdict.
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  */
 export async function validateFile(fileId, documentType) {
 	const url = generateUrl('/apps/docudesk/api/validation/validate')
@@ -34,7 +34,7 @@ export async function validateFile(fileId, documentType) {
  * @param {string} status The verdict (passed|warnings|failed|'').
  * @return {string} The colour token.
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  */
 export function verdictColor(status) {
 	switch (status) {

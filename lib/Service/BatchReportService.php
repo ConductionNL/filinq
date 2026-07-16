@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -58,7 +58,7 @@ class BatchReportService
      *
      * @throws Exception When the batch cannot be found or is not yet completed.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-10
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
      */
     public function generateReport(string $batchId): string
     {

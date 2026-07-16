@@ -193,7 +193,7 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @throws RuntimeException Always — the ValidSign artifact flow is not wired.
      *
-     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     * @spec openspec/specs/document-signing/spec.md
      */
     public function produceSignedArtifact(string $documentContent, array $context): string
     {

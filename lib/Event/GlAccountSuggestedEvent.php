@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use OCP\EventDispatcher\Event;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
 class GlAccountSuggestedEvent extends Event
 {
@@ -82,7 +82,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string The extraction id.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getExtractionId(): string
     {
@@ -95,7 +95,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string|null The identity, or null when unresolvable.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getSupplierIdentity(): ?string
     {
@@ -108,7 +108,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string|null `kvk`|`iban`|`name`, or null when unresolvable.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getIdentityType(): ?string
     {
@@ -122,7 +122,7 @@ class GlAccountSuggestedEvent extends Event
      * @return array<int, array<string, mixed>> The ranked candidates (each `{code, label, confidence,
      *         rationale}`).
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getSuggestedAccounts(): array
     {
@@ -135,7 +135,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string `history`|`keyword-rule`|`none`.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getSource(): string
     {
@@ -148,7 +148,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string The source app id.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getSourceApp(): string
     {
@@ -161,7 +161,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return string The requesting user id.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function getRequestedBy(): string
     {
@@ -174,7 +174,7 @@ class GlAccountSuggestedEvent extends Event
      *
      * @return array<string, mixed> The payload shape.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function toPayload(): array
     {

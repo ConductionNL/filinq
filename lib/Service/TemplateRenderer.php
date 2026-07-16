@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+ * @spec openspec/specs/pdf-generation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -134,7 +134,7 @@ class TemplateRenderer
      *
      * @throws Exception If Twig rendering fails (syntax error, security violation)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     public function renderTemplate(string $templateContent, array $data): string
     {

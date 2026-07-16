@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {number} [opts.limit] Maximum entries.
  * @param {number} [opts.offset] Entries to skip.
  * @return {Promise<{versions: Array}>} The version list.
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 export async function listVersions(fileId, opts = {}) {
 	const url = generateUrl('/apps/docudesk/api/documents/{fileId}/versions', { fileId })
@@ -33,7 +33,7 @@ export async function listVersions(fileId, opts = {}) {
  * @param {number} fileId The Nextcloud file id.
  * @param {number} versionTimestamp The version timestamp.
  * @return {string} The download URL.
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 export function versionDownloadUrl(fileId, versionTimestamp) {
 	return generateUrl(
@@ -48,7 +48,7 @@ export function versionDownloadUrl(fileId, versionTimestamp) {
  * @param {number} fileId The Nextcloud file id.
  * @param {number} versionTimestamp The version timestamp to restore.
  * @return {Promise<object>} The restore result.
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 export async function restoreVersion(fileId, versionTimestamp) {
 	const url = generateUrl(

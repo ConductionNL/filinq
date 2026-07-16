@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -164,7 +164,7 @@ class DocumentValidationService
      *
      * @return array{validationStatus:string, validationFindings:array<int, array<string,mixed>>}
      *
-     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     * @spec openspec/specs/document-validation-checks/spec.md
      */
     public function validate(File $file, array $record=[], ?string $documentType=null): array
     {
@@ -277,7 +277,7 @@ class DocumentValidationService
      *
      * @return array{allowedMimes:array<int,string>, requiredFields:array<int,string>, severities:array<string,string>}
      *
-     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     * @spec openspec/specs/document-validation-checks/spec.md
      */
     public function resolveProfile(string $documentType): array
     {
@@ -331,7 +331,7 @@ class DocumentValidationService
      *
      * @return string The verdict (passed|warnings|failed).
      *
-     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     * @spec openspec/specs/document-validation-checks/spec.md
      */
     public function aggregate(array $findings): string
     {

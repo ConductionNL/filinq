@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -55,7 +55,7 @@ class IbanExtractor
      *         IBAN and its confidence, or a null value with confidence 0
      *         when no checksum-valid candidate is found.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function extract(string $text): array
     {

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -74,7 +74,7 @@ class BatchUploadService
      *
      * @return array<int, array{name: string, tmp_name: string, error: int}> List of raw uploaded file entries.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     public function collectFiles(IRequest $request): array
     {
@@ -123,7 +123,7 @@ class BatchUploadService
      *
      * @return array<string, mixed> The new batch record as returned by BatchStateService.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-5
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      */
     public function processBatchUpload(string $userId, array $files): array
     {

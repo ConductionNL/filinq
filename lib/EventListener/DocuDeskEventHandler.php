@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+ * @spec openspec/specs/metadata-enrichment/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -58,7 +58,7 @@ class DocuDeskEventHandler
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function handleObjectCreated(
         ObjectCreatedEvent $event,
@@ -103,7 +103,7 @@ class DocuDeskEventHandler
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function handleObjectUpdated(
         ObjectUpdatedEvent $event,
@@ -189,7 +189,7 @@ class DocuDeskEventHandler
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     private function maybeRegenerateGrondslagenSummary(
         array $objectData,
@@ -420,7 +420,7 @@ class DocuDeskEventHandler
      *
      * @return bool True if content has changed
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     private function hasContentChanged(array $objectData, array $oldObjectData): bool
     {

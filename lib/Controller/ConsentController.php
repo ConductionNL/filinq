@@ -14,9 +14,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -147,7 +147,7 @@ class ConsentController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function index(): JSONResponse
     {
@@ -198,7 +198,7 @@ class ConsentController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-13
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function create(): JSONResponse
     {
@@ -251,7 +251,7 @@ class ConsentController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function show(string $id): JSONResponse
     {
@@ -303,7 +303,7 @@ class ConsentController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-14
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function update(string $id): JSONResponse
     {
@@ -363,7 +363,7 @@ class ConsentController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-12
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function byDocument(string $documentId): JSONResponse
     {

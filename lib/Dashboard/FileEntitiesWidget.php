@@ -12,8 +12,8 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
+ * @spec openspec/specs/dashboard/spec.md
+ * @spec openspec/specs/dashboard/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getId(): string
     {
@@ -69,7 +69,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getTitle(): string
     {
@@ -82,7 +82,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return int
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getOrder(): int
     {
@@ -95,7 +95,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getIconClass(): string
     {
@@ -108,7 +108,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-31
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getIconUrl(): string
     {
@@ -123,7 +123,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @return string|null
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function getUrl(): ?string
     {
@@ -138,7 +138,7 @@ class FileEntitiesWidget implements IWidget, IIconWidget
      *
      * @SuppressWarnings(PHPMD.StaticAccess)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-30
+     * @spec openspec/specs/dashboard/spec.md
      */
     public function load(): void
     {

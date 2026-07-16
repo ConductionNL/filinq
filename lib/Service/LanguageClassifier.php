@@ -90,7 +90,7 @@ class LanguageClassifier
      *
      * @return int Total occurrence count
      *
-     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     private function countWordOccurrences(string $text, array $words): int
     {
@@ -110,7 +110,7 @@ class LanguageClassifier
      *
      * @return string|null Detected language code or null if detection fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function detectLanguage(string $text): ?string
     {
@@ -138,7 +138,7 @@ class LanguageClassifier
      *
      * @return string|null Classified topic or null if classification fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-metadata-enrichment/tasks.md#task-1
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function classifyTopic(string $text): ?string
     {

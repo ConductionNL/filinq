@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 class VersionController extends Controller
 {
@@ -86,7 +86,7 @@ class VersionController extends Controller
      *
      * @return JSONResponse The versions, or a localised error.
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     #[NoAdminRequired]
     public function index(int $fileId): JSONResponse
@@ -121,7 +121,7 @@ class VersionController extends Controller
      *
      * @return DataDownloadResponse|JSONResponse The bytes, or a localised error.
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     #[NoAdminRequired]
     public function download(int $fileId, int $versionTimestamp): DataDownloadResponse|JSONResponse
@@ -151,7 +151,7 @@ class VersionController extends Controller
      *
      * @return JSONResponse Success, or a localised error.
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     #[NoAdminRequired]
     public function restore(int $fileId, int $versionTimestamp): JSONResponse

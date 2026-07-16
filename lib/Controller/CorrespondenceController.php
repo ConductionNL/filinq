@@ -13,9 +13,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
+ * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
+ * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+ * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -86,7 +86,7 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
@@ -125,7 +125,7 @@ class CorrespondenceController extends Controller
      *
      * @return array|JSONResponse Parsed params or error response
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
      */
     private function parseGenerateParams(): array | JSONResponse
     {
@@ -171,7 +171,7 @@ class CorrespondenceController extends Controller
      *
      * @return DataDownloadResponse|JSONResponse The formatted response
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-17
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
      */
     private function formatGenerateResponse(
         array $result,
@@ -209,7 +209,7 @@ class CorrespondenceController extends Controller
      *
      * @return DataDownloadResponse The download response
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-15
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
      */
     private function buildDownloadResponse(
         array $result,
@@ -247,7 +247,7 @@ class CorrespondenceController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
      */
     public function generateBatch(): JSONResponse
     {
@@ -315,7 +315,7 @@ class CorrespondenceController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-16
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
      */
     public function jobStatus(string $jobId): JSONResponse
     {

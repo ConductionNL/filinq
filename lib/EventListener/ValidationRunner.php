@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+ * @spec openspec/specs/document-validation-checks/spec.md
  */
 class ValidationRunner
 {
@@ -63,7 +63,7 @@ class ValidationRunner
      *
      * @return void
      *
-     * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+     * @spec openspec/specs/document-validation-checks/spec.md
      */
     public function validateObject(
         mixed $object,

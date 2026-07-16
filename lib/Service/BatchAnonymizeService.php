@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 
@@ -101,7 +101,7 @@ class BatchAnonymizeService
      * @throws Exception When the batch cannot be found.
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-9
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
      */
     public function anonymizeBatch(

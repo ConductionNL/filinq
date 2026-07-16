@@ -34,7 +34,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class Pdfa3ConversionService
 {
@@ -175,7 +175,7 @@ class Pdfa3ConversionService
      *
      * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function convertExistingPdf(File $source, array $metadata=[], array $attachments=[], array $options=[]): array
     {
@@ -241,7 +241,7 @@ class Pdfa3ConversionService
      *
      * @throws Pdfa3ConversionException On any guardrail violation or conversion failure.
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function convertHtml(string $html, array $metadata=[], array $attachments=[], array $options=[]): array
     {

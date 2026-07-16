@@ -14,8 +14,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -68,7 +68,7 @@ class FileListingService
      *
      * @return array<string, mixed> File info
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     private function buildFileInfo(
         \OCP\Files\File $file,
@@ -114,7 +114,7 @@ class FileListingService
      *
      * @return array<int, array<string, mixed>> Array of file info
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function listProcessedFiles(): array
     {
@@ -172,7 +172,7 @@ class FileListingService
      *
      * @throws Exception If the upload fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {

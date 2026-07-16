@@ -278,7 +278,7 @@ class NativeSigningProvider implements SigningProviderInterface
      *
      * @throws RuntimeException When the signing secret is unset.
      *
-     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     * @spec openspec/specs/document-signing/spec.md
      */
     public function produceSignedArtifact(string $documentContent, array $context): string
     {

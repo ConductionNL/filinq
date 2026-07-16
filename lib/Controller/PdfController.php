@@ -13,9 +13,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdf-generation/spec.md
+ * @spec openspec/specs/print-preview/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class PdfController extends Controller
 {
@@ -92,7 +92,7 @@ class PdfController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-23
+     * @spec openspec/specs/pdf-generation/spec.md
      */
     public function render(): DataDownloadResponse | JSONResponse
     {
@@ -179,8 +179,8 @@ class PdfController extends Controller
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/print-preview/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function renderPdfA(): DataDownloadResponse | JSONResponse
     {
@@ -366,7 +366,7 @@ class PdfController extends Controller
      *
      * @throws \OCA\DocuDesk\Exception\Pdfa3ConversionException Propagated to renderPdfA()'s catch block.
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     private function renderArchivalPdfA(
         string $template,

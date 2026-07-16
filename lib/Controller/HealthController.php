@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/adopt-apphost/tasks.md
+ * @spec openspec/specs/adopt-apphost/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ class HealthController extends GenericHealthController
      *
      * @return JSONResponse `{status, app, version, checks}`.
      *
-     * @spec openspec/changes/adopt-apphost/tasks.md
+     * @spec openspec/specs/adopt-apphost/spec.md
      */
     #[PublicPage]
     #[NoCSRFRequired]

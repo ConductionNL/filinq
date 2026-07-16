@@ -17,10 +17,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-2
  */
@@ -112,7 +112,7 @@ class AnonymizationController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function files(): JSONResponse
     {
@@ -152,7 +152,7 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function upload(): JSONResponse
     {
@@ -259,7 +259,7 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function extract(int $fileId): JSONResponse
     {
@@ -306,7 +306,7 @@ class AnonymizationController extends Controller
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-1
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
      * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
      * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-11
@@ -746,7 +746,7 @@ class AnonymizationController extends Controller
      *
      * @return array<int, array<string, mixed>> Filtered entities
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      */
     private function filterByExcludeTypes(array $entities, array $params): array
     {
@@ -775,7 +775,7 @@ class AnonymizationController extends Controller
      *
      * @return array<int, array<string, mixed>> Filtered entities
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      */
     private function filterByConfidence(array $entities, array $params): array
     {

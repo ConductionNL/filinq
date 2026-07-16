@@ -13,8 +13,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-47
+ * @spec openspec/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -93,7 +93,7 @@ class ObjectionDeadlineChecker
      *
      * @return int Number of days for the objection period
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-47
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function getObjectionPeriodDays(): int
     {
@@ -110,7 +110,7 @@ class ObjectionDeadlineChecker
      *
      * @return DateTime The deadline date
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function calculateDeadline(): DateTime
     {
@@ -133,7 +133,7 @@ class ObjectionDeadlineChecker
      *
      * @throws Exception If check fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-37
+     * @spec openspec/specs/consent-management/spec.md
      */
     public function checkObjectionDeadline(string $consentId, string $register, string $schema): bool
     {
