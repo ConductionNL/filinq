@@ -140,6 +140,13 @@ class NativeSigningProvider implements SigningProviderInterface
     /**
      * Check status of a native signing session
      *
+     * Orphan-auth seam (hydra gate-6): a provider-contract status *read*, not
+     * an authorization guard. No native caller — the async status-poll leg is
+     * a pluggable extension point (see SigningProviderInterface::checkStatus);
+     * the live status surface is OR's ApprovalChain via
+     * `SigningController::showRequest`. Classified as a legit plugin seam in
+     * openspec/changes/orphan-auth-remediation/design.md.
+     *
      * @param string $externalId The signing session identifier
      *
      * @return array<string, mixed> The session status
