@@ -1,7 +1,7 @@
 # signing-via-or-approval-with-provider-plugins Specification (delta)
 
 ---
-status: proposed
+status: done
 ---
 
 ## Purpose
