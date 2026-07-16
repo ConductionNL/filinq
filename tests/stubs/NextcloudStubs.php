@@ -343,14 +343,28 @@ class JSONResponse extends Response
 /**
  * Stub for OCP\AppFramework\Http\DataDownloadResponse
  *
+ * Extends the local Response stub (matching the real
+ * DataDownloadResponse -> DownloadResponse -> Response inheritance
+ * chain) so addHeader()/getHeaders() are available — needed by
+ * Pdfa3ConversionController / PdfController::renderPdfA, which surface
+ * checksum/pages/conformance as response headers.
+ *
  * @category Tests
  * @package  OCA\DocuDesk\Tests
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class DataDownloadResponse
+class DataDownloadResponse extends Response
 {
+
+    /**
+     * The response data
+     *
+     * @var string
+     */
+    private string $data;
+
     /**
      * Constructor
      *
@@ -362,8 +376,34 @@ class DataDownloadResponse
      */
     public function __construct(string $data, string $filename, string $contentType)
     {
+        $this->data = $data;
+        $this->addHeader('Content-Type', $contentType);
+        $this->addHeader('Content-Disposition', 'attachment; filename="'.$filename.'"');
 
     }//end __construct()
+
+    /**
+     * Get response data
+     *
+     * @return string
+     */
+    public function getData(): string
+    {
+        return $this->data;
+
+    }//end getData()
+
+    /**
+     * Get HTTP status code. DataDownloadResponse always defaults to 200
+     * (matching the real OCP class, which inherits Http::STATUS_OK).
+     *
+     * @return int
+     */
+    public function getStatus(): int
+    {
+        return 200;
+
+    }//end getStatus()
 }//end class
 
 namespace OCP\AppFramework;

@@ -46,6 +46,8 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
  */
 class PdfService
 {
@@ -98,6 +100,34 @@ class PdfService
     }//end renderPdf()
 
     /**
+     * Render a Twig template to HTML without converting to PDF.
+     *
+     * Public wrapper around TemplateRenderer for callers that need the
+     * rendered HTML itself rather than a PDF — used by
+     * `PdfController::renderPdfA` to hand off to
+     * `Pdfa3ConversionService::convertHtml` when the request carries
+     * attachments or MDTO metadata, keeping Twig rendering centralised
+     * in one place rather than duplicated per caller.
+     *
+     * @param string $templateContent Twig template content (HTML with Twig syntax)
+     * @param array  $data            Data context for template rendering
+     *
+     * @return string Rendered HTML
+     *
+     * @throws Exception If Twig rendering fails
+     *
+     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     */
+    public function renderTemplateToHtml(string $templateContent, array $data=[]): string
+    {
+        return $this->templateRenderer->renderTemplate(
+            templateContent: $templateContent,
+            data: $data
+        );
+
+    }//end renderTemplateToHtml()
+
+    /**
      * Generate a PDF from a raw HTML string (no Twig pre-processing).
      *
      * Public wrapper around the private generatePdf path for callers
@@ -114,6 +144,8 @@ class PdfService
      * @return string PDF binary content.
      *
      * @throws Exception When mPDF rendering fails.
+     *
+     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-61
      */
     public function generatePdfFromHtml(string $html, array $options=[]): string
     {
@@ -260,6 +292,15 @@ class PdfService
         if ($isPdfA === true) {
             $config['PDFA']     = true;
             $config['PDFAauto'] = true;
+            // Fix (2026-07-16): mPDF defaults PDFAversion to '1-B' when the
+            // key is absent (see vendor/mpdf/mpdf/src/Config/ConfigVariables.php).
+            // This class's docblock has always promised PDF/A-3b output, and
+            // every caller (pdf#renderPdfA, print#downloadPdfA,
+            // DocumentService's `pdfOptions.pdfa`) relies on that promise for
+            // MDTO/archival compliance, but the version was never pinned —
+            // output was silently PDF/A-1B. Pin explicitly so the emitted
+            // XMP `pdfaid:part`/`pdfaid:conformance` markers actually say "3"/"B".
+            $config['PDFAversion'] = '3-B';
 
             $fontDir = $this->getFontDirectory();
             if ($fontDir !== null) {
@@ -285,9 +326,16 @@ class PdfService
     /**
      * Get the path to the bundled font directory
      *
+     * Public so other services that build their own mPDF configuration
+     * (e.g. `Pdfa3ConversionService`, which needs the same embedded
+     * DejaVu Sans set for PDF/A-3 font-embedding compliance) can reuse
+     * this instead of re-deriving the path.
+     *
      * @return string|null The font directory path, or null if not found
+     *
+     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
      */
-    private function getFontDirectory(): ?string
+    public function getFontDirectory(): ?string
     {
         $fontDir = dirname(path: __DIR__).'/Fonts';
         if (is_dir(filename: $fontDir) === true) {
