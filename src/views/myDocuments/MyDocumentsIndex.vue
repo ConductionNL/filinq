@@ -522,7 +522,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+		 * @spec openspec/specs/document-validation-checks/spec.md
 		 */
 		async validateDocument(row) {
 			if (!row || !row.fileId) return
@@ -545,7 +545,7 @@ export default {
 		 * Handle an OCR cross-link from a text-layer-missing finding.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+		 * @spec openspec/specs/document-validation-checks/spec.md
 		 */
 		onOcrRequested() {
 			this.validation.show = false
@@ -558,7 +558,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {void}
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		compareDocument(row) {
 			if (!row || !row.fileId) return
@@ -573,7 +573,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {void}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		openVersions(row) {
 			if (!row || !row.fileId) return

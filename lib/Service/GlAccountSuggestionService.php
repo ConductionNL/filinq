@@ -23,7 +23,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
 class GlAccountSuggestionService
 {
@@ -111,7 +111,7 @@ class GlAccountSuggestionService
      *
      * @throws RuntimeException (code 404) When no extraction exists for the given id.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function suggest(string $extractionId, array $candidateAccounts, string $sourceApp, string $requestedBy): array
     {
@@ -154,7 +154,7 @@ class GlAccountSuggestionService
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $correctedBy reserved for future attribution
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function recordBooking(string $extractionId, string $accountCode, ?string $accountLabel, string $correctedBy): void
     {
@@ -365,7 +365,7 @@ class GlAccountSuggestionService
      *
      * @return array<int, array<string, mixed>> The (possibly reordered) candidates.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     private function applyAiReRank(array $suggestions, array $fields): array
     {
@@ -560,7 +560,7 @@ class GlAccountSuggestionService
      *
      * @return void
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     private function dispatchSuggestedEvent(string $extractionId, array $result, string $sourceApp, string $requestedBy): void
     {

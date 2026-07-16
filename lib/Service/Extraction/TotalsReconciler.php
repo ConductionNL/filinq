@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -60,7 +60,7 @@ class TotalsReconciler
      * @return bool True when all three values are present and reconcile
      *              within the tolerance.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function reconciles(
         ?float $totalExcl,

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
+ * @spec openspec/specs/admin-settings/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -88,7 +88,7 @@ class RegisterDiscoveryService
      *
      * @return array<int, array<string, mixed>> List of register arrays with filtered schemas
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function fetchAvailableRegisters(): array
     {
@@ -161,7 +161,7 @@ class RegisterDiscoveryService
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
+     * @spec openspec/specs/admin-settings/spec.md
      */
     private function filterSchemas(array $registerArray): array
     {
@@ -185,7 +185,7 @@ class RegisterDiscoveryService
      *
      * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
+     * @spec openspec/specs/admin-settings/spec.md
      */
     private function filterSchemaProperties(mixed $schema): mixed
     {
@@ -206,7 +206,7 @@ class RegisterDiscoveryService
      *
      * @return array<string, string> Configuration key-value pairs
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-62
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function loadObjectTypeConfiguration(array $objectTypes): array
     {

@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+ * @spec openspec/specs/admin-settings/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -75,7 +75,7 @@ class DocuDeskAdmin implements IIconSection
      * @psalm-return   string
      * @phpstan-return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getIcon(): string
     {
@@ -91,7 +91,7 @@ class DocuDeskAdmin implements IIconSection
      * @psalm-return   string
      * @phpstan-return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getID(): string
     {
@@ -107,7 +107,7 @@ class DocuDeskAdmin implements IIconSection
      * @psalm-return   string
      * @phpstan-return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getName(): string
     {
@@ -123,7 +123,7 @@ class DocuDeskAdmin implements IIconSection
      * @psalm-return   int
      * @phpstan-return int
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getPriority(): int
     {

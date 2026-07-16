@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/adopt-apphost/tasks.md
+ * @spec openspec/specs/adopt-apphost/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ class MetricsController extends GenericMetricsController
      *
      * @return TextPlainResponse Prometheus text exposition 0.0.4.
      *
-     * @spec openspec/changes/adopt-apphost/tasks.md
+     * @spec openspec/specs/adopt-apphost/spec.md
      */
     #[NoCSRFRequired]
     public function index(): TextPlainResponse

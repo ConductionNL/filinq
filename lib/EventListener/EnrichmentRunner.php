@@ -14,8 +14,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-33
+ * @spec openspec/specs/metadata-enrichment/spec.md
+ * @spec openspec/specs/metadata-enrichment/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+ * @spec openspec/specs/metadata-enrichment/spec.md
  */
 class EnrichmentRunner
 {
@@ -49,7 +49,7 @@ class EnrichmentRunner
      *
      * @return bool True if at least one enrichment feature is enabled
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-33
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function isEnrichmentEnabled(SettingsService $settingsService): bool
     {
@@ -73,7 +73,7 @@ class EnrichmentRunner
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-32
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function enrichObject(
         mixed $object,

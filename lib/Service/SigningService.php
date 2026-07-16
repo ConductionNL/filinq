@@ -49,7 +49,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  *
- * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+ * @spec openspec/specs/document-signing/spec.md
  */
 class SigningService
 {
@@ -760,7 +760,7 @@ class SigningService
      *
      * @throws RuntimeException When no verifiable artifact can be produced/stored.
      *
-     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     * @spec openspec/specs/document-signing/spec.md
      */
     private function produceAndStoreSignedArtifact(array $request): string
     {

@@ -17,8 +17,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\DocuDesk\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+ * @spec openspec/specs/anonymization/spec.md
  */
 class EntityDetectionService
 {
@@ -105,7 +105,7 @@ class EntityDetectionService
      *
      * @return array<int, array<string, mixed>> Normalized entity list
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function normalizeEntities(array $entities): array
     {
@@ -160,7 +160,7 @@ class EntityDetectionService
      * @return array<int, array<string, mixed>> Mapped entities
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-2
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function mapEntitiesForAnonymization(array $entities): array
     {
@@ -212,7 +212,7 @@ class EntityDetectionService
      *
      * @return array{anonymizedFileId: mixed, anonymizedFileName: mixed, anonymizedFilePath: mixed}
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function parseAnonymizationResult(mixed $result): array
     {

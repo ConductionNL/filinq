@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+@spec openspec/specs/document-versions/spec.md
 -->
 
 <template>
@@ -85,7 +85,7 @@ export default {
 		 * Table columns for the version list.
 		 *
 		 * @return {Array} The column definitions.
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		columns() {
 			return [
@@ -99,7 +99,7 @@ export default {
 		 * Rows for the CnDataTable, newest first, current marked.
 		 *
 		 * @return {Array} The rows.
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		rows() {
 			return this.versions.map((v) => ({
@@ -121,7 +121,7 @@ export default {
 		 * Load the version list for the current document.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -146,7 +146,7 @@ export default {
 		 *
 		 * @param {object} row The version row.
 		 * @return {boolean} True when compare is available.
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		canCompare(row) {
 			return this.textExtractable && !row.isCurrent
@@ -156,7 +156,7 @@ export default {
 		 *
 		 * @param {object} row The version row.
 		 * @return {void}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		download(row) {
 			const ts = row.isCurrent ? 0 : row.timestamp
@@ -167,7 +167,7 @@ export default {
 		 *
 		 * @param {object} row The version row.
 		 * @return {void}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		promptRestore(row) {
 			this.restoreTarget = row
@@ -176,7 +176,7 @@ export default {
 		 * Confirm and perform the restore, then reload.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		async confirmRestore() {
 			const target = this.restoreTarget
@@ -194,7 +194,7 @@ export default {
 		 *
 		 * @param {object} row The version row.
 		 * @return {void}
-		 * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+		 * @spec openspec/specs/document-versions/spec.md
 		 */
 		compare(row) {
 			this.$router.push({

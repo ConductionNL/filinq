@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
 class ExtractionController extends Controller
 {
@@ -87,7 +87,7 @@ class ExtractionController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function financial(): JSONResponse
     {
@@ -124,8 +124,8 @@ class ExtractionController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function corrections(string $id): JSONResponse
     {

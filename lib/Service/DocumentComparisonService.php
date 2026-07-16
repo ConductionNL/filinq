@@ -22,7 +22,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+ * @spec openspec/specs/document-comparison/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -123,7 +123,7 @@ class DocumentComparisonService
      *
      * @throws ComparisonException On any resolvable failure (404/413/415/422).
      *
-     * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+     * @spec openspec/specs/document-comparison/spec.md
      */
     public function compare(array $left, array $right): array
     {

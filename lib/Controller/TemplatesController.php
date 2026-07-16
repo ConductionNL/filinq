@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+ * @spec openspec/specs/template-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -100,7 +100,7 @@ class TemplatesController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+     * @spec openspec/specs/template-management/spec.md
      */
     public function index(): JSONResponse
     {
@@ -153,7 +153,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+     * @spec openspec/specs/template-management/spec.md
      */
     public function show(string $id): JSONResponse
     {
@@ -181,7 +181,7 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+     * @spec openspec/specs/template-management/spec.md
      */
     public function create(): JSONResponse
     {
@@ -214,7 +214,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+     * @spec openspec/specs/template-management/spec.md
      */
     public function update(string $id): JSONResponse
     {
@@ -247,7 +247,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-29
+     * @spec openspec/specs/template-management/spec.md
      */
     public function destroy(string $id): JSONResponse
     {
@@ -280,7 +280,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function versions(string $id): JSONResponse
     {
@@ -319,7 +319,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function restoreVersion(string $id, string $versionId): JSONResponse
     {
@@ -359,7 +359,7 @@ class TemplatesController extends Controller
      * @SuppressWarnings(PHPMD.ShortVariable)
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
+     * @spec openspec/specs/template-management/spec.md
      */
     public function diffVersions(string $id): JSONResponse
     {
@@ -474,7 +474,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-3
+     * @spec openspec/specs/template-management/spec.md
      */
     public function duplicate(string $id): JSONResponse
     {
@@ -506,7 +506,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
+     * @spec openspec/specs/template-management/spec.md
      */
     public function lock(string $id): JSONResponse
     {
@@ -548,7 +548,7 @@ class TemplatesController extends Controller
      *
      * @SuppressWarnings(PHPMD.ShortVariable)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-4
+     * @spec openspec/specs/template-management/spec.md
      */
     public function unlock(string $id): JSONResponse
     {

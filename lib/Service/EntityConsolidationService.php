@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+ * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-2
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
@@ -100,7 +100,7 @@ class EntityConsolidationService
      *
      * @return array<int, array<string, mixed>> Consolidated, confidence-sorted list of entities.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+     * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
      * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
      * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-2
      * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-3
@@ -154,7 +154,7 @@ class EntityConsolidationService
      *
      * @return array<string, array<string, mixed>> Updated consolidation map.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+     * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
      */
     private function mergeEntity(array $map, mixed $entity): array
     {
@@ -267,7 +267,7 @@ class EntityConsolidationService
      *
      * @return array<int, mixed> Raw entity detections, or an empty array on failure.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-8
+     * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
      */
     private function getEntitiesForFile(int $fileId): array
     {

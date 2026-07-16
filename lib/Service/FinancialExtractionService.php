@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -66,7 +66,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.TooManyMethods)
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
 class FinancialExtractionService
 {
@@ -234,7 +234,7 @@ class FinancialExtractionService
      *
      * @throws RuntimeException (code 400) On missing file reference or invalid docType.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function extractFinancial(array $data, string $requestedBy): array
     {
@@ -373,7 +373,7 @@ class FinancialExtractionService
      *
      * @throws RuntimeException (code 404) When no extraction exists for the given id.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function addCorrection(string $id, array $correctedFields, string $correctedBy): array
     {
@@ -428,7 +428,7 @@ class FinancialExtractionService
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) $docType reserved for future per-type heuristic tuning
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function runExtraction(string $text, string $docType): array
     {
@@ -508,7 +508,7 @@ class FinancialExtractionService
      *
      * @return array<string, mixed> The (possibly AI-enhanced) pipeline result, same shape as the input.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function applyAiEnhancement(string $text, array $result, string $requestedBy): array
     {
@@ -978,7 +978,7 @@ class FinancialExtractionService
      *
      * @return void
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     private function dispatchCompletionEvent(
         string $documentUri,

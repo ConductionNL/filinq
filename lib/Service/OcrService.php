@@ -14,15 +14,15 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
+ * @spec openspec/specs/ocr-document-scanning/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -120,7 +120,7 @@ class OcrService
      *
      * @return bool True if Tesseract is installed and executable
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-48
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function isTesseractAvailable(): bool
     {
@@ -144,7 +144,7 @@ class OcrService
      *
      * @return string|null The version string or null if not available
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-49
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function getTesseractVersion(): ?string
     {
@@ -176,7 +176,7 @@ class OcrService
      *
      * @return bool True if the file needs OCR processing
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-50
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function needsOcr(string $mimeType, ?string $existingText=null): bool
     {
@@ -200,7 +200,7 @@ class OcrService
      *
      * @return bool True if OCR is enabled
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function isOcrEnabled(): bool
     {
@@ -217,7 +217,7 @@ class OcrService
      *
      * @return string Tesseract language string (e.g., "nld+eng")
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-51
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function getOcrLanguages(): string
     {
@@ -246,7 +246,7 @@ class OcrService
      *
      * @return int DPI value
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-52
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function getOcrDpi(): int
     {
@@ -281,7 +281,7 @@ class OcrService
      *
      * @throws Exception If OCR processing fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-53
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function extractTextFromImage(
         string $filePath,
@@ -343,7 +343,7 @@ class OcrService
      *
      * @throws Exception If PDF conversion or OCR processing fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-54
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function extractTextFromPdf(
         string $filePath,
@@ -445,7 +445,7 @@ class OcrService
      *
      * @return array{text: string, confidence: float, ocrProcessed: bool} OCR results
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-55
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     public function processFile(int $fileId): array
     {
@@ -583,7 +583,7 @@ class OcrService
      *
      * @return float Confidence score (0-100)
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-56
+     * @spec openspec/specs/ocr-document-scanning/spec.md
      */
     private function getConfidenceScore(string $filePath, string $languages, int $dpi): float
     {

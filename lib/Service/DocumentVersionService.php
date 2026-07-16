@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+ * @spec openspec/specs/document-versions/spec.md
  */
 class DocumentVersionService
 {
@@ -91,7 +91,7 @@ class DocumentVersionService
      *
      * @throws ComparisonException 404 (not readable) / 422 (versions-unavailable).
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     public function listVersions(int $fileId, int $limit=50, int $offset=0): array
     {
@@ -143,7 +143,7 @@ class DocumentVersionService
      *
      * @throws ComparisonException 404 / 422.
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     public function readVersion(int $fileId, int $versionTimestamp): string
     {
@@ -190,7 +190,7 @@ class DocumentVersionService
      *
      * @throws ComparisonException 404 (not writeable) / 422 / 404 (unknown version).
      *
-     * @spec openspec/changes/document-versions-detail-tab/specs/document-versions/spec.md
+     * @spec openspec/specs/document-versions/spec.md
      */
     public function restoreVersion(int $fileId, int $versionTimestamp): void
     {

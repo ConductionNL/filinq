@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+ * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -58,7 +58,7 @@ class WooProfileService
      *
      * @return array{anonymize: array<string>, keep: array<string>} Active profile (configured or default).
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
     public function getProfile(): array
     {
@@ -89,7 +89,7 @@ class WooProfileService
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
     public function saveProfile(array $profile): void
     {
@@ -104,7 +104,7 @@ class WooProfileService
      *
      * @return bool True when the type should be anonymized.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-11
+     * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
     public function shouldAnonymize(string $entityType): bool
     {

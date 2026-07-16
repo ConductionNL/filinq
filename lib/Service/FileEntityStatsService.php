@@ -13,8 +13,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -73,7 +73,7 @@ class FileEntityStatsService
      *
      * @return \OCA\OpenRegister\Db\EntityRelationMapper|null The mapper or null
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-45
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function tryGetEntityRelationMapper(): ?\OCA\OpenRegister\Db\EntityRelationMapper
     {
@@ -95,7 +95,7 @@ class FileEntityStatsService
      *
      * @return \OCA\OpenRegister\Service\RiskLevelService|null The service or null
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function tryGetRiskLevelService(): ?\OCA\OpenRegister\Service\RiskLevelService
     {
@@ -120,7 +120,7 @@ class FileEntityStatsService
      *
      * @return array{entityCount: int, anonymizedCount: int, status: string} Entity stats
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function getEntityStats(
         int $fileId,
@@ -170,7 +170,7 @@ class FileEntityStatsService
      *
      * @return string The status string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function determineFileStatus(int $entityCount, int $anonymizedCount): string
     {
@@ -194,7 +194,7 @@ class FileEntityStatsService
      *
      * @return string The risk level
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-1
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function getFileRiskLevel(
         int $fileId,

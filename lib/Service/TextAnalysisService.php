@@ -14,10 +14,10 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-70
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-71
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-72
+ * @spec openspec/specs/metadata-enrichment/spec.md
+ * @spec openspec/specs/metadata-enrichment/spec.md
+ * @spec openspec/specs/metadata-enrichment/spec.md
+ * @spec openspec/specs/metadata-enrichment/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -59,7 +59,7 @@ class TextAnalysisService
      *
      * @return int Total occurrence count
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function countWordOccurrences(string $text, array $words): int
     {
@@ -79,7 +79,7 @@ class TextAnalysisService
      *
      * @return string|null Detected language code or null if detection fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-46
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function detectLanguage(string $text): ?string
     {
@@ -94,7 +94,7 @@ class TextAnalysisService
      *
      * @return array<string> Extracted keywords
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-70
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function extractKeywords(string $text): array
     {
@@ -150,7 +150,7 @@ class TextAnalysisService
      *
      * @return string|null Classified topic or null if classification fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-71
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function classifyTopic(string $text): ?string
     {
@@ -165,7 +165,7 @@ class TextAnalysisService
      *
      * @return string Standardized document type
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-72
+     * @spec openspec/specs/metadata-enrichment/spec.md
      */
     public function standardizeDocumentType(string $documentType): string
     {

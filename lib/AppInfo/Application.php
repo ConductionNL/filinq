@@ -256,7 +256,7 @@ class Application extends App implements IBootstrap
      *
      * @return void
      *
-     * @spec openspec/changes/adopt-apphost/tasks.md
+     * @spec openspec/specs/adopt-apphost/spec.md
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {

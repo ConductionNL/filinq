@@ -137,7 +137,7 @@ interface SigningProviderInterface
      *
      * @throws \RuntimeException When no signed artifact can be produced.
      *
-     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     * @spec openspec/specs/document-signing/spec.md
      */
     public function produceSignedArtifact(string $documentContent, array $context): string;
 }//end interface
