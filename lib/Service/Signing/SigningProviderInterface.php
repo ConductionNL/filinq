@@ -63,6 +63,14 @@ interface SigningProviderInterface
     /**
      * Check the status of an ongoing signing flow
      *
+     * Orphan-auth seam (hydra gate-6): this is a provider-contract status
+     * *read*, not an authorization guard. It intentionally has no native
+     * caller — the async external-provider status-poll leg is a pluggable
+     * extension point implemented by external providers (e.g. ValidSign) and
+     * invoked through the provider flow, not the live OR-ApprovalChain status
+     * path (`SigningController::showRequest`). Classified as a legit plugin
+     * seam in openspec/changes/orphan-auth-remediation/design.md.
+     *
      * @param string $externalId The external signing flow identifier
      *
      * @return array<string, mixed> Status with keys: status, signers, completedAt
