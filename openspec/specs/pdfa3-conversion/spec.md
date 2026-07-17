@@ -1,7 +1,15 @@
+---
+status: in-progress
+---
+
 # pdfa3-conversion Specification
 
+**Status**: in-progress
+**OpenSpec changes**:
+- [verapdf-validation](../../changes/verapdf-validation/) _(active)_ — adds veraPDF output verification after conversion: `X-Docudesk-Pdfa3-Verified` header, persisted `conformanceReport` (`trigger: "conversion"`), report mode by default and a `docudesk.pdfa3.strict_verify` fail-loud mode (REQ-DDVPV-006) (kind: code)
+
 ## Purpose
-TBD - created by archiving change pdfa3-conversion. Update Purpose after archive.
+Converts HTML and existing PDFs into genuine PDF/A-3b archival documents via the vendored mPDF/FPDI stack: real XMP `pdfaid` identification, embedded fonts and ICC output intent for rendered content, caller-supplied embedded attachments plus an auto-generated MDTO metadata sidecar, and MDTO/archival metadata mapped into a `docudesk:` XMP namespace. Conversion is guarded (size caps, wall-clock budget, output validation) and fails loud with typed `Pdfa3ConversionException` reasons rather than silently returning non-compliant bytes; the capability is reachable via `POST /api/pdfa3/convert` (IDOR-safe) and from DocuDesk's own PDF/A generation endpoint.
 ## Requirements
 ### Requirement: Converting HTML MUST produce a genuine PDF/A-3b document
 

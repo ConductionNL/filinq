@@ -1,8 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # dossier-register Specification
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [dossier-management-ui](../../changes/dossier-management-ui/) _(active)_ — the `dossier` schema gains an optional `status` property governed by a declarative `x-openregister-lifecycle` (canonical `initial: open`; `open → in-review → processed → published/closed`); all other properties, the `base` vocabulary, folder binding and seeds unchanged (kind: code)
 
 ## Purpose
 Defines DocuDesk's `dossier` register in OpenRegister, holding a `dossier` schema for folder-level anonymisation metadata (name, description, legal bases, and review date) and a `base` schema that encodes the Dutch Woo Art. 5 grondslagen vocabulary, seeded with the six canonical exception grounds. The register is installed and upserted idempotently via the existing configuration-import path on app install and upgrade. This gives folder-based anonymisation work a structured, queryable record of which legal grounds apply and when a dossier was last reviewed.

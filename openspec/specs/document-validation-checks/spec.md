@@ -7,6 +7,7 @@ status: in-progress
 **Status**: in-progress
 **OpenSpec changes**:
 - [pdfua-accessible-output](../../changes/pdfua-accessible-output/) _(active)_ — adds the accessibility check category (`pdf-not-tagged`, `pdf-language-missing`, `pdf-title-missing`, `pdfua-identifier-missing`; REQ-DDPUA-003) riding the existing profile/severity mechanism (kind: code)
+- [verapdf-validation](../../changes/verapdf-validation/) _(active)_ — adds the validator-backed `archival` check category (`pdfa-conformance-failed`, `pdfa-font-not-embedded`, `archival-validator-unavailable`; REQ-DDVPV-005) and amends the shipped-defaults sentence of the profiles requirement (archival checks default `off`) (kind: code)
 
 ## Purpose
 Runs a catalogue of document quality checks covering format allowlisting, extension/mime consistency, file integrity, PDF encryption, text-layer presence, and metadata completeness, returning structured findings keyed by a stable check ID and severity. It is a pure computation backend that reads document content and records but never writes fields, creates objects, or modifies files. This lets DocuDesk flag documents that are unreadable, scan-only, encrypted, or missing required metadata before further processing.
