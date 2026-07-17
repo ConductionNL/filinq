@@ -1,8 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # document-creatie-sjablonen Specification
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — wizard-driven generations validate `options.wizardContext` server-side and record the interview context (wizard id + version + answers) on the `generatedDocument` audit object (REQ-DDGDW-008) (kind: code)
+- [multi-format-output](../../changes/multi-format-output/) _(active)_ — `options.formats` produces multiple outputs from a single render pass with a JSON manifest; `docx` becomes a first-class editable generation format; every produced output is recorded on `generatedDocument.outputs` (REQ-DDMFO-001/003/006) (kind: code)
 
 ## Purpose
 Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.

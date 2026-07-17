@@ -1,9 +1,14 @@
 ---
-status: done
+status: in-progress
 or_adoption_change: docudesk-adopt-or-abstractions
 ---
 
 # Anonymization Pipeline
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [image-redaction](../../changes/image-redaction/) _(active)_ — extract response gains image-origin entities with region geometry, anonymise gains the pixel-burn step for image-bearing content with a fail-flagged contract (REQ-DDIMR-007/008) (kind: code)
+- [document-sanitization](../../changes/document-sanitization/) _(active)_ — anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in `sanitize` flag for the final artifact (REQ-DDSAN-006/007) (kind: code)
 
 ## Purpose
 

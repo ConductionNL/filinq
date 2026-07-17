@@ -1,8 +1,12 @@
 ---
-status: done
+status: in-progress
 ---
 
 # pdf-conversion Specification
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [multi-format-output](../../changes/multi-format-output/) _(active)_ — adds non-throwing capability introspection: `PdfConversionService::getCapabilities()` reports per-backend `{name, available, supports}` in cascade order, reusing the `ConversionFailedException` report shape (REQ-DDMFO-005) (kind: code)
 
 ## Purpose
 Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives DocuDesk a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.
