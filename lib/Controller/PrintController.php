@@ -14,9 +14,9 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
+ * @spec openspec/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
+ * @spec openspec/specs/print-preview/spec.md
  * @spec openspec/changes/print-functionality/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -126,7 +126,7 @@ class PrintController extends Controller
      *
      * @throws Exception If neither templateId nor template content is provided
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-26
+     * @spec openspec/specs/print-preview/spec.md
      * @spec openspec/changes/print-functionality/tasks.md#task-2
      */
     private function resolveTemplate(): array
@@ -189,7 +189,7 @@ class PrintController extends Controller
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-25
+     * @spec openspec/specs/print-preview/spec.md
      */
     public function preview(): JSONResponse
     {
@@ -255,7 +255,7 @@ class PrintController extends Controller
      *
      * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-24
+     * @spec openspec/specs/print-preview/spec.md
      */
     public function downloadPdfA(): DataDownloadResponse | JSONResponse
     {

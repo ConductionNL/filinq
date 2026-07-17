@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-validation-checks/specs/document-validation-checks/spec.md
+@spec openspec/specs/document-validation-checks/spec.md
 -->
 
 <template>

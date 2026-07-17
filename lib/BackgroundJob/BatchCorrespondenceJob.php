@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+ * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -73,7 +73,7 @@ class BatchCorrespondenceJob extends QueuedJob
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
      */
     protected function run(mixed $argument): void
     {
@@ -113,7 +113,7 @@ class BatchCorrespondenceJob extends QueuedJob
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
      */
     private function initializeJobStatus(string $jobId, int $total, string $ownerUserId=''): void
     {
@@ -142,7 +142,7 @@ class BatchCorrespondenceJob extends QueuedJob
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-39
+     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-generation
      */
     private function processRecipients(
         string $jobId,

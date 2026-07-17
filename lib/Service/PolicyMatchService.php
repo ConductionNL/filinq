@@ -32,7 +32,7 @@
  *
  * @link https://www.DocuDesk.app
  *
- * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+ * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -50,7 +50,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Detection-time policy matcher.
  *
- * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+ * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
 class PolicyMatchService
@@ -131,7 +131,7 @@ class PolicyMatchService
      *   primaryName: string
      * }
      *
-     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function match(
         string $entityText,
@@ -238,7 +238,7 @@ class PolicyMatchService
      *
      * @return bool
      *
-     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function entityMatchesAnyRule(
         array $matchRules,
@@ -634,7 +634,7 @@ class PolicyMatchService
      *
      * @return void
      *
-     * @spec openspec/changes/entity-publication-policies/specs/entity-publication-policies/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function invalidateCache(): void
     {

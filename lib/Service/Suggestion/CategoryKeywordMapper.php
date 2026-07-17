@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ namespace OCA\DocuDesk\Service\Suggestion;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+ * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
 class CategoryKeywordMapper
 {
@@ -62,7 +62,7 @@ class CategoryKeywordMapper
      * @return array<string, mixed>|null The matched suggestion (`{code, label, confidence, rationale}`),
      *         or null when no enabled rule matches.
      *
-     * @spec openspec/changes/ai-gl-account-suggestion/specs/ai-gl-account-suggestion/spec.md
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
      */
     public function match(string $text, array $rules): ?array
     {

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
+ * @spec openspec/specs/template-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -65,7 +65,7 @@ class TemplatePreviewService
      *
      * @throws Exception If rendering fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
+     * @spec openspec/specs/template-management/spec.md
      */
     public function preview(string $content, array $data): string
     {
@@ -93,7 +93,7 @@ class TemplatePreviewService
      *
      * @throws Exception If the template is not found or rendering fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-67
+     * @spec openspec/specs/template-management/spec.md
      */
     public function previewTemplate(string $templateId, array $data): string
     {

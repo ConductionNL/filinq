@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class Pdfa3ConversionController extends Controller
 {
@@ -97,7 +97,7 @@ class Pdfa3ConversionController extends Controller
      *
      * @return DataDownloadResponse|JSONResponse PDF/A-3 download or a typed error response.
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     #[NoAdminRequired]
     public function convert(): DataDownloadResponse | JSONResponse

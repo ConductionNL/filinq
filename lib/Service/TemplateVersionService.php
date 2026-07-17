@@ -89,7 +89,7 @@ class TemplateVersionService
      *
      * @throws Exception If version creation fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function createVersion(
         string $templateId,
@@ -140,7 +140,7 @@ class TemplateVersionService
      *
      * @throws Exception If listing fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function getVersions(string $templateId, int $limit=20, int $offset=0): array
     {
@@ -173,7 +173,7 @@ class TemplateVersionService
      *
      * @throws Exception If the version is not found
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function getVersion(string $versionId): array
     {
@@ -209,7 +209,7 @@ class TemplateVersionService
      *
      * @throws Exception If counting fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function getNextVersionNumber(string $templateId): int
     {
@@ -238,7 +238,7 @@ class TemplateVersionService
      *
      * @throws Exception If restore fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     public function restoreVersion(
         string $templateId,
@@ -283,7 +283,7 @@ class TemplateVersionService
      *
      * @throws Exception If either version is not found
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-2
+     * @spec openspec/specs/template-management/spec.md
      */
     public function getDiff(string $versionIdFrom, string $versionIdTo): array
     {

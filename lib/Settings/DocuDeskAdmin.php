@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+ * @spec openspec/specs/admin-settings/spec.md
  *
  * DocuDesk is free software: you can redistribute it and/or modify
  * it under the terms of the European Union Public License (EUPL),
@@ -89,7 +89,7 @@ class DocuDeskAdmin implements IDelegatedSettings
      * @psalm-return   TemplateResponse
      * @phpstan-return TemplateResponse
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getForm(): TemplateResponse
     {
@@ -114,7 +114,7 @@ class DocuDeskAdmin implements IDelegatedSettings
      * @psalm-return   string
      * @phpstan-return string
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getSection(): string
     {
@@ -130,7 +130,7 @@ class DocuDeskAdmin implements IDelegatedSettings
      * @psalm-return   int
      * @phpstan-return int
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-34
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getPriority(): int
     {

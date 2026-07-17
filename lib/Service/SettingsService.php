@@ -15,10 +15,10 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -172,7 +172,7 @@ class SettingsService
      *
      * @throws \RuntimeException If the service is not available
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
@@ -196,7 +196,7 @@ class SettingsService
      *
      * @throws \RuntimeException If initialization fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function initialize(): array
     {
@@ -209,7 +209,7 @@ class SettingsService
      *
      * @return array<string, mixed> Feature toggle settings
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-66
+     * @spec openspec/specs/admin-settings/spec.md
      */
     private function loadFeatureToggles(): array
     {
@@ -311,7 +311,7 @@ class SettingsService
      *
      * @throws RuntimeException If settings retrieval fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-65
+     * @spec openspec/specs/admin-settings/spec.md
      * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.3
      */
     public function getAllSettings(): array
@@ -413,7 +413,7 @@ class SettingsService
      *
      * @throws \RuntimeException If settings update fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-27
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function updateSettings(array $data): array
     {

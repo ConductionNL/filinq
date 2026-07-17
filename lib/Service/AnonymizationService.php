@@ -18,12 +18,12 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
- * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
+ * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-4
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
@@ -55,7 +55,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+ * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  */
 class AnonymizationService
@@ -157,7 +157,7 @@ class AnonymizationService
      *
      * @throws \RuntimeException If OpenRegister is not available
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-35
+     * @spec openspec/specs/anonymization/spec.md
      */
     private function getOpenRegisterService(string $className): mixed
     {
@@ -186,8 +186,8 @@ class AnonymizationService
      * @throws Exception If extraction or detection fails
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-3
-     * @spec openspec/changes/enhanced-anonymization/specs/anonymization/spec.md
+     * @spec openspec/specs/anonymization/spec.md
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function extractAndDetectEntities(int $fileId): array
     {
@@ -395,7 +395,7 @@ class AnonymizationService
      *                                    missing or invalid overrides for high-confidence matches).
      *
      * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-4
+     * @spec openspec/specs/anonymization/spec.md
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
      * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
      * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3

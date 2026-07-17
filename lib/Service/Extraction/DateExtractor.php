@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+ * @spec openspec/specs/financial-document-field-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -85,7 +85,7 @@ class DateExtractor
      * @return array{value: string|null, confidence: float} The ISO 8601 date
      *         and its confidence, or a null value with confidence 0.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function extractLabelled(string $text, array $labels): array
     {
@@ -124,7 +124,7 @@ class DateExtractor
      *
      * @return array<int, array{value: string, confidence: float}> Dates found.
      *
-     * @spec openspec/changes/financial-document-field-extraction/specs/financial-document-field-extraction/spec.md
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
      */
     public function extractAll(string $text): array
     {

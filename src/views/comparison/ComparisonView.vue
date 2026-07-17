@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+@spec openspec/specs/document-comparison/spec.md
 -->
 
 <template>
@@ -119,7 +119,7 @@ export default {
 		 * Whether both subjects have a file id selected.
 		 *
 		 * @return {boolean} True when comparison can run.
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		canCompare() {
 			return this.leftFileId !== '' && this.rightFileId !== ''
@@ -128,7 +128,7 @@ export default {
 		 * Advisory list of entities that produced no change hunk.
 		 *
 		 * @return {Array} The unredacted-entities list.
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		unredactedEntities() {
 			return (this.result && this.result.unredactedEntities) || []
@@ -138,7 +138,7 @@ export default {
 	 * Auto-run the comparison when both subjects are preselected (shortcut).
 	 *
 	 * @return {void}
-	 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+	 * @spec openspec/specs/document-comparison/spec.md
 	 */
 	mounted() {
 		if (this.canCompare) {
@@ -152,7 +152,7 @@ export default {
 		 * @param {string|number} fileId  File id.
 		 * @param {string|number} version Optional version timestamp.
 		 * @return {object} The subject payload.
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		buildSubject(fileId, version) {
 			const subject = { fileId: Number(fileId) }
@@ -165,7 +165,7 @@ export default {
 		 * Request the structured comparison from the backend and store the result.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		async runComparison() {
 			this.loading = true
@@ -189,7 +189,7 @@ export default {
 		 * @param {object} hunk A diff hunk.
 		 * @param {string} side 'left' or 'right'.
 		 * @return {string} The CSS class string.
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		hunkClass(hunk, side) {
 			const base = 'comparison-view__hunk'
@@ -213,7 +213,7 @@ export default {
 		 * @param {string} source 'left' or 'right' (the pane that scrolled).
 		 * @param {Event}  event  The scroll event.
 		 * @return {void}
-		 * @spec openspec/changes/document-comparison/specs/document-comparison/spec.md
+		 * @spec openspec/specs/document-comparison/spec.md
 		 */
 		syncScroll(source, event) {
 			if (this.syncing) {

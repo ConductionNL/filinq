@@ -15,8 +15,8 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+ * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -142,7 +142,7 @@ class SettingsInitializer
      *
      * @throws \RuntimeException If settings loading fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-63
+     * @spec openspec/specs/admin-settings/spec.md
      */
     private function loadSettings(): array
     {
@@ -183,7 +183,7 @@ class SettingsInitializer
      *
      * @throws \RuntimeException If initialization fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-64
+     * @spec openspec/specs/admin-settings/spec.md
      */
     public function initialize(): array
     {
@@ -276,7 +276,7 @@ class SettingsInitializer
      *
      * @return void
      *
-     * @spec openspec/changes/retrofit-2026-05-24-template-management/tasks.md#task-1
+     * @spec openspec/specs/template-management/spec.md
      */
     private function provisionTemplateVersionConfig(): void
     {

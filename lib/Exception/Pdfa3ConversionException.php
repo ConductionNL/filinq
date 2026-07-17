@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+ * @spec openspec/specs/pdfa3-conversion/spec.md
  */
 class Pdfa3ConversionException extends RuntimeException
 {
@@ -135,7 +135,7 @@ class Pdfa3ConversionException extends RuntimeException
      *
      * @return string One of the REASON_* constants.
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function getReason(): string
     {
@@ -148,7 +148,7 @@ class Pdfa3ConversionException extends RuntimeException
      *
      * @return string
      *
-     * @spec openspec/changes/pdfa3-conversion/specs/pdfa3-conversion/spec.md
+     * @spec openspec/specs/pdfa3-conversion/spec.md
      */
     public function getAdminHint(): string
     {

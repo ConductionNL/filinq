@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.DocuDesk.app
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+ * @spec openspec/specs/anonymization/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -64,7 +64,7 @@ class FileUploadService
      *
      * @throws Exception If no user is logged in
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function getCurrentUserId(): string
     {
@@ -84,7 +84,7 @@ class FileUploadService
      *
      * @throws Exception If folder creation fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function getDocuDeskFolder(): \OCP\Files\Folder
     {
@@ -112,7 +112,7 @@ class FileUploadService
      *
      * @return string A unique file name
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function resolveUniqueFileName(\OCP\Files\Folder $folder, string $fileName): string
     {
@@ -144,7 +144,7 @@ class FileUploadService
      *
      * @throws Exception If the upload fails
      *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-docudesk/tasks.md#task-2
+     * @spec openspec/specs/anonymization/spec.md
      */
     public function uploadFile(string $fileName, string $fileContent): array
     {

@@ -106,6 +106,13 @@ class ValidSignProvider implements SigningProviderInterface
     /**
      * Check status of a ValidSign signing flow (stub)
      *
+     * Orphan-auth seam (hydra gate-6): a provider-contract status *read*, not
+     * an authorization guard. No native caller — this is the external-provider
+     * status-poll extension point (SigningProviderInterface::checkStatus),
+     * currently a stub pending ValidSign integration; the live status surface
+     * is OR's ApprovalChain via `SigningController::showRequest`. Classified as
+     * a legit plugin seam in openspec/changes/orphan-auth-remediation/design.md.
+     *
      * @param string $externalId The ValidSign package identifier
      *
      * @return array<string, mixed> The signing flow status
@@ -186,7 +193,7 @@ class ValidSignProvider implements SigningProviderInterface
      *
      * @throws RuntimeException Always — the ValidSign artifact flow is not wired.
      *
-     * @spec openspec/changes/native-ses-signature-embedding/specs/document-signing/spec.md
+     * @spec openspec/specs/document-signing/spec.md
      */
     public function produceSignedArtifact(string $documentContent, array $context): string
     {
