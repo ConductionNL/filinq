@@ -1,8 +1,12 @@
 ---
-status: done
+status: in-progress
 ---
 
 # PDF Generation
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [pdfua-accessible-output](../../changes/pdfua-accessible-output/) _(active)_ — adds tagged, accessible PDF output (PDF/UA-1 target): `accessible` option routed through the LibreOffice accessible-export mode with mandatory language/title metadata and honest non-conformance failure on the mPDF path (REQ-DDPUA-001/002) (kind: code)
 
 ## Purpose
 
