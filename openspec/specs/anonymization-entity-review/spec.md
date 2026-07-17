@@ -1,6 +1,11 @@
 ---
-status: done
+status: in-progress
 ---
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [anonymization-review-workbench](../../changes/anonymization-review-workbench/) _(active)_ — consolidated-entities response gains `standingConsentMatch` (sibling of `prohibitionMatch`, pre-excluding matched entities) and the batch anonymize commit gains the per-document checked-gate precondition (kind: code)
 
 ## Purpose
 

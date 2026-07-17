@@ -1,8 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # OCR Document Scanning
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [ocr-trigger-surface](../../changes/ocr-trigger-surface/) _(active)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
 
 ## Purpose
 

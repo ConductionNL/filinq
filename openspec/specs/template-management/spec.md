@@ -1,5 +1,5 @@
 ---
-status: done
+status: in-progress
 retrofit_extensions:
   - REQ-TMPL-08
   - REQ-TMPL-09
@@ -9,6 +9,10 @@ retrofit_extensions:
 ---
 
 # Template Management
+
+**Status**: in-progress
+**OpenSpec changes**:
+- [office-template-authoring](../../changes/office-template-authoring/) _(active)_ — office-file-native templates: `templateType`/source-file data-model extension (REQ-DDOTA-006) and versioning/lock/preview/duplicate parity for office templates (REQ-DDOTA-007) (kind: code)
 
 ## Purpose
 

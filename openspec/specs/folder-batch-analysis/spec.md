@@ -1,8 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # folder-batch-analysis Specification
+
+**Status**: in-progress
+**Scope**: docudesk
+**OpenSpec changes**:
+- [redaction-at-scale](../../changes/redaction-at-scale/) _(active)_ — single-run `FolderExtractionJob` replaced by chunked, cancellable coordinator work units; optional `recursive` dossier enumeration with relative paths (kind: code)
 
 ## Purpose
 Creates anonymisation batches from the files already present in a Nextcloud folder, accepting either a folder ID or a folder path and enumerating the folder's direct file children. The batch stores both the rename-proof folder ID and a human-readable path snapshot, resolves multi-mount folder IDs by preferring a writable node, and processes the files through a background extraction job and entity-consolidation service subject to admin-configurable size limits. This lets operators run analysis and anonymisation over an existing document folder in one batch operation.
