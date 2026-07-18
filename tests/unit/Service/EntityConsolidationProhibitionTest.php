@@ -193,7 +193,7 @@ class EntityConsolidationProhibitionTest extends TestCase
     public function testProhibitionMatchIsNullWhenNoRules(): void
     {
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(null);
+        $policyMatch->method('matchProhibitionHint')->willReturn(null);
 
         $basesResolver = $this->createMock(BasesResolverService::class);
         $basesResolver->method('resolveBasesForBatch')->willReturn([]);
@@ -222,7 +222,7 @@ class EntityConsolidationProhibitionTest extends TestCase
     public function testProhibitionMatchIsPopulatedWhenRuleMatches(): void
     {
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(
+        $policyMatch->method('matchProhibitionHint')->willReturn(
                 [
                     'ruleId'   => 'R-X',
                     'ruleName' => 'Beschermde Getuige A',
@@ -263,7 +263,7 @@ class EntityConsolidationProhibitionTest extends TestCase
         $this->appConfig->method('getValueFloat')->willReturn(0.85);
 
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(
+        $policyMatch->method('matchProhibitionHint')->willReturn(
                 [
                     'ruleId'   => 'R-boundary',
                     'ruleName' => 'Boundary Rule',
@@ -297,7 +297,7 @@ class EntityConsolidationProhibitionTest extends TestCase
     public function testHighConfidenceFalseBelowThreshold(): void
     {
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(
+        $policyMatch->method('matchProhibitionHint')->willReturn(
                 [
                     'ruleId'   => 'R-Y',
                     'ruleName' => 'Low Confidence Rule',
@@ -331,7 +331,7 @@ class EntityConsolidationProhibitionTest extends TestCase
     public function testSuggestedBasesAttachedToEachEntity(): void
     {
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(null);
+        $policyMatch->method('matchProhibitionHint')->willReturn(null);
 
         $basesResolver = $this->createMock(BasesResolverService::class);
         $basesResolver->method('resolveBasesForBatch')->willReturn(['uuid-base-a', 'uuid-base-b']);
@@ -366,7 +366,7 @@ class EntityConsolidationProhibitionTest extends TestCase
     public function testPreChangeFieldsRemainIntact(): void
     {
         $policyMatch = $this->createMock(PolicyMatchService::class);
-        $policyMatch->method('matchProhibition')->willReturn(null);
+        $policyMatch->method('matchProhibitionHint')->willReturn(null);
 
         $basesResolver = $this->createMock(BasesResolverService::class);
         $basesResolver->method('resolveBasesForBatch')->willReturn([]);

@@ -52,6 +52,7 @@ import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PrintPreview from './components/PrintPreview.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import VersionsView from './views/versions/VersionsView.vue'
+import ComponentGallery from './views/gallery/ComponentGallery.vue'
 
 export default {
 	DashboardIndex: { kind: 'page', component: DashboardIndex },
@@ -67,4 +68,5 @@ export default {
 	PrintPreview: { kind: 'page', component: PrintPreview },
 	ComparisonView: { kind: 'page', component: ComparisonView },
 	VersionsView: { kind: 'page', component: VersionsView },
+	ComponentGallery: { kind: 'page', component: ComponentGallery },
 }

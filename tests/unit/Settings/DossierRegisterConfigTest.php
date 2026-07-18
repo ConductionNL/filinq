@@ -89,15 +89,32 @@ class DossierRegisterConfigTest extends TestCase
         $this->assertArrayHasKey('description', $base['properties']);
     }
 
-    public function testSeedObjectsIncludeAllSixCanonicalGrondslagen(): void
+    public function testSeedObjectsIncludeAllCanonicalWooArt5Grondslagen(): void
     {
+        // The merge adopted Robert's canonical grondslagen taxonomy: the Woo
+        // Art. 5 A–S legend (uitzonderingsgronden), which supersedes
+        // development's earlier six ad-hoc bases. The seed slugs follow the
+        // article numbering (art-5-1-1-a … art-5-2-2).
         $expectedSlugs = [
-            'persoonsgegevens',
-            'bijzondere-persoonsgegevens',
-            'strafrechtelijk',
-            'bedrijfs-fabricagegegevens',
-            'onevenredige-benadeling',
-            'nationale-veiligheid',
+            'art-5-1-1-a',
+            'art-5-1-1-b',
+            'art-5-1-1-c',
+            'art-5-1-1-d',
+            'art-5-1-1-e',
+            'art-5-1-2-a',
+            'art-5-1-2-b',
+            'art-5-1-2-c',
+            'art-5-1-2-d',
+            'art-5-1-2-e',
+            'art-5-1-2-f',
+            'art-5-1-2-g',
+            'art-5-1-2-h',
+            'art-5-1-2-i',
+            'art-5-1-4',
+            'art-5-1-5',
+            'art-5-1-6',
+            'art-5-2-1',
+            'art-5-2-2',
         ];
 
         $baseSeeds = $this->seedObjectsForSchema('base');
@@ -111,7 +128,11 @@ class DossierRegisterConfigTest extends TestCase
             $this->assertContains($slug, $foundSlugs, "Seed base '$slug' MUST be present");
         }
 
-        $this->assertCount(6, $baseSeeds, 'Exactly six canonical base seed objects expected');
+        $this->assertCount(
+            count($expectedSlugs),
+            $baseSeeds,
+            'The canonical Woo Art. 5 A–S legend must seed exactly '.count($expectedSlugs).' base objects'
+        );
     }
 
     public function testFiveOrMoreSeedDossiersExist(): void

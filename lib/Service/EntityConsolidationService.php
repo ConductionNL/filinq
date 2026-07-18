@@ -210,7 +210,7 @@ class EntityConsolidationService
     private function computeProhibitionMatch(array $entity, float $threshold): ?array
     {
         try {
-            $match = $this->policyMatch->matchProhibition(
+            $match = $this->policyMatch->matchProhibitionHint(
                 entityType: (string) ($entity['type'] ?? ''),
                 entityValue: (string) ($entity['value'] ?? '')
             );

@@ -40,8 +40,12 @@ Batch state is persisted in Nextcloud `ICache` with a 2-hour TTL. No batch data 
 | `POST` | `/api/anonymization/batch/{batchId}/extract` | Extract next unprocessed file in batch |
 | `GET` | `/api/anonymization/batch/{batchId}/status` | Polling endpoint — returns batch status and per-file progress |
 | `GET` | `/api/anonymization/batch/{batchId}/entities` | Consolidated entity list for review |
-| `POST` | `/api/anonymization/batch/{batchId}/anonymize` | Apply anonymization with reviewed entity list |
+| `POST` | `/api/anonymization/batch/{batchId}/anonymize` | Apply anonymization with reviewed entity list. Body supports `entities`, `outputFormat`, `appendBasisSummary`, and `scope` (default `dossier`). |
 | `GET` | `/api/anonymization/batch/{batchId}/report` | Download CSV audit report (post-completion) |
+
+### Placeholder-numbering scope
+
+A batch **is** a folder/dossier, so `POST /api/anonymization/batch/{batchId}/anonymize` defaults to `scope: "dossier"`: a given entity gets the same scope-local placeholder number across **all** files in the batch, so the redacted set reads as one unit. Pass `scope: "document"` to number each file independently instead. See [Placeholder-numbering scope](./anonymization.md#placeholder-numbering-scope-scope) on the anonymization page for the full semantics.
 
 ## Audit Report
 

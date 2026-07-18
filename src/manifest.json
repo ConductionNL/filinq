@@ -192,6 +192,14 @@
 			"_note": "Document versions (Versies) — thin consumer of Nextcloud files_versions. Part of the ADR-001 document-detail family; standalone deep-linked page (?fileId=) like Comparison, no nav item. Lists/opens/downloads/restores/compares a document's file versions."
 		},
 		{
+			"id": "ComponentGallery",
+			"route": "/gallery",
+			"type": "custom",
+			"title": "Component gallery",
+			"component": "ComponentGallery",
+			"_note": "Living design-system reference for the reusable Dd* components (each shown with its variants/states). Self-contained view; standalone deep-linked page (/gallery), no nav item, like PrintPreview/Comparison/Versions."
+		},
+		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
 			"type": "roadmap",

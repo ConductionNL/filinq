@@ -146,6 +146,12 @@ class Application extends App implements IBootstrap
             static function ($c): PdfConversionService {
                 return new PdfConversionService(
                     backends: [
+                        // OURS DI style ($c->get) preserved — autowires each
+                        // backend, keeps development's LibreOfficeHeadlessBackend
+                        // fallback, and pulls in Robert's EmlBackend (which now
+                        // autowires EmlPdfAssemblyService via its constructor).
+                        // Robert's explicit `new` variant referenced an undefined
+                        // $conversionManager and dropped the LibreOffice backend.
                         $c->get(OfficeAppBackend::class),
                         $c->get(LibreOfficeHeadlessBackend::class),
                         $c->get(PhpWordBackend::class),
@@ -257,10 +263,16 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @spec openspec/specs/adopt-apphost/spec.md
+     *
+     * Health/MetricsController extend OpenRegister AppHost base classes that
+     * are absent during static analysis, so Psalm sees no constructor on them
+     * (TooManyArguments) and cannot see $container used inside the flagged
+     * construction (UnusedClosureParam). Both resolve at runtime.
+     *
+     * @psalm-suppress TooManyArguments, UnusedClosureParam
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {
-        // @psalm-suppress UnusedClosureParam, TooManyArguments
         $context->registerService(
             HealthController::class,
             static function (ContainerInterface $container): HealthController {
@@ -273,7 +285,6 @@ class Application extends App implements IBootstrap
             }
         );
 
-        // @psalm-suppress TooManyArguments
         $context->registerService(
             MetricsController::class,
             static function (ContainerInterface $container): MetricsController {

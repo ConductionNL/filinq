@@ -62,6 +62,14 @@ class GrondslagProposalService
     public const CONFIG_KEY = 'docudesk.grondslagen.entity_type_bases';
 
     /**
+     * App config key holding the JSON array of entity types left enabled for
+     * automatic detection. Unset or empty means "all types" (the default).
+     *
+     * @var string
+     */
+    public const ENABLED_TYPES_CONFIG_KEY = 'docudesk.anonymisation.enabled_entity_types';
+
+    /**
      * The DocuDesk app id, used as the app-config namespace.
      *
      * @var string
@@ -98,6 +106,7 @@ class GrondslagProposalService
         'DATE',
         'BSN',
         'IBAN',
+        'KENTEKEN',
         // Additional GLiNER targets emitted by the GPU flavor.
         'STREET_ADDRESS',
         'NORP',
@@ -105,7 +114,6 @@ class GrondslagProposalService
         'INCOME',
         'EDUCATION_LEVEL',
     ];
-
 
     /**
      * Constructor for GrondslagProposalService.
@@ -126,7 +134,6 @@ class GrondslagProposalService
 
     }//end __construct()
 
-
     /**
      * Return the entity types selectable in the settings UI.
      *
@@ -141,6 +148,88 @@ class GrondslagProposalService
 
     }//end getSelectableEntityTypes()
 
+    /**
+     * Return the entity types currently enabled for automatic detection.
+     *
+     * Backs the settings selector, which is all-on by default: when nothing has
+     * been stored yet every curated type is returned so the UI shows them all
+     * checked. A stored selection is sanitised against the curated list so an
+     * unknown/stale type can never surface in the UI.
+     *
+     * @return array<int, string> Enabled entity type identifiers.
+     */
+    public function getEnabledEntityTypes(): array
+    {
+        $stored = $this->readEnabledEntityTypes();
+        if ($stored === null) {
+            return self::CURATED_ENTITY_TYPES;
+        }
+
+        return $stored;
+
+    }//end getEnabledEntityTypes()
+
+    /**
+     * Return the entity-type whitelist to hand to OpenRegister's analysis call.
+     *
+     * Null means "do not constrain detection" (detect every type) and is
+     * returned whenever the operator has everything enabled — either because
+     * nothing was stored or because the stored selection covers the full
+     * curated set. Only a genuine subset yields a whitelist, keeping the
+     * default behaviour identical to today and avoiding a filter that would
+     * needlessly narrow the detector's vocabulary.
+     *
+     * @return array<int, string>|null Entity type whitelist, or null for "all".
+     */
+    public function getEntityTypeWhitelist(): ?array
+    {
+        $stored = $this->readEnabledEntityTypes();
+        if ($stored === null || count($stored) === count(self::CURATED_ENTITY_TYPES)) {
+            return null;
+        }
+
+        return $stored;
+
+    }//end getEntityTypeWhitelist()
+
+    /**
+     * Read and sanitise the stored enabled-types selection.
+     *
+     * Returns null when unset, empty, malformed, or reduced to nothing after
+     * sanitisation — every one of those cases means "all types". Otherwise the
+     * stored ids are intersected with the curated list and returned in curated
+     * order, dropping unknown/stale/duplicate entries.
+     *
+     * @return array<int, string>|null Sanitised enabled subset, or null for "all".
+     */
+    private function readEnabledEntityTypes(): ?array
+    {
+        $raw = $this->config->getValueString(self::APP_ID, self::ENABLED_TYPES_CONFIG_KEY, '');
+        if ($raw === '') {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false) {
+            return null;
+        }
+
+        $enabled = array_values(
+            array_filter(
+                self::CURATED_ENTITY_TYPES,
+                static function (string $type) use ($decoded): bool {
+                    return in_array($type, $decoded, true);
+                }
+            )
+        );
+
+        if (count($enabled) === 0) {
+            return null;
+        }
+
+        return $enabled;
+
+    }//end readEnabledEntityTypes()
 
     /**
      * Return the configured entity-type → base-slug[] mapping.
@@ -176,7 +265,6 @@ class GrondslagProposalService
         return $mapping;
 
     }//end getMapping()
-
 
     /**
      * List the available `base` (grondslag) records for the settings selector.
@@ -239,7 +327,6 @@ class GrondslagProposalService
 
     }//end getAvailableBases()
 
-
     /**
      * Pre-fill proposed bases onto a file's freshly-detected entity relations.
      *
@@ -288,7 +375,6 @@ class GrondslagProposalService
 
     }//end applyProposals()
 
-
     /**
      * Pre-fill the proposed bases for a single detection, when applicable.
      *
@@ -333,7 +419,6 @@ class GrondslagProposalService
         }//end try
 
     }//end proposeForDetection()
-
 
     /**
      * Merge each relation's current `bases` into the detection rows.
@@ -382,7 +467,6 @@ class GrondslagProposalService
 
     }//end enrichEntitiesWithBases()
 
-
     /**
      * Resolve an OpenRegister service/mapper by class name, or null.
      *
@@ -410,7 +494,6 @@ class GrondslagProposalService
         }
 
     }//end resolveOpenRegister()
-
 
     /**
      * Normalise an ObjectService search result into a list of object arrays.
@@ -446,7 +529,6 @@ class GrondslagProposalService
         return $out;
 
     }//end extractObjects()
-
 
     /**
      * Normalise a single search-result item to an array, or null to skip it.
@@ -485,6 +567,4 @@ class GrondslagProposalService
         return null;
 
     }//end normaliseSearchItem()
-
-
 }//end class

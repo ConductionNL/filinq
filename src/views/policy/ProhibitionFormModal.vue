@@ -59,8 +59,8 @@ export default {
 		},
 		dialogTitle() {
 			return this.editing
-				? t('docudesk', 'Edit prohibition')
-				: t('docudesk', 'Add prohibition')
+				? t('docudesk', 'Edit publish-never rule')
+				: t('docudesk', 'Add publish-never rule')
 		},
 		canSubmit() {
 			return this.form.primaryName.trim() !== ''

@@ -175,4 +175,58 @@ class PdfServiceTest extends TestCase
 
     }//end testRenderPdfWithPdfaOptionProducesPdfA3b()
 
+    /**
+     * The print CSS must NOT force whole tables onto a single page.
+     *
+     * `page-break-inside: avoid` on the `table` element made mPDF cram a
+     * large data table (e.g. the 696-row grondslagen summary) onto one
+     * page, rendering it unreadable. The avoid rule must apply to atomic
+     * blocks (figure/img/pre/blockquote) but not to `table`.
+     *
+     * @return void
+     */
+    public function testBuildPrintCssDoesNotKeepWholeTablesOnOnePage(): void
+    {
+        $css = $this->service->buildPrintCss('A4', 'P');
+
+        // The old, broken selector grouped `table` with the atomic blocks.
+        $this->assertStringNotContainsString(
+            'table, figure',
+            $css,
+            'The print CSS must not apply page-break-inside: avoid to whole tables.'
+        );
+
+        // The atomic-block avoid rule must still be present.
+        $this->assertStringContainsString('figure, img, pre, blockquote', $css);
+
+    }//end testBuildPrintCssDoesNotKeepWholeTablesOnOnePage()
+
+
+    /**
+     * Large tables must paginate cleanly: rows stay intact and the column
+     * header repeats on every page the table spans.
+     *
+     * @return void
+     */
+    public function testBuildPrintCssPaginatesLargeTables(): void
+    {
+        $css = $this->service->buildPrintCss('A4', 'P');
+
+        // Rows are kept whole so cells never split across a page boundary.
+        $this->assertMatchesRegularExpression(
+            '/tr\s*\{[^}]*page-break-inside:\s*avoid/s',
+            $css,
+            'Table rows must carry page-break-inside: avoid.'
+        );
+
+        // mPDF repeats <thead> on each page when display is table-header-group.
+        $this->assertMatchesRegularExpression(
+            '/thead\s*\{[^}]*display:\s*table-header-group/s',
+            $css,
+            'Table headers must repeat across pages via table-header-group.'
+        );
+
+    }//end testBuildPrintCssPaginatesLargeTables()
+
+
 }//end class

@@ -9,7 +9,7 @@
 		</div>
 		<div v-if="signingStore.verificationResult" class="results">
 			<p><strong>{{ t('docudesk', 'File') }}:</strong> {{ signingStore.verificationResult.fileName }}</p>
-			<p><strong>{{ t('docudesk', 'Valid') }}:</strong> {{ signingStore.verificationResult.isValid ? 'Yes' : 'No' }}</p>
+			<p><strong>{{ t('docudesk', 'Valid') }}:</strong> {{ signingStore.verificationResult.isValid ? t('docudesk', 'Yes') : t('docudesk', 'No') }}</p>
 			<p><strong>{{ t('docudesk', 'Signatures') }}:</strong> {{ signingStore.verificationResult.signatures.length }}</p>
 		</div>
 	</div>

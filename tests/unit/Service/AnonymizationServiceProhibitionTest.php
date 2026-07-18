@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\PolicyMatchService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -34,11 +35,15 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for AnonymizationService's prohibition-match attachment
+ * Tests for AnonymizationService's prohibition-match attachment.
  *
- * Uses a partial-mock strategy: container returns a fake PolicyMatchService
- * so the private attachProhibitionMatches / computeProhibitionMatch logic
- * is exercised via extractAndDetectEntities().
+ * The merge of Robert's branch REMOVED development's narrow private helpers
+ * `attachProhibitionMatches` / `computeProhibitionMatch`. Their behaviour is
+ * superseded by the private `applyPolicyDecisions()` pass (which consults
+ * `PolicyMatchService::match()` and `PolicyMatchService::highConfidenceThreshold()`).
+ * These tests therefore exercise that SURVIVING behaviour through the public
+ * `extractAndDetectEntities()` entry point: every returned entity carries a
+ * read-only `prohibitionMatch` hint (null, or `{ruleId, ruleName, highConfidence}`).
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -117,34 +122,51 @@ class AnonymizationServiceProhibitionTest extends TestCase
             consentService: $this->createMock(originalClassName: ConsentService::class),
             grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
             fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class),
-            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class)
+            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class),
+            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class)
         );
 
     }//end makeService()
 
 
     /**
-     * Stub the container to return mock OR services + an optional PolicyMatchService
+     * Stub the container to return the OR services + an optional PolicyMatchService.
      *
-     * @param mixed $policyService PolicyMatchService mock or null (not registered)
-     * @param array $rawEntities   Entities returned by EntityRelationMapper
+     * Mirrors the merged `extractAndDetectEntities()` container dependencies:
+     * TextExtractionService, GrondslagProposalService, EntityRelationMapper and
+     * (optionally) PolicyMatchService — the last is what `applyPolicyDecisions()`
+     * resolves and is omitted (throws on resolve) to simulate an unavailable
+     * policy layer.
+     *
+     * @param FakePolicyMatchService|null $policyService Fake matcher or null (not registered).
+     * @param array                       $rawEntities   Entities returned by EntityRelationMapper.
      *
      * @return void
      */
-    private function stubContainerForExtract(mixed $policyService, array $rawEntities): void
+    private function stubContainerForExtract(?FakePolicyMatchService $policyService, array $rawEntities): void
     {
         $mockExtractor = $this->createMock(\OCA\OpenRegister\Service\TextExtractionService::class);
-        $mockMapper    = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
+
+        $mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
         $mockMapper->method('findEntitiesForFile')->willReturn($rawEntities);
 
+        $mockGrondslag = $this->createMock(\OCA\DocuDesk\Service\GrondslagProposalService::class);
+        $mockGrondslag->method('getEntityTypeWhitelist')->willReturn(null);
+        // enrichEntitiesWithBases must return its entities argument unchanged.
+        $mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
+
         $this->mockContainer->method('get')->willReturnCallback(
-            function (string $class) use ($mockExtractor, $mockMapper, $policyService) {
+            function (string $class) use ($mockExtractor, $mockMapper, $mockGrondslag, $policyService) {
                 if ($class === 'OCA\OpenRegister\Service\TextExtractionService') {
                     return $mockExtractor;
                 }
 
                 if ($class === 'OCA\OpenRegister\Db\EntityRelationMapper') {
                     return $mockMapper;
+                }
+
+                if ($class === 'OCA\DocuDesk\Service\GrondslagProposalService') {
+                    return $mockGrondslag;
                 }
 
                 if ($class === 'OCA\DocuDesk\Service\PolicyMatchService') {
@@ -163,7 +185,26 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * When PolicyMatchService is not available, all prohibitionMatch fields are null
+     * Build a fake matcher whose match() returns a prohibition (or null) and
+     * whose highConfidenceThreshold() returns the given threshold.
+     *
+     * @param array|null $matchResult The match() return (kind=prohibition) or null.
+     * @param float      $threshold   The high-confidence threshold.
+     *
+     * @return FakePolicyMatchService
+     */
+    private function makeMatcher(?array $matchResult, float $threshold=0.85): FakePolicyMatchService
+    {
+        $matcher              = new FakePolicyMatchService();
+        $matcher->matchResult = $matchResult;
+        $matcher->threshold   = $threshold;
+        return $matcher;
+
+    }//end makeMatcher()
+
+
+    /**
+     * When PolicyMatchService is not available, all prohibitionMatch fields are null.
      *
      * @return void
      *
@@ -176,7 +217,6 @@ class AnonymizationServiceProhibitionTest extends TestCase
         ];
 
         $this->stubContainerForExtract(policyService: null, rawEntities: $rawEntities);
-        $this->mockAppConfig->method('getValueFloat')->willReturn(0.85);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
@@ -188,7 +228,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * When a prohibition rule matches and confidence is above threshold, highConfidence is true
+     * When a prohibition rule matches and confidence is above threshold, highConfidence is true.
      *
      * @return void
      *
@@ -196,17 +236,21 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     public function testProhibitionMatchHighConfidenceWhenAboveThreshold(): void
     {
-        $mockPolicyService = $this->createMock(FakePolicyMatchService::class);
-        $mockPolicyService->method('matchProhibition')->willReturn(
-            ['ruleId' => 'R-X', 'ruleName' => 'Beschermde Getuige A']
+        $matcher = $this->makeMatcher(
+            matchResult: [
+                'kind'        => PolicyMatchService::KIND_PROHIBITION,
+                'uuid'        => 'R-X',
+                'primaryName' => 'Beschermde Getuige A',
+                'entityType'  => 'PERSON',
+            ],
+            threshold: 0.85
         );
 
         $rawEntities = [
             ['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.96],
         ];
 
-        $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
-        $this->mockAppConfig->method('getValueFloat')->willReturn(0.85);
+        $this->stubContainerForExtract(policyService: $matcher, rawEntities: $rawEntities);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
@@ -221,7 +265,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * When confidence is below threshold, highConfidence is false
+     * When confidence is below threshold, highConfidence is false.
      *
      * @return void
      *
@@ -229,17 +273,21 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     public function testProhibitionMatchLowConfidenceWhenBelowThreshold(): void
     {
-        $mockPolicyService = $this->createMock(FakePolicyMatchService::class);
-        $mockPolicyService->method('matchProhibition')->willReturn(
-            ['ruleId' => 'R-Y', 'ruleName' => 'Rule Y']
+        $matcher = $this->makeMatcher(
+            matchResult: [
+                'kind'        => PolicyMatchService::KIND_PROHIBITION,
+                'uuid'        => 'R-Y',
+                'primaryName' => 'Rule Y',
+                'entityType'  => 'PERSON',
+            ],
+            threshold: 0.85
         );
 
         $rawEntities = [
             ['entity_type' => 'PERSON', 'entity_value' => 'Jane Doe', 'confidence' => 0.62],
         ];
 
-        $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
-        $this->mockAppConfig->method('getValueFloat')->willReturn(0.85);
+        $this->stubContainerForExtract(policyService: $matcher, rawEntities: $rawEntities);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
@@ -252,7 +300,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * Threshold is inclusive: confidence exactly at threshold → highConfidence true
+     * Threshold is inclusive: confidence exactly at threshold → highConfidence true.
      *
      * @return void
      *
@@ -260,17 +308,21 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     public function testProhibitionMatchThresholdIsInclusive(): void
     {
-        $mockPolicyService = $this->createMock(FakePolicyMatchService::class);
-        $mockPolicyService->method('matchProhibition')->willReturn(
-            ['ruleId' => 'R-Z', 'ruleName' => 'Rule Z']
+        $matcher = $this->makeMatcher(
+            matchResult: [
+                'kind'        => PolicyMatchService::KIND_PROHIBITION,
+                'uuid'        => 'R-Z',
+                'primaryName' => 'Rule Z',
+                'entityType'  => 'PERSON',
+            ],
+            threshold: 0.85
         );
 
         $rawEntities = [
             ['entity_type' => 'PERSON', 'entity_value' => 'Exact Threshold', 'confidence' => 0.85],
         ];
 
-        $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
-        $this->mockAppConfig->method('getValueFloat')->willReturn(0.85);
+        $this->stubContainerForExtract(policyService: $matcher, rawEntities: $rawEntities);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
@@ -283,7 +335,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * When no rule matches, prohibitionMatch is null even when service is available
+     * When no rule matches, prohibitionMatch is null even when service is available.
      *
      * @return void
      *
@@ -291,15 +343,13 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     public function testProhibitionMatchNullWhenNoRuleMatches(): void
     {
-        $mockPolicyService = $this->createMock(FakePolicyMatchService::class);
-        $mockPolicyService->method('matchProhibition')->willReturn(null);
+        $matcher = $this->makeMatcher(matchResult: null, threshold: 0.85);
 
         $rawEntities = [
             ['entity_type' => 'LOCATION', 'entity_value' => 'Amsterdam', 'confidence' => 0.99],
         ];
 
-        $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
-        $this->mockAppConfig->method('getValueFloat')->willReturn(0.85);
+        $this->stubContainerForExtract(policyService: $matcher, rawEntities: $rawEntities);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
@@ -310,44 +360,48 @@ class AnonymizationServiceProhibitionTest extends TestCase
 
 
     /**
-     * extractAndDetectEntities reads high_confidence_threshold from IAppConfig
+     * The high-confidence threshold governs the flag and is read from the
+     * matcher (PolicyMatchService::highConfidenceThreshold, which itself reads
+     * IAppConfig). A custom 0.60 threshold makes confidence 0.70 high-confidence.
      *
      * @return void
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-7
      */
-    public function testThresholdReadFromAppConfig(): void
+    public function testThresholdReadFromMatcher(): void
     {
-        $mockPolicyService = $this->createMock(FakePolicyMatchService::class);
-        $mockPolicyService->method('matchProhibition')->willReturn(
-            ['ruleId' => 'R-1', 'ruleName' => 'Rule 1']
+        $matcher = $this->makeMatcher(
+            matchResult: [
+                'kind'        => PolicyMatchService::KIND_PROHIBITION,
+                'uuid'        => 'R-1',
+                'primaryName' => 'Rule 1',
+                'entityType'  => 'PERSON',
+            ],
+            threshold: 0.60
         );
 
         $rawEntities = [
             ['entity_type' => 'PERSON', 'entity_value' => 'Test Person', 'confidence' => 0.70],
         ];
 
-        $this->stubContainerForExtract(policyService: $mockPolicyService, rawEntities: $rawEntities);
-
-        // Use a custom threshold of 0.60 — confidence 0.70 should be high-confidence.
-        $this->mockAppConfig->expects($this->atLeastOnce())
-            ->method('getValueFloat')
-            ->with('docudesk', 'prohibition.high_confidence_threshold', 0.85)
-            ->willReturn(0.60);
+        $this->stubContainerForExtract(policyService: $matcher, rawEntities: $rawEntities);
 
         $service = $this->makeService();
         $result  = $service->extractAndDetectEntities(fileId: 1);
 
         $this->assertTrue($result['entities'][0]['prohibitionMatch']['highConfidence']);
 
-    }//end testThresholdReadFromAppConfig()
+    }//end testThresholdReadFromMatcher()
 
 
 }//end class
 
 
 /**
- * Fake PolicyMatchService interface stub for mocking
+ * Fake PolicyMatchService for the prohibition pass.
+ *
+ * Concrete (not a PHPUnit mock) so it exposes the exact merged surface
+ * `applyPolicyDecisions()` relies on: `match()` and `highConfidenceThreshold()`.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -358,20 +412,47 @@ class AnonymizationServiceProhibitionTest extends TestCase
 class FakePolicyMatchService
 {
 
+    /**
+     * The result match() should return (or null for no match).
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $matchResult = null;
 
     /**
-     * Match a prohibition rule for the given entity
+     * The high-confidence threshold to report.
      *
-     * @param string $entityType  The entity type
-     * @param string $entityValue The entity value
-     *
-     * @return array<string, string>|null Match or null
+     * @var float
      */
-    public function matchProhibition(string $entityType, string $entityValue): ?array
-    {
-        return null;
+    public float $threshold = 0.85;
 
-    }//end matchProhibition()
+
+    /**
+     * The configured high-confidence threshold.
+     *
+     * @return float
+     */
+    public function highConfidenceThreshold(): float
+    {
+        return $this->threshold;
+
+    }//end highConfidenceThreshold()
+
+
+    /**
+     * Match a detected entity against the policy layer.
+     *
+     * @param string               $entityText          The entity text.
+     * @param string               $entityType          The entity type.
+     * @param array<string, mixed> $resolvedIdentifiers Optional structured identifiers.
+     *
+     * @return array<string, mixed>|null The configured match, or null.
+     */
+    public function match(string $entityText, string $entityType, array $resolvedIdentifiers=[]): ?array
+    {
+        return $this->matchResult;
+
+    }//end match()
 
 
 }//end class

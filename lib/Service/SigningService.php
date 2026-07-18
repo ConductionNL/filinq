@@ -867,12 +867,9 @@ class SigningService
             return 'Unknown';
         }
 
-        $name = $user->getDisplayName();
-        if ($name !== '') {
-            return $name;
-        }
-
-        return $user->getUID();
+        // IUser::getDisplayName() is guaranteed non-empty by contract — it
+        // falls back to the UID itself when no display name is set.
+        return $user->getDisplayName();
 
     }//end resolveSignerLabel()
 

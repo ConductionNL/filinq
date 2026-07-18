@@ -45,6 +45,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCP\App\IAppManager;
+use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 /**
@@ -55,6 +56,11 @@ use Psr\Log\LoggerInterface;
  */
 class PolicyMatchService
 {
+
+    /**
+     * The DocuDesk app id, used as the app-config namespace.
+     */
+    private const APP_ID = 'docudesk';
 
     /**
      * Match result kind — prohibition (force anonymise).
@@ -104,14 +110,36 @@ class PolicyMatchService
      * @param LoggerInterface    $logger     Structured log sink.
      * @param ContainerInterface $container  DI container for OpenRegister lookup.
      * @param IAppManager        $appManager App manager (used to confirm OR is installed).
+     * @param IAppConfig         $config     App config (prohibition high-confidence threshold).
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager
+        private readonly IAppManager $appManager,
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
+
+    /**
+     * The confidence at or above which a prohibition match is "absolute".
+     *
+     * A prohibition match with detection confidence >= this threshold cannot be
+     * released by `force`; below it, `force` may release the skip. Read at call
+     * time so a runtime app-config change propagates without a restart. Same
+     * threshold governs `highConfidence` in the extract response and the gate.
+     *
+     * @return float The configured threshold (default 0.85).
+     */
+    public function highConfidenceThreshold(): float
+    {
+        return (float) $this->config->getValueString(
+            self::APP_ID,
+            'docudesk.prohibition.high_confidence_threshold',
+            '0.85'
+        );
+
+    }//end highConfidenceThreshold()
 
     /**
      * Match a detected entity against the policy layer.
@@ -162,6 +190,37 @@ class PolicyMatchService
         );
 
     }//end match()
+
+    /**
+     * Match a detected entity against the prohibition layer only.
+     *
+     * Unlike {@see match}, this never returns a standing-consent match: the
+     * prohibition gate (anonymisation-prohibition-gate) is read-only safety
+     * layered on generic anonymisation and MUST NOT consult standing consents.
+     * Same return shape as {@see match}.
+     *
+     * @param string               $entityText          Detected entity text.
+     * @param string               $entityType          'PERSON', 'ORGANIZATION', or 'OTHER'.
+     * @param array<string, mixed> $resolvedIdentifiers Optional structured identifiers (BSN, KvK).
+     *
+     * @return array<string, mixed>|null Prohibition match, or null when none matches.
+     *
+     * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string}
+     */
+    public function matchProhibition(
+        string $entityText,
+        string $entityType,
+        array $resolvedIdentifiers=[]
+    ): ?array {
+        return $this->firstMatchOf(
+            kind: self::KIND_PROHIBITION,
+            rules: $this->loadRules(),
+            entityText: $entityText,
+            entityType: $entityType,
+            resolvedIdentifiers: $resolvedIdentifiers
+        );
+
+    }//end matchProhibition()
 
     /**
      * Find the first rule of the given kind that matches the entity.
@@ -385,10 +444,20 @@ class PolicyMatchService
             'OCA\OpenRegister\Service\ObjectService'
         );
 
-        $result = $objectService->findAll(
-            config: ['filters' => ['register' => 'consent', 'schema' => 'publicationProhibition']],
-            _rbac: false
+        // OR's findAll/searchObjects require NUMERIC register/schema ids and
+        // silently return nothing for slugs; searchObjectsBySlug resolves the
+        // slugs first (same call PolicyCrudService uses for the admin list).
+        // _multitenancy is off so this safety policy is not scoped away by the
+        // active organisation.
+        $result = $objectService->searchObjectsBySlug(
+            registerSlug: 'consent',
+            schemaSlug: 'publicationProhibition',
+            _rbac: false,
+            _multitenancy: false
         );
+        if (is_int($result) === true) {
+            $result = [];
+        }
 
         $rules = [];
         foreach ($this->extractObjects(result: $result) as $obj) {
@@ -423,17 +492,16 @@ class PolicyMatchService
         // bounds the result to standing-consent rows and lets ObjectService
         // index on the column. The defensive PHP scope check is retained as
         // a belt-and-braces in case the filter is later dropped.
-        $result = $objectService->findAll(
-            config: [
-                'filters' => [
-                    'register' => 'consent',
-                    'schema'   => 'publicationConsent',
-                    'scope'    => 'entity',
-                    'active'   => true,
-                ],
-            ],
-            _rbac: false
+        $result = $objectService->searchObjectsBySlug(
+            registerSlug: 'consent',
+            schemaSlug: 'publicationConsent',
+            filters: ['scope' => 'entity', 'active' => true],
+            _rbac: false,
+            _multitenancy: false
         );
+        if (is_int($result) === true) {
+            $result = [];
+        }
 
         $rules = [];
         foreach ($this->extractObjects(result: $result) as $obj) {
@@ -611,7 +679,7 @@ class PolicyMatchService
      *
      * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
      */
-    public function matchProhibition(string $entityType, string $entityValue): ?array
+    public function matchProhibitionHint(string $entityType, string $entityValue): ?array
     {
         $result = $this->match(entityText: $entityValue, entityType: $entityType);
         if ($result === null || $result['kind'] !== self::KIND_PROHIBITION) {
@@ -623,7 +691,7 @@ class PolicyMatchService
             'ruleName' => (string) $result['primaryName'],
         ];
 
-    }//end matchProhibition()
+    }//end matchProhibitionHint()
 
     /**
      * Invalidate the in-memory rule cache.

@@ -1,57 +1,54 @@
-{#
- # EML Attachment Divider Page
- #
- # Single-page divider that introduces each attachment in the assembled
- # PDF. Consumed by `EmlPdfAssemblyService::renderDivider`.
- #
- # Inputs (context):
- #   - index            int          1-based position of the attachment.
- #   - total            int          Total attachment count.
- #   - filename         string       Attachment filename.
- #   - mime_type        string       MIME type.
- #   - size_bytes       int          Decoded byte size.
- #   - size_human       string       Pre-formatted size (e.g. "1.2 MB").
- #   - placeholder      string|null  One of: null | 'too_large' | 'not_renderable' | 'render_failed'
- #                                  Drives the "kon niet worden weergegeven" notice.
- #   - cap_bytes        int|null     The configured max-render byte cap (only set when placeholder == 'too_large').
- #
- # spec: openspec/changes/eml-pdf-assembly/specs/eml-pdf-assembly/spec.md#attachment-divider
- #}
-<div class="docudesk-eml-divider" style="font-family: 'DejaVu Sans', sans-serif; padding: 30mm 0 0 0; color: #222;">
-  <p style="font-size: 9pt; color: #888; margin: 0;">Bijlage {{ index }} van {{ total }}</p>
-  <h1 style="font-size: 18pt; margin: 4mm 0 8mm 0; word-break: break-all;">{{ filename }}</h1>
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Bijlage {{ index|default('') }}</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #222; }
+  .divider-wrap { border: 1pt solid #999; padding: 16pt; margin-top: 4pt; }
+  h2.divider-title { font-size: 14pt; margin: 0 0 8pt 0; }
+  table.divider-meta { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.divider-meta td { padding: 2pt 6pt 2pt 0; vertical-align: top; }
+  table.divider-meta td.label { color: #666; width: 24%; white-space: nowrap; font-weight: bold; }
+  .divider-note { margin-top: 12pt; font-size: 10pt; color: #444; }
+  .divider-note.omitted { color: #b00; font-style: italic; }
+</style>
+</head>
+<body>
 
-  <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 10mm;">
-    <tbody>
-      <tr>
-        <td style="width: 30mm; padding: 1mm 2mm 1mm 0; color: #555;">MIME-type</td>
-        <td style="padding: 1mm 0;">{{ mime_type }}</td>
-      </tr>
-      <tr>
-        <td style="width: 30mm; padding: 1mm 2mm 1mm 0; color: #555;">Grootte</td>
-        <td style="padding: 1mm 0;">{{ size_human }} ({{ size_bytes }} bytes)</td>
-      </tr>
-    </tbody>
+<div class="divider-wrap">
+  <h2 class="divider-title">Bijlage {{ index|default('?') }}: {{ filename|default('(onbekend)')|escape }}</h2>
+  <table class="divider-meta">
+    <tr>
+      <td class="label">Bestandsnaam:</td>
+      <td>{{ filename|default('—')|escape }}</td>
+    </tr>
+    <tr>
+      <td class="label">Type:</td>
+      <td>{{ mimeType|default('—')|escape }}</td>
+    </tr>
+    {% if size is defined and size is not null %}
+    <tr>
+      <td class="label">Grootte:</td>
+      <td>{{ size }} bytes</td>
+    </tr>
+    {% endif %}
   </table>
 
-  {% if placeholder == 'too_large' %}
-    <p style="font-size: 10pt; color: #a04; margin: 0;">
-      Deze bijlage is te groot om in dit document te worden weergegeven
-      (grens: {{ cap_bytes }} bytes). De bytes zijn wel als ingesloten bestand bewaard.
-    </p>
-  {% elseif placeholder == 'not_renderable' %}
-    <p style="font-size: 10pt; color: #a04; margin: 0;">
-      Dit bestandstype kan niet als pagina worden weergegeven. De bytes zijn
-      wel als ingesloten bestand bewaard.
-    </p>
-  {% elseif placeholder == 'render_failed' %}
-    <p style="font-size: 10pt; color: #a04; margin: 0;">
-      De bijlage kon niet worden weergegeven. De bytes zijn wel als ingesloten
-      bestand bewaard.
-    </p>
+  {% if variant == 'non_renderable' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — geredigeerd maar niet weer te geven</p>
+  {% elseif variant == 'too_large' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — te groot om weer te geven</p>
+  {% elseif variant == 'unsupported' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} ({{ mimeType|escape }}) weggelaten — geen anonimiseerder beschikbaar</p>
+  {% elseif variant == 'depth_limit' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — geneste e-mail weggelaten op de maximale nestdiepte</p>
+  {% elseif variant == 'render_failed' %}
+    <p class="divider-note omitted">Bijlage {{ index }}: {{ filename|escape }} — kon niet worden weergegeven</p>
   {% else %}
-    <p style="font-size: 10pt; color: #555; margin: 0;">
-      De volgende pagina's tonen de inhoud van deze bijlage.
-    </p>
+    <p class="divider-note">De geredigeerde inhoud van deze bijlage volgt op de volgende pagina('s).</p>
   {% endif %}
 </div>
+
+</body>
+</html>

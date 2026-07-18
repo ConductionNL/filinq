@@ -351,13 +351,13 @@ export default {
 }
 
 .status-extracted {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .status-anonymized {
-	background-color: var(--color-success-element-light, #d4edda);
-	color: var(--color-success-text, #155724);
+	background-color: var(--color-success);
+	color: var(--color-success-text);
 }
 
 /* Risk badges */
@@ -375,23 +375,23 @@ export default {
 }
 
 .risk-low {
-	background-color: var(--color-info-element-light, #cce5ff);
-	color: var(--color-info-text, #004085);
+	background-color: var(--color-info);
+	color: var(--color-info-text);
 }
 
 .risk-medium {
-	background-color: var(--color-warning-element-light, #fef3cd);
-	color: var(--color-warning-text, #856404);
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
 }
 
 .risk-high {
-	background-color: var(--color-error-element-light, #f8d7da);
-	color: var(--color-error-text, #721c24);
+	background-color: var(--color-error);
+	color: var(--color-error-text);
 }
 
 .risk-very_high {
-	background-color: var(--color-error);
-	color: white;
+	background-color: var(--color-element-error);
+	color: var(--color-primary-element-text);
 }
 
 /* Footer link */

@@ -178,7 +178,7 @@ export default {
 <style scoped>
 .dd-data-table {
 	border-radius: var(--dd-data-table-border-radius, var(--dd-radius-panel));
-	border: 1px solid var(--dd-data-table-border-color, #E9E9E9);
+	border: 1px solid var(--dd-data-table-border-color, var(--dd-border, #E9E9E9));
 	overflow-x: auto;
 	box-shadow: var(--dd-shadow-panel);
 }

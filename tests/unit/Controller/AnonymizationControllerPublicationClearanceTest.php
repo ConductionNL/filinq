@@ -405,8 +405,12 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
                 fileId: 10,
                 entities: $entities,
                 appendBasisSummary: false,
-                outputFormat: 'pdf',
-                unredactedEntities: []
+                outputFormat: 'pdf-only',
+                unredactedEntities: [],
+                acknowledgedOverrides: [],
+                userId: 'test-user',
+                scope: 'document',
+                dossierKey: null
             )
             ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f-10']);
 

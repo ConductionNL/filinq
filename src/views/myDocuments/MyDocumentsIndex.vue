@@ -46,7 +46,7 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 
 				<template #column-fileName="{ row }">
 					<div class="my-documents-name">
-						<component :is="iconFor(row)" :size="20" class="my-documents-name__icon" />
+						<DdIcon :name="iconFor(row)" :size="18" class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
 					</div>
 				</template>
@@ -57,12 +57,17 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 						:color-map="kindColorMap" />
 				</template>
 
+				<!-- TODO: re-enable the Status column once a real per-document
+				     checked/reviewed status is available from the backend. The
+				     label is hardcoded ("Not checked") for now, so the column is
+				     hidden rather than showing a placeholder for every row.
 				<template #column-status="{ row }">
 					<span class="my-documents-status">
 						<EyeOffOutline :size="16" class="my-documents-status__icon" />
 						{{ statusLabel(row) }}
 					</span>
 				</template>
+				-->
 
 				<template #column-modified="{ row }">
 					{{ formatDate(row.modified) }}
@@ -177,12 +182,15 @@ import DdSearchBar from '../../components/DdSearchBar.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
+import DdIcon from '../../components/DdIcon.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import { validateFile } from '../../services/validationService.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
-import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
+// TODO: re-enable with the Status column (commented out until a real
+// per-document checked status exists).
+// import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
@@ -191,10 +199,6 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
-import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
-import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
-import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
-import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 
 const VIEW_MODE_STORAGE_KEY = 'docudesk:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
@@ -227,11 +231,13 @@ export default {
 		DdSearchBar,
 		DdPageHeader,
 		DdDocumentCard,
+		DdIcon,
 		FileViewerPage,
 		ValidationResultModal,
 		DotsHorizontal,
 		Eye,
-		EyeOffOutline,
+		// TODO: re-enable with the Status column (see import above).
+		// EyeOffOutline,
 		Download,
 		ShieldCheckOutline,
 		Compare,
@@ -240,10 +246,6 @@ export default {
 		Cog,
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
-		FolderOutline,
-		FilePdfBox,
-		FileWordBox,
-		FileDocumentOutline,
 	},
 	data() {
 		return {
@@ -262,7 +264,6 @@ export default {
 				fileId: null,
 			},
 			kindColorMap: {
-				[t('docudesk', 'Dossier')]: 'info',
 				[t('docudesk', 'Concept')]: 'warning',
 				[t('docudesk', 'Anonymized')]: 'success',
 			},
@@ -273,14 +274,16 @@ export default {
 			return [
 				{ key: 'fileName', label: t('docudesk', 'Name') },
 				{ key: 'kind', label: t('docudesk', 'Kind') },
-				{ key: 'status', label: t('docudesk', 'Status') },
+				// TODO: re-enable once a real per-document checked/reviewed status
+				// is available from the backend (label is hardcoded for now).
+				// { key: 'status', label: t('docudesk', 'Status') },
 				{ key: 'modified', label: t('docudesk', 'Date') },
 				{ key: 'fileSize', label: t('docudesk', 'Size') },
 			]
 		},
 		filteredDocuments() {
 			const query = this.searchQuery.trim().toLowerCase()
-			const docs = myDocumentsStore.documents
+			const docs = myDocumentsStore.visibleDocuments
 			if (!query) return docs
 			return docs.filter((d) => (d.fileName || '').toLowerCase().includes(query))
 		},
@@ -423,7 +426,7 @@ export default {
 			if (row.isFolder) {
 				await myDocumentsStore.openFolder(row.fileName)
 				this.currentPage = 1
-				const firstFile = myDocumentsStore.documents.find((d) => !d.isFolder)
+				const firstFile = myDocumentsStore.visibleDocuments.find((d) => !d.isFolder)
 				if (firstFile) {
 					this.viewFile(firstFile)
 				}
@@ -495,17 +498,32 @@ export default {
 		 * Preview the file inline using DocuDesk's own file viewer modal
 		 * (PDF / docx / text). Folders are ignored.
 		 *
+		 * The overview only lists the anonymized copy once a file has been
+		 * anonymized, so opening one wires up both variants: the concept
+		 * (original) is loaded as the base and the anonymized copy is shown on
+		 * top, leaving the "Show original" toggle to switch back to the concept.
+		 *
 		 * @param {object} row Document row from the table.
 		 */
 		viewFile(row) {
 			if (!row || row.isFolder) return
-			const path = `${myDocumentsStore.currentPath}/${row.fileName}`
+			const concept = row.isAnonymized ? myDocumentsStore.conceptFor(row) : row
+			const anonymized = row.isAnonymized ? row : myDocumentsStore.anonymizedFor(row)
+			const base = concept || row
 			fileViewerStore.open({
-				fileId: row.fileId,
-				fileName: row.fileName,
-				mimeType: row.mimeType,
-				path,
+				fileId: base.fileId,
+				fileName: base.fileName,
+				mimeType: base.mimeType,
+				path: `${myDocumentsStore.currentPath}/${base.fileName}`,
 			})
+			if (anonymized && anonymized.fileId !== base.fileId) {
+				fileViewerStore.setAnonymizedVariant({
+					fileId: anonymized.fileId,
+					fileName: anonymized.fileName,
+					mimeType: anonymized.mimeType,
+					path: `${myDocumentsStore.currentPath}/${anonymized.fileName}`,
+				})
+			}
 		},
 		/**
 		 * Download the file via the classic Files app download endpoint.
@@ -580,18 +598,17 @@ export default {
 			this.$router.push({ name: 'Versions', query: { fileId: String(row.fileId) } })
 		},
 		/**
-		 * Pick an icon component name based on the file's MIME type / extension.
+		 * Pick a DocuDesk icon name based on the file's MIME type / extension.
 		 *
 		 * @param {object} row Document row.
-		 * @return {string} Component name.
+		 * @return {string} DdIcon name ('folder', 'pdf' or 'article').
 		 */
 		iconFor(row) {
 			const mime = row.mimeType || ''
 			const name = (row.fileName || '').toLowerCase()
-			if (mime === 'httpd/unix-directory' || name.endsWith('/')) return 'FolderOutline'
-			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'FilePdfBox'
-			if (mime.includes('word') || name.match(/\.(docx?|odt)$/)) return 'FileWordBox'
-			return 'FileDocumentOutline'
+			if (mime === 'httpd/unix-directory' || name.endsWith('/')) return 'folder'
+			if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
+			return 'article'
 		},
 		/**
 		 * Strip the file extension for cleaner display (folders show full name).
@@ -604,19 +621,26 @@ export default {
 			return row.isFolder ? name : name.replace(/\.[^./]+$/, '')
 		},
 		/**
-		 * Badge label for the "Soort" column: folder/dossier, original, or anonymized copy.
+		 * Badge label for the "Soort" column. Files are tagged by their own
+		 * state; a dossier (folder) reflects its contents — "Anonymized" once
+		 * every source inside has an anonymized output, "Concept" otherwise.
 		 *
 		 * @param {object} row Document row.
 		 * @return {string} Badge label.
 		 */
 		kindLabel(row) {
-			if (row.isFolder) return t('docudesk', 'Dossier')
+			if (row.isFolder) {
+				return row.allChildrenAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
+			}
 			return row.isAnonymized ? t('docudesk', 'Anonymized') : t('docudesk', 'Concept')
 		},
-		/** Placeholder status until the app has a real "checked" signal. */
-		statusLabel() {
-			return t('docudesk', 'Not checked')
-		},
+		// TODO: re-enable when the app has a real per-document checked/reviewed
+		// status. The Status column is commented out for now (both its column
+		// definition and template) because this was hardcoded to "Not checked".
+		// /** Placeholder status until the app has a real "checked" signal. */
+		// statusLabel() {
+		// 	return t('docudesk', 'Not checked')
+		// },
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.
 		 *
@@ -661,10 +685,6 @@ export default {
 	padding: 0;
 }
 
-.my-documents-search {
-	max-width: 280px;
-}
-
 .my-documents-name {
 	display: flex;
 	align-items: center;
@@ -677,6 +697,8 @@ export default {
 	transition: color 0.15s ease;
 }
 
+/* TODO: re-enable with the Status column (commented out until a real
+   per-document checked status exists).
 .my-documents-status {
 	display: inline-flex;
 	align-items: center;
@@ -686,6 +708,12 @@ export default {
 }
 
 .my-documents-status__icon {
+	color: var(--color-text-maxcontrast);
+}
+*/
+
+/* Options menu in the actions-column header (bulk-selection / bulk actions). */
+.my-documents-options {
 	color: var(--color-text-maxcontrast);
 }
 

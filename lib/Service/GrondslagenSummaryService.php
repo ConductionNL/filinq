@@ -336,7 +336,7 @@ class GrondslagenSummaryService
         // their Woo Art. 5 toelichting — rendered as a legend under the table.
         $allEntities = [];
         foreach ($perFile as $fileRow) {
-            foreach (($fileRow['entities'] ?? []) as $entity) {
+            foreach ($fileRow['entities'] as $entity) {
                 $allEntities[] = $entity;
             }
         }
@@ -987,7 +987,10 @@ class GrondslagenSummaryService
      *
      * @param array<int, string> $baseRefs Slugs or UUIDs of base records.
      *
-     * @return array<string, string> Map from each reference to its display name.
+     * @return array<string, array{name: string, description: string}> Map from each
+     *                                                                  reference to its
+     *                                                                  display name and
+     *                                                                  Woo Art. 5 toelichting.
      */
     private function resolveBaseLabels(array $baseRefs): array
     {
@@ -1112,13 +1115,13 @@ class GrondslagenSummaryService
         // drop nameless entries; keep the first non-empty description.
         $byName = [];
         foreach ($detail as $entry) {
-            $name = (string) ($entry['name'] ?? '');
+            $name = $entry['name'];
             if ($name === '') {
                 continue;
             }
 
             if (isset($byName[$name]) === false || $byName[$name] === '') {
-                $byName[$name] = (string) ($entry['description'] ?? '');
+                $byName[$name] = $entry['description'];
             }
         }
 
@@ -1371,8 +1374,8 @@ class GrondslagenSummaryService
      */
     private static function placeholderSortKey(string $placeholder): array
     {
-        if (preg_match('/^\[(.+):\s*(\d+)\]\s*$/u', $placeholder, $m) === 1) {
-            return [$m[1], (int) $m[2]];
+        if (preg_match('/^\[(.+):\s*(\d+)\]\s*$/u', $placeholder, $matches) === 1) {
+            return [$matches[1], (int) $matches[2]];
         }
 
         return [$placeholder, PHP_INT_MAX];
@@ -1653,10 +1656,7 @@ class GrondslagenSummaryService
      */
     private function isOpenRegisterAvailable(): bool
     {
-        // Defensive `?? []`: getInstalledApps() is array-typed in production but
-        // a bare mock returns null, and PHP 8.4 makes in_array(x, null) a fatal
-        // TypeError rather than a warning.
-        return in_array('openregister', ($this->appManager->getInstalledApps() ?? []), true);
+        return in_array('openregister', $this->appManager->getInstalledApps(), true);
 
     }//end isOpenRegisterAvailable()
 }//end class

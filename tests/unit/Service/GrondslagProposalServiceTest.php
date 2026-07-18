@@ -85,6 +85,9 @@ class GrondslagProposalServiceTest extends TestCase
         $this->assertContains('EMAIL', $types);
         $this->assertContains('BSN', $types);
         $this->assertContains('LOCATION', $types);
+        // KENTEKEN (Dutch license plate) is selectable/toggleable and carried
+        // in the whitelist sent to the detector (enable-kenteken-entity-type).
+        $this->assertContains('KENTEKEN', $types);
 
     }//end testGetSelectableEntityTypesReturnsCuratedList()
 
@@ -367,6 +370,131 @@ class GrondslagProposalServiceTest extends TestCase
         $this->assertSame([], $service->getAvailableBases());
 
     }//end testGetAvailableBasesEmptyWhenOpenRegisterUnavailable()
+
+
+    /**
+     * Build a service whose config returns the given JSON for the
+     * enabled-entity-types key and the default for every other key.
+     *
+     * @param string $enabledJson Raw JSON for the enabled-types config key.
+     *
+     * @return GrondslagProposalService The service under test.
+     */
+    private function makeServiceEnabled(string $enabledJson): GrondslagProposalService
+    {
+        $config = $this->createMock(IAppConfig::class);
+        $config->method('getValueString')->willReturnCallback(
+            static function (string $app, string $key, string $default='') use ($enabledJson): string {
+                if ($key === GrondslagProposalService::ENABLED_TYPES_CONFIG_KEY) {
+                    return $enabledJson;
+                }
+
+                return $default;
+            }
+        );
+
+        return new GrondslagProposalService(
+            $config,
+            $this->createMock(IAppManager::class),
+            $this->createMock(ContainerInterface::class),
+            $this->createMock(LoggerInterface::class)
+        );
+
+    }//end makeServiceEnabled()
+
+
+    /**
+     * An unset selection means "all types": the full curated list for the UI
+     * and a null whitelist (no detection constraint) for the backend.
+     *
+     * @return void
+     */
+    public function testEnabledTypesDefaultToAllWhenUnset(): void
+    {
+        $service = $this->makeServiceEnabled('');
+        $curated = $service->getSelectableEntityTypes();
+
+        $this->assertSame($curated, $service->getEnabledEntityTypes());
+        $this->assertNull($service->getEntityTypeWhitelist());
+
+    }//end testEnabledTypesDefaultToAllWhenUnset()
+
+
+    /**
+     * A genuine subset (dates disabled) yields a whitelist in curated order
+     * that omits only the disabled type — nothing else is affected.
+     *
+     * @return void
+     */
+    public function testWhitelistReturnsSubsetWithoutDisabledType(): void
+    {
+        $curated = $this->makeServiceEnabled('')->getSelectableEntityTypes();
+        $enabled = array_values(
+            array_filter($curated, static fn(string $type): bool => $type !== 'DATE')
+        );
+
+        $service   = $this->makeServiceEnabled((string) json_encode($enabled));
+        $whitelist = $service->getEntityTypeWhitelist();
+
+        $this->assertSame($enabled, $whitelist);
+        $this->assertNotContains('DATE', (array) $whitelist);
+        $this->assertContains('BSN', (array) $whitelist);
+        $this->assertSame($enabled, $service->getEnabledEntityTypes());
+
+    }//end testWhitelistReturnsSubsetWithoutDisabledType()
+
+
+    /**
+     * When every curated type is enabled the whitelist collapses to null so
+     * the default "detect all" behaviour is preserved.
+     *
+     * @return void
+     */
+    public function testWhitelistNullWhenAllTypesEnabled(): void
+    {
+        $curated = $this->makeServiceEnabled('')->getSelectableEntityTypes();
+        $service = $this->makeServiceEnabled((string) json_encode($curated));
+
+        $this->assertNull($service->getEntityTypeWhitelist());
+
+    }//end testWhitelistNullWhenAllTypesEnabled()
+
+
+    /**
+     * Unknown/stale ids are dropped and the result keeps curated order,
+     * regardless of the stored order.
+     *
+     * @return void
+     */
+    public function testEnabledTypesSanitiseUnknownAndPreserveOrder(): void
+    {
+        $curated = $this->makeServiceEnabled('')->getSelectableEntityTypes();
+        $service = $this->makeServiceEnabled((string) json_encode(['UFO', 'DATE', 'PERSON']));
+
+        $expected = array_values(
+            array_filter($curated, static fn(string $type): bool => in_array($type, ['DATE', 'PERSON'], true))
+        );
+
+        $this->assertSame($expected, $service->getEnabledEntityTypes());
+        $this->assertSame($expected, $service->getEntityTypeWhitelist());
+
+    }//end testEnabledTypesSanitiseUnknownAndPreserveOrder()
+
+
+    /**
+     * Malformed JSON and an empty selection both degrade to "all types".
+     *
+     * @return void
+     */
+    public function testWhitelistNullOnMalformedOrEmptySelection(): void
+    {
+        $this->assertNull($this->makeServiceEnabled('not json')->getEntityTypeWhitelist());
+        $this->assertNull($this->makeServiceEnabled('[]')->getEntityTypeWhitelist());
+
+        $malformed = $this->makeServiceEnabled('not json');
+        $this->assertSame($malformed->getSelectableEntityTypes(), $malformed->getEnabledEntityTypes());
+
+    }//end testWhitelistNullOnMalformedOrEmptySelection()
 
 
 }//end class

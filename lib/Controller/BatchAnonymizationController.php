@@ -119,8 +119,13 @@ class BatchAnonymizationController extends Controller
 
     /**
      * Supported values for the `outputFormat` request param.
+     *
+     * - `pdf-only` (default): convert to PDF and delete the native
+     *   anonymised intermediate so only the PDF remains.
+     * - `pdf`: convert to PDF but keep the native intermediate too.
+     * - `preserve`: skip conversion; native format is the only output.
      */
-    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
+    private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
 
     /**
      * Accept a multipart upload and create a new anonymization batch.
@@ -494,7 +499,7 @@ class BatchAnonymizationController extends Controller
      * Resolve the effective `outputFormat` for this batch call.
      *
      * Per-batch value overrides tenant default; tenant default defaults
-     * to `"pdf"`. Returns null when an invalid per-call value was
+     * to `"pdf-only"`. Returns null when an invalid per-call value was
      * supplied; the caller maps that to HTTP 400.
      *
      * @param array<string,mixed> $params Request params.
@@ -517,11 +522,11 @@ class BatchAnonymizationController extends Controller
         $tenantDefault = $this->appConfig->getValueString(
             'docudesk',
             self::DEFAULT_OUTPUT_FORMAT_KEY,
-            'pdf'
+            'pdf-only'
         );
 
         if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
-            return 'pdf';
+            return 'pdf-only';
         }
 
         return $tenantDefault;
