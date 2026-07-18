@@ -98,8 +98,13 @@ class AnonymizationController extends Controller
     /**
      * Supported values for the `outputFormat` request param + tenant
      * config. Anything else from the request results in HTTP 400.
+     *
+     * - `pdf-only` (default): convert to PDF and delete the native
+     *   anonymised intermediate so only the PDF remains.
+     * - `pdf`: convert to PDF but keep the native intermediate too.
+     * - `preserve`: skip conversion; native format is the only output.
      */
-    private const VALID_OUTPUT_FORMATS = ['pdf', 'preserve'];
+    private const VALID_OUTPUT_FORMATS = ['pdf-only', 'pdf', 'preserve'];
 
     /**
      * List all processed files with entity counts and status
@@ -273,7 +278,10 @@ class AnonymizationController extends Controller
                 return $accessError;
             }
 
-            $result = $this->anonymizationService->extractAndDetectEntities($fileId);
+            // Default: resume (cached) — reuse existing entities when the file
+            // is unchanged. `force=true` requests an explicit re-analysis.
+            $force  = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
+            $result = $this->anonymizationService->extractAndDetectEntities($fileId, $force);
 
             return new JSONResponse($result);
         } catch (\Throwable $e) {
@@ -404,7 +412,7 @@ class AnonymizationController extends Controller
             // selects PDF conversion vs native-format preservation.
             // Per-call value overrides the tenant default; missing
             // value falls back to the tenant default which itself
-            // defaults to 'pdf'.
+            // defaults to 'pdf-only'.
             $outputFormat = $this->resolveOutputFormat(params: $params);
             if ($outputFormat === null) {
                 return new JSONResponse(
@@ -439,6 +447,24 @@ class AnonymizationController extends Controller
             $dossierKey      = null;
             if ($dossierKeyParam !== null && $dossierKeyParam !== '') {
                 $dossierKey = (string) $dossierKeyParam;
+            }
+
+            // Defence-in-depth backstop (Robert): refuse if an absolute-tier
+            // prohibition entity would be left un-redacted (e.g. skipped by
+            // bypassing the guarded skip endpoint and PATCHing OpenRegister
+            // directly). Complements the request-payload prohibition gate that
+            // runProhibitionGate() enforces inside anonymizeDocument().
+            $violations = $this->anonymizationService->absoluteProhibitionViolations($fileId);
+            if (empty($violations) === false) {
+                return new JSONResponse(
+                    [
+                        'error'                     => $this->l10n->t(
+                            'Anonymisation blocked: prohibition-listed entities would be left un-redacted.'
+                        ),
+                        'missingProhibitionMatches' => $violations,
+                    ],
+                    422
+                );
             }
 
             try {
@@ -645,18 +671,80 @@ class AnonymizationController extends Controller
     }//end validateUnredactedEntities()
 
     /**
+     * Record a per-entity skip/include decision, guarded by the prohibition policy.
+     *
+     * Called by the review UI on skip-toggle in place of PATCHing OpenRegister's
+     * relation endpoint directly. Skipping a prohibition-matched entity is
+     * rejected with HTTP 422 (absolute at/above the threshold; below it only
+     * unless `force`). Include / non-skip decisions are always allowed and
+     * forwarded to OpenRegister.
+     *
+     * @param int $id The EntityRelation id.
+     *
+     * @return JSONResponse Success, or 422 with `{threshold, prohibitionMatch}`.
+     *
+     * @NoAdminRequired
+     * @NoCSRFRequired
+     */
+    public function updateRelation(int $id): JSONResponse
+    {
+        try {
+            $params = $this->request->getParams();
+
+            $skip = false;
+            if (array_key_exists('skipAnonymization', $params) === true) {
+                if (is_bool($params['skipAnonymization']) === false) {
+                    return new JSONResponse(
+                        ['error' => $this->l10n->t('Invalid skipAnonymization: must be a boolean')],
+                        400
+                    );
+                }
+
+                $skip = $params['skipAnonymization'];
+            }
+
+            $bases = null;
+            if (array_key_exists('bases', $params) === true && is_array($params['bases']) === true) {
+                $bases = array_values($params['bases']);
+            }
+
+            $force = filter_var(($params['force'] ?? false), FILTER_VALIDATE_BOOLEAN);
+
+            $result = $this->anonymizationService->applyRelationSkipDecision(
+                relationId: $id,
+                skip: $skip,
+                bases: $bases,
+                force: $force
+            );
+
+            return new JSONResponse($result['body'], $result['status']);
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to update entity relation decision: '.$e->getMessage(),
+                ['exception' => $e]
+            );
+            return new JSONResponse(
+                ['error' => $this->l10n->t('Failed to update entity relation decision')],
+                500
+            );
+        }//end try
+
+    }//end updateRelation()
+
+
+    /**
      * Resolve the effective `outputFormat` for this request.
      *
      * Order: per-call value (when supplied and valid) → tenant default
-     * from IAppConfig → hard-coded `"pdf"` fallback.
+     * from IAppConfig → hard-coded `"pdf-only"` fallback.
      *
      * Returns `null` when the per-call value is supplied but invalid;
      * the caller maps that to HTTP 400.
      *
      * @param array<string,mixed> $params Request params.
      *
-     * @return string|null Resolved outputFormat ('pdf'|'preserve'), or
-     *                     null when an invalid value was supplied.
+     * @return string|null Resolved outputFormat ('pdf-only'|'pdf'|'preserve'),
+     *                     or null when an invalid value was supplied.
      */
     private function resolveOutputFormat(array $params): ?string
     {
@@ -674,13 +762,13 @@ class AnonymizationController extends Controller
         $tenantDefault = $this->appConfig->getValueString(
             'docudesk',
             self::DEFAULT_OUTPUT_FORMAT_KEY,
-            'pdf'
+            'pdf-only'
         );
 
         if (in_array($tenantDefault, self::VALID_OUTPUT_FORMATS, true) === false) {
             // Malformed tenant setting falls back to spec default
             // rather than rejecting the call.
-            return 'pdf';
+            return 'pdf-only';
         }
 
         return $tenantDefault;

@@ -38,6 +38,7 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use RuntimeException;
 use Throwable;
 use OCP\App\IAppManager;
@@ -130,6 +131,11 @@ class AnonymizationService
      * @param PdfConversionService      $pdfConversion      Cascade orchestrator that converts the
      *                                                      anonymised intermediate to PDF when
      *                                                      `outputFormat: "pdf"` is in effect.
+     * @param EmlPdfAssemblyService     $emlAssembly        Assembles OR's redacted anonymise-EML
+     *                                                      result into a PDF/A-3b. EML inputs are
+     *                                                      routed here directly because OR's
+     *                                                      `anonymizeDocument()` throws on
+     *                                                      `message/rfc822`.
      *
      * @return void
      */
@@ -143,7 +149,8 @@ class AnonymizationService
         private readonly ConsentService $consentService,
         private readonly GrondslagenSummaryService $grondslagenSummary,
         private readonly FileEntityStatsService $fileEntityStats,
-        private readonly PdfConversionService $pdfConversion
+        private readonly PdfConversionService $pdfConversion,
+        private readonly EmlPdfAssemblyService $emlAssembly
     ) {
 
     }//end __construct()
@@ -179,7 +186,18 @@ class AnonymizationService
      * The response also includes a `riskLevel` field derived from OpenRegister's
      * RiskLevelService, or 'none' when that service is unavailable.
      *
-     * @param int $fileId The Nextcloud file ID
+     * By default this is a resume-friendly, DB-cached lookup: when the file is
+     * unchanged, OpenRegister's `isSourceUpToDate` short-circuit returns the
+     * existing chunks and `EntityRelation` rows (with their skip/bases
+     * decisions) instead of re-detecting — so re-opening a concept picks up
+     * where the operator left off and does not append duplicate relations.
+     * Pass `$force = true` for an explicit re-analysis (e.g. after changing the
+     * enabled entity types); the file's mtime already triggers a re-extract
+     * when the source itself changed.
+     *
+     * @param int  $fileId The Nextcloud file ID
+     * @param bool $force  Force a fresh extraction + detection even when the
+     *                     file is unchanged (default false = resume/cached).
      *
      * @return array<string, mixed> Extraction result with entities, entityCount, riskLevel
      *
@@ -187,35 +205,61 @@ class AnonymizationService
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/specs/anonymization/spec.md
-     * @spec openspec/specs/anonymization/spec.md
+     *
+     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Force flag mirrors the OR API.
      */
-    public function extractAndDetectEntities(int $fileId): array
+    public function extractAndDetectEntities(int $fileId, bool $force=false): array
     {
         try {
             $textExtractor = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Service\TextExtractionService'
             );
-            $textExtractor->extractFile($fileId, true);
 
-            $this->logger->debug('Text extracted from file', ['fileId' => $fileId]);
+            // Resolve DocuDesk's grondslag service up front (via the container,
+            // string class name, to keep this class's coupling in check). It
+            // also owns the operator's enabled-entity-type selection, used to
+            // scope automatic detection just below.
+            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+
+            // Scope automatic detection to the enabled entity types (null = all
+            // types). Manual entities are added through a separate path, so a
+            // manually-added type is still anonymised even when its automatic
+            // detection is disabled here.
+            $entityTypes = $grondslagProposal->getEntityTypeWhitelist();
+            $textExtractor->extractFile($fileId, $force, $entityTypes);
+
+            $this->logger->debug(
+                'Text extracted from file',
+                ['fileId' => $fileId, 'entityTypes' => $entityTypes]
+            );
 
             $entityRelationMapper = $this->getOpenRegisterService(
                 className: 'OCA\OpenRegister\Db\EntityRelationMapper'
             );
             $entities = $entityRelationMapper->findEntitiesForFile($fileId);
 
-            // Pre-fill a proposed grondslag per entity type onto the freshly-
-            // detected relations (fill-only-when-empty), then enrich the rows
-            // with their bases so the review UI shows the proposal. Resolved
-            // via the container to keep this class's coupling in check; both
+            // Pre-fill a proposed grondslag per entity type onto the
+            // freshly-detected relations (fill-only-when-empty), then enrich
+            // the returned rows with their current bases so the review UI can
+            // show the proposal. $grondslagProposal was resolved above. Both
             // calls are internally best-effort and never block detection.
-            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
             $grondslagProposal->applyProposals(fileId: $fileId);
             $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
 
             $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
-            $normalized = $this->attachProhibitionMatches(entities: $normalized);
 
+            // Apply publication policy (Robert's policy pass, supersedes the
+            // narrower attachProhibitionMatches): standing-consent winners are
+            // auto-skipped on their relation; prohibition winners get a
+            // read-only `prohibitionMatch` hint for the review UI. Best-effort —
+            // a policy failure never blocks detection.
+            $normalized = $this->applyPolicyDecisions(
+                entities: $normalized,
+                entityRelationMapper: $entityRelationMapper
+            );
+
+            // Development riskLevel feature (RiskLevelService via
+            // FileEntityStatsService) — required by the return payload below.
             $riskLevelService = $this->fileEntityStats->tryGetRiskLevelService();
             $riskLevel        = $this->fileEntityStats->getFileRiskLevel(
                 fileId: $fileId,
@@ -240,79 +284,6 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
-
-    /**
-     * Attach a `prohibitionMatch` field to each normalized entity
-     *
-     * Calls PolicyMatchService when available; returns null for every entity when
-     * the service is not yet installed (before anonymisation-prohibition-gate lands).
-     *
-     * @param array<int, array<string, mixed>> $entities Normalized entity list
-     *
-     * @return array<int, array<string, mixed>> Entities with prohibitionMatch added
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
-     */
-    private function attachProhibitionMatches(array $entities): array
-    {
-        $policyService = $this->tryGetPolicyMatchService();
-        $threshold     = $this->getHighConfidenceThreshold();
-
-        foreach ($entities as &$entity) {
-            $entity['prohibitionMatch'] = $this->computeProhibitionMatch(
-                entity: $entity,
-                policyService: $policyService,
-                threshold: $threshold
-            );
-        }
-
-        return $entities;
-
-    }//end attachProhibitionMatches()
-
-    /**
-     * Compute the prohibitionMatch value for a single entity
-     *
-     * @param array<string, mixed> $entity        Normalized entity
-     * @param mixed                $policyService PolicyMatchService instance or null
-     * @param float                $threshold     High-confidence threshold (inclusive)
-     *
-     * @return array<string, mixed>|null Match object or null
-     *
-     * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-6
-     */
-    private function computeProhibitionMatch(array $entity, mixed $policyService, float $threshold): ?array
-    {
-        if ($policyService === null) {
-            return null;
-        }
-
-        try {
-            $match = $policyService->matchProhibition(
-                entityType: (string) ($entity['type'] ?? ''),
-                entityValue: (string) ($entity['value'] ?? '')
-            );
-        } catch (\Throwable $e) {
-            $this->logger->debug(
-                'PolicyMatchService::matchProhibition threw; returning null',
-                ['exception' => $e->getMessage()]
-            );
-            return null;
-        }
-
-        if ($match === null) {
-            return null;
-        }
-
-        $confidence = (float) ($entity['confidence'] ?? 0.0);
-
-        return [
-            'ruleId'         => $match['ruleId'] ?? null,
-            'ruleName'       => $match['ruleName'] ?? null,
-            'highConfidence' => $confidence >= $threshold,
-        ];
-
-    }//end computeProhibitionMatch()
 
     /**
      * Try to get PolicyMatchService from the container without throwing
@@ -351,6 +322,327 @@ class AnonymizationService
     }//end getHighConfidenceThreshold()
 
     /**
+     * Apply publication policy to freshly-detected, normalized entities.
+     *
+     * Runs `PolicyMatchService::match()` (prohibition precedence) per entity:
+     *  - a standing-consent winner is auto-skipped (`skip_anonymization = true`
+     *    on the relation, via OpenRegister) unless it is already skipped;
+     *  - a prohibition winner gets a read-only `prohibitionMatch`
+     *    (`{ruleId, ruleName, highConfidence}`) for the review UI and is never
+     *    auto-skipped.
+     *
+     * Every returned entity gains a `prohibitionMatch` key (null when none).
+     * Best-effort: policy failures are logged and never block detection.
+     *
+     * @param array<int, array<string, mixed>> $entities             Normalized entities.
+     * @param mixed                            $entityRelationMapper OpenRegister EntityRelationMapper (DI).
+     *
+     * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
+     */
+    private function applyPolicyDecisions(array $entities, mixed $entityRelationMapper): array
+    {
+        try {
+            $matcher   = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+            $threshold = (float) $matcher->highConfidenceThreshold();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Policy matcher unavailable; skipping publication-policy pass',
+                ['exception' => $e->getMessage()]
+            );
+            foreach ($entities as &$plain) {
+                $plain['prohibitionMatch'] = ($plain['prohibitionMatch'] ?? null);
+            }
+
+            unset($plain);
+            return $entities;
+        }//end try
+
+        foreach ($entities as &$entity) {
+            $entity['prohibitionMatch'] = null;
+            $value = (string) ($entity['value'] ?? '');
+            $type  = (string) ($entity['type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            try {
+                $match = $matcher->match(entityText: $value, entityType: $type);
+            } catch (Exception $e) {
+                $this->logger->warning('Policy match failed for entity', ['exception' => $e->getMessage()]);
+                continue;
+            }
+
+            if ($match === null) {
+                continue;
+            }
+
+            if ($match['kind'] === PolicyMatchService::KIND_PROHIBITION) {
+                $entity['prohibitionMatch'] = [
+                    'ruleId'         => $match['uuid'],
+                    'ruleName'       => $match['primaryName'],
+                    'highConfidence' => (((float) ($entity['confidence'] ?? 0.0)) >= $threshold),
+                ];
+                continue;
+            }
+
+            // Standing consent → auto-skip this occurrence unless already skipped.
+            if ($match['kind'] === PolicyMatchService::KIND_STANDING_CONSENT
+                && ((bool) ($entity['skipAnonymization'] ?? false)) === false
+                && ($entity['relationId'] ?? null) !== null
+            ) {
+                try {
+                    $relation = $entityRelationMapper->find((int) $entity['relationId']);
+                    $entityRelationMapper->updateDecisionMetadata($relation, ['skipAnonymization' => true]);
+                    $entity['skipAnonymization'] = true;
+                } catch (Exception $e) {
+                    $this->logger->warning(
+                        'Failed to auto-skip standing-consent entity',
+                        ['relationId' => $entity['relationId'], 'exception' => $e->getMessage()]
+                    );
+                }
+            }
+        }//end foreach
+
+        unset($entity);
+
+        return $entities;
+
+    }//end applyPolicyDecisions()
+
+
+    /**
+     * Classify a skip attempt on a prohibition-matched entity.
+     *
+     * Pure tier logic (callers have already established it is a skip AND a
+     * prohibition match): at or above the threshold the match is absolute and
+     * cannot be released; below the threshold it is releasable only with force.
+     *
+     * @param float $confidence Detection confidence for the occurrence.
+     * @param float $threshold  High-confidence threshold in effect.
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return string One of 'block_absolute', 'block_releasable', 'allow'.
+     */
+    public static function classifyProhibitionSkip(float $confidence, float $threshold, bool $force): string
+    {
+        if ($confidence >= $threshold) {
+            return 'block_absolute';
+        }
+
+        if ($force === false) {
+            return 'block_releasable';
+        }
+
+        return 'allow';
+
+    }//end classifyProhibitionSkip()
+
+
+    /**
+     * Guard + apply a per-relation skip/include decision from the review UI.
+     *
+     * Setting `skipAnonymization = true` on a prohibition-matched relation is
+     * guarded per {@see classifyProhibitionSkip}. Include / non-skip decisions
+     * are always allowed. Allowed decisions are forwarded to OpenRegister via
+     * `updateDecisionMetadata` (so OR's audit-trail records the flip). A blocked
+     * decision performs no OpenRegister write.
+     *
+     * @param int        $relationId The EntityRelation id.
+     * @param bool       $skip       The requested skipAnonymization value.
+     * @param array|null $bases      Optional bases to set alongside the decision.
+     * @param bool       $force      Release a sub-threshold prohibition match.
+     *
+     * @return array{status: 200|404|422, body: array<string, mixed>} HTTP status + response body.
+     */
+    public function applyRelationSkipDecision(int $relationId, bool $skip, ?array $bases, bool $force): array
+    {
+        $mapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+
+        try {
+            $relation = $mapper->find($relationId);
+        } catch (Exception $e) {
+            return ['status' => 404, 'body' => ['error' => 'Entity relation not found']];
+        }
+
+        if ($skip === true) {
+            $block = $this->evaluateProhibitionSkip(
+                mapper: $mapper,
+                relation: $relation,
+                relationId: $relationId,
+                force: $force
+            );
+            if ($block !== null) {
+                return ['status' => 422, 'body' => $block];
+            }
+        }
+
+        $fields = ['skipAnonymization' => $skip];
+        if ($bases !== null) {
+            $fields['bases'] = $bases;
+        }
+
+        $mapper->updateDecisionMetadata($relation, $fields);
+
+        return ['status' => 200, 'body' => ['status' => 'ok', 'skipAnonymization' => $skip]];
+
+    }//end applyRelationSkipDecision()
+
+
+    /**
+     * Evaluate the prohibition guard for a skip on one relation.
+     *
+     * Resolves the occurrence's entity value/type/confidence via the file join,
+     * matches it against the prohibition cache, and classifies the skip. Returns
+     * the 422 body when the skip is blocked, or null when it is allowed (not a
+     * prohibition match, released by force, or the match cannot be resolved).
+     *
+     * @param mixed $mapper     OpenRegister EntityRelationMapper (DI).
+     * @param mixed $relation   The EntityRelation being decided.
+     * @param int   $relationId The relation id (for the file-join lookup + logs).
+     * @param bool  $force      Whether the request set force.
+     *
+     * @return array<string, mixed>|null The 422 body when blocked, else null.
+     */
+    private function evaluateProhibitionSkip(mixed $mapper, mixed $relation, int $relationId, bool $force): ?array
+    {
+        $row = null;
+        foreach ($mapper->findEntitiesForFile((int) $relation->getFileId()) as $candidate) {
+            if ((int) ($candidate['relation_id'] ?? 0) === $relationId) {
+                $row = $candidate;
+                break;
+            }
+        }
+
+        if ($row === null) {
+            return null;
+        }
+
+        $value = (string) ($row['entity_value'] ?? '');
+        $type  = (string) ($row['entity_type'] ?? 'OTHER');
+        if ($value === '') {
+            return null;
+        }
+
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning('Policy matcher unavailable; skip guard is a no-op', ['exception' => $e->getMessage()]);
+            return null;
+        }
+
+        $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+        if ($match === null) {
+            return null;
+        }
+
+        $confidence = (float) ($row['confidence'] ?? 0.0);
+        $threshold  = (float) $matcher->highConfidenceThreshold();
+        $decision   = self::classifyProhibitionSkip(confidence: $confidence, threshold: $threshold, force: $force);
+        if ($decision === 'allow') {
+            return null;
+        }
+
+        $this->logger->warning(
+            'Prohibition guard blocked a skip decision',
+            [
+                'ruleId'     => $match['uuid'],
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'relationId' => $relationId,
+            ]
+        );
+
+        return [
+            'error'            => 'Entity is on the publication prohibition list; skipping is not allowed.',
+            'threshold'        => $threshold,
+            'prohibitionMatch' => [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => $confidence,
+                'absolute'   => ($decision === 'block_absolute'),
+            ],
+        ];
+
+    }//end evaluateProhibitionSkip()
+
+
+    /**
+     * Defence-in-depth backstop: absolute prohibition matches left un-redacted.
+     *
+     * OpenRegister's generic relation PATCH stays open, so a caller could skip a
+     * prohibited relation directly, bypassing the DocuDesk skip endpoint. Before
+     * redaction, this returns any prohibition-matched occurrence at confidence
+     * >= threshold that is being left un-redacted (skipped). Only the absolute
+     * tier is enforced here — the primary decision-time guard covers the rest.
+     *
+     * "Skipped" = detected for the file but absent from the anonymise set
+     * (`findEntitiesForAnonymization`, which already excludes skipAnonymization).
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array<int, array<string, mixed>> Absolute-tier violations (may be empty).
+     */
+    public function absoluteProhibitionViolations(int $fileId): array
+    {
+        try {
+            $matcher = $this->container->get('OCA\DocuDesk\Service\PolicyMatchService');
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Policy matcher unavailable; prohibition backstop is a no-op',
+                ['exception' => $e->getMessage()]
+            );
+            return [];
+        }
+
+        $mapper    = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
+        $threshold = (float) $matcher->highConfidenceThreshold();
+
+        $redactIds = [];
+        foreach ($mapper->findEntitiesForAnonymization($fileId) as $row) {
+            $redactIds[(int) ($row['relation_id'] ?? 0)] = true;
+        }
+
+        $violations = [];
+        foreach ($mapper->findEntitiesForFile($fileId) as $row) {
+            $relationId = (int) ($row['relation_id'] ?? 0);
+            if (isset($redactIds[$relationId]) === true) {
+                // Being redacted — fine.
+                continue;
+            }
+
+            $value = (string) ($row['entity_value'] ?? '');
+            $type  = (string) ($row['entity_type'] ?? 'OTHER');
+            if ($value === '') {
+                continue;
+            }
+
+            $match = $matcher->matchProhibition(entityText: $value, entityType: $type);
+            if ($match === null || ((float) ($row['confidence'] ?? 0.0)) < $threshold) {
+                continue;
+            }
+
+            $this->logger->warning(
+                'Prohibition backstop caught an un-redacted absolute match',
+                ['ruleId' => $match['uuid'], 'entityId' => (int) ($row['entity_id'] ?? 0), 'fileId' => $fileId]
+            );
+
+            $violations[] = [
+                'entityId'   => (int) ($row['entity_id'] ?? 0),
+                'entityName' => $value,
+                'ruleId'     => $match['uuid'],
+                'ruleName'   => $match['primaryName'],
+                'confidence' => (float) ($row['confidence'] ?? 0.0),
+                'absolute'   => true,
+            ];
+        }//end foreach
+
+        return $violations;
+
+    }//end absoluteProhibitionViolations()
+
+
+    /**
      * Anonymize entities in a document
      *
      * When appendBasisSummary is true, invokes GrondslagenSummaryService after
@@ -360,11 +652,18 @@ class AnonymizationService
      * is non-fatal: the anonymised file is always preserved and a `warning`
      * field is added to the response instead (HTTP 200).
      *
-     * When outputFormat is "pdf" (default), the anonymised intermediate is run
-     * through the PdfConversionService cascade and replaced with the PDF; on
-     * cascade failure the intermediate is rolled back (best-effort) and a
-     * ConversionFailedException is thrown for the controller to surface as
-     * HTTP 422. "preserve" skips conversion and keeps the native format.
+     * When outputFormat is "pdf-only" (default) or "pdf", the anonymised
+     * intermediate is run through the PdfConversionService cascade and replaced
+     * with the PDF; on cascade failure the intermediate is rolled back
+     * (best-effort) and a ConversionFailedException is thrown for the controller
+     * to surface as HTTP 422. "pdf-only" additionally best-effort deletes the
+     * native anonymised intermediate after a successful conversion so only the
+     * PDF remains; "pdf" keeps the native intermediate too; "preserve" skips
+     * conversion and keeps the native format.
+     *
+     * EML inputs are routed to OpenRegister's dedicated anonymise-EML API and
+     * assembled into a PDF/A-3b by EmlPdfAssemblyService (OR's anonymizeDocument
+     * throws on message/rfc822); "preserve" is overridden to PDF for EML.
      *
      * When unredactedEntities is non-empty, a publicationConsent record is
      * created for each entry AFTER the anonymise pipeline succeeds. The
@@ -373,7 +672,7 @@ class AnonymizationService
      * @param int                              $fileId                The Nextcloud file ID
      * @param array<array<string, mixed>>      $entities              The entities to anonymize
      * @param bool                             $appendBasisSummary    Whether to append a grondslagen summary (default false)
-     * @param string                           $outputFormat          Output format: 'pdf' (default) or 'preserve'
+     * @param string                           $outputFormat          Output format: 'pdf-only' (default), 'pdf' or 'preserve'
      * @param array<int, array<string, mixed>> $unredactedEntities    Entities to publish unredacted with consent creation
      * @param array<int, array<string, mixed>> $acknowledgedOverrides Override entries {ruleId, entityId, reason?} that
      *                                                                release low-confidence prohibition matches.
@@ -405,7 +704,7 @@ class AnonymizationService
         int $fileId,
         array $entities,
         bool $appendBasisSummary=false,
-        string $outputFormat='pdf',
+        string $outputFormat='pdf-only',
         array $unredactedEntities=[],
         array $acknowledgedOverrides=[],
         string $userId='',
@@ -426,6 +725,27 @@ class AnonymizationService
             $node           = $fileService->getFileById($fileId);
             $mappedEntities = $this->entityDetection->mapEntitiesForAnonymization($entities);
 
+            // EML branch (eml-pdf-assembly, Robert): OR's anonymizeDocument()
+            // THROWS on message/rfc822 (it no longer leaks a raw-text body). EML
+            // inputs are therefore routed to OR's dedicated anonymise-EML API
+            // (anonymizeEmlStructured) and assembled into a PDF/A-3b here,
+            // BEFORE the standard anonymizeDocument + convertToPdf path. This
+            // REPLACES that path for EML. `outputFormat: "preserve"` is
+            // silently overridden to PDF for EML (design D8) — handled inside
+            // anonymizeEmlToPdf because EML has no reliably-redacted native
+            // form to preserve.
+            if ($this->isEmlInput(node: $node) === true) {
+                return $this->anonymizeEmlToPdf(
+                    fileId: $fileId,
+                    node: $node,
+                    fileService: $fileService,
+                    mappedEntities: $mappedEntities,
+                    appendBasisSummary: $appendBasisSummary,
+                    scope: $scope,
+                    dossierKey: $dossierKey
+                );
+            }
+
             // Capture a textual projection of the ORIGINAL document BEFORE
             // anonymization so we can compute which mapped entity values
             // were actually present (and therefore eligible to be
@@ -434,12 +754,26 @@ class AnonymizationService
             $originalText = $this->readNodeTextSafely(node: $node);
 
             // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
-            // 'document' numbers entities locally to this file; 'dossier' makes
-            // the number consistent across the dossier folder's files.
-            // OpenRegister derives the dossier from $dossierKey (a stable folder
-            // id) or falls back to the file's parent folder when null. Passed
-            // positionally for the reflectively-resolved OpenRegister FileService.
+            // 'document' (default) numbers entities locally to this file;
+            // 'dossier' makes the number consistent across the dossier folder's
+            // files. OpenRegister derives the dossier from $dossierKey (a stable
+            // folder id) or falls back to the file's parent folder when null —
+            // so a folder anonymise only needs to signal scope=dossier. Passed
+            // positionally for compatibility with the reflectively-resolved
+            // OpenRegister FileService.
             $result = $fileService->anonymizeDocument($node, $mappedEntities, $scope, $dossierKey);
+
+            // Best-effort policy: OpenRegister now produces the anonymised file
+            // even when some entity text could not be removed (e.g. the ExApp
+            // NER over-captured a span across table cells, so the value is not
+            // contiguous in the document). Pull the residual list so the
+            // operator can be warned and iterate (manual entities, skip
+            // unselected occurrences). Defensive method_exists() guard for
+            // older OpenRegister versions without the best-effort API.
+            $residualEntities = [];
+            if (method_exists($fileService, 'getLastResidualEntities') === true) {
+                $residualEntities = $fileService->getLastResidualEntities();
+            }
 
             // Per-entity placeholder map (anonymisation-placeholder-id-scope):
             // the EXACT placeholder OpenRegister emitted per global entity id
@@ -473,6 +807,8 @@ class AnonymizationService
                     'replacementsApplied'   => $verification['replacementsApplied'],
                     'replacementsVerified'  => $verification['replacementsVerified'],
                     'unmatchedCount'        => count($verification['unmatchedEntities']),
+                    // PII-free: count only, never the residual text.
+                    'residualCount'         => count($residualEntities),
                 ]
             );
 
@@ -491,15 +827,25 @@ class AnonymizationService
                 );
             }
 
-            // PDF conversion gate: when outputFormat is 'pdf' AND the
-            // anonymised result is not already a PDF, run the cascade.
+            // PDF conversion gate: when outputFormat requests a PDF
+            // ('pdf-only' or 'pdf') AND the anonymised result is not
+            // already a PDF, run the cascade.
             // On failure: delete the un-converted intermediate (the
             // operator must NOT see a half-finished native-format
             // output when they asked for PDF) and re-throw the typed
             // exception so the controller maps it to 422.
-            if ($outputFormat === 'pdf' && $result instanceof File === true) {
+            // On success in 'pdf-only' mode: best-effort delete the native
+            // anonymised intermediate so only the PDF remains.
+            if (in_array($outputFormat, ['pdf-only', 'pdf'], true) === true && $result instanceof File === true) {
                 $resultMime = (string) $result->getMimeType();
                 if ($resultMime !== 'application/pdf') {
+                    // Capture the native anonymised node BEFORE $result is
+                    // reassigned to the converted PDF — 'pdf-only' deletes it
+                    // after a successful conversion. When the result is
+                    // already a PDF the cascade is skipped, so there is no
+                    // native intermediate to delete and 'pdf-only' behaves
+                    // identically to 'pdf'.
+                    $nativeIntermediate = $result;
                     try {
                         $result = $this->pdfConversion->convertToPdf($result);
                     } catch (ConversionFailedException $e) {
@@ -513,9 +859,11 @@ class AnonymizationService
                         // Best-effort rollback. If delete fails, log
                         // and continue — re-throwing is more important
                         // than leaving the operator in a partial state
-                        // that they CAN inspect (they sent
-                        // outputFormat: "pdf" and got 422, so the
-                        // expectation is "no file written").
+                        // that they CAN inspect (they sent a PDF
+                        // outputFormat and got 422, so the expectation
+                        // is "no file written"). $result still points at
+                        // the un-converted native intermediate here, as
+                        // the reassignment above only runs on success.
                         try {
                             $result->delete();
                         } catch (Throwable $deleteError) {
@@ -531,6 +879,27 @@ class AnonymizationService
 
                         throw $e;
                     }//end try
+
+                    // 'pdf-only': the conversion succeeded and the PDF is the
+                    // referenced output, so the native intermediate is now
+                    // un-redactable leftover. Best-effort delete it; a failure
+                    // here MUST NOT fail an otherwise-successful run (mirrors
+                    // the rollback above). PII-free log (file id + exception
+                    // metadata only).
+                    if ($outputFormat === 'pdf-only') {
+                        try {
+                            $nativeIntermediate->delete();
+                        } catch (Throwable $deleteError) {
+                            $this->logger->warning(
+                                'pdf-only: failed to delete native anonymised intermediate; orphaned file remains.',
+                                [
+                                    'fileId'    => $fileId,
+                                    'exception' => get_class($deleteError),
+                                    'message'   => $deleteError->getMessage(),
+                                ]
+                            );
+                        }
+                    }//end if
                 }//end if
             }//end if
 
@@ -566,6 +935,13 @@ class AnonymizationService
                     unredactedEntities: $unredactedEntities
                 );
             }
+
+            // Surface best-effort residuals so the UI can warn that the file was
+            // produced but some entities could not be fully removed, and let the
+            // operator refine them. `complete` drives the warning banner.
+            $resultInfo['complete']         = (count($residualEntities) === 0);
+            $resultInfo['residualCount']    = count($residualEntities);
+            $resultInfo['residualEntities'] = $residualEntities;
 
             if ($appendBasisSummary === true) {
                 $resultInfo = $this->attachGrondslagenSummary(
@@ -1342,6 +1718,225 @@ class AnonymizationService
     }//end verifyReplacements()
 
     /**
+     * Whether a file node is an EML (email) input.
+     *
+     * Detected by MIME `message/rfc822` or a `.eml` extension. EML inputs are
+     * routed to the dedicated anonymise-EML + assembly path.
+     *
+     * @param mixed $node The source file node.
+     *
+     * @return bool True when the node is an EML message.
+     */
+    private function isEmlInput(mixed $node): bool
+    {
+        if (is_object($node) === false) {
+            return false;
+        }
+
+        if (method_exists($node, 'getMimeType') === true
+            && (string) $node->getMimeType() === 'message/rfc822'
+        ) {
+            return true;
+        }
+
+        if (method_exists($node, 'getName') === true) {
+            $name = (string) $node->getName();
+            $dot  = strrpos($name, '.');
+            if ($dot !== false && strtolower(substr($name, ($dot + 1))) === 'eml') {
+                return true;
+            }
+        }
+
+        return false;
+
+    }//end isEmlInput()
+
+
+    /**
+     * Anonymise an EML input via OR's anonymise-EML API and assemble the
+     * redacted result into a PDF/A-3b written beside the source.
+     *
+     * This is the EML replacement for the standard anonymizeDocument +
+     * convertToPdf path. EML always produces a PDF — `outputFormat:
+     * "preserve"` is silently overridden here (the caller is never told;
+     * design D8), because OR redacts components, not a re-serialised native
+     * `.eml`, so there is no native intermediate to keep. On OR API failure a
+     * `ConversionFailedException` is raised with NO raw-parse fallback (design
+     * D9), so the controller maps it to HTTP 422 and no un-redacted content is
+     * ever written.
+     *
+     * @param int          $fileId             Source Nextcloud file ID.
+     * @param mixed        $node               Source EML file node.
+     * @param mixed        $fileService        OR FileService (resolved reflectively).
+     * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
+     * @param bool         $appendBasisSummary Append the grondslagen summary to the PDF.
+     * @param string       $scope              Placeholder-numbering scope.
+     * @param string|null  $dossierKey         Stable dossier folder id, or null.
+     *
+     * @return array<string, mixed> The anonymisation result info (same shape the
+     *                              controller expects: anonymizedFileId/Name/Path,
+     *                              replacementCount, complete, residualEntities).
+     *
+     * @throws ConversionFailedException On OR API failure or assembly failure.
+     */
+    private function anonymizeEmlToPdf(
+        int $fileId,
+        mixed $node,
+        mixed $fileService,
+        array $mappedEntities,
+        bool $appendBasisSummary,
+        string $scope,
+        ?string $dossierKey
+    ): array {
+        if (method_exists($fileService, 'anonymizeEmlStructured') === false) {
+            throw new ConversionFailedException(
+                message: 'OpenRegister does not expose the anonymise-EML API; cannot anonymise EML input.',
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => false,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured not present on OpenRegister FileService',
+                    ],
+                ]
+            );
+        }
+
+        try {
+            $structure = $fileService->anonymizeEmlStructured($node, $mappedEntities, $scope, $dossierKey);
+        } catch (ConversionFailedException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            // NO raw-parse fallback — leaking un-redacted EML is the worse
+            // failure. Surface as a typed conversion failure (HTTP 422).
+            $this->logger->warning(
+                'EML anonymise-API failed; no raw-parse fallback.',
+                ['fileId' => $fileId, 'exception' => get_class($e), 'message' => $e->getMessage()]
+            );
+            throw new ConversionFailedException(
+                message: 'OpenRegister anonymise-EML API failed: '.$e->getMessage(),
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => true,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured threw: '.$e->getMessage(),
+                    ],
+                ],
+                previous: $e
+            );
+        }//end try
+
+        if (is_object($structure) === false) {
+            throw new ConversionFailedException(
+                message: 'OpenRegister anonymise-EML API returned no structure.',
+                attempts: [
+                    [
+                        'name'      => 'eml',
+                        'available' => true,
+                        'supports'  => true,
+                        'reason'    => 'anonymizeEmlStructured returned non-object',
+                    ],
+                ]
+            );
+        }
+
+        $sourceName = '';
+        if (method_exists($node, 'getName') === true) {
+            $sourceName = (string) $node->getName();
+        }
+
+        // assemble() throws ConversionFailedException on unrecoverable
+        // failure; let it propagate so the controller surfaces 422.
+        $pdfBytes = $this->emlAssembly->assemble(result: $structure, sourceFilename: $sourceName);
+
+        $parent     = $node->getParent();
+        $baseName   = $this->stripExtension(name: $sourceName === '' ? 'email' : $sourceName);
+        $outputName = $baseName.'_anonymized.pdf';
+        if ($parent->nodeExists($outputName) === true) {
+            $parent->get($outputName)->delete();
+        }
+
+        $pdfNode = $parent->newFile($outputName, $pdfBytes);
+
+        $this->logger->info(
+            'EML anonymised and assembled to PDF',
+            [
+                'fileId'      => $fileId,
+                'entityCount' => count($mappedEntities),
+            ]
+        );
+
+        $resultInfo = $this->entityDetection->parseAnonymizationResult($pdfNode);
+
+        // #286: do not fabricate replacementCount from count($mappedEntities).
+        // The EML output is an assembled binary PDF, so the replacement layer
+        // cannot verify how many mapped entities actually appeared in — and were
+        // therefore removed from — the source text (same limitation as any
+        // binary format; see readNodeTextSafely()/verifyReplacements()). Surface
+        // the truth: how many were attempted, that none could be verified, and
+        // let the legacy replacementCount fall back to the attempted count with
+        // replacementsVerified=false telling callers it is unconfirmed. This
+        // preserves the #286 anti-fabrication fix on the EML path (issue #312).
+        $attemptedCount                      = count($mappedEntities);
+        $resultInfo['replacementsAttempted'] = $attemptedCount;
+        $resultInfo['replacementsApplied']   = null;
+        $resultInfo['replacementsVerified']  = false;
+        $resultInfo['unmatchedEntities']     = [];
+        $resultInfo['replacementCount']      = $resultInfo['replacementsApplied'] ?? $resultInfo['replacementsAttempted'];
+        // OR's anonymise-EML path does not surface a residual list; the
+        // assembled PDF is the authoritative redacted output.
+        $resultInfo['complete']         = true;
+        $resultInfo['residualCount']    = 0;
+        $resultInfo['residualEntities'] = [];
+
+        if ($appendBasisSummary === true) {
+            $placeholderMap = [];
+            if (method_exists($fileService, 'getLastPlaceholderMap') === true) {
+                $placeholderMap = $fileService->getLastPlaceholderMap();
+            }
+
+            $resultInfo = $this->attachGrondslagenSummary(
+                anonymisedNode: $pdfNode,
+                sourceFileId: $fileId,
+                resultInfo: $resultInfo,
+                placeholderMap: $placeholderMap
+            );
+        }
+
+        if (empty($resultInfo['anonymizedFileId']) === false) {
+            $resultInfo = $this->recordAnonymizationLink(
+                fileId: $fileId,
+                sourceNode: $node,
+                resultInfo: $resultInfo
+            );
+        }
+
+        return $resultInfo;
+
+    }//end anonymizeEmlToPdf()
+
+
+    /**
+     * Return $name without its trailing `.ext`.
+     *
+     * @param string $name File name with extension.
+     *
+     * @return string Name without extension.
+     */
+    private function stripExtension(string $name): string
+    {
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            return $name;
+        }
+
+        return substr($name, 0, $dotPos);
+
+    }//end stripExtension()
+
+
+    /**
      * Persist or update the mapping between a source file and its anonymised counterpart.
      *
      * Idempotent UPSERT keyed on `sourceFileId`: the first successful
@@ -1386,18 +1981,18 @@ class AnonymizationService
                 $existing = $this->extractLinkObjectData(candidate: $results[0]);
             }
 
-            $object = [
-                '@self'        => [
-                    'register' => 'document',
-                    'schema'   => 'anonymizationLink',
-                ],
-                'sourceFileId' => $fileId,
-                'runCount'     => 1,
-            ];
-
             if (empty($existing) === false) {
                 $object = $existing;
                 $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
+            } else {
+                $object = [
+                    '@self'        => [
+                        'register' => 'document',
+                        'schema'   => 'anonymizationLink',
+                    ],
+                    'sourceFileId' => $fileId,
+                    'runCount'     => 1,
+                ];
             }
 
             $object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
@@ -1446,6 +2041,7 @@ class AnonymizationService
 
     }//end recordAnonymizationLink()
 
+
     /**
      * Apply best-effort source-node metadata (name, path, owner) to a link object.
      *
@@ -1483,6 +2079,7 @@ class AnonymizationService
         return $object;
 
     }//end applySourceNodeMetadata()
+
 
     /**
      * Normalise a searchObjects() candidate to a plain array including its `@self`.
@@ -1526,6 +2123,7 @@ class AnonymizationService
 
     }//end extractLinkObjectData()
 
+
     /**
      * Extract the persisted object's identifier from a saveObject() return value.
      *
@@ -1566,6 +2164,7 @@ class AnonymizationService
         return null;
 
     }//end extractSavedObjectId()
+
 
     /**
      * Render and attach the grondslagen summary to a freshly-anonymised file.

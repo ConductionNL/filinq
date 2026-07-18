@@ -1,20 +1,14 @@
 <?php
 
 /**
- * Unit tests for EmlBackend (the EML→PDF cascade entry point).
+ * Unit tests for EmlBackend
  *
- * Exercises:
- *   - name() returns 'eml'.
- *   - canHandle('message/rfc822' / .eml) returns true; other formats false.
- *   - isAvailable() returns false when the tenant flag is 'false'.
- *   - isAvailable() returns false when OR's TextExtractionService is
- *     not present on the classpath (default unit-test environment).
- *   - convert() throws ConversionFailedException when the assembly
- *     service cannot resolve the OR service.
- *
- * Verifying the full happy path requires a running OR (or a heavier
- * dependency stub); we cover it from the assembly side instead in
- * `EmlPdfAssemblyServiceTest`.
+ * Covers: isAvailable() reflecting both dependencies (tenant flag,
+ * OpenRegister installed + anonymize-EML API present, assembly service);
+ * canHandle() claiming message/rfc822; convert() calling OR's anonymise-EML
+ * API (NOT parseEmlStructured) and delegating to the assembly service; and
+ * OR API failure surfacing as ConversionFailedException with no raw-parse
+ * fallback.
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
@@ -26,329 +20,310 @@
  * @version GIT: <git_id>
  *
  * @link https://www.DocuDesk.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
- * @spec openspec/changes/eml-pdf-assembly/tasks.md#task-11
  */
-
-declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Service\Conversion;
 
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Service\Conversion\EmlBackend;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
+use OCP\App\IAppManager;
 use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
- * @category Tests
- * @package  OCA\DocuDesk\Tests\Unit\Service\Conversion
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.DocuDesk.app
+ * A test double exposing anonymizeEmlStructured(), mimicking OR's FileService
+ * surface so the backend's reflection / method_exists checks pass.
+ */
+class FakeOrFileService
+{
+    /** @var mixed */
+    public mixed $toReturn = null;
+
+    /** @var \Throwable|null */
+    public ?\Throwable $toThrow = null;
+
+    /** @var bool */
+    public bool $called = false;
+
+
+    /**
+     * Mimic OR's anonymise-EML entry point.
+     *
+     * @param mixed  $node       File node.
+     * @param array  $entities   Entities.
+     * @param string $scope      Scope.
+     * @param mixed  $dossierKey Dossier key.
+     *
+     * @return mixed
+     */
+    public function anonymizeEmlStructured(mixed $node, array $entities, string $scope='document', mixed $dossierKey=null): mixed
+    {
+        $this->called = true;
+        if ($this->toThrow !== null) {
+            throw $this->toThrow;
+        }
+
+        return $this->toReturn;
+    }
+}
+
+/**
+ * A test double WITHOUT the anonymise-EML method — isAvailable() must be false.
+ */
+class FakeOrFileServiceWithoutApi
+{
+}
+
+/**
+ * @psalm-suppress PropertyNotSetInConstructor
  */
 class EmlBackendTest extends TestCase
 {
 
-
     /**
-     * @var EmlPdfAssemblyService|MockObject
+     * @var IAppConfig&MockObject
      */
-    private EmlPdfAssemblyService|MockObject $assemblyService;
-
+    private IAppConfig $appConfig;
 
     /**
-     * @var IAppConfig|MockObject
+     * @var IAppManager&MockObject
      */
-    private IAppConfig|MockObject $appConfig;
-
+    private IAppManager $appManager;
 
     /**
-     * @var LoggerInterface|MockObject
+     * @var ContainerInterface&MockObject
      */
-    private LoggerInterface|MockObject $logger;
+    private ContainerInterface $container;
 
+    /**
+     * @var EmlPdfAssemblyService&MockObject
+     */
+    private EmlPdfAssemblyService $assembly;
 
-    private EmlBackend $backend;
+    /**
+     * @var LoggerInterface&MockObject
+     */
+    private LoggerInterface $logger;
 
 
     /**
+     * Set up common mocks.
+     *
      * @return void
      */
     protected function setUp(): void
     {
-        $this->assemblyService = $this->createMock(EmlPdfAssemblyService::class);
-        $this->appConfig       = $this->createMock(IAppConfig::class);
-        $this->logger          = $this->createMock(LoggerInterface::class);
-
-        $this->appConfig->method('getValueString')->willReturnCallback(
-            function (string $app, string $key, string $default='') {
-                return $default;
-            }
-        );
-
-        $this->backend = new EmlBackend(
-            assemblyService: $this->assemblyService,
-            appConfig: $this->appConfig,
-            logger: $this->logger
-        );
+        parent::setUp();
+        $this->appConfig  = $this->createMock(IAppConfig::class);
+        $this->appManager = $this->createMock(IAppManager::class);
+        $this->container  = $this->createMock(ContainerInterface::class);
+        $this->assembly   = $this->createMock(EmlPdfAssemblyService::class);
+        $this->logger     = $this->createMock(LoggerInterface::class);
 
     }//end setUp()
 
 
     /**
+     * Build the backend under test.
+     *
+     * @return EmlBackend
+     */
+    private function backend(): EmlBackend
+    {
+        return new EmlBackend(
+            $this->appConfig,
+            $this->appManager,
+            $this->container,
+            $this->assembly,
+            $this->logger
+        );
+
+    }//end backend()
+
+
+    /**
+     * name() is the stable 'eml' identifier.
+     *
      * @return void
      */
     public function testNameIsEml(): void
     {
-        self::assertSame('eml', $this->backend->name());
+        $this->appConfig->method('getValueString')->willReturn('true');
+        $this->assertSame('eml', $this->backend()->name());
 
     }//end testNameIsEml()
 
 
     /**
+     * canHandle() claims message/rfc822 and the .eml extension.
+     *
      * @return void
      */
-    public function testCanHandleEmlByMime(): void
+    public function testCanHandleEml(): void
     {
-        self::assertTrue($this->backend->canHandle('message/rfc822', 'eml'));
+        $this->appConfig->method('getValueString')->willReturn('true');
+        $backend = $this->backend();
+        $this->assertTrue($backend->canHandle('message/rfc822', ''));
+        $this->assertTrue($backend->canHandle('application/octet-stream', 'eml'));
+        $this->assertFalse($backend->canHandle('application/pdf', 'pdf'));
 
-    }//end testCanHandleEmlByMime()
+    }//end testCanHandleEml()
 
 
     /**
+     * isAvailable() is true when the flag is set, OR is installed, the
+     * anonymise-EML API is present, and the assembly service is wired.
+     *
      * @return void
      */
-    public function testCanHandleEmlByExtensionOnly(): void
+    public function testIsAvailableWhenBothDepsPresent(): void
     {
-        self::assertTrue($this->backend->canHandle('application/octet-stream', 'eml'));
+        $this->appConfig->method('getValueString')->willReturn('true');
+        $this->appManager->method('getInstalledApps')->willReturn(['openregister', 'docudesk']);
+        $this->container->method('get')->willReturn(new FakeOrFileService());
 
-    }//end testCanHandleEmlByExtensionOnly()
+        $this->assertTrue($this->backend()->isAvailable());
+
+    }//end testIsAvailableWhenBothDepsPresent()
 
 
     /**
+     * isAvailable() is false when the OR anonymise-EML API is absent.
+     *
      * @return void
      */
-    public function testCanHandleRejectsNonEml(): void
+    public function testIsUnavailableWhenOrApiAbsent(): void
     {
-        self::assertFalse($this->backend->canHandle('application/pdf', 'pdf'));
-        self::assertFalse($this->backend->canHandle('text/html', 'html'));
+        $this->appConfig->method('getValueString')->willReturn('true');
+        $this->appManager->method('getInstalledApps')->willReturn(['openregister']);
+        $this->container->method('get')->willReturn(new FakeOrFileServiceWithoutApi());
 
-    }//end testCanHandleRejectsNonEml()
+        $this->assertFalse($this->backend()->isAvailable());
+
+    }//end testIsUnavailableWhenOrApiAbsent()
 
 
     /**
+     * isAvailable() is false when OpenRegister is not installed.
+     *
      * @return void
      */
-    public function testIsAvailableReturnsFalseWhenTenantFlagDisabled(): void
+    public function testIsUnavailableWhenOrNotInstalled(): void
     {
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturn('false');
+        $this->appConfig->method('getValueString')->willReturn('true');
+        $this->appManager->method('getInstalledApps')->willReturn(['docudesk']);
 
-        $backend = new EmlBackend(
-            assemblyService: $this->assemblyService,
-            appConfig: $appConfig,
-            logger: $this->logger
-        );
+        $this->assertFalse($this->backend()->isAvailable());
 
-        self::assertFalse($backend->isAvailable());
-
-    }//end testIsAvailableReturnsFalseWhenTenantFlagDisabled()
+    }//end testIsUnavailableWhenOrNotInstalled()
 
 
     /**
+     * isAvailable() is false when the tenant flag is explicitly disabled.
+     *
      * @return void
      */
-    public function testIsAvailableReturnsFalseWhenORClassMissing(): void
+    public function testIsUnavailableWhenFlagDisabled(): void
     {
-        // In unit-test context OR's TextExtractionService is not on
-        // the classpath, so isAvailable must report false even with
-        // the tenant flag enabled (which is the default).
-        self::assertFalse($this->backend->isAvailable());
+        $this->appConfig->method('getValueString')->willReturn('false');
+        // OR/container should not even be consulted, but tolerate if they are.
+        $this->assertFalse($this->backend()->isAvailable());
 
-    }//end testIsAvailableReturnsFalseWhenORClassMissing()
+    }//end testIsUnavailableWhenFlagDisabled()
 
 
     /**
+     * convert() calls OR's anonymise-EML API (NOT parseEmlStructured) and
+     * delegates to the assembly service, writing the PDF beside the source.
+     *
      * @return void
      */
-    public function testConvertThrowsConversionFailedWhenORServiceUnresolved(): void
+    public function testConvertCallsOrApiAndDelegatesToAssembly(): void
     {
-        $this->assemblyService
-            ->method('resolveTextExtractionService')
-            ->willReturn(null);
+        $structure = (object) ['headers' => [], 'body' => (object) ['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
 
-        $source = $this->createMock(File::class);
-        $source->method('getPath')->willReturn('/admin/files/email.eml');
+        $or           = new FakeOrFileService();
+        $or->toReturn = $structure;
+        $this->container->method('get')->willReturn($or);
 
-        $this->expectException(ConversionFailedException::class);
-        $this->backend->convert($source);
-
-    }//end testConvertThrowsConversionFailedWhenORServiceUnresolved()
-
-
-    /**
-     * @return void
-     */
-    public function testConvertReturnsNewFileOnHappyPath(): void
-    {
-        // Stub OR service: a stdClass with parseEmlStructured returning
-        // a minimal structure.
-        $structure = new \stdClass();
-        $structure->headers = ['from' => 'a@b'];
-        $structure->body = new \stdClass();
-        $structure->body->plainText = 'hi';
-        $structure->body->html = null;
-        $structure->attachments = [];
-
-        $orService = new class($structure) {
-            private $structure;
-            public function __construct($s)
-            {
-                $this->structure = $s;
-            }
-            public function parseEmlStructured($file)
-            {
-                return $this->structure;
-            }
-        };
-
-        $this->assemblyService
-            ->method('resolveTextExtractionService')
-            ->willReturn($orService);
-
-        $this->assemblyService
+        $this->assembly->expects($this->once())
             ->method('assemble')
-            ->willReturn('%PDF-BINARY');
+            ->with($structure, 'message.eml')
+            ->willReturn('%PDF-1.4 fake');
 
-        $newFile = $this->createMock(File::class);
-        $parent  = $this->createMock(\OCP\Files\Folder::class);
+        $outFile = $this->createMock(File::class);
+        $parent  = $this->createMock(Folder::class);
         $parent->method('nodeExists')->willReturn(false);
-        $parent->method('newFile')->willReturn($newFile);
+        $parent->expects($this->once())
+            ->method('newFile')
+            ->with('message_anonymized.pdf', '%PDF-1.4 fake')
+            ->willReturn($outFile);
 
         $source = $this->createMock(File::class);
         $source->method('getName')->willReturn('message.eml');
         $source->method('getParent')->willReturn($parent);
 
-        $result = $this->backend->convert($source);
-        self::assertSame($newFile, $result);
+        $result = $this->backend()->convert($source);
 
-    }//end testConvertReturnsNewFileOnHappyPath()
+        $this->assertSame($outFile, $result);
+        $this->assertTrue($or->called, 'OR anonymise-EML API must be called');
+
+    }//end testConvertCallsOrApiAndDelegatesToAssembly()
 
 
     /**
+     * OR API failure surfaces as ConversionFailedException with NO raw-parse
+     * fallback (the assembly service is never invoked).
+     *
      * @return void
      */
-    public function testConvertWrapsParseFailureInConversionFailed(): void
+    public function testConvertOrFailureThrowsNoFallback(): void
     {
-        $orService = new class {
-            public function parseEmlStructured($file)
-            {
-                throw new \RuntimeException('bogus eml');
-            }
-        };
+        $or          = new FakeOrFileService();
+        $or->toThrow = new RuntimeException('OR exploded');
+        $this->container->method('get')->willReturn($or);
 
-        $this->assemblyService
-            ->method('resolveTextExtractionService')
-            ->willReturn($orService);
+        $this->assembly->expects($this->never())->method('assemble');
 
         $source = $this->createMock(File::class);
-        $source->method('getName')->willReturn('bad.eml');
-        $source->method('getPath')->willReturn('/x/bad.eml');
+        $source->method('getName')->willReturn('message.eml');
+        $source->method('getPath')->willReturn('/u/admin/message.eml');
 
         $this->expectException(ConversionFailedException::class);
-        $this->backend->convert($source);
+        $this->backend()->convert($source);
 
-    }//end testConvertWrapsParseFailureInConversionFailed()
+    }//end testConvertOrFailureThrowsNoFallback()
 
 
     /**
+     * When OR returns a non-object, convert() throws ConversionFailedException
+     * rather than passing junk to the assembler.
+     *
      * @return void
      */
-    public function testConvertWrapsAssemblyFailureInConversionFailed(): void
+    public function testConvertNonObjectResultThrows(): void
     {
-        $structure = new \stdClass();
-        $orService = new class($structure) {
-            private $s;
-            public function __construct($s)
-            {
-                $this->s = $s;
-            }
-            public function parseEmlStructured($file)
-            {
-                return $this->s;
-            }
-        };
+        $or           = new FakeOrFileService();
+        $or->toReturn = null;
+        $this->container->method('get')->willReturn($or);
 
-        $this->assemblyService
-            ->method('resolveTextExtractionService')
-            ->willReturn($orService);
-        $this->assemblyService
-            ->method('assemble')
-            ->willThrowException(new \RuntimeException('assemble kaput'));
+        $this->assembly->expects($this->never())->method('assemble');
 
         $source = $this->createMock(File::class);
-        $source->method('getName')->willReturn('boom.eml');
-        $source->method('getPath')->willReturn('/x/boom.eml');
+        $source->method('getName')->willReturn('message.eml');
+        $source->method('getPath')->willReturn('/u/admin/message.eml');
 
         $this->expectException(ConversionFailedException::class);
-        $this->backend->convert($source);
+        $this->backend()->convert($source);
 
-    }//end testConvertWrapsAssemblyFailureInConversionFailed()
+    }//end testConvertNonObjectResultThrows()
 
 
-    /**
-     * @return void
-     */
-    public function testConvertOverwritesExistingPdfBesideSource(): void
-    {
-        $structure = new \stdClass();
-        $structure->headers = [];
-        $structure->body = new \stdClass();
-        $structure->body->plainText = null;
-        $structure->body->html = null;
-        $structure->attachments = [];
-
-        $orService = new class($structure) {
-            private $s;
-            public function __construct($s)
-            {
-                $this->s = $s;
-            }
-            public function parseEmlStructured($file)
-            {
-                return $this->s;
-            }
-        };
-
-        $this->assemblyService
-            ->method('resolveTextExtractionService')
-            ->willReturn($orService);
-        $this->assemblyService
-            ->method('assemble')
-            ->willReturn('%PDF-1.4');
-
-        $existing = $this->createMock(File::class);
-        $existing->expects(self::once())->method('delete');
-
-        $parent = $this->createMock(\OCP\Files\Folder::class);
-        $parent->method('nodeExists')->willReturn(true);
-        $parent->method('get')->willReturn($existing);
-        $newFile = $this->createMock(File::class);
-        $parent->method('newFile')->willReturn($newFile);
-
-        $source = $this->createMock(File::class);
-        $source->method('getName')->willReturn('replace.eml');
-        $source->method('getParent')->willReturn($parent);
-
-        $result = $this->backend->convert($source);
-        self::assertSame($newFile, $result);
-
-    }//end testConvertOverwritesExistingPdfBesideSource()
 }//end class

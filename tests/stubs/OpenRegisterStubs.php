@@ -131,10 +131,25 @@ class ObjectService
     /**
      * Search objects by register/schema slug.
      *
-     * @return array
+     * Signature mirrors the real OCA\OpenRegister\Service\ObjectService so
+     * PHPUnit-generated mocks accept the named arguments the merged callers use
+     * (PolicyMatchService, GrondslagProposalService).
+     *
+     * @param string               $registerSlug  Register slug.
+     * @param string               $schemaSlug    Schema slug.
+     * @param array<string, mixed> $filters       Optional filters.
+     * @param bool                 $_rbac         RBAC bypass flag.
+     * @param bool                 $_multitenancy Multitenancy flag.
+     *
+     * @return array|int
      */
-    public function searchObjectsBySlug()
-    {
+    public function searchObjectsBySlug(
+        string $registerSlug,
+        string $schemaSlug,
+        array $filters=[],
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ) {
         return [];
 
     }//end searchObjectsBySlug()
@@ -917,6 +932,21 @@ class EntityRelationMapper
         return $relation;
 
     }//end updateDecisionMetadata()
+
+
+    /**
+     * Find the entity relations for a file that are marked for anonymisation
+     * (i.e. not skipped). Used by the absolute-prohibition backstop.
+     *
+     * @param int $fileId The Nextcloud file id.
+     *
+     * @return array
+     */
+    public function findEntitiesForAnonymization(int $fileId): array
+    {
+        return [];
+
+    }//end findEntitiesForAnonymization()
 }//end class
 
 
@@ -946,6 +976,13 @@ class EntityRelation
      */
     private $bases = null;
 
+    /**
+     * The Nextcloud file id this relation belongs to.
+     *
+     * @var int|null
+     */
+    private $fileId = null;
+
 
     /**
      * Get the relation id.
@@ -957,6 +994,35 @@ class EntityRelation
         return $this->id;
 
     }//end getId()
+
+
+    /**
+     * Get the file id.
+     *
+     * Mirrors the real EntityRelation magic getter used by the merged
+     * AnonymizationService prohibition-skip guard (evaluateProhibitionSkip).
+     *
+     * @return int|null
+     */
+    public function getFileId()
+    {
+        return $this->fileId;
+
+    }//end getFileId()
+
+
+    /**
+     * Set the file id.
+     *
+     * @param int|null $fileId The Nextcloud file id.
+     *
+     * @return void
+     */
+    public function setFileId($fileId)
+    {
+        $this->fileId = $fileId;
+
+    }//end setFileId()
 
 
     /**

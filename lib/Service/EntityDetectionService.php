@@ -190,7 +190,7 @@ class EntityDetectionService
             $seen[$text] = true;
             $mapped      = [
                 'text'       => $text,
-                'entityType' => (string) ($entity['type'] ?? $entity['entityType'] ?? 'UNKNOWN'),
+                'entityType' => $type,
                 'key'        => $this->generateUuid(),
             ];
 

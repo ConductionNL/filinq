@@ -324,6 +324,7 @@ class GrondslagenSummaryServiceTest extends TestCase
 
     }//end testLocalizeEntityTypeTranslatesKnownTypesAndFallsBack()
 
+
     /**
      * With no IL10N injected the raw English label is emitted.
      *

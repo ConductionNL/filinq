@@ -2,209 +2,227 @@
 status: draft
 ---
 
-# PDF Conversion — Delta for EML Rich-Rendering Assembly
+# PDF Conversion — Delta for EML Redacted-Component Assembly
 
-This delta extends the existing `pdf-conversion` capability so the `EmlBackend` (introduced by `anonymise-output-as-pdf-by-default`) consumes OpenRegister's structured EML parse and assembles a rich PDF/A-3b combining headers, body (HTML when present, plain-text fallback), and attachments (always embedded as PDF/A-3 file attachments; renderable types additionally appended as pages with dividers).
+This delta extends the existing `pdf-conversion` capability so the `EmlBackend` (introduced as a stub by `anonymise-output-as-pdf-by-default`) consumes OpenRegister's **anonymise-EML API** (an `AnonymisedEmlStructure` from the paired `anonymise-eml-structured` change) and assembles a PDF/A-3b purely from already-redacted components: a redacted header block, the redacted body (HTML when present, plain-text fallback), and the redacted attachments (renderable types rendered as appended pages with dividers; un-anonymisable types dropped to a placeholder page). DocuDesk performs no redaction itself, embeds no original bytes, and always produces a PDF for EML inputs.
 
 ## ADDED Requirements
 
-### Requirement: The `EmlBackend` MUST use `TextExtractionService::parseEmlStructured` when available
+### Requirement: The `EmlBackend` MUST consume OpenRegister's anonymise-EML API and assemble redacted components
 
 The `EmlBackend.isAvailable()` MUST return true if and only if BOTH conditions hold:
 
-1. OpenRegister's `TextExtractionService` exposes `parseEmlStructured()` (the paired `text-extraction-eml` change has been applied).
+1. OpenRegister exposes its anonymise-EML API (the paired `anonymise-eml-structured` change has been applied), returning an `AnonymisedEmlStructure`.
 2. DocuDesk's `EmlPdfAssemblyService` is registered in the DI container (this change is applied).
 
-When `convert()` runs, the backend MUST call `TextExtractionService::parseEmlStructured($file)` and pass the resulting `EmlStructure` to `EmlPdfAssemblyService::assemble()`. The backend MUST NOT fall back to the original placeholder "extract flat text + render plaintext" path when the structured method is available.
+When `convert()` runs, the backend MUST call OpenRegister's anonymise-EML API for the source file and pass the resulting **redacted** result to `EmlPdfAssemblyService::assemble()`. The backend MUST NOT call the raw `parseEmlStructured()`, MUST NOT redact anything itself, and MUST NOT fall back to a raw/unredacted parse on failure.
 
 #### Scenario: Both changes applied — backend is available
 
-- **GIVEN** an OR install with `text-extraction-eml` applied (parseEmlStructured exists)
+- **GIVEN** an OR install with `anonymise-eml-structured` applied (the anonymise-EML API exists)
 - **AND** a DocuDesk install with this change applied (EmlPdfAssemblyService registered)
 - **WHEN** `EmlBackend::isAvailable()` is called
 - **THEN** it returns true
 
-#### Scenario: OR change not yet applied — backend reports unavailable
+#### Scenario: OR anonymise-EML API not yet applied — backend reports unavailable
 
-- **GIVEN** an OR install where `text-extraction-eml` has not yet landed (parseEmlStructured does not exist)
+- **GIVEN** an OR install where `anonymise-eml-structured` has not yet landed (the anonymise-EML API does not exist)
 - **WHEN** `EmlBackend::isAvailable()` is called
 - **THEN** it returns false
 - **AND** the conversion cascade proceeds to the next backend (or 422s if no backend handles EML)
 
-### Requirement: The assembled PDF MUST include a header block with From / To / Cc / Subject / Date
+#### Scenario: convert consumes the redacted result, not the raw parse
 
-The Twig envelope template (`lib/Resources/templates/eml/email_envelope.twig`) MUST render a header block at the top of the assembled PDF containing the EML's headers in fixed order: From, To (comma-joined recipient list), Cc (only when non-empty), Subject, Date (formatted as YYYY-MM-DD HH:MM in the tenant's timezone). Labels MUST be in Dutch in v1 (`Van:`, `Aan:`, `Cc:`, `Onderwerp:`, `Datum:`).
+- **GIVEN** an EML input and an available `EmlBackend`
+- **WHEN** `convert()` runs
+- **THEN** it calls OpenRegister's anonymise-EML API (not `parseEmlStructured`)
+- **AND** passes the redacted result to `EmlPdfAssemblyService::assemble()`
+- **AND** performs no redaction of headers, body, or attachments itself
 
-#### Scenario: Standard EML produces full header block
+### Requirement: The assembled PDF MUST render the redacted header block (From / Reply-To / To / Cc / Subject / Date)
 
-- **GIVEN** an EML with full standard headers
+The Twig envelope template (`lib/Resources/templates/eml/email_envelope.twig`) MUST render a header block at the top of the assembled PDF containing the **redacted** headers from OR's result in fixed order: From, Reply-To (only when non-empty), To (comma-joined), Cc (only when non-empty), Subject, Date (formatted `YYYY-MM-DD HH:MM` in the tenant timezone). Labels MUST be Dutch in v1 (`Van:`, `Antwoord aan:`, `Aan:`, `Cc:`, `Onderwerp:`, `Datum:`). The header values rendered are exactly what OR redacted — DocuDesk does not alter them.
+
+#### Scenario: Standard EML produces full redacted header block
+
+- **GIVEN** OR's anonymise-EML result with redacted From/Reply-To/To/Subject/Date
 - **WHEN** the assembly runs
 - **THEN** the resulting PDF's first page begins with the header block in the documented order
 - **AND** each line uses the Dutch label prefix
+- **AND** the rendered values are OR's redacted values (no DocuDesk-side redaction)
 - **AND** the date is formatted as `YYYY-MM-DD HH:MM`
 
-#### Scenario: Cc header omitted from rendering when empty
+#### Scenario: Reply-To and Cc omitted from rendering when empty
 
-- **GIVEN** an EML with no Cc recipients
+- **GIVEN** OR's result has no Reply-To and no Cc recipients
 - **WHEN** the assembly runs
-- **THEN** the header block contains no `Cc:` line
+- **THEN** the header block contains no `Antwoord aan:` line and no `Cc:` line
 
-#### Scenario: Malformed Date results in fallback rendering
+### Requirement: The body MUST be rendered from OR's redacted body, preferring HTML
 
-- **GIVEN** an EML where the Date header is malformed (parses to null per OR's structured parse)
-- **WHEN** the assembly runs
-- **THEN** the `Datum:` line shows `(onbekend)` (or the tenant-localised "unknown" placeholder)
+The body section MUST use OR's **redacted** body:
 
-### Requirement: The body MUST be rendered preferring HTML, falling back to plain-text
-
-The body section of the assembled PDF MUST use:
-
-1. `EmlStructure.body.html` if non-null and non-empty — rendered directly (with `cid:` inline-image references resolved per the next requirement).
-2. `EmlStructure.body.plainText` wrapped in a `<pre>` block if HTML is null/empty but plain-text is present.
+1. redacted `html` if non-null/non-empty — rendered directly (with `cid:` inline images resolved per the next requirement).
+2. redacted `plain` wrapped in a `<pre>` block if `html` is null/empty but `plain` is present.
 3. A localised "(empty body — only attachments)" notice if both are null/empty.
 
-#### Scenario: HTML body rendered when present
+#### Scenario: Redacted HTML body rendered when present
 
-- **GIVEN** an EML with both `text/plain` and `text/html` body parts
+- **GIVEN** OR's result with both redacted `plain` and redacted `html`
 - **WHEN** the assembly runs
-- **THEN** the rendered body uses the HTML part
+- **THEN** the rendered body uses the redacted HTML
 - **AND** layout / formatting from the HTML is preserved
 
-#### Scenario: Plain-text fallback when only plain-text body exists
+#### Scenario: Redacted plain-text fallback when only plain exists
 
-- **GIVEN** an EML with only `text/plain` body
+- **GIVEN** OR's result with only redacted `plain` (html null)
 - **WHEN** the assembly runs
-- **THEN** the body section contains a `<pre>`-wrapped block with the plain-text content
+- **THEN** the body section contains a `<pre>`-wrapped block with the redacted plain text
 - **AND** whitespace and linebreaks are preserved
 
-#### Scenario: Empty-body EML shows a placeholder
+#### Scenario: Empty-body result shows a placeholder
 
-- **GIVEN** an EML with both body parts null/empty
+- **GIVEN** OR's result with both body parts null/empty
 - **WHEN** the assembly runs
-- **THEN** the body section contains the localised "(Bericht zonder body — alleen bijlagen)" notice (or equivalent)
+- **THEN** the body section contains the localised "(Bericht zonder body — alleen bijlagen)" notice
 
-### Requirement: Inline images referenced by `cid:` URLs MUST be resolved from the attachments list
+### Requirement: Inline images MUST be resolved from OR's redacted inline-image map
 
-When the rendered HTML body contains `<img src="cid:<contentId>">` (or similar), the assembly MUST resolve the reference by looking up `EmlStructure.attachments[].contentId` and substitute a `data:` URL with the matching attachment's bytes. If no matching attachment exists, the broken reference is left as-is and a debug log entry is emitted.
+When the redacted HTML body contains `<img src="cid:<contentId>">`, the assembly MUST resolve the reference against OR's inline-image map (`contentId → redacted bytes`) and substitute a `data:` URL with the matching **redacted** bytes. If no matching entry exists, the broken reference is left as-is and a debug log entry is emitted. DocuDesk substitutes only OR's redacted bytes — never original inline-image content.
 
-#### Scenario: Inline image is resolved and embedded as data URL
+#### Scenario: Inline image resolved from the redacted map
 
-- **GIVEN** an EML's HTML body with `<img src="cid:logo@example">`
-- **AND** an attachment with `contentId: "logo@example"` and `mimeType: "image/png"`
+- **GIVEN** redacted HTML with `<img src="cid:logo@example">`
+- **AND** OR's inline-image map has `logo@example → <redacted png bytes>` with mimeType `image/png`
 - **WHEN** the assembly runs
-- **THEN** the rendered HTML's `src` is replaced with `data:image/png;base64,<encoded>`
-- **AND** the rendered PDF page shows the image inline
+- **THEN** the rendered HTML's `src` is replaced with `data:image/png;base64,<redacted-encoded>`
+- **AND** the rendered PDF page shows the redacted image inline
 
 #### Scenario: Broken cid reference renders mPDF placeholder
 
-- **GIVEN** HTML body referencing `cid:missing@example` with no matching attachment
+- **GIVEN** redacted HTML referencing `cid:missing@example` with no map entry
 - **WHEN** the assembly runs
 - **THEN** the rendered page shows mPDF's missing-image placeholder
 - **AND** the broken cid reference is logged at debug level
 
-### Requirement: Every attachment MUST be embedded as a PDF/A-3 file attachment
+### Requirement: Redactable attachments MUST be rendered as pages from their redacted bytes; originals MUST NOT be embedded
 
-For each entry in `EmlStructure.attachments[]`, the assembly MUST embed the raw bytes as a PDF/A-3 file attachment in the resulting PDF. The embedded file MUST preserve the attachment's original filename and MIME type. Embedding MUST happen regardless of the `append_attachment_pages` setting.
+For each `attachments[]` entry that carries `redactedContent`, has a renderable MIME, and is within the size cap, the assembly MUST (when `docudesk.conversion.eml.append_attachment_pages` is true, the default) append rendered pages produced from the **redacted bytes** via the existing cascade backends, preceded by a divider page identifying the attachment by index, filename, MIME, and size. The renderable set is `application/pdf`, `image/png`, `image/jpeg`, `image/gif`, `image/webp`, plain-text MIMEs, `message/rfc822` (recursive), and the Word MIMEs supported by Change A's PhpWord backend.
 
-#### Scenario: PDF attachment is embedded as a file inside the resulting PDF/A-3b
+The assembly MUST NOT embed any attachment's original bytes as a PDF/A-3 file attachment. (This change drops the prior draft's verbatim embedding because original bytes are un-redacted and would leak PII.)
 
-- **GIVEN** an EML with a PDF attachment named `bijlage.pdf`
-- **WHEN** the assembly runs
-- **THEN** the resulting PDF/A-3b contains an embedded file with name `bijlage.pdf` and MIME `application/pdf`
-- **AND** extracting the embedded file via a PDF/A-3 viewer produces the byte-identical original PDF
+A `redactedContent` attachment whose MIME is NOT renderable MUST get a placeholder/divider page ("geredigeerd maar niet weer te geven") and no embedded bytes. An attachment larger than `docudesk.conversion.eml.max_attachment_render_size_bytes` (default 26214400 = 25 MB) MUST get a placeholder page ("te groot om weer te geven") and no embedded bytes.
 
-#### Scenario: Non-renderable attachment is embedded only
+#### Scenario: Redacted PDF attachment renders as appended pages, no verbatim embedding
 
-- **GIVEN** an EML with a `.zip` attachment (non-renderable)
-- **AND** `append_attachment_pages` is the default (true)
-- **WHEN** the assembly runs
-- **THEN** the resulting PDF contains the embedded `.zip` file
-- **AND** no rendered page exists for the `.zip`
-- **AND** a divider page references it: "Bijlage <N>: <filename> — niet weergegeven; zie ingebed bestand"
-
-### Requirement: Renderable attachments MUST be appended as pages with dividers (when enabled)
-
-When `docudesk.conversion.eml.append_attachment_pages` is true (default), the assembly MUST append rendered pages for each renderable attachment. Each set of attachment pages MUST be preceded by a divider page identifying the attachment by index, filename, MIME type, and size. The renderable set is: `application/pdf`, `image/png`, `image/jpeg`, `image/gif`, `image/webp`, plain-text MIMEs, `message/rfc822` (recursive nested EML), and the Word MIMEs supported by Change A's PhpWord backend (DOCX/ODT/RTF/HTML).
-
-Attachments larger than `docudesk.conversion.eml.max_attachment_render_size_bytes` (default 26214400 = 25 MB) MUST be embedded but NOT rendered as pages; the divider page indicates "te groot om weer te geven".
-
-#### Scenario: PDF attachment renders as appended pages
-
-- **GIVEN** an EML with a 5-page PDF attachment named `bijlage-1.pdf`
+- **GIVEN** OR's result with a renderable PDF attachment `bijlage-1.pdf` carrying `redactedContent`
 - **AND** `append_attachment_pages: true`
 - **WHEN** the assembly runs
-- **THEN** the resulting PDF contains a divider page identifying "Bijlage 1: bijlage-1.pdf"
-- **AND** the 5 pages of the source PDF follow the divider
-- **AND** the PDF/A-3b file embedding for the attachment is also present
+- **THEN** a divider page identifies "Bijlage 1: bijlage-1.pdf"
+- **AND** the redacted PDF's pages follow the divider
+- **AND** the resulting PDF/A-3b contains NO embedded file attachment for the original bytes
 
-#### Scenario: Image attachment renders as a single page
+#### Scenario: Redacted image attachment renders as a single page
 
-- **GIVEN** an EML with an image attachment
+- **GIVEN** OR's result with a renderable image attachment carrying `redactedContent`
 - **WHEN** the assembly runs (default config)
 - **THEN** a divider page identifies the image
-- **AND** a single page following the divider shows the image (sized to fit the page)
+- **AND** a single page following the divider shows the redacted image (sized to fit)
 
-#### Scenario: Oversized attachment is embedded but not rendered
+#### Scenario: Redacted but non-renderable attachment gets a placeholder
 
-- **GIVEN** an attachment larger than the configured size limit (e.g. 30 MB PDF with 25 MB limit)
+- **GIVEN** OR's result with a `.xlsx` attachment carrying `redactedContent` (non-renderable MIME)
 - **WHEN** the assembly runs
-- **THEN** the divider page shows "Bijlage <N>: <filename> — te groot om weer te geven; zie ingebed bestand"
-- **AND** no further pages from the attachment are rendered
-- **AND** the PDF/A-3b embedded file is still present
+- **THEN** a divider/placeholder page references it ("Bijlage <N>: <filename> — geredigeerd maar niet weer te geven")
+- **AND** no rendered pages and no embedded bytes exist for the attachment
 
-#### Scenario: append_attachment_pages: false — attachments embedded only
+#### Scenario: Oversized redacted attachment gets a placeholder
+
+- **GIVEN** a redacted attachment larger than the configured size limit
+- **WHEN** the assembly runs
+- **THEN** the placeholder page shows "Bijlage <N>: <filename> — te groot om weer te geven"
+- **AND** no rendered pages and no embedded bytes exist for the attachment
+
+#### Scenario: append_attachment_pages false — only the redacted envelope renders
 
 - **GIVEN** the tenant config sets `append_attachment_pages: false`
-- **WHEN** the assembly runs against an EML with renderable attachments
-- **THEN** no divider pages or rendered attachment pages appear
-- **AND** all attachments are still embedded as PDF/A-3 files
-- **AND** the resulting PDF contains only the email envelope page(s)
+- **WHEN** the assembly runs against a result with renderable attachments
+- **THEN** no divider pages or rendered attachment pages appear for renderable attachments
+- **AND** the resulting PDF contains only the redacted email envelope page(s)
+- **AND** no original or redacted attachment bytes are embedded
 
-### Requirement: Nested EML attachments MUST be recursively assembled within the depth budget
+### Requirement: Un-anonymisable attachments MUST be dropped to a placeholder page
 
-When an attachment has `mimeType: "message/rfc822"` and a non-null `nestedEml` (per OR's depth-3 cap), the assembly MUST recursively render its envelope + its own attachments using the same template and rules. The nested rendering produces its own divider, header block, body, and (recursively) attachments. Beyond the depth-3 limit, the nested EML is embedded but rendered as a "(genest e-mail, niet weergegeven — diepte-limiet)" notice.
+For each `attachments[]` entry OR marks `unsupported: true` (no anonymiser available for that format), the assembly MUST append a placeholder/divider page and MUST NOT embed or render the attachment's bytes in any form. The placeholder MUST name the attachment and state the omission reason.
 
-#### Scenario: Depth-2 nested EML is recursively assembled
+#### Scenario: Unsupported attachment produces placeholder, no content
 
-- **GIVEN** an EML containing a nested EML attachment (depth-1 nesting)
+- **GIVEN** OR's result with an attachment entry `{filename: "verslag.bin", mimeType: "application/octet-stream", unsupported: true}`
 - **WHEN** the assembly runs
-- **THEN** the outer envelope renders normally
+- **THEN** a placeholder page reads "Bijlage <N>: verslag.bin (application/octet-stream) weggelaten — geen anonimiseerder beschikbaar"
+- **AND** the attachment's bytes are neither embedded nor rendered anywhere in the PDF
+
+### Requirement: Nested EML attachments MUST be recursively assembled from OR's redacted nested result within the depth budget
+
+When an attachment is `message/rfc822` and OR's result carries a non-null **redacted** nested `AnonymisedEmlStructure` (within OR's depth-3 cap), the assembly MUST recursively render its redacted envelope + its own redacted attachments using the same template and rules. Beyond depth 3, OR returns the nested EML as an `unsupported`/placeholder entry and the assembly renders the placeholder page only (no bytes).
+
+#### Scenario: Depth-1 nested EML is recursively assembled from redacted result
+
+- **GIVEN** OR's result with a nested EML attachment carrying a redacted nested result
+- **WHEN** the assembly runs
+- **THEN** the outer redacted envelope renders normally
 - **AND** a divider page identifies the nested EML
-- **AND** the nested EML's own envelope + body + attachments are rendered as appended pages
+- **AND** the nested EML's redacted envelope + body + attachments render as appended pages
 
-#### Scenario: Depth-4 nested EML is embedded only
+#### Scenario: Beyond-depth nested EML gets a placeholder only
 
-- **GIVEN** an EML chain at depth 4 (where OR's depth-3 cap applied during parse, leaving the depth-3-level EML's attachment with `nestedEml: null`)
-- **WHEN** the assembly runs at the depth-3 level
-- **THEN** the depth-4 EML is embedded as a `.eml` PDF/A-3 file attachment
-- **AND** the divider page shows "Bijlage <N>: <filename> (genest e-mail, niet weergegeven — diepte-limiet)"
-- **AND** no recursive rendering attempt is made beyond the limit
+- **GIVEN** OR returned the depth-3-level nested EML attachment as `unsupported` (depth cap reached)
+- **WHEN** the assembly runs at that level
+- **THEN** a placeholder page identifies the nested EML as omitted at the depth limit
+- **AND** no recursive rendering and no byte embedding occurs
 
-### Requirement: Assembly failure modes MUST degrade gracefully
+### Requirement: EML inputs MUST always produce a PDF; `outputFormat: "preserve"` MUST be overridden to PDF for EML
 
-The assembly MUST NOT abandon the entire conversion on partial failures. Per the design's error-handling table:
+Because OR redacts EML components rather than producing a reliably-redacted native `.eml`, EML inputs MUST always resolve to a PDF output. When an anonymise request targets an EML input with `outputFormat: "preserve"`, the format MUST be silently overridden to the PDF cascade — the request MUST NOT be rejected and MUST NOT return an error; the caller receives the assembled PDF. For `outputFormat: "pdf-only"`, `"pdf"`, and the overridden `"preserve"`, the EML cascade runs and produces the assembled PDF; since there is no native EML intermediate, all three behave identically for EML.
 
-- OR `parseEmlStructured` throws → fall back to `extractEml` flat text; render as a single plain-text page; no attachments visible. Log the parse failure.
-- Twig template render throws → render minimal envelope with available headers + a notice "(template rendering failed)".
-- Renderable attachment fails to render → skip the page; embed bytes only; divider with "kon niet worden weergegeven".
-- File embedding fails → log; embed as much as possible; footer notice listing failed embeds.
-- All steps fail catastrophically → throw `ConversionFailedException` per Change A's contract; cascade falls through (which 422s for EML, since no other backend handles EML in the cascade).
+#### Scenario: preserve for an EML input is overridden to PDF
 
-#### Scenario: parseEmlStructured throws — flat-text fallback renders
+- **GIVEN** an anonymise request for an EML input with `outputFormat: "preserve"`
+- **WHEN** the request is processed
+- **THEN** the format is overridden to the PDF cascade and the assembled PDF/A-3b is returned
+- **AND** no error is returned
+- **AND** no native EML output is written
 
-- **GIVEN** an EML where `parseEmlStructured` throws `EmlParseException` but `extractEml` returns flat text
+#### Scenario: pdf-only and pdf both produce the assembled PDF for EML
+
+- **GIVEN** an EML input anonymised with `outputFormat: "pdf-only"` (or `"pdf"`)
+- **WHEN** the EML backend runs
+- **THEN** the result is the assembled PDF/A-3b
+- **AND** there is no native EML intermediate to keep or delete
+
+### Requirement: Assembly failure modes MUST degrade gracefully and MUST NEVER emit un-redacted content
+
+The assembly MUST NOT abandon the entire conversion on partial failures, and MUST NOT fall back to any path that emits un-redacted content:
+
+- OR's anonymise-EML API throws → throw `ConversionFailedException` (cascade falls through → 422 for EML). The assembly MUST NOT fall back to a raw/unredacted parse.
+- Twig render throws → render a minimal envelope with the redacted headers + "(template rendering failed)" notice.
+- A renderable redacted attachment fails to render → skip the page; divider says "kon niet worden weergegeven"; no bytes embedded.
+- All steps fail catastrophically → throw `ConversionFailedException` per Change A's contract.
+
+#### Scenario: OR anonymise-EML failure does NOT leak a raw parse
+
+- **GIVEN** an EML where OR's anonymise-EML API throws
 - **WHEN** the assembly runs
-- **THEN** the resulting PDF is a single page containing the flat text
-- **AND** an error is logged identifying the structured-parse failure
-- **AND** no attachments are visible (no structure available)
+- **THEN** a `ConversionFailedException` is raised and the cascade falls through (422 for EML)
+- **AND** no raw/unredacted email content is rendered or written
 
-#### Scenario: One attachment fails to render — others still render
+#### Scenario: One redacted attachment fails to render — others still render
 
-- **GIVEN** an EML with three renderable attachments where one fails (e.g. corrupted PDF)
+- **GIVEN** OR's result with three renderable redacted attachments where one fails to render (e.g. corrupted redacted PDF)
 - **WHEN** the assembly runs
 - **THEN** two attachments produce dividers + rendered pages
 - **AND** the failing attachment produces a divider + "kon niet worden weergegeven" notice
-- **AND** all three attachments are still embedded as PDF/A-3 files
+- **AND** no attachment bytes are embedded
 - **AND** the conversion succeeds (returns the assembled PDF)
 
 ## MODIFIED Requirements
@@ -213,10 +231,10 @@ The assembly MUST NOT abandon the entire conversion on partial failures. Per the
 
 A backend that can produce only plain PDF (not PDF/A-3b) MUST report `isAvailable()` as false for the conversion or throw from `convert()`, allowing the cascade to try the next backend. The service MUST NOT silently degrade to plain PDF.
 
-When the EML backend is the active path, mPDF MUST be configured with the appropriate PDF/A-3 mode (`SetPDFAVersion('3-B')` or equivalent) before any content or embedded files are written. The resulting file MUST declare PDF/A-3b conformance in its metadata.
+When the EML backend is the active path, mPDF MUST be configured with the appropriate PDF/A-3 mode (`SetPDFAVersion('3-B')` or equivalent) before any content is written. The resulting file MUST declare PDF/A-3b conformance in its metadata. (No original attachment bytes are embedded, so PDF/A-3 file-embedding conformance is not exercised by this change.)
 
 #### Scenario: EML assembly output declares PDF/A-3b
 
 - **WHEN** the assembly produces an output file
 - **THEN** the file's PDF metadata indicates PDF/A-3b conformance (verified via `pdfinfo` or `verapdf`)
-- **AND** the embedded files are accessible via PDF/A-3-aware tools
+- **AND** the PDF contains no embedded original attachment files

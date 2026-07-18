@@ -20,7 +20,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 						{{ t('docudesk', 'Drag and drop one or more documents') }}
 					</p>
 					<p class="drop-subtitle">
-						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
+						{{ t('docudesk', 'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
 					<span class="fake-button">
 						{{ t('docudesk', '+ Select files') }}
@@ -30,7 +30,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
-					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
+					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect">
 			</div>
@@ -53,25 +53,47 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			</div>
 		</section>
 
-		<!-- Dossier name dialog -->
+		<!-- Upload dialog (single document or dossier) -->
 		<NcDialog
 			v-if="showDossierDialog"
-			:name="t('docudesk', 'Create dossier')"
+			:name="dialogName"
 			:can-close="!dossierSubmitting"
 			size="normal"
 			@closing="cancelDossier">
 			<div class="dossier-dialog">
-				<NcTextField
-					ref="dossierInput"
-					:value.sync="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-					:disabled="dossierSubmitting"
-					:error="!!dossierError"
-					:helper-text="dossierError"
-					@keyup.enter="confirmDossier" />
+				<!-- Single file: read-only filename, no dossier name -->
+				<div v-if="isSingleFile" class="single-file">
+					<span class="single-file__label">{{ t('docudesk', 'Document') }}</span>
+					<span class="single-file__name">{{ singleFileName }}</span>
+					<NcNoteCard v-if="dossierError" type="error">
+						{{ dossierError }}
+					</NcNoteCard>
+				</div>
+				<!-- Multiple files: dossier name input -->
+				<template v-else>
+					<NcTextField
+						ref="dossierInput"
+						:value.sync="dossierName"
+						:label="t('docudesk', 'Dossier name')"
+						:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
+						:disabled="dossierSubmitting"
+						:error="!!dossierError"
+						:helper-text="dossierError"
+						@keyup.enter="confirmDossier" />
+					<NcNoteCard type="info">
+						{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+					</NcNoteCard>
+				</template>
+
+				<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
+				<NcCheckboxRadioSwitch
+					type="switch"
+					:checked.sync="grondslagen"
+					:disabled="dossierSubmitting">
+					{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
+				</NcCheckboxRadioSwitch>
 				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
+					{{ t('docudesk', 'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.') }}
 				</NcNoteCard>
 			</div>
 			<template #actions>
@@ -90,48 +112,12 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import uploadIcon from '../../assets/upload.png'
-
-// Anonymisation only produces real redactions for formats the backend can
-// edit in place: Word via PHPWord, plain text via byte-level replace, PDF
-// via the SAPP byte-replace pipeline. Other binary formats fall through to
-// the str_ireplace path that returns a byte-identical copy — see
-// project-anonymization-pipeline for the upstream OR limitation. Restrict
-// the upload widget so users can't accidentally pick a format that won't
-// actually redact.
-const ALLOWED_EXTENSIONS = ['docx', 'txt', 'pdf']
-const ALLOWED_MIMES = new Set([
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-	'text/plain',
-	'application/pdf',
-])
-
-/**
- * Split a FileList into accepted (docx/txt/pdf) and rejected files.
- *
- * Matches on both MIME and filename extension because drag-and-drop sometimes
- * omits MIME (e.g. for .docx on certain browsers) and the input's `accept`
- * attribute is advisory only.
- *
- * @param {FileList | File[]} files Incoming files.
- * @return {{ accepted: File[], rejected: File[] }}
- */
-function partitionFiles(files) {
-	const accepted = []
-	const rejected = []
-	for (const file of Array.from(files)) {
-		const ext = (file.name.split('.').pop() || '').toLowerCase()
-		if (ALLOWED_MIMES.has(file.type) || ALLOWED_EXTENSIONS.includes(ext)) {
-			accepted.push(file)
-		} else {
-			rejected.push(file)
-		}
-	}
-	return { accepted, rejected }
-}
+import { partitionFiles } from '../../services/anonymizationUpload.js'
 
 // Widget only handles upload + the dossier dialog. After upload the user is
 // routed to the file viewer (/my-documents host), where `FileViewerSidebar`
@@ -141,6 +127,7 @@ export default {
 	name: 'AnonymizationWidget',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcDialog,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -155,12 +142,66 @@ export default {
 			dossierName: '',
 			dossierSubmitting: false,
 			dossierError: '',
+			grondslagen: true,
 			uploadIcon,
 			recentItems: [],
 			recentLoading: false,
 		}
 	},
-	computed: {},
+	computed: {
+		/**
+		 * Display name of the currently logged-in Nextcloud user.
+		 *
+		 * @return {string} The user's display name, or their uid as fallback, or empty string when unauthenticated.
+		 */
+		userName() {
+			const user = getCurrentUser()
+			return user?.displayName || user?.uid || ''
+		},
+		/**
+		 * Time-of-day greeting interpolated with the user's display name.
+		 *
+		 * Morning: 05:00–11:59. Afternoon: 12:00–17:59. Evening: 18:00–04:59.
+		 *
+		 * @return {string} Localised greeting like 'Good morning Marco,'.
+		 */
+		greeting() {
+			const hour = new Date().getHours()
+			if (hour >= 5 && hour < 12) {
+				return t('docudesk', 'Good morning {name},', { name: this.userName })
+			}
+			if (hour >= 12 && hour < 18) {
+				return t('docudesk', 'Good afternoon {name},', { name: this.userName })
+			}
+			return t('docudesk', 'Good evening {name},', { name: this.userName })
+		},
+		/**
+		 * Whether the upload modal is showing a single document (no dossier).
+		 *
+		 * @return {boolean} True when exactly one file is pending.
+		 */
+		isSingleFile() {
+			return this.pendingFiles.length === 1
+		},
+		/**
+		 * Filename of the single pending file, shown read-only in the modal.
+		 *
+		 * @return {string} The first pending file's name, or empty string.
+		 */
+		singleFileName() {
+			return this.pendingFiles[0]?.name || ''
+		},
+		/**
+		 * Title of the upload modal: single-file vs dossier wording.
+		 *
+		 * @return {string} Localised dialog title.
+		 */
+		dialogName() {
+			return this.isSingleFile
+				? t('docudesk', 'Anonymize document')
+				: t('docudesk', 'Create dossier')
+		},
+	},
 	mounted() {
 		this.loadRecent()
 	},
@@ -189,12 +230,19 @@ export default {
 		 * to My Documents host.
 		 *
 		 * @param {object} item Recent item from `loadRecent`.
-		 * @return {void}
+		 * @return {Promise<void>}
 		 */
-		openRecent(item) {
+		async openRecent(item) {
 			if (!item) return
 			if (item.isFolder) {
-				myDocumentsStore.fetchDocuments(item.path)
+				// Await the fetch before routing. `MyDocumentsIndex.mounted`
+				// fires a no-arg `fetchDocuments()` that resolves against
+				// `currentPath`; routing before this fetch sets `currentPath`
+				// to the dossier makes that mount-time refetch load the root
+				// instead, leaving `documents` (root) out of sync with
+				// `currentPath` (dossier) so the dossier sidebar shows the
+				// wrong files.
+				await myDocumentsStore.fetchDocuments(item.path)
 				this.gotoViewer()
 				return
 			}
@@ -252,42 +300,26 @@ export default {
 			const { accepted, rejected } = partitionFiles(files)
 			if (rejected.length > 0) {
 				const names = rejected.map((f) => f.name).join(', ')
-				showError(t('docudesk', 'Only Word (.docx), PDF and TXT files are supported. Skipped: {names}', { names }))
+				showError(t('docudesk', 'Only Word (.docx), ODT, PDF and TXT files are supported. Skipped: {names}', { names }))
 			}
 			return accepted
 		},
 		/**
-		 * Route the incoming files to the right flow:
-		 *   - 2+ files → open the dossier dialog (user picks a folder name).
-		 *   - single file → straight into the queue under /DocuDesk/, then
-		 *     open the file in the in-app viewer and route to /my-documents
-		 *     so `FileViewerPage` mounts and the sidebar lists entities.
+		 * Always open the upload modal so the user confirms the grondslagen
+		 * choice before anonymization, regardless of file count:
+		 *   - single file → read-only filename, no dossier name.
+		 *   - 2+ files → dossier-name input.
+		 * The actual upload + viewer routing happens on confirm.
 		 *
 		 * @param {File[] | FileList} fileList Files from drop or input.
-		 * @return {Promise<void>}
+		 * @return {void}
 		 */
-		async dispatchFiles(fileList) {
+		dispatchFiles(fileList) {
 			const files = Array.from(fileList)
-			if (files.length >= 2) {
-				this.openDossierDialog(files)
+			if (files.length === 0) {
 				return
 			}
-
-			// Capture MIME type before addFiles consumes the File blob,
-			// and the queue length so we can find the new entry afterwards.
-			const mimeType = files[0]?.type || ''
-			const before = anonymizationStore.files.length
-			await anonymizationStore.addFiles(files)
-			const entry = anonymizationStore.files[before]
-			if (entry && entry.fileId) {
-				fileViewerStore.open({
-					fileId: entry.fileId,
-					fileName: entry.name,
-					mimeType,
-					path: entry.filePath,
-				})
-				this.gotoViewer()
-			}
+			this.openDossierDialog(files)
 		},
 		/**
 		 * Route to the file-viewer host page when not already there.
@@ -303,15 +335,17 @@ export default {
 			this.$router.push({ name: 'MyDocuments' }).catch(() => { /* duplicate nav */ })
 		},
 		/**
-		 * Open the dossier-name dialog with an empty input so the
-		 * placeholder is visible and focus on next tick.
+		 * Open the upload dialog with a fresh state: empty dossier name,
+		 * grondslagen defaulting to AAN. Focuses the dossier-name input on
+		 * next tick when present (multi-file only).
 		 *
-		 * @param {File[]} files Files that will be placed into the dossier.
+		 * @param {File[]} files Files pending upload.
 		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 			this.showDossierDialog = true
 			this.$nextTick(() => {
 				this.$refs.dossierInput?.focus?.()
@@ -367,7 +401,7 @@ export default {
 						fileName: firstEntry.name,
 						mimeType: firstMime,
 						path: firstEntry.filePath,
-					})
+					}, { grondslagen: this.grondslagen })
 					this.gotoViewer()
 				}
 
@@ -392,6 +426,7 @@ export default {
 			this.pendingFiles = []
 			this.dossierName = ''
 			this.dossierError = ''
+			this.grondslagen = true
 		},
 	},
 }
@@ -399,6 +434,8 @@ export default {
 
 <style scoped>
 .anonymization-widget {
+	/* Theme-aware mid-contrast grey for the drop-zone's dashed border. */
+	--dd-color-dark-grey: var(--color-border-maxcontrast, #61616c);
 	display: flex;
 	flex-direction: column;
 	padding: 20px;
@@ -423,7 +460,8 @@ export default {
 	border: 2px dashed var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 32px;
-	background-color: #fff;
+	background-color: var(--dd-surface, #fff);
+	box-shadow: var(--dd-shadow-panel);
 	cursor: pointer;
 	transition: border-color 0.2s, background-color 0.2s;
 }
@@ -491,6 +529,23 @@ export default {
 
 .dossier-dialog :deep(.notecard) {
 	margin: 0;
+}
+
+.single-file {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.single-file__label {
+	font-size: 0.85rem;
+	color: var(--color-text-maxcontrast);
+}
+
+.single-file__name {
+	font-weight: 600;
+	color: var(--color-main-text);
+	word-break: break-word;
 }
 
 .recent-section {

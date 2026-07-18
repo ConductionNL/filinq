@@ -101,7 +101,9 @@ class AnonymizationServiceOutputFormatTest extends TestCase
     public function testPdfConversionGateGuardExists(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString("\$outputFormat === 'pdf'", $content);
+        // The merged source gates on both 'pdf-only' (Robert's new default) and
+        // 'pdf' via in_array, combined with the File-type check.
+        $this->assertStringContainsString("in_array(\$outputFormat, ['pdf-only', 'pdf'], true)", $content);
         $this->assertStringContainsString('$result instanceof File', $content);
 
     }//end testPdfConversionGateGuardExists()
@@ -135,7 +137,9 @@ class AnonymizationServiceOutputFormatTest extends TestCase
     public function testOutputFormatGuardExistsInSource(): void
     {
         $content = file_get_contents(__DIR__.'/../../../lib/Service/AnonymizationService.php');
-        $this->assertStringContainsString("outputFormat === 'pdf'", $content);
+        // Robert's merged source expresses the gate as an in_array over the
+        // pdf-producing formats rather than a bare equality check.
+        $this->assertStringContainsString("in_array(\$outputFormat, ['pdf-only', 'pdf'], true)", $content);
 
     }//end testOutputFormatGuardExistsInSource()
 
@@ -274,6 +278,7 @@ class AnonymizationServiceOutputFormatTest extends TestCase
         $grondslagenSummary = $this->createMock(\OCA\DocuDesk\Service\GrondslagenSummaryService::class);
         $fileEntityStats    = $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class);
         $pdfConversion      = $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class);
+        $emlAssembly        = $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class);
 
         return new AnonymizationService(
             $logger,
@@ -285,7 +290,8 @@ class AnonymizationServiceOutputFormatTest extends TestCase
             $consentService,
             $grondslagenSummary,
             $fileEntityStats,
-            $pdfConversion
+            $pdfConversion,
+            $emlAssembly
         );
 
     }//end buildServiceWithoutDependencies()

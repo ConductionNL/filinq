@@ -112,6 +112,7 @@ class GrondslagenSummaryService
         'IP_ADDRESS',
     ];
 
+
     /**
      * Constructor.
      *
@@ -139,6 +140,7 @@ class GrondslagenSummaryService
     ) {
 
     }//end __construct()
+
 
     /**
      * Append a grondslagen summary page to an already-anonymised PDF file.
@@ -199,6 +201,7 @@ class GrondslagenSummaryService
 
     }//end appendSummaryToPdf()
 
+
     /**
      * Produce a separate grondslagen-summary PDF beside the anonymised file.
      *
@@ -258,6 +261,7 @@ class GrondslagenSummaryService
 
     }//end renderSummaryBesideFile()
 
+
     /**
      * Authorize the acting user to (re)generate a dossier's summary.
      *
@@ -292,6 +296,7 @@ class GrondslagenSummaryService
         }
 
     }//end authorizeAccess()
+
 
     /**
      * Render the per-dossier summary PDF for one dossier.
@@ -389,6 +394,7 @@ class GrondslagenSummaryService
 
     }//end renderDossierSummary()
 
+
     /**
      * Load the minimum dossier context the renderer needs.
      *
@@ -472,6 +478,7 @@ class GrondslagenSummaryService
 
     }//end loadDossierContext()
 
+
     /**
      * Resolve the dossier's `@self.folder` reference to a Nextcloud Folder node.
      *
@@ -517,6 +524,7 @@ class GrondslagenSummaryService
         return $node;
 
     }//end resolveDossierFolder()
+
 
     /**
      * Walk every file under the dossier folder and collect its anonymised entities.
@@ -566,6 +574,7 @@ class GrondslagenSummaryService
         return $rows;
 
     }//end walkDossierFiles()
+
 
     /**
      * Recompute the dossier's scope-local placeholder map on demand.
@@ -643,6 +652,7 @@ class GrondslagenSummaryService
 
     }//end computeDossierPlaceholderMap()
 
+
     /**
      * Collect the descendant file ids of a dossier folder (recursive), skipping
      * the redacted-output subfolders — mirrors {@see walkDossierFiles} so the
@@ -683,6 +693,7 @@ class GrondslagenSummaryService
         return array_values(array_unique($ids));
 
     }//end collectFileIds()
+
 
     /**
      * Build the row set the per-dossier template renders.
@@ -813,6 +824,7 @@ class GrondslagenSummaryService
 
     }//end aggregateForDossier()
 
+
     /**
      * Save the rendered per-dossier summary PDF.
      *
@@ -853,6 +865,7 @@ class GrondslagenSummaryService
         return $newFile;
 
     }//end saveDossierSummary()
+
 
     /**
      * Update the dossier object's `configuration.grondslagen.{fileId, lastGeneratedAt}`.
@@ -971,6 +984,7 @@ class GrondslagenSummaryService
 
     }//end updateDossierConfiguration()
 
+
     /**
      * Resolve a list of `base` references (slugs or UUIDs) to human-readable labels.
      *
@@ -1084,6 +1098,7 @@ class GrondslagenSummaryService
 
     }//end resolveBaseLabels()
 
+
     /**
      * Collect the distinct grondslagen assigned across the given entities,
      * each with its name + description (the Woo Art. 5 toelichting), for the
@@ -1132,6 +1147,7 @@ class GrondslagenSummaryService
         return $bases;
 
     }//end collectAssignedBases()
+
 
     /**
      * Coerce an ObjectService findAll result into a plain array of object payloads.
@@ -1186,6 +1202,7 @@ class GrondslagenSummaryService
         return $out;
 
     }//end extractObjects()
+
 
     /**
      * Load the EntityRelation rows that this service cares about for a file.
@@ -1359,6 +1376,7 @@ class GrondslagenSummaryService
 
     }//end loadAnonymisedEntitiesForFile()
 
+
     /**
      * Sort key for a `[<TYPE>: <number>]` placeholder: [type, number] so a
      * spaceship compare orders by type alphabetically then by number
@@ -1378,6 +1396,7 @@ class GrondslagenSummaryService
         return [$placeholder, PHP_INT_MAX];
 
     }//end placeholderSortKey()
+
 
     /**
      * Localise an entity-type label for the summary placeholder so it reads
@@ -1402,6 +1421,7 @@ class GrondslagenSummaryService
         return $this->l10n->t($entityType);
 
     }//end localizeEntityType()
+
 
     /**
      * Render the per-document summary template into PDF bytes.
@@ -1467,6 +1487,7 @@ class GrondslagenSummaryService
         }
 
     }//end renderPerDocumentSummary()
+
 
     /**
      * Merge an anonymised PDF + the freshly-rendered summary PDF into one PDF.
@@ -1538,6 +1559,7 @@ class GrondslagenSummaryService
 
     }//end mergeSummaryIntoPdf()
 
+
     /**
      * Count distinct base references across a set of shaped entity rows.
      *
@@ -1564,6 +1586,7 @@ class GrondslagenSummaryService
         return count($seen);
 
     }//end countDistinctBases()
+
 
     /**
      * Load a Twig template's source from disk.
@@ -1600,6 +1623,7 @@ class GrondslagenSummaryService
 
     }//end loadTemplate()
 
+
     /**
      * Get the OpenRegister EntityRelationMapper, or null when unavailable.
      *
@@ -1622,6 +1646,7 @@ class GrondslagenSummaryService
         }
 
     }//end getEntityRelationMapper()
+
 
     /**
      * Get the OpenRegister ObjectService, or null when unavailable.
@@ -1646,6 +1671,7 @@ class GrondslagenSummaryService
 
     }//end getObjectService()
 
+
     /**
      * True when the OpenRegister app is installed and enabled.
      *
@@ -1659,4 +1685,6 @@ class GrondslagenSummaryService
         return in_array('openregister', ($this->appManager->getInstalledApps() ?? []), true);
 
     }//end isOpenRegisterAvailable()
+
+
 }//end class

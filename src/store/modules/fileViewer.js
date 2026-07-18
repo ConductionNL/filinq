@@ -24,7 +24,23 @@ export const useFileViewerStore = defineStore(
 			originalFile: null,
 			anonymizedFile: null,
 			showAnonymized: false,
+			// Latest text selection from the viewer surface. In add mode this
+			// doubles as the pending candidate text for a new manual entity
+			// (see setAddMode / T10).
 			selection: '',
+			// Whether the user may edit the detected entities (set legal
+			// grounds / toggle inclusion) before anonymising. Set by the
+			// upload modal and live-switchable from the sidebar header.
+			// `true` keeps the existing reviewable UI; `false` makes the
+			// entity cards read-only with default values (see T03/T04).
+			grondslagen: true,
+			// "Add new data" mode: the sidebar swaps to the add-entity panel
+			// and the viewer enables text selection for highlighting (T10).
+			addMode: false,
+			// Entities the viewer should highlight in the rendered document,
+			// as `{ value, type }`. Pushed by the sidebar from the current
+			// entity list; consumed by the viewers (T09).
+			highlightEntities: [],
 		}),
 		getters: {
 			/**
@@ -47,27 +63,46 @@ export const useFileViewerStore = defineStore(
 			 * @param {string} file.fileName File name with extension.
 			 * @param {string} file.mimeType MIME type.
 			 * @param {string} file.path     Absolute path inside the user's storage (e.g. /DocuDesk/foo.pdf).
+			 * @param {object} [options]             Viewer options.
+			 * @param {boolean} [options.grondslagen] Whether the entity cards
+			 *        start editable (review mode). Defaults to `true` so callers
+			 *        that don't pass it keep the existing reviewable behaviour.
 			 */
-			open(file) {
+			open(file, options = {}) {
 				this.currentFile = file
 				this.originalFile = file
 				this.anonymizedFile = null
 				this.showAnonymized = false
 				this.selection = ''
+				this.grondslagen = options.grondslagen ?? true
+				this.addMode = false
+				this.highlightEntities = []
 			},
 			/**
-			 * Attach the anonymised counterpart of the currently-open file and
-			 * switch the viewer to it. Used by the sidebar after a successful
-			 * anonymise so the user sees the result inline without losing the
-			 * link back to the original.
+			 * Attach the anonymised counterpart of the currently-open file.
+			 * Used by the sidebar after a successful anonymise so the user sees
+			 * the result inline without losing the link back to the original.
+			 *
+			 * By default the viewer switches to the anonymised file (the common
+			 * case: show the freshly produced result). Pass `{ show: false }` to
+			 * keep the original on screen — e.g. when the user explicitly opened
+			 * the original from the dossier navigation: the pair is still linked
+			 * (the toggle works), we just don't hijack the view to the anonymised
+			 * side of the file they clicked.
 			 *
 			 * @param {object} file Anonymised file descriptor (same shape as `open`).
+			 * @param {object} [options]      Behaviour options.
+			 * @param {boolean} [options.show] Whether to switch the viewer to the
+			 *        anonymised file. Defaults to `true`.
 			 */
-			setAnonymizedVariant(file) {
+			setAnonymizedVariant(file, options = {}) {
+				const show = options.show ?? true
 				this.anonymizedFile = file
-				this.currentFile = file
-				this.showAnonymized = true
+				this.showAnonymized = show
+				this.currentFile = show ? file : (this.originalFile || file)
 				this.selection = ''
+				this.addMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Close the viewer. Host page reverts to file list.
@@ -78,6 +113,9 @@ export const useFileViewerStore = defineStore(
 				this.anonymizedFile = null
 				this.showAnonymized = false
 				this.selection = ''
+				this.grondslagen = true
+				this.addMode = false
+				this.highlightEntities = []
 			},
 			/**
 			 * Swap `currentFile` between the original and the anonymised variant.
@@ -90,14 +128,59 @@ export const useFileViewerStore = defineStore(
 				this.showAnonymized = !this.showAnonymized
 				this.currentFile = this.showAnonymized ? this.anonymizedFile : this.originalFile
 				this.selection = ''
+				this.addMode = false
+				this.highlightEntities = []
 			},
 			/**
-			 * Record the latest text selection from the viewer surface.
+			 * Toggle whether the detected entities may be edited. Driven by the
+			 * sidebar-header switch so the user can switch into review mode
+			 * (add legal grounds) after opening a file that started read-only,
+			 * or back out again. Does not reload or re-extract entities — only
+			 * the editability of the cards changes (see T03).
+			 *
+			 * Switching back to read-only (AAN→UIT) does NOT discard decisions
+			 * the user already made while editing: the per-entity
+			 * `_decisionBases` / `_decisionSkip` live on the entity rows in the
+			 * anonymization store, untouched here. They stay frozen in state and
+			 * are still applied on the next `anonymiseEntry` (its PATCH step
+			 * compares against the extracted defaults). This keeps deliberate
+			 * edits from silently vanishing on an accidental toggle; flipping
+			 * the switch only locks further editing, it does not roll back (T04).
+			 *
+			 * @param {boolean} value `true` = editable review mode, `false` = read-only.
+			 */
+			setGrondslagen(value) {
+				this.grondslagen = Boolean(value)
+			},
+			/**
+			 * Record the latest text selection from the viewer surface. In
+			 * add mode this is the pending candidate value for a new manual
+			 * entity (T10/T11).
 			 *
 			 * @param {string} text Selected text.
 			 */
 			setSelection(text) {
 				this.selection = text || ''
+			},
+			/**
+			 * Toggle the "Add new data" mode. Turning it off clears the
+			 * pending selection so a stale highlight does not linger.
+			 *
+			 * @param {boolean} value `true` enters the add-entity panel; `false` leaves it.
+			 */
+			setAddMode(value) {
+				this.addMode = Boolean(value)
+				if (!this.addMode) {
+					this.selection = ''
+				}
+			},
+			/**
+			 * Replace the list of entities the viewer should highlight.
+			 *
+			 * @param {Array<{value: string, type: string}>} list Entities to mark.
+			 */
+			setHighlightEntities(list) {
+				this.highlightEntities = Array.isArray(list) ? list : []
 			},
 		},
 	},

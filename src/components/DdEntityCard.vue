@@ -1,7 +1,8 @@
 <script setup>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translate as t } from '@nextcloud/l10n'
 import { NcSelect } from '@nextcloud/vue'
 import DdSkeleton from './DdSkeleton.vue'
+import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 </script>
 
 <template>
@@ -14,21 +15,19 @@ import DdSkeleton from './DdSkeleton.vue'
 		</div>
 	</div>
 
-	<!-- Anonymised-document view — read-only, value hidden behind reveal. -->
+	<!-- Anonymised-document view — read-only. Shows the original value and the
+	     anonymised placeholder it was replaced with, stacked together. -->
 	<div v-else-if="mode === 'anonymized'" class="dd-entity-card">
 		<div class="dd-entity-card__header">
-			<span class="dd-entity-card__type">{{ item.type }}</span>
-			<span class="dd-entity-card__confidence">
-				{{ n('docudesk', '%n occurrence', '%n occurrences', item.count) }}
-			</span>
+			<span
+				class="dd-entity-card__type"
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
+			<span class="dd-entity-card__count">{{ item.count }}x</span>
 		</div>
-		<div
-			v-if="revealValues"
-			class="dd-entity-card__value"
-			:title="item.value || ''">
+		<div class="dd-entity-card__value" :title="item.value || ''">
 			{{ item.value || t('docudesk', 'Unknown value') }}
 		</div>
-		<div v-else class="dd-entity-card__value dd-entity-card__value--hidden">
+		<div class="dd-entity-card__value dd-entity-card__value--hidden">
 			{{ item.placeholder }}
 		</div>
 		<div v-if="item.bases && item.bases.length" class="dd-entity-card__bases-tags">
@@ -43,18 +42,27 @@ import DdSkeleton from './DdSkeleton.vue'
 	<div
 		v-else
 		class="dd-entity-card"
-		:class="{ 'dd-entity-card--excluded': !item.included }">
+		:class="{
+			'dd-entity-card--excluded': !item.included,
+		}">
 		<div class="dd-entity-card__header">
 			<input
 				type="checkbox"
 				class="dd-entity-card__checkbox"
 				:checked="item.included"
 				:aria-label="t('docudesk', 'Include in anonymisation')"
+				:disabled="!!(item.prohibitionMatch && item.prohibitionMatch.highConfidence)"
 				@change="$emit('toggle')">
-			<span class="dd-entity-card__type">{{ item.type }}</span>
+			<span
+				class="dd-entity-card__type"
+				:style="{ backgroundColor: entityTypeColor(item.type) }">{{ entityTypeLabel(item.type) }}</span>
 			<span class="dd-entity-card__confidence">
 				{{ ((item.confidence || 0) * 100).toFixed(0) }}%
 			</span>
+			<span
+				v-if="item.prohibitionMatch"
+				class="dd-entity-card__lock"
+				:title="item.prohibitionMatch.ruleName">🔒</span>
 		</div>
 		<div class="dd-entity-card__value" :title="item.value">
 			{{ item.value }}
@@ -64,10 +72,12 @@ import DdSkeleton from './DdSkeleton.vue'
 				class="dd-entity-card__bases"
 				:value="item._decisionBases || []"
 				:options="basesOptions"
+				label="label"
+				:reduce="(o) => o.value"
 				:multiple="true"
 				:input-label="t('docudesk', 'Grondslagen')"
 				:placeholder="t('docudesk', 'Pick grondslagen…')"
-				:disabled="!hasRelation"
+				:disabled="!editable || !hasRelation"
 				@input="$emit('set-bases', $event)" />
 		</div>
 		<div v-if="item._patchError" class="dd-entity-card__error" :title="item._patchError">
@@ -82,8 +92,8 @@ import DdSkeleton from './DdSkeleton.vue'
  *
  * Renders one of three states selected by props:
  *   - `loading`            → skeleton placeholder (no `item` required).
- *   - `mode="anonymized"`  → read-only summary of a removed entity, with
- *                            its original value hidden behind `revealValues`.
+ *   - `mode="anonymized"`  → read-only summary of a removed entity: its
+ *                            original value plus the anonymised placeholder.
  *   - `mode="review"`      → editable: include checkbox + grondslagen select.
  *
  * The card owns no store state; it emits `toggle` and `set-bases` so the
@@ -119,19 +129,22 @@ export default {
 			default: false,
 		},
 		/**
-		 * Anonymised view only — show the original value instead of the
-		 * `[<TYPE>: <id>]` placeholder.
-		 */
-		revealValues: {
-			type: Boolean,
-			default: false,
-		},
-		/**
 		 * Review view only — options for the grondslagen multiselect.
 		 */
 		basesOptions: {
 			type: Array,
 			default: () => [],
+		},
+		/**
+		 * Review view only — whether grondslagen are editable. When `false`
+		 * (grondslagen toggle off) the grondslagen select is disabled and no
+		 * grondslagen are applied. The include checkbox is always editable:
+		 * including/excluding an entity is independent of grondslagen.
+		 * Live-reactive to the sidebar header toggle.
+		 */
+		editable: {
+			type: Boolean,
+			default: true,
 		},
 	},
 	emits: ['toggle', 'set-bases'],
@@ -186,8 +199,11 @@ export default {
 	letter-spacing: 0.04em;
 	padding: 2px 8px;
 	border-radius: var(--border-radius-large);
-	background-color: var(--color-primary-element-light);
-	color: var(--color-primary-element);
+	/* Background is set inline per type via entityTypeColor(); this is the
+	 * fallback when no inline style is present. Text colour comes from the
+	 * shared entity-text token (revisit contrast once backgrounds diverge). */
+	background-color: var(--dd-entity-color-default);
+	color: var(--dd-entity-color-text, var(--color-primary-element));
 	display: inline-block;
 	max-width: max-content;
 }
@@ -195,6 +211,14 @@ export default {
 .dd-entity-card__confidence {
 	flex: 0 0 auto;
 	font-size: 0.8rem;
+	color: var(--color-text-maxcontrast);
+}
+
+/* Occurrence count for the anonymised view, shown as "3x". */
+.dd-entity-card__count {
+	flex: 0 0 auto;
+	font-size: 0.8rem;
+	font-weight: 600;
 	color: var(--color-text-maxcontrast);
 }
 
@@ -219,8 +243,9 @@ export default {
 	font-size: 0.75rem;
 }
 
-/* Anonymised-document view — placeholder shown until the user reveals the
- * original value, plus the read-only grondslagen tags. */
+/* Anonymised-document view — the placeholder the value was replaced with,
+ * rendered below the original value in a muted monospace so the two read as
+ * "original → anonymised". */
 .dd-entity-card__value--hidden {
 	font-family: var(--font-face-monospace, monospace);
 	color: var(--color-text-maxcontrast);

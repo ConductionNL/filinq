@@ -146,6 +146,12 @@ class Application extends App implements IBootstrap
             static function ($c): PdfConversionService {
                 return new PdfConversionService(
                     backends: [
+                        // OURS DI style ($c->get) preserved — autowires each
+                        // backend, keeps development's LibreOfficeHeadlessBackend
+                        // fallback, and pulls in Robert's EmlBackend (which now
+                        // autowires EmlPdfAssemblyService via its constructor).
+                        // Robert's explicit `new` variant referenced an undefined
+                        // $conversionManager and dropped the LibreOffice backend.
                         $c->get(OfficeAppBackend::class),
                         $c->get(LibreOfficeHeadlessBackend::class),
                         $c->get(PhpWordBackend::class),

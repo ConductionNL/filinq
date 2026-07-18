@@ -49,16 +49,36 @@
 
 			<div class="setting-item">
 				<div class="setting-label">
-					{{ t('docudesk', 'Always export anonymised documents as PDF') }}
+					{{ t('docudesk', 'Default output format for anonymised documents') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings['docudesk.anonymisation.default_output_format'] === 'pdf'"
-					type="switch"
-					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event ? 'pdf' : 'preserve'" />
+					:checked="settings['docudesk.anonymisation.default_output_format']"
+					value="pdf-only"
+					name="anonymisation_output_format"
+					type="radio"
+					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					{{ t('docudesk', 'PDF only — delete the native anonymised file (recommended)') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					:checked="settings['docudesk.anonymisation.default_output_format']"
+					value="pdf"
+					name="anonymisation_output_format"
+					type="radio"
+					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					{{ t('docudesk', 'PDF and native file — keep both') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					:checked="settings['docudesk.anonymisation.default_output_format']"
+					value="preserve"
+					name="anonymisation_output_format"
+					type="radio"
+					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					{{ t('docudesk', 'Native format only — no PDF conversion') }}
+				</NcCheckboxRadioSwitch>
 				<div class="setting-description">
-					{{ t('docudesk', 'When enabled, anonymised files are converted to PDF/A-3b before being written back to Nextcloud Files. PDF flattens the text into a glyph stream, which makes the redaction much harder to revert by editing the document, and strips most metadata channels that would otherwise still name the original entities. When disabled, anonymised files keep their native format (DOCX, ODT, …). Callers can still override per-request by sending outputFormat: "pdf" or "preserve".') }}
+					{{ t('docudesk', 'Controls what the anonymise endpoints write back to Nextcloud Files by default. "PDF only" converts the result to PDF/A-3b and then deletes the native-format intermediate, so no re-editable copy of the redacted document is left behind — PDF flattens the text into a glyph stream and strips most metadata channels that would otherwise still name the original entities. "PDF and native file" also keeps the native version (DOCX, ODT, …) alongside the PDF. "Native format only" skips conversion entirely. Callers can always override per-request by sending outputFormat: "pdf-only", "pdf", or "preserve".') }}
 				</div>
-				<div v-if="settings['docudesk.anonymisation.default_output_format'] === 'pdf'" class="setting-description">
+				<div v-if="settings['docudesk.anonymisation.default_output_format'] !== 'preserve'" class="setting-description">
 					<em>{{ t('docudesk', 'Conversion requires either a supported Office app integration (Collabora, OnlyOffice, or Euro Office) for the best fidelity, or the bundled PhpWord + mPDF fallback for DOC/DOCX/ODT/RTF/HTML/TXT. Spreadsheet and presentation formats are not supported in the fallback tier and will return an error unless an Office app is configured.') }}</em>
 				</div>
 			</div>
@@ -87,6 +107,14 @@
 						@input="onBasesChange(entityType, $event)" />
 				</div>
 			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
+			:name="t('docudesk', 'Entity types to detect')"
+			:description="t('docudesk', 'Choose which entity types are detected automatically during analysis. Types left off are not detected or stored, but can still be added manually per document and will be anonymised. Leaving every type on detects all types.')">
+			<EntityTypeSelector
+				v-model="enabledEntityTypes"
+				:options="grondslagEntityTypes" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -439,6 +467,7 @@ import FileExportOutline from 'vue-material-design-icons/FileExportOutline.vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import EntityTypeSelector from './EntityTypeSelector.vue'
 
 export default {
 	name: 'Settings',
@@ -456,6 +485,7 @@ export default {
 		OpenInNew,
 		FileExportOutline,
 		AccountSearchOutline,
+		EntityTypeSelector,
 	},
 	data() {
 		return {
@@ -476,10 +506,14 @@ export default {
 			objectTypes: ['publicationConsent'],
 			sections: {},
 			// Propose-grondslag-per-entity-type: curated entity types, the
-			// available base records, and the operator-configured mapping.
+			// available base records, and the operator-configured mapping
+			// (entity type → base slug[]). All supplied by the settings GET.
 			grondslagEntityTypes: [],
 			grondslagBases: [],
 			entityTypeBases: {},
+			// Entity types enabled for automatic detection (all-on by default).
+			// An empty or complete selection means "detect all types".
+			enabledEntityTypes: [],
 			settings: {
 				publication_objection_period_days: 28,
 				enable_language_detection: true,
@@ -491,7 +525,7 @@ export default {
 				signing_provider: 'native',
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
-				'docudesk.anonymisation.default_output_format': 'pdf',
+				'docudesk.anonymisation.default_output_format': 'pdf-only',
 			},
 			ocrLanguages: {
 				nld: true,
@@ -625,7 +659,9 @@ export default {
 					this.settings.signing_provider = data.signing_provider || 'native'
 					this.settings.signing_default_level = data.signing_default_level || 'SES'
 					this.settings.signing_request_expiry_days = parseInt(data.signing_request_expiry_days, 10) || 30
-					this.settings['docudesk.anonymisation.default_output_format'] = data['docudesk.anonymisation.default_output_format'] ?? 'pdf'
+					this.settings['docudesk.anonymisation.default_output_format'] = data['docudesk.anonymisation.default_output_format'] ?? 'pdf-only'
+					// Entity types enabled for automatic detection (all-on by default).
+					this.enabledEntityTypes = data['docudesk.anonymisation.enabled_entity_types'] || []
 
 					// Parse OCR languages
 					const ocrLangStr = data.ocr_languages || 'nld+eng'
@@ -760,9 +796,11 @@ export default {
 				signing_provider: this.settings.signing_provider || 'native',
 				signing_default_level: this.settings.signing_default_level || 'SES',
 				signing_request_expiry_days: String(this.settings.signing_request_expiry_days || 30),
-				'docudesk.anonymisation.default_output_format': this.settings['docudesk.anonymisation.default_output_format'] === 'pdf' ? 'pdf' : 'preserve',
+				'docudesk.anonymisation.default_output_format': ['pdf-only', 'pdf', 'preserve'].includes(this.settings['docudesk.anonymisation.default_output_format']) ? this.settings['docudesk.anonymisation.default_output_format'] : 'pdf-only',
 				// Sent as an object; the backend json-encodes it for storage.
 				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
+				// Sent as an array; the backend json-encodes it for storage.
+				'docudesk.anonymisation.enabled_entity_types': this.enabledEntityTypes,
 			}
 
 			// Add register/schema configs

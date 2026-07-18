@@ -256,12 +256,14 @@ class SettingsService
             ),
             // Anonymise-output-as-pdf-by-default — tenant-wide default
             // for the anonymise endpoint's `outputFormat` request param.
-            // 'pdf' converts the anonymised output via the cascade;
+            // 'pdf-only' (default) converts via the cascade and deletes the
+            // native anonymised intermediate so only the PDF remains;
+            // 'pdf' converts but keeps the native intermediate too;
             // 'preserve' returns it in the native input format.
             'docudesk.anonymisation.default_output_format' => $this->config->getValueString(
                 $this->appName,
                 'docudesk.anonymisation.default_output_format',
-                'pdf'
+                'pdf-only'
             ),
             // OCR document scanning (ocr-document-scanning) — tenant-wide
             // toggles read by OcrService for scanned-PDF text extraction.
@@ -282,8 +284,14 @@ class SettingsService
             ),
             // Propose-grondslag-per-entity-type — instance-global map of
             // entity type → base slug(s), used to pre-fill a proposed
-            // grondslag onto freshly-detected entities.
+            // grondslag onto freshly-detected entities. Decoded to an
+            // object so the settings UI can bind it directly.
             'docudesk.grondslagen.entity_type_bases'       => $this->grondslagProposal->getMapping(),
+            // Entity types left enabled for automatic detection. Returned as an
+            // explicit list (all curated types when unset) so the settings UI
+            // renders the selector all-on by default; an empty/complete
+            // selection is treated as "all types" at detection time.
+            'docudesk.anonymisation.enabled_entity_types'  => $this->grondslagProposal->getEnabledEntityTypes(),
         ];
 
     }//end loadFeatureToggles()
@@ -343,6 +351,12 @@ class SettingsService
 
             // Data for the grondslag-per-entity-type selector: the curated
             // entity types and the available `base` records (slug + name).
+            $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
+            $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
+
+            // Data for the grondslag-per-entity-type selector: the curated
+            // entity types and the available `base` records (slug + name).
+            // Both degrade to safe defaults when OpenRegister is absent.
             $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
             $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
 

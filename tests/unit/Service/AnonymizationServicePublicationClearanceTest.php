@@ -85,7 +85,8 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
             consentService: $consentService,
             grondslagenSummary: $grondslagenSummary,
             fileEntityStats: $fileEntityStats,
-            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class)
+            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class),
+            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class)
         );
 
     }//end buildService()

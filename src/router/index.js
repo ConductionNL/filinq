@@ -3,8 +3,6 @@ import Router from 'vue-router'
 
 import Dashboard from '../views/dashboard/DashboardIndex.vue'
 import AnonymizationIndex from '../views/anonymization/AnonymizationIndex.vue'
-import AnonymizationPocWidget from '../views/anonymization/AnonymizationPocWidget.vue'
-import BatchAnonymizationView from '../views/anonymization/BatchAnonymizationView.vue'
 import FolderAnonymizationView from '../views/anonymization/FolderAnonymizationView.vue'
 import ConsentIndex from '../views/consent/ConsentIndex.vue'
 import ConsentDetail from '../views/consent/ConsentDetail.vue'
@@ -21,6 +19,7 @@ import BulkSigningPanel from '../views/signing/BulkSigningPanel.vue'
 import SignatureVerification from '../views/signing/SignatureVerification.vue'
 import CorrespondenceIndex from '../views/correspondence/CorrespondenceIndex.vue'
 import ComparisonView from '../views/comparison/ComparisonView.vue'
+import ComponentGallery from '../views/gallery/ComponentGallery.vue'
 
 Vue.use(Router)
 
@@ -31,8 +30,6 @@ export default new Router(
 			{ path: '/', redirect: { name: 'Anonymization' } },
 			{ path: '/dashboard', name: 'Dashboard', component: Dashboard },
 			{ path: '/anonymization', name: 'Anonymization', component: AnonymizationIndex },
-			{ path: '/anonymization/poc', name: 'AnonymizationPoc', component: AnonymizationPocWidget },
-			{ path: '/anonymization/batch', name: 'BatchAnonymization', component: BatchAnonymizationView },
 			{ path: '/anonymization/folder', name: 'FolderAnonymization', component: FolderAnonymizationView },
 			{ path: '/consent', name: 'Consent', component: ConsentIndex },
 			{ path: '/consent/:id', name: 'ConsentDetail', component: ConsentDetail, props: route => ({ consentId: route.params.id }) },
@@ -50,6 +47,7 @@ export default new Router(
 			{ path: '/signing/:id', name: 'SigningRequestDetail', component: SigningRequestDetail, props: route => ({ requestId: route.params.id }) },
 			{ path: '/correspondence', name: 'Correspondence', component: CorrespondenceIndex },
 			{ path: '/comparison', name: 'Comparison', component: ComparisonView, props: route => ({ initialLeftFileId: route.query.left || '', initialRightFileId: route.query.right || '' }) },
+			{ path: '/gallery', name: 'Gallery', component: ComponentGallery },
 			{ path: '*', redirect: { name: 'Anonymization' } },
 		],
 	},
