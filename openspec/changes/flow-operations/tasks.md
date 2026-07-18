@@ -1,12 +1,14 @@
 # Tasks: flow-operations
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 16.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `flowOperationRun` schema (operation, fileId, fileName, ownerUserId, status, statusReason, triggerEvent, startedAt, finishedAt, resultSummary, producedFileId, errorMessage) to `lib/Settings/docudesk_register.json` with `x-openregister-lifecycle` (initial `queued`), `x-openregister-archival` (`P1Y` placeholder pending selectielijst sign-off) and the failure-notification rule in the verified `x-openregister-notifications` dialect (recipient `kind:field ownerUserId`) — additive, union-merge only; re-validate JSON after merge (REQ-DDFLO-008)
+- [ ] 1.1 Add the `flowOperationRun` schema (operation, fileId, fileName, ownerUserId, status, statusReason, triggerEvent, startedAt, finishedAt, resultSummary, producedFileId, errorMessage) to `lib/Settings/docudesk_register.json` with `x-openregister-lifecycle` (initial `queued`), `x-openregister-archival` TTL retention in the OR-validated object shape (`{"retention": {"default": "<ISO-8601>"}}` — `P1Y` placeholder for authoring, see the apply-blocker task 1.3) and the failure-notification rule in the verified `x-openregister-notifications` dialect (recipient `kind:field ownerUserId`) — additive, union-merge only; re-validate JSON after merge (REQ-DDFLO-008)
 - [ ] 1.2 Seed the two `flowOperationRun` fixtures from design.md so the runs listing renders on a clean install
+- [ ] 1.3 APPLY-BLOCKER — replace the `P1Y` retention placeholder on `flowOperationRun` with a real selectielijst-manager-approved retention value before apply/done (REQ-DDFLO-010)
+  - Obtain the approved processing-log retention from the responsible selectielijst-manager (records-appraisal decision — the runs carry `ownerUserId`, file names and per-type entity counts); express it in the validated object shape; add a PHPUnit register-lint that FAILS while `P1Y` remains so the gate enforces it (same production-enablement posture as archiefwet B4 / REQ-DDARE-009). Note only: `entitySearchLog` and `classificationResult` carry the same obligation in `entity-search` and `inbound-auto-classification` — out of scope here.
 
 ## 2. Backend
 
@@ -32,4 +34,4 @@
 - [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/flow-operations.spec.ts` for the `@e2e`-referenced scenarios
 - [ ] 4.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
 - [ ] 4.4 Docs: `docs/features/flow-operations.md` with Playwright screenshots (rule builder with a DocuDesk operation, runs listing, failure notification) (ADR-010)
-- [ ] 4.5 Validate: `openspec validate flow-operations --strict` passes; hydra gates green
+- [ ] 4.5 Validate: `openspec validate flow-operations --strict` passes; the REQ-DDFLO-010 register-lint passes (no `P1Y` placeholder remains); hydra gates green

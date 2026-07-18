@@ -78,6 +78,54 @@ the existing hold.
 - AND the case is not presented as fully protective
 - @e2e tests/e2e/workflows/e-discovery-legal-hold.spec.ts
 
+### Requirement: File-level freeze via Nextcloud file locking (REQ-DDEDL-007)
+
+The app MUST place a file-layer lock on the underlying Nextcloud file node of
+every in-scope document when a hold case is activated, using OCP
+`\OCP\Files\Lock\ILockManager` with an app-scoped lock (`ILock::TYPE_APP`,
+owner the DocuDesk app id), so that raw Nextcloud file operations — deletion,
+rename and overwrite via the Files UI, WebDAV or a sync client — are blocked
+at the storage layer while the hold is active. This file lock is IN ADDITION
+to the OpenRegister per-object record-destruction freeze (REQ-DDEDL-002),
+which remains the PRIMARY and authoritative freeze governing Archiefwet
+destruction. The
+file lock is a BACKSTOP that closes the gap the record freeze does not cover
+(a user deleting the actual file through Nextcloud rather than destroying the
+OR record); it MUST NOT replace or weaken the OR record freeze. On release
+the app MUST unlock a file only when no other active case covers it, using
+the same overlap accounting as REQ-DDEDL-003 (the file stays locked while any
+active case still covers it). When the lock provider is unavailable
+(`ILockManager::isLockProviderAvailable()` is false — the `files_lock` app is
+not installed), the app MUST record the file-layer backstop as unavailable on
+the case fan-out status and MUST NOT claim file-level protection it does not
+have; the OR record freeze still applies. Per-object lock and unlock failures
+MUST be visible and retried like the record fan-out, never silent.
+
+#### Scenario: Placing a hold blocks raw file deletion
+
+- GIVEN an in-scope document and an installed `files_lock` lock provider
+- WHEN the hold case is activated
+- THEN an app-scoped lock is placed on the document's Nextcloud file node
+- AND an attempt to delete that file through the Files app or WebDAV is refused while the hold is active
+- @e2e exclude storage-layer lock enforcement is Nextcloud/files_lock behaviour — covered by PHPUnit on the lock fan-out (tests/unit/Service/LegalHoldCaseServiceTest.php) plus the record-freeze e2e in tests/e2e/workflows/e-discovery-legal-hold.spec.ts
+
+#### Scenario: File lock lifts only after the last covering case releases
+
+- GIVEN a file covered by two active hold cases, both holding the file lock
+- WHEN the first case is released
+- THEN the file remains locked (a case still covers it)
+- AND only after the second case is released is the file lock lifted
+- @e2e exclude overlap-safe unlock is backend orchestration — covered by PHPUnit overlap-matrix tests (tests/unit/Service/LegalHoldCaseServiceTest.php)
+
+#### Scenario: Missing lock provider degrades honestly
+
+- GIVEN an instance without the `files_lock` app installed
+- WHEN a hold case is activated
+- THEN the OpenRegister record freeze is placed as usual
+- AND the case fan-out status records the file-layer backstop as unavailable
+- AND the case does not claim file-level deletion protection
+- @e2e exclude provider-availability degradation branch — covered by PHPUnit (tests/unit/Service/LegalHoldCaseServiceTest.php)
+
 ### Requirement: Release is overlap-safe and audited (REQ-DDEDL-003)
 
 The app MUST release a case only with a mandatory `releaseReason`, and MUST

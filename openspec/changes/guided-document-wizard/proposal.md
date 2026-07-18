@@ -96,7 +96,11 @@ extension), local-only, and documented in design.md Security.
 - **Register**: `lib/Settings/docudesk_register.json` — new `wizardDefinition`
   schema in the `templates` register (version bump, additive on top of
   Wave-1's `2.1.0`); `generatedDocument` schema gains optional
-  `wizardContext` (document register bump `2.2.0` → `2.3.0`, additive).
+  `wizardContext` (document register bump `2.2.0` → `2.3.0`, additive; `2.2.0`
+  is the verified current version at HEAD). Apply order is pinned: this change
+  applies **first** and takes the document register to `2.3.0`; the
+  co-scheduled `multi-format-output` change applies **after** it and bumps
+  `2.3.0` → `2.4.0` — no rebase-on-whichever-lands-second.
 - **Frontend**: wizard authoring panel on `TemplateDetail.vue`, new wizard
   runner view + register-object picker using `@conduction/nextcloud-vue`
   components (ADR-012); "Generate with wizard" entry points on the template

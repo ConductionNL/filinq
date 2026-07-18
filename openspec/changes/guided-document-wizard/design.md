@@ -76,10 +76,14 @@ extended by Wave-1 in the same release train) is not touched twice; lookup is
 `GET /api/templates/{id}/wizard` (a filtered OR query on
 `templateId + active`). **Relationship note (canonical-spec touch
 discipline):** this adds a schema to the templates register but does not
-modify the `template`/`templateVersion` data model, so no `template-management`
-delta is needed; the new schema is specified in this change's own capability
-spec, and the templates-register version bump is additive on top of Wave-1's
-`2.1.0`.
+modify the `template`/`templateVersion` data model, so no requirement-level
+`template-management` delta is needed. Per decision C3 (single source of
+truth) the new `wizardDefinition` schema **is** registered in the canonical
+`openspec/specs/template-management/spec.md` header — its "Templates Register
+Schemas" listing and `**OpenSpec changes**` list — while the full
+requirements (question model, validation, translation, prefill, runner) remain
+in this change's own capability spec (REQ-DDGDW-*). The templates-register
+version bump is additive on top of Wave-1's `2.1.0`.
 
 ### D2 — Question model: four types, dotted `mapsTo`, one-level conditions
 
@@ -214,7 +218,12 @@ behaviour extensions are used or needed.
 No custom database tables. Register import stays
 `ConfigurationService::importFromApp()` on boot; templates register bump is
 additive on top of Wave-1 (`2.1.0` → `2.2.0`), document register `2.2.0` →
-`2.3.0`.
+`2.3.0` (`2.2.0` verified current at HEAD). **Apply order (pinned):** this
+change applies first (document register → `2.3.0`); the co-scheduled
+`multi-format-output` change applies after it (document register `2.3.0` →
+`2.4.0`, adding `docx` + `outputs`). The two bumps touch disjoint additive
+properties of `generatedDocument`; register import is idempotent. No
+rebase-on-whichever-lands-second.
 
 ## Seed Data
 

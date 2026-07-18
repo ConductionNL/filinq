@@ -24,7 +24,9 @@ holds **document content, signature material and citizen contact data**, and it 
 would hand an agent the signature blobs, the signer IP addresses, the un-anonymised source
 path behind every redacted document, and the publication-prohibition list of protected
 individuals. This change therefore adopts MCP with a deliberately **narrow, read-biased**
-surface: **8 of 18 schemas ON, all read-only**, plus **exactly one curated write tool**.
+surface: **8 of 18 schemas ON, all read-only**, plus **one curated generation write tool**
+(the sole document-generation tool; sibling changes MAY add further curated tools via the
+same scannable-services path, each bound by the same refusals).
 
 ## What Changes
 
@@ -37,14 +39,17 @@ surface: **8 of 18 schemas ON, all read-only**, plus **exactly one curated write
   letterhead and legal boilerplate); correspondence/generatedDocument/batch rows are
   *audit records* of what was produced; `signingRequest` is the legal spine of a signature
   process. None of them is safe for an agent to mutate.
-- **Add exactly one curated `#[McpTool]`**: `CorrespondenceService::generate()` becomes
+- **Add the curated generation `#[McpTool]`**: `CorrespondenceService::generate()` becomes
   `docudesk.generateCorrespondence` — a genuinely non-CRUD, multi-step action (fetch
   template → resolve OpenRegister data refs → apply huisstijl → render → produce PDF/DOCX/HTML
   → log a `correspondence` register entry). Annotated honestly: `scope: 'create'`,
-  `readOnlyHint: false`, `destructiveHint: false`, `idempotentHint: false`.
+  `readOnlyHint: false`, `destructiveHint: false`, `idempotentHint: false`. This is the sole
+  document-*generation* tool; sibling changes (e.g. `mcp-generation-tools`) MAY add further
+  curated tools via the same scannable-services path, each bound by the refusals below.
 - **Add `lib/Mcp/DocudeskScannableServices.php`** implementing OpenRegister's
-  `IMcpScannableServices` and returning `[CorrespondenceService::class]` — the per-app
-  opt-in that tells OR which classes to scan.
+  `IMcpScannableServices` and returning a list that MUST include `CorrespondenceService::class`
+  (and MAY be extended by sibling changes) — the per-app opt-in that tells OR which classes
+  to scan.
 - **Explicitly REFUSE a signing tool.** No `#[McpTool]` is added to `SigningService`,
   `SigningVerificationService`, `SigningAuditService`, or any
   `Service/Signing/*Provider`. Applying an electronic signature is an act with legal
@@ -61,9 +66,9 @@ surface: **8 of 18 schemas ON, all read-only**, plus **exactly one curated write
 
 ### New Capabilities
 - `docudesk-mcp-surface` — DocuDesk's agent-facing tool surface: the curated schema
-  allowlist and its verb/scope/hint declarations, the single curated generation tool, and
-  the standing refusals (signing, batch mail-merge, signature material, consent/prohibition
-  registers).
+  allowlist and its verb/scope/hint declarations, the curated generation tool (extensible by
+  sibling changes via the scannable-services path), and the standing refusals (signing, batch
+  mail-merge, signature material, consent/prohibition registers).
 
 ### Modified Capabilities
 _None._ No existing DocuDesk requirement changes behaviour: the dialect is additive

@@ -13,6 +13,7 @@ retrofit_extensions:
 **Status**: in-progress
 **OpenSpec changes**:
 - [office-template-authoring](../../changes/office-template-authoring/) _(active)_ — office-file-native templates: `templateType`/source-file data-model extension (REQ-DDOTA-006) and versioning/lock/preview/duplicate parity for office templates (REQ-DDOTA-007) (kind: code)
+- [guided-document-wizard](../../changes/guided-document-wizard/) _(active)_ — adds the `wizardDefinition` schema to the templates register (guided-interview definitions fronting a template by `templateId`; the `template`/`templateVersion` data model is unchanged) — full requirements live in the `guided-document-wizard` capability (REQ-DDGDW-*) (kind: code)
 
 ## Purpose
 
@@ -266,6 +267,19 @@ Template objects from OpenRegister are consistently serialized for API responses
 | namespace | string | Yes | -- | App identifier (max 64 chars, lowercase alphanumeric) |
 | format | string (enum) | No | A4 | Page format: A4, A3, Letter, Legal |
 | orientation | string (enum) | No | P | Page orientation: P (portrait), L (landscape) |
+
+### Templates Register Schemas
+
+The `templates` register (`lib/Settings/docudesk_register.json`) is the single
+source of truth for template-related schemas. It contains:
+
+| Schema | Owning capability | Purpose |
+|--------|-------------------|---------|
+| `template` | template-management | The template data model (this spec, REQ-TMPL-01) |
+| `templateVersion` | template-management | Versioned template snapshots (REQ-TMPL-08) |
+| `textFragment` | office-template-authoring | Reusable text fragments for office templates |
+| `templateImportJob` | office-template-authoring | Office-template import job records |
+| `wizardDefinition` | guided-document-wizard | Guided-interview definition (ordered questions, skip logic, register-object pickers) attached to exactly one template by `templateId`; does not modify the `template`/`templateVersion` data model — full requirements in the `guided-document-wizard` capability (REQ-DDGDW-*) |
 
 ## API Endpoints
 

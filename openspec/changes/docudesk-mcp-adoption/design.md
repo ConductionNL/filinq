@@ -52,6 +52,14 @@ schema gets a write verb.
 
 ## The one curated tool
 
+This adoption baseline adds exactly one curated tool — the document-*generation*
+tool below. It is **not** a closed set: the scannable-services path
+(`DocudeskScannableServices`) is the extension point, and sibling changes MAY add
+further curated tools through it (e.g. `mcp-generation-tools` adds the read-only
+`getDocumentStatus` aggregate and the gate-safe `anonymizeDocument` intake).
+`generateCorrespondence` remains the sole *generation* tool, and every added
+curated tool inherits every refusal in the §Refusals section unchanged.
+
 `CorrespondenceService::generate(string $templateId, array $dataRefs, array $options)` →
 `docudesk.generateCorrespondence`.
 

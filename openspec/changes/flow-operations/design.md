@@ -163,9 +163,14 @@ New register schema `flowOperationRun` (additive, union-merge):
 confidence / findings / producedFileId), `producedFileId`,
 `errorMessage`. Declared with `x-openregister-lifecycle` (canonical
 `initial: queued`; transitions queued→running→succeeded|failed, and
-queued→skipped) and `x-openregister-archival` retention `P1Y`
-(operational processing log, same Archiefwet cat. 1.2 rationale as
-`anonymizationResult` in the anonymization spec). Failure notification is
+queued→skipped) and `x-openregister-archival` TTL log-rotation retention in
+the OR-validated object shape (`{"retention": {"default": "<ISO-8601>"}}`).
+`flowOperationRun` is an operational processing-log schema — the only class
+for which `x-openregister-archival` is permitted (`archiefwet-retention-engine`
+REQ-DDARE-008); its retention duration ships as a `P1Y` **placeholder** and
+is a production-enablement apply-blocker (REQ-DDFLO-010): a real
+selectielijst-manager-approved value MUST replace it before apply, enforced
+by a register-lint. Failure notification is
 declared in the verified `x-openregister-notifications` dialect on this
 schema, recipient `{"kind": "field", "field": "ownerUserId"}` — a
 confirmed NC uid, satisfying the `docudesk-notifications` staff-safe
@@ -278,13 +283,23 @@ a clean install (nil-consequence fixture fileIds, self-evidently fake).
 5. Rollback: deleting a Flow rule stops triggering; the operations are
    inert without rules; no data migration to unwind.
 
+## Production-enablement (apply-blocker, REQ-DDFLO-010)
+
+The `flowOperationRun` `x-openregister-archival` retention ships as a `P1Y`
+placeholder for authoring only. Before this change is applied to production
+or marked done, it MUST be replaced with a **real selectielijst-manager-
+approved retention value** for this processing log — the runs carry
+`ownerUserId`, file names and per-type entity counts, so their lifespan is a
+records-appraisal decision, expressed in the OR-validated object shape. A
+PHPUnit register-lint fails the gate while the placeholder remains. This
+mirrors the `archiefwet-retention-engine` B4 posture (REQ-DDARE-009). The
+sibling processing-log schemas `entitySearchLog` (`entity-search`) and
+`classificationResult` (`inbound-auto-classification`) carry the same
+obligation in their own changes and are out of scope here.
+
 ## Open Questions
 
 - Should the anonymise operation optionally tag the file (e.g.
   `awaiting-review`) so a second Flow rule can chain on it? Deferred —
   chaining via tags is engine-idiomatic but needs a loop-safety review
   first.
-- Per-operation run-retention: is `P1Y` right for validation runs that
-  carry findings referenced by audits? Provisional `P1Y` pending
-  selectielijst-manager sign-off (same placeholder pattern as
-  `financialExtraction`).

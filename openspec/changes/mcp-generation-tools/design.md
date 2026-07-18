@@ -132,19 +132,22 @@ detection run and carry an `mcp` attribution the same way
 `triggeredBy`). No DocuDesk-side grant enforcement code — duplicating the
 authz path is the ADR-022 violation the fleet keeps re-learning.
 
-### D6 — ScannableServices reconciliation (coordination note)
+### D6 — ScannableServices reconciliation (already reconciled per F4)
 
 `DocudeskScannableServices::getScannableServices()` becomes
 `[CorrespondenceService::class, FileListingService::class,
-AnonymizationService::class]`. The in-flight `docudesk-mcp-adoption`
-delta words the list as exactly `[CorrespondenceService::class]` and its
-narrative says "exactly one curated tool"; with both changes in-flight,
-whichever archives second amends that wording (flagged in both changes'
-task lists via this note; also recorded as a deferred question). None of
+AnonymizationService::class]`. This wording collision with
+`docudesk-mcp-adoption` has been **reconciled in the build phase (decision
+F4)**: the adoption delta no longer pins the list as exactly
+`[CorrespondenceService::class]` — it now requires the list to *include*
+`CorrespondenceService::class` and explicitly permits sibling changes (this
+one) to add further curated services via the same scannable-services path,
+with `generateCorrespondence` remaining the sole *generation* tool. None of
 the adoption change's testable guarantees (16 derived read tools, the
 generate tool's registration and hints, every refusal) is weakened — the
-"exactly one write" statement generalises to "every write is a curated,
-fully-hinted, gate-safe tool; derived write verbs remain zero".
+former "exactly one write" narrative is now "every write is a curated,
+fully-hinted, gate-safe tool; derived write verbs remain zero". No
+archive-time amendment of the adoption delta is required.
 
 ### D7 — Declarative vs imperative (ADR-031) and ADR-001/ADR-011
 
@@ -194,8 +197,10 @@ seeded sample documents that already ship
   this change is applied first by mistake, the ScannableServices class
   does not exist yet — the task list makes creating/extending it
   explicitly conditional on the adoption change's artifact.
-- [Two in-flight changes touching one wording] → D6 coordination note +
-  deferred question; mechanical, not semantic, conflict.
+- [Two in-flight changes touching one wording] → reconciled in the build
+  phase (decision F4): the adoption delta's wording now permits this
+  extension (D6); mechanical, not semantic, conflict — resolved, no
+  archive-time amendment.
 
 ## Migration Plan
 

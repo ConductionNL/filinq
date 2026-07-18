@@ -47,15 +47,16 @@ vernietigingslijsten shrink while holds are active), record owners
 
 - A case-level hold object with matter type, reason, explicit scope,
   custodian and a declarative lifecycle.
-- Platform-enforced destruction freeze (OR legal holds), overlap-safe
-  release, owner notifications, full audit trail, searchable register.
+- Platform-enforced destruction freeze (OR legal holds, primary) plus a
+  Nextcloud file-lock (`files_lock`) backstop against raw file deletion,
+  overlap-safe release, owner notifications, full audit trail, searchable
+  register.
 
 **Non-Goals (the ZyLAB boundary):**
 
 - No document review UI, tagging, TAR/analytics, production/export sets,
   custodian questionnaires or matter workflow beyond active→released.
 - No query-based or self-updating scopes this wave.
-- No storage-layer file locking (open question below).
 
 ## Decisions
 
@@ -137,6 +138,34 @@ their records; silent freezes get violated innocently.
   read access via OR RBAC; hold placement authority restricted to a
   designated group (records-manager/juridisch), verified server-side.
 
+### D6 — File-level freeze backstop via `files_lock` (REQ-DDEDL-007)
+
+The OR record hold (D3) freezes *record destruction* — it does not stop a
+user with Files/WebDAV/sync access from deleting the underlying Nextcloud
+file. That gap is a real evidence-spoliation risk under a running matter.
+**Decision:** alongside every OR hold, place an app-scoped lock on the
+document's file node via OCP `\OCP\Files\Lock\ILockManager`
+(`ILock::TYPE_APP`, owner = the DocuDesk app id — an app lock, not a user
+lock, so it is not tied to the placing user's session and blocks all raw file
+mutation). The lock provider is the `files_lock` app; DocuDesk consumes the
+OCP interface, never `files_lock` internals.
+
+- **Primary vs backstop:** the OR record freeze stays authoritative for
+  Archiefwet destruction; the file lock is strictly a storage-layer backstop.
+  Neither replaces the other.
+- **Overlap-safe:** the file lock follows the SAME overlap ledger as the OR
+  hold (D3) — a file is unlocked only when no other active case covers it.
+- **Honest degradation:** probe `ILockManager::isLockProviderAvailable()`;
+  when false (`files_lock` not installed) the case fan-out status records the
+  backstop as unavailable and the UI never claims file-level protection — the
+  OR record freeze still applies.
+- **Imperative:** lock/unlock fan-out joins the existing per-object fan-out
+  status (visible, retried, audited), an ADR-031-justified imperative side
+  effect exactly like the OR-hold fan-out.
+
+Rejected: a user-scoped lock (`TYPE_USER`) — tied to the placing custodian
+and liftable by them, defeating the freeze; a WebDAV-token lock — transient.
+
 ## OpenRegister service usage (ADR-001 / config.yaml)
 
 | Operation | OR surface |
@@ -157,8 +186,9 @@ in OR.
 - **Imperative (justified exceptions)**: fan-out/release orchestration with
   overlap accounting (cross-object, cross-register side effects with a
   platform single-slot limitation — no `x-openregister-*` dialect expresses
-  it); owner notifications (external side effect). Both append to the case
-  audit so the imperative path stays declaratively readable.
+  it); the `files_lock` file-lock backstop fan-out (D6, OCP `ILockManager`
+  side effect); owner notifications (external side effect). All append to the
+  case audit so the imperative path stays declaratively readable.
 
 ## Seed Data
 
@@ -191,10 +221,12 @@ demo-municipality flavour):
 - [Fan-out partial failure] → per-object fan-out status on the case;
   retries; case not treated as fully protective until every object holds —
   visible, never silent.
-- [NC file deletion bypasses record-level holds] → OR holds freeze record
-  destruction, not raw file deletion by a user with filesystem access;
-  mitigations (files_lock integration, trashbin retention) are an open
-  question; the risk is documented in the feature docs.
+- [NC file deletion bypasses record-level holds] → addressed (REQ-DDEDL-007,
+  decision D6): an app-scoped `files_lock` file lock is placed alongside the
+  OR record hold and lifted overlap-safe on release, blocking raw file
+  deletion/rename/overwrite at the storage layer. When `files_lock` is not
+  installed the backstop is recorded as unavailable and the OR record freeze
+  still applies — the case never claims file-level protection it lacks.
 - [Hold placement authority] → server-side group check on the controller
   (semantic-auth gate); UI hiding is never the control.
 - [Scope mistakes (missing document)] → explicit-reference scope is
@@ -212,9 +244,6 @@ migration.
 
 ## Open Questions
 
-- Storage-layer freeze: integrate `files_lock` (or trashbin policy) so the
-  underlying NC file of a held record cannot be deleted either? Deferred —
-  needs a fleet decision on file-level immutability.
 - Native multi-hold support in OR (issue to file) — adopt and delete the
   overlap ledger when available.
 - Should Woo-request cases (woo-request-workflow, wave 1) auto-propose a

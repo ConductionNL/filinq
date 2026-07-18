@@ -1,6 +1,6 @@
 # Tasks: signer-identity-rails
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 12.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
@@ -27,6 +27,8 @@
 - [ ] 3.2 Evidence recording: persist `identityEvidence` on the signer record, extend the OR audit `changed` context, include the tuple in the v2 artifact assertion (MAC-covered per REQ-DDSTR-001); raw token never stored, evidenceHash only (REQ-DDSIR-004)
 
 - [ ] 3.3 Step-up UI: sign dialog (in `src/modals/`) triggers `initiateAuthentication` on 403 step-up, handles the broker redirect/callback, re-attempts the signature; request form exposes `requiredAssurance` with floor hints (NcSelect with `inputLabel`)
+
+- [ ] 3.4 Surface resolved assurance to consumers (REQ-DDSIR-007): expose the recorded `identityEvidence.assurance` on the `docudesk-signing` completion payload (feeds decidesk `QesGuard`; coordinates with `signing-trust-rebuild` REQ-DDSTR-010) and make it readable by the `portal-signing-actions` `minTrust` gate; surface pseudonym + assurance only, never BSN/raw token
 
 ## 4. Quality, i18n, docs
 

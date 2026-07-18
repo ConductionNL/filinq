@@ -6,9 +6,17 @@ kind: code
 
 ## Why
 
-DocuDesk can now *detect* PII on scans (wave-1 `ocr-trigger-surface` feeds
-OCR-recovered text into OpenRegister entity detection) but it cannot *remove*
-PII from pixels. Verified at HEAD:
+Robert's project branch (merged into `development`, PR #314) is the new
+baseline: it landed the `KENTEKEN` entity type (`src/services/entityTypes.js`,
+`GrondslagProposalService`), ODT anonymisation (`AnonymizationService`,
+`LibreOfficeHeadlessBackend`/`PhpWordBackend`), the PDF entity-review viewer,
+grondslag/prohibition guards and eml assembly. This change therefore does NOT
+re-spec entity-type coverage or ODT/office anonymisation — those ship. It
+scopes to the gap Robert's branch did **not** close: DocuDesk can now *detect*
+PII on scans (wave-1 `ocr-trigger-surface` feeds OCR-recovered text into
+OpenRegister entity detection) but it still cannot *remove* PII from pixels,
+detect **handwritten signatures**, or reach images **embedded** in born-digital
+PDFs. Verified at HEAD:
 
 - OpenRegister's `DocumentProcessingHandler::replaceWords()` dispatches PDF →
   `PdfTextReplacer` (text-operator replacement), DOCX/ODT → sanitize +

@@ -10,7 +10,7 @@ Format-capability honesty around document generation: a per-instance and
 per-template output-format matrix computed from live conversion-backend
 availability, surfaced to the generation and correspondence flows so clerks
 choose from what is actually producible. The multi-format render contract
-itself extends `document-creatie-sjablonen` (REQ-DDMFO-001/003/006, this
+itself extends `document-creatie-sjablonen` (REQ-DDMFO-001/003/006/007, this
 change) and the backend introspection extends `pdf-conversion`
 (REQ-DDMFO-005, this change). Evidence: Docmosis/Carbone/Fluent simultaneous
 renders (competitor theme #5); municipalities exchange editable DOCX
@@ -24,14 +24,18 @@ The app MUST expose a format-capability matrix at `GET
 /api/documents/formats` (instance level) and `GET /api/templates/{id}/formats`
 (template level), reporting for each output format `{available: bool,
 reason?: string}`. The matrix MUST be computed from live conversion-backend
-availability (LibreOffice-dependent formats `odf`/`docx` are available iff a
-capable backend reports available) intersected, at template level, with the
-formats the template's `templateType` supports (`html` MUST NOT be offered
-for `office` templates). Matrix responses MUST be authenticated, read-only,
-and non-cacheable (`Cache-Control: no-store`). Generating a format the matrix
-reports unavailable MUST fail with HTTP 503 carrying the **same** reason
-string the matrix reports — the app MUST NOT silently substitute another
-format.
+availability: the LibreOffice-dependent formats `odf`, `docx`, and — for
+`office` templates — `html` (produced via DOCX→HTML, REQ-DDMFO-007) are
+available iff a capable LibreOffice backend reports available. At template
+level the instance matrix MUST be intersected with the formats the template's
+`templateType` supports; every output format (`pdf`/`odf`/`docx`/`html`) MUST
+be reachable for both `twig` and `office` templates subject to backend
+availability (`html` for a `twig` template is an always-available passthrough,
+`html` for an `office` template is LibreOffice-gated). Matrix responses MUST
+be authenticated, read-only, and non-cacheable (`Cache-Control: no-store`).
+Generating a format the matrix reports unavailable MUST fail with HTTP 503
+carrying the **same** reason string the matrix reports — the app MUST NOT
+silently substitute another format.
 
 #### Scenario: LibreOffice absence disables docx and odf with a reason
 
@@ -43,10 +47,17 @@ format.
 
 #### Scenario: Template matrix reflects the template type
 
-- GIVEN an office template
+- GIVEN an office template on an instance with a working LibreOffice backend
 - WHEN `GET /api/templates/{id}/formats` is fetched
-- THEN `html` is not offered and `docx` is offered as the editable passthrough format (subject to backend availability for `pdf`/`odf`)
+- THEN `docx` is offered as the editable passthrough format, `html` is offered (produced via DOCX→HTML), and `pdf`/`odf` are offered
 - @e2e tests/e2e/spec-coverage/multi-format-output.spec.ts
+
+#### Scenario: Office html is LibreOffice-gated in the matrix
+
+- GIVEN an office template on an instance without a working LibreOffice backend
+- WHEN `GET /api/templates/{id}/formats` is fetched
+- THEN `html`, `docx`, and `odf` are reported unavailable with a reason and only `pdf` is available
+- @e2e exclude requires an instance-level LibreOffice teardown — covered by PHPUnit (tests/unit/Service/FormatMatrixServiceTest.php::testOfficeHtmlGatedOnLibreOffice)
 
 ### Requirement: Generation and correspondence flows drive format choice from the matrix (REQ-DDMFO-004)
 

@@ -317,10 +317,12 @@ runtime artifacts; unit tests build fixtures with nil-UUIDs.
   flagged in the PR for the owning change's reviewer.
 - [Archivist authorization] → relies on OR's 403 guard on `/api/archival/*`;
   DocuDesk adds no weaker parallel path (no pass-through controllers).
-- [Wrong seeded category numbers cause unlawful destruction] → all seeds are
-  explicit TODO placeholders with `nog_niet_bepaald`-safe review posture:
-  seeds default demo schemas only; production categories are a documented
-  admin task before enabling the DestructionCheckJob wiring.
+- [Wrong seeded category numbers cause unlawful destruction] → the seeds ship
+  as explicit `TODO-*` placeholders during authoring, and REQ-DDARE-009 makes
+  replacing them with real selectielijst-manager-approved numbers a hard
+  **apply-blocker**: a PHPUnit seed-lint fails while any `TODO-*` categorie
+  remains, so the change cannot be marked done or applied to production with
+  placeholders. See §Production-enablement below.
 
 ## Migration Plan
 
@@ -332,12 +334,25 @@ remove UI/service; register objects and retention metadata remain inert
 `correspondence` annotation swap only changes which mechanism deletes future
 expired rows.
 
+## Production-enablement (apply-blocker, REQ-DDARE-009)
+
+The seeded `selectielijstEntry.categorie` values ship as `TODO-*`
+placeholders for authoring only. Before this change is applied to production
+or marked done, every placeholder MUST be replaced with a **real VNG
+selectielijst category number confirmed by the responsible
+selectielijst-manager** (records-appraisal sign-off), each with its correct
+`archiefnominatie` and `bewaartermijn`. This is a hard apply-blocker, not a
+follow-up: OpenRegister computes real destruction dates from these numbers
+(REQ-DDARE-003), so a placeholder or wrong code drives a wrong or absent
+retention schedule (unlawful or missed destruction). A PHPUnit seed-lint
+(task 1.4 / 4.1) fails the gate while any `TODO-*` categorie is present. This
+mirrors the flow-operations E3 posture (real selectielijst-approved retention
+on processing-log schemas is likewise an apply-blocker).
+
 ## Open Questions
 
 - Promote selectielijst master data + destruction homes to an OR-owned (or
   hydra-ADR'd shared) register once a second app consumes them?
-- Exact VNG selectielijst 2020 category numbers per schema — selectielijst
-  manager sign-off before production enablement.
 - Should `notificationLeadDays` pre-destruction notifications surface in
   DocuDesk's notification center (OR emits INotification to archivists
   already)? Deferred until OR's notification is verified live.

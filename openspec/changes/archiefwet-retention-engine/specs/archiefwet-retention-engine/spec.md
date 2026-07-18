@@ -35,8 +35,10 @@ OR's `DestructionService` writes (list: `status`, `createdAt`,
 `type`, `destructionDate`, `approvers[]`, per-schema and per-category
 counts, `complianceStatement`, `immutable`). The register version MUST be
 bumped so `ConfigurationService::importFromApp()` imports it on boot.
-Seeded `selectielijstEntry` objects MUST carry explicit placeholder
-category codes (`TODO-*`) pending selectielijst-manager confirmation.
+Seeded `selectielijstEntry` objects MUST, before this change is applied to
+production, carry real VNG selectielijst-manager-approved category codes
+(the apply-blocker in REQ-DDARE-009): placeholder `TODO-*` codes MAY be used
+only during authoring and MUST NOT remain in the seed at apply time.
 
 #### Scenario: Register import creates the archief schemas and seeds
 
@@ -44,7 +46,7 @@ category codes (`TODO-*`) pending selectielijst-manager confirmation.
 - WHEN the app boots and `ConfigurationService::importFromApp()` runs
 - THEN the `archief` register exists with schemas `selectielijstEntry`, `destructionList` and `destructionCertificate`
 - AND the seeded selectielijst entries are queryable via `ObjectService::searchObjects()` with `@self.register = archief`
-- AND every seeded `categorie` value starts with `TODO-` (placeholder pending appraisal sign-off)
+- AND at apply time no seeded `categorie` value is a `TODO-*` placeholder (see the apply-blocker in REQ-DDARE-009)
 - @e2e exclude register import is a boot-time backend concern with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
 #### Scenario: Selectielijst entry field contract matches the OR reader
@@ -275,3 +277,33 @@ shape.
 - THEN each occurrence parses without validation errors
 - AND no bare-string `retention` value remains
 - @e2e exclude declarative register-content rule — covered by a PHPUnit register-lint test
+
+### Requirement: Real selectielijst category numbers are a production-enablement apply-blocker (REQ-DDARE-009)
+
+This change MUST NOT be applied to a production instance, and MUST NOT be
+marked done, while any seeded `selectielijstEntry.categorie` remains a
+`TODO-*` placeholder. Before apply, every seeded selectielijst category
+number MUST be a real VNG selectielijst category code confirmed by the
+responsible selectielijst-manager (records-appraisal sign-off), each paired
+with its correct `archiefnominatie` (`bewaren`|`vernietigen`) and
+`bewaartermijn`. A placeholder code is a production-enablement blocker, not a
+cosmetic gap: OpenRegister computes real destruction dates from these
+numbers (REQ-DDARE-003), so a placeholder or wrong code yields a wrong or
+absent retention schedule and could drive an unlawful destruction or a
+missed one. The apply/verify gate MUST fail while any `TODO-*` categorie is
+present, and the failure MUST name the offending entries.
+
+#### Scenario: Placeholder category codes block completion
+
+- GIVEN the seed still contains a `selectielijstEntry` whose `categorie` starts with `TODO-`
+- WHEN the change's apply/verify gate (seed-lint) runs
+- THEN it fails with a production-enablement error naming the placeholder entries
+- AND the change cannot be marked done until real selectielijst-manager-approved codes replace them
+- @e2e exclude apply-time enablement gate with no UI surface — covered by a PHPUnit seed-lint test (tests/unit/Settings/) that fails on any `TODO-` categorie
+
+#### Scenario: Real approved codes satisfy the gate
+
+- GIVEN every seeded `selectielijstEntry` carries a real VNG selectielijst category code with its matching `archiefnominatie` and `bewaartermijn`
+- WHEN the seed-lint gate runs
+- THEN no placeholder remains and the gate passes
+- @e2e exclude apply-time enablement gate — covered by the same PHPUnit seed-lint test

@@ -42,18 +42,26 @@ review platform:
    with matter type (litigation | audit | woo-appeal | other), reason,
    explicit scope (document and dossier references — no query-based
    scopes), custodian, and a declarative `active → released` lifecycle.
-2. **Freeze enforcement via OR**: activating a case places an OR legal
-   hold (reason = case reference) on every in-scope OR object; held
+2. **Freeze enforcement via OR (primary)**: activating a case places an OR
+   legal hold (reason = case reference) on every in-scope OR object; held
    records are excluded from vernietigingslijsten by OR itself and the
    Archiefbeheer UI shows the exclusion. Releasing a case lifts only the
    holds this case placed, and only on objects no *other* active case
    still covers (overlap-safe by design).
-3. **Notifications**: affected document/dossier owners are notified on
+3. **File-level freeze via files_lock (backstop)**: activating a case also
+   places an app-scoped Nextcloud file lock (OCP `ILockManager`,
+   `ILock::TYPE_APP`) on each in-scope document's file node, so raw file
+   deletion/rename/overwrite through the Files UI, WebDAV or sync is blocked
+   at the storage layer — closing the gap the record freeze does not cover.
+   The OR record freeze stays primary; the file lock is a backstop, lifted
+   overlap-safe on release, and degrades honestly when `files_lock` is not
+   installed.
+4. **Notifications**: affected document/dossier owners are notified on
    place and on release.
-4. **Audit trail**: OR's `legalHold.history` plus the case object's own
+5. **Audit trail**: OR's `legalHold.history` plus the case object's own
    audit trail; released cases are retained (bewaren) — a hold register is
    itself a record.
-5. **Searchable register**: a hold-register surface (filter by status,
+6. **Searchable register**: a hold-register surface (filter by status,
    type, custodian) plus an active-hold indicator on document/dossier
    detail that also disables destruction-adjacent actions.
 
@@ -64,7 +72,8 @@ review platform:
 - `e-discovery-legal-hold`: case-level legal holds for
   litigation/audit/Woo-appeal matters — scope + custodian + reason on a
   hold case, destruction freeze enforced through OpenRegister's per-object
-  legal holds (overriding the retention engine's disposal), owner
+  legal holds (overriding the retention engine's disposal) with a Nextcloud
+  file-lock (`files_lock`) backstop against raw file deletion, owner
   notifications, overlap-safe release with a full audit trail, and a
   searchable hold register. Hold + freeze + audit only; no review
   platform.
@@ -80,7 +89,9 @@ review platform:
   accounting), hold register UI + detail indicators, notifications, this
   OpenSpec change.
 - Consumed: `openregister` — `retention.legalHold`, `LegalHoldService`,
-  `/api/archival/legal-holds*`, DestructionCheckJob hold exclusion.
+  `/api/archival/legal-holds*`, DestructionCheckJob hold exclusion; Nextcloud
+  `files_lock` via OCP `\OCP\Files\Lock\ILockManager` (app-scoped file-lock
+  backstop, probed with `isLockProviderAvailable()`).
 - Depends on: `archiefwet-retention-engine` (the disposal workflow the
   freeze overrides; Archiefbeheer surfaces that display exclusions).
 
@@ -91,9 +102,6 @@ review platform:
   (design.md Non-Goals); DocuDesk ships hold + freeze + audit only.
 - Query/saved-search-based hold scopes (explicit references only in this
   wave; re-evaluated scopes are a follow-up).
-- Freezing Nextcloud file deletion at the storage layer — OR holds freeze
-  record destruction; storage-layer locking is an open question
-  (design.md).
 - The dossier-register canonical spec file (sibling ownership) — dossier
   scope entries are expressed as capability behaviour.
 

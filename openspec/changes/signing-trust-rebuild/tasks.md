@@ -1,6 +1,6 @@
 # Tasks: signing-trust-rebuild
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 13.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 16.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Identity-bound assertion + honest verification
@@ -25,6 +25,9 @@
 
 - [ ] 2.4 Unit tests for 2.1–2.3 incl. the QES+native 400, unknown-provider completion failure, decline-on-COMPLETED rejection, marker-less download refusal
 
+- [ ] 2.5 Preserve the decidesk delegation seam (REQ-DDSTR-010): keep the `docudesk-signing` `/signing-requests` request (`documentId, signatories, signingLevel, returnTarget`) and response (`id`/`signingRequestId`, `signingUrl`) fields backward-compatible (additive only), and add the resolved eIDAS `assuranceLevel` (`low` for native SES) to the completion payload the consumer maps to `resolveSignatureStage()`; Newman contract test against the docudesk-signing collection
+  - Verify decidesk's `EIDASSignatureService::composeDocudeskSigningRequest()` expectations still pass; broker-resolved assurance is populated by `signer-identity-rails` (REQ-DDSIR-007) into the same field
+
 ## 3. Audit binding + proven immutability
 
 - [ ] 3.1 `SigningAuditService::logEvent()` resolves the real signing-request entity (register `signing`/schema `signingRequest`) with uuid fallback + warning (REQ-DDSTR-006); `getAuditTrail()` switches to an objectUuid-scoped mapper query — verify the REAL AuditTrailMapper filter key at OR HEAD, add the filter OR-side if missing (REQ-DDSTR-007)
@@ -39,7 +42,7 @@
 
 - [ ] 4.3 i18n: EN source + NL translations for new verdict/reason strings and error messages (keys in English)
 
-- [ ] 4.4 Docs: `docs/features/` signing verification page updated (tri-state semantics, legacy-artifact guidance, screenshots via Playwright MCP); F-13/`features.json` narrative updated per the honest-readiness requirement; close GH #282/#284/#287/#289/#304 with evidence links, #283 jointly with `multi-tenant-hardening`
+- [ ] 4.4 Docs: `docs/features/` signing verification page updated (tri-state semantics, legacy-artifact guidance, screenshots via Playwright MCP); F-13/`features.json` narrative updated per the honest-readiness requirement; close GH #282/#283/#284/#287/#289/#304 with fixing-commit evidence links ONLY AFTER apply + tests pass (#283 jointly with `multi-tenant-hardening`)
 
 - [ ] 4.5 Quality gates: `composer check:strict` green; hydra gates pass; `openspec validate signing-trust-rebuild --strict` exits 0
 

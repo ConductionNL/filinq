@@ -65,7 +65,7 @@ intermediate:
 
 | Target | From HTML (twig) | From filled DOCX (office) |
 |---|---|---|
-| `html` | passthrough | not offered (no faithful DOCX→HTML path in the cascade) |
+| `html` | passthrough | shared `DocxToHtmlConverter` (LO headless DOCX→HTML, D3) — full format parity (C1) |
 | `pdf` | `PdfService::renderPdf()` (mPDF) | `PdfConversionService::convertToPdf()` (cascade) |
 | `odf` | LO headless HTML→ODT (existing `convertToOdf()`) | LO headless DOCX→ODT |
 | `docx` | shared `HtmlToDocxConverter` (LO headless, D3) | the filled DOCX itself (true editable passthrough) |
@@ -88,16 +88,34 @@ sharing — the DOCX must be shareable to the buurgemeente directly from
 Nextcloud, which is the point) and multipart responses (poor client
 support). A caller wanting one file uses `options.format`.
 
-### D3 — Promote `CorrespondenceService`'s DOCX conversion to a shared converter (ADR-011)
+### D3 — Shared local office converters (ADR-011)
 
-Extract the existing private HTML→DOCX LibreOffice invocation
-(`CorrespondenceService::produceOutput()` `docx` case, verified: `soffice
---headless --convert-to docx`) into `lib/Service/Conversion/
-HtmlToDocxConverter` (same serialization lock discipline as the cascade's LO
-backend — pdf-conversion's "LibreOffice headless invocations MUST be
-serialised" applies to every soffice caller). `CorrespondenceService` and
-`DocumentService` both consume it; correspondence behaviour is unchanged
-(pinned by its existing tests). No second DOCX implementation is written.
+**HTML→DOCX (docx output).** Extract the existing private HTML→DOCX
+LibreOffice invocation (`CorrespondenceService::produceOutput()` `docx` case,
+verified: `soffice --headless --convert-to docx`) into
+`lib/Service/Conversion/HtmlToDocxConverter` (same serialization lock
+discipline as the cascade's LO backend — pdf-conversion's "LibreOffice
+headless invocations MUST be serialised" applies to every soffice caller).
+`CorrespondenceService` and `DocumentService` both consume it; correspondence
+behaviour is unchanged (pinned by its existing tests). No second DOCX
+implementation is written.
+
+**DOCX→HTML (office html output — C1).** Verified at HEAD: the cascade's
+`LibreOfficeHeadlessBackend::convert()` hard-codes a PDF target
+(`--convert-to pdf:writer_pdf_Export:UseTaggedPDF=true,SelectPdfVersion=2`,
+emits `.pdf`) and there is **no** DOCX→HTML path anywhere in
+`lib/Service/Conversion/` — so office (DOCX/ODT) templates previously had no
+HTML output (the D1 table's old "not offered" cell). The earlier decision that
+office HTML was "not offered" is now reversed: a new
+`lib/Service/Conversion/DocxToHtmlConverter` runs `soffice --headless
+--convert-to html` (LibreOffice's `HTML (StarWriter)` export filter) on the
+filled DOCX, giving office templates full format parity. It reuses the same
+soffice serialization lock, temp-dir hygiene (0700 dirs, `basename()` on the
+source name, unlink after use, array-form `proc_open` — no shell-interpolated
+user input) and timeout discipline the cascade's LO backend already enforces.
+Because it depends on LibreOffice, office `html` is a
+LibreOffice-availability-gated format in the matrix (D4), exactly like `odf`
+and `docx`. `twig` `html` stays a zero-cost passthrough.
 
 ### D4 — Capability introspection on the cascade + a `FormatMatrixService`
 
@@ -108,12 +126,16 @@ consumers and tests share fixtures). On top of it, `FormatMatrixService`
 computes:
 
 - **instance matrix** (`GET /api/documents/formats`): for each output format,
-  `{available: bool, reason?: string}` — `pdf`/`html` always true (mPDF is a
-  composer dep), `odf`/`docx` true iff an LO-capable backend reports
-  available.
+  `{available: bool, reason?: string}` — `pdf` always true (mPDF is a composer
+  dep), `html` from a `twig` render always true (passthrough), and the
+  LibreOffice-gated formats `odf`/`docx`/**office `html`** true iff an
+  LO-capable backend reports available.
 - **template matrix** (`GET /api/templates/{id}/formats`): instance matrix
-  intersected with the template's `templateType` row of the D1 table (e.g.
-  `html` absent for office templates).
+  intersected with the template's `templateType` row of the D1 table. For a
+  `twig` template `html` is always available (passthrough); for an `office`
+  template `html` is available iff a LibreOffice backend is available
+  (DOCX→HTML, D3/C1) — every format is now reachable for both template types
+  subject to backend availability.
 
 The matrix is computed live per request (availability can change when
 LibreOffice is installed/removed); responses carry `Cache-Control: no-store`.
@@ -127,10 +149,14 @@ status, error?}`) and its `format` enum gains `docx`. For multi-format jobs
 one `generatedDocument` object is written per render (not per format) with
 `format` set to the first requested format (back-compat for consumers that
 read the scalar) and `outputs` carrying the full truth. Single-format
-generations stay exactly as today (no `outputs`). Register bump is additive;
-this wave also bumps the document register in `guided-document-wizard` —
-whichever change lands second rebases its version number (both additive, no
-conflict; noted in tasks).
+generations stay exactly as today (no `outputs`). The register bump is
+additive and the apply order is **pinned**, not "whichever lands second":
+`guided-document-wizard` applies first and bumps the document register
+`2.2.0` → `2.3.0` (its own additive `wizardContext` on `generatedDocument`);
+this change applies second and bumps `2.3.0` → `2.4.0` (`docx` enum value +
+`outputs` array). `2.2.0` is the verified current version in
+`lib/Settings/docudesk_register.json` at HEAD. Register import is idempotent;
+the two bumps touch disjoint properties of the same schema.
 
 ### D6 — Flows read the matrix
 
@@ -199,12 +225,18 @@ dossier data and asserts both files land in the output folder.
   *editing*, the PDF remains the presentation artifact; office templates get
   native-fidelity DOCX (the filled source). The docs state which path gives
   which fidelity.
+- [Office HTML via DOCX→HTML (C1) is a web-oriented, layout-approximate export
+  — LO's HTML writer flattens print layout] → accepted: office `html` is for
+  web display / archival plain-content use, not print fidelity; the PDF/DOCX
+  paths remain the presentation/editable artifacts. The docs state which path
+  gives which fidelity, mirroring the twig-DOCX note above.
 - [Multi-format jobs multiply soffice work under the serialization lock] →
   formats convert sequentially per job; `odf`+`docx` from one HTML means two
   LO calls — bounded by the formats list length (≤4 valid formats), and bulk
   jobs already queue.
-- [Two changes bump the document register this wave] → additive properties,
-  explicit rebase note in tasks; register import is idempotent.
+- [Two changes bump the document register this wave] → apply order is pinned
+  (wizard first `2.2.0`→`2.3.0`, this change second `2.3.0`→`2.4.0`); disjoint
+  additive properties; register import is idempotent. No rebase-on-land-order.
 - [Manifest response is a new shape for `api/documents/generate`] → gated
   entirely behind `options.formats`; existing clients cannot receive it
   accidentally.
