@@ -41,8 +41,6 @@ use Throwable;
  */
 class EmlPreviewController extends Controller
 {
-
-
     /**
      * Constructor.
      *
@@ -60,7 +58,6 @@ class EmlPreviewController extends Controller
         parent::__construct(appName: $appName, request: $request);
 
     }//end __construct()
-
 
     /**
      * Stream a PDF/A-3b preview of the original (un-redacted) EML.
@@ -94,6 +91,4 @@ class EmlPreviewController extends Controller
         );
 
     }//end preview()
-
-
 }//end class

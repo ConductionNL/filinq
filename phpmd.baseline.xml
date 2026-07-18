@@ -7,6 +7,7 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/BackgroundJob/FolderExtractionJob.php" method="run"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/BackgroundJob/FolderExtractionJob.php" method="run"/>
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/BackgroundJob/FolderExtractionJob.php" method="run"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/BackgroundJob/SigningExpirationJob.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/BackgroundJob/SigningExpirationJob.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Controller/AnonymizationController.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Controller/AnonymizationController.php"/>
@@ -40,22 +41,30 @@
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\Design\LongParameterList" file="lib/Service/AnonymizationService.php" method="__construct"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="applyPolicyDecisions"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/AnonymizationService.php" method="applyPolicyDecisions"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="anonymizeDocument"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/AnonymizationService.php" method="anonymizeDocument"/>
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/AnonymizationService.php" method="anonymizeDocument"/>
   <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="runProhibitionGate"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/AnonymizationService.php" method="runProhibitionGate"/>
   <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/AnonymizationService.php" method="runProhibitionGate"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\Naming\BooleanGetMethodName" file="lib/Service/AnonymizationService.php" method="getFailClosed"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/AnonymizationService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="readNodeTextSafely"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="anonymizeEmlToPdf"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/AnonymizationService.php" method="anonymizeEmlToPdf"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/AnonymizationService.php" method="anonymizeEmlToPdf"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/AnonymizationService.php" method="extractLinkObjectData"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/BasesResolverService.php" method="collectFolderIds"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/BasesResolverService.php" method="extractObjects"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/BasesResolverService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/BatchAnonymizeService.php" method="anonymizeBatch"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/BatchAnonymizeService.php" method="anonymizeBatch"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/BatchAnonymizeService.php" method="anonymizeBatch"/>
   <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="lib/Service/BatchAnonymizeService.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/BatchExtractionService.php" method="extractNext"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/BatchExtractionService.php" method="extractNext"/>
@@ -74,7 +83,7 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/ConsentService.php" method="firstObject"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="lib/Service/ConsentUpdateHandler.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/ConsentUpdateHandler.php" method="guardPolicyPreemptedTransition"/>
-  <violation rule="PHPMD\Rule\Naming\LongVariable" file="lib/Service/Conversion/EmlBackend.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/ConsentUpdateHandler.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/Conversion/LibreOfficeHeadlessBackend.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Conversion/LibreOfficeHeadlessBackend.php" method="runConversion"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Conversion/LibreOfficeHeadlessBackend.php" method="runConversion"/>
@@ -110,18 +119,42 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/DocumentValidationService.php" method="resolveProfile"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/DocumentValidationService.php" method="resolveProfile"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Service/DocumentValidationService.php"/>
-  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/EmlPdfAssemblyService.php"/>
+  <violation rule="PHPMD\Rule\Design\LongClass" file="lib/Service/EmlPdfAssemblyService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/EmlPdfAssemblyService.php"/>
-  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/EmlPdfAssemblyService.php" method="assembleAtDepth"/>
-  <violation rule="PHPMD\Rule\CleanCode\ErrorControlOperator" file="lib/Service/EmlPdfAssemblyService.php" method="renderPdfAttachment"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/EmlPdfAssemblyService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/EmlPdfAssemblyService.php" method="renderAttachment"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/EmlPdfAssemblyService.php" method="renderAttachment"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/EmlPdfAssemblyService.php" method="renderAttachment"/>
   <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/EmlPdfAssemblyService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ErrorControlOperator" file="lib/Service/EmlPdfAssemblyService.php" method="importPdfPages"/>
+  <violation rule="PHPMD\Rule\CleanCode\ErrorControlOperator" file="lib/Service/EmlPdfAssemblyService.php" method="renderWordBytesToHtml"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/EmlPdfAssemblyService.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/FolderBatchService.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/GrondslagProposalService.php"/>
+  <violation rule="PHPMD\Rule\Design\LongClass" file="lib/Service/GrondslagenSummaryService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/GrondslagenSummaryService.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/GrondslagenSummaryService.php"/>
-  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/Service/GrondslagenSummaryService.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\MissingImport" file="lib/Service/GrondslagenSummaryService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="loadDossierContext"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/GrondslagenSummaryService.php" method="loadDossierContext"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="computeDossierPlaceholderMap"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/GrondslagenSummaryService.php" method="computeDossierPlaceholderMap"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/GrondslagenSummaryService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="aggregateForDossier"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="updateDossierConfiguration"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/GrondslagenSummaryService.php" method="updateDossierConfiguration"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/GrondslagenSummaryService.php" method="updateDossierConfiguration"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="resolveBaseLabels"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/GrondslagenSummaryService.php" method="resolveBaseLabels"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/GrondslagenSummaryService.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="extractObjects"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/GrondslagenSummaryService.php" method="loadAnonymisedEntitiesForFile"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/GrondslagenSummaryService.php" method="loadAnonymisedEntitiesForFile"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/GrondslagenSummaryService.php" method="loadAnonymisedEntitiesForFile"/>
+  <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="lib/Service/MetadataService.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/MetadataService.php"/>
   <violation rule="PHPMD\Rule\UnusedFormalParameter" file="lib/Service/PdfConversionService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/PdfConversionService.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/Pdfa3ConversionService.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Service/PolicyCrudService.php"/>
   <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/PolicyMatchService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PolicyMatchService.php"/>

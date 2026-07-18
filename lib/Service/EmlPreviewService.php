@@ -54,7 +54,6 @@ class EmlPreviewService
      */
     private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
 
-
     /**
      * Constructor.
      *
@@ -71,7 +70,6 @@ class EmlPreviewService
     ) {
 
     }//end __construct()
-
 
     /**
      * Render the original EML identified by $fileId to a preview PDF/A-3b.
@@ -115,7 +113,6 @@ class EmlPreviewService
 
     }//end renderOriginalPreview()
 
-
     /**
      * Resolve OpenRegister's FileService or fail with a clear message.
      *
@@ -141,6 +138,4 @@ class EmlPreviewService
         }
 
     }//end resolveFileService()
-
-
 }//end class

@@ -409,7 +409,6 @@ class AnonymizationService
 
     }//end applyPolicyDecisions()
 
-
     /**
      * Classify a skip attempt on a prohibition-matched entity.
      *
@@ -436,7 +435,6 @@ class AnonymizationService
         return 'allow';
 
     }//end classifyProhibitionSkip()
-
 
     /**
      * Guard + apply a per-relation skip/include decision from the review UI.
@@ -486,7 +484,6 @@ class AnonymizationService
         return ['status' => 200, 'body' => ['status' => 'ok', 'skipAnonymization' => $skip]];
 
     }//end applyRelationSkipDecision()
-
 
     /**
      * Evaluate the prohibition guard for a skip on one relation.
@@ -566,7 +563,6 @@ class AnonymizationService
 
     }//end evaluateProhibitionSkip()
 
-
     /**
      * Defence-in-depth backstop: absolute prohibition matches left un-redacted.
      *
@@ -640,7 +636,6 @@ class AnonymizationService
         return $violations;
 
     }//end absoluteProhibitionViolations()
-
 
     /**
      * Anonymize entities in a document
@@ -1751,7 +1746,6 @@ class AnonymizationService
 
     }//end isEmlInput()
 
-
     /**
      * Anonymise an EML input via OR's anonymise-EML API and assemble the
      * redacted result into a PDF/A-3b written beside the source.
@@ -1765,13 +1759,13 @@ class AnonymizationService
      * D9), so the controller maps it to HTTP 422 and no un-redacted content is
      * ever written.
      *
-     * @param int          $fileId             Source Nextcloud file ID.
-     * @param mixed        $node               Source EML file node.
-     * @param mixed        $fileService        OR FileService (resolved reflectively).
-     * @param array<int, array<string,mixed>> $mappedEntities Entities to redact.
-     * @param bool         $appendBasisSummary Append the grondslagen summary to the PDF.
-     * @param string       $scope              Placeholder-numbering scope.
-     * @param string|null  $dossierKey         Stable dossier folder id, or null.
+     * @param int                             $fileId             Source Nextcloud file ID.
+     * @param mixed                           $node               Source EML file node.
+     * @param mixed                           $fileService        OR FileService (resolved reflectively).
+     * @param array<int, array<string,mixed>> $mappedEntities     Entities to redact.
+     * @param bool                            $appendBasisSummary Append the grondslagen summary to the PDF.
+     * @param string                          $scope              Placeholder-numbering scope.
+     * @param string|null                     $dossierKey         Stable dossier folder id, or null.
      *
      * @return array<string, mixed> The anonymisation result info (same shape the
      *                              controller expects: anonymizedFileId/Name/Path,
@@ -1846,12 +1840,18 @@ class AnonymizationService
             $sourceName = (string) $node->getName();
         }
 
-        // assemble() throws ConversionFailedException on unrecoverable
+        // The assemble() call throws ConversionFailedException on unrecoverable
         // failure; let it propagate so the controller surfaces 422.
         $pdfBytes = $this->emlAssembly->assemble(result: $structure, sourceFilename: $sourceName);
 
-        $parent     = $node->getParent();
-        $baseName   = $this->stripExtension(name: $sourceName === '' ? 'email' : $sourceName);
+        $parent = $node->getParent();
+        // Fall back to a generic base name when the source node has no name.
+        $safeName = $sourceName;
+        if ($safeName === '') {
+            $safeName = 'email';
+        }
+
+        $baseName   = $this->stripExtension(name: $safeName);
         $outputName = $baseName.'_anonymized.pdf';
         if ($parent->nodeExists($outputName) === true) {
             $parent->get($outputName)->delete();
@@ -1878,12 +1878,16 @@ class AnonymizationService
         // let the legacy replacementCount fall back to the attempted count with
         // replacementsVerified=false telling callers it is unconfirmed. This
         // preserves the #286 anti-fabrication fix on the EML path (issue #312).
-        $attemptedCount                      = count($mappedEntities);
+        $attemptedCount = count($mappedEntities);
         $resultInfo['replacementsAttempted'] = $attemptedCount;
         $resultInfo['replacementsApplied']   = null;
         $resultInfo['replacementsVerified']  = false;
         $resultInfo['unmatchedEntities']     = [];
-        $resultInfo['replacementCount']      = $resultInfo['replacementsApplied'] ?? $resultInfo['replacementsAttempted'];
+        // The replacementsApplied value is null on the EML path (the assembled
+        // binary PDF cannot confirm applied replacements), so the legacy
+        // replacementCount deliberately falls back to the attempted count with
+        // replacementsVerified=false marking it unconfirmed (#286/#312).
+        $resultInfo['replacementCount'] = $resultInfo['replacementsAttempted'];
         // OR's anonymise-EML path does not surface a residual list; the
         // assembled PDF is the authoritative redacted output.
         $resultInfo['complete']         = true;
@@ -1916,7 +1920,6 @@ class AnonymizationService
 
     }//end anonymizeEmlToPdf()
 
-
     /**
      * Return $name without its trailing `.ext`.
      *
@@ -1934,7 +1937,6 @@ class AnonymizationService
         return substr($name, 0, $dotPos);
 
     }//end stripExtension()
-
 
     /**
      * Persist or update the mapping between a source file and its anonymised counterpart.
@@ -2041,7 +2043,6 @@ class AnonymizationService
 
     }//end recordAnonymizationLink()
 
-
     /**
      * Apply best-effort source-node metadata (name, path, owner) to a link object.
      *
@@ -2079,7 +2080,6 @@ class AnonymizationService
         return $object;
 
     }//end applySourceNodeMetadata()
-
 
     /**
      * Normalise a searchObjects() candidate to a plain array including its `@self`.
@@ -2123,7 +2123,6 @@ class AnonymizationService
 
     }//end extractLinkObjectData()
 
-
     /**
      * Extract the persisted object's identifier from a saveObject() return value.
      *
@@ -2164,7 +2163,6 @@ class AnonymizationService
         return null;
 
     }//end extractSavedObjectId()
-
 
     /**
      * Render and attach the grondslagen summary to a freshly-anonymised file.

@@ -427,8 +427,8 @@ class PdfService
      * `Output()`.
      *
      * @param array<string,mixed> $options PDF configuration options; same shape as
-     *                                      {@see renderPdf} (`format`, `orientation`,
-     *                                      `margin`, `title`, `pdfa`).
+     *                                     {@see renderPdf} (`format`, `orientation`,
+     *                                     `margin`, `title`, `pdfa`).
      *
      * @return Mpdf The configured mPDF instance.
      *
@@ -470,7 +470,6 @@ class PdfService
 
     }//end createMpdfInstance()
 
-
     /**
      * Build the print-optimised CSS prefix for an HTML fragment when PDF/A
      * mode is in effect, mirroring the prefix `generatePdf` injects.
@@ -496,7 +495,6 @@ class PdfService
         return $this->buildPrintCss(format: $format, orientation: $orientation).$html;
 
     }//end applyPrintCss()
-
 
     /**
      * Generate a PDF from rendered HTML content

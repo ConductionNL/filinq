@@ -141,7 +141,6 @@ class PolicyMatchService
 
     }//end highConfidenceThreshold()
 
-
     /**
      * Match a detected entity against the policy layer.
      *
@@ -222,7 +221,6 @@ class PolicyMatchService
         );
 
     }//end matchProhibition()
-
 
     /**
      * Find the first rule of the given kind that matches the entity.

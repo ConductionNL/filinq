@@ -84,7 +84,6 @@ class EmlBackend implements ConversionBackendInterface
      */
     private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
 
-
     /**
      * Constructor.
      *
@@ -104,7 +103,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end __construct()
 
-
     /**
      * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
      *
@@ -115,7 +113,6 @@ class EmlBackend implements ConversionBackendInterface
         return 'eml';
 
     }//end name()
-
 
     /**
      * Available iff the tenant flag is set AND OpenRegister exposes its
@@ -146,7 +143,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end isAvailable()
 
-
     /**
      * Declare the input formats this backend claims for cascade routing.
      *
@@ -160,7 +156,6 @@ class EmlBackend implements ConversionBackendInterface
         return $mimeType === 'message/rfc822' || $extension === 'eml';
 
     }//end canHandle()
-
 
     /**
      * Convert an EML input: call OR's anonymise-EML API and assemble the
@@ -246,7 +241,6 @@ class EmlBackend implements ConversionBackendInterface
 
     }//end convert()
 
-
     /**
      * Return $name without its trailing `.ext`.
      *
@@ -264,6 +258,4 @@ class EmlBackend implements ConversionBackendInterface
         return substr($name, 0, $dotPos);
 
     }//end stripExtension()
-
-
 }//end class

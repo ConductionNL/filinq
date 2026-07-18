@@ -151,9 +151,9 @@ class BatchAnonymizeService
             }
 
             try {
-                // dossierKey: null → OpenRegister falls back to each file's
-                // parent folder as the dossier (= the batch's folder), so a
-                // person is numbered consistently across the batch.
+                // The dossierKey:null argument makes OpenRegister fall back to
+                // each file's parent folder as the dossier (= the batch's
+                // folder), so a person is numbered consistently across the batch.
                 $result = $this->anonService->anonymizeDocument(
                     fileId: (int) $file['fileId'],
                     entities: $entities,

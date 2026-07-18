@@ -108,7 +108,6 @@ class EmlPdfAssemblyService
         'text/rtf',
     ];
 
-
     /**
      * Constructor.
      *
@@ -133,7 +132,6 @@ class EmlPdfAssemblyService
     ) {
 
     }//end __construct()
-
 
     /**
      * Assemble a PDF/A-3b from a redacted EML structure and return its bytes.
@@ -230,7 +228,6 @@ class EmlPdfAssemblyService
 
     }//end assemble()
 
-
     /**
      * Render one EML structure (envelope + attachments) into the shared mPDF
      * instance. Recurses for nested EML attachments.
@@ -283,7 +280,6 @@ class EmlPdfAssemblyService
         }
 
     }//end renderStructure()
-
 
     /**
      * Render a single redacted attachment: either appended rendered pages
@@ -446,7 +442,6 @@ class EmlPdfAssemblyService
 
     }//end renderAttachment()
 
-
     /**
      * Render renderable redacted bytes onto a new page (or pages) of the
      * shared mPDF instance. No bytes are embedded as file attachments.
@@ -503,7 +498,6 @@ class EmlPdfAssemblyService
 
     }//end renderRenderableBytes()
 
-
     /**
      * Import every page of a redacted PDF into the shared mPDF instance via
      * FPDI. Each imported page is placed full-size on its own new page.
@@ -544,7 +538,6 @@ class EmlPdfAssemblyService
         }
 
     }//end importPdfPages()
-
 
     /**
      * Render Word-family redacted bytes to HTML via PhpWord (reusing the
@@ -610,7 +603,6 @@ class EmlPdfAssemblyService
 
     }//end renderWordBytesToHtml()
 
-
     /**
      * Render the envelope (headers + body) HTML for one structure. Resolves
      * inline `cid:` images against OR's redacted inline-image map.
@@ -649,7 +641,6 @@ class EmlPdfAssemblyService
         return $this->pdfService->applyPrintCss(html: $html, options: $options);
 
     }//end renderEnvelopeHtml()
-
 
     /**
      * Build the Twig data context for the envelope template from a redacted
@@ -690,7 +681,6 @@ class EmlPdfAssemblyService
         ];
 
     }//end buildEnvelopeData()
-
 
     /**
      * Normalise OR's redacted headers map into the flat shape the template
@@ -750,7 +740,6 @@ class EmlPdfAssemblyService
 
     }//end extractHeaders()
 
-
     /**
      * Format OR's redacted date string to `YYYY-MM-DD HH:MM`. Passes through
      * unparseable values unchanged (they may be redacted to a placeholder).
@@ -765,15 +754,14 @@ class EmlPdfAssemblyService
             return '';
         }
 
-        $ts = strtotime($date);
-        if ($ts === false) {
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
             return $date;
         }
 
-        return date('Y-m-d H:i', $ts);
+        return date('Y-m-d H:i', $timestamp);
 
     }//end formatDate()
-
 
     /**
      * Resolve `<img src="cid:...">` references against OR's redacted
@@ -789,14 +777,14 @@ class EmlPdfAssemblyService
     {
         return preg_replace_callback(
             '/src\s*=\s*(["\'])cid:([^"\']+)\1/i',
-            function (array $m) use ($inlineImages): string {
-                $contentId  = trim($m[2]);
+            function (array $matches) use ($inlineImages): string {
+                $contentId  = trim($matches[2]);
                 $candidates = [$contentId, '<'.$contentId.'>', trim($contentId, '<>')];
                 foreach ($candidates as $key) {
                     if (isset($inlineImages[$key]) === true) {
                         $bytes = $inlineImages[$key];
                         $mime  = $this->sniffImageMime(bytes: $bytes);
-                        return 'src='.$m[1].'data:'.$mime.';base64,'.base64_encode($bytes).$m[1];
+                        return 'src='.$matches[1].'data:'.$mime.';base64,'.base64_encode($bytes).$matches[1];
                     }
                 }
 
@@ -804,13 +792,12 @@ class EmlPdfAssemblyService
                     '[EmlPdfAssemblyService] Unresolved inline cid reference',
                     ['contentId' => $contentId]
                 );
-                return $m[0];
+                return $matches[0];
             },
             $html
         ) ?? $html;
 
     }//end resolveInlineImages()
-
 
     /**
      * Best-effort image MIME sniff from leading magic bytes; defaults to PNG.
@@ -836,7 +823,6 @@ class EmlPdfAssemblyService
         return 'image/png';
 
     }//end sniffImageMime()
-
 
     /**
      * Render a divider/placeholder page for one attachment.
@@ -887,7 +873,6 @@ class EmlPdfAssemblyService
 
     }//end writeDivider()
 
-
     /**
      * Write a minimal envelope (redacted headers + failure notice) when the
      * main envelope render fails — never emits un-redacted content.
@@ -919,7 +904,6 @@ class EmlPdfAssemblyService
 
     }//end writeMinimalEnvelope()
 
-
     /**
      * Build a plain HTML fallback envelope from redacted headers — used only
      * when Twig rendering is unavailable. Renders no body content.
@@ -945,7 +929,6 @@ class EmlPdfAssemblyService
         return $open.implode('<br>', $lines).$notice;
 
     }//end fallbackEnvelopeHtml()
-
 
     /**
      * Load a bundled template file's content.
@@ -974,7 +957,6 @@ class EmlPdfAssemblyService
 
     }//end loadTemplate()
 
-
     /**
      * Whether the MIME type is renderable as appended pages.
      *
@@ -1000,7 +982,6 @@ class EmlPdfAssemblyService
 
     }//end isRenderable()
 
-
     /**
      * Whether the MIME type is plain-text-like (rendered in a `<pre>` block).
      *
@@ -1017,7 +998,6 @@ class EmlPdfAssemblyService
         return false;
 
     }//end isTextLike()
-
 
     /**
      * Extract the attachments array from a structure (typed property or map).
@@ -1036,7 +1016,6 @@ class EmlPdfAssemblyService
         return array_values(array_filter($attachments, 'is_object'));
 
     }//end extractAttachments()
-
 
     /**
      * Extract the inline-image map (contentId => redacted bytes).
@@ -1062,7 +1041,6 @@ class EmlPdfAssemblyService
         return $clean;
 
     }//end extractInlineImages()
-
 
     /**
      * Read a public property from an OR value object with a default.
@@ -1095,7 +1073,6 @@ class EmlPdfAssemblyService
 
     }//end prop()
 
-
     /**
      * Derive the PDF title from the source filename or the redacted subject.
      *
@@ -1124,7 +1101,6 @@ class EmlPdfAssemblyService
 
     }//end deriveTitle()
 
-
     /**
      * Whether renderable attachments should be appended (config-driven).
      *
@@ -1136,7 +1112,6 @@ class EmlPdfAssemblyService
         return $value !== 'false';
 
     }//end shouldAppendPages()
-
 
     /**
      * Resolve the max-attachment-render-size config (positive integer).
@@ -1158,7 +1133,6 @@ class EmlPdfAssemblyService
 
     }//end maxAttachmentSize()
 
-
     /**
      * Resolve the divider template name (config-driven, sandboxed to the
      * template root by loadTemplate).
@@ -1175,6 +1149,4 @@ class EmlPdfAssemblyService
         return $value;
 
     }//end dividerTemplate()
-
-
 }//end class

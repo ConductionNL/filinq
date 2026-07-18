@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
 
+use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Exception\ProhibitionGateException;
 use OCA\DocuDesk\Service\AnonymizationService;
@@ -730,7 +731,6 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end updateRelation()
-
 
     /**
      * Resolve the effective `outputFormat` for this request.

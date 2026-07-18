@@ -115,7 +115,6 @@ class GrondslagProposalService
         'EDUCATION_LEVEL',
     ];
 
-
     /**
      * Constructor for GrondslagProposalService.
      *
@@ -135,7 +134,6 @@ class GrondslagProposalService
 
     }//end __construct()
 
-
     /**
      * Return the entity types selectable in the settings UI.
      *
@@ -149,7 +147,6 @@ class GrondslagProposalService
         return self::CURATED_ENTITY_TYPES;
 
     }//end getSelectableEntityTypes()
-
 
     /**
      * Return the entity types currently enabled for automatic detection.
@@ -171,7 +168,6 @@ class GrondslagProposalService
         return $stored;
 
     }//end getEnabledEntityTypes()
-
 
     /**
      * Return the entity-type whitelist to hand to OpenRegister's analysis call.
@@ -195,7 +191,6 @@ class GrondslagProposalService
         return $stored;
 
     }//end getEntityTypeWhitelist()
-
 
     /**
      * Read and sanitise the stored enabled-types selection.
@@ -236,7 +231,6 @@ class GrondslagProposalService
 
     }//end readEnabledEntityTypes()
 
-
     /**
      * Return the configured entity-type → base-slug[] mapping.
      *
@@ -271,7 +265,6 @@ class GrondslagProposalService
         return $mapping;
 
     }//end getMapping()
-
 
     /**
      * List the available `base` (grondslag) records for the settings selector.
@@ -334,7 +327,6 @@ class GrondslagProposalService
 
     }//end getAvailableBases()
 
-
     /**
      * Pre-fill proposed bases onto a file's freshly-detected entity relations.
      *
@@ -383,7 +375,6 @@ class GrondslagProposalService
 
     }//end applyProposals()
 
-
     /**
      * Pre-fill the proposed bases for a single detection, when applicable.
      *
@@ -428,7 +419,6 @@ class GrondslagProposalService
         }//end try
 
     }//end proposeForDetection()
-
 
     /**
      * Merge each relation's current `bases` into the detection rows.
@@ -477,7 +467,6 @@ class GrondslagProposalService
 
     }//end enrichEntitiesWithBases()
 
-
     /**
      * Resolve an OpenRegister service/mapper by class name, or null.
      *
@@ -505,7 +494,6 @@ class GrondslagProposalService
         }
 
     }//end resolveOpenRegister()
-
 
     /**
      * Normalise an ObjectService search result into a list of object arrays.
@@ -541,7 +529,6 @@ class GrondslagProposalService
         return $out;
 
     }//end extractObjects()
-
 
     /**
      * Normalise a single search-result item to an array, or null to skip it.
@@ -580,6 +567,4 @@ class GrondslagProposalService
         return null;
 
     }//end normaliseSearchItem()
-
-
 }//end class

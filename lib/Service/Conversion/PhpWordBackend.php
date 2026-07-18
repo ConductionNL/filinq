@@ -304,7 +304,7 @@ class PhpWordBackend implements ConversionBackendInterface
                 ],
                 previous: $e
             );
-        }
+        }//end try
 
         if ($pdfBytes === '') {
             throw new ConversionFailedException(

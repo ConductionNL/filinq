@@ -263,10 +263,16 @@ class Application extends App implements IBootstrap
      * @return void
      *
      * @spec openspec/specs/adopt-apphost/spec.md
+     *
+     * Health/MetricsController extend OpenRegister AppHost base classes that
+     * are absent during static analysis, so Psalm sees no constructor on them
+     * (TooManyArguments) and cannot see $container used inside the flagged
+     * construction (UnusedClosureParam). Both resolve at runtime.
+     *
+     * @psalm-suppress TooManyArguments, UnusedClosureParam
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {
-        // @psalm-suppress UnusedClosureParam, TooManyArguments
         $context->registerService(
             HealthController::class,
             static function (ContainerInterface $container): HealthController {
@@ -279,7 +285,6 @@ class Application extends App implements IBootstrap
             }
         );
 
-        // @psalm-suppress TooManyArguments
         $context->registerService(
             MetricsController::class,
             static function (ContainerInterface $container): MetricsController {
