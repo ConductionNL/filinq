@@ -10,7 +10,7 @@
 - [ ] 1.3 Add `AnonymizationService::anonymizeViaAgent(int $fileId): array` — fileId-only signature; intake pipeline via `extractAndDetectEntities()`; identical checked-gate + prohibition-gate rules as every surface; `ProhibitionGateException` mapped to a refused result; `mcp` attribution on the run — with `#[McpTool(name: 'anonymizeDocument', scope: 'create', readOnlyHint: false, destructiveHint: false, idempotentHint: false)]` (REQ-DDMGT-003, REQ-DDMGT-005)
   - Counts-only response shape: `{status, entityCounts, reviewRequired, refusedReason?}` — never entity values/placeholder maps/text (REQ-DDMGT-004).
 - [ ] 1.4 Extend `lib/Mcp/DocudeskScannableServices.php` to `[CorrespondenceService::class, FileListingService::class, AnonymizationService::class]` (REQ-DDMGT-002..003)
-  - Coordination (design.md D6): whichever of this change / `docudesk-mcp-adoption` archives second amends the adoption delta's `[CorrespondenceService::class]` wording and its "exactly one curated tool" narrative.
+  - Coordination (design.md D6): the wording collision is already reconciled (decision F4) — the `docudesk-mcp-adoption` delta now requires the list to *include* `CorrespondenceService::class` and permits this change to extend it, so no archive-time amendment is needed; just verify the extended list still passes OR's scanner and every adoption refusal holds.
 
 ## 2. Quality
 

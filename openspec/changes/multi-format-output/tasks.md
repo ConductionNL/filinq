@@ -1,11 +1,11 @@
 # Tasks: multi-format-output
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 13.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 15.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: `generatedDocument.format` enum gains `docx`; new optional `outputs` array (`{format, fileId, status, error?}`); document register bump (additive — rebase the version number on whichever of this change / `guided-document-wizard` lands second)
+- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: `generatedDocument.format` enum gains `docx`; new optional `outputs` array (`{format, fileId, status, error?}`); bump the document register `2.3.0` → `2.4.0` (additive). Apply order is pinned: `guided-document-wizard` applies FIRST (`2.2.0` → `2.3.0`), this change SECOND (`2.3.0` → `2.4.0`) — no rebase-on-whichever-lands-second
   - `tests/validate-manifest.js` and register import on boot both pass
 
 ## 2. Backend
@@ -20,6 +20,8 @@
 
 - [ ] 2.5 `docx` on the document path: shared converter for twig templates, filled-DOCX passthrough for office templates; forced-unavailable → 503 with matrix reason; single-`format` requests byte-identical to today (REQ-DDMFO-003)
 
+- [ ] 2.7 `docx` → `html` for office templates: new `lib/Service/Conversion/DocxToHtmlConverter` (`soffice --headless --convert-to html` on the filled DOCX, reusing the cascade soffice serialization lock + temp-dir hygiene + timeout); office `html` gated on LibreOffice availability in the matrix, forced-unavailable → 503 with matrix reason; twig `html` passthrough unchanged (REQ-DDMFO-007, C1 — full format parity)
+
 - [ ] 2.6 Audit logging: one `generatedDocument` per render with `outputs` array for multi-format jobs; scalar `format` = first requested format; single-format generations unchanged (REQ-DDMFO-006)
 
 ## 3. Routes & controller
@@ -33,9 +35,9 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests (≥75% coverage on new code): formats validation, render-once/convert-N with partial failure, docx passthrough vs converted, capability report shape, matrix/503 reason equality, register-drift pin for `outputs`; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [ ] 5.1 Unit tests (≥75% coverage on new code): formats validation, render-once/convert-N with partial failure, docx passthrough vs converted, office DOCX→HTML converter + office-html-gated-on-LibreOffice (REQ-DDMFO-007), capability report shape, matrix/503 reason equality, register-drift pin for `outputs`; run in container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
-- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/multi-format-output.spec.ts`: generate `["pdf","docx"]` from the seeded template → both files in the output folder, DOCX opens editable (content assertion via download); matrix-driven disabled state in correspondence view; verify on Postgres (8080), test with nldesign theme enabled
+- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/multi-format-output.spec.ts`: generate `["pdf","docx"]` from the seeded template → both files in the output folder, DOCX opens editable (content assertion via download); office template `html` output via DOCX→HTML with resolved data; matrix-driven disabled state in correspondence view; verify on Postgres (8080), test with nldesign theme enabled
 
 - [ ] 5.3 i18n: all new UI strings (disabled-format reasons, manifest labels) with English source keys + NL translations (ADR-005)
 

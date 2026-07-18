@@ -37,4 +37,4 @@
 - No composer/npm dependency added — veraPDF is an admin-installed local binary (design D1 justifies the choice over PDFBox/JHOVE).
 - OR services used: ObjectService/AppHost persistence for `conformanceReport`; no other OR surface touched.
 - `pdfua-accessible-output` heuristics untouched; category naming aligned (`archival` beside `accessibility`); PDF/UA validation is a named follow-up, not smuggled in.
-- Tracking issue: CB #182 (GitHub #182 is an unrelated merged PR — Codeberg issue stays canonical until mirrored).
+- Tracking issue: GitHub #315 (primary; mirrors the original Codeberg #182, kept for analysis history).

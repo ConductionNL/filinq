@@ -10,7 +10,7 @@
 
 ## 2. Cross-app (OpenRegister)
 
-- [ ] 2.1 File the OR issue + PR for the standalone PDF sanitizer in the existing `Sanitizer` family: /Info + XMP scope of `PdfMetadataSanitizer`, annotations, embedded files (PDF/A-3 `/AFRelationship` exception), JavaScript/OpenAction/AA, full re-save; public per-file entry point like `OfficeDocumentSanitizer::sanitize()` (REQ-DDSAN-002)
+- [ ] 2.1 File the OR issue + PR for the standalone PDF sanitizer in the existing `Sanitizer` family: /Info + XMP scope of `PdfMetadataSanitizer`, annotations, embedded files (D2 exception: preserve only PDF/A-3 attachments declared `/AFRelationship Source|Data` plus their `/AF` association; strip all others), JavaScript/OpenAction/AA, full re-save; public per-file entry point like `OfficeDocumentSanitizer::sanitize()` (REQ-DDSAN-002)
   - Cross-app dependency; verify against OR HEAD at apply time — do not assume it landed.
 
 ## 3. Backend

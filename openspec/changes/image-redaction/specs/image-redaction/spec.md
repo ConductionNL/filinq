@@ -23,9 +23,13 @@ image-detection seam on the anonymisation backend chain (Presidio image mode
 as the first supported backend), returning detected entities typed by the
 shared taxonomy (PERSON, ORGANIZATION, EMAIL, IBAN, …, SIGNATURE) with
 per-page bounding boxes normalised to [0..1]. DocuDesk MUST submit: (a) files
-with an image MIME type, and (b) page rasters of scanned PDFs (rasterised via
+with an image MIME type, (b) page rasters of scanned PDFs (rasterised via
 the existing Imagick path at the configured OCR DPI, one shared raster per
-page for detection and burn). DocuDesk MUST NOT implement or embed its own
+page for detection and burn), and (c) images extracted from the image
+XObjects of born-digital PDFs (in v1 — decision D1). When a specific embedded
+XObject cannot be decoded, that file MUST flag `imageDetectionSkipped` reason
+`embedded_images_unsupported` (per-file honest degradation), never a silent
+skip of the whole document. DocuDesk MUST NOT implement or embed its own
 image-detection engine (ADR-017/ADR-022) and MUST NOT send image content to
 any endpoint other than the OpenRegister seam (processing stays local,
 AVG/EDPB posture).
@@ -44,6 +48,22 @@ AVG/EDPB posture).
 - THEN the file bytes are submitted to the OpenRegister image seam without rasterisation
 - AND detected entities carry boxes without a page number
 - @e2e exclude backend submission plumbing — covered by PHPUnit (tests/unit/Service/ImageRedactionServiceTest.php)
+
+#### Scenario: Born-digital PDF with an embedded image is reached
+
+- GIVEN a born-digital PDF whose page carries a photo as an image XObject (no scanned page raster) and a printed BSN inside that photo
+- WHEN extraction runs with an image-capable backend
+- THEN the embedded image is extracted and submitted to the OpenRegister seam
+- AND the BSN entity is returned with `origin: "image"` and a bounding box referencing that page
+- @e2e exclude embedded-XObject extraction path — covered by PHPUnit (tests/unit/Service/ImageRedactionServiceTest.php)
+
+#### Scenario: Undecodable embedded image flags the file honestly
+
+- GIVEN a born-digital PDF whose embedded image XObject cannot be decoded
+- WHEN extraction runs
+- THEN that file carries `imageDetectionSkipped` with reason `embedded_images_unsupported`
+- AND the review workbench shows the image-not-scanned warning for the document
+- @e2e exclude degradation-reason branch — covered by PHPUnit (tests/unit/Service/ImageRedactionServiceTest.php)
 
 ### Requirement: Missing image capability degrades fail-flagged, never fail-silent (REQ-DDIMR-002)
 

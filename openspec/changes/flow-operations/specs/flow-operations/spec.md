@@ -216,8 +216,14 @@ object (`operation`, `fileId`, `fileName`, `ownerUserId`, `status`
 `queued|running|succeeded|failed|skipped`, `statusReason`,
 `triggerEvent`, `startedAt`, `finishedAt`, `resultSummary`,
 `producedFileId`, `errorMessage`) with lifecycle declared via
-`x-openregister-lifecycle` (initial `queued`) and retention via
-`x-openregister-archival` (`P1Y`, operational processing log). A run
+`x-openregister-lifecycle` (initial `queued`) and TTL log-rotation retention
+via `x-openregister-archival` in the OR-validated object shape
+(`{"retention": {"default": "<ISO-8601>"}}`, never a bare string).
+`flowOperationRun` is an operational processing-log schema (the only class of
+schema for which `x-openregister-archival` is permitted — see
+`archiefwet-retention-engine` REQ-DDARE-008), but its retention duration is a
+placeholder pending a real selectielijst-approved value and MUST be resolved
+before apply (REQ-DDFLO-010). A run
 entering `failed` MUST notify the file owner via a Nextcloud notification
 declared in the verified `x-openregister-notifications` dialect with
 recipient `{"kind": "field", "field": "ownerUserId"}` (a confirmed NC
@@ -254,3 +260,35 @@ apps (workflow_ocr, workflow_pdf_converter) are found.
 - WHEN its category elements are read
 - THEN both `organization` and `workflow` are present
 - @e2e exclude static app-metadata declaration; covered by PHPUnit (tests/unit/AppInfo/InfoXmlTest.php)
+
+### Requirement: Real selectielijst-approved retention on flowOperationRun is a production-enablement apply-blocker (REQ-DDFLO-010)
+
+The `flowOperationRun` schema MUST NOT ship its `x-openregister-archival`
+retention as the `P1Y` placeholder to production. Before this change is
+applied or marked done, the retention MUST be set to a real
+selectielijst-manager-approved value for this processing log (the runs carry
+`ownerUserId`, file names and per-type entity counts, so their lifespan is a
+records-appraisal decision, not a developer guess), expressed in the
+OR-validated object shape (`{"retention": {"default": "<ISO-8601>"}}`). This
+is a hard apply-blocker with the same posture as
+`archiefwet-retention-engine` REQ-DDARE-009: a PHPUnit register-lint MUST
+fail while the retention is still the `P1Y` placeholder, so the change cannot
+be marked done with it. (The sibling processing-log schemas `entitySearchLog`
+and `classificationResult` carry the same obligation in their own changes —
+`entity-search` and `inbound-auto-classification` — and are out of scope for
+this delta.)
+
+#### Scenario: Placeholder retention blocks completion
+
+- GIVEN `flowOperationRun` still declares the `P1Y` placeholder retention
+- WHEN the change's apply/verify register-lint runs
+- THEN it fails with a production-enablement error requiring a real selectielijst-approved retention value
+- AND the change cannot be marked done until the approved value replaces the placeholder
+- @e2e exclude apply-time enablement gate with no UI surface — covered by a PHPUnit register-lint test (tests/unit/Settings/)
+
+#### Scenario: Approved retention satisfies the gate
+
+- GIVEN `flowOperationRun` declares a real selectielijst-approved retention in the validated object shape
+- WHEN the register-lint runs
+- THEN no placeholder remains and the gate passes
+- @e2e exclude apply-time enablement gate — covered by the same PHPUnit register-lint test

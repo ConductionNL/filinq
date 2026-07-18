@@ -1,16 +1,16 @@
 ---
 kind: code
-tracking_issue: https://codeberg.org/Conduction/docudesk/issues/182
+tracking_issue: https://github.com/ConductionNL/docudesk/issues/315
 ---
 
 # Proposal: verapdf-validation
 
 ## Why
 
-DocuDesk claims archival conformance it never verifies. CB #182 (this
-change's tracking issue — the GitHub number 182 is an unrelated merged PR,
-so the Codeberg issue stays canonical) documents both limitations verified
-at HEAD:
+DocuDesk claims archival conformance it never verifies. GitHub #315 (this
+change's tracking issue; GitHub is primary — it mirrors the original Codeberg
+#182, referenced below for the analysis history) documents both limitations
+verified at HEAD:
 
 - **Validation is shallow.** `Pdfa3ConversionService::validateOutput()`
   asserts the `%PDF-` header and the `pdfaid:part`/`pdfaid:conformance` XMP

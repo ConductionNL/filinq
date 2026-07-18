@@ -1,7 +1,9 @@
 # docudesk-mcp-surface
 
 DocuDesk's agent-facing MCP tool surface under ADR-063: the curated schema allowlist, the
-single curated generation tool, and the standing refusals.
+curated document-generation tool (which sibling changes MAY extend with further curated
+tools via the same scannable-services path, each still bound by the standing refusals here),
+and the standing refusals.
 
 ## ADDED Requirements
 
@@ -69,8 +71,14 @@ tool. The declared filters MUST be: `template` → `category`, `namespace`, `for
 `CorrespondenceService::generate()` MUST carry `#[McpTool(name: 'generateCorrespondence',
 scope: 'create', readOnlyHint: false, destructiveHint: false, idempotentHint: false)]`, and
 `lib/Mcp/DocudeskScannableServices.php` MUST implement OpenRegister's
-`IMcpScannableServices` returning `[CorrespondenceService::class]`. The method is genuine
-non-CRUD behaviour — it fetches a template, resolves OpenRegister data references, applies a
+`IMcpScannableServices` and MUST include `CorrespondenceService::class` in its returned
+list. `generateCorrespondence` MUST remain DocuDesk's sole curated document-*generation*
+tool. The returned list MAY include additional curated services registered by sibling
+changes (for example `mcp-generation-tools`, which adds `getDocumentStatus` and
+`anonymizeDocument`); every such additional curated tool MUST itself honour every standing
+refusal in this spec (no signing act, no batch, none of the excluded schemas, no derived
+write verb) and MUST carry a complete, honest hint set. The method is genuine non-CRUD
+behaviour — it fetches a template, resolves OpenRegister data references, applies a
 huisstijl, renders, produces the output format, and logs a `correspondence` register entry —
 so it is a curated tool and not a derivable CRUD verb. Its hints are load-bearing: a curated
 two-segment tool that declares no hints fails open in Hermiq's write/destructive

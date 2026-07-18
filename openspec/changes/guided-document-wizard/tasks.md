@@ -5,7 +5,7 @@
 
 ## 1. Register & data model
 
-- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: new `wizardDefinition` schema in the `templates` register (name, description, namespace, templateId, active, questions[] per design.md D2); `generatedDocument` gains optional `wizardContext` object; bump templates register (additive on top of Wave-1 `2.1.0` → `2.2.0`) and document register (`2.2.0` → `2.3.0`)
+- [ ] 1.1 Extend `lib/Settings/docudesk_register.json`: new `wizardDefinition` schema in the `templates` register (name, description, namespace, templateId, active, questions[] per design.md D2); `generatedDocument` gains optional `wizardContext` object; bump templates register (additive on top of Wave-1 `2.1.0` → `2.2.0`) and document register (`2.2.0` → `2.3.0`). Apply order pinned: this change FIRST (document → `2.3.0`), `multi-format-output` SECOND (document `2.3.0` → `2.4.0`)
   - All new properties optional except `wizardDefinition` required `name`/`templateId`/`questions`; schema refs by slug
   - `tests/validate-manifest.js` and register import on boot both pass
 

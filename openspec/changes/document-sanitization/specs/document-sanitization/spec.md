@@ -60,14 +60,23 @@ never a success claim.
 
 The PDF sanitization pass MUST remove: /Info identity fields and XMP
 identity namespaces (the field/namespace scope of OR's existing
-`PdfMetadataSanitizer`), comments/annotations, embedded files (with a
-documented exception for declared PDF/A-3 archival attachments carrying an
-`/AFRelationship` of `Source` or `Data`), JavaScript (`/JavaScript` name
-tree, `/JS` actions), `/OpenAction` and `/AA` entries — and MUST emit the
-result as a full re-serialisation so prior-save incremental updates and
-orphaned objects are absent from the output. The pass MUST NOT alter visible
-page content. Removal means removal: no masked, emptied-but-present, or
-overlay constructs.
+`PdfMetadataSanitizer`), comments/annotations, embedded files, JavaScript
+(`/JavaScript` name tree, `/JS` actions), `/OpenAction` and `/AA` entries —
+and MUST emit the result as a full re-serialisation so prior-save incremental
+updates and orphaned objects are absent from the output. The pass MUST NOT
+alter visible page content. Removal means removal: no masked,
+emptied-but-present, or overlay constructs.
+
+The pass MUST make one exception (decision D2): a PDF/A-3 embedded file
+declared with an `/AFRelationship` of `Source` or `Data` is the archival
+payload of the container (the MDTO/machine-readable sidecar that makes the
+PDF/A-3 a valid archival record) and MUST be PRESERVED, together with the
+`/AF` association that binds it to the document. Every other embedded file —
+including PDF/A-3 attachments with any other `/AFRelationship`
+(`Alternative`, `Supplement`, `Unspecified`) and all non-PDF/A-3 embedded
+files — MUST be stripped. Each preserved attachment MUST be listed in the
+sanitization report as preserved (with its relationship), so preservation is
+accountable and never silent.
 
 #### Scenario: Hidden payload is absent from the sanitized PDF
 
@@ -77,13 +86,22 @@ overlay constructs.
 - AND the output is a single full save without incremental-update remnants
 - @e2e exclude byte-level output assertions — covered by PHPUnit against fixture PDFs (tests/unit/Service/DocumentSanitizationServiceTest.php)
 
-#### Scenario: Declared archival attachments survive per the exception
+#### Scenario: Declared PDF/A-3 archival attachment is preserved
 
 - GIVEN a PDF/A-3 file with an MDTO sidecar attachment declared `/AFRelationship /Source`
 - WHEN PDF sanitization runs
-- THEN the sidecar attachment is preserved and listed in the report as preserved
-- AND undeclared embedded files are removed
-- @e2e exclude PDF/A-3 attachment branch — covered by PHPUnit fixtures shared with Pdfa3ConversionServiceTest
+- THEN the sidecar attachment and its `/AF` association are preserved in the output
+- AND the report lists it as a preserved attachment with relationship `Source`
+- @e2e exclude PDF/A-3 attachment-preservation branch — covered by PHPUnit fixtures shared with Pdfa3ConversionServiceTest
+
+#### Scenario: Non-archival embedded files are stripped
+
+- GIVEN a PDF/A-3 file carrying both a `/Source` MDTO sidecar and a separate embedded spreadsheet with `/AFRelationship /Unspecified`, plus a plain (non-PDF/A-3) embedded attachment
+- WHEN PDF sanitization runs
+- THEN the `/Source` sidecar is preserved
+- AND both the `/Unspecified` attachment and the plain embedded attachment are removed from the output
+- AND the report records the removed attachments as an embedded-files count
+- @e2e exclude embedded-file strip branch — covered by PHPUnit fixtures shared with Pdfa3ConversionServiceTest
 
 ### Requirement: Every sanitization run persists a content-free report (REQ-DDSAN-003)
 

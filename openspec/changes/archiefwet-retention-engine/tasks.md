@@ -1,6 +1,6 @@
 # Tasks: archiefwet-retention-engine
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 13.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register + seed data
@@ -10,7 +10,10 @@
   - Unit drift-pin: every field OR's `lookupSelectielijstEntry()` reads exists on `selectielijstEntry`; verify against OR HEAD, not against this spec's snapshot.
 
 - [ ] 1.2 Seed representative VNG selectielijst 2020 entries (design.md Seed Data)
-  - `TODO-*` placeholder category codes only; one `bewaren` and at least one `vernietigen` entry; validates on import.
+  - `TODO-*` placeholder category codes during authoring only; one `bewaren` and at least one `vernietigen` entry; validates on import. Placeholders MUST be replaced with real codes before apply — see task 1.4 (apply-blocker).
+
+- [ ] 1.4 APPLY-BLOCKER — replace every `TODO-*` placeholder with a real VNG selectielijst-manager-approved category number before apply/done (REQ-DDARE-009)
+  - Obtain the real category codes with matching `archiefnominatie` + `bewaartermijn` from the responsible selectielijst-manager (records-appraisal sign-off); this change MUST NOT be marked done while any `TODO-*` categorie remains. Add a PHPUnit seed-lint test that FAILS on any `TODO-` categorie so the gate enforces it (production-enablement gate, same posture as flow-operations E3 retention).
 
 - [ ] 1.3 Add `archive` configuration to the record schemas `correspondence`, `generatedDocument`, `publicationRecord` (REQ-DDARE-020) and remove `x-openregister-archival` from record classes; rewrite the `batchCorrespondenceJob` annotation to `{"retention": {"default": "P1Y"}}` (REQ-DDARE-008, REQ-DREG-01/02)
   - Import-pin unit test proves the `archive` key survives `ConfigurationService::importFromApp()`; file an OpenRegister issue if it is dropped (degradation: OR schema UI configuration, never DocuDesk-side retention code).
@@ -39,7 +42,7 @@
 
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
-  - Includes: register/seed import pins, selectielijst drift-pin, archive-key import pin, propagation precedence matrix, register-lint for REQ-DDARE-008 (no annotation on record classes, object shape elsewhere), architecture test for "no retention arithmetic".
+  - Includes: register/seed import pins, selectielijst drift-pin, archive-key import pin, propagation precedence matrix, register-lint for REQ-DDARE-008 (no annotation on record classes, object shape elsewhere), architecture test for "no retention arithmetic", and the REQ-DDARE-009 seed-lint that fails on any `TODO-` categorie.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/archiefwet-retention.spec.ts` covering the `@e2e`-referenced scenarios
   - Wire settings, review/partial-approve/reject a vernietigingslijst, certificates list, overbrenging list; verify on the Postgres dev instance (port 8080); test through the UI.
@@ -51,4 +54,4 @@
   - Covers selectielijst maintenance, the admin wiring step, the archivist workflow and the production checklist (replace `TODO-*` categories before enabling destruction).
 
 - [ ] 4.5 Gates + validation
-  - `composer check:strict` zero new violations; `openspec validate archiefwet-retention-engine --strict` exits 0; fix pre-existing quality issues encountered on touched files.
+  - `composer check:strict` zero new violations; `openspec validate archiefwet-retention-engine --strict` exits 0; the REQ-DDARE-009 seed-lint passes (no `TODO-*` categorie remains); fix pre-existing quality issues encountered on touched files.

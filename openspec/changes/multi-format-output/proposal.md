@@ -46,6 +46,16 @@ Priority **could-have**.
   out of it) and as the filled source DOCX (true editable passthrough) for
   office templates (Wave-1 REQ-DDOTA-003). This is the editable-DOCX delivery
   for inter-municipal exchange.
+- **Office-template HTML output (full format parity)**: office (DOCX/ODT)
+  templates can now also produce `html`, via LibreOffice headless DOCX→HTML
+  (new `DocxToHtmlConverter`, `soffice --convert-to html`, sharing the
+  cascade's soffice serialization lock and temp-dir hygiene). Verified at
+  HEAD: the conversion cascade (`lib/Service/Conversion/`) hard-codes a PDF
+  target (`LibreOfficeHeadlessBackend` → `--convert-to pdf:writer_pdf_Export…`)
+  and offers **no** DOCX→HTML path today — office templates previously had no
+  HTML output at all. With this converter every output format
+  (`pdf`/`odf`/`docx`/`html`) is reachable for both `twig` and `office`
+  templates, subject to live backend availability.
 - **Format-capability matrix**: `GET /api/documents/formats` (instance-level)
   and `GET /api/templates/{id}/formats` (per template) report which output
   formats are currently producible and why not (e.g. `odf`/`docx` unavailable
@@ -79,8 +89,10 @@ local (LibreOffice headless, mPDF — no external API calls).
 
 - `document-creatie-sjablonen`: output-format support (REQ-DCS-03 family) is
   extended — `docx` becomes a valid generation format (editable delivery),
-  `options.formats` produces multiple outputs from one render, and the
-  `generatedDocument` audit object records every produced output.
+  `html` becomes a valid output format for `office` templates too (LibreOffice
+  DOCX→HTML — full format parity), `options.formats` produces multiple outputs
+  from one render, and the `generatedDocument` audit object records every
+  produced output.
 - `pdf-conversion`: the conversion cascade gains a non-throwing capability
   introspection surface (per-backend availability + supported conversions)
   that powers the format matrix — today that report only exists inside
@@ -91,13 +103,17 @@ local (LibreOffice headless, mPDF — no external API calls).
 - **Backend**: `DocumentService` — `formats` handling, render-once/convert-N
   pipeline, DOCX production (shared `HtmlToDocxConverter` extracted from
   `CorrespondenceService`'s private implementation — ADR-011 reuse instead of
-  a second copy); `PdfConversionService` — public `getCapabilities()`;
-  new `FormatMatrixService`; `DocumentController` manifest response;
-  `CorrespondenceService` delegates its DOCX conversion to the shared
+  a second copy) and office HTML production (new `DocxToHtmlConverter`,
+  LibreOffice headless DOCX→HTML); `PdfConversionService` — public
+  `getCapabilities()`; new `FormatMatrixService`; `DocumentController` manifest
+  response; `CorrespondenceService` delegates its DOCX conversion to the shared
   converter (behaviour unchanged).
 - **Register**: `generatedDocument` schema — `format` enum gains `docx`,
-  new optional `outputs` array (document register bump, additive; coordinates
-  with `guided-document-wizard`'s bump of the same register in this wave).
+  new optional `outputs` array (document register bump `2.3.0` → `2.4.0`,
+  additive). Apply order is fixed: `guided-document-wizard` applies **first**
+  and bumps the document register `2.2.0` → `2.3.0`; this change applies
+  **after** it and bumps `2.3.0` → `2.4.0` (both additive; no
+  rebase-on-whichever-lands-second — the order is pinned in tasks/design).
 - **Routes**: `GET api/documents/formats`, `GET api/templates/{id}/formats`
   (`appinfo/routes.php`).
 - **Frontend**: format checkboxes/disabled states driven by the matrix in
@@ -128,6 +144,9 @@ local (LibreOffice headless, mPDF — no external API calls).
 - One `POST /api/documents/generate` with `options.formats: ["pdf", "docx"]`
   returns a manifest referencing a PDF and an editable DOCX produced from one
   render pass; the DOCX opens editable in Word/LibreOffice.
+- An `office` template generates `html` output via LibreOffice DOCX→HTML, and
+  its per-template matrix offers `html` when a LibreOffice backend is
+  available (full format parity with `twig` templates).
 - Requests with the existing single `options.format` are byte-identical to
   today's behaviour.
 - With LibreOffice unavailable, the matrix reports `docx`/`odf` unavailable

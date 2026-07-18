@@ -64,24 +64,43 @@ folder-analysis architecture), repo-inventory notable absence.
 
 ## Decisions
 
-### D1 — Membership = the bound folder (no second membership store)
+### D1 — Membership = home folder ∪ an explicit relation list (`documents[]`)
 
-A dossier's documents ARE the files in its `@self.folder` folder — the
-existing contract that folder-batch anonymisation, the grondslagen summary
-and the Woo collection step already rely on (CB #148's point). Therefore:
+Per decision **E4**, the strict folder=dossier equivalence of the first v1
+draft is relaxed: a document may belong to several dossiers. A dossier keeps
+a bound **home folder** (`@self.folder`) — the physical home of the files it
+owns and the unit that folder-batch anonymisation, the grondslagen summary
+and the Woo collection step still operate on (CB #148's architecture is
+preserved) — but membership is additionally tracked by an explicit
+`documents[]` relation list (NC file node references) on the schema. A
+dossier's **effective membership** (what the index count and detail list
+render) is the deduplicated union of the home-folder files and the
+`documents[]` references. Therefore:
 
-- **Add document** (GH #48) = upload/copy the file into the dossier folder;
-  the documents list refreshes immediately.
-- **Remove document** (GH #50) = delete the file from the dossier folder to
-  the NC trashbin after confirmation (recoverable; never a silent hard
-  delete).
-- No `documents[]` array is added to the schema — a second membership store
-  would drift from the folder truth that the processing capabilities use.
+- **Add document** (GH #48): an uploaded/copied file lands in the home folder
+  AND is recorded in `documents[]`; a file picked from elsewhere is added by
+  reference (node id appended to `documents[]`) WITHOUT being moved or copied
+  (link semantics) — so the same document can be a member of many dossiers.
+  The documents list refreshes immediately.
+- **Remove document** (GH #50), always confirmed: if the file lives in this
+  dossier's home folder and is a member of no other dossier → move it to the
+  NC trashbin (recoverable; never a silent hard delete). If it is a referenced
+  member (lives elsewhere or is also referenced by another dossier) → drop
+  only this dossier's `documents[]` reference; the underlying file is never
+  deleted. The confirmation states which will happen.
+- A `documents[]` entry whose target file is gone or unreadable by the caller
+  renders as a visible "missing/inaccessible" marker (same never-silently-drop
+  rule as unknown grondslag slugs); it never breaks the detail view.
+- All membership writes are full-payload PUTs (saveObject PUT-semantic rule)
+  and must not null the dossier's other fields.
 
-Rejected alternative: object-relation membership (dossier → file refs) —
-would let one file join many dossiers, but breaks the 1-folder-batch
-architecture and duplicates truth; multi-dossier membership is recorded as an
-open question.
+Why not folder-only (the earlier v1 draft): a single bound folder can hold a
+file in exactly one dossier, which contradicts the E4 requirement that one
+document belong to several dossiers. Why not relation-list-only (drop the
+folder): folder-batch anonymisation, the grondslagen PDF and the Woo
+collection step are all keyed on `@self.folder`; keeping the home folder as
+the physical/processing anchor while layering `documents[]` for membership
+preserves that architecture and adds cross-dossier membership on top.
 
 ### D2 — Index + detail aggregation
 
@@ -91,7 +110,7 @@ open question.
 | Facet | Source (existing, unchanged) |
 |---|---|
 | Dossier rows | OR ObjectService search on `dossier`/`dossier` |
-| Document list | folder listing of `@self.folder` (caller ACLs apply) |
+| Document list | effective membership = deduplicated union of the `@self.folder` home-folder listing and the resolved `documents[]` references, all under caller ACLs; unresolvable references shown as a visible marker |
 | Per-document anonymisation state | faceted `anonymizationLink` by `sourceFileId` |
 | Per-document checked state | `documentReview` objects (presence-gated on the review-workbench change) |
 | Grondslagen chips | `BasesResolverService` (unknown slug → visible warning, existing rule) |
@@ -165,6 +184,25 @@ Every presence gate is hidden-not-broken.
 - Modals/dialogs in own files (`src/modals/`, `src/dialogs/`); `NcSelect`
   with `inputLabel`; NL Design tokens via NC CSS variables (ADR-003); store
   per the Options API + createObjectStore pattern.
+- Inline rename (GH #51) triggers the object rename AND the bound-folder
+  rename in one operator action (D7); the "+ Document toevoegen" flow offers
+  both upload-into-home-folder and pick-from-elsewhere (reference) paths, and
+  the remove-confirm dialog names the outcome (trash vs unlink) per D1.
+
+### D7 — Rename keeps the bound home folder in sync (E4)
+
+Renaming a dossier (inline title rename or the create-time name) also renames
+its bound home folder (`@self.folder`) so the object name and its physical
+home folder stay in sync instead of diverging (the earlier v1 draft renamed
+the object only). The folder rename:
+
+- runs under the caller's NC filesystem ACLs (no privilege escalation);
+- is best-effort — if the caller lacks write permission or a sibling node
+  already carries the target name, the object rename still commits and the UI
+  shows a readable warning that the folder was not renamed (a collision never
+  silently overwrites or merges folders);
+- touches only this dossier's own home folder — never folders bound to other
+  dossiers, and never referenced documents that physically live elsewhere.
 
 ## OpenRegister service usage (ADR-001)
 
@@ -207,9 +245,17 @@ for the schema change.
 
 ## Risks / Trade-offs
 
-- [Folder = membership means moving a file out silently changes the dossier]
-  → accepted: it is the architecture every processing capability already
-  assumes (CB #148); the detail view always renders the live folder truth.
+- [Moving a file out of the home folder silently changes home-folder
+  membership] → accepted: it is the architecture every processing capability
+  already assumes (CB #148); the detail view always renders the live union of
+  the folder truth and the `documents[]` references.
+- [Referenced membership can dangle when a target file is deleted elsewhere]
+  → the union resolver renders unresolvable references as a visible
+  "missing/inaccessible" marker (never silently dropped) and a unit test pins
+  that a deleted target does not break the detail view.
+- [A best-effort folder rename can leave object and folder names diverged on
+  ACL/collision] → accepted and surfaced: the object rename always commits and
+  the UI warns when the folder was not renamed (D7); no silent overwrite.
 - [PUT-semantic saves could null fields on rename/status writes] → store
   carries all fields forward; unit test pins that a rename survives `bases`
   and `checkedOn` (the known saveObject trap).
@@ -222,16 +268,23 @@ for the schema change.
 
 ## Migration Plan
 
-Additive: `status` + lifecycle annotation on `dossier` (register version
-bump, boot import — existing objects untouched), new
-service/controller/routes/views. Rollback = remove routes/UI; `status`
-values remain inert data. No data migration.
+Additive: `status` + lifecycle annotation and the optional `documents[]`
+membership relation on `dossier` (register version bump, boot import —
+existing objects untouched), new service/controller/routes/views. A dossier
+without `documents[]` derives membership from its home folder alone, so no
+data migration is needed. Rollback = remove routes/UI; `status` and
+`documents` values remain inert data.
 
 ## Open Questions
 
-- Multi-dossier membership (one file in several dossiers) — needs an
-  object-relation model and a folder-truth decision; deferred.
-- Should renaming the dossier offer to rename the bound folder too (they
-  diverge after a rename)? Deferred UX decision; v1 renames the object only.
+- ~~Multi-dossier membership (one file in several dossiers)~~ — **resolved by
+  E4**: modelled with the `documents[]` relation list over a bound home
+  folder (D1); shipped in v1.
+- ~~Should renaming the dossier rename the bound folder too?~~ — **resolved by
+  E4**: yes, best-effort folder sync on rename (D7); shipped in v1.
 - Dossier deletion/archival UX (with Archiefwet implications) — deferred to
   the retention/archival programme (`archiefwet-retention-engine` sibling).
+- Whether the folder-batch/grondslagen/Woo steps should follow `documents[]`
+  references (not just the home folder) — deferred; v1 keeps those steps
+  keyed on the home folder and uses `documents[]` only for the browse/detail
+  membership view.

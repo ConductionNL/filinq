@@ -11,7 +11,9 @@ verified open at HEAD, with the already-shipped fixes explicitly out of
 scope): bind signer identity into the signed artifact's MAC, report
 verification honestly in three states, enforce provider/level honesty on the
 completion path, route every terminal transition through the status machine,
-and make the session download fail closed. All requirements are ADDED; no
+make the session download fail closed, and preserve the decidesk delegation
+seam (`docudesk-signing`) backward-compatibly while exposing the resolved
+eIDAS assurance level on completion. All requirements are ADDED; no
 existing `document-signing` requirement is weakened.
 
 ## ADDED Requirements
@@ -161,3 +163,38 @@ may ever escalate to `verified` without a passing MAC.
 - THEN the signature reports status `invalid`
 - AND the document `verdict` is `tampered`
 - @e2e exclude artifact byte-flip mutation — covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)
+
+### Requirement: The decidesk delegation seam is preserved and exposes assurance (REQ-DDSTR-010)
+
+The rebuild MUST preserve — or version without breaking — the
+`docudesk-signing` OpenConnector Source contract that decidesk drives from
+`EIDASSignatureService` (verified at HEAD: source slug `docudesk-signing`,
+`EIDASSignatureService::composeDocudeskSigningRequest()`). The request contract
+`POST /signing-requests` accepting `{documentId, signatories, signingLevel,
+returnTarget}` and returning `{id | signingRequestId, signingUrl}` MUST remain
+backward-compatible: no existing field may be removed, renamed, or have its type
+changed, and any new field MUST be additive. On completion, the callback the
+consumer maps to `resolveSignatureStage()` MUST include the resolved eIDAS
+**assurance level** (`low | substantial | high`) of the completed request so
+decidesk's `QesGuard` can gate on it. For a native SES completion the exposed
+assurance MUST be `low` (the SES level floor); a broker-authenticated value is
+populated into this same field by `signer-identity-rails` (REQ-DDSIR-007). The
+assurance level MUST be the only identity-strength signal exposed on the seam —
+no BSN, other national identifier, or raw token may appear in the seam payload
+(data minimisation carried from `signer-identity-rails`).
+
+#### Scenario: Decidesk seam request/response shape is unchanged
+
+- GIVEN decidesk posts `{documentId, signatories, signingLevel, returnTarget}` to the `docudesk-signing` source `/signing-requests` endpoint
+- WHEN the signing request is created
+- THEN the response carries `id` (or `signingRequestId`) and `signingUrl` with unchanged field names and types
+- AND no previously present request or response field is removed or renamed
+- @e2e exclude cross-app OpenConnector Source contract — decidesk drives it with no docudesk UI surface; covered by Newman (docudesk-signing collection) + PHPUnit (tests/unit/Controller/SigningControllerTest.php)
+
+#### Scenario: Completion payload exposes the resolved assurance level
+
+- GIVEN a signing request delegated from decidesk that completes via the native provider
+- WHEN the completion callback the consumer maps to `resolveSignatureStage()` is emitted
+- THEN it includes the resolved eIDAS assurance level, which is `low` for a native SES completion
+- AND `QesGuard` can read the assurance without receiving any BSN or raw token
+- @e2e exclude backend completion-payload contract — covered by PHPUnit (tests/unit/Service/SigningServiceTest.php) + Newman

@@ -53,10 +53,17 @@ depends on that fix and wires the action into the dossier detail.
   to batch progress), publication section (publication record state + publish
   entry, presence-gated).
 - **Create / rename / membership**: create-dossier dialog (name, description,
-  bases, folder); inline title rename (GH #51); "+ Document toevoegen" CTA
-  (GH #48); remove document (to trashbin, confirmed); auto-dossier modal on
-  multi-upload — one document uploads without a modal, several trigger the
-  name + grondslagen-preselect modal (GH #47).
+  bases, folder); inline title rename that also renames the bound home folder
+  to keep them in sync (GH #51, E4); "+ Document toevoegen" CTA — upload into
+  the home folder or add an existing document by reference (GH #48); remove
+  document (confirmed — trashbin when home-folder-owned, unlink-only when
+  referenced elsewhere); auto-dossier modal on multi-upload — one document
+  uploads without a modal, several trigger the name + grondslagen-preselect
+  modal (GH #47).
+- **Multi-dossier membership** (E4): membership is an explicit `documents[]`
+  relation list over a bound home folder, so one document may belong to
+  several dossiers — relaxing the strict folder=dossier equivalence of the
+  first draft while keeping the home folder as the physical/processing anchor.
 - **Dossier lifecycle, declaratively**: the `dossier` schema gains an
   optional `status` governed by an `x-openregister-lifecycle` annotation
   (canonical `initial: open`; `open → in-review → processed →
@@ -76,13 +83,16 @@ depends on that fix and wires the action into the dossier detail.
 
 - `dossier-register`: the `dossier` schema gains the optional `status`
   property with a declarative `x-openregister-lifecycle` (canonical
-  `initial: open`). All other schema properties, the `base` vocabulary, the
-  folder binding and the seed set are unchanged.
+  `initial: open`) and the optional `documents[]` membership relation list
+  (multi-dossier membership, E4). The `base` vocabulary, the `@self.folder`
+  home-folder binding and the seed set are unchanged; status-less,
+  `documents`-less dossiers read as `open` with folder-derived membership.
 
 ## Impact
 
-- `lib/Settings/docudesk_register.json`: `status` + lifecycle annotation on
-  the `dossier` schema; register version bump. No new schemas.
+- `lib/Settings/docudesk_register.json`: `status` + lifecycle annotation and
+  the optional `documents[]` membership relation on the `dossier` schema;
+  register version bump. No new schemas.
 - New `lib/Service/DossierManagementService.php` (membership operations,
   aggregation for detail: documents, batch runs, publication state) + new
   routes/actions on a `DossierManagementController` (the existing

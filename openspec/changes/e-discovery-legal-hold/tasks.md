@@ -1,11 +1,11 @@
 # Tasks: e-discovery-legal-hold
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 15.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `legalHoldCase` schema to the document register in `lib/Settings/docudesk_register.json` (REQ-DDEDL-001, REQ-DDEDL-020)
+- [ ] 1.1 Add the `legalHoldCase` schema to the document register in `lib/Settings/docudesk_register.json` (REQ-DDEDL-001)
   - Properties/enums per design.md D1; `hardValidation: true`; `x-openregister-lifecycle` with canonical `initial: active` and only `active → released`; `archive.defaultNominatie: bewaren`; no `x-openregister-archival`; register version bump.
 
 - [ ] 1.2 Seed one demo `woo-appeal` case (design.md Seed Data)
@@ -28,6 +28,9 @@
 - [ ] 2.5 File the OpenRegister issue for native multi-hold support (design.md D3 limitation)
   - Single hold slot per object forces the case-layer overlap ledger; link on tracking issue #234 with the adopt-and-delete plan.
 
+- [ ] 2.6 Implement the `files_lock` file-level freeze backstop (REQ-DDEDL-007)
+  - On activation place an app-scoped lock (`\OCP\Files\Lock\ILockManager`, `ILock::TYPE_APP`, owner = app id) on each in-scope document's file node; on release unlock overlap-safe (only when no other active case covers the file); probe `isLockProviderAvailable()` and record the backstop as unavailable when `files_lock` is absent (never claim file-level protection); per-object lock/unlock failures visible + retried like the record fan-out. OR record freeze stays primary.
+
 ## 3. Frontend
 
 - [ ] 3.1 Hold register page + case detail (REQ-DDEDL-005)
@@ -40,7 +43,7 @@
 
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/docudesk nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
-  - Includes: overlap matrix (two cases/one record, release order permutations), partial fan-out failure visibility, incremental additions, release-reason guard, notification recipients, controller 403 for non-authority users, register-lint (lifecycle shape, bewaren config, no archival annotation), PUT-semantics survival of a non-changed case field.
+  - Includes: overlap matrix (two cases/one record, release order permutations) for BOTH the OR record hold and the files_lock file lock, partial fan-out failure visibility, file-lock backstop-unavailable degradation, incremental additions, release-reason guard, notification recipients, controller 403 for non-authority users, register-lint (lifecycle shape, bewaren config, no archival annotation), PUT-semantics survival of a non-changed case field.
 
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/e-discovery-legal-hold.spec.ts` covering the `@e2e`-referenced scenarios
   - Create case → fan-out status → held record excluded from vernietigingslijst (case name shown) → owner notification → blocked reason-less release → release; verify on the Postgres dev instance (port 8080); test through the UI.
@@ -49,7 +52,7 @@
   - Keys in English; NL legal vocabulary (bezwaar, bewaring, vrijgave) correct in the NL locale.
 
 - [ ] 4.4 Documentation `docs/features/e-discovery-legal-hold.md` with Playwright MCP screenshots (ADR-010)
-  - Covers the hold lifecycle, overlap behaviour, the ZyLAB non-goal boundary and the documented storage-layer limitation (NC file deletion vs record destruction).
+  - Covers the hold lifecycle, overlap behaviour, the ZyLAB non-goal boundary, and the two-layer freeze (OR record-destruction freeze as primary + `files_lock` file-deletion backstop, and its honest degradation when `files_lock` is absent).
 
 - [ ] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate e-discovery-legal-hold --strict` exits 0; fix pre-existing quality issues encountered on touched files.

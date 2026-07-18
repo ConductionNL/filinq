@@ -180,3 +180,26 @@ shipped wallet integration.
 - WHEN it is run through the abstract provider contract suite
 - THEN the suite exercises initiate/complete/fail-closed cases without any DocuDesk core change
 - @e2e exclude plugin-seam conformance — covered by PHPUnit (tests/unit/Service/SignerAuth/SignerAuthProviderContractTest.php)
+
+### Requirement: Resolved assurance is surfaced to downstream consumers (REQ-DDSIR-007)
+
+A completed signing act's resolved eIDAS assurance level MUST be surfaced to
+downstream consumers (`low | substantial | high`) without ever exposing a
+BSN, other national identifier, or the raw ID token. Specifically: (a) the
+completion payload of the `docudesk-signing` delegation seam
+(`signing-trust-rebuild` REQ-DDSTR-010) MUST carry the resolved assurance so
+decidesk's `QesGuard` can gate resolution adoption on it; and (b) the same
+assurance MUST be readable by the `portal-signing-actions` `minTrust` gate so an
+external portal signer's act is admitted only when its assurance meets the
+request's `requiredAssurance`. The surfaced value MUST be exactly the assurance
+recorded in `identityEvidence` (REQ-DDSIR-004) — never re-derived from a
+client-supplied value — and only the pairwise `subjectPseudonym`, never a BSN,
+may accompany it.
+
+#### Scenario: QesGuard and portal gate read the same recorded assurance
+
+- GIVEN a signing act completed after DigiD-substantial step-up (recorded `identityEvidence.assurance` = `substantial`)
+- WHEN the delegation-seam completion payload and the `portal-signing-actions` `minTrust` gate read the assurance
+- THEN both observe `substantial` — the exact value from `identityEvidence`, not a re-derived or client-supplied one
+- AND neither receives a BSN nor the raw ID token
+- @e2e exclude cross-app assurance propagation — covered by PHPUnit (tests/unit/Service/SigningServiceTest.php) + the docudesk-signing seam Newman contract

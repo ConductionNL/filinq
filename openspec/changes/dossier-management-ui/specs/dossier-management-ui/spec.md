@@ -11,10 +11,13 @@ that aggregates documents, lifecycle status, grondslagen, batch runs and
 publication state; membership operations (create, inline rename, add/remove
 documents, auto-dossier on multi-upload per GH #47/#48/#50/#51); and
 dossier-level actions wired to the existing folder-batch, grondslagen-PDF
-and publication capabilities. A dossier's documents are the files in its
-bound folder (`@self.folder`) — no second membership store. The dossier
-lifecycle itself is declared on the schema (see the `dossier-register`
-delta in this change).
+and publication capabilities. A dossier keeps a bound **home folder**
+(`@self.folder`) as the physical location of the files it owns, but
+membership is an explicit relation list (`documents[]`) so one document may
+belong to several dossiers (the strict folder=dossier equivalence is
+relaxed — see REQ-DDDMU-008); renaming a dossier keeps its bound home folder
+in sync (REQ-DDDMU-009). The dossier lifecycle itself is declared on the
+schema (see the `dossier-register` delta in this change).
 
 ## ADDED Requirements
 
@@ -85,11 +88,18 @@ MUST carry all schema fields forward — a rename MUST NOT null `bases`,
 ### Requirement: Add and remove documents in a dossier (REQ-DDDMU-004)
 
 The dossier detail MUST offer a "+ Document toevoegen" CTA (GH #48) that adds
-an uploaded or picked file into the dossier's bound folder, with the
-documents list updating immediately without a page reload. Removing a
-document (GH #50) MUST require confirmation and MUST move the file to the
-Nextcloud trashbin (recoverable) — never a silent hard delete. Membership is
-the folder content: the app MUST NOT maintain a second membership store.
+an uploaded or picked file to the dossier: an uploaded/copied file lands in
+the dossier's bound home folder and is recorded in `documents[]`; a file
+picked from elsewhere is added by reference (its node id appended to
+`documents[]`) without being moved (see REQ-DDDMU-008). The documents list
+MUST update immediately without a page reload. Removing a document (GH #50)
+MUST require confirmation; the confirmation MUST state whether the file will
+be trashed or merely unlinked. When the document lives in this dossier's home
+folder and is a member of no other dossier, removal MUST move the file to the
+Nextcloud trashbin (recoverable) — never a silent hard delete; when the
+document is a referenced member (lives elsewhere or is also a member of
+another dossier), removal MUST drop only this dossier's membership reference
+and MUST NOT delete the underlying file.
 
 #### Scenario: Added document appears immediately
 
@@ -176,3 +186,64 @@ The UI MUST surface the rejection as a readable error, never silently.
 - WHEN a save attempts `status = published`
 - THEN OpenRegister rejects the transition and the dossier stays `open`
 - @e2e exclude server-side lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php)
+
+### Requirement: Multi-dossier membership via an explicit relation list (REQ-DDDMU-008)
+
+A document MAY belong to several dossiers. Membership MUST be tracked by an
+explicit `documents[]` relation list on the `dossier` schema (NC file node
+references — see the `dossier-register` delta) rather than by the bound home
+folder alone; the strict folder=dossier equivalence is relaxed. A dossier's
+membership set that the index count and detail list render MUST be the union
+of the files physically present in its bound home folder and the files
+referenced in `documents[]` (deduplicated). Files uploaded or created through
+the dossier MUST land in the home folder AND be recorded in `documents[]`;
+adding an existing document to a second dossier MUST append its node
+reference to that dossier's `documents[]` and MUST NOT move or copy the file
+(link semantics), so the same document appears in every dossier that
+references it. A `documents[]` entry whose target file no longer exists (or
+the caller cannot read) MUST be rendered as a visible "missing/inaccessible"
+marker, never silently dropped, and MUST NOT break the detail view. All
+membership writes are full-payload PUTs (the saveObject PUT-semantic rule)
+and MUST NOT null the dossier's other fields.
+
+#### Scenario: One document is a member of two dossiers
+
+- GIVEN dossier A whose home folder holds a document, and dossier B
+- WHEN the operator adds that document to dossier B via "+ Document toevoegen" (pick from elsewhere)
+- THEN B's `documents[]` gains the file's node reference, the file is not moved out of A's home folder, and both A and B list the document in their detail
+- @e2e tests/e2e/workflows/dossier-management.spec.ts
+
+#### Scenario: Unlinking a referenced member keeps the file
+
+- GIVEN a document that is a member of dossier A (its home folder) and dossier B (by reference)
+- WHEN the operator removes the document from dossier B and confirms
+- THEN only B's membership reference is dropped, the underlying file is untouched, and the document still lists in dossier A
+- @e2e tests/e2e/spec-coverage/dossier-management.spec.ts
+
+### Requirement: Renaming a dossier keeps the bound home folder in sync (REQ-DDDMU-009)
+
+Renaming a dossier MUST attempt to rename the dossier's bound home folder
+(`@self.folder`) to match — whether the rename comes from the inline title
+rename (REQ-DDDMU-003) or the create-time name — keeping the object name and
+its physical home folder in sync rather than diverging. The rename MUST run under the caller's
+NC filesystem ACLs. If the folder cannot be renamed — the caller lacks write
+permission, or a sibling node with the target name already exists — the
+dossier object rename MUST still succeed and the UI MUST surface a readable
+warning that the bound folder was not renamed (a name collision MUST NOT
+silently overwrite or merge folders). Only the dossier's own bound home
+folder is renamed; folders bound to other dossiers and referenced documents
+that live elsewhere are never touched.
+
+#### Scenario: Inline rename renames the bound folder
+
+- GIVEN a dossier named "Handhaving 2024" bound to a writable home folder of the same name
+- WHEN the operator renames the dossier inline to "Handhaving 2025"
+- THEN the dossier object and its bound home folder are both named "Handhaving 2025"
+- @e2e tests/e2e/workflows/dossier-management.spec.ts
+
+#### Scenario: Folder rename collision keeps the object rename and warns
+
+- GIVEN a dossier whose parent already contains a sibling folder with the target name
+- WHEN the operator renames the dossier to that name
+- THEN the dossier object is renamed, the bound folder is left unchanged, and the UI shows a readable warning that the folder could not be renamed
+- @e2e exclude filesystem collision path — covered by PHPUnit tests (tests/unit/Service/DossierManagementServiceTest.php)

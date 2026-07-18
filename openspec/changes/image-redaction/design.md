@@ -2,8 +2,11 @@
 
 ## Context
 
-Verified at HEAD (worktree `spec/market-gap-wave2-2026-07`, includes the nine
-wave-1 changes):
+Verified at merged HEAD (`development`, includes the nine wave-1 changes and
+Robert's PR #314: KENTEKEN entity type, ODT anonymisation, PDF entity-review
+viewer, grondslag/prohibition guards, eml assembly). Robert's baseline covers
+entity-type and office-format anonymisation; the pixel/signature/embedded-image
+gap below remains:
 
 - OR `DocumentProcessingHandler` (lib/Service/File/) dispatches
   `replaceWords()` by extension/MIME: `pdf` → `PdfTextReplacer` (+
@@ -240,11 +243,14 @@ a clean install.
 
 ## Open Questions
 
-- Should embedded-image extraction for born-digital PDFs ship in v1, or only
-  image files + scanned pages (the tender-relevant 90%)? Provisional: v1
-  ships image files + scanned pages; embedded-XObject extraction is task-
-  gated and may slip to a fast-follow with its own flag reason
-  (`embedded_images_unsupported`).
+- Embedded-image extraction for born-digital PDFs: **RESOLVED — in v1**
+  (decision D1). All three submission sources ship in the first release:
+  image-MIME files, scanned-PDF page rasters, and images extracted from image
+  XObjects of born-digital PDFs (`Pdfa3ConversionService` already handles the
+  XObject-wrapping direction; the extraction direction reuses the same fpdi
+  parsing Robert added). Only if a specific PDF's XObject cannot be decoded
+  does the file flag `imageDetectionSkipped` reason `embedded_images_unsupported`
+  — a per-file honest-degradation reason, not a whole-feature deferral.
 - Minimum confidence for auto-including SIGNATURE regions (signatures have
   no text to eyeball) — provisional: same threshold mechanism as other
   entities; the workbench preview overlay IS the review affordance.

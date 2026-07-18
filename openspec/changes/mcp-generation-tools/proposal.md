@@ -24,11 +24,13 @@ The in-flight sibling change **`docudesk-mcp-adoption`** (read at HEAD
 `9cc14407`, proposal/design/specs/tasks complete) establishes DocuDesk's
 baseline: 8 read-only schemas via `x-openregister-mcp`
 (`docudesk.template.search|get`, `docudesk.generatedDocument.search|get`,
-`docudesk.signingRequest.search|get`, ...), exactly one curated write
-tool `docudesk.generateCorrespondence`, and standing refusals (no
-signing, no batch mail-merge, no `publicationConsent`/
-`publicationProhibition`/`anonymizationLink`/signature-material
-exposure). This change EXTENDS that surface and contradicts none of it.
+`docudesk.signingRequest.search|get`, ...), the curated generation write
+tool `docudesk.generateCorrespondence` (its sole *generation* tool, which
+the adoption delta explicitly permits sibling changes to extend, per
+decision F4), and standing refusals (no signing, no batch mail-merge, no
+`publicationConsent`/`publicationProhibition`/`anonymizationLink`/
+signature-material exposure). This change EXTENDS that surface with two
+further curated tools and contradicts none of it.
 
 Measured against the market's four assistant-facing document operations
 (the Carbone MCP feature set: generate document, get status, list
@@ -90,13 +92,13 @@ templates — plus DocuDesk's differentiator, anonymisation):
 
 ### Modified Capabilities
 
-- None in this repo's canonical specs. The in-flight
-  `docudesk-mcp-adoption` delta describes `DocudeskScannableServices` as
-  returning `[CorrespondenceService::class]`; this change extends that
-  list (adding the services carrying the two new curated tools). Both
-  changes are in-flight, so the reconciliation is a coordination note in
-  design.md (and a flagged wording amendment for whichever archives
-  second) — no landed requirement moves.
+- None in this repo's canonical specs. The `docudesk-mcp-adoption` delta
+  now requires `DocudeskScannableServices` to *include*
+  `CorrespondenceService::class` and explicitly permits sibling changes to
+  extend the list; this change adds the services carrying the two new
+  curated tools. The wording collision was reconciled in the build phase
+  (decision F4) directly in the adoption delta — no archive-time amendment
+  and no landed requirement move.
 
 ## Impact
 
