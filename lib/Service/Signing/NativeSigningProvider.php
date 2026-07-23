@@ -171,27 +171,22 @@ class NativeSigningProvider implements SigningProviderInterface
     /**
      * Download the signed document
      *
-     * Returns the path to the document for the persisted signing session.
-     * When the session reaches a `completed` state, the SES marker block
-     * (the same `/DocuDesk-Signature(base64-json)` PDF pattern that
-     * SigningVerificationService::extractSignatures looks for, optionally
-     * carrying the HMAC `mac` field over the document content-hash that
-     * SigningVerificationService::verifyAssertion validates with the
-     * `signing_verification_secret` app-config secret) must be embedded
-     * into the produced file bytes. Embedding requires a writeable PDF
-     * pipeline (mPDF re-render or a PDF cross-ref appending step) which
-     * is not yet wired here; tracked as a follow-up to #287 — this method
-     * therefore returns the persisted `signedDocumentPath` (falling back
-     * to the original `documentPath`) and flags the session with
-     * `markerEmbedded => false` until the marker writer ships.
+     * Fail-closed session download (signing-trust-rebuild REQ-DDSTR-004,
+     * closing issue #287's residual): returns the persisted
+     * `signedDocumentPath` ONLY when the session is `completed`, the path is
+     * non-empty, AND `markerEmbedded === true`. In every other case this
+     * throws — the unsigned original `documentPath` is NEVER returned as if
+     * it were the signed document. This extends the honest-completion gate
+     * (issue #304) to the pluggable session-download seam.
      *
      * @param string $externalId The signing session identifier
      *
      * @return string The signed document path
      *
-     * @throws RuntimeException If session not found or not completed
+     * @throws RuntimeException If the session is not found, not completed, or
+     *                          has no embedded, marker-verified artifact.
      *
-     * @spec openspec/changes/digital-signing-integration/tasks.md#2-2
+     * @spec openspec/specs/document-signing/spec.md
      */
     public function downloadSignedDocument(string $externalId): string
     {
@@ -201,20 +196,20 @@ class NativeSigningProvider implements SigningProviderInterface
             throw new RuntimeException('Signing session is not completed (pipeline not yet integrated — see issue #304)');
         }
 
-        $signedPath = $session['signedDocumentPath'] ?? null;
-        if (is_string($signedPath) === true && $signedPath !== '') {
+        $signedPath     = $session['signedDocumentPath'] ?? null;
+        $markerEmbedded = ($session['markerEmbedded'] ?? false) === true;
+
+        if (is_string($signedPath) === true && $signedPath !== '' && $markerEmbedded === true) {
             return $signedPath;
         }
 
-        // Marker not yet embedded — record that the caller hit the
-        // download path before the marker writer is available so ops
-        // can see how often the follow-up matters.
-        $this->logger->info(
-            'Native signing session '.$externalId.' downloaded without an embedded SES marker; '
-            .'falling back to original document path (follow-up to #287).'
+        // Fail-closed (REQ-DDSTR-004): a completed session without a
+        // produced, marker-embedded artifact must never serve the unsigned
+        // original as if it were signed. Throw loudly instead.
+        throw new RuntimeException(
+            'Signing session '.$externalId.' is completed but has no verifiable signed artifact '
+            .'(missing signedDocumentPath or markerEmbedded); the unsigned original is never served as signed.'
         );
-
-        return (string) ($session['documentPath'] ?? '');
 
     }//end downloadSignedDocument()
 
@@ -256,32 +251,61 @@ class NativeSigningProvider implements SigningProviderInterface
     }//end supportsLevel()
 
     /**
-     * Produce a verifiable native SES signed artifact.
+     * Produce a verifiable, identity-bound native SES signed artifact (v2).
      *
      * Embeds a `/DocuDesk-Signature(base64-json)` marker binding the signer
-     * identity, timestamp and IP, carrying an HMAC (`mac`) over the document
-     * content-hash computed with the server-held `signing_verification_secret`.
-     * The HMAC is computed over the *canonical* form of the produced document —
-     * the bytes with every `/DocuDesk-Signature(...)` marker payload blanked —
-     * so the assertion cannot cover itself and
-     * `SigningVerificationService::verifyAssertion()` recomputes the identical
-     * value and validates the artifact.
+     * identity, timestamp, level, method and IP. The assertion carries a
+     * version discriminator `v: 2` and a MAC computed as
+     * `HMAC-SHA256(secret, sha256(canonical-document) . "\n" .
+     * canonical-JSON(assertion-minus-mac))` — the identity fields are now
+     * INSIDE the MAC input, so rewriting any of them (signer name, level,
+     * timestamp, method) while keeping the original `mac` fails verification
+     * (signing-trust-rebuild REQ-DDSTR-001, closing the #284 residual where
+     * the v1 MAC covered only the content-hash and left every assertion
+     * field forgeable). `SigningVerificationService::verifyAssertion()`
+     * recomputes the identical value and validates the artifact.
      *
-     * Honest-completion gate (issue #304): when the secret is unset the writer
-     * throws rather than emit an unverifiable artifact, so the completing
-     * signature fails loudly instead of mislabelling the original as signed.
+     * When the completing act is portal-originated (`portal-signing-actions` /
+     * `portal-signing-surface`), the receiver-resolved portal subject claims
+     * (`portalSubjectRef`, `portalIdentityRef`, `portalTrust`, `portalJti`) are
+     * threaded in via `$context` and folded into the SAME assertion — and
+     * therefore the SAME MAC — before it is computed, so the portal signer's
+     * identity is cryptographically bound too (portal-signing-surface
+     * REQ-DDPSS-004, closing the portaliq#3 forgeable-signer class for the
+     * portal seam). Those fields are present only when the caller (always
+     * `SigningService`, sourced only from the verified assertion — never
+     * client input) supplies them.
+     *
+     * Honest-completion gates: (1) an unset signing secret and (2) a
+     * requested level this provider does not support (`supportsLevel()`,
+     * REQ-DDSTR-002 point 3, defence in depth alongside the request-creation
+     * and completion-resolution gates in `SigningService`) both throw rather
+     * than emit an unverifiable or mislabelled artifact.
      *
      * @param string               $documentContent The original document bytes.
-     * @param array<string, mixed> $context         Signing context.
+     * @param array<string, mixed> $context         Signing context: signer,
+     *                                              signers, timestamp, ip,
+     *                                              level, and optionally the
+     *                                              portal* identity claims.
      *
      * @return string The signed document bytes.
      *
-     * @throws RuntimeException When the signing secret is unset.
+     * @throws RuntimeException When the signing secret is unset or the
+     *                          requested level is not SES.
      *
      * @spec openspec/specs/document-signing/spec.md
+     * @spec openspec/specs/portal-signing-surface/spec.md
      */
     public function produceSignedArtifact(string $documentContent, array $context): string
     {
+        $level = (string) ($context['level'] ?? 'SES');
+        if ($this->supportsLevel(level: $level) === false) {
+            throw new RuntimeException(
+                'Native provider cannot produce a signed artifact for unsupported level "'.$level.'": '
+                .'the native provider only supports SES (REQ-DDSTR-002).'
+            );
+        }
+
         $secret = $this->config->getValueString('docudesk', 'signing_verification_secret', '');
         if ($secret === '') {
             throw new RuntimeException(
@@ -291,20 +315,34 @@ class NativeSigningProvider implements SigningProviderInterface
         }
 
         $assertion = [
+            'v'         => 2,
             'signer'    => (string) ($context['signer'] ?? 'Unknown'),
             'signers'   => ($context['signers'] ?? []),
             'timestamp' => (string) ($context['timestamp'] ?? (new DateTimeImmutable())->format(DateTimeInterface::ATOM)),
-            'level'     => (string) ($context['level'] ?? 'SES'),
+            'level'     => $level,
             'method'    => 'native',
             'ip'        => (string) ($context['ip'] ?? ''),
         ];
+
+        // Portal-signature evidence binding (portal-signing-surface
+        // REQ-DDPSS-004): fold the verified-assertion-derived portal subject
+        // claims into the SAME assertion object BEFORE the MAC is computed,
+        // so they are covered by it exactly like the in-app signer fields.
+        // Only ever populated by SigningService from a resolved, verified
+        // portal actor — never from raw request input.
+        foreach (['portalSubjectRef', 'portalIdentityRef', 'portalTrust', 'portalJti'] as $portalField) {
+            if (isset($context[$portalField]) === true && $context[$portalField] !== '') {
+                $assertion[$portalField] = (string) $context[$portalField];
+            }
+        }
 
         // Build the canonical (unsigned-marker) form the verifier will recompute:
         // the produced document with an empty marker payload. The HMAC is taken
         // over the hash of that canonical form so the MAC cannot cover itself.
         $canonical   = $this->assembleSignedBytes(documentContent: $documentContent, payload: '');
         $contentHash = hash('sha256', $canonical);
-        $mac         = hash_hmac('sha256', $contentHash, $secret);
+        $payloadCore = AssertionCanonicalizer::canonicalJson(data: $assertion);
+        $mac         = hash_hmac('sha256', $contentHash."\n".$payloadCore, $secret);
 
         $assertion['mac'] = $mac;
         $payload          = base64_encode((string) json_encode($assertion));

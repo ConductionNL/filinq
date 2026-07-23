@@ -24,8 +24,10 @@ namespace OCA\DocuDesk\Service;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Service for immutable signing audit trail via OR audit-trail-immutable.
@@ -62,6 +64,12 @@ class SigningAuditService
      *
      * @param AuditTrailMapper $auditTrailMapper OR audit trail mapper.
      * @param LoggerInterface  $logger           Logger.
+     * @param SettingsService  $settingsService  Settings service (resolves the real
+     *                                          signing-request ObjectEntity via OR's
+     *                                          ObjectService, signing-trust-rebuild
+     *                                          REQ-DDSTR-006).
+     * @param IAppConfig       $config           App config (resolves the signingRequest
+     *                                          register/schema).
      *
      * @return void
      *
@@ -69,13 +77,24 @@ class SigningAuditService
      */
     public function __construct(
         private readonly AuditTrailMapper $auditTrailMapper,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly SettingsService $settingsService,
+        private readonly IAppConfig $config
     ) {
 
     }//end __construct()
 
     /**
      * Log a signing audit event via OR's native audit trail.
+     *
+     * Binds the entry to the REAL signing-request object (register `signing`,
+     * schema `signingRequest`) so its register/schema/object-id linkage is
+     * real and the hash chain anchors to an actual row — closing the #289
+     * residual where every entry was created from a uuid-only `ObjectEntity`
+     * stub (signing-trust-rebuild REQ-DDSTR-006). Fail-soft: when the request
+     * no longer resolves (deleted mid-flight) the entry is still written with
+     * the uuid-only fallback and a warning is logged — an unlinked audit entry
+     * is acceptable, a dropped one is not.
      *
      * @param string               $signingRequestId The signing request UUID.
      * @param string               $action           The action type (must be in VALID_ACTIONS).
@@ -90,7 +109,7 @@ class SigningAuditService
      *
      * @throws RuntimeException If the action is not valid.
      *
-     * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-2.1
+     * @spec openspec/specs/signing-audit-via-or/spec.md
      */
     public function logEvent(
         string $signingRequestId,
@@ -119,14 +138,8 @@ class SigningAuditService
             'extra'            => $metadata,
         ];
 
-        // Create a minimal ObjectEntity so the mapper can populate objectUuid on the entry.
-        // Full OR object resolution (integer ID, register, schema) happens in the broader
-        // migrate-signing-to-or-approval-workflow change where ObjectEntity is available.
-        $objectStub = new ObjectEntity();
-        $objectStub->setUuid($signingRequestId);
-
         $entry = $this->auditTrailMapper->createAuditTrailEntry(
-            object:  $objectStub,
+            object:  $this->resolveSigningRequestObject(signingRequestId: $signingRequestId),
             action:  $actionType,
             context: $context
         );
@@ -136,22 +149,72 @@ class SigningAuditService
     }//end logEvent()
 
     /**
+     * Resolve the real signing-request ObjectEntity for audit binding.
+     *
+     * Uses OR's ObjectService so the returned entity carries a real
+     * register/schema/object-id triple (`AuditTrailMapper::createAuditTrailEntry()`
+     * reads `getId()`/`getRegister()`/`getSchema()`/`getUuid()` off it). Falls
+     * back to a uuid-only stub — WITH a logged warning — when the request has
+     * vanished mid-flight, so an audit entry is still written (fail-soft: an
+     * unlinked entry is acceptable, a dropped one is not).
+     *
+     * @param string $signingRequestId The signing request UUID.
+     *
+     * @return ObjectEntity The resolved entity, or a uuid-only fallback stub.
+     *
+     * @spec openspec/specs/signing-audit-via-or/spec.md
+     */
+    private function resolveSigningRequestObject(string $signingRequestId): ObjectEntity
+    {
+        try {
+            $objectService = $this->settingsService->getObjectService();
+            if ($objectService === null) {
+                throw new RuntimeException('OpenRegister is not available');
+            }
+
+            $register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+            $schema   = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+
+            $object = $objectService->find(id: $signingRequestId, register: $register, schema: $schema);
+            if ($object instanceof ObjectEntity) {
+                return $object;
+            }
+
+            throw new RuntimeException('Signing request did not resolve to an ObjectEntity');
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'DocuDesk: signing audit entry for '.$signingRequestId.' could not resolve the real '
+                .'signing-request object; falling back to a uuid-only stub (unlinked but not dropped): '
+                .$e->getMessage()
+            );
+
+            $objectStub = new ObjectEntity();
+            $objectStub->setUuid($signingRequestId);
+
+            return $objectStub;
+        }//end try
+
+    }//end resolveSigningRequestObject()
+
+    /**
      * Get all audit entries for a signing request from OR's audit trail.
      *
-     * Queries OR's audit trail for all docudesk.signing.* actions and filters
-     * by objectUuid in PHP. AuditTrailMapper::findAll() does not expose a
-     * direct objectUuid filter; action-scoped pre-filtering keeps the result
-     * set bounded to signing events only.
+     * Queries OR's audit trail scoped to the request's object identity
+     * (`object_uuid` filter, pushed into `AuditTrailMapper::findAll()`)
+     * instead of fetching every `docudesk.signing.*` entry fleet-wide and
+     * filtering in PHP — closing the #289 residual (signing-trust-rebuild
+     * REQ-DDSTR-007). The action-type filter is retained alongside it so a
+     * non-signing entry that happened to share an objectUuid (should not
+     * occur, but costs nothing to exclude) can never leak in.
      *
      * @param string $signingRequestId The signing request UUID.
      *
      * @return array<int, array<string, mixed>> Audit entries in chronological order.
      *
-     * @spec openspec/changes/migrate-signing-audit-to-or-audit/tasks.md#D-3.1
+     * @spec openspec/specs/signing-audit-via-or/spec.md
      */
     public function getAuditTrail(string $signingRequestId): array
     {
-        // Pre-filter by all docudesk.signing.* action types to bound the result set.
         $actionFilter = implode(
             ',',
             array_map(
@@ -160,14 +223,11 @@ class SigningAuditService
             )
         );
 
-        $allSigningEntries = $this->auditTrailMapper->findAll(
-            filters: ['action' => $actionFilter]
-        );
-
-        // Filter by objectUuid because findAll() does not support objectUuid directly.
-        $entries = array_filter(
-            $allSigningEntries,
-            fn(AuditTrail $e): bool => $e->getObjectUuid() === $signingRequestId
+        $entries = $this->auditTrailMapper->findAll(
+            filters: [
+                'object_uuid' => $signingRequestId,
+                'action'      => $actionFilter,
+            ]
         );
 
         usort(

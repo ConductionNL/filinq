@@ -23,6 +23,7 @@ namespace OCA\DocuDesk\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\DocuDesk\Service\Signing\AssertionCanonicalizer;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -90,27 +91,66 @@ class SigningVerificationService
             'fileName'   => $file->getName(),
             'signatures' => $signatures,
             'isValid'    => $this->allSignaturesValid(signatures: $signatures),
+            'verdict'    => $this->computeVerdict(signatures: $signatures),
             'verifiedAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
         ];
 
     }//end verifyDocument()
 
     /**
+     * Compute the document-level tri-state verdict from per-signature status.
+     *
+     * `isValid` keeps its strict pre-existing meaning (at least one signature,
+     * all `verified`); `verdict` additionally distinguishes tampering from
+     * mere inability to verify (signing-trust-rebuild REQ-DDSTR-005): all
+     * signatures `verified` -> `verified`; all `invalid` -> `tampered`; all
+     * `unverifiable` -> `unverifiable`; any other combination -> `mixed`.
+     *
+     * @param array<int, array<string, mixed>> $signatures The per-signature results.
+     *
+     * @return string One of verified|tampered|unverifiable|mixed.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    private function computeVerdict(array $signatures): string
+    {
+        if (count($signatures) === 0) {
+            return 'unverifiable';
+        }
+
+        $statuses = array_values(array_unique(array_column($signatures, 'status')));
+
+        if (count($statuses) === 1) {
+            return match ($statuses[0]) {
+                'verified' => 'verified',
+                'invalid' => 'tampered',
+                default => 'unverifiable',
+            };
+        }
+
+        return 'mixed';
+
+    }//end computeVerdict()
+
+    /**
      * Extract signature information from a PDF document
      *
-     * Security note (finding #284): the embedded `/DocuDesk-Signature(...)`
-     * blob is entirely attacker-controlled (anyone can append it to a PDF),
-     * so its mere presence proves nothing. This verifier is therefore
-     * FAIL-CLOSED: a self-asserted blob is reported with `valid => false`
-     * unless its content can be cryptographically verified against the
-     * document (HMAC over the document content-hash using a server-held
-     * secret, see verifyAssertion()). Real PAdES/CMS signature validation is
-     * not yet implemented; embedded `/Type /Sig` entries we cannot verify are
-     * reported as `valid => false` rather than trusted.
+     * Security note (finding #284 / signing-trust-rebuild REQ-DDSTR-005): the
+     * embedded `/DocuDesk-Signature(...)` blob is entirely attacker-controlled
+     * (anyone can append it to a PDF), so its mere presence proves nothing.
+     * This verifier is therefore FAIL-CLOSED and reports one of three honest
+     * states per signature: `verified` (v2 MAC recomputed and matches),
+     * `invalid` (a v2 marker whose MAC fails — tamper evidence), or
+     * `unverifiable` (a legacy v1 marker, or a genuine external `/Type /Sig`
+     * signature DocuDesk cannot yet cryptographically validate). `valid` is
+     * retained as the derived boolean `status === 'verified'` for
+     * response-shape backward compatibility.
      *
      * @param string $pdfContent The PDF file content
      *
      * @return array<int, array<string, mixed>> List of signature records
+     *
+     * @spec openspec/specs/document-signing/spec.md
      */
     private function extractSignatures(string $pdfContent): array
     {
@@ -130,25 +170,32 @@ class SigningVerificationService
             foreach ($dataMatches[1] as $encoded) {
                 $decoded = json_decode(base64_decode($encoded), true);
                 if (is_array($decoded) === true) {
-                    // Fail-closed: only trust the blob if it carries a valid
-                    // server-verifiable HMAC over the document content. A
-                    // self-asserted (unsigned) blob reports valid => false.
+                    $verification = $this->verifyAssertion(
+                        assertion: $decoded,
+                        pdfContent: $pdfContent
+                    );
+
                     $signatures[] = [
                         'signer'    => $decoded['signer'] ?? 'Unknown',
                         'timestamp' => $decoded['timestamp'] ?? '',
                         'level'     => $decoded['level'] ?? 'SES',
                         'method'    => $decoded['method'] ?? 'unknown',
                         'ip'        => $decoded['ip'] ?? '',
-                        'valid'     => $this->verifyAssertion(
-                            assertion: $decoded,
-                            pdfContent: $pdfContent
-                        ),
+                        'status'    => $verification['status'],
+                        'reason'    => $verification['reason'],
+                        // Derived boolean kept for response-shape
+                        // compatibility (REQ-DDSTR-005).
+                        'valid'     => ($verification['status'] === 'verified'),
                     ];
                 }
             }//end foreach
         }//end if
 
         if (empty($signatures) === true) {
+            // A `/Type /Sig` entry with no DocuDesk marker is a genuine
+            // external signature DocuDesk cannot yet validate — honestly
+            // `unverifiable`, never `invalid` (that would mislabel an
+            // inability to verify as tampering, REQ-DDSTR-005).
             for ($i = 0; $i < $matches; $i++) {
                 $signatures[] = [
                     'signer'    => 'External signer',
@@ -156,6 +203,8 @@ class SigningVerificationService
                     'level'     => 'unknown',
                     'method'    => 'external',
                     'ip'        => '',
+                    'status'    => 'unverifiable',
+                    'reason'    => 'external-signature-unsupported',
                     'valid'     => false,
                 ];
             }
@@ -166,30 +215,47 @@ class SigningVerificationService
     }//end extractSignatures()
 
     /**
-     * Cryptographically verify a self-asserted DocuDesk signature blob
+     * Cryptographically verify a self-asserted DocuDesk signature blob (v2)
      *
-     * Verifies an HMAC-SHA256 over the document content-hash (the PDF with
-     * the signature blob's own `mac` field stripped) using a server-held
-     * secret. Without a configured secret or a matching MAC the assertion is
-     * rejected (fail-closed, security finding #284).
+     * v2 assertions carry `v: 2` and a MAC computed as `HMAC-SHA256(secret,
+     * sha256(canonical-document) . "\n" . canonical-JSON(assertion-minus-mac))`
+     * — the identity fields (`signer`, `timestamp`, `level`, `method`, `ip`,
+     * and any bound portal-identity claims) are inside the MAC input, so
+     * rewriting any of them while keeping the original `mac` recomputes to a
+     * DIFFERENT value and reports `invalid` (closes the #284 residual /
+     * portaliq#3 forgeable-signer class, signing-trust-rebuild REQ-DDSTR-001).
+     * An assertion without `v: 2` or without `mac` is a legacy v1 artifact (or
+     * malformed) and reports `unverifiable`/`legacy-assertion-v1` — it MUST
+     * NEVER be reported `verified` (fail-closed).
      *
      * @param array<string, mixed> $assertion  The decoded signature blob
      * @param string               $pdfContent The full PDF content
      *
-     * @return bool True only if the assertion is cryptographically verified
+     * @return array{status: string, reason: string} The tri-state verification result.
+     *
+     * @spec openspec/specs/document-signing/spec.md
      */
-    private function verifyAssertion(array $assertion, string $pdfContent): bool
+    private function verifyAssertion(array $assertion, string $pdfContent): array
     {
         $mac = $assertion['mac'] ?? '';
         if (is_string($mac) === false || $mac === '') {
-            // No server-issued MAC present: cannot be trusted.
-            return false;
+            // No server-issued MAC present: legacy/malformed, never trusted.
+            return ['status' => 'unverifiable', 'reason' => 'legacy-assertion-v1'];
+        }
+
+        if ((int) ($assertion['v'] ?? 0) !== 2) {
+            // A pre-rebuild (v1) assertion carried a MAC over the content-hash
+            // ONLY — its identity fields were never covered. Reporting it
+            // `verified` would resurrect the #284 forgery for old artifacts;
+            // reporting it `invalid` would mislabel a merely-unverifiable
+            // legacy artifact as tampered. Fail-closed to `unverifiable`.
+            return ['status' => 'unverifiable', 'reason' => 'legacy-assertion-v1'];
         }
 
         $secret = $this->getSigningSecret();
         if ($secret === '') {
             // No server secret configured: nothing can be verified.
-            return false;
+            return ['status' => 'unverifiable', 'reason' => 'signing-secret-not-configured'];
         }
 
         // Recompute the MAC over the *canonical* form of the document — the
@@ -206,9 +272,22 @@ class SigningVerificationService
         // the canonical form, retained for the finding #284 fail-closed intent).
         $canonical   = $this->stripAssertionMac(pdfContent: $canonical, mac: $mac);
         $contentHash = hash('sha256', $canonical);
-        $expected    = hash_hmac('sha256', $contentHash, $secret);
 
-        return hash_equals($expected, $mac);
+        // v2: the MAC covers the content-hash AND the canonical-JSON of the
+        // assertion fields (minus `mac` itself) — recompute over BOTH parts so
+        // any rewritten identity field (signer, timestamp, level, method, ip,
+        // or a bound portal-identity claim) invalidates the MAC.
+        $assertionWithoutMac = $assertion;
+        unset($assertionWithoutMac['mac']);
+        $payloadCore = AssertionCanonicalizer::canonicalJson(data: $assertionWithoutMac);
+
+        $expected = hash_hmac('sha256', $contentHash."\n".$payloadCore, $secret);
+
+        if (hash_equals($expected, $mac) === false) {
+            return ['status' => 'invalid', 'reason' => 'mac-mismatch'];
+        }
+
+        return ['status' => 'verified', 'reason' => 'ok'];
 
     }//end verifyAssertion()
 

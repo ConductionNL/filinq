@@ -191,6 +191,8 @@ class SigningServiceTest extends TestCase
             'signerIds'       => [],
         ];
 
+        $this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+
         // First saveObject call creates the request; subsequent calls update signerIds.
         $this->objectService->expects($this->atLeastOnce())
             ->method('saveObject')
@@ -225,6 +227,8 @@ class SigningServiceTest extends TestCase
     public function testCreateRequestPersistsProvenance(): void
     {
         $captured = [];
+
+        $this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
 
         $this->objectService->method('saveObject')->willReturnCallback(
             function (array $object) use (&$captured): array {
@@ -269,6 +273,8 @@ class SigningServiceTest extends TestCase
     public function testCreateRequestInternalHasNoProvenance(): void
     {
         $captured = [];
+
+        $this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
 
         $this->objectService->method('saveObject')->willReturnCallback(
             function (array $object) use (&$captured): array {
@@ -863,4 +869,233 @@ class SigningServiceTest extends TestCase
         $this->assertFalse($results['req-001']['success']);
 
     }//end testBulkSignReturnsResultsPerRequest()
+
+    /**
+     * Build a permissive SigningProviderInterface double (supportsLevel: true).
+     *
+     * @return \OCA\DocuDesk\Service\Signing\SigningProviderInterface&MockObject
+     */
+    private function makeSupportingProvider(): \OCA\DocuDesk\Service\Signing\SigningProviderInterface
+    {
+        $provider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+        $provider->method('supportsLevel')->willReturn(true);
+
+        return $provider;
+
+    }//end makeSupportingProvider()
+
+    /**
+     * Provider/level honesty (signing-trust-rebuild REQ-DDSTR-002 point 1):
+     * createRequest() rejects a provider/level pair the provider does not
+     * support with HTTP 400, before anything is persisted.
+     *
+     * @return void
+     */
+    public function testCreateRequestRejectsUnsupportedProviderLevelPair(): void
+    {
+        $refusingProvider = $this->createMock(\OCA\DocuDesk\Service\Signing\SigningProviderInterface::class);
+        $refusingProvider->method('supportsLevel')->willReturn(false);
+        $this->providerFactory->method('getProvider')->willReturn($refusingProvider);
+
+        $this->objectService->expects($this->never())->method('saveObject');
+
+        try {
+            $this->service->createRequest(
+                data: [
+                    'documentFileId' => 'file-001',
+                    'documentName'   => 'contract.pdf',
+                    'signatureLevel' => 'QES',
+                    'signingMode'    => 'sequential',
+                    'provider'       => 'native',
+                ]
+            );
+            $this->fail('createRequest() must reject an unsupported provider/level pair.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(400, $e->getCode());
+            $this->assertStringContainsString('does not support signature level', $e->getMessage());
+        }
+
+    }//end testCreateRequestRejectsUnsupportedProviderLevelPair()
+
+    /**
+     * createRequest() rejects an unknown provider name with HTTP 400, before
+     * anything is persisted (signing-trust-rebuild REQ-DDSTR-002 point 1).
+     *
+     * @return void
+     */
+    public function testCreateRequestRejectsUnknownProvider(): void
+    {
+        $this->providerFactory->method('getProvider')->willThrowException(
+            new RuntimeException('Signing provider not available: bogus')
+        );
+
+        $this->objectService->expects($this->never())->method('saveObject');
+
+        try {
+            $this->service->createRequest(
+                data: [
+                    'documentFileId' => 'file-001',
+                    'documentName'   => 'contract.pdf',
+                    'signatureLevel' => 'SES',
+                    'signingMode'    => 'sequential',
+                    'provider'       => 'bogus',
+                ]
+            );
+            $this->fail('createRequest() must reject an unknown provider.');
+        } catch (RuntimeException $e) {
+            $this->assertSame(400, $e->getCode());
+            $this->assertStringContainsString('Unknown signing provider', $e->getMessage());
+        }
+
+    }//end testCreateRequestRejectsUnknownProvider()
+
+    /**
+     * decline() rejects a COMPLETED request via the status machine — the
+     * stored status is unchanged and the signer record is NOT mutated
+     * (signing-trust-rebuild REQ-DDSTR-003, closing the #282 residual where
+     * decline() skipped isValidTransition() entirely).
+     *
+     * @return void
+     */
+    public function testDeclineRejectedOnCompletedRequest(): void
+    {
+        $requestData = [
+            'id'     => 'req-001',
+            'status' => 'COMPLETED',
+        ];
+
+        $this->objectService->method('find')->willReturn($requestData);
+        // The gate must reject BEFORE any signer/request mutation.
+        $this->objectService->expects($this->never())->method('saveObject');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot decline request in status');
+
+        $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'changed my mind');
+
+    }//end testDeclineRejectedOnCompletedRequest()
+
+    /**
+     * decline() from a signable (IN_PROGRESS) state still works: the signer
+     * record becomes DECLINED with the reason and the request becomes
+     * DECLINED (signing-trust-rebuild REQ-DDSTR-003).
+     *
+     * @return void
+     */
+    public function testDeclineHappyPathFromInProgress(): void
+    {
+        $requestData = [
+            'id'             => 'req-001',
+            'status'         => 'IN_PROGRESS',
+            'signatureLevel' => 'SES',
+            'provider'       => 'native',
+        ];
+        $signerData  = [
+            'id'               => 'signer-001',
+            'signingRequestId' => 'req-001',
+            'userId'           => 'alice',
+            'status'           => 'PENDING',
+        ];
+
+        $this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+        $this->objectService->method('saveObject')->willReturnArgument(0);
+
+        $this->auditService->expects($this->once())
+            ->method('logEvent')
+            ->with($this->equalTo('req-001'), $this->equalTo('DECLINED'));
+
+        $result = $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'changed my mind');
+
+        $this->assertSame('DECLINED', $result['status']);
+        $this->assertSame('changed my mind', $result['declineReason']);
+
+    }//end testDeclineHappyPathFromInProgress()
+
+    /**
+     * decline() throws when signer record belongs to a different request
+     * (C4 check preserved by the rewritten decline()).
+     *
+     * @return void
+     */
+    public function testDeclineThrowsOnSignerRequestMismatch(): void
+    {
+        $requestData = ['id' => 'req-001', 'status' => 'IN_PROGRESS'];
+        $signerData  = [
+            'id'               => 'signer-001',
+            'signingRequestId' => 'req-other',
+            'userId'           => 'alice',
+            'status'           => 'PENDING',
+        ];
+
+        $this->objectService->method('find')->willReturnOnConsecutiveCalls($requestData, $signerData);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('does not belong to this signing request');
+
+        $this->service->decline(requestId: 'req-001', signerId: 'signer-001', reason: 'no');
+
+    }//end testDeclineThrowsOnSignerRequestMismatch()
+
+    /**
+     * Provider/level honesty on the completion path (signing-trust-rebuild
+     * REQ-DDSTR-002 point 2): an unknown/unregistered provider name on a
+     * completing request fails loudly — NO fallback to getActiveProvider().
+     *
+     * @return void
+     */
+    public function testCompletionFailsLoudlyOnUnknownProviderNoFallback(): void
+    {
+        $request = [
+            'id'              => 'req-001',
+            'status'          => 'IN_PROGRESS',
+            'signatureLevel'  => 'SES',
+            'provider'        => 'bogus',
+            'initiatorUserId' => 'alice',
+            'documentFileId'  => '42',
+            'signerIds'       => ['signer-001'],
+        ];
+        $signerPending = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+        $signerSigned  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'SIGNED'];
+
+        $this->objectService->method('find')->willReturnOnConsecutiveCalls(
+            $request,
+            $signerPending,
+            $signerSigned,
+            $request
+        );
+
+        $sawCompleted = false;
+        $this->objectService->method('saveObject')->willReturnCallback(
+            function (array $object) use (&$sawCompleted): array {
+                if (($object['status'] ?? '') === 'COMPLETED') {
+                    $sawCompleted = true;
+                }
+
+                return $object;
+            }
+        );
+
+        $this->providerFactory->expects($this->once())
+            ->method('getProvider')
+            ->with($this->equalTo('bogus'))
+            ->willThrowException(new RuntimeException('Signing provider not available: bogus'));
+        $this->providerFactory->expects($this->never())->method('getActiveProvider');
+
+        $file = $this->createMock(\OCP\Files\File::class);
+        $file->method('getContent')->willReturn('original-bytes');
+        $folder = $this->createMock(\OCP\Files\Folder::class);
+        $folder->method('getById')->willReturn([$file]);
+        $this->rootFolder->method('getUserFolder')->willReturn($folder);
+
+        $threw = false;
+        try {
+            $this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+        } catch (RuntimeException $e) {
+            $threw = true;
+        }
+
+        $this->assertTrue($threw, 'Completion must fail loudly for an unknown provider.');
+        $this->assertFalse($sawCompleted, 'The request must NOT complete via a silently substituted provider.');
+
+    }//end testCompletionFailsLoudlyOnUnknownProviderNoFallback()
 }//end class

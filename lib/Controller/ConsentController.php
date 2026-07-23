@@ -109,18 +109,34 @@ class ConsentController extends Controller
     /**
      * Build an error JSON response with logging
      *
+     * Oracle-free (signing-trust-rebuild REQ-DDSTR-009, closing the #283
+     * residual): the response body carries ONLY a generic translated message —
+     * never the exception text, a record identifier, or any other detail that
+     * differs by failure class. Full detail goes to the logger only. Mirrors
+     * the fix already shipped on `SigningController::errorResponse()`
+     * (docudesk#100 / Wilco #6). A legitimate HTTP status carried on the
+     * exception code (e.g. 400 for invalid input) is still honoured so client
+     * errors are not masked as a generic 500.
+     *
      * @param string    $message   The log message prefix
      * @param Exception $exception The exception
      *
      * @return JSONResponse The error response
+     *
+     * @spec openspec/specs/consent-endpoint-hardening/spec.md
      */
     private function errorResponse(string $message, Exception $exception): JSONResponse
     {
         $this->logger->error($message.$exception->getMessage(), ['exception' => $exception]);
 
+        $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
+        if ($exception->getCode() >= 400 && $exception->getCode() < 600) {
+            $statusCode = $exception->getCode();
+        }
+
         return new JSONResponse(
-            ['error' => $this->l10n->t($message.'%s', [$exception->getMessage()])],
-            500
+            ['error' => $this->l10n->t($message)],
+            $statusCode
         );
 
     }//end errorResponse()
@@ -186,7 +202,7 @@ class ConsentController extends Controller
                 )
             );
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to list consents: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to list consents', exception: $e);
         }//end try
 
     }//end index()
@@ -234,7 +250,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($result, 201);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to create consent: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to create consent', exception: $e);
         }//end try
 
     }//end create()
@@ -287,7 +303,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($consent);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to get consent: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to get consent', exception: $e);
         }//end try
 
     }//end show()
@@ -348,7 +364,7 @@ class ConsentController extends Controller
                 Http::STATUS_FORBIDDEN
             );
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to update consent: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to update consent', exception: $e);
         }//end try
 
     }//end update()
@@ -402,7 +418,7 @@ class ConsentController extends Controller
 
             return new JSONResponse($consents);
         } catch (Exception $e) {
-            return $this->errorResponse(message: 'Failed to get consents for document: ', exception: $e);
+            return $this->errorResponse(message: 'Failed to get consents for document', exception: $e);
         }//end try
 
     }//end byDocument()
