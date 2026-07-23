@@ -18,12 +18,20 @@ server-side resolution (no audit trail of what was queried, no reuse of
 OpenRegister's filtering/sorting, and the caller needs read access to the
 raw register itself).
 
-OpenRegister's `ObjectService::searchObjectsBySlug()` already resolves
-register/schema slugs and delegates to `searchObjects()` on the standard
-search path — including external DBAL-backed virtual registers (e.g. a
-`spectr-live` register backed by an external Postgres table), which became
-searchable through this exact path as of openregister#2043. So the resolver
-data is a single new method away; the data source is already there.
+OpenRegister's `ObjectService::searchObjectsPaginated()` — the same method
++ `setRegister()`/`setSchema()` context pattern `ObjectsController::index()`
+itself uses — already resolves register/schema slugs (both setters accept
+slug strings) and, when the resolved schema declares an
+`x-openregister-object-source`, delegates live to that provider instead of
+the magic table/generic storage. External DBAL-backed virtual registers
+(e.g. a `spectr-live` register backed by an external Postgres table) are
+searchable through this exact path. (Note: the sibling
+`searchObjects()`/`searchObjectsBySlug()` methods do NOT check for an
+object-source — they only ever read the magic table / generic object
+storage, so they silently return nothing for a DBAL-backed schema; verified
+live against `spectr-live` during implementation, see design note below.)
+So the resolver data is a couple of method calls away; the data source is
+already there.
 
 Priority **should-have**.
 
@@ -83,3 +91,25 @@ Priority **should-have**.
   already passed through opaquely).
 - No register/schema/manifest changes; no new routes (existing
   generate/preview routes gain a new optional request field).
+
+## Design note: searchObjectsBySlug() vs. searchObjectsPaginated()
+
+The first implementation of `ListReferenceResolver::resolveList()` used
+`ObjectService::searchObjectsBySlug()` (a slug-aware wrapper the task
+guidance suggested). Live verification against the real `spectr-live`
+register (`app_id`-filterable `competitors` schema) returned an empty array
+every time, with no error. Tracing `searchObjectsBySlug()` →
+`searchObjects()` → `QueryHandler::searchObjects()` showed this path never
+consults `Schema::getObjectSource()` — it only reads the magic table or
+generic object storage, both empty for a purely-external DBAL-backed
+schema. Only `ObjectService::searchObjectsPaginated()` checks
+`$this->currentSchema` (set via `setRegister()`/`setSchema()`, both of
+which accept slug strings directly) and delegates to the object-source
+provider via `paginateObjectSource()` when one is configured — the exact
+mechanism `ObjectsController::index()` itself uses for the real
+`GET /apps/openregister/api/objects/{register}/{schema}` endpoint. Fixed to
+use `setRegister()`/`setSchema()` + `searchObjectsPaginated()`; re-verified
+live with real rows returned. `tests/stubs/OpenRegisterStubs.php` (the
+PHPUnit-mocking stand-in for `OCA\OpenRegister\Service\ObjectService`)
+gained `setRegister()`/`setSchema()`/`getRegister()`/`getSchema()` stubs
+to make this mockable.
