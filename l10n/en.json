@@ -743,7 +743,17 @@
         "No import content provided": "No import content provided",
         "Not authenticated": "Not authenticated",
         "Term not found": "Term not found",
-        "You do not have access to this custom dictionary": "You do not have access to this custom dictionary"
+        "You do not have access to this custom dictionary": "You do not have access to this custom dictionary",
+        "Confidentiality label from files_confidential": "Confidentiality label from files_confidential",
+        "Confidentiality Labels": "Confidentiality Labels",
+        "Confidentiality: {label}": "Confidentiality: {label}",
+        "Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.": "Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.",
+        "Expected a JSON object mapping label names to numbers.": "Expected a JSON object mapping label names to numbers.",
+        "Invalid JSON — the previous vocabulary was kept.": "Invalid JSON — the previous vocabulary was kept.",
+        "Label vocabulary (JSON)": "Label vocabulary (JSON)",
+        "Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.": "Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.",
+        "Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.": "Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.",
+        "Prioritise higher-confidentiality files in batch/folder analysis": "Prioritise higher-confidentiality files in batch/folder analysis"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
