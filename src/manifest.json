@@ -85,6 +85,20 @@
 			"order": 91
 		}
 	],
+	"deepLinks": [
+		{
+			"registerSlug": "templates",
+			"schemaSlug": "template",
+			"urlTemplate": "/apps/docudesk/templates/{uuid}",
+			"displayName": "Template"
+		},
+		{
+			"registerSlug": "signing",
+			"schemaSlug": "signingRequest",
+			"urlTemplate": "/apps/docudesk/signing/{uuid}",
+			"displayName": "Signing request"
+		}
+	],
 	"pages": [
 		{
 			"id": "Dashboard",
