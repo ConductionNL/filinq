@@ -239,6 +239,46 @@
 			</div>
 		</NcSettingsSection>
 
+		<!-- files-confidential-labels — read-only signal ingested from
+		     files_confidential (TSCP/BAILS system tags). No policy/enforcement
+		     of its own: the vocabulary controls which tag names are recognised,
+		     and the priority hint (off by default) only reorders batch/folder
+		     analysis. -->
+		<NcSettingsSection
+			:name="t('docudesk', 'Confidentiality Labels')"
+			:description="t('docudesk', 'Consume confidentiality labels already assigned by files_confidential (TSCP/BAILS) as a read-only sensitivity signal. This never blocks, redacts or gates anything.')">
+			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('docudesk', 'Prioritise higher-confidentiality files in batch/folder analysis') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					:checked="settings['docudesk.confidentiality.prioritise_analysis']"
+					type="switch"
+					@update:checked="settings['docudesk.confidentiality.prioritise_analysis'] = $event" />
+				<div class="setting-description">
+					{{ t('docudesk', 'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.') }}
+				</div>
+			</div>
+
+			<div class="setting-item">
+				<div class="input-field">
+					<label for="confidentiality-vocabulary">{{ t('docudesk', 'Label vocabulary (JSON)') }}</label>
+					<textarea
+						id="confidentiality-vocabulary"
+						v-model="confidentialityVocabularyText"
+						rows="4"
+						class="confidentiality-vocabulary-input"
+						@blur="onConfidentialityVocabularyBlur" />
+				</div>
+				<NcNoteCard v-if="confidentialityVocabularyError" type="error">
+					{{ confidentialityVocabularyError }}
+				</NcNoteCard>
+				<div class="setting-description">
+					{{ t('docudesk', 'Maps files_confidential tag names to a normalised level (higher = more confidential). Unmatched tags are ignored. Default: Public=0, Internal=1, Confidential=2, Secret=3.') }}
+				</div>
+			</div>
+		</NcSettingsSection>
+
 		<NcSettingsSection
 			:name="t('docudesk', 'Data Storage')"
 			:description="t('docudesk', 'Configure Open Register integration for consent data storage')">
@@ -526,7 +566,15 @@ export default {
 				signing_default_level: 'SES',
 				signing_request_expiry_days: 30,
 				'docudesk.anonymisation.default_output_format': 'pdf-only',
+				// files-confidential-labels — off by default (design.md D3).
+				'docudesk.confidentiality.prioritise_analysis': false,
+				'docudesk.confidentiality.label_vocabulary': { Public: 0, Internal: 1, Confidential: 2, Secret: 3 },
 			},
+			// Editable JSON text backing 'docudesk.confidentiality.label_vocabulary'
+			// — kept separate from `settings` so an in-progress edit can be
+			// invalid JSON without corrupting the object that gets submitted.
+			confidentialityVocabularyText: '',
+			confidentialityVocabularyError: null,
 			ocrLanguages: {
 				nld: true,
 				eng: true,
@@ -662,6 +710,12 @@ export default {
 					this.settings['docudesk.anonymisation.default_output_format'] = data['docudesk.anonymisation.default_output_format'] ?? 'pdf-only'
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes = data['docudesk.anonymisation.enabled_entity_types'] || []
+
+					// files-confidential-labels — read-only signal settings.
+					this.settings['docudesk.confidentiality.prioritise_analysis'] = data['docudesk.confidentiality.prioritise_analysis'] ?? false
+					this.settings['docudesk.confidentiality.label_vocabulary'] = data['docudesk.confidentiality.label_vocabulary']
+						|| { Public: 0, Internal: 1, Confidential: 2, Secret: 3 }
+					this.confidentialityVocabularyText = JSON.stringify(this.settings['docudesk.confidentiality.label_vocabulary'], null, 2)
 
 					// Parse OCR languages
 					const ocrLangStr = data.ocr_languages || 'nld+eng'
@@ -801,6 +855,11 @@ export default {
 				'docudesk.grondslagen.entity_type_bases': this.entityTypeBases,
 				// Sent as an array; the backend json-encodes it for storage.
 				'docudesk.anonymisation.enabled_entity_types': this.enabledEntityTypes,
+				// files-confidential-labels — off by default; reorders analysis
+				// only, never gates/blocks/redacts (design.md D3).
+				'docudesk.confidentiality.prioritise_analysis': this.settings['docudesk.confidentiality.prioritise_analysis'] ? '1' : '0',
+				// Sent as an object; the backend json-encodes it for storage.
+				'docudesk.confidentiality.label_vocabulary': this.settings['docudesk.confidentiality.label_vocabulary'],
 			}
 
 			// Add register/schema configs
@@ -827,6 +886,35 @@ export default {
 					this.saving = false
 				})
 		},
+		/**
+		 * Validate + commit the edited confidentiality-label vocabulary JSON.
+		 *
+		 * Parses `confidentialityVocabularyText` on blur; a valid object of
+		 * string keys to numeric levels replaces
+		 * `settings['docudesk.confidentiality.label_vocabulary']` (submitted
+		 * by `saveAll`). Invalid JSON shows an inline error and leaves the
+		 * previously-saved vocabulary untouched (files-confidential-labels).
+		 *
+		 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-read-a-files-confidentiality-label-availability-guarded-req-ddfcl-001
+		 */
+		onConfidentialityVocabularyBlur() {
+			let parsed
+			try {
+				parsed = JSON.parse(this.confidentialityVocabularyText)
+			} catch {
+				this.confidentialityVocabularyError = t('docudesk', 'Invalid JSON — the previous vocabulary was kept.')
+				return
+			}
+
+			if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+				this.confidentialityVocabularyError = t('docudesk', 'Expected a JSON object mapping label names to numbers.')
+				return
+			}
+
+			this.confidentialityVocabularyError = null
+			this.settings['docudesk.confidentiality.label_vocabulary'] = parsed
+		},
+
 		/**
 		 * Handle the anonymiser backend warning being dismissed.
 		 * Hides the banner immediately without a page reload.
@@ -934,6 +1022,18 @@ export default {
 	border-radius: var(--border-radius);
 	background-color: var(--color-main-background);
 	color: var(--color-main-text);
+}
+
+.confidentiality-vocabulary-input {
+	width: 100%;
+	max-width: 420px;
+	padding: 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+	background-color: var(--color-main-background);
+	color: var(--color-main-text);
+	font-family: var(--font-face-monospace, monospace);
+	resize: vertical;
 }
 
 .ocr-languages {

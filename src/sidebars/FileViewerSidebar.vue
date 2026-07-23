@@ -187,6 +187,17 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 					@toggle="onToggleEntity(idx)"
 					@set-bases="anonymizationStore.setEntityBases(entry, idx, $event)" />
 			</div>
+			<!-- Read-only files_confidential sensitivity signal (files-confidential-labels).
+			     Informational only — carries no action, hidden when no label resolved.
+			     Independent of the state chain above so it stays visible alongside
+			     whichever review state is currently showing. -->
+			<div v-if="entry && entry.confidentialityLabel" class="confidentiality-chip-row">
+				<span
+					:class="'confidentiality-chip confidentiality-level-' + (entry.confidentialityLevel ?? 0)"
+					:title="t('docudesk', 'Confidentiality label from files_confidential')">
+					{{ t('docudesk', 'Confidentiality: {label}', { label: entry.confidentialityLabel }) }}
+				</span>
+			</div>
 			<ProhibitionBlockedDialog
 				:open="prohibitionOpen"
 				:block="prohibitionBlock"
@@ -1440,6 +1451,41 @@ export default {
 .entities-list {
 	display: flex;
 	flex-direction: column;
+}
+
+/* Read-only files_confidential chip (files-confidential-labels). Level
+ * colours mirror the existing risk-badge scale (info/warning/error) so
+ * the two read-only signals read consistently. */
+.confidentiality-chip-row {
+	padding: 4px 12px 0;
+}
+
+.confidentiality-chip {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill);
+	font-size: 0.75rem;
+	font-weight: 500;
+}
+
+.confidentiality-level-0 {
+	background-color: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+}
+
+.confidentiality-level-1 {
+	background-color: var(--color-info);
+	color: var(--color-info-text);
+}
+
+.confidentiality-level-2 {
+	background-color: var(--color-warning);
+	color: var(--color-warning-text);
+}
+
+.confidentiality-level-3 {
+	background-color: var(--color-error);
+	color: var(--color-error-text);
 }
 
 /* Add new data panel (add mode). */

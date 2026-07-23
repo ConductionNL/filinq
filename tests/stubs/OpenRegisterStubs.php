@@ -188,6 +188,60 @@ class ObjectService
         return [];
 
     }//end searchObjectsBySlug()
+
+    /**
+     * Set the current register context.
+     *
+     * Loosely typed (vs. the real `Register|string|int`) so the stub does
+     * not need to know about OpenRegister's `Register` entity class.
+     *
+     * @param mixed $register Register slug/ID, or a Register-shaped object
+     *
+     * @return static
+     */
+    public function setRegister($register)
+    {
+        return $this;
+
+    }//end setRegister()
+
+    /**
+     * Set the current schema context.
+     *
+     * Loosely typed (vs. the real `Schema|string|int`) so the stub does not
+     * need to know about OpenRegister's `Schema` entity class.
+     *
+     * @param mixed $schema Schema slug/ID, or a Schema-shaped object
+     *
+     * @return static
+     */
+    public function setSchema($schema)
+    {
+        return $this;
+
+    }//end setSchema()
+
+    /**
+     * Get the current register context's resolved numeric ID.
+     *
+     * @return int|null
+     */
+    public function getRegister()
+    {
+        return null;
+
+    }//end getRegister()
+
+    /**
+     * Get the current schema context's resolved numeric ID.
+     *
+     * @return int|null
+     */
+    public function getSchema()
+    {
+        return null;
+
+    }//end getSchema()
 }//end class
 
 /**

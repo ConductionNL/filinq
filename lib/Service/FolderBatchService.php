@@ -16,6 +16,7 @@
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-sequential-batch-extraction
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-2
+ * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,6 +36,7 @@ use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\Files\NotFoundException;
+use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -53,21 +55,40 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
+ * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
 class FolderBatchService
 {
     /**
+     * App config key for the optional confidentiality-based analysis-priority
+     * hint. Defaults to off — ordering is byte-for-byte identical to the
+     * pre-change behaviour until an admin opts in (files-confidential-labels,
+     * design.md D3).
+     *
+     * @var string
+     */
+    private const PRIORITISE_ANALYSIS_KEY = 'docudesk.confidentiality.prioritise_analysis';
+
+    /**
      * Constructor for FolderBatchService
      *
-     * @param LoggerInterface      $logger       Logger for error reporting
-     * @param IRootFolder          $rootFolder   Root folder for file operations
-     * @param IUserSession         $userSession  User session for current user
-     * @param BatchStateService    $stateService Batch state management
-     * @param IJobList             $jobList      Background job list
-     * @param AnonymizationService $anonService  Anonymization/extraction service
-     * @param OutputLayoutResolver $layout       Output-layout helper (used here to
-     *                                           identify legacy `_anonymized` outputs
-     *                                           and exclude them from source discovery).
+     * @param LoggerInterface             $logger               Logger for error reporting
+     * @param IRootFolder                 $rootFolder           Root folder for file operations
+     * @param IUserSession                $userSession          User session for current user
+     * @param BatchStateService           $stateService         Batch state management
+     * @param IJobList                    $jobList              Background job list
+     * @param AnonymizationService        $anonService          Anonymization/extraction service
+     * @param OutputLayoutResolver        $layout               Output-layout helper (used here to
+     *                                                          identify legacy `_anonymized` outputs
+     *                                                          and exclude them from source discovery).
+     * @param ConfidentialityLabelService $confidentialityLabel Read-only files_confidential signal,
+     *                                                          used (only when
+     *                                                          `docudesk.confidentiality.prioritise_analysis`
+     *                                                          is on) as a secondary, tie-breaking
+     *                                                          sort key so higher-confidentiality
+     *                                                          files are analysed sooner
+     *                                                          (files-confidential-labels).
+     * @param IAppConfig                  $appConfig            App configuration for the priority-hint flag
      *
      * @return void
      */
@@ -78,7 +99,9 @@ class FolderBatchService
         private readonly BatchStateService $stateService,
         private readonly IJobList $jobList,
         private readonly AnonymizationService $anonService,
-        private readonly OutputLayoutResolver $layout
+        private readonly OutputLayoutResolver $layout,
+        private readonly ConfidentialityLabelService $confidentialityLabel,
+        private readonly IAppConfig $appConfig
     ) {
 
     }//end __construct()
@@ -336,6 +359,7 @@ class FolderBatchService
      *
      * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
      * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
      */
     private function enumerateFiles(Folder $folder): array
     {
@@ -353,9 +377,63 @@ class FolderBatchService
             $files[] = $node;
         }
 
-        return $files;
+        return $this->applyConfidentialityPriorityOrdering(files: $files);
 
     }//end enumerateFiles()
+
+    /**
+     * Optionally reorder enumerated files by confidentiality level.
+     *
+     * A pure suggestion signal: when
+     * `docudesk.confidentiality.prioritise_analysis` is off (default),
+     * returns `$files` untouched — ordering stays byte-for-byte identical to
+     * today. When on, sorts by the normalised confidentiality level
+     * descending (unlabelled files = level 0), using each file's original
+     * position as an explicit, deterministic tie-break — it never skips,
+     * blocks or redacts anything, it only reorders the work queue
+     * (files-confidential-labels, design.md D3).
+     *
+     * @param File[] $files Enumerated files, in their original (directory-listing) order
+     *
+     * @return File[] Files in analysis order
+     *
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
+     */
+    private function applyConfidentialityPriorityOrdering(array $files): array
+    {
+        if ($this->appConfig->getValueBool('docudesk', self::PRIORITISE_ANALYSIS_KEY, false) === false) {
+            return $files;
+        }
+
+        $decorated = [];
+        foreach (array_values($files) as $index => $file) {
+            $level = 0;
+            $label = $this->confidentialityLabel->getLabelForFile($file->getId());
+            if ($label !== null) {
+                $level = $label->getLevel();
+            }
+
+            $decorated[] = [
+                'level' => $level,
+                'index' => $index,
+                'file'  => $file,
+            ];
+        }
+
+        usort(
+            $decorated,
+            static function (array $a, array $b): int {
+                if ($a['level'] !== $b['level']) {
+                    return $b['level'] <=> $a['level'];
+                }
+
+                return $a['index'] <=> $b['index'];
+            }
+        );
+
+        return array_map(static fn (array $entry) => $entry['file'], $decorated);
+
+    }//end applyConfidentialityPriorityOrdering()
 
     /**
      * Get the current user ID

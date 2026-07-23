@@ -60,6 +60,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
+ * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
 class AnonymizationService
 {
@@ -147,6 +148,13 @@ class AnonymizationService
      *                                                            internally.
      * @param CustomDictionaryMatchService $customDictionaryMatch Pure matcher run per active
      *                                                            dictionary during detection.
+     * @param ConfidentialityLabelService  $confidentialityLabel  Reads a file's existing
+     *                                                            files_confidential TSCP/BAILS
+     *                                                            classification (availability-
+     *                                                            guarded; null when absent) so
+     *                                                            it can be surfaced alongside
+     *                                                            detected entities and risk
+     *                                                            (files-confidential-labels).
      *
      * @return void
      */
@@ -163,7 +171,8 @@ class AnonymizationService
         private readonly PdfConversionService $pdfConversion,
         private readonly EmlPdfAssemblyService $emlAssembly,
         private readonly CustomDictionaryService $customDictionary,
-        private readonly CustomDictionaryMatchService $customDictionaryMatch
+        private readonly CustomDictionaryMatchService $customDictionaryMatch,
+        private readonly ConfidentialityLabelService $confidentialityLabel
     ) {
 
     }//end __construct()
@@ -206,6 +215,14 @@ class AnonymizationService
      * returned regardless — the pass is best-effort and never blocks them
      * (custom-dictionary-recognition, design.md §D3).
      *
+     * When the file carries a `files_confidential` TSCP/BAILS confidentiality
+     * label (availability-guarded — see ConfidentialityLabelService), the
+     * response also includes `confidentialityLabel` (display string) and
+     * `confidentialityLevel` (normalised int). Both fields are omitted when no
+     * label resolves (app absent, file untagged, or no vocabulary match) —
+     * this is a read-only signal, never a block/gate/redaction
+     * (files-confidential-labels).
+     *
      * By default this is a resume-friendly, DB-cached lookup: when the file is
      * unchanged, OpenRegister's `isSourceUpToDate` short-circuit returns the
      * existing chunks and `EntityRelation` rows (with their skip/bases
@@ -225,6 +242,7 @@ class AnonymizationService
      *
      * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-5
      * @spec openspec/specs/anonymization/spec.md
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-surface-the-label-in-the-document-report-and-entity-review-context-req-ddfcl-002
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Force flag mirrors the OR API.
      */
@@ -296,12 +314,24 @@ class AnonymizationService
                 riskLevelService: $riskLevelService
             );
 
-            return [
+            $result = [
                 'entities'                => $normalized,
                 'entityCount'             => count($entities),
                 'riskLevel'               => $riskLevel,
                 'customDictionaryWarning' => $customDictionaryWarning,
             ];
+
+            // Read-only sensitivity signal from files_confidential (or null
+            // when the app is absent / the file is unlabelled / no vocabulary
+            // match) — surfaced alongside entities and risk, never blocking
+            // detection (files-confidential-labels, design.md D2).
+            $confidentialityLabel = $this->confidentialityLabel->getLabelForFile($fileId);
+            if ($confidentialityLabel !== null) {
+                $result['confidentialityLabel'] = $confidentialityLabel->getLabel();
+                $result['confidentialityLevel'] = $confidentialityLabel->getLevel();
+            }
+
+            return $result;
         } catch (Exception $e) {
             $this->logger->error(
                 'Failed to extract and detect entities: '.$e->getMessage(),

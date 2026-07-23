@@ -179,7 +179,8 @@ class AnonymizationLinkServiceTest extends TestCase
             pdfConversion: $this->createMock(originalClassName: PdfConversionService::class),
             emlAssembly: $this->createMock(originalClassName: EmlPdfAssemblyService::class),
             customDictionary: $this->createMock(originalClassName: CustomDictionaryService::class),
-            customDictionaryMatch: new CustomDictionaryMatchService()
+            customDictionaryMatch: new CustomDictionaryMatchService(),
+            confidentialityLabel: $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConfidentialityLabelService::class)
         );
 
     }//end buildService()

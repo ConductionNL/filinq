@@ -112,16 +112,18 @@ class ListReferenceResolverTest extends TestCase
         ];
 
         $this->objectService->expects($this->once())
-            ->method('searchObjectsBySlug')
-            ->with(
-                $this->equalTo('spectr-live'),
-                $this->equalTo('v-app-competitors'),
-                $this->callback(function (array $filters): bool {
-                    return ($filters['app_id'] ?? null) === 6
-                        && ($filters['_limit'] ?? null) === 50;
-                })
-            )
-            ->willReturn($entities);
+            ->method('setRegister')
+            ->with($this->equalTo('spectr-live'));
+        $this->objectService->expects($this->once())
+            ->method('setSchema')
+            ->with($this->equalTo('v-app-competitors'));
+        $this->objectService->expects($this->once())
+            ->method('searchObjectsPaginated')
+            ->with($this->callback(function (array $query): bool {
+                return ($query['app_id'] ?? null) === 6
+                    && ($query['_limit'] ?? null) === 50;
+            }))
+            ->willReturn(['results' => $entities, 'total' => 2]);
 
         $result = $this->service->resolve(
             listRefs: [
@@ -149,15 +151,11 @@ class ListReferenceResolverTest extends TestCase
     public function testResolveListRefExplicitAsKeyAndLimit(): void
     {
         $this->objectService->expects($this->once())
-            ->method('searchObjectsBySlug')
-            ->with(
-                $this->equalTo('spectr-live'),
-                $this->equalTo('v-app-competitors'),
-                $this->callback(function (array $filters): bool {
-                    return ($filters['_limit'] ?? null) === 5;
-                })
-            )
-            ->willReturn([$this->makeEntity(['id' => '1'])]);
+            ->method('searchObjectsPaginated')
+            ->with($this->callback(function (array $query): bool {
+                return ($query['_limit'] ?? null) === 5;
+            }))
+            ->willReturn(['results' => [$this->makeEntity(['id' => '1'])], 'total' => 1]);
 
         $result = $this->service->resolve(
             listRefs: [
@@ -184,15 +182,11 @@ class ListReferenceResolverTest extends TestCase
     public function testResolveListRefOrderForwarded(): void
     {
         $this->objectService->expects($this->once())
-            ->method('searchObjectsBySlug')
-            ->with(
-                $this->anything(),
-                $this->anything(),
-                $this->callback(function (array $filters): bool {
-                    return ($filters['_order'] ?? null) === ['name' => 'ASC'];
-                })
-            )
-            ->willReturn([]);
+            ->method('searchObjectsPaginated')
+            ->with($this->callback(function (array $query): bool {
+                return ($query['_order'] ?? null) === ['name' => 'ASC'];
+            }))
+            ->willReturn(['results' => [], 'total' => 0]);
 
         $result = $this->service->resolve(
             listRefs: [
@@ -216,15 +210,11 @@ class ListReferenceResolverTest extends TestCase
     public function testDefaultLimitAppliedWhenOmitted(): void
     {
         $this->objectService->expects($this->once())
-            ->method('searchObjectsBySlug')
-            ->with(
-                $this->anything(),
-                $this->anything(),
-                $this->callback(function (array $filters): bool {
-                    return ($filters['_limit'] ?? null) === 50;
-                })
-            )
-            ->willReturn([]);
+            ->method('searchObjectsPaginated')
+            ->with($this->callback(function (array $query): bool {
+                return ($query['_limit'] ?? null) === 50;
+            }))
+            ->willReturn(['results' => [], 'total' => 0]);
 
         $this->service->resolve(
             listRefs: [
@@ -403,7 +393,7 @@ class ListReferenceResolverTest extends TestCase
     public function testGuardrailViolationAbortsBeforeAnySearch(): void
     {
         $this->objectService->expects($this->never())
-            ->method('searchObjectsBySlug');
+            ->method('searchObjectsPaginated');
 
         try {
             $this->service->resolve(
@@ -427,14 +417,17 @@ class ListReferenceResolverTest extends TestCase
      */
     public function testSearchFailureIsSoftError(): void
     {
-        $this->objectService->method('searchObjectsBySlug')
-            ->willReturnCallback(function (string $register, string $schema) {
+        $this->objectService->method('setSchema')
+            ->willReturnCallback(function (string $schema) {
                 if ($schema === 'broken-schema') {
                     throw new Exception('schema slug not found in caller organisation');
                 }
 
-                return [$this->makeEntity(['id' => '1'])];
+                return null;
             });
+
+        $this->objectService->method('searchObjectsPaginated')
+            ->willReturn(['results' => [$this->makeEntity(['id' => '1'])], 'total' => 1]);
 
         $result = $this->service->resolve(
             listRefs: [
@@ -463,7 +456,7 @@ class ListReferenceResolverTest extends TestCase
     public function testEmptyListRefsIsNoOp(): void
     {
         $this->objectService->expects($this->never())
-            ->method('searchObjectsBySlug');
+            ->method('searchObjectsPaginated');
 
         $result = $this->service->resolve(listRefs: []);
 

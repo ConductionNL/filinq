@@ -386,20 +386,29 @@ class ListReferenceResolver
     }//end slugToIdentifier()
 
     /**
-     * Resolve a single listRef against OpenRegister's slug-aware search.
+     * Resolve a single listRef against OpenRegister's paginated search.
      *
-     * Uses {@see \OCA\OpenRegister\Service\ObjectService::searchObjectsBySlug()}
-     * so register/schema slugs (including external DBAL-backed registers,
-     * e.g. 'spectr-live') resolve the same way the rest of the fleet's
-     * slug-aware callers do. Filter keys are passed through as top-level
-     * query keys; 'limit' becomes '_limit' and 'order' becomes '_order'.
+     * Uses `setRegister()`/`setSchema()` (both slug-aware) to put the
+     * ObjectService instance into register/schema context, then
+     * {@see \OCA\OpenRegister\Service\ObjectService::searchObjectsPaginated()}
+     * — the SAME method + context pattern OpenRegister's own
+     * `ObjectsController::index()` uses. This matters: the sibling
+     * `searchObjects()`/`searchObjectsBySlug()` path never consults a
+     * schema's `x-openregister-object-source` and silently returns nothing
+     * for schemas backed by an external DBAL register (e.g. `spectr-live`)
+     * — only `searchObjectsPaginated()` checks `$this->currentSchema`
+     * (set by `setSchema()`) and delegates to the object-source provider
+     * when one is configured. `setRegister()`/`setSchema()` in turn
+     * auto-inject the resolved numeric `_register`/`_schema` into the
+     * query, so `filter` stays plain top-level keys.
      *
      * @param array $ref The listRef, already validated by {@see validateListReference()}
      *
      * @return array The resolved objects, each serialized via jsonSerialize()
      *               where available
      *
-     * @throws Exception If the OpenRegister search fails (e.g. unknown slug)
+     * @throws Exception If the register/schema slug does not resolve, or the
+     *                    OpenRegister search fails
      *
      * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
@@ -421,11 +430,10 @@ class ListReferenceResolver
         }
 
         try {
-            $result = $objectService->searchObjectsBySlug(
-                registerSlug: (string) $ref['register'],
-                schemaSlug: (string) $ref['schema'],
-                filters: $query
-            );
+            $objectService->setRegister(register: (string) $ref['register']);
+            $objectService->setSchema(schema: (string) $ref['schema']);
+
+            $result = $objectService->searchObjectsPaginated(query: $query);
         } catch (Exception $e) {
             throw new Exception(
                 message: "List resolution failed for register={$ref['register']}, "
@@ -433,14 +441,10 @@ class ListReferenceResolver
             );
         }
 
-        if (is_array($result) === false) {
-            // SearchObjectsBySlug() only returns a plain int for _count
-            // queries, which listRefs never issue.
-            return [];
-        }
+        $rows = $result['results'] ?? [];
 
         $items = [];
-        foreach ($result as $item) {
+        foreach ($rows as $item) {
             if (is_object($item) === true
                 && method_exists(object_or_class: $item, method: 'jsonSerialize') === true
             ) {
