@@ -281,6 +281,7 @@ class AnonymizationServiceOutputFormatTest extends TestCase
         $emlAssembly        = $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class);
         $customDictionary      = $this->createMock(\OCA\DocuDesk\Service\CustomDictionaryService::class);
         $customDictionaryMatch = new \OCA\DocuDesk\Service\CustomDictionaryMatchService();
+        $confidentialityLabel  = $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class);
 
         return new AnonymizationService(
             $logger,
@@ -295,7 +296,8 @@ class AnonymizationServiceOutputFormatTest extends TestCase
             $pdfConversion,
             $emlAssembly,
             $customDictionary,
-            $customDictionaryMatch
+            $customDictionaryMatch,
+            $confidentialityLabel
         );
 
     }//end buildServiceWithoutDependencies()

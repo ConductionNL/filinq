@@ -26,6 +26,7 @@ use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\BatchStateService;
+use OCA\DocuDesk\Service\ConfidentialityLabelService;
 use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCP\IAppConfig;
@@ -111,6 +112,23 @@ class FolderBatchServiceTest extends TestCase
      */
     private OutputLayoutResolver $layout;
 
+    /**
+     * Mocked ConfidentialityLabelService — default mock behaviour (null
+     * return) is the "no signal" case (files-confidential-labels).
+     *
+     * @var ConfidentialityLabelService|MockObject
+     */
+    private ConfidentialityLabelService|MockObject $mockConfidentialityLabel;
+
+    /**
+     * Mocked IAppConfig — default mock behaviour (false) keeps the
+     * confidentiality priority hint off, matching the pre-change ordering
+     * (files-confidential-labels).
+     *
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $mockAppConfig;
+
 
     /**
      * Set up test environment
@@ -121,11 +139,13 @@ class FolderBatchServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->mockLogger       = $this->createMock(LoggerInterface::class);
-        $this->mockRootFolder   = $this->createMock(IRootFolder::class);
-        $this->mockUserSession  = $this->createMock(IUserSession::class);
-        $this->mockStateService = $this->createMock(BatchStateService::class);
-        $this->mockJobList      = $this->createMock(IJobList::class);
+        $this->mockLogger               = $this->createMock(LoggerInterface::class);
+        $this->mockRootFolder           = $this->createMock(IRootFolder::class);
+        $this->mockUserSession          = $this->createMock(IUserSession::class);
+        $this->mockStateService         = $this->createMock(BatchStateService::class);
+        $this->mockJobList              = $this->createMock(IJobList::class);
+        $this->mockConfidentialityLabel = $this->createMock(ConfidentialityLabelService::class);
+        $this->mockAppConfig            = $this->createMock(IAppConfig::class);
 
         $mockUser = $this->createMock(IUser::class);
         $mockUser->method('getUID')->willReturn('testuser');
@@ -140,7 +160,9 @@ class FolderBatchServiceTest extends TestCase
             $this->mockStateService,
             $this->mockJobList,
             $this->createMock(AnonymizationService::class),
-            $this->layout
+            $this->layout,
+            $this->mockConfidentialityLabel,
+            $this->mockAppConfig
         );
 
     }//end setUp()
@@ -621,7 +643,9 @@ class FolderBatchServiceTest extends TestCase
             $this->mockStateService,
             $this->mockJobList,
             $this->createMock(AnonymizationService::class),
-            $this->makeLayoutResolver()
+            $this->makeLayoutResolver(),
+            $this->mockConfidentialityLabel,
+            $this->mockAppConfig
         );
 
         $this->expectException(Exception::class);
@@ -660,7 +684,9 @@ class FolderBatchServiceTest extends TestCase
             $this->mockStateService,
             $this->mockJobList,
             $this->createMock(AnonymizationService::class),
-            $this->makeLayoutResolver()
+            $this->makeLayoutResolver(),
+            $this->mockConfidentialityLabel,
+            $this->mockAppConfig
         );
 
         $this->mockStateService->method('getMaxFiles')->willReturn(100);
@@ -718,7 +744,9 @@ class FolderBatchServiceTest extends TestCase
             $this->mockStateService,
             $this->mockJobList,
             $this->createMock(AnonymizationService::class),
-            $this->makeLayoutResolver()
+            $this->makeLayoutResolver(),
+            $this->mockConfidentialityLabel,
+            $this->mockAppConfig
         );
 
         $this->expectException(Exception::class);
@@ -727,6 +755,123 @@ class FolderBatchServiceTest extends TestCase
         $service->createFolderBatch(null, '/Documents/WOB');
 
     }//end testEnumerateFilesAllLegacyOutputsThrows400()
+
+
+    /**
+     * `docudesk.confidentiality.prioritise_analysis` off (the default —
+     * unconfigured mock `getValueBool` returns false) MUST leave the
+     * enumeration order byte-for-byte identical to the pre-change directory
+     * listing order, even though a confidentiality label is resolvable.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#scenario-flag-off-leaves-ordering-unchanged
+     */
+    public function testPriorityOffLeavesOrderingUnchanged(): void
+    {
+        $secret     = $this->buildFile(901, 'secret.pdf');
+        $unlabelled = $this->buildFile(902, 'plain.pdf');
+
+        $folder     = $this->buildFolder([$secret, $unlabelled], 700);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        // Even though a label WOULD resolve, the flag is off (default mock
+        // return for getValueBool), so the service must not even need to
+        // consult it for ordering purposes.
+        $this->mockConfidentialityLabel->method('getLabelForFile')
+            ->willReturnCallback(
+                static fn (int $fileId) => $fileId === 901 ? new \OCA\DocuDesk\Service\ConfidentialityLabel('Secret', 3) : null
+            );
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+        $capturedFiles = null;
+        $this->mockStateService->method('createBatch')->willReturnCallback(
+            function (string $userId, array $files) use (&$capturedFiles): array {
+                $capturedFiles = $files;
+                return [
+                    'batchId' => 'priority-off-uuid',
+                    'userId'  => $userId,
+                    'status'  => 'uploading',
+                    'files'   => array_map(
+                        static fn (array $f): array => $f + ['status' => 'uploaded'],
+                        $files
+                    ),
+                ];
+            }
+        );
+
+        $this->service->createFolderBatch(null, '/Documents/WOB');
+
+        $this->assertNotNull($capturedFiles);
+        $this->assertSame(
+            [901, 902],
+            array_map(static fn (array $f): int => (int) $f['fileId'], $capturedFiles),
+            'Original directory-listing order must be preserved when the priority flag is off'
+        );
+
+    }//end testPriorityOffLeavesOrderingUnchanged()
+
+
+    /**
+     * `docudesk.confidentiality.prioritise_analysis` on orders a higher
+     * (Secret, level 3) confidentiality file ahead of an unlabelled
+     * (level 0) file that appeared first in the directory listing — a pure
+     * secondary/tie-break sort, never a skip/block/redaction.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#scenario-flag-on-prioritises-higher-confidentiality
+     */
+    public function testPriorityOnOrdersSecretAheadOfUnlabelled(): void
+    {
+        // Directory-listing order deliberately puts the unlabelled file first.
+        $unlabelled = $this->buildFile(902, 'plain.pdf');
+        $internal   = $this->buildFile(903, 'internal.pdf');
+        $secret     = $this->buildFile(901, 'secret.pdf');
+
+        $folder     = $this->buildFolder([$unlabelled, $internal, $secret], 701);
+        $userFolder = $this->buildUserFolder(null, $folder, false, '/Documents/WOB');
+        $this->mockRootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        $this->mockAppConfig->method('getValueBool')->willReturn(true);
+        $this->mockConfidentialityLabel->method('getLabelForFile')->willReturnCallback(
+            static function (int $fileId) {
+                return match ($fileId) {
+                    901     => new \OCA\DocuDesk\Service\ConfidentialityLabel('Secret', 3),
+                    903     => new \OCA\DocuDesk\Service\ConfidentialityLabel('Internal', 1),
+                    default => null,
+                };
+            }
+        );
+
+        $this->mockStateService->method('getMaxFiles')->willReturn(100);
+        $capturedFiles = null;
+        $this->mockStateService->method('createBatch')->willReturnCallback(
+            function (string $userId, array $files) use (&$capturedFiles): array {
+                $capturedFiles = $files;
+                return [
+                    'batchId' => 'priority-on-uuid',
+                    'userId'  => $userId,
+                    'status'  => 'uploading',
+                    'files'   => array_map(
+                        static fn (array $f): array => $f + ['status' => 'uploaded'],
+                        $files
+                    ),
+                ];
+            }
+        );
+
+        $this->service->createFolderBatch(null, '/Documents/WOB');
+
+        $this->assertNotNull($capturedFiles);
+        $this->assertSame(
+            [901, 903, 902],
+            array_map(static fn (array $f): int => (int) $f['fileId'], $capturedFiles),
+            'Secret (level 3) must sort ahead of Internal (level 1), which sorts ahead of the unlabelled (level 0) file'
+        );
+
+    }//end testPriorityOnOrdersSecretAheadOfUnlabelled()
 
 
 }//end class

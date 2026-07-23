@@ -174,6 +174,10 @@ function makeEntry(file, dossier) {
 		anonymizedFileName: null,
 		anonymizedFilePath: null,
 		dossier,
+		// Read-only files_confidential sensitivity signal (files-confidential-labels).
+		// Both stay null until an extract response resolves a label.
+		confidentialityLabel: null,
+		confidentialityLevel: null,
 		_file: file,
 	}
 }
@@ -207,6 +211,9 @@ function makeSyntheticEntry(fileMeta) {
 		anonymizedFileName: null,
 		anonymizedFilePath: null,
 		dossier,
+		// Read-only files_confidential sensitivity signal (files-confidential-labels).
+		confidentialityLabel: null,
+		confidentialityLevel: null,
 	}
 }
 
@@ -550,6 +557,10 @@ export const useAnonymizationStore = defineStore(
 					// rows, so count the grouped result, not the raw rows.
 					entry.entities = decorateEntities(entities)
 					entry.entityCount = entry.entities.length
+					// Read-only files_confidential signal — present only when the
+					// backend resolved a matching label (files-confidential-labels).
+					entry.confidentialityLabel = extractResponse.data.confidentialityLabel ?? null
+					entry.confidentialityLevel = extractResponse.data.confidentialityLevel ?? null
 
 					if (entities.length === 0) {
 						// Nothing to anonymise; skip review and mark done.
@@ -804,6 +815,8 @@ export const useAnonymizationStore = defineStore(
 					const entities = extractResponse.data.entities || []
 					entry.entities = decorateEntities(entities)
 					entry.entityCount = entry.entities.length
+					entry.confidentialityLabel = extractResponse.data.confidentialityLabel ?? null
+					entry.confidentialityLevel = extractResponse.data.confidentialityLevel ?? null
 					entry.status = entities.length === 0 ? 'completed' : 'extracted'
 				} catch (err) {
 					console.error(`Failed to load entities for ${entry.name}:`, err)
@@ -838,6 +851,8 @@ export const useAnonymizationStore = defineStore(
 					const entities = res.data.entities || []
 					entry.entities = decorateEntities(entities)
 					entry.entityCount = entry.entities.length
+					entry.confidentialityLabel = res.data.confidentialityLabel ?? null
+					entry.confidentialityLevel = res.data.confidentialityLevel ?? null
 					entry.status = entities.length === 0 ? 'completed' : 'extracted'
 				} catch (err) {
 					entry.error = err.response?.data?.error || err.message
@@ -902,6 +917,8 @@ export const useAnonymizationStore = defineStore(
 					}
 					entry.entities = entities
 					entry.entityCount = entities.length
+					entry.confidentialityLabel = extractResponse.data.confidentialityLabel ?? null
+					entry.confidentialityLevel = extractResponse.data.confidentialityLevel ?? null
 					// Drop the read-only anonymised view so the editable review
 					// list + "Anonymize" button take over. Keep anonymizedFile*
 					// so the viewer toggle can still show the current result until

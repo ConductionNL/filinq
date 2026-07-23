@@ -58,5 +58,18 @@ if (is_dir($ocpDbExceptionDir) === true) {
     }
 }
 
+// Load OCP's public system-tag API (files_confidential label consumption,
+// files-confidential-labels) — same "real file, not classmapped" situation
+// as the EventDispatcher/AppFramework\Db contracts above.
+$ocpSystemTagDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/SystemTag';
+if (is_dir($ocpSystemTagDir) === true) {
+    foreach (['ISystemTag.php', 'TagNotFoundException.php', 'ISystemTagManager.php', 'ISystemTagObjectMapper.php'] as $ocpTagFile) {
+        $ocpTagPath = $ocpSystemTagDir . '/' . $ocpTagFile;
+        if (is_file($ocpTagPath) === true) {
+            require_once $ocpTagPath;
+        }
+    }
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__.'/stubs/OpenRegisterStubs.php';

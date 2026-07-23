@@ -46,6 +46,7 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
+ * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
  */
 class SettingsService
 {
@@ -292,9 +293,52 @@ class SettingsService
             // renders the selector all-on by default; an empty/complete
             // selection is treated as "all types" at detection time.
             'docudesk.anonymisation.enabled_entity_types'  => $this->grondslagProposal->getEnabledEntityTypes(),
+            // Files-confidential-labels — read-only sensitivity signal
+            // ingested from files_confidential (TSCP/BAILS system tags).
+            // The vocabulary maps tag/label name to a normalised level;
+            // decoded to an object so the settings UI can bind it directly
+            // and falls back to the seeded TSCP/BAILS default names when
+            // unset (design.md Open Questions).
+            'docudesk.confidentiality.label_vocabulary'    => $this->getConfidentialityVocabulary(),
+            // Off by default: purely a suggestion signal that reorders
+            // batch/folder analysis, never gates/blocks/redacts (design.md D3).
+            'docudesk.confidentiality.prioritise_analysis' => $this->config->getValueBool(
+                $this->appName,
+                'docudesk.confidentiality.prioritise_analysis',
+                false
+            ),
         ];
 
     }//end loadFeatureToggles()
+
+    /**
+     * Read the configured confidentiality-label vocabulary for the settings
+     * UI, falling back to ConfidentialityLabelService's default TSCP/BAILS
+     * names when unset or unreadable.
+     *
+     * @return array<string, int> Map of label/tag name to normalised level
+     *
+     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-read-a-files-confidentiality-label-availability-guarded-req-ddfcl-001
+     */
+    private function getConfidentialityVocabulary(): array
+    {
+        $raw = $this->config->getValueString(
+            $this->appName,
+            ConfidentialityLabelService::VOCABULARY_KEY,
+            ''
+        );
+        if ($raw === '') {
+            return ConfidentialityLabelService::DEFAULT_VOCABULARY;
+        }
+
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded) === false || empty($decoded) === true) {
+            return ConfidentialityLabelService::DEFAULT_VOCABULARY;
+        }
+
+        return $decoded;
+
+    }//end getConfidentialityVocabulary()
 
     /**
      * Get Tesseract OCR availability status
@@ -412,6 +456,8 @@ class SettingsService
         'ocr_enabled',
         'ocr_languages',
         'ocr_dpi',
+        'docudesk.confidentiality.label_vocabulary',
+        'docudesk.confidentiality.prioritise_analysis',
     ];
 
     /**
