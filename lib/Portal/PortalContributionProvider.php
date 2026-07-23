@@ -23,25 +23,27 @@
  * consent objection and document signing are UPDATE / A6 flows the
  * create-action vocabulary cannot express safely, and remain deferred.
  *
- * `portal-signing-surface` (this file, extended) adds the ONE additive seam
- * that IS safe to ship without the A6 receiver: contract-v2.2 `rowActions`
- * (`sign`, `decline`) declared directly on the `signerSigningRequests`
- * collection — pure data, no I/O, no new imports. The endpoints they name
- * (`/apps/docudesk/api/portal/signing/{sign,decline}`) are the ones
- * `portal-signing-actions`'s receiver is designed to expose; AT HEAD that
- * receiver, its `PortalAssertionVerifier`, and `signing-trust-rebuild`'s
- * identity-bound `v: 2` assertion MAC are NOT YET IMPLEMENTED (spec-only, 0 of
- * their tasks checked, no controller/route/verifier code in this repo). The
- * rowActions are declared here anyway (forward-compatible, dead until the
- * receiver ships — calling them 404s today) so the manifest and the future
- * receiver land in sync; the portal-subject identity binding into the
- * signature evidence (REQ-DDPSS-004) is intentionally NOT implemented in this
- * class or in `NativeSigningProvider`/`SigningVerificationService` because
- * doing so before `signing-trust-rebuild`'s MAC rebuild lands would silently
- * decorate the assertion with unenforced fields — the exact forgeable-signer
- * shape (portaliq#3) this surface exists to close, not a fix for it. See
- * `openspec/changes/portal-signing-surface/design.md` "Open questions" and the
- * apply-time PR for the full dependency-state note.
+ * `portal-signing-surface` (this file, extended) adds contract-v2.2
+ * `rowActions` (`sign`, `decline`) declared directly on the
+ * `signerSigningRequests` collection — pure data, no I/O, no new imports.
+ * `portal-signing-actions` (this file, further extended) adds the SAME three
+ * acts as top-level contract-v2 A6 `endpoint` actions (`sign`, `decline`,
+ * `viewDocument`, REQ-DDPSA-001) — both point at
+ * `/apps/docudesk/api/portal/signing/{sign,decline,viewDocument}`, now backed
+ * by a real receiver: `Controller\PortalSigningReceiverController` +
+ * `Portal\PortalAssertionVerifier` validate portaliq's frozen
+ * `X-Portal-Subject` assertion, derive the invited signer's identity
+ * server-side, and drive the honest `SigningService::sign()`/`decline()`
+ * primitive via its verified-actor entrypoint. `signing-trust-rebuild`'s
+ * identity-bound `v: 2` assertion MAC (`NativeSigningProvider`,
+ * `SigningVerificationService`) is implemented alongside it, and the
+ * portal-subject identity claims (`subjectRef`/`identityRef`/`trust`/`jti`)
+ * are folded into that SAME MAC for a portal-originated signature
+ * (REQ-DDPSS-004), closing the portaliq#3 forgeable-signer class for the
+ * portal seam too. The one remaining apply-blocker (design.md "Open
+ * questions"): portaliq's frozen A6 wire format does not yet forward a
+ * resolved `signerEmail` scope claim, so the receiver fails closed (403) on
+ * every act until that lands — safe to ship early by design.
  *
  * @category  Portal
  * @package   OCA\DocuDesk\Portal
@@ -56,6 +58,7 @@
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
+ * @spec openspec/specs/portal-signing-actions/spec.md
  */
 
 declare(strict_types=1);
@@ -128,6 +131,17 @@ class PortalContributionProvider
      * @var string
      */
     private const DECLINE_ENDPOINT = '/apps/docudesk/api/portal/signing/decline';
+
+    /**
+     * Instance-local relative endpoint the `viewDocument` A6 action resolves to.
+     *
+     * Targets the `portal-signing-actions` receiver's `viewDocument` act
+     * (REQ-DDPSA-006) — lets the verified invited signer read the target
+     * document before signing.
+     *
+     * @var string
+     */
+    private const VIEW_DOCUMENT_ENDPOINT = '/apps/docudesk/api/portal/signing/viewDocument';
 
     /**
      * Minimum eIDAS-aligned portal trust required to sign or decline.
@@ -294,16 +308,28 @@ class PortalContributionProvider
      * pure data — no I/O, no callbacks — keeping this class plain and
      * dependency-free; the `signerRecords` collection and the entire
      * `data-subject` manifest carry no write action. The endpoints they name
-     * target the `portal-signing-actions` receiver, which is NOT YET
-     * implemented at HEAD (see this file's top-of-file docblock) — a row
-     * already in a terminal state (`signed`/`declined`) must not offer the
-     * actions, which is the receiver's terminal-state guard to enforce once
-     * it ships, not something this pure-data manifest can express.
+     * target the `portal-signing-actions` receiver
+     * (`PortalSigningReceiverController`), now implemented — a row already
+     * in a terminal state (`signed`/`declined`) must not offer the actions,
+     * which is the receiver's terminal-state guard (via the honest
+     * `SigningService` status machine) to enforce, not something this
+     * pure-data manifest can express.
+     *
+     * The manifest's top-level `actions` array additionally declares the
+     * SAME three acts as contract-v2 A6 `endpoint`-type actions — `sign`,
+     * `decline`, `viewDocument` (REQ-DDPSA-001) — for the A6
+     * `POST /portal/api/actions/{appId}/{actionId}` forward mechanism, which
+     * is a distinct rendering path from the per-row `rowActions` above (both
+     * ultimately hit the SAME `PortalSigningReceiverController` endpoints).
+     * `viewDocument` (GET, REQ-DDPSA-006) has no rowAction equivalent — it
+     * lets the signer read the target document before deciding to sign or
+     * decline.
      *
      * @return array<string, mixed> The signer manifest.
      *
      * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
      * @spec openspec/specs/portal-signing-surface/spec.md
+     * @spec openspec/specs/portal-signing-actions/spec.md
      */
     private function signerContribution(): array
     {
@@ -367,7 +393,35 @@ class PortalContributionProvider
                     ],
                 ],
             ],
-            'actions'       => [],
+            // Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
+            // ONLY three actions on the `signer` manifest, all instance-local
+            // relative endpoints under `/apps/docudesk/api/portal/signing/`,
+            // all gated `minTrust: substantial`. Handled by
+            // `PortalSigningReceiverController` +
+            // `Portal\PortalAssertionVerifier`.
+            'actions'       => [
+                [
+                    'id'       => 'sign',
+                    'label'    => 'Sign',
+                    'endpoint' => self::SIGN_ENDPOINT,
+                    'method'   => 'POST',
+                    'minTrust' => self::SIGNING_MIN_TRUST,
+                ],
+                [
+                    'id'       => 'decline',
+                    'label'    => 'Decline to sign',
+                    'endpoint' => self::DECLINE_ENDPOINT,
+                    'method'   => 'POST',
+                    'minTrust' => self::SIGNING_MIN_TRUST,
+                ],
+                [
+                    'id'       => 'viewDocument',
+                    'label'    => 'View document',
+                    'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+                    'method'   => 'GET',
+                    'minTrust' => self::SIGNING_MIN_TRUST,
+                ],
+            ],
             'notifications' => [],
         ];
 

@@ -155,6 +155,13 @@ class SigningService
 
         $this->validateRequestData(data: $request);
 
+        // Provider/level honesty at creation time (signing-trust-rebuild
+        // REQ-DDSTR-002 point 1): reject an unsupported provider/level pair
+        // with 400 BEFORE any object is persisted, so a QES request can never
+        // be routed to a provider that will later silently complete it with a
+        // lower-assurance (e.g. native SES) artifact.
+        $this->validateProviderLevelPair(provider: (string) $request['provider'], level: (string) $request['signatureLevel']);
+
         // Cross-app delegated-signing contract (docudesk-signing-events): when a
         // consumer raised this request through DocumentSigningRequestedEvent it
         // carries provenance fields. Persist any present provenance onto the
@@ -340,21 +347,35 @@ class SigningService
     /**
      * Sign a document within a signing request
      *
-     * @param string $requestId The signing request ID
-     * @param string $signerId  The signer record ID
+     * @param string                    $requestId     The signing request ID
+     * @param string                    $signerId      The signer record ID
+     * @param array<string, mixed>|null $verifiedActor The already-resolved, verified
+     *                                                 external actor (portal-signing-actions
+     *                                                 REQ-DDPSA-005): `email` (invited signer
+     *                                                 identity), and optionally `subjectRef`,
+     *                                                 `identityRef`, `trust`, `jti` from the
+     *                                                 verified portal assertion. When null
+     *                                                 (default) the actor is the Nextcloud
+     *                                                 session user, exactly as before — this
+     *                                                 parameter is an ADDITIVE seam, not a
+     *                                                 behaviour change for existing callers.
+     * @param array<string, mixed>|null $signatureData Optional evidence to record on the
+     *                                                 signer record's `signatureData` field
+     *                                                 (portal-signing-surface REQ-DDPSS-002:
+     *                                                 consent confirmation + optional drawn
+     *                                                 signature). Never trusted for identity.
      *
      * @return array<string, mixed> The updated signer record
      *
      * @throws RuntimeException If signing fails
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
+     * @spec openspec/specs/portal-signing-actions/spec.md
+     * @spec openspec/specs/portal-signing-surface/spec.md
      */
-    public function sign(string $requestId, string $signerId): array
+    public function sign(string $requestId, string $signerId, ?array $verifiedActor=null, ?array $signatureData=null): array
     {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new RuntimeException('No authenticated user');
-        }
+        [$actorUserId, $actorDisplayName] = $this->resolveActingIdentity(verifiedActor: $verifiedActor);
 
         $objectService = $this->settingsService->getObjectService();
         $request       = $this->getRequest(requestId: $requestId);
@@ -394,10 +415,13 @@ class SigningService
             throw new RuntimeException('Signer record does not belong to this signing request');
         }
 
-        // Security finding #282: ensure the authenticated user is the signer
-        // they claim to be. Without this check any authenticated user could
-        // sign on behalf of another signer by supplying their signer ID.
-        if (($signer['userId'] ?? '') !== $user->getUID()) {
+        // Security finding #282 / portal-signing-actions REQ-DDPSA-005: ensure
+        // the acting identity is the signer they claim to be — the Nextcloud
+        // session user for an in-app signer, or the verified assertion's
+        // resolved email for an external portal signer. Either way this check
+        // is unchanged in spirit: an actor cannot sign on behalf of another
+        // signer by supplying their signer ID.
+        if ($this->actorMatchesSigner(signer: $signer, verifiedActor: $verifiedActor, actorUserId: $actorUserId) === false) {
             throw new RuntimeException('Not authorized to sign as this signer');
         }
 
@@ -409,19 +433,27 @@ class SigningService
         $signer['status']    = 'SIGNED';
         $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
+        if ($signatureData !== null) {
+            // Portal-signing-surface REQ-DDPSS-002: consent confirmation +
+            // optional drawn signature, recorded into the existing
+            // `visible:false` field — never used for identity.
+            $signer['signatureData'] = $signatureData;
+        }
+
         $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'SIGNED',
-            actorUserId: $user->getUID(),
-            actorDisplayName: $user->getDisplayName(),
+            actorUserId: $actorUserId,
+            actorDisplayName: $actorDisplayName,
             ipAddress: $this->getClientIp(),
             signatureLevel: $request['signatureLevel'] ?? 'SES',
-            provider: $request['provider'] ?? 'native'
+            provider: $request['provider'] ?? 'native',
+            metadata: $this->actorAuditMetadata(verifiedActor: $verifiedActor)
         );
 
-        $this->updateRequestStatus(requestId: $requestId, request: $request);
+        $this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
 
         return $signer;
 
@@ -430,22 +462,47 @@ class SigningService
     /**
      * Decline a signing request
      *
-     * @param string $requestId The signing request ID
-     * @param string $signerId  The signer record ID
-     * @param string $reason    The decline reason
+     * @param string                    $requestId     The signing request ID
+     * @param string                    $signerId      The signer record ID
+     * @param string                    $reason        The decline reason
+     * @param array<string, mixed>|null $verifiedActor The already-resolved, verified
+     *                                                 external actor (see `sign()`); null
+     *                                                 (default) behaves exactly as before.
      *
      * @return array<string, mixed> The updated signer record
      *
+     * @throws RuntimeException If the request is not in a state that can be
+     *                          declined, or the actor is not authorised.
+     *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
+     * @spec openspec/specs/document-signing/spec.md
+     * @spec openspec/specs/portal-signing-actions/spec.md
+     * @spec openspec/specs/portal-signing-surface/spec.md
      */
-    public function decline(string $requestId, string $signerId, string $reason): array
+    public function decline(string $requestId, string $signerId, string $reason, ?array $verifiedActor=null): array
     {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new RuntimeException('No authenticated user');
+        [$actorUserId, $actorDisplayName] = $this->resolveActingIdentity(verifiedActor: $verifiedActor);
+
+        $objectService = $this->settingsService->getObjectService();
+
+        // Load the request FIRST and gate the terminal-state status machine
+        // BEFORE any signer/request mutation (signing-trust-rebuild
+        // REQ-DDSTR-003, closing the #282 residual where decline() skipped
+        // isValidTransition() entirely — a COMPLETED/CANCELLED/EXPIRED
+        // request could still be flipped to DECLINED).
+        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        if ($requestObject === null) {
+            throw new RuntimeException('Signing request not found: '.$requestId);
         }
 
-        $objectService  = $this->settingsService->getObjectService();
+        $request = $this->toArray(object: $requestObject);
+
+        if ($this->isValidTransition(currentStatus: $request['status'] ?? '', newStatus: 'DECLINED') === false) {
+            throw new RuntimeException('Cannot decline request in status: '.($request['status'] ?? 'unknown'));
+        }
+
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
         $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
@@ -454,11 +511,7 @@ class SigningService
             throw new RuntimeException('Signer record not found: '.$signerId);
         }
 
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
+        $signer = $this->toArray(object: $signerObject);
 
         // C4 security fix: verify the signer record belongs to this signing
         // request. Without this check, an attacker who knows any valid
@@ -467,24 +520,16 @@ class SigningService
             throw new RuntimeException('Signer record does not belong to this signing request');
         }
 
-        // Security finding #282: ensure the authenticated user is the signer
-        // they claim to be before allowing them to decline on its behalf.
-        if (($signer['userId'] ?? '') !== $user->getUID()) {
+        // Security finding #282 / portal-signing-actions REQ-DDPSA-005: same
+        // acting-identity check as sign() — Nextcloud uid or verified
+        // assertion email, never the request body.
+        if ($this->actorMatchesSigner(signer: $signer, verifiedActor: $verifiedActor, actorUserId: $actorUserId) === false) {
             throw new RuntimeException('Not authorized to decline as this signer');
         }
 
         $signer['status']        = 'DECLINED';
         $signer['declineReason'] = $reason;
         $objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema);
-
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($requestObject !== null && is_object($requestObject) === true && method_exists($requestObject, 'jsonSerialize') === true) {
-            $request = $requestObject->jsonSerialize();
-        } else {
-            $request = (array) $requestObject;
-        }
 
         $signatureLevel = $request['signatureLevel'] ?? 'SES';
         $provider       = $request['provider'] ?? 'native';
@@ -496,20 +541,107 @@ class SigningService
         // emit SigningConcludedEvent (status=declined) for a delegated request.
         $this->emitConclusionIfDelegated(request: $request, status: 'declined');
 
+        $metadata           = $this->actorAuditMetadata(verifiedActor: $verifiedActor);
+        $metadata['reason'] = $reason;
+
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'DECLINED',
-            actorUserId: $user->getUID(),
-            actorDisplayName: $user->getDisplayName(),
+            actorUserId: $actorUserId,
+            actorDisplayName: $actorDisplayName,
             ipAddress: $this->getClientIp(),
             signatureLevel: $signatureLevel,
             provider: $provider,
-            metadata: ['reason' => $reason]
+            metadata: $metadata
         );
 
         return $signer;
 
     }//end decline()
+
+    /**
+     * Resolve the acting identity for `sign()`/`decline()`.
+     *
+     * Default (no verified actor): the Nextcloud session user — behaviour is
+     * byte-identical to before this seam was added. With a verified actor
+     * (portal-signing-actions REQ-DDPSA-005): the resolved portal signer's
+     * email, never a Nextcloud uid.
+     *
+     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
+     *
+     * @return array{0: string, 1: string} [actorUserId, actorDisplayName]
+     *
+     * @throws RuntimeException When no verified actor is supplied and there is
+     *                          no authenticated Nextcloud user.
+     */
+    private function resolveActingIdentity(?array $verifiedActor): array
+    {
+        if ($verifiedActor !== null) {
+            $email = (string) ($verifiedActor['email'] ?? '');
+
+            $displayName = 'External signer';
+            if ($email !== '') {
+                $displayName = $email;
+            }
+
+            // Namespaced so a portal actor identity can never collide with (or
+            // be mistaken for) a Nextcloud uid in the audit trail.
+            return ['portal:'.$email, $displayName];
+        }
+
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            throw new RuntimeException('No authenticated user');
+        }
+
+        return [$user->getUID(), $user->getDisplayName()];
+
+    }//end resolveActingIdentity()
+
+    /**
+     * Check whether the acting identity matches the target signer record.
+     *
+     * @param array<string, mixed>      $signer        The loaded signer record.
+     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
+     * @param string                    $actorUserId   The resolved acting identity (unused for
+     *                                                 the verified-actor branch; kept for the
+     *                                                 in-app branch's exact pre-existing check).
+     *
+     * @return bool True when the actor is authorised to act as this signer.
+     */
+    private function actorMatchesSigner(array $signer, ?array $verifiedActor, string $actorUserId): bool
+    {
+        if ($verifiedActor !== null) {
+            $signerEmail = (string) ($signer['email'] ?? '');
+            $actorEmail  = (string) ($verifiedActor['email'] ?? '');
+
+            return $signerEmail !== '' && $actorEmail !== '' && strcasecmp($signerEmail, $actorEmail) === 0;
+        }
+
+        return ($signer['userId'] ?? '') === $actorUserId;
+
+    }//end actorMatchesSigner()
+
+    /**
+     * Build the audit `metadata` for a portal-originated act.
+     *
+     * Records the assertion `jti` so the portal act is traceable to its
+     * originating portaliq session (portal-signing-actions REQ-DDPSA-005).
+     * Returns an empty array for an in-app (Nextcloud session) actor.
+     *
+     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
+     *
+     * @return array<string, mixed>
+     */
+    private function actorAuditMetadata(?array $verifiedActor): array
+    {
+        if ($verifiedActor === null) {
+            return [];
+        }
+
+        return ['portalJti' => (string) ($verifiedActor['jti'] ?? '')];
+
+    }//end actorAuditMetadata()
 
     /**
      * Cancel a signing request
@@ -673,14 +805,57 @@ class SigningService
     }//end validateRequestData()
 
     /**
+     * Validate that the requested provider actually supports the requested level.
+     *
+     * Provider/level honesty at request creation (signing-trust-rebuild
+     * REQ-DDSTR-002 point 1): an unknown provider, or a provider that does not
+     * support the requested signature level (via
+     * `SigningProviderInterface::supportsLevel()`), is rejected with HTTP 400
+     * before anything is persisted — the completion path (REQ-DDSTR-002 point
+     * 2) never has to silently substitute a provider or level because an
+     * invalid pair can never be created in the first place.
+     *
+     * @param string $provider The requested provider identifier.
+     * @param string $level    The requested signature level.
+     *
+     * @return void
+     *
+     * @throws RuntimeException With HTTP code 400 when the provider is unknown
+     *                          or does not support the requested level.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    private function validateProviderLevelPair(string $provider, string $level): void
+    {
+        try {
+            $providerInstance = $this->providerFactory->getProvider(identifier: $provider);
+        } catch (\Throwable $e) {
+            throw new RuntimeException('Unknown signing provider: '.$provider, 400);
+        }
+
+        if ($providerInstance->supportsLevel(level: $level) === false) {
+            throw new RuntimeException(
+                'Signing provider "'.$provider.'" does not support signature level "'.$level.'"',
+                400
+            );
+        }
+
+    }//end validateProviderLevelPair()
+
+    /**
      * Update the signing request status based on signer progress
      *
-     * @param string               $requestId The signing request ID
-     * @param array<string, mixed> $request   The current request data
+     * @param string                    $requestId     The signing request ID
+     * @param array<string, mixed>      $request       The current request data
+     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
+     *                                                 this act, when portal-originated (see
+     *                                                 `sign()`); threaded through to the
+     *                                                 produced artifact's evidence binding
+     *                                                 (portal-signing-surface REQ-DDPSS-004).
      *
      * @return void
      */
-    private function updateRequestStatus(string $requestId, array $request): void
+    private function updateRequestStatus(string $requestId, array $request, ?array $verifiedActor=null): void
     {
         $objectService  = $this->settingsService->getObjectService();
         $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -723,7 +898,7 @@ class SigningService
         // COMPLETED with the unsigned original as its signed reference. If the
         // artifact cannot be produced, the request stays IN_PROGRESS and the
         // failure surfaces loudly to the completing signer.
-        $signedDocumentRef = $this->produceAndStoreSignedArtifact(request: $freshRequest);
+        $signedDocumentRef = $this->produceAndStoreSignedArtifact(request: $freshRequest, verifiedActor: $verifiedActor);
 
         $freshRequest['status']            = 'COMPLETED';
         $freshRequest['signedDocumentRef'] = $signedDocumentRef;
@@ -752,17 +927,28 @@ class SigningService
      *
      * Honest-completion gate: any failure (no file, unreadable, provider cannot
      * produce an artifact) throws, so the caller never marks the request
-     * COMPLETED without a real signed document.
+     * COMPLETED without a real signed document. Provider/level honesty
+     * (signing-trust-rebuild REQ-DDSTR-002 point 2): the request's named
+     * provider is resolved STRICTLY — an unknown provider name fails the
+     * completion loudly and is never silently substituted with
+     * `getActiveProvider()` / the native provider.
      *
-     * @param array<string, mixed> $request The completing signing-request array.
+     * @param array<string, mixed>      $request       The completing signing-request array.
+     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
+     *                                                 this act, when portal-originated —
+     *                                                 folded into the produced artifact's
+     *                                                 evidence binding (portal-signing-surface
+     *                                                 REQ-DDPSS-004).
      *
      * @return string The stored signed-artifact reference (file id + version).
      *
-     * @throws RuntimeException When no verifiable artifact can be produced/stored.
+     * @throws RuntimeException When no verifiable artifact can be produced/stored,
+     *                          or when the request names an unregistered provider.
      *
      * @spec openspec/specs/document-signing/spec.md
+     * @spec openspec/specs/portal-signing-surface/spec.md
      */
-    private function produceAndStoreSignedArtifact(array $request): string
+    private function produceAndStoreSignedArtifact(array $request, ?array $verifiedActor=null): string
     {
         $fileId = (int) ($request['documentFileId'] ?? 0);
         if ($fileId <= 0) {
@@ -777,23 +963,44 @@ class SigningService
             throw new RuntimeException('Cannot read the document to sign: '.$e->getMessage());
         }
 
+        // Provider/level honesty (REQ-DDSTR-002 point 2): resolve the request's
+        // named provider strictly. An unknown provider name MUST fail the
+        // completion loudly — no fallback to getActiveProvider()/native. This
+        // is the honest-completion gate closing the #304 residual where a
+        // request naming a misconfigured/unregistered provider silently
+        // completed with a substituted (native) artifact.
         $providerName = (string) ($request['provider'] ?? 'native');
-        try {
-            $provider = $this->providerFactory->getProvider(identifier: $providerName);
-        } catch (\Throwable $e) {
-            $provider = $this->providerFactory->getActiveProvider();
+        $provider     = $this->providerFactory->getProvider(identifier: $providerName);
+
+        $context = [
+            'signer'    => $this->resolveSignerLabel(verifiedActor: $verifiedActor),
+            'signers'   => ($request['signerIds'] ?? []),
+            'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+            'ip'        => $this->getClientIp(),
+            'level'     => (string) ($request['signatureLevel'] ?? 'SES'),
+        ];
+
+        if ($verifiedActor !== null) {
+            // Portal-signature evidence binding (portal-signing-surface
+            // REQ-DDPSS-004): fold the verified assertion's portal subject
+            // claims into the provider context so they land inside the SAME
+            // MAC as the rest of the assertion. Sourced ONLY from the
+            // already-verified actor (never the request body).
+            $portalFieldMap = [
+                'subjectRef'  => 'portalSubjectRef',
+                'identityRef' => 'portalIdentityRef',
+                'trust'       => 'portalTrust',
+                'jti'         => 'portalJti',
+            ];
+
+            foreach ($portalFieldMap as $actorKey => $contextKey) {
+                if (empty($verifiedActor[$actorKey]) === false) {
+                    $context[$contextKey] = (string) $verifiedActor[$actorKey];
+                }
+            }
         }
 
-        $signedBytes = $provider->produceSignedArtifact(
-            documentContent: $originalContent,
-            context: [
-                'signer'    => $this->resolveSignerLabel(),
-                'signers'   => ($request['signerIds'] ?? []),
-                'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-                'ip'        => $this->getClientIp(),
-                'level'     => (string) ($request['signatureLevel'] ?? 'SES'),
-            ]
-        );
+        $signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
 
         // Writing new content to the existing file creates a new Nextcloud file
         // version of the prior (unsigned) content automatically (files_versions).
@@ -858,10 +1065,22 @@ class SigningService
     /**
      * Resolve a human label for the completing signer.
      *
-     * @return string The signer display name or UID, or 'Unknown'.
+     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
+     *                                                 this act, when portal-originated.
+     *
+     * @return string The signer display name, verified portal email, UID, or 'Unknown'.
      */
-    private function resolveSignerLabel(): string
+    private function resolveSignerLabel(?array $verifiedActor=null): string
     {
+        if ($verifiedActor !== null) {
+            $email = (string) ($verifiedActor['email'] ?? '');
+            if ($email !== '') {
+                return $email;
+            }
+
+            return 'External signer';
+        }
+
         $user = $this->userSession->getUser();
         if ($user === null) {
             return 'Unknown';

@@ -301,4 +301,96 @@ class ConsentControllerTest extends TestCase
         $this->assertEquals(200, $result->getStatus());
 
     }//end testUpdateSucceedsForOwner()
+
+    /**
+     * Oracle-free error response (signing-trust-rebuild REQ-DDSTR-009, closing
+     * the #283 residual): exception text carrying a record UUID must NEVER
+     * reach the response body — only the generic translated message. Full
+     * detail goes to the logger only. Mirrors the proven
+     * SigningController::errorResponse() fix (docudesk#100 / Wilco #6).
+     *
+     * @return void
+     */
+    public function testErrorResponseNeverLeaksExceptionText(): void
+    {
+        $sensitiveUuid = '11111111-2222-3333-4444-555555555555';
+        $this->mockCrudService->method('getConsentConfig')
+            ->willThrowException(new \Exception('Consent record '.$sensitiveUuid.' violates constraint xyz'));
+
+        $result = $this->controller->index();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(500, $result->getStatus());
+
+        $body = json_encode($result->getData());
+        $this->assertStringNotContainsString($sensitiveUuid, $body, 'The response body must never contain exception text/identifiers.');
+        $this->assertStringNotContainsString('violates constraint', $body);
+
+    }//end testErrorResponseNeverLeaksExceptionText()
+
+    /**
+     * A non-owner probe (existing record, not theirs) and a genuinely
+     * not-found record collapse to a BYTE-IDENTICAL 404 body (no
+     * existence-probing oracle) — signing-trust-rebuild REQ-DDSTR-009.
+     *
+     * @return void
+     */
+    public function testNonOwnerProbeAndNotFoundAreByteIdentical(): void
+    {
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+
+        // Case A: record exists but belongs to someone else.
+        $this->mockCrudService->method('getConsent')
+            ->willReturn(
+                [
+                    'id'    => 'uuid-owned-by-other',
+                    '@self' => ['owner' => 'someone-else'],
+                ]
+            );
+        $nonOwnerResult = $this->controller->show('uuid-owned-by-other');
+
+        // Case B: record genuinely does not exist — fresh controller/mock so
+        // getConsent() returns null instead.
+        $notFoundCrudService = $this->createMock(ConsentCrudService::class);
+        $notFoundCrudService->method('getConsentConfig')->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $notFoundCrudService->method('getConsent')->willReturn(null);
+
+        $notFoundController = new ConsentController(
+            'docudesk',
+            $this->mockRequest,
+            $this->mockLogger,
+            $notFoundCrudService,
+            $this->mockL10n,
+            $this->mockUserSession,
+            $this->mockGroupManager
+        );
+        $notFoundResult = $notFoundController->show('does-not-exist');
+
+        $this->assertEquals(404, $nonOwnerResult->getStatus());
+        $this->assertEquals(404, $notFoundResult->getStatus());
+        $this->assertSame(
+            json_encode($notFoundResult->getData()),
+            json_encode($nonOwnerResult->getData()),
+            'Non-owner and not-found responses must be byte-identical (no existence oracle).'
+        );
+
+    }//end testNonOwnerProbeAndNotFoundAreByteIdentical()
+
+    /**
+     * A legitimate 4xx status carried on the exception code is still honoured
+     * — client errors are not masked as a generic 500 (REQ-DDSTR-009).
+     *
+     * @return void
+     */
+    public function testErrorResponseHonoursExceptionStatusCode(): void
+    {
+        $this->mockCrudService->method('getConsentConfig')
+            ->willThrowException(new \Exception('Invalid input', 400));
+
+        $result = $this->controller->index();
+
+        $this->assertEquals(400, $result->getStatus());
+
+    }//end testErrorResponseHonoursExceptionStatusCode()
 }//end class

@@ -160,6 +160,15 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
 
+        // Portal signing receiver routes (portal-signing-actions,
+        // portal-signing-surface): the A6 endpoint-forward targets portaliq
+        // calls server-to-server on behalf of an external, accountless
+        // signer — #[PublicPage] because the caller is portaliq's backend,
+        // never a browser; the X-Portal-Subject assertion IS the auth.
+        ['name' => 'portalsigningreceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
+        ['name' => 'portalsigningreceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalsigningreceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
+
         // Financial extraction routes (scan-en-herken).
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
         ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],

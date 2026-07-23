@@ -197,6 +197,17 @@ class ValidSignProvider implements SigningProviderInterface
      */
     public function produceSignedArtifact(string $documentContent, array $context): string
     {
+        // Defence in depth (REQ-DDSTR-002 point 3): guard supportsLevel() here
+        // too, even though the integration below always throws regardless —
+        // so a future implementation of this method inherits the guard rather
+        // than having to remember to add it.
+        $level = (string) ($context['level'] ?? 'SES');
+        if ($this->supportsLevel(level: $level) === false) {
+            throw new RuntimeException(
+                'ValidSign provider does not support signature level: '.$level
+            );
+        }
+
         throw new RuntimeException(
             'ValidSign cannot yet produce a signed artifact — the external signing integration is '
             .'not implemented. The request must not complete with the unsigned original as its signed document.'

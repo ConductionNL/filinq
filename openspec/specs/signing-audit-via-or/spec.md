@@ -144,3 +144,34 @@ migration.
 - THEN no new objects SHALL be written to `signingAuditEntry_schema`
 - AND the OR audit trail SHALL receive the new entry instead
 
+---
+
+### Requirement: Audit entries bind to the real signing-request object (REQ-DDSTR-006)
+
+`SigningAuditService::logEvent()` MUST resolve the actual signing-request object (register `signing`, schema `signingRequest`) via ObjectService and create the OR audit entry against that entity, so the entry carries real register/schema/object linkage and the tamper-evident hash chain anchors to a real row — not a uuid-only stub. When resolution fails (request deleted mid-flight), the service MUST still write the entry with the uuid fallback and log a warning: an unlinked audit entry is acceptable, a dropped one is not. Audit rows MUST never be mutated after their hash is sealed.
+
+#### Scenario: Entry carries real object linkage
+- **GIVEN** a persisted signing request in the `signing` register
+- **WHEN** `logEvent(<its uuid>, 'SIGNED', ...)` is called
+- **THEN** the created OR audit entry references the resolved signing-request entity (objectUuid AND its register/schema linkage)
+- **AND** the entry participates in the object's hash chain
+- @e2e exclude OR persistence internals with no UI surface — covered by PHPUnit (tests/unit/Service/SigningAuditServiceTest.php)
+
+#### Scenario: Vanished request still yields an audit entry
+- **GIVEN** a signing-request uuid that no longer resolves to an object
+- **WHEN** `logEvent()` is called for a CANCELLED action on that uuid
+- **THEN** an audit entry is still created carrying the uuid
+- **AND** a warning is logged about the unresolved linkage
+- @e2e exclude fail-soft fault injection — covered by PHPUnit (tests/unit/Service/SigningAuditServiceTest.php)
+
+### Requirement: Audit retrieval is object-scoped and bounded (REQ-DDSTR-007)
+
+`SigningAuditService::getAuditTrail()` MUST query OR's audit trail scoped to the signing request's object identity (`object_uuid` filter pushed into the mapper/query layer, verified against `AuditTrailMapper::findAll()` at OR HEAD) instead of fetching all `docudesk.signing.*` entries fleet-wide and filtering in PHP. The result MUST remain chronologically ordered.
+
+#### Scenario: Trail query does not scan unrelated requests
+- **GIVEN** 3 audit entries for signing request A and 500 entries for other signing requests
+- **WHEN** `getAuditTrail(A)` is called
+- **THEN** exactly A's 3 entries are returned in chronological order
+- **AND** the underlying query is scoped to A's object identity (verified via query assertions, not post-hoc PHP filtering)
+- @e2e exclude query-shape assertion — covered by PHPUnit (tests/unit/Service/SigningAuditServiceTest.php)
+

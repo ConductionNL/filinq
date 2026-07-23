@@ -32,10 +32,13 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use DateTime;
+use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -77,9 +80,29 @@ class SigningAuditServiceTest extends TestCase
      */
     private SigningAuditService $service;
 
+    /**
+     * SettingsService mock (resolves the real signing-request ObjectEntity).
+     *
+     * @var SettingsService|MockObject
+     */
+    private SettingsService|MockObject $settingsServiceMock;
+
+    /**
+     * IAppConfig mock.
+     *
+     * @var IAppConfig|MockObject
+     */
+    private IAppConfig|MockObject $configMock;
+
 
     /**
      * Set up mocks before each test.
+     *
+     * By default `settingsServiceMock->getObjectService()` returns null
+     * (PHPUnit's default stub for a nullable return type), so
+     * `resolveSigningRequestObject()` falls back to the uuid-only stub — the
+     * pre-existing tests below rely on that fallback shape unless a test
+     * explicitly configures a resolving ObjectService (REQ-DDSTR-006 tests).
      *
      * @return void
      */
@@ -90,9 +113,23 @@ class SigningAuditServiceTest extends TestCase
         $this->mapperMock = $this->createMock(AuditTrailMapper::class);
         $this->loggerMock = $this->createMock(LoggerInterface::class);
 
+        $this->settingsServiceMock = $this->createMock(SettingsService::class);
+        $this->configMock          = $this->createMock(IAppConfig::class);
+        $this->configMock->method('getValueString')->willReturnCallback(
+            function (string $app, string $key, string $default=''): string {
+                $map = [
+                    'signingRequest_register' => 'signing',
+                    'signingRequest_schema'   => 'signingRequest',
+                ];
+                return $map[$key] ?? $default;
+            }
+        );
+
         $this->service = new SigningAuditService(
             auditTrailMapper: $this->mapperMock,
-            logger:           $this->loggerMock
+            logger:           $this->loggerMock,
+            settingsService:  $this->settingsServiceMock,
+            config:           $this->configMock
         );
 
     }//end setUp()
@@ -255,7 +292,9 @@ class SigningAuditServiceTest extends TestCase
             $this->mapperMock = $this->createMock(AuditTrailMapper::class);
             $this->service    = new SigningAuditService(
                 auditTrailMapper: $this->mapperMock,
-                logger:           $this->loggerMock
+                logger:           $this->loggerMock,
+                settingsService:  $this->settingsServiceMock,
+                config:           $this->configMock
             );
         }//end foreach
 
@@ -288,33 +327,186 @@ class SigningAuditServiceTest extends TestCase
 
 
     // -------------------------------------------------------------------------
+    // REQ-DDSTR-006: audit entries bind to the REAL signing-request object
+    // -------------------------------------------------------------------------
+
+    /**
+     * logEvent() resolves the REAL signing-request ObjectEntity via
+     * ObjectService and passes IT (not a uuid-only stub) to
+     * createAuditTrailEntry() — the entry carries real register/schema/id
+     * linkage (signing-trust-rebuild REQ-DDSTR-006, closing the #289 residual
+     * where every entry anchored to a uuid-only stub).
+     *
+     * @return void
+     */
+    public function testLogEventResolvesRealObjectEntity(): void
+    {
+        $realEntity = $this->createMock(ObjectEntity::class);
+        $realEntity->method('getUuid')->willReturn('sign-001');
+        $realEntity->method('getId')->willReturn(42);
+        $realEntity->method('getRegister')->willReturn('signing');
+        $realEntity->method('getSchema')->willReturn('signingRequest');
+
+        $objectService = $this->getMockBuilder(className: ObjectService::class)
+            ->disableOriginalConstructor()
+            ->disableOriginalClone()
+            ->disableArgumentCloning()
+            ->disallowMockingUnknownTypes()
+            ->onlyMethods(['find'])
+            ->getMock();
+        $objectService->expects($this->once())
+            ->method('find')
+            ->with(
+                $this->equalTo('sign-001'),
+                $this->anything(),
+                $this->anything(),
+                $this->equalTo('signing'),
+                $this->equalTo('signingRequest')
+            )
+            ->willReturn($realEntity);
+
+        $this->settingsServiceMock->method('getObjectService')->willReturn($objectService);
+
+        $returnedTrail = $this->createMock(AuditTrail::class);
+        $returnedTrail->method('jsonSerialize')->willReturn([]);
+
+        $capturedObject = null;
+        $this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
+            function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+                $capturedObject = $obj;
+                return $returnedTrail;
+            }
+        );
+
+        $this->service->logEvent(
+            signingRequestId: 'sign-001',
+            action:           'SIGNED',
+            actorUserId:      'u',
+            actorDisplayName: 'U',
+            ipAddress:        '0.0.0.0'
+        );
+
+        $this->assertSame($realEntity, $capturedObject, 'logEvent() must bind to the REAL resolved ObjectEntity.');
+
+    }//end testLogEventResolvesRealObjectEntity()
+
+    /**
+     * When the signing-request has vanished mid-flight (find() returns null),
+     * logEvent() STILL writes the entry — with the uuid-only fallback stub —
+     * and logs a warning. An unlinked audit entry is acceptable; a dropped one
+     * is not (signing-trust-rebuild REQ-DDSTR-006).
+     *
+     * @return void
+     */
+    public function testLogEventFallsBackToStubWithWarningWhenRequestVanished(): void
+    {
+        $objectService = $this->getMockBuilder(className: ObjectService::class)
+            ->disableOriginalConstructor()
+            ->disableOriginalClone()
+            ->disableArgumentCloning()
+            ->disallowMockingUnknownTypes()
+            ->onlyMethods(['find'])
+            ->getMock();
+        $objectService->method('find')->willReturn(null);
+        $this->settingsServiceMock->method('getObjectService')->willReturn($objectService);
+
+        $this->loggerMock->expects($this->once())->method('warning');
+
+        $returnedTrail = $this->createMock(AuditTrail::class);
+        $returnedTrail->method('jsonSerialize')->willReturn([]);
+
+        $capturedObject = null;
+        $this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
+            function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+                $capturedObject = $obj;
+                return $returnedTrail;
+            }
+        );
+
+        // Must NOT throw — the entry is still written.
+        $this->service->logEvent(
+            signingRequestId: 'vanished-request',
+            action:           'CANCELLED',
+            actorUserId:      'u',
+            actorDisplayName: 'U',
+            ipAddress:        '0.0.0.0'
+        );
+
+        $this->assertNotNull($capturedObject);
+        $this->assertSame('vanished-request', $capturedObject->getUuid());
+
+    }//end testLogEventFallsBackToStubWithWarningWhenRequestVanished()
+
+    // -------------------------------------------------------------------------
     // D-3.1: getAuditTrail() queries OR audit trail and filters by objectUuid
     // -------------------------------------------------------------------------
 
     /**
-     * getAuditTrail() calls findAll() with an action filter and returns entries
-     * matching the requested objectUuid, sorted chronologically.
+     * getAuditTrail() pushes an objectUuid-scoped filter into findAll() —
+     * scoped at the query layer, not a PHP-side post-filter — and returns the
+     * (already-scoped) entries sorted chronologically (signing-trust-rebuild
+     * REQ-DDSTR-007, closing the #289 unbounded-scan residual).
      *
      * @return void
      */
     public function testGetAuditTrailFiltersAndSortsChronologically(): void
     {
         $older = $this->makeAuditTrail('sign-003', 'docudesk.signing.CREATED', new DateTime('2026-01-01 10:00:00'));
-        $newer = $this->makeAuditTrail('sign-003', 'docudesk.signing.SIGNED',  new DateTime('2026-01-02 10:00:00'));
-        $other = $this->makeAuditTrail('sign-999', 'docudesk.signing.SIGNED',  new DateTime('2026-01-01 09:00:00'));
+        $newer = $this->makeAuditTrail('sign-003', 'docudesk.signing.SIGNED', new DateTime('2026-01-02 10:00:00'));
 
+        // The mock simulates OR's bounded query: it only returns rows for the
+        // requested object_uuid filter — proving the scope is pushed into the
+        // mapper call, not recovered by client-side filtering.
         $this->mapperMock
             ->expects($this->once())
             ->method('findAll')
-            ->willReturn([$newer, $other, $older]);
+            ->willReturnCallback(
+                function (?int $limit, ?int $offset, ?array $filters) use ($older, $newer): array {
+                    if (($filters['object_uuid'] ?? null) === 'sign-003') {
+                        return [$newer, $older];
+                    }
+
+                    return [];
+                }
+            );
 
         $result = $this->service->getAuditTrail('sign-003');
 
-        $this->assertCount(2, $result, 'Only entries for sign-003 should be returned.');
+        $this->assertCount(2, $result, 'Only the object-scoped entries should be returned.');
         $this->assertSame('docudesk.signing.CREATED', $result[0]['action'], 'Oldest entry must come first.');
-        $this->assertSame('docudesk.signing.SIGNED',  $result[1]['action']);
+        $this->assertSame('docudesk.signing.SIGNED', $result[1]['action']);
 
     }//end testGetAuditTrailFiltersAndSortsChronologically()
+
+    /**
+     * getAuditTrail() does NOT scan unrelated requests: a query scoped to
+     * request A never sees entries that only match by chance (e.g. a shared
+     * action type) on a DIFFERENT object_uuid.
+     *
+     * @return void
+     */
+    public function testGetAuditTrailDoesNotLeakUnrelatedRequests(): void
+    {
+        $this->mapperMock
+            ->method('findAll')
+            ->willReturnCallback(
+                function (?int $limit, ?int $offset, ?array $filters): array {
+                    // Simulate OR actually scoping by object_uuid: an
+                    // unrelated request's entries are never returned for A's query.
+                    if (($filters['object_uuid'] ?? null) === 'request-a') {
+                        return [$this->makeAuditTrail('request-a', 'docudesk.signing.SIGNED')];
+                    }
+
+                    return [$this->makeAuditTrail('request-b', 'docudesk.signing.SIGNED')];
+                }
+            );
+
+        $result = $this->service->getAuditTrail('request-a');
+
+        $this->assertCount(1, $result);
+        $this->assertSame('request-a', $result[0]['objectUuid'] ?? null);
+
+    }//end testGetAuditTrailDoesNotLeakUnrelatedRequests()
 
 
     /**
@@ -359,6 +551,8 @@ class SigningAuditServiceTest extends TestCase
 
         $this->assertNotNull($capturedFilters);
         $this->assertArrayHasKey('action', $capturedFilters);
+        $this->assertArrayHasKey('object_uuid', $capturedFilters, 'The query must be scoped by object_uuid (REQ-DDSTR-007).');
+        $this->assertSame('any-uuid', $capturedFilters['object_uuid']);
 
         // Every VALID_ACTION must appear in the filter string as docudesk.signing.{ACTION}.
         $actionFilter = $capturedFilters['action'];

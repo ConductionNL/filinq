@@ -17,7 +17,9 @@
  * (REQ-DDPSS-001): the `sign`/`decline` `rowActions` on `signerSigningRequests`
  * (ids, `minTrust: substantial`, relative-endpoint shape) and the invariant
  * that `signerRecords` and the entire `data-subject` manifest carry no write
- * action.
+ * action. And the `portal-signing-actions` extension (REQ-DDPSA-001): the
+ * SAME three acts as top-level contract-v2 A6 `endpoint` actions — `sign`,
+ * `decline`, `viewDocument` — on the `signer` manifest only.
  *
  * Subjects use nil-pattern UUIDs per the change design.md Seed Data section —
  * self-evidently fake, never colliding with live data. The provider is
@@ -239,7 +241,6 @@ final class PortalContributionProviderTest extends TestCase
         $manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
         $this->assertIsArray($manifest);
         $this->assertSame('DocuDesk', $manifest['label']);
-        $this->assertSame([], $manifest['actions'], 'No create/endpoint actions ship this wave');
 
         $record = $this->indexById($manifest['collections'])['signerRecords'];
         $this->assertSame('signing', $record['register']);
@@ -358,34 +359,79 @@ final class PortalContributionProviderTest extends TestCase
 
 
     /**
-     * Neither audience ships top-level create/endpoint actions; only the
-     * `signerSigningRequests` collection carries the sign/decline rowActions
-     * (a distinct, per-collection contract-v2.2 concept, REQ-DDPSS-001), and
-     * no read-only collection (`signerRecords`, the entire `data-subject`
-     * manifest) carries any write action.
+     * The `data-subject` audience ships NO top-level actions and no
+     * per-collection write action anywhere. The `signer` audience's ONLY
+     * top-level actions are the three A6 endpoint actions (pinned separately
+     * in `testSignerManifestDeclaresEndpointActions()`); its only
+     * per-collection write action is `signerSigningRequests`' `rowActions`.
      *
      * @return void
      */
     public function testNoActionsShipThisWave(): void
     {
-        foreach ([self::DATA_SUBJECT, self::SIGNER_SUBJECT] as $subject) {
-            $manifest = $this->provider->getContribution($subject);
-            $this->assertIsArray($manifest);
-            $this->assertSame([], $manifest['actions'], 'No top-level create/endpoint action ships');
-            $this->assertSame([], $manifest['notifications'], 'No inbox / notification collections ship');
-            foreach ($manifest['collections'] as $collection) {
-                $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
-                if ($collection['id'] !== 'signerSigningRequests') {
-                    $this->assertArrayNotHasKey(
-                        'rowActions',
-                        $collection,
-                        "Collection '{$collection['id']}' must carry no write action"
-                    );
-                }
+        $dataSubjectManifest = $this->provider->getContribution(self::DATA_SUBJECT);
+        $this->assertIsArray($dataSubjectManifest);
+        $this->assertSame([], $dataSubjectManifest['actions'], 'data-subject ships no top-level create/endpoint action');
+        $this->assertSame([], $dataSubjectManifest['notifications'], 'No inbox / notification collections ship');
+        foreach ($dataSubjectManifest['collections'] as $collection) {
+            $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
+            $this->assertArrayNotHasKey('rowActions', $collection, "data-subject collection '{$collection['id']}' must carry no write action");
+        }
+
+        $signerManifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+        $this->assertIsArray($signerManifest);
+        $this->assertSame([], $signerManifest['notifications'], 'No inbox / notification collections ship');
+        foreach ($signerManifest['collections'] as $collection) {
+            $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
+            if ($collection['id'] !== 'signerSigningRequests') {
+                $this->assertArrayNotHasKey(
+                    'rowActions',
+                    $collection,
+                    "Collection '{$collection['id']}' must carry no write action"
+                );
             }
         }
 
     }//end testNoActionsShipThisWave()
+
+    /**
+     * The `signer` manifest declares exactly the three contract-v2 A6
+     * endpoint actions — `sign`, `decline`, `viewDocument` — each
+     * `minTrust: substantial`, each an instance-local relative endpoint
+     * (portal-signing-actions REQ-DDPSA-001). The `data-subject` manifest's
+     * `actions` stays empty.
+     *
+     * @return void
+     */
+    public function testSignerManifestDeclaresEndpointActions(): void
+    {
+        $manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+        $this->assertIsArray($manifest);
+
+        $actions = $this->indexById($manifest['actions']);
+        $this->assertSame(['decline', 'sign', 'viewDocument'], $this->sortedKeys($actions), 'Exactly sign + decline + viewDocument, no other action');
+
+        $expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'viewDocument' => 'GET'];
+        foreach ($expectedMethods as $id => $method) {
+            $action = $actions[$id];
+            $this->assertSame($id, $action['id']);
+            $this->assertSame($method, $action['method']);
+            $this->assertSame('substantial', $action['minTrust'], "action '{$id}' must be eIDAS-substantial gated");
+            $this->assertIsString($action['endpoint']);
+            $this->assertStringStartsWith('/apps/docudesk/api/portal/signing/', $action['endpoint'], "action '{$id}' endpoint must be instance-local relative under the portal signing receiver path");
+            $this->assertStringNotContainsStringIgnoringCase('://', $action['endpoint'], "action '{$id}' endpoint must carry no scheme");
+            $this->assertStringNotContainsString('..', $action['endpoint'], "action '{$id}' endpoint must not traverse ('..')");
+            $this->assertNotEmpty($action['label']);
+        }
+
+        $endpoints = array_column($actions, 'endpoint');
+        $this->assertSame(count($endpoints), count(array_unique($endpoints)), 'sign/decline/viewDocument must resolve to distinct endpoints');
+
+        $dataSubjectManifest = $this->provider->getContribution(self::DATA_SUBJECT);
+        $this->assertIsArray($dataSubjectManifest);
+        $this->assertSame([], $dataSubjectManifest['actions'], 'data-subject actions must stay empty');
+
+    }//end testSignerManifestDeclaresEndpointActions()
 
 
     /**
@@ -437,6 +483,13 @@ final class PortalContributionProviderTest extends TestCase
             }//end foreach
 
             foreach ($manifest['actions'] as $action) {
+                // A6 endpoint actions (portal-signing-actions REQ-DDPSA-001)
+                // carry no `schema`/`fields` whitelist — they forward to a
+                // receiver, they do not write an OpenRegister object directly.
+                if (isset($action['schema']) === false) {
+                    continue;
+                }
+
                 $schema = $action['schema'];
                 $this->assertArrayHasKey($schema, $schemaProperties);
                 foreach (($action['fields'] ?? []) as $field) {

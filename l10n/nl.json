@@ -565,7 +565,18 @@
         "No import content provided": "Geen importinhoud opgegeven",
         "Not authenticated": "Niet geauthenticeerd",
         "Term not found": "Term niet gevonden",
-        "You do not have access to this custom dictionary": "U heeft geen toegang tot deze aangepaste woordenlijst"
+        "You do not have access to this custom dictionary": "U heeft geen toegang tot deze aangepaste woordenlijst",
+        "External signature, not yet supported": "Externe handtekening, nog niet ondersteund",
+        "Invalid": "Ongeldig",
+        "Legacy signature format, cannot be re-verified": "Verouderd handtekeningformaat, kan niet opnieuw worden geverifieerd",
+        "Mixed": "Gemengd",
+        "Operatie Zilverreiger\nDossier Karekiet": "Operatie Zilverreiger\nDossier Karekiet",
+        "Server verification secret not configured": "Serververificatiegeheim niet geconfigureerd",
+        "Signature no longer matches the document": "Handtekening komt niet meer overeen met het document",
+        "Tampered": "Gemanipuleerd",
+        "Unverifiable": "Niet verifieerbaar",
+        "Verdict": "Uitkomst",
+        "Verified": "Geverifieerd"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

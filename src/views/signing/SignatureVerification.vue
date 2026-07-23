@@ -9,8 +9,18 @@
 		</div>
 		<div v-if="signingStore.verificationResult" class="results">
 			<p><strong>{{ t('docudesk', 'File') }}:</strong> {{ signingStore.verificationResult.fileName }}</p>
-			<p><strong>{{ t('docudesk', 'Valid') }}:</strong> {{ signingStore.verificationResult.isValid ? t('docudesk', 'Yes') : t('docudesk', 'No') }}</p>
+			<p>
+				<strong>{{ t('docudesk', 'Verdict') }}:</strong>
+				<span class="verdict-badge" :class="'verdict-' + verdict">{{ verdictLabel }}</span>
+			</p>
 			<p><strong>{{ t('docudesk', 'Signatures') }}:</strong> {{ signingStore.verificationResult.signatures.length }}</p>
+			<ul v-if="signingStore.verificationResult.signatures.length" class="signature-list">
+				<li v-for="(signature, index) in signingStore.verificationResult.signatures" :key="index">
+					<span class="status-badge" :class="'status-' + signature.status">{{ statusLabel(signature.status) }}</span>
+					<span class="signer">{{ signature.signer }}</span>
+					<span v-if="signature.reason" class="reason">({{ reasonLabel(signature.reason) }})</span>
+				</li>
+			</ul>
 			<p class="results__attribution">
 				{{ t('docudesk', 'Verification provided by the signing engine.') }}
 			</p>
@@ -38,7 +48,37 @@ export default {
 	data() {
 		return { verifyFileId: this.fileId }
 	},
-	computed: { signingStore() { return useSigningStore() } },
+	computed: {
+		signingStore() { return useSigningStore() },
+		/**
+		 * Tri-state document verdict (signing-trust-rebuild REQ-DDSTR-005):
+		 * verified | tampered | unverifiable | mixed. Falls back to the
+		 * strict `isValid` boolean for a pre-rebuild verification result
+		 * shape so an older cached result never crashes the view.
+		 *
+		 * @return {string} The verdict key.
+		 */
+		verdict() {
+			const result = this.signingStore.verificationResult
+			if (!result) {
+				return 'unverifiable'
+			}
+
+			if (result.verdict) {
+				return result.verdict
+			}
+
+			return result.isValid ? 'verified' : 'unverifiable'
+		},
+		/**
+		 * Human-readable label for the current verdict.
+		 *
+		 * @return {string} The translated verdict label.
+		 */
+		verdictLabel() {
+			return this.verdictLabel_(this.verdict)
+		},
+	},
 	mounted() {
 		if (this.verifyFileId) {
 			this.verify()
@@ -56,6 +96,50 @@ export default {
 		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
 		 */
 		async verify() { if (this.verifyFileId) { await this.signingStore.verifyDocument(this.verifyFileId) } },
+		/**
+		 * Human-readable label for the document-level tri-state verdict.
+		 *
+		 * @param {string} verdict The verdict key (verified|tampered|unverifiable|mixed).
+		 * @return {string} The translated verdict label.
+		 */
+		verdictLabel_(verdict) {
+			const labels = {
+				verified: t('docudesk', 'Verified'),
+				tampered: t('docudesk', 'Tampered'),
+				unverifiable: t('docudesk', 'Unverifiable'),
+				mixed: t('docudesk', 'Mixed'),
+			}
+			return labels[verdict] ?? verdict
+		},
+		/**
+		 * Human-readable label for a per-signature tri-state status.
+		 *
+		 * @param {string} status The signature status (verified|invalid|unverifiable).
+		 * @return {string} The translated status label.
+		 */
+		statusLabel(status) {
+			const labels = {
+				verified: t('docudesk', 'Verified'),
+				invalid: t('docudesk', 'Invalid'),
+				unverifiable: t('docudesk', 'Unverifiable'),
+			}
+			return labels[status] ?? status
+		},
+		/**
+		 * Human-readable label for a machine-readable verification reason.
+		 *
+		 * @param {string} reason The reason code.
+		 * @return {string} The translated reason label.
+		 */
+		reasonLabel(reason) {
+			const labels = {
+				'legacy-assertion-v1': t('docudesk', 'Legacy signature format, cannot be re-verified'),
+				'external-signature-unsupported': t('docudesk', 'External signature, not yet supported'),
+				'mac-mismatch': t('docudesk', 'Signature no longer matches the document'),
+				'signing-secret-not-configured': t('docudesk', 'Server verification secret not configured'),
+			}
+			return labels[reason] ?? reason
+		},
 	},
 }
 </script>
@@ -82,5 +166,56 @@ export default {
 	padding: 16px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
+}
+
+.signature-list {
+	list-style: none;
+	margin: 8px 0 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.signature-list li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.reason {
+	color: var(--color-text-maxcontrast);
+}
+
+/*
+ * Tri-state badges use NL Design System / Nextcloud CSS variables only —
+ * no hardcoded colors (signing-trust-rebuild task 1.3).
+ */
+.verdict-badge,
+.status-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill, 16px);
+	font-weight: bold;
+	font-size: 0.9em;
+}
+
+.verdict-verified,
+.status-verified {
+	background-color: var(--color-success, var(--color-main-text));
+	color: var(--color-primary-element-text, #fff);
+}
+
+.verdict-tampered,
+.status-invalid {
+	background-color: var(--color-error);
+	color: var(--color-primary-element-text, #fff);
+}
+
+.verdict-unverifiable,
+.verdict-mixed,
+.status-unverifiable {
+	background-color: var(--color-warning, var(--color-border-dark));
+	color: var(--color-main-text);
 }
 </style>

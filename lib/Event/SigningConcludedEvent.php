@@ -60,6 +60,14 @@ class SigningConcludedEvent extends Event
      * @param string|null       $subjectId         OpenRegister id of the originating object
      * @param string            $externalReference Consumer's own reference
      * @param string            $correlationId     Correlation id from the request event
+     * @param string            $assuranceLevel    Resolved eIDAS assurance (low|substantial|high,
+     *                                             signing-trust-rebuild REQ-DDSTR-010) — the
+     *                                             delegating consumer (e.g. decidesk's
+     *                                             `EIDASSignatureService::resolveSignatureStage()`)
+     *                                             maps this onto its own stage vocabulary. `low`
+     *                                             for the native SES provider today; broker-resolved
+     *                                             assurance is populated into the SAME field by the
+     *                                             `signer-identity-rails` change.
      *
      * @return void
      */
@@ -75,6 +83,7 @@ class SigningConcludedEvent extends Event
         private readonly ?string $subjectId,
         private readonly string $externalReference='',
         private readonly string $correlationId='',
+        private readonly string $assuranceLevel='low',
     ) {
         parent::__construct();
 
@@ -93,6 +102,8 @@ class SigningConcludedEvent extends Event
      * @param string|null          $signedDocumentRef Reference to the signed document, when signed
      *
      * @return self
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public static function fromRequest(
         array $request,
@@ -111,14 +122,53 @@ class SigningConcludedEvent extends Event
             subjectId: ($request['subjectId'] ?? null),
             externalReference: (string) ($request['externalReference'] ?? ''),
             correlationId: (string) ($request['correlationId'] ?? ''),
+            assuranceLevel: self::resolveAssuranceLevel(request: $request),
         );
 
     }//end fromRequest()
 
     /**
+     * Resolve the eIDAS assurance level for the completion payload
+     * (signing-trust-rebuild REQ-DDSTR-010).
+     *
+     * Conservative-by-construction: the native provider only ever produces SES
+     * artifacts (`NativeSigningProvider::supportsLevel()`), so a native/SES
+     * request always resolves `low`. Any level this map does not explicitly
+     * recognise falls back to `low` rather than over-claiming an assurance the
+     * request cannot actually evidence. `signer-identity-rails` is expected to
+     * populate a broker-resolved, higher assurance into this SAME field for a
+     * request whose provider actually supports it — this mapping never needs
+     * to change for that, only the request's own `provider`/`signatureLevel`
+     * do.
+     *
+     * @param array<string, mixed> $request The persisted signing-request array.
+     *
+     * @return string One of low|substantial|high.
+     */
+    private static function resolveAssuranceLevel(array $request): string
+    {
+        $provider = (string) ($request['provider'] ?? 'native');
+        $level    = (string) ($request['signatureLevel'] ?? 'SES');
+
+        if ($provider === 'native') {
+            // The native provider only ever produces SES — never claim more.
+            return 'low';
+        }
+
+        return match ($level) {
+            'QES' => 'high',
+            'AdES' => 'substantial',
+            default => 'low',
+        };
+
+    }//end resolveAssuranceLevel()
+
+    /**
      * Get the concluded signing-request id.
      *
      * @return string The signing-request id.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSigningRequestId(): string
     {
@@ -130,6 +180,8 @@ class SigningConcludedEvent extends Event
      * Get the normalised outcome status (signed|declined|expired|cancelled).
      *
      * @return string The status.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getStatus(): string
     {
@@ -141,6 +193,8 @@ class SigningConcludedEvent extends Event
      * Get the reference to the signed document, when signed.
      *
      * @return string|null The signed document reference, or null.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSignedDocumentRef(): ?string
     {
@@ -152,6 +206,8 @@ class SigningConcludedEvent extends Event
      * Get the resolved signers list.
      *
      * @return array<int, mixed> The signers.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSigners(): array
     {
@@ -163,6 +219,8 @@ class SigningConcludedEvent extends Event
      * Get when the request concluded.
      *
      * @return string|null The signed-at timestamp, or null.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSignedAt(): ?string
     {
@@ -174,6 +232,8 @@ class SigningConcludedEvent extends Event
      * Get the consumer app that requested the signature.
      *
      * @return string The source app id.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSourceApp(): string
     {
@@ -185,6 +245,8 @@ class SigningConcludedEvent extends Event
      * Get the OpenRegister register of the originating object.
      *
      * @return string|null The subject register, or null.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSubjectRegister(): ?string
     {
@@ -196,6 +258,8 @@ class SigningConcludedEvent extends Event
      * Get the OpenRegister schema of the originating object.
      *
      * @return string|null The subject schema, or null.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSubjectSchema(): ?string
     {
@@ -207,6 +271,8 @@ class SigningConcludedEvent extends Event
      * Get the OpenRegister id of the originating object.
      *
      * @return string|null The subject id, or null.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getSubjectId(): ?string
     {
@@ -218,6 +284,8 @@ class SigningConcludedEvent extends Event
      * Get the consumer's own external reference.
      *
      * @return string The external reference.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getExternalReference(): string
     {
@@ -229,10 +297,25 @@ class SigningConcludedEvent extends Event
      * Get the correlation id from the request event.
      *
      * @return string The correlation id.
+     *
+     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
      */
     public function getCorrelationId(): string
     {
         return $this->correlationId;
 
     }//end getCorrelationId()
+
+    /**
+     * Get the resolved eIDAS assurance level (signing-trust-rebuild REQ-DDSTR-010).
+     *
+     * @return string One of low|substantial|high.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    public function getAssuranceLevel(): string
+    {
+        return $this->assuranceLevel;
+
+    }//end getAssuranceLevel()
 }//end class
