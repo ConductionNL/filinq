@@ -198,6 +198,8 @@ class Http
 
     public const STATUS_NOT_IMPLEMENTED = 501;
 
+    public const STATUS_BAD_GATEWAY = 502;
+
     public const STATUS_SERVICE_UNAVAILABLE = 503;
 }//end class
 

@@ -344,8 +344,8 @@ class SigningAuditServiceTest extends TestCase
         $realEntity = $this->createMock(ObjectEntity::class);
         $realEntity->method('getUuid')->willReturn('sign-001');
         $realEntity->method('getId')->willReturn(42);
-        $realEntity->method('getRegister')->willReturn(1);
-        $realEntity->method('getSchema')->willReturn(2);
+        $realEntity->method('getRegister')->willReturn('signing');
+        $realEntity->method('getSchema')->willReturn('signingRequest');
 
         $objectService = $this->getMockBuilder(className: ObjectService::class)
             ->disableOriginalConstructor()

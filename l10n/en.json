@@ -743,7 +743,18 @@
         "No import content provided": "No import content provided",
         "Not authenticated": "Not authenticated",
         "Term not found": "Term not found",
-        "You do not have access to this custom dictionary": "You do not have access to this custom dictionary"
+        "You do not have access to this custom dictionary": "You do not have access to this custom dictionary",
+        "External signature, not yet supported": "External signature, not yet supported",
+        "Invalid": "Invalid",
+        "Legacy signature format, cannot be re-verified": "Legacy signature format, cannot be re-verified",
+        "Mixed": "Mixed",
+        "Operatie Zilverreiger\nDossier Karekiet": "Operatie Zilverreiger\nDossier Karekiet",
+        "Server verification secret not configured": "Server verification secret not configured",
+        "Signature no longer matches the document": "Signature no longer matches the document",
+        "Tampered": "Tampered",
+        "Unverifiable": "Unverifiable",
+        "Verdict": "Verdict",
+        "Verified": "Verified"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

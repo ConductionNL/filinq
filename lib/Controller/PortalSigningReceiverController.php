@@ -90,7 +90,7 @@ class PortalSigningReceiverController extends Controller
      * @param PortalAssertionVerifier $verifier        Verifies the X-Portal-Subject assertion.
      * @param SigningService          $signingService  The honest signing primitive.
      * @param SettingsService         $settingsService Settings service (resolves OR's ObjectService).
-     * @param IAppConfig              $config           App config (resolves signerRecord/signingRequest register/schema).
+     * @param IAppConfig              $config          App config (resolves signerRecord/signingRequest register/schema).
      * @param IRootFolder             $rootFolder      Root folder (reads the target document for viewDocument).
      * @param LoggerInterface         $logger          Logger.
      *
@@ -113,10 +113,11 @@ class PortalSigningReceiverController extends Controller
     /**
      * POST /apps/docudesk/api/portal/signing/sign
      *
-     * signDocument (portal-signing-actions REQ-DDPSA-005, portal-signing-surface
-     * REQ-DDPSS-002): records the signer's consent confirmation + optional
-     * drawn-signature payload, then drives `SigningService::sign()` acting as
-     * the resolved, verified external signer.
+     * The signDocument act (portal-signing-actions REQ-DDPSA-005,
+     * portal-signing-surface REQ-DDPSS-002): records the signer's consent
+     * confirmation + optional drawn-signature payload, then drives
+     * `SigningService::sign()` acting as the resolved, verified external
+     * signer.
      *
      * @return JSONResponse
      *
@@ -164,10 +165,10 @@ class PortalSigningReceiverController extends Controller
     /**
      * POST /apps/docudesk/api/portal/signing/decline
      *
-     * declineDocument (portal-signing-actions REQ-DDPSA-005, portal-signing-surface
-     * REQ-DDPSS-003): records the client-supplied reason, then drives
-     * `SigningService::decline()` acting as the resolved, verified external
-     * signer.
+     * The declineDocument act (portal-signing-actions REQ-DDPSA-005,
+     * portal-signing-surface REQ-DDPSS-003): records the client-supplied
+     * reason, then drives `SigningService::decline()` acting as the resolved,
+     * verified external signer.
      *
      * @return JSONResponse
      *
@@ -209,11 +210,12 @@ class PortalSigningReceiverController extends Controller
     /**
      * GET /apps/docudesk/api/portal/signing/viewDocument
      *
-     * viewDocument (portal-signing-actions REQ-DDPSA-006): lets the verified,
-     * invited signer read the target document BEFORE signing. Scoped by the
-     * IDENTICAL invited-signer guard as sign/decline. portaliq's A6 forward
-     * relays a decoded JSON body only, so the document is returned as
-     * `{documentName, mimeType, contentBase64}` inside the single JSON hop.
+     * The viewDocument act (portal-signing-actions REQ-DDPSA-006): lets the
+     * verified, invited signer read the target document BEFORE signing.
+     * Scoped by the IDENTICAL invited-signer guard as sign/decline.
+     * portaliq's A6 forward relays a decoded JSON body only, so the document
+     * is returned as `{documentName, mimeType, contentBase64}` inside the
+     * single JSON hop.
      *
      * @return JSONResponse
      *
@@ -321,7 +323,7 @@ class PortalSigningReceiverController extends Controller
         }
 
         $verifiedActor = [
-            'email' => $signerEmail,
+            'email'       => $signerEmail,
             // The frozen A6 wire format carries only `sub` as the portal
             // subject reference; there is no distinct `identityRef` claim.
             // Until portaliq's contract grows one, `identityRef` mirrors
@@ -329,10 +331,10 @@ class PortalSigningReceiverController extends Controller
             // time) so the portal-signing-surface evidence binding
             // (REQ-DDPSS-004) always has both keys populated from the SAME
             // verified value.
-            'subjectRef'   => (string) $claims['sub'],
-            'identityRef'  => (string) $claims['sub'],
-            'trust'        => $trust,
-            'jti'          => (string) ($claims['jti'] ?? ''),
+            'subjectRef'  => (string) $claims['sub'],
+            'identityRef' => (string) $claims['sub'],
+            'trust'       => $trust,
+            'jti'         => (string) ($claims['jti'] ?? ''),
         ];
 
         return [$verifiedActor, $signerRecord];

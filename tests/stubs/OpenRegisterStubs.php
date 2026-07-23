@@ -80,11 +80,20 @@ class ObjectService
     /**
      * Find all objects matching a set of filters
      *
-     * @param array<string, mixed> $config Config with 'filters' key
+     * Signature pinned to the real OpenRegister ObjectService::findAll() at
+     * HEAD (`array $config=[], bool $_rbac=true, bool $_multitenancy=true`) —
+     * a mock built from a drifted stub silently accepts named arguments the
+     * real class never declared, then errors at call time instead of at
+     * mock-setup time (test-fake drift; see
+     * `reference_or-objectservice-findall-signature-and-fake-drift`).
+     *
+     * @param array<string, mixed> $config        Config with 'filters' key
+     * @param bool                 $_rbac         RBAC bypass flag.
+     * @param bool                 $_multitenancy Multitenancy bypass flag.
      *
      * @return array<mixed>
      */
-    public function findAll(array $config=[]): array
+    public function findAll(array $config=[], bool $_rbac=true, bool $_multitenancy=true): array
     {
         return [];
 

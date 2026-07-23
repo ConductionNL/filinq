@@ -65,11 +65,11 @@ class SigningAuditService
      * @param AuditTrailMapper $auditTrailMapper OR audit trail mapper.
      * @param LoggerInterface  $logger           Logger.
      * @param SettingsService  $settingsService  Settings service (resolves the real
-     *                                          signing-request ObjectEntity via OR's
-     *                                          ObjectService, signing-trust-rebuild
-     *                                          REQ-DDSTR-006).
+     *                                           signing-request ObjectEntity via OR's
+     *                                           ObjectService, signing-trust-rebuild
+     *                                           REQ-DDSTR-006).
      * @param IAppConfig       $config           App config (resolves the signingRequest
-     *                                          register/schema).
+     *                                           register/schema).
      *
      * @return void
      *

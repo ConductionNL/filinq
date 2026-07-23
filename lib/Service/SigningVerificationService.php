@@ -217,7 +217,7 @@ class SigningVerificationService
     /**
      * Cryptographically verify a self-asserted DocuDesk signature blob (v2)
      *
-     * v2 assertions carry `v: 2` and a MAC computed as `HMAC-SHA256(secret,
+     * V2 assertions carry `v: 2` and a MAC computed as `HMAC-SHA256(secret,
      * sha256(canonical-document) . "\n" . canonical-JSON(assertion-minus-mac))`
      * — the identity fields (`signer`, `timestamp`, `level`, `method`, `ip`,
      * and any bound portal-identity claims) are inside the MAC input, so
@@ -273,7 +273,7 @@ class SigningVerificationService
         $canonical   = $this->stripAssertionMac(pdfContent: $canonical, mac: $mac);
         $contentHash = hash('sha256', $canonical);
 
-        // v2: the MAC covers the content-hash AND the canonical-JSON of the
+        // V2: the MAC covers the content-hash AND the canonical-JSON of the
         // assertion fields (minus `mac` itself) — recompute over BOTH parts so
         // any rewritten identity field (signer, timestamp, level, method, ip,
         // or a bound portal-identity claim) invalidates the MAC.

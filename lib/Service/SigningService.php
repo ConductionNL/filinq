@@ -347,23 +347,23 @@ class SigningService
     /**
      * Sign a document within a signing request
      *
-     * @param string                     $requestId     The signing request ID
-     * @param string                     $signerId      The signer record ID
-     * @param array<string, mixed>|null  $verifiedActor The already-resolved, verified
-     *                                                  external actor (portal-signing-actions
-     *                                                  REQ-DDPSA-005): `email` (invited signer
-     *                                                  identity), and optionally `subjectRef`,
-     *                                                  `identityRef`, `trust`, `jti` from the
-     *                                                  verified portal assertion. When null
-     *                                                  (default) the actor is the Nextcloud
-     *                                                  session user, exactly as before — this
-     *                                                  parameter is an ADDITIVE seam, not a
-     *                                                  behaviour change for existing callers.
-     * @param array<string, mixed>|null  $signatureData Optional evidence to record on the
-     *                                                  signer record's `signatureData` field
-     *                                                  (portal-signing-surface REQ-DDPSS-002:
-     *                                                  consent confirmation + optional drawn
-     *                                                  signature). Never trusted for identity.
+     * @param string                    $requestId     The signing request ID
+     * @param string                    $signerId      The signer record ID
+     * @param array<string, mixed>|null $verifiedActor The already-resolved, verified
+     *                                                 external actor (portal-signing-actions
+     *                                                 REQ-DDPSA-005): `email` (invited signer
+     *                                                 identity), and optionally `subjectRef`,
+     *                                                 `identityRef`, `trust`, `jti` from the
+     *                                                 verified portal assertion. When null
+     *                                                 (default) the actor is the Nextcloud
+     *                                                 session user, exactly as before — this
+     *                                                 parameter is an ADDITIVE seam, not a
+     *                                                 behaviour change for existing callers.
+     * @param array<string, mixed>|null $signatureData Optional evidence to record on the
+     *                                                 signer record's `signatureData` field
+     *                                                 (portal-signing-surface REQ-DDPSS-002:
+     *                                                 consent confirmation + optional drawn
+     *                                                 signature). Never trusted for identity.
      *
      * @return array<string, mixed> The updated signer record
      *
@@ -434,7 +434,7 @@ class SigningService
         $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
         $signer['ipAddress'] = $this->getClientIp();
         if ($signatureData !== null) {
-            // portal-signing-surface REQ-DDPSS-002: consent confirmation +
+            // Portal-signing-surface REQ-DDPSS-002: consent confirmation +
             // optional drawn signature, recorded into the existing
             // `visible:false` field — never used for identity.
             $signer['signatureData'] = $signatureData;
@@ -541,7 +541,7 @@ class SigningService
         // emit SigningConcludedEvent (status=declined) for a delegated request.
         $this->emitConclusionIfDelegated(request: $request, status: 'declined');
 
-        $metadata          = $this->actorAuditMetadata(verifiedActor: $verifiedActor);
+        $metadata           = $this->actorAuditMetadata(verifiedActor: $verifiedActor);
         $metadata['reason'] = $reason;
 
         $this->auditService->logEvent(
@@ -579,9 +579,14 @@ class SigningService
         if ($verifiedActor !== null) {
             $email = (string) ($verifiedActor['email'] ?? '');
 
+            $displayName = 'External signer';
+            if ($email !== '') {
+                $displayName = $email;
+            }
+
             // Namespaced so a portal actor identity can never collide with (or
             // be mistaken for) a Nextcloud uid in the audit trail.
-            return ['portal:'.$email, ($email !== '' ? $email : 'External signer')];
+            return ['portal:'.$email, $displayName];
         }
 
         $user = $this->userSession->getUser();
@@ -840,13 +845,13 @@ class SigningService
     /**
      * Update the signing request status based on signer progress
      *
-     * @param string                     $requestId     The signing request ID
-     * @param array<string, mixed>       $request       The current request data
-     * @param array<string, mixed>|null  $verifiedActor The verified external actor completing
-     *                                                  this act, when portal-originated (see
-     *                                                  `sign()`); threaded through to the
-     *                                                  produced artifact's evidence binding
-     *                                                  (portal-signing-surface REQ-DDPSS-004).
+     * @param string                    $requestId     The signing request ID
+     * @param array<string, mixed>      $request       The current request data
+     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
+     *                                                 this act, when portal-originated (see
+     *                                                 `sign()`); threaded through to the
+     *                                                 produced artifact's evidence binding
+     *                                                 (portal-signing-surface REQ-DDPSS-004).
      *
      * @return void
      */
@@ -981,7 +986,14 @@ class SigningService
             // claims into the provider context so they land inside the SAME
             // MAC as the rest of the assertion. Sourced ONLY from the
             // already-verified actor (never the request body).
-            foreach (['subjectRef' => 'portalSubjectRef', 'identityRef' => 'portalIdentityRef', 'trust' => 'portalTrust', 'jti' => 'portalJti'] as $actorKey => $contextKey) {
+            $portalFieldMap = [
+                'subjectRef'  => 'portalSubjectRef',
+                'identityRef' => 'portalIdentityRef',
+                'trust'       => 'portalTrust',
+                'jti'         => 'portalJti',
+            ];
+
+            foreach ($portalFieldMap as $actorKey => $contextKey) {
                 if (empty($verifiedActor[$actorKey]) === false) {
                     $context[$contextKey] = (string) $verifiedActor[$actorKey];
                 }
@@ -1062,8 +1074,11 @@ class SigningService
     {
         if ($verifiedActor !== null) {
             $email = (string) ($verifiedActor['email'] ?? '');
+            if ($email !== '') {
+                return $email;
+            }
 
-            return $email !== '' ? $email : 'External signer';
+            return 'External signer';
         }
 
         $user = $this->userSession->getUser();
