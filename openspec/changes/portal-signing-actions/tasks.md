@@ -38,10 +38,10 @@
 
 - [ ] **NOT DONE**: Newman receiver contract `tests/newman/portal-signing-actions.postman_collection.json` — no Newman collection was authored in this pass.
 
-- [x] Pass the quality gates
-  - `php -l` clean; PHPCS clean (0 errors/warnings after fixes) on every touched file; the full unit suite is green (1016/1016) in the `nextcloud:34.0.0-apache` container; PHPStan/Psalm — see PR body; route-auth/route-reachability satisfied (`#[PublicPage]`/`#[NoCSRFRequired]` on all 3 routes, routes.php entries match controller methods).
+- [x] Pass the quality gates (re-confirmed 2026-07-23, baseline = origin/development @ 61746af0): `php -l` clean; PHPCS 0 errors fleet-wide (183 warnings vs baseline 196 — fewer, zero new) on every touched file; the full unit suite is green — **1042/1042** in the `nextcloud:34.0.0-apache` container vs baseline **998/998** (+44, zero regressions); PHPStan **2 pre-existing unrelated errors** identical to baseline; Psalm **1 pre-existing unrelated error** identical to baseline; route-auth/route-reachability satisfied (`#[PublicPage]`/`#[NoCSRFRequired]` on all 3 routes, routes.php entries match controller methods).
 
-- [ ] **NOT DONE**: `openspec validate portal-signing-actions --strict` — see PR body for the actual result; closing Conduction/docudesk#160 requires live-verify evidence this pass did not produce (prerequisite above is also externally blocked), so the issue was NOT closed.
+- [x] `openspec validate --type change portal-signing-actions --strict` → **valid** (re-run 2026-07-23).
+- [ ] **NOT DONE**: closing Conduction/docudesk#160 requires live-verify evidence — the A6 `signerEmail` claim forward from portaliq is still not landed (go-live blocker, not an authoring blocker; see Prerequisites above). The issue was NOT closed.
 
 ## Quality checklist
 
