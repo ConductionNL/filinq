@@ -2,7 +2,9 @@
 
 ## 1. Backend
 
-- [x] 1.1 New `lib/Service/ListReferenceResolver.php`: validates + resolves `listRefs` entries against `OCA\OpenRegister\Service\ObjectService::searchObjectsBySlug()` — guardrails (max 10 entries, scalar-only filter values, limit 1-500, `as` pattern + collision check, all fail-fast before any search runs), default `as` = sanitised schema slug + `_list`, per-item search failures collected as soft errors (REQ-DDLR-001, REQ-DDLR-003)
+- [x] 1.1 New `lib/Service/ListReferenceResolver.php`: validates + resolves `listRefs` entries against `OCA\OpenRegister\Service\ObjectService::setRegister()`/`::setSchema()` + `::searchObjectsPaginated()` (the object-source-aware path — `searchObjectsBySlug()` was tried first, live-verification against `spectr-live` caught that it never reaches a DBAL-backed schema's provider, see proposal.md design note) — guardrails (max 10 entries, scalar-only filter values, limit 1-500, `as` pattern + collision check, all fail-fast before any search runs), default `as` = sanitised schema slug + `_list`, per-item search failures collected as soft errors (REQ-DDLR-001, REQ-DDLR-003)
+
+- [x] 1.1a `tests/stubs/OpenRegisterStubs.php`: add `setRegister()`/`setSchema()`/`getRegister()`/`getSchema()` to the `ObjectService` PHPUnit-mocking stub (were missing — `createMock(ObjectService::class)` could not configure them)
 
 - [x] 1.2 `DataResolverService::resolve()`: new optional `listRefs` parameter, resolved after `dataRefs` and before `adHocData` via `ListReferenceResolver` (lazily constructed, no constructor-injection churn); existing named-argument call sites (`CorrespondenceService`, `DocumentService`) unaffected by the additive parameter (REQ-DDLR-002)
 

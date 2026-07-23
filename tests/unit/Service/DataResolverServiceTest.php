@@ -268,8 +268,8 @@ class DataResolverServiceTest extends TestCase
 
         $competitor = $this->createMock(ObjectEntity::class);
         $competitor->method('jsonSerialize')->willReturn(['id' => 'c-1', 'name' => 'Acme']);
-        $this->objectService->method('searchObjectsBySlug')
-            ->willReturn([$competitor]);
+        $this->objectService->method('searchObjectsPaginated')
+            ->willReturn(['results' => [$competitor], 'total' => 1]);
 
         $result = $this->service->resolve(
             dataRefs: [
@@ -302,8 +302,8 @@ class DataResolverServiceTest extends TestCase
      */
     public function testAdHocDataOverridesListRef(): void
     {
-        $this->objectService->method('searchObjectsBySlug')
-            ->willReturn([]);
+        $this->objectService->method('searchObjectsPaginated')
+            ->willReturn(['results' => [], 'total' => 0]);
 
         $result = $this->service->resolve(
             dataRefs: [],
@@ -359,7 +359,7 @@ class DataResolverServiceTest extends TestCase
             ->willReturn($entity);
 
         $this->objectService->expects($this->never())
-            ->method('searchObjectsBySlug');
+            ->method('searchObjectsPaginated');
 
         $result = $this->service->resolve(
             dataRefs: [

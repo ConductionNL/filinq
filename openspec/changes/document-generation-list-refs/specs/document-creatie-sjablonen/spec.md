@@ -21,17 +21,22 @@ ADDs.
 
 `DataResolverService::resolve()` MUST accept an optional `listRefs`
 parameter: an array of `{register, schema, filter?, limit?, order?, as?}`
-entries. Each entry MUST resolve, via
-`OCA\OpenRegister\Service\ObjectService::searchObjectsBySlug()`, to an array
-of the matching objects (each serialized via `jsonSerialize()` where
-available), placed in the merged data context under the key `as`. When `as`
-is omitted it MUST default to the schema slug converted to a legal Twig
-identifier (every character outside `[a-zA-Z0-9_]` replaced with `_`, a
-leading digit prefixed with `_`) with `_list` appended — e.g. schema
-`v-app-competitors` defaults to `v_app_competitors_list`. `filter` entries
-(if present) MUST be passed through as top-level search filter keys;
-`limit` MUST be forwarded as the search's `_limit`; `order` (if an array)
-MUST be forwarded as `_order`.
+entries. Each entry MUST resolve via
+`OCA\OpenRegister\Service\ObjectService::setRegister()` /
+`::setSchema()` (both slug-aware) followed by `::searchObjectsPaginated()`
+— the register/schema-context pattern that also reaches a schema's
+`x-openregister-object-source` provider when one is configured (unlike
+the sibling `searchObjects()`/`searchObjectsBySlug()` methods, which never
+consult the object-source and return nothing for a DBAL-backed schema) —
+to an array of the matching objects (each serialized via `jsonSerialize()`
+where available), placed in the merged data context under the key `as`.
+When `as` is omitted it MUST default to the schema slug converted to a
+legal Twig identifier (every character outside `[a-zA-Z0-9_]` replaced
+with `_`, a leading digit prefixed with `_`) with `_list` appended — e.g.
+schema `v-app-competitors` defaults to `v_app_competitors_list`. `filter`
+entries (if present) MUST be passed through as top-level search filter
+keys; `limit` MUST be forwarded as the search's `_limit`; `order` (if an
+array) MUST be forwarded as `_order`.
 
 #### Scenario: Resolve a DBAL-backed collection with an explicit `as` key
 
