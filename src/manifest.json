@@ -49,7 +49,7 @@
 		},
 		{
 			"id": "Correspondence",
-			"label": "Brieven & correspondentie",
+			"label": "Letters & correspondence",
 			"icon": "icon-mail",
 			"route": "Correspondence",
 			"order": 55
@@ -185,7 +185,7 @@
 			"id": "Correspondence",
 			"route": "/correspondence",
 			"type": "custom",
-			"title": "Brieven & correspondentie",
+			"title": "Letters & correspondence",
 			"component": "CorrespondenceIndex",
 			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
 		},

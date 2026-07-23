@@ -1,6 +1,7 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Letters & correspondence": "Brieven & correspondentie",
 		"Add publish-always rule": "Altijd-publiceren-regel toevoegen",
 		"Add publish-never rule": "Nooit-publiceren-regel toevoegen",
 		"Edit publish-always rule": "Altijd-publiceren-regel bewerken",
