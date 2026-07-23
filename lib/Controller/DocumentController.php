@@ -81,7 +81,11 @@ class DocumentController extends Controller
      * Request body:
      * - templateId (string, required): UUID of the template
      * - dataRefs (array, required): [{register, schema, id}, ...]
-     * - options (object, optional): format, huisstijlId, zaakId, adHocData, pdfOptions
+     * - options (object, optional): format, huisstijlId, zaakId, adHocData,
+     *   listRefs, pdfOptions
+     *   - listRefs (array, optional): [{register, schema, filter?, limit?,
+     *     order?, as?}, ...] — each resolves to an array of objects in the
+     *     Twig context under key 'as' (default: schema + '_list')
      * - filename (string, optional): Download filename
      *
      * @return DataDownloadResponse|JSONResponse Generated document binary or error
@@ -89,6 +93,7 @@ class DocumentController extends Controller
      * @NoAdminRequired
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
@@ -132,13 +137,17 @@ class DocumentController extends Controller
      * Request body:
      * - templateId (string, required): UUID of the template
      * - dataRefs (array, optional): [{register, schema, id}, ...]
-     * - options (object, optional): huisstijlId, adHocData
+     * - options (object, optional): huisstijlId, adHocData, listRefs
+     *   - listRefs (array, optional): [{register, schema, filter?, limit?,
+     *     order?, as?}, ...] — each resolves to an array of objects in the
+     *     Twig context under key 'as' (default: schema + '_list')
      *
      * @return JSONResponse Rendered HTML or error
      *
      * @NoAdminRequired
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
     public function preview(): JSONResponse
     {
@@ -197,6 +206,8 @@ class DocumentController extends Controller
      * - templateId (string, required): UUID of the template
      * - objectIds (array, required): Array of object UUIDs
      * - options (object, optional): register, schema, format, huisstijlId
+     *   - Note: options.listRefs is NOT supported here — see
+     *     DocumentService::generateBulk() docblock for why.
      *
      * @return JSONResponse Synchronous results or async job info (202 Accepted)
      *

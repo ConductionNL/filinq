@@ -274,6 +274,43 @@ class DocumentControllerTest extends TestCase
     }//end testPreviewReturnsHtmlAndWarnings()
 
     /**
+     * Test that preview() forwards options.listRefs through to
+     * DocumentService::generatePreview() unchanged.
+     *
+     * @return void
+     */
+    public function testPreviewForwardsListRefsOption(): void
+    {
+        $listRefs = [
+            ['register' => 'spectr-live', 'schema' => 'v-app-competitors', 'filter' => ['app_id' => 6]],
+        ];
+
+        $this->request->method('getParam')
+            ->willReturnMap([
+                ['templateId', null, 'tmpl-1'],
+                ['dataRefs', [], []],
+                ['options', [], ['listRefs' => $listRefs]],
+            ]);
+
+        $this->documentSvc->expects($this->once())
+            ->method('generatePreview')
+            ->with(
+                $this->equalTo('tmpl-1'),
+                $this->equalTo([]),
+                $this->callback(function (array $options) use ($listRefs): bool {
+                    return ($options['listRefs'] ?? null) === $listRefs;
+                })
+            )
+            ->willReturn(['html' => '<p>ok</p>', 'warnings' => []]);
+
+        $result = $this->controller->preview();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(200, $result->getStatus());
+
+    }//end testPreviewForwardsListRefsOption()
+
+    /**
      * Test preview returns 400 when templateId missing.
      *
      * @return void
