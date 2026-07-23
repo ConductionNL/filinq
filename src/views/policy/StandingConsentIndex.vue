@@ -217,12 +217,23 @@ export default {
 			}
 			return rules.map(r => `${r.type}:${r.value}`).join(', ')
 		},
+		/**
+		 * Open the extracted standing-consent modal in create mode.
+		 *
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
 		openCreateDialog() {
 			this.editing = null
 			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
+		/**
+		 * Open the extracted standing-consent modal in edit mode for a row.
+		 *
+		 * @param {object} row The standing-consent object to edit.
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
 			this.editingRecord = {
@@ -245,6 +256,12 @@ export default {
 			this.formError = ''
 			this.dialogOpen = true
 		},
+		/**
+		 * Persist the modal form via the standing-consent store (create or update).
+		 *
+		 * @param {object} formData The submitted standing-consent form payload.
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
 		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''

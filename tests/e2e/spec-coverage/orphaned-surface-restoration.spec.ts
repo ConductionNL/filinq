@@ -34,9 +34,9 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-correspondence-opens-from-the-menu
 		const guard = attachConsoleGuard(page)
 		await go(page, '')
-		await navClick(page, 'Brieven & correspondentie')
+		await navClick(page, 'Letters & correspondence')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
-		await expect(page.getByRole('heading', { name: 'Brieven & correspondentie' })).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Letters & correspondence' })).toBeVisible()
 
 		expect(guard.errors, `console errors: ${guard.errors.join(' | ')}`).toEqual([])
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
@@ -45,7 +45,7 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 	test('Correspondence deep-links directly', async ({ page }) => {
 		await go(page, 'correspondence')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/correspondence/)
-		await expect(page.getByRole('heading', { name: 'Brieven & correspondentie' })).toBeVisible()
+		await expect(page.getByRole('heading', { name: 'Letters & correspondence' })).toBeVisible()
 		// Real field from CorrespondenceIndex.vue — proves the component
 		// (not a manifest-empty-state fallback) actually rendered.
 		await expect(page.getByText('Template ID')).toBeVisible()

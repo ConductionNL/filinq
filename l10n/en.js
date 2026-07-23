@@ -445,7 +445,7 @@ OC.L10N.register(
 		"New term value": "New term value",
 		"No custom dictionaries defined yet.": "No custom dictionaries defined yet.",
 		"No terms yet": "No terms yet",
-		"Operatie Zilverreiger\\nDossier Karekiet": "Operatie Zilverreiger\\nDossier Karekiet",
+		"Operatie Zilverreiger\nDossier Karekiet": "Operatie Zilverreiger\nDossier Karekiet",
 		"Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.": "Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.",
 		"Remove": "Remove",
 		"Remove \"{value}\"?": "Remove \"{value}\"?",

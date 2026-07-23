@@ -1,6 +1,7 @@
 OC.L10N.register(
 	"docudesk",
 	{
+		"Letters & correspondence": "Brieven & correspondentie",
 		"Add publish-always rule": "Altijd-publiceren-regel toevoegen",
 		"Add publish-never rule": "Nooit-publiceren-regel toevoegen",
 		"Edit publish-always rule": "Altijd-publiceren-regel bewerken",
@@ -513,7 +514,7 @@ OC.L10N.register(
 		"New term value": "Nieuwe termwaarde",
 		"No custom dictionaries defined yet.": "Nog geen aangepaste woordenlijsten gedefinieerd.",
 		"No terms yet": "Nog geen termen",
-		"Operatie Zilverreiger\\nDossier Karekiet": "Operatie Zilverreiger\\nDossier Karekiet",
+		"Operatie Zilverreiger\nDossier Karekiet": "Operatie Zilverreiger\nDossier Karekiet",
 		"Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.": "Door de organisatie beheerde woordenlijsten — projectcodenamen, lokale straatnamen, dossierkenmerken — die een extra herkenner toevoegen naast Presidio en regex.",
 		"Remove": "Verwijderen",
 		"Remove \"{value}\"?": "\"{value}\" verwijderen?",

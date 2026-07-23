@@ -8,7 +8,7 @@ SPDX-License-Identifier: EUPL-1.2
 <template>
 	<div class="correspondence-index">
 		<div class="correspondence-index__header">
-			<h2>{{ t('docudesk', 'Brieven & correspondentie') }}</h2>
+			<h2>{{ t('docudesk', 'Letters & correspondence') }}</h2>
 			<p class="correspondence-index__subtitle">
 				{{ t('docudesk', 'Generate letters and correspondence from templates with merge data.') }}
 			</p>
