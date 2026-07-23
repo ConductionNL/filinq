@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "7.3.0"
+        "description": "DocuDesk register v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "7.4.0"
     },
     "x-openregister": {
         "type": "application",
@@ -54,8 +54,8 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "2.2.0",
-                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie en grootboekrekening-suggesties",
+                "version": "2.3.0",
+                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie, grootboekrekening-suggesties en organisatie-woordenlijsten voor aangepaste entiteitherkenning",
                 "schemas": [
                     "correspondence",
                     "huisstijl",
@@ -64,7 +64,9 @@
                     "generatedDocument",
                     "financialExtraction",
                     "glAccountBooking",
-                    "glAccountMappingRule"
+                    "glAccountMappingRule",
+                    "customDictionary",
+                    "customDictionaryTerm"
                 ]
             },
             "dossier": {
@@ -1397,6 +1399,175 @@
                 "configuration": {
                     "objectNameField": "accountCode",
                     "objectDescriptionField": "accountLabel",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "customDictionary": {
+                "uri": null,
+                "slug": "customDictionary",
+                "title": "Custom Dictionary",
+                "description": "Organisatie-beheerde woordenlijst die als extra herkenner naast Presidio/regex werkt. Termen in deze lijst worden tegen documenttekst gematcht volgens de gekozen matchmodus; matches worden als CUSTOM_DICTIONARY entiteiten weggeschreven in OpenRegister's gedeelde entiteitencatalogus. Eigenaarschap wordt bijgehouden via @self.organisation; lezen/schrijven is fail-closed org-gated door CustomDictionaryController.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "BookAlphabet",
+                "required": [
+                    "label"
+                ],
+                "properties": {
+                    "label": {
+                        "description": "Naam van de woordenlijst, getoond in de admin-UI en als badge bij elke match in de review-workbench.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Label",
+                        "maxLength": 255,
+                        "translatable": true
+                    },
+                    "description": {
+                        "description": "Toelichting op het doel van deze woordenlijst.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Beschrijving",
+                        "translatable": true
+                    },
+                    "colour": {
+                        "description": "Hex-kleurcode waarmee matches uit deze woordenlijst gemarkeerd worden in de review-workbench.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Kleur",
+                        "pattern": "^#[0-9A-Fa-f]{6}$",
+                        "default": "#0082C9"
+                    },
+                    "matchMode": {
+                        "description": "Matching-strategie: `exact` (hoofdlettergevoelig, byte-voor-byte), `caseInsensitive` (hoofdletterongevoelig, standaard) of `wordBoundary` (hoofdletterongevoelig, alleen op woordgrenzen zodat een term niet binnen een langer woord matcht).",
+                        "type": "string",
+                        "enum": [
+                            "exact",
+                            "caseInsensitive",
+                            "wordBoundary"
+                        ],
+                        "visible": true,
+                        "order": 4,
+                        "facetable": true,
+                        "title": "Matchmodus",
+                        "default": "caseInsensitive"
+                    },
+                    "fuzzy": {
+                        "description": "Geaccepteerd maar genegeerd in deze versie — benaderend (fuzzy) matchen is uitgesteld naar een toekomstige versie (zie design.md Open Questions).",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Fuzzy matching (nog niet actief)",
+                        "default": false
+                    },
+                    "active": {
+                        "description": "Of deze woordenlijst wordt meegenomen in automatische detectie. Uitgeschakelde woordenlijsten blijven beheerbaar maar detecteren niet automatisch.",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Actief",
+                        "default": true
+                    },
+                    "termCount": {
+                        "description": "Aantal termen in deze woordenlijst. Server-berekend door CustomDictionaryService bij elke list/get-aanroep (ADR-022 term-count enrichment); niet clientseitig instelbaar en niet persistent opgeslagen als schema-property.",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 7,
+                        "facetable": false,
+                        "title": "Aantal termen",
+                        "readOnly": true,
+                        "default": 0
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-07-23T00:00:00+00:00",
+                "created": "2026-07-23T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "label",
+                    "objectDescriptionField": "description",
+                    "autoPublish": false
+                },
+                "searchable": true
+            },
+            "customDictionaryTerm": {
+                "uri": null,
+                "slug": "customDictionaryTerm",
+                "title": "Custom Dictionary Term",
+                "description": "Eén term binnen een organisatie-woordenlijst (customDictionary). `value` is de exacte zoekterm die CustomDictionaryMatchService tegen geëxtraheerde documenttekst matcht.",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "FormatListBulleted",
+                "required": [
+                    "value",
+                    "dictionary"
+                ],
+                "properties": {
+                    "value": {
+                        "description": "De term die gezocht wordt (bijv. een projectcodenaam, straatnaam of dossierkenmerk). Dit is de zoekterm zelf, geen weergavetekst — niet vertaalbaar.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Waarde",
+                        "maxLength": 512
+                    },
+                    "label": {
+                        "description": "Optioneel leesbaar label voor deze term, getoond in de review-workbench. Valt terug op het label van de woordenlijst wanneer leeg.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Label",
+                        "maxLength": 255,
+                        "translatable": true
+                    },
+                    "dictionary": {
+                        "description": "Slug of UUID van de customDictionary waartoe deze term behoort. Consumer-side resolution door CustomDictionaryService (zelfde conventie als `dossier.bases`).",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "Woordenlijst"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-07-23T00:00:00+00:00",
+                "created": "2026-07-23T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "value",
+                    "objectDescriptionField": "label",
                     "autoPublish": false
                 },
                 "searchable": true
@@ -3568,6 +3739,27 @@
                 "runCount": 1,
                 "anonymizedAt": "2026-05-12T11:40:00+00:00",
                 "anonymizedBy": "privacy.officer@zonnestraal.nl"
+            },
+            {
+                "@self": {"register": "document", "schema": "customDictionary", "slug": "seed-custom-dictionary-projectnamen"},
+                "label": "Projectnamen",
+                "description": "Interne projectcodenamen die niet door Presidio worden herkend",
+                "colour": "#8E44AD",
+                "matchMode": "caseInsensitive",
+                "fuzzy": false,
+                "active": true
+            },
+            {
+                "@self": {"register": "document", "schema": "customDictionaryTerm", "slug": "seed-custom-dictionary-term-operatie-zilverreiger"},
+                "value": "Operatie Zilverreiger",
+                "label": null,
+                "dictionary": "seed-custom-dictionary-projectnamen"
+            },
+            {
+                "@self": {"register": "document", "schema": "customDictionaryTerm", "slug": "seed-custom-dictionary-term-dossier-karekiet"},
+                "value": "Dossier Karekiet",
+                "label": null,
+                "dictionary": "seed-custom-dictionary-projectnamen"
             }
         ]
     }

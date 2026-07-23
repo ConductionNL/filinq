@@ -34,14 +34,21 @@ class ObjectService
     /**
      * Find an object by id
      *
-     * @param string $id       Object UUID
-     * @param string $register Register slug
-     * @param string $schema   Schema slug
+     * @param string      $id            Object UUID
+     * @param string      $register      Register slug
+     * @param string      $schema        Schema slug
+     * @param bool        $_rbac         RBAC bypass flag.
+     * @param bool        $_multitenancy Multitenancy bypass flag.
      *
      * @return mixed
      */
-    public function find(string $id='', string $register='', string $schema='')
-    {
+    public function find(
+        string $id='',
+        string $register='',
+        string $schema='',
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ) {
         return null;
 
     }//end find()
@@ -49,14 +56,23 @@ class ObjectService
     /**
      * Save an object
      *
-     * @param array  $object   Object data
-     * @param string $register Register slug
-     * @param string $schema   Schema slug
+     * @param array       $object        Object data
+     * @param string      $register      Register slug
+     * @param string      $schema        Schema slug
+     * @param string|null $uuid          Optional UUID for updates.
+     * @param bool        $_rbac         RBAC bypass flag.
+     * @param bool        $_multitenancy Multitenancy bypass flag.
      *
      * @return mixed
      */
-    public function saveObject(array $object=[], string $register='', string $schema='')
-    {
+    public function saveObject(
+        array $object=[],
+        string $register='',
+        string $schema='',
+        ?string $uuid=null,
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ) {
         return null;
 
     }//end saveObject()
@@ -77,12 +93,22 @@ class ObjectService
     /**
      * Delete an object
      *
-     * @param string $uuid Object UUID
+     * @param string      $uuid          Object UUID
+     * @param string      $register      Register slug
+     * @param string      $schema        Schema slug
+     * @param bool        $_rbac         RBAC bypass flag.
+     * @param bool        $_multitenancy Multitenancy bypass flag.
      *
-     * @return void
+     * @return bool
      */
-    public function deleteObject(string $uuid='')
-    {
+    public function deleteObject(
+        string $uuid='',
+        string $register='',
+        string $schema='',
+        bool $_rbac=true,
+        bool $_multitenancy=true
+    ) {
+        return true;
 
     }//end deleteObject()
 
@@ -153,6 +179,31 @@ class ObjectService
         return [];
 
     }//end searchObjectsBySlug()
+}//end class
+
+/**
+ * Stub for OrganisationService (custom-dictionary-recognition organisation gate).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class OrganisationService
+{
+    /**
+     * Whether the current user has access to an organisation.
+     *
+     * @param string $organisationUuid The organisation UUID.
+     *
+     * @return bool
+     */
+    public function hasAccessToOrganisation(string $organisationUuid): bool
+    {
+        return false;
+
+    }//end hasAccessToOrganisation()
 }//end class
 
 /**
@@ -947,6 +998,396 @@ class EntityRelationMapper
         return [];
 
     }//end findEntitiesForAnonymization()
+
+    /**
+     * Insert multiple relation rows in one pass (custom-dictionary-recognition).
+     *
+     * @param array<int, array<string, mixed>> $rows Rows to insert.
+     *
+     * @return EntityRelation[]
+     */
+    public function insertBatch(array $rows=[]): array
+    {
+        return [];
+
+    }//end insertBatch()
+
+    /**
+     * Delete a relation row (custom-dictionary-recognition idempotent re-run).
+     *
+     * @param EntityRelation $entity The relation to delete.
+     *
+     * @return EntityRelation
+     */
+    public function delete($entity)
+    {
+        return $entity;
+
+    }//end delete()
+}//end class
+
+/**
+ * Stub for GdprEntity (custom-dictionary-recognition catalogue entries).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class GdprEntity
+{
+    /** @var int|null */
+    private $id = null;
+
+    /** @var string|null */
+    private $uuid = null;
+
+    /** @var string|null */
+    private $value = null;
+
+    /** @var string|null */
+    private $type = null;
+
+    /** @var string|null */
+    private $category = null;
+
+    /** @var \DateTime|null */
+    private $detectedAt = null;
+
+    /** @var \DateTime|null */
+    private $updatedAt = null;
+
+    /**
+     * Get the entity id.
+     *
+     * @return int|null
+     */
+    public function getId()
+    {
+        return $this->id;
+
+    }//end getId()
+
+    /**
+     * Set the entity id (test helper — real OR sets this on insert).
+     *
+     * @param int|null $id Entity id.
+     *
+     * @return void
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+    }//end setId()
+
+    /**
+     * Set the UUID.
+     *
+     * @param string|null $uuid UUID.
+     *
+     * @return void
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
+
+    }//end setUuid()
+
+    /**
+     * Get the UUID.
+     *
+     * @return string|null
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+
+    }//end getUuid()
+
+    /**
+     * Set the value.
+     *
+     * @param string $value Entity value.
+     *
+     * @return void
+     */
+    public function setValue($value)
+    {
+        $this->value = $value;
+
+    }//end setValue()
+
+    /**
+     * Get the value.
+     *
+     * @return string|null
+     */
+    public function getValue()
+    {
+        return $this->value;
+
+    }//end getValue()
+
+    /**
+     * Set the type.
+     *
+     * @param string $type Entity type.
+     *
+     * @return void
+     */
+    public function setType($type)
+    {
+        $this->type = $type;
+
+    }//end setType()
+
+    /**
+     * Get the type.
+     *
+     * @return string|null
+     */
+    public function getType()
+    {
+        return $this->type;
+
+    }//end getType()
+
+    /**
+     * Set the category.
+     *
+     * @param string $category Entity category.
+     *
+     * @return void
+     */
+    public function setCategory($category)
+    {
+        $this->category = $category;
+
+    }//end setCategory()
+
+    /**
+     * Get the category.
+     *
+     * @return string|null
+     */
+    public function getCategory()
+    {
+        return $this->category;
+
+    }//end getCategory()
+
+    /**
+     * Set detectedAt.
+     *
+     * @param \DateTime $detectedAt Detected-at timestamp.
+     *
+     * @return void
+     */
+    public function setDetectedAt($detectedAt)
+    {
+        $this->detectedAt = $detectedAt;
+
+    }//end setDetectedAt()
+
+    /**
+     * Set updatedAt.
+     *
+     * @param \DateTime $updatedAt Updated-at timestamp.
+     *
+     * @return void
+     */
+    public function setUpdatedAt($updatedAt)
+    {
+        $this->updatedAt = $updatedAt;
+
+    }//end setUpdatedAt()
+}//end class
+
+/**
+ * Stub for GdprEntityMapper (custom-dictionary-recognition catalogue lookups).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class GdprEntityMapper
+{
+    /**
+     * Look up a catalogue entry by (value, type).
+     *
+     * @param string $value Entity value.
+     * @param string $type  Entity type.
+     *
+     * @return GdprEntity|null
+     */
+    public function findOneByValueAndType(string $value, string $type)
+    {
+        return null;
+
+    }//end findOneByValueAndType()
+
+    /**
+     * Insert a catalogue entry.
+     *
+     * @param GdprEntity $entity Entity to insert.
+     *
+     * @return GdprEntity
+     */
+    public function insert($entity)
+    {
+        return $entity;
+
+    }//end insert()
+}//end class
+
+/**
+ * Stub for Chunk (custom-dictionary-recognition text-chunk matching).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class Chunk
+{
+    /** @var int|null */
+    private $id = null;
+
+    /** @var string */
+    private $textContent = '';
+
+    /** @var int */
+    private $startOffset = 0;
+
+    /** @var int */
+    private $chunkIndex = 0;
+
+    /**
+     * Get the chunk id.
+     *
+     * @return int|null
+     */
+    public function getId()
+    {
+        return $this->id;
+
+    }//end getId()
+
+    /**
+     * Set the chunk id (test helper).
+     *
+     * @param int|null $id Chunk id.
+     *
+     * @return void
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+
+    }//end setId()
+
+    /**
+     * Get the chunk's text content.
+     *
+     * @return string
+     */
+    public function getTextContent(): string
+    {
+        return $this->textContent;
+
+    }//end getTextContent()
+
+    /**
+     * Set the chunk's text content (test helper).
+     *
+     * @param string $textContent Text content.
+     *
+     * @return void
+     */
+    public function setTextContent(string $textContent): void
+    {
+        $this->textContent = $textContent;
+
+    }//end setTextContent()
+
+    /**
+     * Get the chunk's absolute start offset within the source document.
+     *
+     * @return int
+     */
+    public function getStartOffset(): int
+    {
+        return $this->startOffset;
+
+    }//end getStartOffset()
+
+    /**
+     * Set the chunk's absolute start offset (test helper).
+     *
+     * @param int $startOffset Start offset.
+     *
+     * @return void
+     */
+    public function setStartOffset(int $startOffset): void
+    {
+        $this->startOffset = $startOffset;
+
+    }//end setStartOffset()
+
+    /**
+     * Get the chunk index.
+     *
+     * @return int
+     */
+    public function getChunkIndex(): int
+    {
+        return $this->chunkIndex;
+
+    }//end getChunkIndex()
+
+    /**
+     * Set the chunk index (test helper).
+     *
+     * @param int $chunkIndex Chunk index.
+     *
+     * @return void
+     */
+    public function setChunkIndex(int $chunkIndex): void
+    {
+        $this->chunkIndex = $chunkIndex;
+
+    }//end setChunkIndex()
+}//end class
+
+/**
+ * Stub for ChunkMapper (custom-dictionary-recognition text-chunk lookups).
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Db
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ChunkMapper
+{
+    /**
+     * Find chunks by source reference.
+     *
+     * @param string $sourceType Source type (e.g. `file`).
+     * @param int    $sourceId   Source id.
+     *
+     * @return Chunk[]
+     */
+    public function findBySource(string $sourceType, int $sourceId): array
+    {
+        return [];
+
+    }//end findBySource()
 }//end class
 
 
@@ -983,6 +1424,13 @@ class EntityRelation
      */
     private $fileId = null;
 
+    /**
+     * Detection method tag (e.g. `presidio`, `manual`, `custom_dictionary`).
+     *
+     * @var string|null
+     */
+    private $detectionMethod = null;
+
 
     /**
      * Get the relation id.
@@ -994,6 +1442,32 @@ class EntityRelation
         return $this->id;
 
     }//end getId()
+
+
+    /**
+     * Get the detection method.
+     *
+     * @return string|null
+     */
+    public function getDetectionMethod()
+    {
+        return $this->detectionMethod;
+
+    }//end getDetectionMethod()
+
+
+    /**
+     * Set the detection method.
+     *
+     * @param string|null $detectionMethod Detection method tag.
+     *
+     * @return void
+     */
+    public function setDetectionMethod($detectionMethod)
+    {
+        $this->detectionMethod = $detectionMethod;
+
+    }//end setDetectionMethod()
 
 
     /**

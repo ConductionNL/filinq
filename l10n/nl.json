@@ -10,13 +10,34 @@
         "(no relation ids — grondslagen will not persist)": "(geen relatie-id's — grondslagen worden niet bewaard)",
         "{found} unique data found": "{found} unieke gegevens gevonden",
         "{selected} of {total} entities selected across {files} files": "{selected} van {total} entiteiten geselecteerd over {files} bestanden",
-        "%n entity": ["%n entiteit", "%n entiteiten"],
-        "%n entity could not be fully removed. Check the file below before using it.": ["%n entiteit kon niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt.", "%n entiteiten konden niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt."],
-        "%n entity detected": ["%n entiteit gedetecteerd", "%n entiteiten gedetecteerd"],
-        "%n entity replaced": ["%n entiteit vervangen", "%n entiteiten vervangen"],
-        "%n item anonymised": ["%n item geanonimiseerd", "%n items geanonimiseerd"],
-        "%n item removed": ["%n item verwijderd", "%n items verwijderd"],
-        "%n occurrence": ["%n keer", "%n keer"],
+        "%n entity": [
+            "%n entiteit",
+            "%n entiteiten"
+        ],
+        "%n entity could not be fully removed. Check the file below before using it.": [
+            "%n entiteit kon niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt.",
+            "%n entiteiten konden niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt."
+        ],
+        "%n entity detected": [
+            "%n entiteit gedetecteerd",
+            "%n entiteiten gedetecteerd"
+        ],
+        "%n entity replaced": [
+            "%n entiteit vervangen",
+            "%n entiteiten vervangen"
+        ],
+        "%n item anonymised": [
+            "%n item geanonimiseerd",
+            "%n items geanonimiseerd"
+        ],
+        "%n item removed": [
+            "%n item verwijderd",
+            "%n items verwijderd"
+        ],
+        "%n occurrence": [
+            "%n keer",
+            "%n keer"
+        ],
         "A standing publication consent applies. You may override to anonymise anyway; the override is audit-logged.": "Er geldt een doorlopende publicatietoestemming. Je kunt dit overschrijven om toch te anonimiseren; de overschrijving wordt vastgelegd in het audittrail.",
         "Action": "Actie",
         "Active": "Actief",
@@ -52,7 +73,10 @@
         "Anonymising…": "Anonimiseren…",
         "Anonymization": "Anonimisering",
         "Anonymize": "Anonimiseren",
-        "Anonymize %n entity": ["%n entiteit anonimiseren", "%n entiteiten anonimiseren"],
+        "Anonymize %n entity": [
+            "%n entiteit anonimiseren",
+            "%n entiteiten anonimiseren"
+        ],
         "Anonymize Another": "Nog een anonimiseren",
         "Anonymize document": "Document anonimiseren",
         "Anonymized": "Geanonimiseerd",
@@ -484,7 +508,53 @@
         "When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.": "Wanneer ingeschakeld kun je de grondslagen voor elke gedetecteerde entiteit controleren en aanpassen vóór het anonimiseren. Wanneer uitgeschakeld worden standaardgrondslagen toegepast en kun je direct anonimiseren.",
         "Yes": "Ja",
         "You selected {count} files. Give this dossier a name to group them in one folder.": "Je hebt {count} bestanden geselecteerd. Geef dit dossier een naam om ze in één map te groeperen.",
-        "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.": "Je hebt meerdere documenten geüpload. Vul een titel in om er automatisch een dossier van te maken. Vul je geen titel in? Dan worden het losse documenten."
+        "You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.": "Je hebt meerdere documenten geüpload. Vul een titel in om er automatisch een dossier van te maken. Vul je geen titel in? Dan worden het losse documenten.",
+        "Active (used in automatic detection)": "Actief (gebruikt bij automatische detectie)",
+        "Add a term above, or import a CSV / newline list.": "Voeg hierboven een term toe, of importeer een CSV- of regel-lijst.",
+        "Add custom dictionary": "Aangepaste woordenlijst toevoegen",
+        "Add term": "Term toevoegen",
+        "Back to custom dictionaries": "Terug naar aangepaste woordenlijsten",
+        "CSV file": "CSV-bestand",
+        "Case-insensitive": "Hoofdletterongevoelig",
+        "Colour": "Kleur",
+        "Custom dictionaries": "Aangepaste woordenlijsten",
+        "Custom dictionary": "Aangepaste woordenlijst",
+        "Delete \"{name}\" and all its terms? This cannot be undone.": "\"{name}\" en alle bijbehorende termen verwijderen? Dit kan niet ongedaan worden gemaakt.",
+        "Display label (optional)": "Weergavelabel (optioneel)",
+        "Edit dictionary": "Woordenlijst bewerken",
+        "Exact": "Exact",
+        "Exact (case-sensitive)": "Exact (hoofdlettergevoelig)",
+        "Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.": "Exact matcht hoofdlettergevoelig; hoofdletterongevoelig (standaard) negeert hoofdlettergebruik; woordgrens is hoofdletterongevoelig maar matcht nooit binnen een langer woord.",
+        "Hex value": "Hexwaarde",
+        "Import": "Importeren",
+        "Import failed": "Importeren mislukt",
+        "Import terms": "Termen importeren",
+        "Import…": "Importeren…",
+        "Label": "Label",
+        "Manage terms": "Termen beheren",
+        "Match mode": "Matchmodus",
+        "New term value": "Nieuwe termwaarde",
+        "No custom dictionaries defined yet.": "Nog geen aangepaste woordenlijsten gedefinieerd.",
+        "No terms yet": "Nog geen termen",
+        "Operatie Zilverreiger\\nDossier Karekiet": "Operatie Zilverreiger\\nDossier Karekiet",
+        "Organisation-managed term lists — project codenames, local street names, case-file codes — that add an extra recognizer alongside Presidio and regex.": "Door de organisatie beheerde woordenlijsten — projectcodenamen, lokale straatnamen, dossierkenmerken — die een extra herkenner toevoegen naast Presidio en regex.",
+        "Remove": "Verwijderen",
+        "Remove \"{value}\"?": "\"{value}\" verwijderen?",
+        "Terms": "Termen",
+        "Terms (one per line)": "Termen (één per regel)",
+        "Upload a CSV file (first column = term, optional second column = label) or paste a newline-separated list below. Blank lines and duplicates (case-insensitive) are skipped automatically.": "Upload een CSV-bestand (eerste kolom = term, optionele tweede kolom = label) of plak hieronder een lijst met één term per regel. Lege regels en duplicaten (hoofdletterongevoelig) worden automatisch overgeslagen.",
+        "Word boundary": "Woordgrens",
+        "e.g. Operatie Zilverreiger": "bijv. Operatie Zilverreiger",
+        "or paste a newline-separated list": "of plak een lijst met één term per regel",
+        "this dictionary": "deze woordenlijst",
+        "{added} added, {skipped} skipped, {total} total.": "{added} toegevoegd, {skipped} overgeslagen, {total} totaal.",
+        "{count} terms": "{count} termen",
+        "Custom dictionaries require OpenRegister, which is not currently available.": "Aangepaste woordenlijsten vereisen OpenRegister, dat momenteel niet beschikbaar is.",
+        "Custom dictionary not found": "Aangepaste woordenlijst niet gevonden",
+        "No import content provided": "Geen importinhoud opgegeven",
+        "Not authenticated": "Niet geauthenticeerd",
+        "Term not found": "Term niet gevonden",
+        "You do not have access to this custom dictionary": "U heeft geen toegang tot deze aangepaste woordenlijst"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

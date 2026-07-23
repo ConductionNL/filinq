@@ -78,6 +78,8 @@ import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
 import ProhibitionFormModal from './views/policy/ProhibitionFormModal.vue'
 import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
 import StandingConsentFormModal from './views/policy/StandingConsentFormModal.vue'
+import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
+import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 
 export default {
 	DashboardIndex: { kind: 'page', component: DashboardIndex },
@@ -99,4 +101,6 @@ export default {
 	ProhibitionFormModal: { kind: 'modal', component: ProhibitionFormModal },
 	StandingConsentIndex: { kind: 'page', component: StandingConsentIndex },
 	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
+	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
+	CustomDictionaryDetail: { kind: 'page', component: CustomDictionaryDetail },
 }

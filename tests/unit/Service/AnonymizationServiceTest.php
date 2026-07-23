@@ -589,7 +589,9 @@ class AnonymizationServiceTest extends TestCase
             grondslagenSummary: $grondslagenSummary,
             fileEntityStats: $fileEntityStats,
             pdfConversion: $pdfConversion,
-            emlAssembly: $emlAssembly
+            emlAssembly: $emlAssembly,
+            customDictionary: $this->makeNoOpCustomDictionaryService(),
+            customDictionaryMatch: new \OCA\DocuDesk\Service\CustomDictionaryMatchService()
         );
 
     }//end buildServiceWithoutDependencies()
@@ -670,10 +672,27 @@ class AnonymizationServiceTest extends TestCase
             grondslagenSummary: $this->createMock(GrondslagenSummaryService::class),
             fileEntityStats: $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class),
             pdfConversion: $this->createMock(PdfConversionService::class),
-            emlAssembly: $this->createMock(EmlPdfAssemblyService::class)
+            emlAssembly: $this->createMock(EmlPdfAssemblyService::class),
+            customDictionary: $this->makeNoOpCustomDictionaryService(),
+            customDictionaryMatch: new \OCA\DocuDesk\Service\CustomDictionaryMatchService()
         );
 
     }//end makeServiceWithMatcher()
+
+    /**
+     * Build a CustomDictionaryService mock that reports no active
+     * dictionaries, so the custom-dictionary detection pass is a no-op for
+     * tests that are not exercising it directly.
+     *
+     * @return \OCA\DocuDesk\Service\CustomDictionaryService
+     */
+    private function makeNoOpCustomDictionaryService(): \OCA\DocuDesk\Service\CustomDictionaryService
+    {
+        $service = $this->createMock(\OCA\DocuDesk\Service\CustomDictionaryService::class);
+        $service->method('listActiveDictionariesForDetection')->willReturn([]);
+        return $service;
+
+    }//end makeNoOpCustomDictionaryService()
 
 
     /**

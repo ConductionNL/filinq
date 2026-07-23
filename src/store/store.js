@@ -25,6 +25,7 @@ import { useMyDocumentsStore } from './modules/myDocuments.js'
 import { useFileViewerStore } from './modules/fileViewer.js'
 import { useProhibitionStore } from './modules/prohibition.js'
 import { useStandingConsentStore } from './modules/standingConsent.js'
+import { useCustomDictionaryStore } from './modules/customDictionary.js'
 import { useSettingsStore } from './modules/settings.js'
 
 // Lib store — registered exactly once at module load with the
@@ -56,6 +57,7 @@ const myDocumentsStore = useMyDocumentsStore(pinia)
 const fileViewerStore = useFileViewerStore(pinia)
 const prohibitionStore = useProhibitionStore(pinia)
 const standingConsentStore = useStandingConsentStore(pinia)
+const customDictionaryStore = useCustomDictionaryStore(pinia)
 
 // OR-backed object types declared by lib/Settings/docudesk_register.json.
 // Triple is (consumer-facing slug, OR schema slug, OR register slug).
@@ -125,6 +127,7 @@ export {
 	fileViewerStore,
 	prohibitionStore,
 	standingConsentStore,
+	customDictionaryStore,
 	useSettingsStore,
 	initializeStores,
 }
