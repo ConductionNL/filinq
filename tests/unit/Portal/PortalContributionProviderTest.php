@@ -13,6 +13,12 @@
  * instead of silently scoping portal reads to nothing or dropping a projected
  * column.
  *
+ * Also pins the contract-v2.2 `portal-signing-surface` extension
+ * (REQ-DDPSS-001): the `sign`/`decline` `rowActions` on `signerSigningRequests`
+ * (ids, `minTrust: substantial`, relative-endpoint shape) and the invariant
+ * that `signerRecords` and the entire `data-subject` manifest carry no write
+ * action.
+ *
  * Subjects use nil-pattern UUIDs per the change design.md Seed Data section —
  * self-evidently fake, never colliding with live data. The provider is
  * constructed directly — it is a plain dependency-free class by contract
@@ -29,6 +35,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-signing-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -212,6 +219,12 @@ final class PortalContributionProviderTest extends TestCase
             $this->assertNotContains($field, $consent['fields'], "Consent projection must never expose '{$field}'");
         }
 
+        $this->assertArrayNotHasKey(
+            'rowActions',
+            $consent,
+            'The entire data-subject manifest carries no write action (REQ-DDPSS-001)'
+        );
+
     }//end testDataSubjectConsentCollectionIsScopedAndProjected()
 
 
@@ -239,6 +252,11 @@ final class PortalContributionProviderTest extends TestCase
             ['displayName', 'status', 'order', 'signedAt', 'declineReason'],
             $record['fields'],
             'Only the signer own participation facts are projected'
+        );
+        $this->assertArrayNotHasKey(
+            'rowActions',
+            $record,
+            'signerRecords is a read-only collection — no write action (REQ-DDPSS-001)'
         );
 
         $forbidden = ['signatureData', 'ipAddress', 'userId', 'signingRequestId', 'email'];
@@ -300,7 +318,51 @@ final class PortalContributionProviderTest extends TestCase
 
 
     /**
-     * Neither audience ships create or endpoint actions in this wave.
+     * `signerSigningRequests` carries exactly the `sign` and `decline`
+     * contract-v2.2 rowActions, each gated `minTrust: substantial`, each
+     * resolving to an instance-local relative endpoint (REQ-DDPSS-001).
+     *
+     * @return void
+     */
+    public function testSignerSigningRequestsCarriesSignAndDeclineRowActions(): void
+    {
+        $manifest = $this->provider->getContribution(self::SIGNER_SUBJECT);
+        $this->assertIsArray($manifest);
+
+        $request = $this->indexById($manifest['collections'])['signerSigningRequests'];
+        $this->assertArrayHasKey('rowActions', $request, 'The awaiting-signature collection must carry the sign/decline rowActions');
+
+        $rowActions = $this->indexById($request['rowActions']);
+        $this->assertSame(['decline', 'sign'], $this->sortedKeys($rowActions), 'Exactly sign + decline, no other rowAction');
+
+        foreach (['sign', 'decline'] as $id) {
+            $action = $rowActions[$id];
+            $this->assertSame($id, $action['id']);
+            $this->assertSame('substantial', $action['minTrust'], "rowAction '{$id}' must be eIDAS-substantial gated");
+            $this->assertSame('POST', $action['method']);
+            $this->assertIsString($action['endpoint']);
+            $this->assertNotSame('', $action['endpoint']);
+            $this->assertStringStartsWith('/', $action['endpoint'], "rowAction '{$id}' endpoint must be instance-local relative (leading slash)");
+            $this->assertStringNotContainsStringIgnoringCase('://', $action['endpoint'], "rowAction '{$id}' endpoint must carry no scheme");
+            $this->assertStringNotContainsString('..', $action['endpoint'], "rowAction '{$id}' endpoint must not traverse ('..')");
+            $this->assertNotEmpty($action['label']);
+        }
+
+        $this->assertNotSame(
+            $rowActions['sign']['endpoint'],
+            $rowActions['decline']['endpoint'],
+            'sign and decline must resolve to distinct endpoints'
+        );
+
+    }//end testSignerSigningRequestsCarriesSignAndDeclineRowActions()
+
+
+    /**
+     * Neither audience ships top-level create/endpoint actions; only the
+     * `signerSigningRequests` collection carries the sign/decline rowActions
+     * (a distinct, per-collection contract-v2.2 concept, REQ-DDPSS-001), and
+     * no read-only collection (`signerRecords`, the entire `data-subject`
+     * manifest) carries any write action.
      *
      * @return void
      */
@@ -309,10 +371,17 @@ final class PortalContributionProviderTest extends TestCase
         foreach ([self::DATA_SUBJECT, self::SIGNER_SUBJECT] as $subject) {
             $manifest = $this->provider->getContribution($subject);
             $this->assertIsArray($manifest);
-            $this->assertSame([], $manifest['actions'], 'Wave-1 ships read collections only');
+            $this->assertSame([], $manifest['actions'], 'No top-level create/endpoint action ships');
             $this->assertSame([], $manifest['notifications'], 'No inbox / notification collections ship');
             foreach ($manifest['collections'] as $collection) {
                 $this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
+                if ($collection['id'] !== 'signerSigningRequests') {
+                    $this->assertArrayNotHasKey(
+                        'rowActions',
+                        $collection,
+                        "Collection '{$collection['id']}' must carry no write action"
+                    );
+                }
             }
         }
 
