@@ -50,6 +50,8 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
 class GrondslagProposalService
 {
@@ -113,6 +115,12 @@ class GrondslagProposalService
         'POLITICAL_PARTY',
         'INCOME',
         'EDUCATION_LEVEL',
+        // Dynamic, per-organisation-list type contributed by
+        // CustomDictionaryMatchService (custom-dictionary-recognition,
+        // design.md §D4) — distinct from the fixed backend-emitted types
+        // above: this one toggle enables/disables ALL active custom
+        // dictionaries' automatic detection at once.
+        'CUSTOM_DICTIONARY',
     ];
 
     /**

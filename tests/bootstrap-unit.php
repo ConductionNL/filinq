@@ -43,5 +43,20 @@ if (is_dir($ocpEventDispatcherDir) === true) {
     }
 }
 
+// Load OCP's real AppFramework\Db exception types (DoesNotExistException +
+// its IMapperException contract) — CustomDictionaryController /
+// CustomDictionaryService (custom-dictionary-recognition) throw/catch the
+// real class so a 404 maps correctly; same "real file, not classmapped"
+// situation as the EventDispatcher contracts above.
+$ocpDbExceptionDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/AppFramework/Db';
+if (is_dir($ocpDbExceptionDir) === true) {
+    foreach (['IMapperException.php', 'DoesNotExistException.php'] as $ocpDbFile) {
+        $ocpDbPath = $ocpDbExceptionDir . '/' . $ocpDbFile;
+        if (is_file($ocpDbPath) === true) {
+            require_once $ocpDbPath;
+        }
+    }
+}
+
 // Load OpenRegister stubs for mocking.
 require_once __DIR__.'/stubs/OpenRegisterStubs.php';
