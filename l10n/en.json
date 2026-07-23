@@ -695,7 +695,9 @@
         "Versions are saved automatically on each update.": "Versions are saved automatically on each update.",
         "When": "When",
         "Written": "Written",
-        "You may override and skip it anyway; the override is recorded in the audit trail.": "You may override and skip it anyway; the override is recorded in the audit trail."
+        "You may override and skip it anyway; the override is recorded in the audit trail.": "You may override and skip it anyway; the override is recorded in the audit trail.",
+        "This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.": "This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.",
+        "Verification provided by the signing engine.": "Verification provided by the signing engine."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

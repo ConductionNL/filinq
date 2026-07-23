@@ -9,6 +9,11 @@
 				<div><strong>{{ t('docudesk', 'Mode') }}</strong>: {{ signingStore.signingRequest.signingMode }}</div>
 				<div><strong>{{ t('docudesk', 'Provider') }}</strong>: {{ signingStore.signingRequest.provider }}</div>
 			</div>
+			<NcButton v-if="signingStore.signingRequest.documentFileId"
+				type="secondary"
+				@click="openVerify">
+				{{ t('docudesk', 'Verify') }}
+			</NcButton>
 			<h3>{{ t('docudesk', 'Audit Trail') }}</h3>
 			<table v-if="signingStore.auditTrail.length > 0" class="audit-table">
 				<thead>
@@ -34,13 +39,13 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { translate as t } from '@nextcloud/l10n'
 import { useSigningStore } from '../../store/modules/signing.js'
 
 export default {
 	name: 'SigningRequestDetail',
-	components: { NcLoadingIcon },
+	components: { NcButton, NcLoadingIcon },
 	props: { requestId: { type: String, required: true } },
 	/**
 	 * Load the signing request and its audit trail on mount.
@@ -53,6 +58,20 @@ export default {
 		signingStore.fetchSigningRequest(props.requestId)
 		signingStore.fetchAuditTrail(props.requestId)
 		return { signingStore, t }
+	},
+	methods: {
+		/**
+		 * Navigate to the restored SignatureVerification page for this
+		 * request's document file id.
+		 *
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
+		 */
+		openVerify() {
+			this.$router.push({
+				name: 'SignatureVerification',
+				params: { fileId: String(this.signingStore.signingRequest.documentFileId) },
+			})
+		},
 	},
 }
 </script>

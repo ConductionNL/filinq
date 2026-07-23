@@ -48,6 +48,13 @@
 			"order": 50
 		},
 		{
+			"id": "Correspondence",
+			"label": "Brieven & correspondentie",
+			"icon": "icon-mail",
+			"route": "Correspondence",
+			"order": 55
+		},
+		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
 			"icon": "icon-rename",
@@ -138,6 +145,14 @@
 			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
 		},
 		{
+			"id": "Correspondence",
+			"route": "/correspondence",
+			"type": "custom",
+			"title": "Brieven & correspondentie",
+			"component": "CorrespondenceIndex",
+			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
+		},
+		{
 			"id": "SigningRequests",
 			"route": "/signing",
 			"type": "index",
@@ -147,9 +162,16 @@
 				"schema": "signingRequest",
 				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://docudesk.conduction.nl",
+				"actionToggles": { "showAdd": false }
 			},
-			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail."
+			"primaryAction": {
+				"id": "NewSigningRequest",
+				"label": "New signing request",
+				"icon": "Plus",
+				"route": "SigningRequestForm"
+			},
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
 		},
 		{
 			"id": "SigningRequestDetail",
@@ -157,7 +179,23 @@
 			"type": "custom",
 			"title": "Signing Request Detail",
 			"component": "SigningRequestDetail",
-			"_note": "Signing request detail view driven by signingStore."
+			"_note": "Signing request detail view driven by signingStore. Links to SignatureVerification (restored — REQ-DDOSR-004) for the document's file id."
+		},
+		{
+			"id": "SigningRequestForm",
+			"route": "/signing/new",
+			"type": "custom",
+			"title": "New Signing Request",
+			"component": "SigningRequestForm",
+			"_note": "Signer-chain create form (documentFileId/documentName/signatureLevel/signingMode via signingStore.createSigningRequest — POST signing#createRequest, which drafts a signingRequest record; it does not send/sign/bind a provider — those remain separate signing#sign / not-yet-built provider-binding actions). Reachable from the SigningRequests index primaryAction. Restored — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-004); trust/identity-assertion controls are gated to signing-trust-rebuild / signer-identity-rails per design.md D4 — this page composes a draft only."
+		},
+		{
+			"id": "SignatureVerification",
+			"route": "/signing/verify/:fileId",
+			"type": "custom",
+			"title": "Signature Verification",
+			"component": "SignatureVerification",
+			"_note": "Read-only verify page over signing#verify/{fileId} (SigningVerificationService); renders the backend verdict verbatim, attributed to the signing engine — it does not compute or assert its own validity. Linked from SigningRequestDetail. Restored — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-004)."
 		},
 		{
 			"id": "MyDocuments",
@@ -198,6 +236,22 @@
 			"title": "Component gallery",
 			"component": "ComponentGallery",
 			"_note": "Living design-system reference for the reusable Dd* components (each shown with its variants/states). Self-contained view; standalone deep-linked page (/gallery), no nav item, like PrintPreview/Comparison/Versions."
+		},
+		{
+			"id": "Prohibitions",
+			"route": "/policy/prohibitions",
+			"type": "custom",
+			"title": "Publish never",
+			"component": "ProhibitionIndex",
+			"_note": "Entity-level publish-never rules (publicationProhibition) via PolicyController (indexProhibitions/createProhibition/showProhibition/updateProhibition/deleteProhibition) + PolicyMatchService. Deep-link reachable, no menu entry — the policy menu label/placement is owned by openspec/changes/publication-policy-labels-and-nav; this change (orphaned-surface-restoration, REQ-DDOSR-005) only restores the page's reachability. Modal is ProhibitionFormModal (registry kind:modal), its own file per ADR-004."
+		},
+		{
+			"id": "StandingConsents",
+			"route": "/policy/standing-consents",
+			"type": "custom",
+			"title": "Publish always",
+			"component": "StandingConsentIndex",
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via PolicyController (indexStandingConsents/createStandingConsent/showStandingConsent/updateStandingConsent/deleteStandingConsent) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
 		},
 		{
 			"id": "FeaturesRoadmap",
