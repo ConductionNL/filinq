@@ -2,8 +2,8 @@
 	<div class="signature-verification">
 		<h2>{{ t('docudesk', 'Signature Verification') }}</h2>
 		<div class="verify-form">
-			<input v-model="fileId" type="text" :placeholder="t('docudesk', 'Enter file ID')">
-			<NcButton type="primary" :disabled="!fileId" @click="verify">
+			<input v-model="verifyFileId" type="text" :placeholder="t('docudesk', 'Enter file ID')">
+			<NcButton type="primary" :disabled="!verifyFileId" @click="verify">
 				{{ t('docudesk', 'Verify') }}
 			</NcButton>
 		</div>
@@ -11,6 +11,9 @@
 			<p><strong>{{ t('docudesk', 'File') }}:</strong> {{ signingStore.verificationResult.fileName }}</p>
 			<p><strong>{{ t('docudesk', 'Valid') }}:</strong> {{ signingStore.verificationResult.isValid ? t('docudesk', 'Yes') : t('docudesk', 'No') }}</p>
 			<p><strong>{{ t('docudesk', 'Signatures') }}:</strong> {{ signingStore.verificationResult.signatures.length }}</p>
+			<p class="results__attribution">
+				{{ t('docudesk', 'Verification provided by the signing engine.') }}
+			</p>
 		</div>
 	</div>
 </template>
@@ -23,16 +26,36 @@ import { useSigningStore } from '../../store/modules/signing.js'
 export default {
 	name: 'SignatureVerification',
 	components: { NcButton },
-	data() { return { fileId: '' } },
+	props: {
+		/**
+		 * Optional file id passed via the manifest route param
+		 * (`/signing/verify/:fileId`); pre-fills and auto-runs the check
+		 * when a request detail deep-links here. The field stays editable
+		 * so a user can also verify an arbitrary file id directly.
+		 */
+		fileId: { type: String, default: '' },
+	},
+	data() {
+		return { verifyFileId: this.fileId }
+	},
 	computed: { signingStore() { return useSigningStore() } },
+	mounted() {
+		if (this.verifyFileId) {
+			this.verify()
+		}
+	},
 	methods: {
 		t,
 		/**
-		 * Verify the signatures of the entered file ID.
+		 * Verify the signatures of the entered file ID. Renders the
+		 * `SigningController::verify()` result verbatim (see the
+		 * `results__attribution` note in the template) — this component
+		 * does not compute or assert its own signature validity
+		 * (design.md D4 / REQ-DDOSR-004).
 		 *
-		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-6
+		 * @spec openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
 		 */
-		async verify() { if (this.fileId) { await this.signingStore.verifyDocument(this.fileId) } },
+		async verify() { if (this.verifyFileId) { await this.signingStore.verifyDocument(this.verifyFileId) } },
 	},
 }
 </script>
