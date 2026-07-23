@@ -92,6 +92,18 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'policy#updateStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
         ['name' => 'policy#deleteStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
 
+        // Custom dictionaries — organisation-managed term-list CRUD + import
+        // (custom-dictionary-recognition).
+        ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
+        ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
+        ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
+        ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
+        ['name' => 'customDictionary#destroy', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'DELETE'],
+        ['name' => 'customDictionary#indexTerms', 'url' => 'api/custom-dictionaries/{id}/terms', 'verb' => 'GET'],
+        ['name' => 'customDictionary#createTerm', 'url' => 'api/custom-dictionaries/{id}/terms', 'verb' => 'POST'],
+        ['name' => 'customDictionary#deleteTerm', 'url' => 'api/custom-dictionaries/{id}/terms/{termId}', 'verb' => 'DELETE'],
+        ['name' => 'customDictionary#import', 'url' => 'api/custom-dictionaries/{id}/import', 'verb' => 'POST'],
+
         // PDF generation routes.
         ['name' => 'pdf#render', 'url' => 'api/pdf/render', 'verb' => 'POST'],
         ['name' => 'pdf#renderPdfA', 'url' => 'api/pdf/render-pdfa', 'verb' => 'POST'],

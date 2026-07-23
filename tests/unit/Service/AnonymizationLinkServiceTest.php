@@ -23,6 +23,8 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
+use OCA\DocuDesk\Service\CustomDictionaryMatchService;
+use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
@@ -175,7 +177,9 @@ class AnonymizationLinkServiceTest extends TestCase
             grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
             fileEntityStats: $this->createMock(originalClassName: FileEntityStatsService::class),
             pdfConversion: $this->createMock(originalClassName: PdfConversionService::class),
-            emlAssembly: $this->createMock(originalClassName: EmlPdfAssemblyService::class)
+            emlAssembly: $this->createMock(originalClassName: EmlPdfAssemblyService::class),
+            customDictionary: $this->createMock(originalClassName: CustomDictionaryService::class),
+            customDictionaryMatch: new CustomDictionaryMatchService()
         );
 
     }//end buildService()

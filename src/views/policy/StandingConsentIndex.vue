@@ -100,94 +100,21 @@ import { standingConsentStore } from '../../store/store.js'
 			</template>
 		</CnIndexPage>
 
-		<NcDialog
-			v-if="dialogOpen"
-			:name="dialogTitle"
+		<!--
+			ADR-004 gate-13: modal lives in its own component, not inline.
+			StandingConsentFormModal handles its own form state; we only own
+			the open flag, the record being edited, and the save outcome.
+			(Previously an inline NcDialog duplicated this exact form —
+			replaced here; openspec/changes/orphaned-surface-restoration.)
+		-->
+		<StandingConsentFormModal
 			:open="dialogOpen"
-			size="normal"
-			@update:open="dialogOpen = $event">
-			<div class="standing-consent-form">
-				<NcTextField
-					:value.sync="form.entityText"
-					:label="t('docudesk', 'Entity text (display name)')"
-					required />
-				<NcSelect
-					v-model="form.entityType"
-					:options="entityTypeOptions"
-					:input-label="t('docudesk', 'Entity type')"
-					:label="t('docudesk', 'Entity type')"
-					required />
-				<NcSelect
-					v-model="form.consentMethod"
-					:options="consentMethodOptions"
-					:input-label="t('docudesk', 'Consent method')"
-					:label="t('docudesk', 'Consent method')"
-					required />
-				<NcTextField
-					:value.sync="form.consentDocument"
-					:label="t('docudesk', 'Consent document (file id or URL)')" />
-				<NcTextField
-					:value.sync="form.consentScope"
-					:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
-				<NcTextField
-					:value.sync="form.legalBasis"
-					:label="t('docudesk', 'Legal basis')" />
-				<NcTextField
-					:value.sync="form.validFrom"
-					:label="t('docudesk', 'Valid from (ISO 8601, optional)')" />
-				<NcTextField
-					:value.sync="form.validUntil"
-					:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
-				<NcCheckboxRadioSwitch
-					v-model="form.active"
-					type="switch">
-					{{ t('docudesk', 'Active') }}
-				</NcCheckboxRadioSwitch>
-
-				<div v-if="!form.validUntil" class="form-warning">
-					{{ t('docudesk', 'No expiry set — this standing consent will remain in force indefinitely. Consider setting a "Valid until" date.') }}
-				</div>
-
-				<h4>{{ t('docudesk', 'Match rules') }}</h4>
-				<div v-if="!form.matchRules?.length" class="form-warning">
-					{{ t('docudesk', 'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.') }}
-				</div>
-				<div v-for="(rule, idx) in form.matchRules" :key="idx" class="match-rule-row">
-					<NcSelect
-						v-model="rule.type"
-						:options="matchTypeOptions"
-						:input-label="t('docudesk', 'Match type')"
-						:label="t('docudesk', 'Match type')" />
-					<NcTextField
-						:value.sync="rule.value"
-						:label="t('docudesk', 'Match value')" />
-					<NcButton type="tertiary" @click="removeRule(idx)">
-						<template #icon>
-							<Delete :size="20" />
-						</template>
-					</NcButton>
-				</div>
-				<NcButton type="secondary" @click="addRule">
-					{{ t('docudesk', 'Add match rule') }}
-				</NcButton>
-
-				<div v-if="formError" class="form-error">
-					{{ formError }}
-				</div>
-			</div>
-
-			<template #actions>
-				<NcButton type="tertiary" @click="dialogOpen = false">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
-					<template v-if="saving" #icon>
-						<NcLoadingIcon :size="20" />
-					</template>
-					{{ editing ? t('docudesk', 'Save') : t('docudesk', 'Create') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			:editing-record="editingRecord"
+			:saving="saving"
+			:form-error="formError"
+			@update:open="dialogOpen = $event"
+			@submit="onModalSubmit"
+			@cancel="dialogOpen = false" />
 	</div>
 </template>
 
@@ -195,33 +122,12 @@ import { standingConsentStore } from '../../store/store.js'
 import {
 	NcActions,
 	NcActionButton,
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcLoadingIcon,
-	NcSelect,
-	NcTextField,
 } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-
-const blankForm = () => ({
-	entityText: '',
-	entityType: 'PERSON',
-	consentMethod: '',
-	consentDocument: '',
-	consentScope: '',
-	legalBasis: '',
-	validFrom: '',
-	validUntil: '',
-	active: true,
-	matchRules: [],
-	consentStatus: 'consent_given',
-	publicationDecision: 'publish_with_consent',
-	notificationStatus: 'skipped',
-})
+import StandingConsentFormModal from './StandingConsentFormModal.vue'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -231,12 +137,7 @@ export default {
 		CnStatusBadge,
 		NcActions,
 		NcActionButton,
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcDialog,
-		NcLoadingIcon,
-		NcSelect,
-		NcTextField,
+		StandingConsentFormModal,
 		Delete,
 		DotsHorizontal,
 		Pencil,
@@ -248,8 +149,8 @@ export default {
 			pageSize: 20,
 			dialogOpen: false,
 			saving: false,
-			editing: null,
-			form: blankForm(),
+			editing: null, // UUID of the record being edited, or null for create
+			editingRecord: null, // full record passed to the modal so it can hydrate its form
 			formError: '',
 			entityTypeColorMap: {
 				PERSON: 'warning',
@@ -266,9 +167,6 @@ export default {
 				[t('docudesk', 'Active')]: 'success',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
-			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
-			consentMethodOptions: ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
-			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 		}
 	},
 	computed: {
@@ -292,17 +190,6 @@ export default {
 				return standingConsentStore.error
 			}
 			return t('docudesk', 'No standing publication consents defined.')
-		},
-		dialogTitle() {
-			return this.editing
-				? t('docudesk', 'Edit publish-always rule')
-				: t('docudesk', 'Add publish-always rule')
-		},
-		canSubmit() {
-			return this.form.entityText.trim() !== ''
-				&& this.form.consentMethod !== ''
-				&& this.form.matchRules.length > 0
-				&& this.form.matchRules.every(r => r.type && r.value !== '')
 		},
 	},
 	mounted() {
@@ -332,13 +219,13 @@ export default {
 		},
 		openCreateDialog() {
 			this.editing = null
-			this.form = blankForm()
+			this.editingRecord = null
 			this.formError = ''
 			this.dialogOpen = true
 		},
 		openEditDialog(row) {
 			this.editing = row['@self']?.id || row.id || row.uuid
-			this.form = {
+			this.editingRecord = {
 				entityText: row.entityText || '',
 				entityType: row.entityType || 'PERSON',
 				consentMethod: row.consentMethod || '',
@@ -358,20 +245,14 @@ export default {
 			this.formError = ''
 			this.dialogOpen = true
 		},
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
-		},
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
-		},
-		async submit() {
+		async onModalSubmit(formData) {
 			this.saving = true
 			this.formError = ''
 			try {
 				if (this.editing) {
-					await standingConsentStore.updateStandingConsent(this.editing, this.form)
+					await standingConsentStore.updateStandingConsent(this.editing, formData)
 				} else {
-					await standingConsentStore.createStandingConsent(this.form)
+					await standingConsentStore.createStandingConsent(formData)
 				}
 				this.dialogOpen = false
 			} catch (err) {

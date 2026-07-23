@@ -24,6 +24,8 @@ use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
+use OCA\DocuDesk\Service\CustomDictionaryMatchService;
+use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
 use OCA\DocuDesk\Service\PolicyMatchService;
@@ -123,10 +125,27 @@ class AnonymizationServiceProhibitionTest extends TestCase
             grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
             fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class),
             pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class),
-            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class)
+            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
+            customDictionary: $this->makeNoOpCustomDictionaryService(),
+            customDictionaryMatch: new CustomDictionaryMatchService()
         );
 
     }//end makeService()
+
+    /**
+     * Build a CustomDictionaryService mock that reports no active
+     * dictionaries, so the custom-dictionary detection pass is a no-op for
+     * these prohibition-focused tests.
+     *
+     * @return CustomDictionaryService
+     */
+    private function makeNoOpCustomDictionaryService(): CustomDictionaryService
+    {
+        $service = $this->createMock(originalClassName: CustomDictionaryService::class);
+        $service->method('listActiveDictionariesForDetection')->willReturn([]);
+        return $service;
+
+    }//end makeNoOpCustomDictionaryService()
 
 
     /**

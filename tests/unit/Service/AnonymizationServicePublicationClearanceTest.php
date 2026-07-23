@@ -25,6 +25,8 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
+use OCA\DocuDesk\Service\CustomDictionaryMatchService;
+use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
 use OCA\DocuDesk\Service\GrondslagenSummaryService;
@@ -86,7 +88,9 @@ class AnonymizationServicePublicationClearanceTest extends TestCase
             grondslagenSummary: $grondslagenSummary,
             fileEntityStats: $fileEntityStats,
             pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class),
-            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class)
+            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
+            customDictionary: $this->createMock(originalClassName: CustomDictionaryService::class),
+            customDictionaryMatch: new CustomDictionaryMatchService()
         );
 
     }//end buildService()
