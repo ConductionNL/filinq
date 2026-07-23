@@ -4,8 +4,9 @@
  * DocuDesk Portal Contribution Provider
  *
  * DocuDesk's contribution to the shared Portaliq external portal (hydra
- * ADR-046, contribution contract v2.1). Portaliq — the ONE shared portal for
- * people WITHOUT Nextcloud accounts — discovers this class by convention FQCN
+ * ADR-046, contribution contract v2.1, extended by v2.2 `rowActions`).
+ * Portaliq — the ONE shared portal for people WITHOUT Nextcloud accounts —
+ * discovers this class by convention FQCN
  * (`OCA\{Namespace}\Portal\PortalContributionProvider`) and duck-types it via
  * method_exists(), never instanceof. This class is therefore deliberately
  * PLAIN: no portaliq imports, no `implements` clause, no info.xml dependency,
@@ -18,9 +19,29 @@
  * and the field whitelists projected onto each. All scoping uses the STABLE
  * claim contract `claims.docudesk.contactId` / `claims.docudesk.signerEmail`;
  * see openspec/changes/portal-contribution/design.md. No create/endpoint
- * actions ship in this wave (see design.md "Deferred actions"): consent
- * objection and document signing are UPDATE / A6 flows the create-action
- * vocabulary cannot express safely, and are deferred to a follow-up.
+ * actions ship at the manifest top level (see design.md "Deferred actions"):
+ * consent objection and document signing are UPDATE / A6 flows the
+ * create-action vocabulary cannot express safely, and remain deferred.
+ *
+ * `portal-signing-surface` (this file, extended) adds the ONE additive seam
+ * that IS safe to ship without the A6 receiver: contract-v2.2 `rowActions`
+ * (`sign`, `decline`) declared directly on the `signerSigningRequests`
+ * collection — pure data, no I/O, no new imports. The endpoints they name
+ * (`/apps/docudesk/api/portal/signing/{sign,decline}`) are the ones
+ * `portal-signing-actions`'s receiver is designed to expose; AT HEAD that
+ * receiver, its `PortalAssertionVerifier`, and `signing-trust-rebuild`'s
+ * identity-bound `v: 2` assertion MAC are NOT YET IMPLEMENTED (spec-only, 0 of
+ * their tasks checked, no controller/route/verifier code in this repo). The
+ * rowActions are declared here anyway (forward-compatible, dead until the
+ * receiver ships — calling them 404s today) so the manifest and the future
+ * receiver land in sync; the portal-subject identity binding into the
+ * signature evidence (REQ-DDPSS-004) is intentionally NOT implemented in this
+ * class or in `NativeSigningProvider`/`SigningVerificationService` because
+ * doing so before `signing-trust-rebuild`'s MAC rebuild lands would silently
+ * decorate the assertion with unenforced fields — the exact forgeable-signer
+ * shape (portaliq#3) this surface exists to close, not a fix for it. See
+ * `openspec/changes/portal-signing-surface/design.md` "Open questions" and the
+ * apply-time PR for the full dependency-state note.
  *
  * @category  Portal
  * @package   OCA\DocuDesk\Portal
@@ -34,6 +55,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+ * @spec openspec/specs/portal-signing-surface/spec.md
  */
 
 declare(strict_types=1);
@@ -84,6 +106,43 @@ class PortalContributionProvider
      * @var string
      */
     private const LABEL = 'DocuDesk';
+
+    /**
+     * Instance-local relative endpoint the `sign` rowAction resolves to.
+     *
+     * Targets the `portal-signing-actions` receiver's `signDocument` act
+     * (design.md "The identity chain"). NOT YET implemented at HEAD (see this
+     * class's docblock) — declared here so the manifest and the future
+     * receiver ship in sync.
+     *
+     * @var string
+     */
+    private const SIGN_ENDPOINT = '/apps/docudesk/api/portal/signing/sign';
+
+    /**
+     * Instance-local relative endpoint the `decline` rowAction resolves to.
+     *
+     * Targets the `portal-signing-actions` receiver's `declineDocument` act.
+     * NOT YET implemented at HEAD — see `SIGN_ENDPOINT`.
+     *
+     * @var string
+     */
+    private const DECLINE_ENDPOINT = '/apps/docudesk/api/portal/signing/decline';
+
+    /**
+     * Minimum eIDAS-aligned portal trust required to sign or decline.
+     *
+     * An advanced-electronic-signature-grade act requires a
+     * substantial-assurance portal session (design.md "eIDAS levels"). This
+     * surface exposes SES/AES assurance only and never claims QES
+     * (qualified electronic signature, eIDAS Article 3(12)) — QES is
+     * certificate-backed via an external QTSP and is explicitly out of scope
+     * (REQ-DDPSS-005); the exposed assurance MUST NOT exceed this session
+     * trust.
+     *
+     * @var string
+     */
+    private const SIGNING_MIN_TRUST = 'substantial';
 
     /**
      * The audiences this provider contributes to (contract v2, preferred).
@@ -222,9 +281,29 @@ class PortalContributionProvider
      * co-signer roster (`signerIds`) and the internal Nextcloud `documentFileId`
      * — every other-party and system-internal column.
      *
+     * `signerSigningRequests` additionally carries contract-v2.2 `rowActions`
+     * — `sign` and `decline` (REQ-DDPSS-001) — so portaliq renders a
+     * per-document sign/decline control on exactly the rows awaiting the
+     * subject. Each rowAction is gated `minTrust: substantial`
+     * (eIDAS-aligned: an AES-grade act needs a substantial-assurance
+     * session — `SIGNING_MIN_TRUST`) and resolves to an instance-local
+     * relative endpoint (`SIGN_ENDPOINT` / `DECLINE_ENDPOINT`). This surface
+     * exposes SES/AES assurance only; QES (qualified electronic signature,
+     * certificate-backed via an external QTSP, eIDAS Article 3(12)) is
+     * delegated and never claimed here (REQ-DDPSS-005). The rowActions are
+     * pure data — no I/O, no callbacks — keeping this class plain and
+     * dependency-free; the `signerRecords` collection and the entire
+     * `data-subject` manifest carry no write action. The endpoints they name
+     * target the `portal-signing-actions` receiver, which is NOT YET
+     * implemented at HEAD (see this file's top-of-file docblock) — a row
+     * already in a terminal state (`signed`/`declined`) must not offer the
+     * actions, which is the receiver's terminal-state guard to enforce once
+     * it ships, not something this pure-data manifest can express.
+     *
      * @return array<string, mixed> The signer manifest.
      *
      * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+     * @spec openspec/specs/portal-signing-surface/spec.md
      */
     private function signerContribution(): array
     {
@@ -269,6 +348,22 @@ class PortalContributionProvider
                         'status',
                         'deadline',
                         'provider',
+                    ],
+                    'rowActions' => [
+                        [
+                            'id'       => 'sign',
+                            'label'    => 'Sign',
+                            'endpoint' => self::SIGN_ENDPOINT,
+                            'method'   => 'POST',
+                            'minTrust' => self::SIGNING_MIN_TRUST,
+                        ],
+                        [
+                            'id'       => 'decline',
+                            'label'    => 'Decline to sign',
+                            'endpoint' => self::DECLINE_ENDPOINT,
+                            'method'   => 'POST',
+                            'minTrust' => self::SIGNING_MIN_TRUST,
+                        ],
                     ],
                 ],
             ],
