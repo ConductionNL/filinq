@@ -25,16 +25,19 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\DocuDesk\Event\SigningConcludedEvent;
+use OCA\DocuDesk\Service\Signing\SignatureQrStampService;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use OCP\Notification\IManager as INotificationManager;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Service for managing signing request lifecycle
@@ -72,16 +75,20 @@ class SigningService
     /**
      * Constructor
      *
-     * @param SettingsService        $settingsService     Settings service
-     * @param SigningAuditService    $auditService        Audit service
-     * @param SigningProviderFactory $providerFactory     Provider factory
-     * @param IAppConfig             $config              App config
-     * @param IUserSession           $userSession         User session
-     * @param INotificationManager   $notificationManager Notification manager
-     * @param LoggerInterface        $logger              Logger
-     * @param IRequest               $request             HTTP request
-     * @param IEventDispatcher       $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
-     * @param IRootFolder            $rootFolder          Root folder (reads the document, stores the signed version)
+     * @param SettingsService                  $settingsService     Settings service
+     * @param SigningAuditService              $auditService        Audit service
+     * @param SigningProviderFactory           $providerFactory     Provider factory
+     * @param IAppConfig                       $config              App config
+     * @param IUserSession                     $userSession         User session
+     * @param INotificationManager             $notificationManager Notification manager
+     * @param LoggerInterface                  $logger              Logger
+     * @param IRequest                         $request             HTTP request
+     * @param IEventDispatcher                 $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
+     * @param IRootFolder                      $rootFolder          Root folder (reads the document, stores the signed version)
+     * @param SigningVerificationService       $verificationService Classifies signatures + computes the content hash for the verification record (signature-verification-portal)
+     * @param SignatureVerificationLinkService $linkService         Mints the public verification record/token (signature-verification-portal)
+     * @param SignatureQrStampService          $qrStampService      Stamps the visible verify/{token} QR onto the artifact (signature-verification-portal)
+     * @param IURLGenerator                    $urlGenerator        Builds the absolute verify/{token} URL
      *
      * @return void
      */
@@ -95,7 +102,11 @@ class SigningService
         private readonly LoggerInterface $logger,
         private readonly IRequest $request,
         private readonly IEventDispatcher $eventDispatcher,
-        private readonly IRootFolder $rootFolder
+        private readonly IRootFolder $rootFolder,
+        private readonly SigningVerificationService $verificationService,
+        private readonly SignatureVerificationLinkService $linkService,
+        private readonly SignatureQrStampService $qrStampService,
+        private readonly IURLGenerator $urlGenerator
     ) {
 
     }//end __construct()
@@ -784,8 +795,18 @@ class SigningService
             $provider = $this->providerFactory->getActiveProvider();
         }
 
+        // Verification-portal QR (signature-verification-portal design.md D4):
+        // mint the token FIRST and stamp its verify URL into the document
+        // content BEFORE the provider embeds its own marker, so the QR
+        // travels inside the exact bytes the marker's canonical-form hash
+        // covers. A stamping failure is fail-soft (cosmetic, opt-outable per
+        // design.md Risks) — it must never block the honest-completion gate
+        // below.
+        $verificationToken = bin2hex(random_bytes(16));
+        $contentToSign      = $this->stampVerificationQr(content: $originalContent, token: $verificationToken);
+
         $signedBytes = $provider->produceSignedArtifact(
-            documentContent: $originalContent,
+            documentContent: $contentToSign,
             context: [
                 'signer'    => $this->resolveSignerLabel(),
                 'signers'   => ($request['signerIds'] ?? []),
@@ -803,12 +824,95 @@ class SigningService
             throw new RuntimeException('Cannot store the signed artifact as a new file version: '.$e->getMessage());
         }
 
+        // Mint the public verification record from the FINAL signed bytes
+        // (task 2.4) — fail-soft: an OR outage here must not undo an
+        // already-stored, already-honest-completion-gated signed artifact.
+        $this->mintVerificationRecord(
+            token: $verificationToken,
+            file: $file,
+            fileId: $fileId,
+            signedBytes: $signedBytes,
+            request: $request
+        );
+
         // The signed-artifact reference is the file id plus a content-derived
         // version tag identifying this specific signed version — never the bare
         // original file id.
         return $fileId.':signed:'.substr(hash('sha256', $signedBytes), 0, 16);
 
     }//end produceAndStoreSignedArtifact()
+
+    /**
+     * Stamp the verification QR (encoding the absolute `verify/{token}` URL)
+     * into the document content. Fail-soft: a stamping failure logs and
+     * returns the original content unchanged — the signing pipeline must
+     * never fail because a cosmetic QR could not be drawn (design.md Risks).
+     *
+     * @param string $content The document bytes to stamp.
+     * @param string $token   The pre-minted verification token.
+     *
+     * @return string The stamped bytes, or `$content` unchanged on failure.
+     */
+    private function stampVerificationQr(string $content, string $token): string
+    {
+        try {
+            // Route names are always lowercased by NC's RouteParser
+            // (`strtolower($app.'.'.$controller.'.'.$action)`), regardless of
+            // the camelCase controller/route-array casing — 'publicVerification'
+            // resolves to 'publicverification' here.
+            $verifyUrl = $this->urlGenerator->linkToRouteAbsolute(
+                'docudesk.publicverification.page',
+                ['token' => $token]
+            );
+
+            return $this->qrStampService->stampFooterQr(pdfContent: $content, verifyUrl: $verifyUrl);
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                'Verification-QR stamping failed; signing continues without a visible QR: '.$e->getMessage()
+            );
+            return $content;
+        }
+
+    }//end stampVerificationQr()
+
+    /**
+     * Mint the public `signatureVerification` record for a just-completed
+     * signature. Fail-soft (logs and returns) — the honest-completion gate
+     * above already stored the real signed artifact; a mint failure must not
+     * roll that back (mirrors {@see emitConclusionIfDelegated()}'s fail-soft
+     * contract for the analogous cross-app event).
+     *
+     * @param string                $token       The pre-minted verification token.
+     * @param File                  $file        The (now signed) file node.
+     * @param int                   $fileId      The Nextcloud file id.
+     * @param string                $signedBytes The final signed bytes (QR + marker).
+     * @param array<string, mixed>  $request     The completing signing-request array.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-non-enumerable-verification-token-backs-anonymous-verification-req-ddsvp-003
+     */
+    private function mintVerificationRecord(string $token, File $file, int $fileId, string $signedBytes, array $request): void
+    {
+        try {
+            $this->linkService->mint(
+                [
+                    'token'            => $token,
+                    'fileRef'          => (string) $fileId,
+                    'fileName'         => $file->getName(),
+                    'contentHash'      => $this->verificationService->computeContentHash(pdfContent: $signedBytes),
+                    'signatures'       => $this->verificationService->classifyForRecord(pdfContent: $signedBytes),
+                    'signingRequestId' => ($request['id'] ?? $request['uuid'] ?? null),
+                ]
+            );
+        } catch (Throwable $e) {
+            $this->logger->error(
+                'Failed to mint the public signature verification record (signed artifact was stored regardless): '.$e->getMessage(),
+                ['exception' => $e]
+            );
+        }
+
+    }//end mintVerificationRecord()
 
     /**
      * Resolve the document File node for the signing request.

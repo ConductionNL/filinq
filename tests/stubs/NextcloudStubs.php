@@ -282,6 +282,38 @@ class Response
     {
         return $this->headers;
     }
+
+    /**
+     * Stub for Response::throttle() — records brute-force throttle metadata
+     * (real NC forwards this to the bruteforce middleware after the
+     * controller returns). No-op here; exposed via getThrottleMetadata()
+     * so a test can assert throttling was requested
+     * (PublicVerificationController).
+     *
+     * @param array<string,mixed> $metadata Throttle metadata (e.g. ['action' => ..., 'token' => ...]).
+     *
+     * @return self
+     */
+    public function throttle(array $metadata=[]): self
+    {
+        $this->throttleMetadata = $metadata;
+        return $this;
+    }
+
+    /**
+     * @var array<string,mixed>|null
+     */
+    private ?array $throttleMetadata = null;
+
+    /**
+     * Test helper: whether throttle() was called on this response.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function getThrottleMetadata(): ?array
+    {
+        return $this->throttleMetadata;
+    }
 }//end class
 
 class JSONResponse extends Response
@@ -1876,4 +1908,113 @@ class Task implements \JsonSerializable
  */
 class FreePromptTaskType
 {
+}//end class
+
+namespace OCP\AppFramework\Services;
+
+/**
+ * Stub for OCP\AppFramework\Services\IInitialState
+ * (signature-verification-portal — PublicVerificationController::page()
+ * provides the token to the guest SPA per ADR-004, never a DOM data-attribute).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IInitialState
+{
+    /**
+     * @param string $key  State key.
+     * @param mixed  $data State value (or a Closure returning it).
+     *
+     * @return void
+     */
+    public function provideInitialState(string $key, $data): void;
+}//end interface
+
+namespace OCP;
+
+/**
+ * Stub for OCP\IURLGenerator (signature-verification-portal —
+ * SigningService builds the absolute verify/{token} URl to stamp into the
+ * QR).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+interface IURLGenerator
+{
+    /**
+     * @param string               $routeName Route name.
+     * @param array<string,mixed>  $arguments Route arguments.
+     *
+     * @return string
+     */
+    public function linkToRoute(string $routeName, array $arguments=[]): string;
+
+    /**
+     * @param string               $routeName Route name.
+     * @param array<string,mixed>  $arguments Route arguments.
+     *
+     * @return string
+     */
+    public function linkToRouteAbsolute(string $routeName, array $arguments=[]): string;
+
+    /**
+     * @param string $url Relative URL.
+     *
+     * @return string
+     */
+    public function getAbsoluteURL(string $url): string;
+}//end interface
+
+namespace OCP\AppFramework\Http;
+
+/**
+ * Stub for OCP\AppFramework\Http\ContentSecurityPolicy
+ * (PublicVerificationController::page() / doriath PublicShellController
+ * precedent — the guest-layout page sets its own CSP relaxations).
+ *
+ * @category Tests
+ * @package  OCA\DocuDesk\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ContentSecurityPolicy
+{
+    /**
+     * @param string $domain Allowed connect-src domain.
+     *
+     * @return self
+     */
+    public function addAllowedConnectDomain(string $domain): self
+    {
+        return $this;
+    }//end addAllowedConnectDomain()
+
+    /**
+     * @param bool $allow Whether to allow WASM eval.
+     *
+     * @return self
+     */
+    public function allowEvalWasm(bool $allow=true): self
+    {
+        return $this;
+    }//end allowEvalWasm()
+
+    /**
+     * @param string $domain Allowed worker-src domain.
+     *
+     * @return self
+     */
+    public function addAllowedWorkerSrcDomain(string $domain): self
+    {
+        return $this;
+    }//end addAllowedWorkerSrcDomain()
 }//end class

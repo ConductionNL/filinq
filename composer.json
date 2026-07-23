@@ -12,7 +12,10 @@
 	"autoload": {
 		"psr-4": {
 			"OCA\\DocuDesk\\": "lib/"
-		}
+		},
+		"classmap": [
+			"lib/Vendor/KazuhikoArase/QrCode.php"
+		]
 	},
 	"scripts": {
 		"post-install-cmd": [

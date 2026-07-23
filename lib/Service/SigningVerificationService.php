@@ -96,6 +96,158 @@ class SigningVerificationService
     }//end verifyDocument()
 
     /**
+     * Whether the active signing pipeline binds signer identity into the
+     * signature MAC.
+     *
+     * Verified at HEAD (design.md Context /
+     * `NativeSigningProvider::produceSignedArtifact()`): the HMAC covers only
+     * the canonicalised content hash; `signer`/`timestamp`/`level`/`ip` are
+     * NOT in the MAC input, so a validly signed artifact's signer field can be
+     * rewritten and still verify. This method is the single flip-point for
+     * that fact: once the active `signing-trust-rebuild` change (GH #284)
+     * ships an identity-bound MAC, this method starts returning true and the
+     * mint step (SigningService) records `identityBound: true` on every new
+     * verification record — no portal code changes beyond reading the flag
+     * (design.md D2).
+     *
+     * @return bool False until signing-trust-rebuild lands.
+     *
+     * @spec openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-content-integrity-and-signer-identity-are-presented-as-distinct-guarantees-req-ddsvp-002
+     */
+    public function isIdentityBoundSupported(): bool
+    {
+        return false;
+
+    }//end isIdentityBoundSupported()
+
+    /**
+     * Classify every signature found in signed PDF bytes for a verification
+     * record — the tri-state summary
+     * {@see SignatureVerificationLinkService::mint()} persists so an
+     * anonymous verifier can be served without file-read access.
+     *
+     * Unlike {@see extractSignatures()} (binary valid/invalid, kept for the
+     * authenticated `verifyDocument()` path), this method reports a tri-state
+     * `status` per signature:
+     *
+     * - `verified`     — a DocuDesk marker whose MAC matched (content
+     *                    integrity cryptographically confirmed).
+     * - `invalid`      — a DocuDesk marker whose MAC did NOT match (tamper).
+     * - `unverifiable` — an external `/Type /Sig` entry with no DocuDesk
+     *                    marker — honestly reported as "cannot yet validate",
+     *                    never as tamper (REQ-DDSVP-002).
+     *
+     * `identityBound` is always {@see isIdentityBoundSupported()} — false
+     * until signing-trust-rebuild lands — so a rewritten `signer` field is
+     * NEVER presented as a cryptographically verified identity, even when the
+     * content-hash MAC matches.
+     *
+     * @param string $pdfContent The signed PDF bytes (already produced —
+     *                           called at mint time, not re-derived later).
+     *
+     * @return array<int, array<string, mixed>> Per-signature summaries:
+     *         level, method, signerAsserted, status, integrityVerified,
+     *         identityBound.
+     *
+     * @spec openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-content-integrity-and-signer-identity-are-presented-as-distinct-guarantees-req-ddsvp-002
+     */
+    public function classifyForRecord(string $pdfContent): array
+    {
+        $identityBound = $this->isIdentityBoundSupported();
+        $summaries      = [];
+
+        $dataPattern = '/\/DocuDesk-Signature\s*\(([^)]+)\)/';
+        preg_match_all($dataPattern, $pdfContent, $dataMatches);
+
+        if (empty($dataMatches[1]) === false) {
+            foreach ($dataMatches[1] as $encoded) {
+                $decoded = json_decode(base64_decode($encoded), true);
+                if (is_array($decoded) === false) {
+                    continue;
+                }
+
+                $integrityVerified = $this->verifyAssertion(assertion: $decoded, pdfContent: $pdfContent);
+
+                $summaries[] = [
+                    'level'             => (string) ($decoded['level'] ?? 'SES'),
+                    'method'            => (string) ($decoded['method'] ?? 'native'),
+                    'signerAsserted'    => (string) ($decoded['signer'] ?? 'Unknown'),
+                    'status'            => $integrityVerified ? 'verified' : 'invalid',
+                    'integrityVerified' => $integrityVerified,
+                    'identityBound'     => $identityBound,
+                ];
+            }//end foreach
+
+            return $summaries;
+        }//end if
+
+        // No DocuDesk marker found — a genuine external `/Type /Sig` CMS
+        // signature (or no signature at all) reports `unverifiable`, never
+        // `invalid`: DocuDesk cannot yet validate it, but that is not evidence
+        // of tampering (REQ-DDSVP-002 scenario: "External CMS signature
+        // reports unverifiable, not invalid").
+        $pattern = '/\/Type\s*\/Sig/';
+        $matches = preg_match_all($pattern, $pdfContent);
+        if ($matches !== false && $matches > 0) {
+            for ($i = 0; $i < $matches; $i++) {
+                $summaries[] = [
+                    'level'             => 'unknown',
+                    'method'            => 'external',
+                    'signerAsserted'    => 'Unknown',
+                    'status'            => 'unverifiable',
+                    'integrityVerified' => false,
+                    'identityBound'     => $identityBound,
+                ];
+            }
+        }
+
+        return $summaries;
+
+    }//end classifyForRecord()
+
+    /**
+     * Render a stored verification record into an anonymous-safe verdict.
+     *
+     * No `userId`/file-read dependency (task 2.2) — the record already
+     * carries the outcome computed at mint time
+     * ({@see classifyForRecord()}); this method only formats it. The caller
+     * (PublicVerificationController) is responsible for the non-oracle
+     * unknown-token handling — a null/absent record never reaches here.
+     *
+     * @param array<string, mixed> $record The `signatureVerification` record.
+     *
+     * @return array<string, mixed> The public verdict payload.
+     *
+     * @spec openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-content-integrity-and-signer-identity-are-presented-as-distinct-guarantees-req-ddsvp-002
+     */
+    public function verifyByRecord(array $record): array
+    {
+        $signatures = $record['signatures'] ?? [];
+        if (is_array($signatures) === false) {
+            $signatures = [];
+        }
+
+        $allVerified = (count($signatures) > 0);
+        foreach ($signatures as $signature) {
+            if (($signature['status'] ?? '') !== 'verified') {
+                $allVerified = false;
+                break;
+            }
+        }
+
+        return [
+            'status'      => 'ok',
+            'fileName'    => (string) ($record['fileName'] ?? ''),
+            'contentHash' => (string) ($record['contentHash'] ?? ''),
+            'signatures'  => array_values($signatures),
+            'isValid'     => $allVerified,
+            'waarmerkRef' => $record['waarmerkRef'] ?? null,
+            'createdAt'   => $record['createdAt'] ?? null,
+        ];
+
+    }//end verifyByRecord()
+
+    /**
      * Extract signature information from a PDF document
      *
      * Security note (finding #284): the embedded `/DocuDesk-Signature(...)`
@@ -211,6 +363,25 @@ class SigningVerificationService
         return hash_equals($expected, $mac);
 
     }//end verifyAssertion()
+
+    /**
+     * Compute the canonical content-hash used both by `verifyAssertion()`
+     * (MAC input) and by the `signatureVerification` record's `contentHash`
+     * field (design.md D1) — a single authoritative implementation so mint
+     * time and verify time can never drift apart.
+     *
+     * @param string $pdfContent The signed PDF bytes (post-QR-stamp,
+     *                           post-marker — the exact bytes stored to the file).
+     *
+     * @return string The sha256 hex digest of the canonical form.
+     *
+     * @spec openspec/changes/signature-verification-portal/design.md#d1
+     */
+    public function computeContentHash(string $pdfContent): string
+    {
+        return hash('sha256', $this->canonicaliseForAssertion(pdfContent: $pdfContent));
+
+    }//end computeContentHash()
 
     /**
      * Blank every DocuDesk signature marker payload to recover the canonical form

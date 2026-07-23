@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "7.3.0"
+        "description": "DocuDesk register v7.4.0 — adds the signatureVerification schema (signature-verification-portal): the outcome record backing the public, account-free `verify/{token}` portal. Keyed by a high-entropy non-enumerable token, stores contentHash + a per-signature summary (level/method/signerAsserted/status/integrityVerified/identityBound) and an optional waarmerkRef — never the document bytes or the signing secret. `identityBound` is false by construction until the active signing-trust-rebuild change lands (GH #284); the property descriptions document that boundary so the portal never claims a signer identity the MAC does not yet cover. x-openregister-archival P10Y, matching signingRequest/signerRecord. See openspec/changes/signature-verification-portal/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "7.4.0"
     },
     "x-openregister": {
         "type": "application",
@@ -54,8 +54,8 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "2.2.0",
-                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie en grootboekrekening-suggesties",
+                "version": "2.3.0",
+                "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie, grootboekrekening-suggesties en publieke handtekening-/waarmerkverificatie-records",
                 "schemas": [
                     "correspondence",
                     "huisstijl",
@@ -64,7 +64,8 @@
                     "generatedDocument",
                     "financialExtraction",
                     "glAccountBooking",
-                    "glAccountMappingRule"
+                    "glAccountMappingRule",
+                    "signatureVerification"
                 ]
             },
             "dossier": {
@@ -3086,6 +3087,177 @@
                     "write": [
                         "docudesk-policy-admins"
                     ]
+                }
+            },
+            "signatureVerification": {
+                "uri": null,
+                "slug": "signatureVerification",
+                "title": "Signature Verification",
+                "description": "Publiek verifieerbare uitkomst van een ondertekend of gewaarmerkt document, geraadpleegd via een niet-opsombare token (verify/{token}) zonder Nextcloud-account of bestandstoegang. Bewaart alleen de UITKOMST (contentHash + per-handtekening samenvatting), nooit de documentbytes en nooit het signing-secret. `identityBound` is `false` totdat de actieve `signing-trust-rebuild`-wijziging de identity-bound MAC levert (GH #284) — de portal claimt nooit geverifieerde ondertekenaarsidentiteit zolang die vlag false is. Aangemaakt door SignatureVerificationLinkService bij het afronden van ondertekening (SigningService) resp. het zegelen (waarmerk, presence-gated tot document-waarmerk-certification live is).",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ShieldCheckOutline",
+                "required": [
+                    "token",
+                    "contentHash",
+                    "signatures",
+                    "createdAt"
+                ],
+                "properties": {
+                    "token": {
+                        "description": "Hoge-entropie (≥128-bit), niet-opsombare publieke handle (bin2hex(random_bytes(16))). Nooit gebruikt voor facet-browsing.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": false,
+                        "title": "Token",
+                        "maxLength": 64
+                    },
+                    "fileRef": {
+                        "description": "OpenRegister-referentie naar het bron-bestandsobject, voor geauthenticeerde herverificatie. Nooit publiek als pad getoond.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 2,
+                        "facetable": false,
+                        "title": "Bestandsreferentie",
+                        "maxLength": 255
+                    },
+                    "fileName": {
+                        "description": "Bestandsnaam zoals publiek getoond op de verificatiepagina (nooit het volledige pad).",
+                        "type": "string",
+                        "visible": true,
+                        "order": 3,
+                        "facetable": false,
+                        "title": "Bestandsnaam",
+                        "maxLength": 255
+                    },
+                    "contentHash": {
+                        "description": "SHA-256 van de canonieke ondertekende bytes op het moment van afronding; optioneel client-side (WebCrypto, geen upload) te vergelijken door de bezoeker.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Inhoud-hash",
+                        "maxLength": 64
+                    },
+                    "signatures": {
+                        "description": "Vastgelegde samenvatting per handtekening op het moment van afronding: level, method, signerAsserted, integrityVerified (bool), identityBound (bool, altijd false tot signing-trust-rebuild), status (verified|unverifiable|invalid).",
+                        "type": "array",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": false,
+                        "title": "Handtekeningen",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "level",
+                                "method",
+                                "status",
+                                "integrityVerified",
+                                "identityBound"
+                            ],
+                            "properties": {
+                                "level": {
+                                    "title": "Niveau",
+                                    "description": "eIDAS-niveau (SES, AdES, QES) of 'unknown' voor een externe handtekening.",
+                                    "type": "string"
+                                },
+                                "method": {
+                                    "title": "Methode",
+                                    "description": "native | external.",
+                                    "type": "string"
+                                },
+                                "signerAsserted": {
+                                    "title": "Ondertekenaar (asserted)",
+                                    "description": "Naam zoals door de ondertekenaar opgegeven — NIET cryptografisch aan de handtekening gebonden zolang identityBound false is.",
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "title": "Status",
+                                    "description": "verified (inhoud cryptografisch bevestigd) | unverifiable (externe /Type /Sig, nog niet te valideren) | invalid (MAC-mismatch, manipulatie).",
+                                    "type": "string",
+                                    "enum": [
+                                        "verified",
+                                        "unverifiable",
+                                        "invalid"
+                                    ]
+                                },
+                                "integrityVerified": {
+                                    "title": "Inhoud geverifieerd",
+                                    "description": "True alleen wanneer de opgeslagen verifyAssertion-MAC klopte op het moment van afronding.",
+                                    "type": "boolean"
+                                },
+                                "identityBound": {
+                                    "title": "Identiteit cryptografisch gebonden",
+                                    "description": "Altijd false tot de actieve signing-trust-rebuild-wijziging de identity-bound MAC levert (GH #284); de portal toont de ondertekenaar dan als 'asserted, niet gebonden'.",
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "waarmerkRef": {
+                        "description": "Optionele referentie naar een waarmerk-record (document-waarmerk-certification); wanneer aanwezig toont de portal de zegelstatus via die primitive (presence-gated, niet herbouwd).",
+                        "type": "string",
+                        "visible": true,
+                        "order": 6,
+                        "facetable": true,
+                        "title": "Waarmerkreferentie",
+                        "maxLength": 255
+                    },
+                    "signingRequestId": {
+                        "description": "Optionele referentie naar het ondertekeningsverzoek, gebruikt om een gereduceerde audit-rollup (aantal stappen, alle goedgekeurd, laatste datum — geen namen/UID's) op te bouwen voor de publieke pagina.",
+                        "type": "string",
+                        "visible": true,
+                        "order": 7,
+                        "facetable": true,
+                        "title": "Ondertekeningsverzoek ID",
+                        "maxLength": 255
+                    },
+                    "createdAt": {
+                        "description": "Aangemaakt (ISO 8601), bij afronding van ondertekening of zegeling.",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 8,
+                        "facetable": false,
+                        "title": "Aangemaakt"
+                    },
+                    "revoked": {
+                        "description": "Wanneer true retourneert de publieke endpoint een neutrale 'unknown'-uitkomst voor dit token (zelfde vorm als een onbekend token — geen oracle).",
+                        "type": "boolean",
+                        "visible": true,
+                        "order": 9,
+                        "facetable": true,
+                        "title": "Ingetrokken",
+                        "default": false
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": false,
+                "immutable": false,
+                "updated": "2026-07-23T12:00:00+00:00",
+                "created": "2026-07-23T12:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "authorization": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "fileName",
+                    "objectDescriptionField": "token",
+                    "autoPublish": false
+                },
+                "searchable": false,
+                "x-openregister-archival": {
+                    "retention": "P10Y",
+                    "reason": "Zelfde bewaartermijn als signingRequest/signerRecord (P10Y) — het verificatierecord is het publiek raadpleegbare bewijs bij een ondertekend document en moet net zo lang controleerbaar blijven."
                 }
             }
         },

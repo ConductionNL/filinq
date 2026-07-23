@@ -59,6 +59,18 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'dashboard.js'),
 		filename: appId + '-dashboard.js',
 	},
+	verify: {
+		// Public, account-free verification portal (signature-verification-portal).
+		// Deliberately its OWN entry point — NOT the `main` bundle — so the
+		// guest-layout page (templates/verify.php, served via
+		// PublicVerificationController, no NC session) never pulls in the
+		// authenticated manifest shell (CnPageRenderer/VueRouter/the full
+		// menu-layout/registry). Still shares the -shared-vendor / -shared-nc-vue
+		// chunks so an anonymous visitor's browser reuses the same cached Vue /
+		// @conduction/nextcloud-vue baseline as an authenticated docudesk tab.
+		import: path.join(__dirname, 'src', 'verify.js'),
+		filename: appId + '-verify.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.

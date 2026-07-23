@@ -23,14 +23,18 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\Signing\SignatureQrStampService;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
+use OCA\DocuDesk\Service\SignatureVerificationLinkService;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SigningService;
+use OCA\DocuDesk\Service\SigningVerificationService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
 use OCP\Notification\IManager as INotificationManager;
@@ -104,6 +108,26 @@ class SigningServiceTest extends TestCase
     private \OCP\Files\IRootFolder|MockObject $rootFolder;
 
     /**
+     * @var SigningVerificationService|MockObject
+     */
+    private SigningVerificationService|MockObject $verificationService;
+
+    /**
+     * @var SignatureVerificationLinkService|MockObject
+     */
+    private SignatureVerificationLinkService|MockObject $linkService;
+
+    /**
+     * @var SignatureQrStampService|MockObject
+     */
+    private SignatureQrStampService|MockObject $qrStampService;
+
+    /**
+     * @var IURLGenerator|MockObject
+     */
+    private IURLGenerator|MockObject $urlGenerator;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -157,6 +181,16 @@ class SigningServiceTest extends TestCase
         $eventDispatcher = $this->createMock(IEventDispatcher::class);
         $this->rootFolder = $this->createMock(\OCP\Files\IRootFolder::class);
 
+        // signature-verification-portal: mint + QR-stamp are fail-soft
+        // side-effects of a completing signature — auto-mocked (no explicit
+        // willReturn) so they no-op harmlessly and every pre-existing
+        // assertion in this file keeps holding. Dedicated expectations live
+        // in the mint/stamp-specific tests below.
+        $this->verificationService = $this->createMock(SigningVerificationService::class);
+        $this->linkService         = $this->createMock(SignatureVerificationLinkService::class);
+        $this->qrStampService      = $this->createMock(SignatureQrStampService::class);
+        $this->urlGenerator        = $this->createMock(IURLGenerator::class);
+
         $this->service = new SigningService(
             settingsService: $this->settingsService,
             auditService: $this->auditService,
@@ -167,7 +201,11 @@ class SigningServiceTest extends TestCase
             logger: $logger,
             request: $this->request,
             eventDispatcher: $eventDispatcher,
-            rootFolder: $this->rootFolder
+            rootFolder: $this->rootFolder,
+            verificationService: $this->verificationService,
+            linkService: $this->linkService,
+            qrStampService: $this->qrStampService,
+            urlGenerator: $this->urlGenerator
         );
 
     }//end setUp()

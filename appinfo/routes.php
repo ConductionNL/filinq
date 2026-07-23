@@ -159,6 +159,15 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'anonymiserWarning#dismiss', 'url' => 'api/admin/anonymiser-warning/dismiss', 'verb' => 'POST'],
         ['name' => 'anonymiserWarning#reset', 'url' => 'api/admin/anonymiser-warning/reset', 'verb' => 'POST'],
 
+        // Public signature verification portal (signature-verification-portal).
+        // #[PublicPage] — anonymous, account-free; disjoint from
+        // document-waarmerk-certification's own GET /verify/{code} (design.md D5:
+        // different token length/charset, non-oracle resolver on either side).
+        // Registered ahead of the SPA catch-all (Routes::standard() appends
+        // `/{path}` last) so it takes priority over the authenticated shell.
+        ['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
+        ['name' => 'publicVerification#show', 'url' => 'api/verify/{token}', 'verb' => 'GET'],
+
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
         // CnSupportDialog) — served by OpenRegister's AppHost
         // GenericPreferencesController (aliased in Application::register).
