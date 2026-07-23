@@ -141,9 +141,9 @@ retention configuration in the document schema's register definition.
 
 ### Requirement: Provider Async-Flow Methods Are a Pluggable Extension Seam, Not Authorization Guards
 
-The `SigningProviderInterface` async-flow methods — `initiateSigning`,
-`checkStatus`, `downloadSignedDocument`, `cancelSigning` — SHALL be classified
-as a pluggable extension seam implemented by external signing providers. These
+The `SigningProviderInterface` async-flow methods SHALL be classified as a
+pluggable extension seam implemented by external signing providers, namely
+`initiateSigning`, `checkStatus`, `downloadSignedDocument` and `cancelSigning`. These
 methods SHALL NOT be treated as authorization guards: none makes an access
 decision, and `checkStatus` in particular is a status **read** returning
 `status`/`signers`/`completedAt`. The current app signing path is synchronous

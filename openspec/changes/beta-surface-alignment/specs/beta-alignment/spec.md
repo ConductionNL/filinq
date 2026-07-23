@@ -45,12 +45,11 @@ or rewritten to describe what is actually implemented.
   ODF, HTML) and SHALL NOT claim unsupported formats (e.g. Word/.docx,
   Excel/.xlsx)
 
-### Requirement: info.xml, product page, and docs MUST agree on version and
-release status
+### Requirement: info.xml, product page, and docs MUST agree on version and release status
 
-The version string and release-status label (e.g. "Beta"/"Stable") shown on
-the product page and in docs MUST be derived from `appinfo/info.xml`'s
-`<version>`, not an independently invented number or status.
+The version string and release-status label MUST be derived from
+`appinfo/info.xml`'s `<version>` wherever they are shown (e.g. "Beta"/"Stable"
+on the product page and in docs), not an independently invented number or status.
 
 #### Scenario: Product page version tracks info.xml
 
@@ -67,8 +66,7 @@ the product page and in docs MUST be derived from `appinfo/info.xml`'s
 - WHEN the product page renders a `status` label
 - THEN it SHALL be `Beta`, not `Stable`
 
-### Requirement: info.xml summary MUST be present in both English and Dutch,
-with Dutch being a real translation
+### Requirement: info.xml summary MUST be present in both English and Dutch, with Dutch being a real translation
 
 Per ADR-007, `appinfo/info.xml` MUST declare `<summary lang="en">` and
 `<summary lang="nl">`, and the Dutch summary MUST be an actual Dutch
@@ -81,8 +79,7 @@ translation, not the English string copied verbatim or machine-transliterated.
 - THEN it SHALL be flagged and split into `<summary lang="en">` and
   `<summary lang="nl">`, with the Dutch text being a genuine translation
 
-### Requirement: info.xml documentation links MUST point to a live, current
-docs site
+### Requirement: info.xml documentation links MUST point to a live, current docs site
 
 `appinfo/info.xml`'s `<documentation>` block MUST link to the docs site that
 is actually deployed and current, not a decommissioned or superseded
