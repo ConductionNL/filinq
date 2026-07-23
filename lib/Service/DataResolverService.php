@@ -60,6 +60,13 @@ class DataResolverService
     private array $resolvedCache = [];
 
     /**
+     * Lazily-constructed resolver for listRefs (collection references)
+     *
+     * @var ListReferenceResolver|null
+     */
+    private ?ListReferenceResolver $listResolver = null;
+
+    /**
      * Constructor for DataResolverService
      *
      * @param ContainerInterface $container  Container for dependency injection
@@ -101,21 +108,58 @@ class DataResolverService
     }//end getObjectService()
 
     /**
+     * Get the ListReferenceResolver, constructing it on first use.
+     *
+     * Built lazily (rather than constructor-injected) so existing callers
+     * that construct DataResolverService directly — including its own unit
+     * tests — are unaffected by this addition.
+     *
+     * @return ListReferenceResolver The resolver for listRefs
+     *
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+     */
+    private function getListReferenceResolver(): ListReferenceResolver
+    {
+        if ($this->listResolver === null) {
+            $this->listResolver = new ListReferenceResolver(
+                container: $this->container,
+                appManager: $this->appManager
+            );
+        }
+
+        return $this->listResolver;
+
+    }//end getListReferenceResolver()
+
+    /**
      * Resolve data from OpenRegister objects
      *
      * Fetches objects from OpenRegister by register, schema, and UUID.
-     * Returns resolved data keyed by schema name. Ad-hoc data is merged
-     * on top, overriding resolved values when keys conflict.
+     * Returns resolved data keyed by schema name. listRefs are resolved
+     * next, each producing an array of objects under its 'as' key (or
+     * schema name + '_list' by default) — see {@see ListReferenceResolver::resolve()}.
+     * Ad-hoc data is merged on top of both, overriding resolved values when
+     * keys conflict. Precedence is therefore: dataRefs < listRefs < adHocData.
      *
      * @param array $dataRefs  Array of object references, each with
      *                         'register', 'schema', and 'id' keys
+     * @param array $listRefs  Array of collection references, each with
+     *                         'register', 'schema' and optional 'filter',
+     *                         'limit', 'order', 'as' keys
      * @param array $adHocData Ad-hoc data to merge on top of resolved data
      *
      * @return array{data: array, errors: array, warnings: array} Resolved data and any errors
      *
+     * @throws Exception If listRefs violate a request-level guardrail (too
+     *                    many entries, invalid filter values, invalid or
+     *                    colliding 'as' key) — these are malformed-request
+     *                    errors (HTTP 400) rather than per-item resolution
+     *                    failures
+     *
      * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
-    public function resolve(array $dataRefs, array $adHocData=[]): array
+    public function resolve(array $dataRefs, array $listRefs=[], array $adHocData=[]): array
     {
         $this->resolvedCache = [];
         $resolved            = [];
@@ -142,6 +186,17 @@ class DataResolverService
                 ];
             }//end try
         }//end foreach
+
+        // Resolve listRefs (collections) after dataRefs and before adHocData,
+        // per the documented precedence. Guardrail violations throw and
+        // abort the whole request; per-item search failures are collected
+        // as soft errors, mirroring dataRefs.
+        $listResolution = $this->getListReferenceResolver()->resolve(
+            listRefs: $listRefs,
+            reservedKeys: array_keys($resolved)
+        );
+        $resolved       = array_merge($resolved, $listResolution['data']);
+        $errors         = array_merge($errors, $listResolution['errors']);
 
         // Merge ad-hoc data on top of resolved data.
         $mergedData = array_merge($resolved, $adHocData);

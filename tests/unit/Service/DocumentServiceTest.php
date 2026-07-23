@@ -237,6 +237,116 @@ class DocumentServiceTest extends TestCase
     }//end testGeneratePreviewReturnsHtml()
 
     /**
+     * Test that generateDocument() forwards options.listRefs to
+     * DataResolverService::resolve() unchanged.
+     *
+     * @return void
+     */
+    public function testGenerateDocumentForwardsListRefs(): void
+    {
+        $template = [
+            'id'      => 'tmpl-1',
+            'name'    => 'Rapport',
+            'content' => '<ul>{% for c in competitors %}<li>{{ c.name }}</li>{% endfor %}</ul>',
+            'format'  => 'A4',
+            'version' => 1,
+        ];
+
+        $this->templateSvc->method('getTemplate')
+            ->willReturn($template);
+
+        $listRefs = [
+            [
+                'register' => 'spectr-live',
+                'schema'   => 'v-app-competitors',
+                'filter'   => ['app_id' => 6],
+                'limit'    => 5,
+                'as'       => 'competitors',
+            ],
+        ];
+
+        $this->dataResolver->expects($this->once())
+            ->method('resolve')
+            ->with(
+                $this->anything(),
+                $this->equalTo($listRefs),
+                $this->anything()
+            )
+            ->willReturn([
+                'data'     => ['competitors' => [['name' => 'Acme']]],
+                'errors'   => [],
+                'warnings' => [],
+            ]);
+
+        $this->renderer->method('renderTemplate')
+            ->willReturn('<ul><li>Acme</li></ul>');
+
+        $this->pdfService->method('renderPdf')
+            ->willReturn('%PDF-binary%');
+
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+        $this->objectSvc->method('saveObject')
+            ->willReturn($logEntity);
+
+        $result = $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'test-user', 'listRefs' => $listRefs]
+        );
+
+        $this->assertEquals('%PDF-binary%', $result['content']);
+
+    }//end testGenerateDocumentForwardsListRefs()
+
+    /**
+     * Test that generatePreview() forwards options.listRefs to
+     * DataResolverService::resolve() unchanged.
+     *
+     * @return void
+     */
+    public function testGeneratePreviewForwardsListRefs(): void
+    {
+        $template = [
+            'id'      => 'tmpl-1',
+            'name'    => 'Preview',
+            'content' => '{% for c in competitors %}{{ c.name }}{% endfor %}',
+        ];
+
+        $this->templateSvc->method('getTemplate')
+            ->willReturn($template);
+
+        $listRefs = [
+            ['register' => 'spectr-live', 'schema' => 'v-app-competitors', 'as' => 'competitors'],
+        ];
+
+        $this->dataResolver->expects($this->once())
+            ->method('resolve')
+            ->with(
+                $this->anything(),
+                $this->equalTo($listRefs),
+                $this->anything()
+            )
+            ->willReturn([
+                'data'     => ['competitors' => [['name' => 'Acme']]],
+                'errors'   => [],
+                'warnings' => [],
+            ]);
+
+        $this->renderer->method('renderTemplate')
+            ->willReturn('Acme');
+
+        $result = $this->service->generatePreview(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['listRefs' => $listRefs]
+        );
+
+        $this->assertEquals('Acme', $result['html']);
+
+    }//end testGeneratePreviewForwardsListRefs()
+
+    /**
      * Test synchronous bulk generation for small batch (DCS-040).
      *
      * @return void

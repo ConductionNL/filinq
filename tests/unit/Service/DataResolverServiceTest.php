@@ -253,4 +253,123 @@ class DataResolverServiceTest extends TestCase
     }//end testPartialResolutionOnFailure()
 
 
+    /**
+     * Test that listRefs resolve into arrays under their 'as' key,
+     * alongside dataRefs, via OpenRegister's slug-aware search.
+     *
+     * @return void
+     */
+    public function testResolveListRefAlongsideDataRef(): void
+    {
+        $entity = $this->createMock(ObjectEntity::class);
+        $entity->method('jsonSerialize')->willReturn(['id' => 'abc-123', 'naam' => 'Test Persoon']);
+        $this->objectService->method('find')
+            ->willReturn($entity);
+
+        $competitor = $this->createMock(ObjectEntity::class);
+        $competitor->method('jsonSerialize')->willReturn(['id' => 'c-1', 'name' => 'Acme']);
+        $this->objectService->method('searchObjectsBySlug')
+            ->willReturn([$competitor]);
+
+        $result = $this->service->resolve(
+            dataRefs: [
+                ['register' => 'brp', 'schema' => 'persoon', 'id' => 'abc-123'],
+            ],
+            listRefs: [
+                [
+                    'register' => 'spectr-live',
+                    'schema'   => 'v-app-competitors',
+                    'filter'   => ['app_id' => 6],
+                    'limit'    => 5,
+                    'as'       => 'competitors',
+                ],
+            ]
+        );
+
+        $this->assertArrayHasKey('persoon', $result['data']);
+        $this->assertArrayHasKey('competitors', $result['data']);
+        $this->assertCount(1, $result['data']['competitors']);
+        $this->assertEquals('Acme', $result['data']['competitors'][0]['name']);
+        $this->assertEmpty($result['errors']);
+
+    }//end testResolveListRefAlongsideDataRef()
+
+    /**
+     * Test the documented precedence: dataRefs < listRefs < adHocData.
+     * Ad-hoc data overrides a listRef's resolved key.
+     *
+     * @return void
+     */
+    public function testAdHocDataOverridesListRef(): void
+    {
+        $this->objectService->method('searchObjectsBySlug')
+            ->willReturn([]);
+
+        $result = $this->service->resolve(
+            dataRefs: [],
+            listRefs: [
+                ['register' => 'spectr-live', 'schema' => 'v-app-competitors', 'as' => 'competitors'],
+            ],
+            adHocData: ['competitors' => ['overridden' => true]]
+        );
+
+        $this->assertEquals(['overridden' => true], $result['data']['competitors']);
+
+    }//end testAdHocDataOverridesListRef()
+
+    /**
+     * Test that a listRef whose 'as' key collides with an already-resolved
+     * dataRef schema key aborts the whole request with a 400.
+     *
+     * @return void
+     */
+    public function testListRefAsKeyCollidesWithDataRefKey(): void
+    {
+        $entity = $this->createMock(ObjectEntity::class);
+        $entity->method('jsonSerialize')->willReturn(['id' => 'abc-123']);
+        $this->objectService->method('find')
+            ->willReturn($entity);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $this->service->resolve(
+            dataRefs: [
+                ['register' => 'brp', 'schema' => 'persoon', 'id' => 'abc-123'],
+            ],
+            listRefs: [
+                ['register' => 'spectr-live', 'schema' => 'v-app-competitors', 'as' => 'persoon'],
+            ]
+        );
+
+    }//end testListRefAsKeyCollidesWithDataRefKey()
+
+    /**
+     * Test that omitting listRefs entirely behaves exactly like before this
+     * feature (default empty array, no OpenRegister search call).
+     *
+     * @return void
+     */
+    public function testResolveWithoutListRefsIsUnchanged(): void
+    {
+        $entity = $this->createMock(ObjectEntity::class);
+        $entity->method('jsonSerialize')->willReturn(['id' => 'abc-123', 'naam' => 'Test Persoon']);
+        $this->objectService->expects($this->once())
+            ->method('find')
+            ->willReturn($entity);
+
+        $this->objectService->expects($this->never())
+            ->method('searchObjectsBySlug');
+
+        $result = $this->service->resolve(
+            dataRefs: [
+                ['register' => 'brp', 'schema' => 'persoon', 'id' => 'abc-123'],
+            ]
+        );
+
+        $this->assertEquals('Test Persoon', $result['data']['persoon']['naam']);
+
+    }//end testResolveWithoutListRefsIsUnchanged()
+
+
 }//end class

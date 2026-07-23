@@ -136,13 +136,18 @@ class DocumentService
      * @param string $templateId The UUID of the template to use
      * @param array  $dataRefs   Data references: [{register, schema, id}, ...]
      * @param array  $options    Options: format (pdf|odf|html), huisstijlId,
-     *                           zaakId, adHocData, pdfOptions, userId
+     *                           zaakId, adHocData, listRefs, pdfOptions, userId.
+     *                           listRefs: [{register, schema, filter?, limit?,
+     *                           order?, as?}, ...] — each resolves to an array
+     *                           of objects under the Twig context key 'as'
+     *                           (default: schema + '_list')
      *
      * @return array{content: string, format: string, metadata: array, warnings: string[]}
      *
      * @throws Exception If generation fails
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
     public function generateDocument(
         string $templateId,
@@ -156,6 +161,7 @@ class DocumentService
 
         $resolution = $this->dataResolver->resolve(
             dataRefs: $dataRefs,
+            listRefs: ($options['listRefs'] ?? []),
             adHocData: ($options['adHocData'] ?? [])
         );
         $data       = $resolution['data'];
@@ -215,13 +221,18 @@ class DocumentService
      *
      * @param string $templateId The UUID of the template to preview
      * @param array  $dataRefs   Data references: [{register, schema, id}, ...]
-     * @param array  $options    Options: huisstijlId, adHocData
+     * @param array  $options    Options: huisstijlId, adHocData, listRefs.
+     *                           listRefs: [{register, schema, filter?, limit?,
+     *                           order?, as?}, ...] — each resolves to an array
+     *                           of objects under the Twig context key 'as'
+     *                           (default: schema + '_list')
      *
      * @return array{html: string, warnings: string[]}
      *
      * @throws Exception If rendering fails
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
      */
     public function generatePreview(
         string $templateId,
@@ -232,6 +243,7 @@ class DocumentService
 
         $resolution = $this->dataResolver->resolve(
             dataRefs: $dataRefs,
+            listRefs: ($options['listRefs'] ?? []),
             adHocData: ($options['adHocData'] ?? [])
         );
         $data       = $resolution['data'];
@@ -262,6 +274,12 @@ class DocumentService
      * For batches <= SYNC_BATCH_LIMIT objects processing is synchronous.
      * For larger batches a queued background job is dispatched and a jobId
      * is returned so the caller can poll GET /api/documents/jobs/{jobId}.
+     *
+     * Note: `options.listRefs` is NOT supported on this path. The async job
+     * (BatchDocumentJob) discards its per-object generation output — there
+     * is nowhere for a collection resolved per-object to end up — so wiring
+     * listRefs here would silently do nothing for the majority of batches.
+     * See openspec/changes/document-generation-list-refs/proposal.md.
      *
      * @param string $templateId The UUID of the template
      * @param array  $objectIds  Array of object UUIDs to generate for
