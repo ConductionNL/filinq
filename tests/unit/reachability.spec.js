@@ -298,6 +298,50 @@ function findOrphanedViews(viewFilesAbsolute, reachableSet, allowList) {
 	return orphans
 }
 
+/**
+ * Detect static routes shadowed by an earlier dynamic-parameter route.
+ *
+ * vue-router matches in declaration order, so `/signing/:id` declared before
+ * `/signing/new` swallows the static route and its page becomes unreachable by
+ * URL — a reachability failure the component-resolution checks cannot see.
+ * Observed live on 2026-07-24: `/signing/new` rendered the detail page with
+ * id="new" instead of the create form.
+ *
+ * @param {object} manifest The parsed src/manifest.json.
+ * @return {Array<string>} Human-readable descriptions of each shadowed route.
+ */
+function findShadowedRoutes(manifest) {
+	const routes = (manifest.pages || [])
+		.map((p) => p.route || p.path)
+		.filter((r) => typeof r === 'string')
+
+	const segmentsOf = (route) => route.split('/').filter(Boolean)
+	const shadowed = []
+
+	routes.forEach((route, index) => {
+		const segs = segmentsOf(route)
+		// Only static routes can be shadowed; a route containing a param is the shadower.
+		if (segs.some((s) => s.startsWith(':'))) {
+			return
+		}
+		for (let earlier = 0; earlier < index; earlier++) {
+			const prevSegs = segmentsOf(routes[earlier])
+			if (prevSegs.length !== segs.length) {
+				continue
+			}
+			const matches = prevSegs.every(
+				(seg, i) => seg.startsWith(':') || seg === segs[i],
+			)
+			if (matches && prevSegs.some((s) => s.startsWith(':'))) {
+				shadowed.push(`"${route}" is shadowed by earlier route "${routes[earlier]}"`)
+				break
+			}
+		}
+	})
+
+	return shadowed
+}
+
 // ---------------------------------------------------------------------------
 // Real-repo assertions — the guard as it runs against the current tree.
 // ---------------------------------------------------------------------------
@@ -329,6 +373,14 @@ describe('reachability guard — current repo state', () => {
 		const { missingRegistryEntry, danglingRegistryEntries } = crossCheckManifestRegistry(manifest, registryEntries)
 		expect(missingRegistryEntry, `manifest pages with no registry entry:\n${missingRegistryEntry.join('\n')}`).toEqual([])
 		expect(danglingRegistryEntries, `registry kind:"page" entries referenced by no manifest page:\n${danglingRegistryEntries.join('\n')}`).toEqual([])
+	})
+
+	it('no shadowed routes: a static page route is never preceded by a matching :param route', () => {
+		const shadowed = findShadowedRoutes(manifest)
+		expect(
+			shadowed,
+			`static routes unreachable because an earlier :param route matches them first:\n${shadowed.join('\n')}`,
+		).toEqual([])
 	})
 
 	it('no hidden orphans: every src/views/** file is reachable or explicitly allow-listed', () => {
@@ -412,6 +464,31 @@ describe('reachability guard — detector correctness (synthetic cases)', () => 
 		const allowListedAbs = path.resolve(REPO_ROOT, 'src/views/signing/BulkSigningPanel.vue')
 		const orphans = findOrphanedViews([allowListedAbs], new Set(), KNOWN_HEADLESS)
 		expect(orphans).toEqual([])
+	})
+
+	it('findShadowedRoutes flags a static route declared after a matching :param route', () => {
+		const shadowed = findShadowedRoutes({
+			pages: [
+				{ route: '/signing' },
+				{ route: '/signing/:id' },
+				{ route: '/signing/new' },
+			],
+		})
+		expect(shadowed).toHaveLength(1)
+		expect(shadowed[0]).toContain('/signing/new')
+		expect(shadowed[0]).toContain('/signing/:id')
+	})
+
+	it('findShadowedRoutes accepts the corrected order and differing segment counts', () => {
+		expect(findShadowedRoutes({
+			pages: [
+				{ route: '/signing' },
+				{ route: '/signing/new' },
+				{ route: '/signing/:id' },
+				// 3 segments — cannot be swallowed by the 2-segment :id route.
+				{ route: '/signing/verify/:fileId' },
+			],
+		})).toEqual([])
 	})
 
 	it('extractRelativeImportSpecifiers finds a brace-wrapped multi-line import', () => {

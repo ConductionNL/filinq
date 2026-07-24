@@ -211,20 +211,20 @@
 			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
 		},
 		{
-			"id": "SigningRequestDetail",
-			"route": "/signing/:id",
-			"type": "custom",
-			"title": "Signing Request Detail",
-			"component": "SigningRequestDetail",
-			"_note": "Signing request detail view driven by signingStore. Links to SignatureVerification (restored — REQ-DDOSR-004) for the document's file id."
-		},
-		{
 			"id": "SigningRequestForm",
 			"route": "/signing/new",
 			"type": "custom",
 			"title": "New Signing Request",
 			"component": "SigningRequestForm",
 			"_note": "Signer-chain create form (documentFileId/documentName/signatureLevel/signingMode via signingStore.createSigningRequest — POST signing#createRequest, which drafts a signingRequest record; it does not send/sign/bind a provider — those remain separate signing#sign / not-yet-built provider-binding actions). Reachable from the SigningRequests index primaryAction. Restored — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-004); trust/identity-assertion controls are gated to signing-trust-rebuild / signer-identity-rails per design.md D4 — this page composes a draft only."
+		},
+		{
+			"id": "SigningRequestDetail",
+			"route": "/signing/:id",
+			"type": "custom",
+			"title": "Signing Request Detail",
+			"component": "SigningRequestDetail",
+			"_note": "Signing request detail view driven by signingStore. Links to SignatureVerification (restored — REQ-DDOSR-004) for the document's file id. MUST stay declared AFTER the static /signing/new route: vue-router matches in declaration order, so a leading :id route swallows /signing/new."
 		},
 		{
 			"id": "SignatureVerification",
