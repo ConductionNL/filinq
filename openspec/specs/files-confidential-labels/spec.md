@@ -55,7 +55,7 @@ any block, redaction, gate or enforcement.
 - GIVEN a file tagged "Confidential" is opened for entity review
 - WHEN the entity-review context loads
 - THEN the appraisal result carries `confidentialityLabel: "Confidential"` and `confidentialityLevel: 2`, and the review surface shows a read-only confidentiality chip beside the risk chip
-- @e2e tests/e2e/spec-coverage/files-confidential-labels.spec.ts
+- @e2e exclude requires the optional `files_confidential` app, which is not installed on the dev/CI instance — with it absent the label service correctly returns null and no chip can ever render, so a browser assertion would be vacuous. The positive path is covered by `tests/unit/Service/ConfidentialityLabelServiceTest.php`; the absent-app path is asserted in the e2e spec.
 
 #### Scenario: Unlabelled file shows no chip and no fields
 
