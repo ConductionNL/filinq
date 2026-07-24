@@ -9,6 +9,34 @@
 
 ### Added
 
+- **Output destinations for document generation
+  (`document-output-destinations-and-bulk-retention`).**
+  `POST /apps/docudesk/api/documents/generate` accepts a new
+  `options.output = {mode: 'return'|'files'|'both', targetPath?}`. Default
+  `mode: 'return'` is byte-identical to today's behaviour. `'files'` stores
+  the generated document in the requesting user's Files
+  (`DocuDesk/<template namespace>/` by default, created recursively;
+  filename collisions resolved via Nextcloud's own
+  `Folder::getNonExistingName()` convention) and returns JSON
+  `{fileId, path, name, size, format}` instead of a binary. `'both'` stores
+  AND returns the binary, with the stored file identified via
+  `X-Docudesk-File-Id`/`X-Docudesk-File-Path` response headers. A storage
+  execution failure (quota, permissions) fails the request for `'files'`
+  but fails open — binary returned, warning attached — for `'both'`;
+  `targetPath` validation failures (path traversal, absolute paths, bad
+  charset) always hard-fail. New `DocumentStorageService`. The
+  `generatedDocument` audit record gains additive `fileId`/`filePath`
+  fields (register bumped to v7.6.0; schema to v1.1.0).
+  **Async bulk generation (`generate/bulk`, >10 objects) no longer
+  discards generated output.** `BatchDocumentJob` now requires
+  `options.output.mode: 'files'` (HTTP 400 otherwise, before the job is
+  ever dispatched) and stores every object's output under
+  `<targetPath>/<jobId>/`; each job-status result item gains `fileId`/
+  `path`. Sync bulk (≤10 objects) honours `options.output.mode` per
+  object the same way single-generate does. Correspondence
+  (`CorrespondenceService`/`CorrespondenceController`) is unchanged — it
+  is a fully independent implementation and out of scope for this change.
+
 - **AVG Art. 30 processing-activity register (`processing-activity-export`).**
   DocuDesk now declares its four processing activities (anonymisation, OCR,
   metadata-enrichment, signing) as `x-openregister-processing` catalogue

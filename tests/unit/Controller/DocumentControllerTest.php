@@ -134,6 +134,127 @@ class DocumentControllerTest extends TestCase
     }//end setUp()
 
     /**
+     * Test generate returns JSON file refs (no binary) for output.mode
+     * "files" (REQ-DDOB-001).
+     *
+     * @return void
+     */
+    public function testGenerateReturnsFileRefsForFilesMode(): void
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([
+                ['templateId', null, 'tmpl-1'],
+                ['dataRefs', [], []],
+                ['options', [], ['output' => ['mode' => 'files']]],
+                ['filename', 'document', 'beschikking'],
+            ]);
+
+        $this->documentSvc->method('generateDocument')
+            ->willReturn([
+                'content'  => '%PDF-binary%',
+                'format'   => 'pdf',
+                'metadata' => ['id' => 'doc-1'],
+                'warnings' => [],
+                'output'   => [
+                    'mode'   => 'files',
+                    'fileId' => 42,
+                    'path'   => '/admin/files/DocuDesk/procest/beschikking.pdf',
+                    'name'   => 'beschikking.pdf',
+                    'size'   => 512,
+                ],
+            ]);
+
+        $result = $this->controller->generate();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(200, $result->getStatus());
+        $data = $result->getData();
+        $this->assertEquals(42, $data['fileId']);
+        $this->assertEquals('/admin/files/DocuDesk/procest/beschikking.pdf', $data['path']);
+
+    }//end testGenerateReturnsFileRefsForFilesMode()
+
+    /**
+     * Test generate returns the binary download PLUS storage headers for
+     * output.mode "both" (REQ-DDOB-001).
+     *
+     * @return void
+     */
+    public function testGenerateReturnsBinaryWithHeadersForBothMode(): void
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([
+                ['templateId', null, 'tmpl-1'],
+                ['dataRefs', [], []],
+                ['options', [], ['output' => ['mode' => 'both']]],
+                ['filename', 'document', 'beschikking'],
+            ]);
+
+        $this->documentSvc->method('generateDocument')
+            ->willReturn([
+                'content'  => '%PDF-binary%',
+                'format'   => 'pdf',
+                'metadata' => ['id' => 'doc-1'],
+                'warnings' => [],
+                'output'   => [
+                    'mode'   => 'both',
+                    'fileId' => 43,
+                    'path'   => '/admin/files/DocuDesk/procest/beschikking.pdf',
+                    'name'   => 'beschikking.pdf',
+                    'size'   => 512,
+                ],
+            ]);
+
+        $result = $this->controller->generate();
+
+        $this->assertInstanceOf(DataDownloadResponse::class, $result);
+        $headers = $result->getHeaders();
+        $this->assertEquals('43', $headers['X-Docudesk-File-Id']);
+        $this->assertEquals('/admin/files/DocuDesk/procest/beschikking.pdf', $headers['X-Docudesk-File-Path']);
+
+    }//end testGenerateReturnsBinaryWithHeadersForBothMode()
+
+    /**
+     * Test generate does NOT add storage headers when mode "both" failed
+     * open (no fileId in the output sub-array) — regression guard for the
+     * fail-open path (REQ-DDOB-003).
+     *
+     * @return void
+     */
+    public function testGenerateOmitsHeadersWhenBothModeFailedOpen(): void
+    {
+        $this->request->method('getParam')
+            ->willReturnMap([
+                ['templateId', null, 'tmpl-1'],
+                ['dataRefs', [], []],
+                ['options', [], ['output' => ['mode' => 'both']]],
+                ['filename', 'document', 'beschikking'],
+            ]);
+
+        $this->documentSvc->method('generateDocument')
+            ->willReturn([
+                'content'  => '%PDF-binary%',
+                'format'   => 'pdf',
+                'metadata' => ['id' => 'doc-1'],
+                'warnings' => ['Document generated but could not be stored in Files: quota exceeded'],
+                'output'   => [
+                    'mode'   => 'both',
+                    'fileId' => null,
+                    'path'   => null,
+                    'name'   => null,
+                    'size'   => null,
+                ],
+            ]);
+
+        $result = $this->controller->generate();
+
+        $this->assertInstanceOf(DataDownloadResponse::class, $result);
+        $headers = $result->getHeaders();
+        $this->assertArrayNotHasKey('X-Docudesk-File-Id', $headers);
+
+    }//end testGenerateOmitsHeadersWhenBothModeFailedOpen()
+
+    /**
      * Test generate returns 400 when templateId is missing.
      *
      * @return void

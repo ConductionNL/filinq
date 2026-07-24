@@ -22,6 +22,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 use Exception;
 use OCA\DocuDesk\Service\DataResolverService;
 use OCA\DocuDesk\Service\DocumentService;
+use OCA\DocuDesk\Service\DocumentStorageService;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateRenderer;
 use OCA\DocuDesk\Service\TemplateService;
@@ -100,6 +101,13 @@ class DocumentServiceTest extends TestCase
     private ObjectService $objectSvc;
 
     /**
+     * Mock document storage service.
+     *
+     * @var DocumentStorageService&MockObject
+     */
+    private DocumentStorageService $storageService;
+
+    /**
      * Set up test fixtures.
      *
      * @return void
@@ -108,12 +116,13 @@ class DocumentServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->templateSvc  = $this->createMock(TemplateService::class);
-        $this->dataResolver = $this->createMock(DataResolverService::class);
-        $this->renderer     = $this->createMock(TemplateRenderer::class);
-        $this->pdfService   = $this->createMock(PdfService::class);
-        $this->jobList      = $this->createMock(IJobList::class);
-        $this->objectSvc    = $this->createMock(ObjectService::class);
+        $this->templateSvc    = $this->createMock(TemplateService::class);
+        $this->dataResolver   = $this->createMock(DataResolverService::class);
+        $this->renderer       = $this->createMock(TemplateRenderer::class);
+        $this->pdfService     = $this->createMock(PdfService::class);
+        $this->jobList        = $this->createMock(IJobList::class);
+        $this->objectSvc      = $this->createMock(ObjectService::class);
+        $this->storageService = $this->createMock(DocumentStorageService::class);
 
         $container  = $this->createMock(ContainerInterface::class);
         $appManager = $this->createMock(IAppManager::class);
@@ -141,6 +150,7 @@ class DocumentServiceTest extends TestCase
             $this->dataResolver,
             $this->renderer,
             $this->pdfService,
+            $this->storageService,
             $container,
             $appManager,
             $this->jobList,
@@ -406,7 +416,7 @@ class DocumentServiceTest extends TestCase
         $result = $this->service->generateBulk(
             templateId: 'tmpl-1',
             objectIds: $objectIds,
-            options: []
+            options: ['output' => ['mode' => 'files'], 'userId' => 'user1']
         );
 
         $this->assertArrayHasKey('jobId', $result);
@@ -414,6 +424,80 @@ class DocumentServiceTest extends TestCase
         $this->assertEquals(15, $result['total']);
 
     }//end testGenerateBulkAsyncForLargeBatch()
+
+    /**
+     * Test async bulk without output.mode "files" is rejected (REQ-DDOB-005).
+     *
+     * @return void
+     */
+    public function testAsyncBulkWithoutFilesModeIsRejected(): void
+    {
+        $this->jobList->expects($this->never())->method('add');
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: array_fill(0, 15, 'object-id'),
+            options: []
+        );
+
+    }//end testAsyncBulkWithoutFilesModeIsRejected()
+
+    /**
+     * Test async bulk with output.mode "both" is rejected (REQ-DDOB-005) —
+     * there is no HTTP response left to attach a binary to once queued.
+     *
+     * @return void
+     */
+    public function testAsyncBulkRejectsBothMode(): void
+    {
+        $this->jobList->expects($this->never())->method('add');
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: array_fill(0, 15, 'object-id'),
+            options: ['output' => ['mode' => 'both']]
+        );
+
+    }//end testAsyncBulkRejectsBothMode()
+
+    /**
+     * Test async bulk with output.mode "files" computes a per-job targetPath
+     * and forwards it to the dispatched job (REQ-DDOB-006).
+     *
+     * @return void
+     */
+    public function testAsyncBulkComputesPerJobTargetPath(): void
+    {
+        $this->templateSvc->method('getTemplate')
+            ->willReturn(['id' => 'tmpl-1', 'namespace' => 'procest']);
+
+        $capturedArgument = null;
+        $this->jobList->expects($this->once())
+            ->method('add')
+            ->willReturnCallback(
+                function (string $job, array $argument) use (&$capturedArgument): void {
+                    $capturedArgument = $argument;
+                }
+            );
+
+        $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: array_fill(0, 15, 'object-id'),
+            options: ['output' => ['mode' => 'files'], 'userId' => 'user1']
+        );
+
+        $this->assertNotNull($capturedArgument);
+        $targetPath = $capturedArgument['options']['output']['targetPath'];
+        $this->assertStringStartsWith('DocuDesk/procest/', $targetPath);
+        $this->assertStringEndsNotWith('/', $targetPath);
+
+    }//end testAsyncBulkComputesPerJobTargetPath()
 
     /**
      * Test that invalid format raises exception (DCS-023).
@@ -659,4 +743,361 @@ class DocumentServiceTest extends TestCase
         $this->assertStringContainsString('<footer>Footer</footer>', $renderedHtml);
 
     }//end testHuisstijlApplied()
+
+    /**
+     * Stub the render pipeline (template, data resolution, rendering, PDF
+     * output, and audit logging) for a happy-path single generation.
+     *
+     * @return void
+     */
+    private function stubHappyPathGeneration(): void
+    {
+        $this->templateSvc->method('getTemplate')
+            ->willReturn([
+                'id'        => 'tmpl-1',
+                'name'      => 'Beschikking',
+                'content'   => '<h1>test</h1>',
+                'format'    => 'A4',
+                'version'   => 1,
+                'namespace' => 'procest',
+            ]);
+
+        $this->dataResolver->method('resolve')
+            ->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
+
+        $this->renderer->method('renderTemplate')
+            ->willReturn('<h1>test</h1>');
+
+        $this->pdfService->method('renderPdf')
+            ->willReturn('%PDF-binary%');
+
+        $logEntity = $this->createMock(ObjectEntity::class);
+        $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+        $this->objectSvc->method('saveObject')
+            ->willReturn($logEntity);
+
+    }//end stubHappyPathGeneration()
+
+    /**
+     * Test options.output omitted is unchanged: no storage call, output
+     * sub-array reports mode 'return' with null refs (REQ-DDOB-001).
+     *
+     * @return void
+     */
+    public function testOutputOmittedDefaultsToReturnAndSkipsStorage(): void
+    {
+        $this->stubHappyPathGeneration();
+        $this->storageService->expects($this->never())->method('store');
+
+        $result = $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1']
+        );
+
+        $this->assertEquals('%PDF-binary%', $result['content']);
+        $this->assertEquals('return', $result['output']['mode']);
+        $this->assertNull($result['output']['fileId']);
+        $this->assertNull($result['output']['path']);
+
+    }//end testOutputOmittedDefaultsToReturnAndSkipsStorage()
+
+    /**
+     * Test an invalid options.output.mode value is rejected (REQ-DDOB-001).
+     *
+     * @return void
+     */
+    public function testInvalidOutputModeThrowsException(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'somewhere-else']]
+        );
+
+    }//end testInvalidOutputModeThrowsException()
+
+    /**
+     * Test mode "files" stores the document and returns JSON refs in the
+     * output sub-array instead of failing (REQ-DDOB-001, REQ-DDOB-002).
+     *
+     * @return void
+     */
+    public function testModeFilesStoresDocumentAndReturnsRefs(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->expects($this->once())
+            ->method('store')
+            ->with(
+                $this->equalTo('user1'),
+                $this->equalTo('DocuDesk/procest'),
+                $this->equalTo('beschikking.pdf'),
+                $this->equalTo('%PDF-binary%')
+            )
+            ->willReturn(['fileId' => 99, 'path' => '/user1/files/DocuDesk/procest/beschikking.pdf', 'name' => 'beschikking.pdf', 'size' => 512]);
+
+        $result = $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'filename' => 'beschikking', 'output' => ['mode' => 'files']]
+        );
+
+        $this->assertEquals('files', $result['output']['mode']);
+        $this->assertEquals(99, $result['output']['fileId']);
+        $this->assertEquals('/user1/files/DocuDesk/procest/beschikking.pdf', $result['output']['path']);
+
+    }//end testModeFilesStoresDocumentAndReturnsRefs()
+
+    /**
+     * Test mode "both" stores the document AND keeps the binary content
+     * (REQ-DDOB-001).
+     *
+     * @return void
+     */
+    public function testModeBothStoresDocumentAndKeepsContent(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willReturn(['fileId' => 100, 'path' => '/user1/files/DocuDesk/procest/beschikking.pdf', 'name' => 'beschikking.pdf', 'size' => 512]);
+
+        $result = $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'both']]
+        );
+
+        $this->assertEquals('%PDF-binary%', $result['content']);
+        $this->assertEquals('both', $result['output']['mode']);
+        $this->assertEquals(100, $result['output']['fileId']);
+
+    }//end testModeBothStoresDocumentAndKeepsContent()
+
+    /**
+     * Test that mode "files" propagates a storage execution failure as a
+     * hard failure (REQ-DDOB-003).
+     *
+     * @return void
+     */
+    public function testFilesModeStorageFailureIsHardFailure(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willThrowException(new Exception('quota exceeded', DocumentStorageService::ERROR_CODE_STORAGE_FAILURE));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
+
+        $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'files']]
+        );
+
+    }//end testFilesModeStorageFailureIsHardFailure()
+
+    /**
+     * Test that mode "both" fails open to a return-only response when
+     * storage fails, with a warning attached and no fileId (REQ-DDOB-003).
+     *
+     * @return void
+     */
+    public function testBothModeStorageFailureFailsOpenToReturn(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willThrowException(new Exception('quota exceeded', DocumentStorageService::ERROR_CODE_STORAGE_FAILURE));
+
+        $result = $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'both']]
+        );
+
+        $this->assertEquals('%PDF-binary%', $result['content']);
+        $this->assertNull($result['output']['fileId']);
+        $this->assertNotEmpty(
+            array_filter(
+                $result['warnings'],
+                static function (string $w): bool {
+                    return str_contains($w, 'could not be stored in Files');
+                }
+            )
+        );
+
+    }//end testBothModeStorageFailureFailsOpenToReturn()
+
+    /**
+     * Test that a targetPath validation failure (code 400) is never
+     * fail-open, even for mode "both" (REQ-DDOB-003).
+     *
+     * @return void
+     */
+    public function testBothModeTargetPathValidationFailureIsHardFailure(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willThrowException(new Exception('bad targetPath', 400));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionCode(400);
+
+        $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'both', 'targetPath' => '../etc']]
+        );
+
+    }//end testBothModeTargetPathValidationFailureIsHardFailure()
+
+    /**
+     * Test that a stored document's audit row records fileId/filePath
+     * (REQ-DDOB-004).
+     *
+     * @return void
+     */
+    public function testLogsFileIdAndPathWhenStored(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willReturn(['fileId' => 77, 'path' => '/user1/files/DocuDesk/procest/x.pdf', 'name' => 'x.pdf', 'size' => 10]);
+
+        $capturedEntry = null;
+        $this->objectSvc->method('saveObject')
+            ->willReturnCallback(
+                function ($entry) use (&$capturedEntry) {
+                    $capturedEntry = $entry;
+                    $logEntity     = $this->createMock(ObjectEntity::class);
+                    $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+                    return $logEntity;
+                }
+            );
+
+        $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1', 'output' => ['mode' => 'files']]
+        );
+
+        $this->assertEquals(77, $capturedEntry['fileId']);
+        $this->assertEquals('/user1/files/DocuDesk/procest/x.pdf', $capturedEntry['filePath']);
+
+    }//end testLogsFileIdAndPathWhenStored()
+
+    /**
+     * Test that options.output omitted keeps fileId/filePath null on the
+     * audit row (REQ-DDOB-004).
+     *
+     * @return void
+     */
+    public function testLogsNullFileIdAndPathWhenNotStored(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $capturedEntry = null;
+        $this->objectSvc->method('saveObject')
+            ->willReturnCallback(
+                function ($entry) use (&$capturedEntry) {
+                    $capturedEntry = $entry;
+                    $logEntity     = $this->createMock(ObjectEntity::class);
+                    $logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+                    return $logEntity;
+                }
+            );
+
+        $this->service->generateDocument(
+            templateId: 'tmpl-1',
+            dataRefs: [],
+            options: ['userId' => 'user1']
+        );
+
+        $this->assertNull($capturedEntry['fileId']);
+        $this->assertNull($capturedEntry['filePath']);
+
+    }//end testLogsNullFileIdAndPathWhenNotStored()
+
+    /**
+     * Test sync bulk (<=10 objects) mode "files" returns refs inline
+     * instead of content (REQ-DDOB-007).
+     *
+     * @return void
+     */
+    public function testSyncBulkFilesModeReturnsRefsNotContent(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willReturn(['fileId' => 5, 'path' => '/user1/files/DocuDesk/procest/x.pdf', 'name' => 'x.pdf', 'size' => 10]);
+
+        $result = $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: ['o1', 'o2'],
+            options: ['register' => 'brp', 'schema' => 'persoon', 'userId' => 'user1', 'output' => ['mode' => 'files']]
+        );
+
+        foreach ($result['results'] as $item) {
+            $this->assertArrayNotHasKey('content', $item);
+            $this->assertEquals(5, $item['fileId']);
+            $this->assertEquals('/user1/files/DocuDesk/procest/x.pdf', $item['path']);
+        }
+
+    }//end testSyncBulkFilesModeReturnsRefsNotContent()
+
+    /**
+     * Test sync bulk mode "both" returns both content and refs inline
+     * (REQ-DDOB-007).
+     *
+     * @return void
+     */
+    public function testSyncBulkBothModeReturnsContentAndRefs(): void
+    {
+        $this->stubHappyPathGeneration();
+
+        $this->storageService->method('store')
+            ->willReturn(['fileId' => 6, 'path' => '/user1/files/DocuDesk/procest/x.pdf', 'name' => 'x.pdf', 'size' => 10]);
+
+        $result = $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: ['o1'],
+            options: ['register' => 'brp', 'schema' => 'persoon', 'userId' => 'user1', 'output' => ['mode' => 'both']]
+        );
+
+        $item = $result['results'][0];
+        $this->assertEquals('%PDF-binary%', $item['content']);
+        $this->assertEquals(6, $item['fileId']);
+
+    }//end testSyncBulkBothModeReturnsContentAndRefs()
+
+    /**
+     * Test sync bulk mode "return" (default) is unchanged: content inline,
+     * no fileId key present (regression guard).
+     *
+     * @return void
+     */
+    public function testSyncBulkReturnModeUnchanged(): void
+    {
+        $this->stubHappyPathGeneration();
+        $this->storageService->expects($this->never())->method('store');
+
+        $result = $this->service->generateBulk(
+            templateId: 'tmpl-1',
+            objectIds: ['o1'],
+            options: ['register' => 'brp', 'schema' => 'persoon']
+        );
+
+        $item = $result['results'][0];
+        $this->assertEquals('%PDF-binary%', $item['content']);
+        $this->assertArrayNotHasKey('fileId', $item);
+
+    }//end testSyncBulkReturnModeUnchanged()
 }//end class
