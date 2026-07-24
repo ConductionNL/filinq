@@ -109,7 +109,13 @@ export async function dismissOverlays(page: Page): Promise<void> {
 
 export async function go(page: Page, route: string): Promise<void> {
 	const url = route ? `/apps/docudesk/${route}` : '/apps/docudesk'
-	await page.goto(url)
+	// Wait for `domcontentloaded`, not the default `load`. Nextcloud keeps
+	// long-lived connections open (notifications polling, user-status
+	// heartbeat), so on a busy instance the `load` event can be minutes late
+	// or never fire at all — every navigation then failed with a 60s timeout
+	// even though the page was interactive. `networkidle` below still gives
+	// the Vue app time to settle, and is already failure-tolerant.
+	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)

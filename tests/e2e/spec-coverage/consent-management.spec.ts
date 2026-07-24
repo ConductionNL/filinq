@@ -27,7 +27,9 @@ async function dismissOverlays(page: Page): Promise<void> {
 
 async function go(page: Page, route: string): Promise<void> {
 	const url = `${APP}/${route}`
-	await page.goto(url)
+	// `domcontentloaded`, not the default `load` — NC's long-lived polling
+	// connections can delay `load` past any sane timeout. See _helpers.ts.
+	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
