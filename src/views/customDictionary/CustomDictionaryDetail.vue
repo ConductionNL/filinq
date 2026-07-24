@@ -14,7 +14,7 @@
 			</NcButton>
 			<h2 class="custom-dictionary-detail__title">
 				<span class="custom-dictionary-detail__swatch" :style="{ backgroundColor: dictionary.colour || '#0082C9' }" />
-				{{ dictionary.label || t('docudesk', 'Custom dictionary') }}
+				{{ displayValue(dictionary.label, t('docudesk', 'Custom dictionary')) }}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
 				<NcButton type="secondary" @click="openEditDialog">
@@ -28,7 +28,7 @@
 		<template v-else>
 			<div class="custom-dictionary-detail__meta">
 				<p v-if="dictionary.description" class="custom-dictionary-detail__description">
-					{{ dictionary.description }}
+					{{ displayValue(dictionary.description) }}
 				</p>
 				<div class="custom-dictionary-detail__badges">
 					<CnStatusBadge
@@ -82,7 +82,7 @@
 					<tbody>
 						<tr v-for="term in terms" :key="term['@self']?.id || term.id">
 							<td>{{ term.value }}</td>
-							<td>{{ term.label || '-' }}</td>
+							<td>{{ displayValue(term.label, '-') }}</td>
 							<td>
 								<NcButton type="tertiary" @click="removeTerm(term)">
 									<template #icon>
@@ -120,6 +120,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { CnStatusBadge, NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import { customDictionaryStore } from '../../store/store.js'
+import { resolveI18nValue } from '../../utils/registerI18n.js'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
 
@@ -181,6 +182,17 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Resolve a register-i18n field (label/description) for display.
+		 *
+		 * @param {string|object|null} value    The raw field value.
+		 * @param {string}             fallback Shown when nothing resolves.
+		 * @return {string} The displayable string.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		displayValue(value, fallback = '') {
+			return resolveI18nValue(value, fallback)
+		},
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('docudesk', 'Exact'),
