@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Exception\Pdfa3ConversionException;
+use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
+use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
 use OCA\DocuDesk\Service\Pdfa3ConversionService;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateRenderer;
@@ -107,7 +109,7 @@ class Pdfa3ConversionServiceTest extends TestCase
 
         $this->pdfService = new PdfService(
             $this->mockLogger,
-            new TemplateRenderer($this->mockLogger)
+            new TemplateRenderer($this->mockLogger, new ChartSvgRenderer(), new TableHtmlRenderer())
         );
 
         $this->service = new Pdfa3ConversionService(

@@ -12,6 +12,8 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
+use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
 use OCA\DocuDesk\Service\TemplateRenderer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -47,7 +49,7 @@ class TemplateRendererTest extends TestCase
     {
         parent::setUp();
         $logger = $this->createMock(LoggerInterface::class);
-        $this->renderer = new TemplateRenderer($logger);
+        $this->renderer = new TemplateRenderer($logger, new ChartSvgRenderer(), new TableHtmlRenderer());
 
     }//end setUp()
 
@@ -163,6 +165,176 @@ class TemplateRendererTest extends TestCase
         $this->assertStringNotContainsString('Should be hidden', $result);
 
     }//end testConditionalSectionHiddenWhenNotMet()
+
+
+    /**
+     * The sandbox whitelist is extended with exactly `chart` and
+     * `data_table` — both are now callable — while a non-whitelisted
+     * function and object method/property access remain refused exactly as
+     * before this change (REQ-DDTCH-005).
+     *
+     * @return void
+     */
+    public function testWhitelistIsExact(): void
+    {
+        $chartResult = $this->renderer->renderTemplate(
+            templateContent: '{{ chart("bar", {labels: ["A"], series: [{name: "S", values: [1]}]}) }}',
+            data: []
+        );
+        $this->assertStringContainsString('<svg', $chartResult);
+
+        $tableResult = $this->renderer->renderTemplate(
+            templateContent: '{{ data_table([{name: "Acme"}], [{key: "name", label: "Name"}]) }}',
+            data: []
+        );
+        $this->assertStringContainsString('<table', $tableResult);
+
+        $this->expectException(\Exception::class);
+        $this->renderer->renderTemplate(templateContent: '{{ dump(1) }}', data: []);
+
+    }//end testWhitelistIsExact()
+
+
+    /**
+     * Object method calls remain refused after the whitelist extension.
+     *
+     * @return void
+     */
+    public function testObjectMethodCallsStillRefused(): void
+    {
+        $this->expectException(\Exception::class);
+        $this->renderer->renderTemplate(
+            templateContent: '{{ now.format("Y") }}',
+            data: ['now' => new \DateTime()]
+        );
+
+    }//end testObjectMethodCallsStillRefused()
+
+
+    /**
+     * `chart()` and `data_table()` render together inside a document
+     * template — the combined Twig-path integration required by
+     * template-charts task 5.1.
+     *
+     * @return void
+     */
+    public function testRenderTemplateWithChartAndDataTable(): void
+    {
+        $template = '<h1>{{ title }}</h1>'
+            .'{{ chart("bar", {labels: labels, series: [{name: "Stars", values: values}]}, {title: "Competitors"}) }}'
+            .'{{ data_table(rows, columns) }}';
+
+        $data = [
+            'title'  => 'Report',
+            'labels' => ['Alpha', 'Beta'],
+            'values' => [10, 20],
+            'rows'   => [['name' => 'Alpha', 'stars' => 10], ['name' => 'Beta', 'stars' => 20]],
+            'columns' => [
+                ['key' => 'name', 'label' => 'Name'],
+                ['key' => 'stars', 'label' => 'Stars', 'format' => 'number'],
+            ],
+        ];
+
+        $result = $this->renderer->renderTemplate(templateContent: $template, data: $data);
+
+        $this->assertStringContainsString('<h1>Report</h1>', $result);
+        $this->assertStringContainsString('<svg', $result);
+        $this->assertStringContainsString('Competitors', $result);
+        $this->assertStringContainsString('<table', $result);
+        $this->assertStringContainsString('Alpha', $result);
+        $this->assertEmpty($this->renderer->getLastRenderWarnings());
+
+    }//end testRenderTemplateWithChartAndDataTable()
+
+
+    /**
+     * A malformed `chart()` call inside a template produces a visible
+     * `[chart error: ...]` marker and a generation warning rather than a
+     * fatal Twig error (REQ-DDTCH-002).
+     *
+     * @return void
+     */
+    public function testChartErrorSurfacesAsWarning(): void
+    {
+        $result = $this->renderer->renderTemplate(
+            templateContent: '{{ chart("bar", {labels: ["A"]}) }}',
+            data: []
+        );
+
+        $this->assertStringContainsString('chart error', $result);
+        $this->assertNotEmpty($this->renderer->getLastRenderWarnings());
+
+    }//end testChartErrorSurfacesAsWarning()
+
+
+    /**
+     * The huisstijl primary color is threaded through to the chart palette
+     * seed when supplied to renderTemplate().
+     *
+     * @return void
+     */
+    public function testHuisstijlSeedsChartPalette(): void
+    {
+        $template = '{{ chart("bar", {labels: ["A"], series: [{name: "S", values: [1]}]}) }}';
+
+        $withHuisstijl    = $this->renderer->renderTemplate(
+            templateContent: $template,
+            data: [],
+            huisstijl: ['primaryColor' => '#008040']
+        );
+        $withoutHuisstijl = $this->renderer->renderTemplate(templateContent: $template, data: []);
+
+        $this->assertNotSame($withoutHuisstijl, $withHuisstijl);
+
+    }//end testHuisstijlSeedsChartPalette()
+
+
+    /**
+     * The `chart()`/`data_table()` implementations are pure with respect to
+     * the instance: no write side effects and no network access are
+     * reachable from either function's execution path (REQ-DDTCH-005 —
+     * a static/manual contract check, since neither function accepts any
+     * writable resource or URL argument by construction).
+     *
+     * @return void
+     */
+    public function testVisualFunctionsAreSideEffectBounded(): void
+    {
+        // Both functions accept only plain data (string/array) arguments —
+        // there is no file handle, URL, or database argument in their
+        // signatures for a template to pass, and their implementations
+        // (ChartSvgRenderer, TableHtmlRenderer) perform pure string
+        // assembly with no I/O calls. Exercise both once to prove they
+        // execute without requiring any injected I/O collaborator.
+        $result = $this->renderer->renderTemplate(
+            templateContent: '{{ chart("pie", {labels: ["A","B"], series: [{name:"S", values:[1,2]}]}) }}'
+                .'{{ data_table([{a: 1}], [{key: "a", label: "A"}]) }}',
+            data: []
+        );
+
+        $this->assertStringContainsString('<svg', $result);
+        $this->assertStringContainsString('<table', $result);
+
+    }//end testVisualFunctionsAreSideEffectBounded()
+
+
+    /**
+     * More than the per-document chart cap degrades the extra charts to a
+     * visible placeholder instead of growing the document unboundedly.
+     *
+     * @return void
+     */
+    public function testMaxChartsPerDocumentGuardrail(): void
+    {
+        $call     = '{{ chart("bar", {labels: ["A"], series: [{name:"S", values:[1]}]}) }}';
+        $template = str_repeat($call, 22);
+
+        $result = $this->renderer->renderTemplate(templateContent: $template, data: []);
+
+        $this->assertStringContainsString('exceeds the maximum of 20 charts', $result);
+        $this->assertNotEmpty($this->renderer->getLastRenderWarnings());
+
+    }//end testMaxChartsPerDocumentGuardrail()
 
 
 }//end class
