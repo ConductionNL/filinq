@@ -77,16 +77,38 @@ class DocumentService
     private const VALID_FORMATS = ['pdf', 'odf', 'html'];
 
     /**
+     * Default output destination mode.
+     *
+     * @var string
+     */
+    private const DEFAULT_OUTPUT_MODE = 'return';
+
+    /**
+     * Valid output destination modes.
+     *
+     * @var string[]
+     */
+    private const VALID_OUTPUT_MODES = ['return', 'files', 'both'];
+
+    /**
+     * Default storage folder prefix (a template's namespace is appended).
+     *
+     * @var string
+     */
+    private const DEFAULT_OUTPUT_FOLDER_PREFIX = 'DocuDesk';
+
+    /**
      * Constructor for DocumentService.
      *
-     * @param TemplateService     $templateService  Service for template CRUD
-     * @param DataResolverService $dataResolver     Service for OpenRegister data resolution
-     * @param TemplateRenderer    $templateRenderer Service for Twig rendering
-     * @param PdfService          $pdfService       Service for PDF generation
-     * @param ContainerInterface  $container        Container for dependency injection
-     * @param IAppManager         $appManager       App manager interface
-     * @param IJobList            $jobList          Nextcloud job list for async processing
-     * @param LoggerInterface     $logger           Logger for error reporting
+     * @param TemplateService        $templateService  Service for template CRUD
+     * @param DataResolverService    $dataResolver     Service for OpenRegister data resolution
+     * @param TemplateRenderer       $templateRenderer Service for Twig rendering
+     * @param PdfService             $pdfService       Service for PDF generation
+     * @param DocumentStorageService $storageService   Service for storing output in Files
+     * @param ContainerInterface     $container        Container for dependency injection
+     * @param IAppManager            $appManager       App manager interface
+     * @param IJobList               $jobList          Nextcloud job list for async processing
+     * @param LoggerInterface        $logger           Logger for error reporting
      *
      * @return void
      */
@@ -95,6 +117,7 @@ class DocumentService
         private readonly DataResolverService $dataResolver,
         private readonly TemplateRenderer $templateRenderer,
         private readonly PdfService $pdfService,
+        private readonly DocumentStorageService $storageService,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
         private readonly IJobList $jobList,
@@ -136,18 +159,24 @@ class DocumentService
      * @param string $templateId The UUID of the template to use
      * @param array  $dataRefs   Data references: [{register, schema, id}, ...]
      * @param array  $options    Options: format (pdf|odf|html), huisstijlId,
-     *                           zaakId, adHocData, listRefs, pdfOptions, userId.
+     *                           zaakId, adHocData, listRefs, pdfOptions, userId,
+     *                           filename, output.
      *                           listRefs: [{register, schema, filter?, limit?,
      *                           order?, as?}, ...] — each resolves to an array
      *                           of objects under the Twig context key 'as'
      *                           (default: schema + '_list')
+     *                           output: {mode?: return|files|both, targetPath?}
+     *                           — defaults to mode 'return' (byte-identical to
+     *                           this method's behaviour before output support
+     *                           existed)
      *
-     * @return array{content: string, format: string, metadata: array, warnings: string[]}
+     * @return array{content: string, format: string, metadata: array, warnings: string[], output: array}
      *
      * @throws Exception If generation fails
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
      * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
      */
     public function generateDocument(
         string $templateId,
@@ -156,6 +185,7 @@ class DocumentService
     ): array {
         $format = $options['format'] ?? self::DEFAULT_FORMAT;
         $this->validateFormat(format: $format);
+        $outputMode = $this->resolveOutputMode(options: $options);
 
         $template = $this->templateService->getTemplate(id: $templateId);
 
@@ -192,6 +222,17 @@ class DocumentService
             pdfOptions: $pdfOptions
         );
 
+        $stored   = $this->storeOutputIfRequested(
+            mode: $outputMode,
+            templateId: $templateId,
+            template: $template,
+            format: $format,
+            content: $content,
+            options: $options,
+            warnings: $warnings
+        );
+        $warnings = $stored['warnings'];
+
         $templateVersion = (int) ($template['version'] ?? 1);
         $metadata        = $this->logGeneratedDocument(
             templateId: $templateId,
@@ -203,7 +244,9 @@ class DocumentService
             warnings: $warnings,
             zaakId: ($options['zaakId'] ?? null),
             errorMessage: null,
-            options: $options
+            options: $options,
+            fileId: $stored['fileId'],
+            filePath: $stored['path']
         );
 
         return [
@@ -211,6 +254,13 @@ class DocumentService
             'format'   => $format,
             'metadata' => $metadata,
             'warnings' => $warnings,
+            'output'   => [
+                'mode'   => $outputMode,
+                'fileId' => $stored['fileId'],
+                'path'   => $stored['path'],
+                'name'   => $stored['name'],
+                'size'   => $stored['size'],
+            ],
         ];
 
     }//end generateDocument()
@@ -278,22 +328,36 @@ class DocumentService
      * For larger batches a queued background job is dispatched and a jobId
      * is returned so the caller can poll GET /api/documents/jobs/{jobId}.
      *
-     * Note: `options.listRefs` is NOT supported on this path. The async job
-     * (BatchDocumentJob) discards its per-object generation output — there
-     * is nowhere for a collection resolved per-object to end up — so wiring
-     * listRefs here would silently do nothing for the majority of batches.
-     * See openspec/changes/document-generation-list-refs/proposal.md.
+     * Note: `options.listRefs` is still NOT supported on this path. As of
+     * document-output-destinations-and-bulk-retention the async job no
+     * longer discards its per-object output (see REQ-DDOB-006) — the
+     * original justification for excluding listRefs (nowhere for a
+     * per-object-resolved collection to end up) no longer holds — but
+     * wiring listRefs through bulk was intentionally left out of this
+     * change's scope; it remains unimplemented pending a real use case.
+     * See openspec/changes/document-generation-list-refs/proposal.md and
+     * openspec/changes/document-output-destinations-and-bulk-retention/proposal.md.
+     *
+     * For batches larger than SYNC_BATCH_LIMIT (async), `options.output.mode`
+     * MUST be exactly 'files' — the generated bytes have nowhere to go once
+     * the job is queued and today's synchronous HTTP response has already
+     * returned, so 'return' (default) and 'both' are both rejected with
+     * HTTP 400 (REQ-DDOB-005).
      *
      * @param string $templateId The UUID of the template
      * @param array  $objectIds  Array of object UUIDs to generate for
-     * @param array  $options    Options: register, schema, format, huisstijlId, userId
+     * @param array  $options    Options: register, schema, format, huisstijlId,
+     *                           userId, output. For batches >SYNC_BATCH_LIMIT,
+     *                           options.output.mode must be 'files'.
      *
      * @return array Synchronous: {results, total, completed, errors}
      *               Async: {jobId, status, total}
      *
-     * @throws Exception If dispatch fails
+     * @throws Exception If dispatch fails, or if an async batch does not
+     *                    request options.output.mode 'files'
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-005
      */
     public function generateBulk(
         string $templateId,
@@ -310,6 +374,8 @@ class DocumentService
             );
         }
 
+        $this->validateAsyncOutputMode(options: $options);
+
         return $this->dispatchBulkJob(
             templateId: $templateId,
             objectIds: $objectIds,
@@ -317,6 +383,34 @@ class DocumentService
         );
 
     }//end generateBulk()
+
+    /**
+     * Validate that an async (>SYNC_BATCH_LIMIT) bulk request requests
+     * options.output.mode 'files' — the only mode that makes sense once
+     * the job is queued and the HTTP response has already returned.
+     *
+     * @param array $options The request options
+     *
+     * @return void
+     *
+     * @throws Exception Code 400 if options.output.mode is not exactly 'files'
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-005
+     */
+    private function validateAsyncOutputMode(array $options): void
+    {
+        $mode = $this->resolveOutputMode(options: $options);
+
+        if ($mode !== 'files') {
+            throw new Exception(
+                message: 'Asynchronous bulk generation (more than '.self::SYNC_BATCH_LIMIT.' objects) '
+                    .'discards generated output unless options.output.mode is "files". '
+                    .'Set options.output.mode="files" and retry.',
+                code: 400
+            );
+        }
+
+    }//end validateAsyncOutputMode()
 
     /**
      * Get the status of an async bulk document generation job.
@@ -400,6 +494,186 @@ class DocumentService
         }
 
     }//end validateFormat()
+
+    /**
+     * Resolve and validate options.output.mode.
+     *
+     * @param array $options The request options
+     *
+     * @return string One of 'return', 'files', 'both'
+     *
+     * @throws Exception Code 400 if an unsupported mode is requested
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
+     */
+    private function resolveOutputMode(array $options): string
+    {
+        $mode = $options['output']['mode'] ?? self::DEFAULT_OUTPUT_MODE;
+
+        if (in_array(needle: $mode, haystack: self::VALID_OUTPUT_MODES, strict: true) === false) {
+            $valid = implode(', ', self::VALID_OUTPUT_MODES);
+            throw new Exception(
+                message: "Unsupported options.output.mode '{$mode}'. Valid values: {$valid}",
+                code: 400
+            );
+        }
+
+        return $mode;
+
+    }//end resolveOutputMode()
+
+    /**
+     * Build the effective storage target path for a generation.
+     *
+     * An explicit `options.output.targetPath` always wins. Otherwise the
+     * default is `DocuDesk/<template namespace>/`. When a template array is
+     * not supplied (the async bulk job calls this once, before its
+     * per-object loop, with no template already loaded) the template is
+     * looked up via TemplateService.
+     *
+     * @param string      $templateId         The template UUID
+     * @param string|null $explicitTargetPath An explicit targetPath, if provided
+     * @param array|null  $template           A pre-fetched template array, if available
+     *
+     * @return string The effective target path (no trailing slash)
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-002
+     */
+    public function buildOutputTargetPath(
+        string $templateId,
+        ?string $explicitTargetPath,
+        ?array $template=null
+    ): string {
+        if (empty($explicitTargetPath) === false) {
+            return rtrim($explicitTargetPath, '/');
+        }
+
+        if ($template === null) {
+            try {
+                $template = $this->templateService->getTemplate(id: $templateId);
+            } catch (Exception $e) {
+                $template = [];
+            }
+        }
+
+        $namespace = $template['namespace'] ?? 'default';
+
+        return self::DEFAULT_OUTPUT_FOLDER_PREFIX.'/'.$namespace;
+
+    }//end buildOutputTargetPath()
+
+    /**
+     * Build the filename a stored (or downloaded) document should use,
+     * mirroring the extension DocumentController's download response uses
+     * per format.
+     *
+     * @param string $filename The requested filename (without extension)
+     * @param string $format   The output format (pdf, odf, html)
+     *
+     * @return string The filename including extension
+     */
+    private function buildOutputFilename(string $filename, string $format): string
+    {
+        $basename = pathinfo($filename, PATHINFO_FILENAME);
+        if (empty($basename) === true) {
+            $basename = 'document';
+        }
+
+        $extension = '.pdf';
+        if ($format === 'odf') {
+            $extension = '.odt';
+        } else if ($format === 'html') {
+            $extension = '.html';
+        }
+
+        return $basename.$extension;
+
+    }//end buildOutputFilename()
+
+    /**
+     * Store the generated output in Files when the requested mode calls for
+     * it, applying the fail-open-for-'both' rule (REQ-DDOB-003): a targetPath
+     * validation failure (code 400) always propagates; a storage execution
+     * failure (code 507) propagates for mode 'files' but is downgraded to a
+     * warning for mode 'both' so the binary is still returned.
+     *
+     * @param string $mode       The resolved output mode
+     * @param string $templateId The template UUID
+     * @param array  $template   The already-fetched template array
+     * @param string $format     The output format
+     * @param string $content    The generated content to store
+     * @param array  $options    The request options
+     * @param array  $warnings   Warnings accumulated so far
+     *
+     * @return array{fileId: int|null, path: string|null, name: string|null, size: int|null, warnings: string[]}
+     *
+     * @throws Exception If storage fails and the mode does not fail open
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-003
+     */
+    private function storeOutputIfRequested(
+        string $mode,
+        string $templateId,
+        array $template,
+        string $format,
+        string $content,
+        array $options,
+        array $warnings
+    ): array {
+        $result = [
+            'fileId'   => null,
+            'path'     => null,
+            'name'     => null,
+            'size'     => null,
+            'warnings' => $warnings,
+        ];
+
+        if ($mode === 'return') {
+            return $result;
+        }
+
+        $userId = (string) ($options['userId'] ?? '');
+        if ($userId === '') {
+            throw new Exception(
+                message: 'options.userId is required to store generated documents in Files',
+                code: 400
+            );
+        }
+
+        $targetPath = $this->buildOutputTargetPath(
+            templateId: $templateId,
+            explicitTargetPath: ($options['output']['targetPath'] ?? null),
+            template: $template
+        );
+        $filename   = $this->buildOutputFilename(
+            filename: ($options['filename'] ?? 'document'),
+            format: $format
+        );
+
+        try {
+            $stored           = $this->storageService->store(
+                userId: $userId,
+                targetPath: $targetPath,
+                filename: $filename,
+                content: $content
+            );
+            $result['fileId'] = $stored['fileId'];
+            $result['path']   = $stored['path'];
+            $result['name']   = $stored['name'];
+            $result['size']   = $stored['size'];
+        } catch (Exception $e) {
+            $isStorageFailure = ($e->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
+            if ($mode === 'both' && $isStorageFailure === true) {
+                $result['warnings'][] = 'Document generated but could not be stored in Files: '.$e->getMessage();
+                return $result;
+            }
+
+            throw $e;
+        }//end try
+
+        return $result;
+
+    }//end storeOutputIfRequested()
 
     /**
      * Load the huisstijl configuration from OpenRegister.
@@ -646,10 +920,13 @@ class DocumentService
      * @param string|null $zaakId          Optional zaak UUID to link
      * @param string|null $errorMessage    Error message if status is failed
      * @param array       $options         The request options (for userId)
+     * @param int|null    $fileId          The stored file's Nextcloud file id, if stored
+     * @param string|null $filePath        The stored file's path, if stored
      *
      * @return array The created document register entry
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-004
      */
     private function logGeneratedDocument(
         string $templateId,
@@ -661,7 +938,9 @@ class DocumentService
         array $warnings,
         ?string $zaakId,
         ?string $errorMessage,
-        array $options
+        array $options,
+        ?int $fileId=null,
+        ?string $filePath=null
     ): array {
         try {
             $objectService = $this->getObjectService();
@@ -678,6 +957,8 @@ class DocumentService
                 'warnings'        => $warnings,
                 'zaakId'          => $zaakId,
                 'errorMessage'    => $errorMessage,
+                'fileId'          => $fileId,
+                'filePath'        => $filePath,
             ];
 
             $result = $objectService->saveObject(
@@ -714,11 +995,19 @@ class DocumentService
     /**
      * Process a bulk generation request synchronously.
      *
+     * Honours `options.output.mode` per object exactly as single-generate
+     * does (REQ-DDOB-007): 'return' (default) keeps today's inline
+     * `content`; 'files' stores each object's output and returns
+     * `{fileId, path, name, size}` inline instead of `content`; 'both'
+     * returns both.
+     *
      * @param string $templateId The template UUID
      * @param array  $objectIds  Array of object UUIDs
-     * @param array  $options    Generation options (register, schema, format, ...)
+     * @param array  $options    Generation options (register, schema, format, output, ...)
      *
      * @return array{results: array, total: int, completed: int, errors: int}
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-007
      */
     private function generateBulkSync(
         string $templateId,
@@ -739,17 +1028,30 @@ class DocumentService
             ];
 
             try {
-                $result    = $this->generateDocument(
+                $result = $this->generateDocument(
                     templateId: $templateId,
                     dataRefs: $dataRefs,
                     options: $options
                 );
-                $results[] = [
+                $item   = [
                     'objectId' => $objectId,
                     'status'   => 'success',
-                    'content'  => $result['content'],
                     'warnings' => $result['warnings'],
                 ];
+
+                $mode = $result['output']['mode'] ?? 'return';
+                if ($mode === 'return' || $mode === 'both') {
+                    $item['content'] = $result['content'];
+                }
+
+                if ($mode === 'files' || $mode === 'both') {
+                    $item['fileId'] = $result['output']['fileId'];
+                    $item['path']   = $result['output']['path'];
+                    $item['name']   = $result['output']['name'];
+                    $item['size']   = $result['output']['size'];
+                }
+
+                $results[] = $item;
             } catch (Exception $e) {
                 $results[] = [
                     'objectId' => $objectId,
@@ -793,11 +1095,22 @@ class DocumentService
     /**
      * Dispatch an async bulk generation background job.
      *
+     * Computes the per-job storage folder once (REQ-DDOB-006):
+     * `<targetPath>/<jobId>/`, where `<targetPath>` is the request's
+     * `options.output.targetPath` if provided, else the same
+     * `DocuDesk/<template namespace>/` default single-generate uses. Every
+     * per-object `generateDocument()` call the job makes uses this same
+     * fixed path, so a large batch's outputs land in one folder instead of
+     * spraying across the destination.
+     *
      * @param string $templateId The template UUID
      * @param array  $objectIds  Array of object UUIDs
-     * @param array  $options    Generation options
+     * @param array  $options    Generation options (options.output.mode is
+     *                           already validated to be 'files' by the caller)
      *
      * @return array{jobId: string, status: string, total: int}
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-006
      */
     private function dispatchBulkJob(
         string $templateId,
@@ -805,6 +1118,12 @@ class DocumentService
         array $options
     ): array {
         $jobId = $this->generateJobId();
+
+        $baseTargetPath = $this->buildOutputTargetPath(
+            templateId: $templateId,
+            explicitTargetPath: ($options['output']['targetPath'] ?? null)
+        );
+        $options['output']['targetPath'] = $baseTargetPath.'/'.$jobId;
 
         $initialStatus = [
             'jobId'     => $jobId,

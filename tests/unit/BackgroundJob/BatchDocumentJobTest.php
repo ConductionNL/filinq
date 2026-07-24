@@ -120,6 +120,13 @@ class BatchDocumentJobTest extends TestCase
                 'format'   => 'pdf',
                 'metadata' => [],
                 'warnings' => [],
+                'output'   => [
+                    'mode'   => 'files',
+                    'fileId' => 7,
+                    'path'   => '/user1/files/DocuDesk/procest/job-1/x.pdf',
+                    'name'   => 'x.pdf',
+                    'size'   => 10,
+                ],
             ]);
 
         $statusUpdates = [];
@@ -138,7 +145,7 @@ class BatchDocumentJobTest extends TestCase
                 'jobId'      => 'test-job-1',
                 'templateId' => 'tmpl-1',
                 'objectIds'  => ['o1', 'o2', 'o3'],
-                'options'    => ['register' => 'brp', 'schema' => 'persoon'],
+                'options'    => ['register' => 'brp', 'schema' => 'persoon', 'output' => ['mode' => 'files']],
             ]
         );
 
@@ -148,6 +155,12 @@ class BatchDocumentJobTest extends TestCase
         $this->assertEquals(3, $lastStatus['total']);
         $this->assertEquals(3, $lastStatus['completed']);
         $this->assertEquals(0, $lastStatus['errors']);
+
+        foreach ($lastStatus['results'] as $result) {
+            $this->assertEquals('success', $result['status']);
+            $this->assertEquals(7, $result['fileId']);
+            $this->assertEquals('/user1/files/DocuDesk/procest/job-1/x.pdf', $result['path']);
+        }
 
     }//end testRunProcessesAllObjectsAndMarksDone()
 

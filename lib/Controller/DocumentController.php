@@ -31,6 +31,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -82,18 +83,27 @@ class DocumentController extends Controller
      * - templateId (string, required): UUID of the template
      * - dataRefs (array, required): [{register, schema, id}, ...]
      * - options (object, optional): format, huisstijlId, zaakId, adHocData,
-     *   listRefs, pdfOptions
+     *   listRefs, pdfOptions, output
      *   - listRefs (array, optional): [{register, schema, filter?, limit?,
      *     order?, as?}, ...] — each resolves to an array of objects in the
      *     Twig context under key 'as' (default: schema + '_list')
-     * - filename (string, optional): Download filename
+     *   - output (object, optional): {mode?: 'return'|'files'|'both', targetPath?}
+     *     — defaults to mode 'return' (byte-identical to omitting it). 'files'
+     *     stores the document in the requesting user's Files and returns JSON
+     *     refs instead of a binary; 'both' stores AND returns the binary, with
+     *     the stored file identified via X-Docudesk-File-Id/X-Docudesk-File-Path
+     *     response headers.
+     * - filename (string, optional): Download filename (also used as the
+     *   stored filename's basename when output.mode is 'files'/'both')
      *
-     * @return DataDownloadResponse|JSONResponse Generated document binary or error
+     * @return DataDownloadResponse|JSONResponse Generated document binary,
+     *         stored-file JSON refs, or error
      *
      * @NoAdminRequired
      *
      * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
      * @spec openspec/changes/document-generation-list-refs/specs/document-creatie-sjablonen/spec.md
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
      */
     public function generate(): DataDownloadResponse | JSONResponse
     {
@@ -111,7 +121,8 @@ class DocumentController extends Controller
                 return $params;
             }
 
-            $params['options']['userId'] = $user->getUID();
+            $params['options']['userId']   = $user->getUID();
+            $params['options']['filename'] = $params['filename'];
 
             $result = $this->documentSvc->generateDocument(
                 templateId: $params['templateId'],
@@ -357,21 +368,44 @@ class DocumentController extends Controller
     /**
      * Build a download response for the generated document.
      *
-     * Returns a binary download for pdf/odf, or JSON with HTML content.
+     * Returns a binary download for pdf/odf, or JSON with HTML content, when
+     * the resolved output mode is 'return' (the default — byte-identical to
+     * this method's behaviour before options.output existed) or 'both'.
+     * Returns JSON stored-file refs instead, with no binary, when the mode
+     * is 'files'. When the mode is 'both', the stored file is additionally
+     * identified via X-Docudesk-File-Id/X-Docudesk-File-Path response
+     * headers.
      *
      * @param array  $result   The generation result
      * @param string $filename The requested filename (without extension)
      *
      * @return DataDownloadResponse|JSONResponse The formatted response
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
      */
     private function buildDocumentResponse(
         array $result,
         string $filename
     ): DataDownloadResponse | JSONResponse {
         $format = $result['format'];
+        $output = $result['output'] ?? ['mode' => 'return'];
+        $mode   = $output['mode'] ?? 'return';
+
+        if ($mode === 'files') {
+            return new JSONResponse(
+                data: [
+                    'fileId' => $output['fileId'] ?? null,
+                    'path'   => $output['path'] ?? null,
+                    'name'   => $output['name'] ?? null,
+                    'size'   => $output['size'] ?? null,
+                    'format' => $format,
+                ],
+                statusCode: Http::STATUS_OK
+            );
+        }
 
         if ($format === 'html') {
-            return new JSONResponse(
+            $response = new JSONResponse(
                 data: [
                     'content'  => $result['content'],
                     'format'   => $format,
@@ -380,6 +414,8 @@ class DocumentController extends Controller
                 ],
                 statusCode: Http::STATUS_OK
             );
+            $this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
+            return $response;
         }
 
         $extension   = '.pdf';
@@ -394,13 +430,44 @@ class DocumentController extends Controller
             $basename = 'document';
         }
 
-        return new DataDownloadResponse(
+        $response = new DataDownloadResponse(
             data: $result['content'],
             filename: $basename.$extension,
             contentType: $contentType
         );
+        $this->addStoredFileHeaders(response: $response, mode: $mode, output: $output);
+
+        return $response;
 
     }//end buildDocumentResponse()
+
+    /**
+     * Attach X-Docudesk-File-Id/X-Docudesk-File-Path headers when the
+     * output mode is 'both' and the document was actually stored (a
+     * fail-open storage failure leaves no fileId, so no headers are added).
+     *
+     * @param Response $response The response to annotate
+     * @param string   $mode     The resolved output mode
+     * @param array    $output   The generation result's output sub-array
+     *
+     * @return void
+     *
+     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
+     */
+    private function addStoredFileHeaders(Response $response, string $mode, array $output): void
+    {
+        if ($mode !== 'both') {
+            return;
+        }
+
+        if (isset($output['fileId']) === false) {
+            return;
+        }
+
+        $response->addHeader('X-Docudesk-File-Id', (string) $output['fileId']);
+        $response->addHeader('X-Docudesk-File-Path', (string) $output['path']);
+
+    }//end addStoredFileHeaders()
 
     /**
      * Handle exceptions and return appropriate JSON error responses.
