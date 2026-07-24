@@ -30,8 +30,14 @@ import * as path from 'path'
 export default defineConfig({
 	testDir: './tests/e2e',
 	globalSetup: path.resolve(__dirname, 'tests/e2e/global-setup.ts'),
-	timeout: 30_000,
-	expect: { timeout: 10_000 },
+	// A shared dev instance running many Conduction apps can take several
+	// seconds just to serve /index.php/login, and DocuDesk ships a ~3 MB
+	// bundle that Playwright loads with a cold cache on every run. The
+	// original 30s budget made the whole suite time out on navigation even
+	// when the app was healthy, so it is generous by design; a real hang
+	// still fails, just later. Override with PW_TEST_TIMEOUT if needed.
+	timeout: Number(process.env.PW_TEST_TIMEOUT || 120_000),
+	expect: { timeout: 15_000 },
 	fullyParallel: false,
 	retries: process.env.CI ? 1 : 0,
 	workers: 1,
@@ -46,6 +52,8 @@ export default defineConfig({
 		storageState: path.resolve(__dirname, 'tests/e2e/.auth/admin.json'),
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
+		navigationTimeout: 60_000,
+		actionTimeout: 20_000,
 	},
 
 	projects: [
