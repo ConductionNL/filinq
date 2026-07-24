@@ -10,6 +10,7 @@
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { customDictionaryStore } from '../../store/store.js'
+import { resolveI18nValue } from '../../utils/registerI18n.js'
 </script>
 
 <template>
@@ -44,7 +45,7 @@ import { customDictionaryStore } from '../../store/store.js'
 			<template #column-label="{ row }">
 				<span class="custom-dictionary-index__label">
 					<span class="custom-dictionary-index__swatch" :style="{ backgroundColor: row.colour || '#0082C9' }" />
-					{{ row.label }}
+					{{ displayLabel(row) }}
 				</span>
 			</template>
 
@@ -164,6 +165,16 @@ export default {
 	},
 	methods: {
 		t,
+		/**
+		 * Resolve a dictionary's register-i18n label for display.
+		 *
+		 * @param {object} row The dictionary row.
+		 * @return {string} The displayable label.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		displayLabel(row) {
+			return resolveI18nValue(row.label, t('docudesk', 'Custom dictionary'))
+		},
 		matchModeLabel(mode) {
 			const labels = {
 				exact: t('docudesk', 'Exact'),
