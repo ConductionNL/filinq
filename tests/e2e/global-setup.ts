@@ -82,10 +82,22 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	const page = await context.newPage()
 
 	await page.goto('/index.php/login')
-	await page.locator('input[name="user"]').fill(username)
-	await page.locator('input[name="password"]').fill(password)
+	// Nextcloud's login form is client-rendered and its markup has drifted
+	// between releases: on NC 34 the fields carry `id="user"` / `id="password"`
+	// but no `name` attribute, so a `input[name="user"]` selector never resolves
+	// and globalSetup times out — which is why this suite could not run at all.
+	// Match either shape, and wait for the field to be attached first.
+	const userField = page.locator('input#user, input[name="user"]').first()
+	const passwordField = page.locator('input#password, input[name="password"]').first()
+	await userField.waitFor({ state: 'visible', timeout: 30_000 })
+	await userField.fill(username)
+	await passwordField.fill(password)
 	await page.locator('button[type="submit"]').first().click()
-	await page.waitForSelector('#header, header.header', { timeout: 20_000 })
+	// Wait for the authenticated shell. NC 34 no longer guarantees the legacy
+	// `#header` / `header.header` markup, so accept any banner-role header and
+	// give the (slow, shared) instance room to finish the post-login redirect.
+	await page.waitForURL((url) => /\/login(\?|$|\/)/.test(url.pathname) === false, { timeout: 60_000 })
+	await page.waitForSelector('#header, header.header, header, [role="banner"]', { timeout: 60_000 })
 	const currentUrl = page.url()
 	if (/\/login(\?|$|\/)/.test(currentUrl)) {
 		throw new Error(
