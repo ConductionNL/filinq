@@ -172,17 +172,19 @@ class DocumentService
             $warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
         }
 
-        $huisstijl   = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-        $pdfOptions  = $this->buildPdfOptions(
+        $huisstijl    = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+        $pdfOptions   = $this->buildPdfOptions(
             template: $template,
             huisstijl: $huisstijl,
             options: $options
         );
-        $htmlContent = $this->renderWithHuisstijl(
+        $renderResult = $this->renderWithHuisstijl(
             templateContent: $template['content'],
             data: $data,
             huisstijl: $huisstijl
         );
+        $htmlContent  = $renderResult['html'];
+        $warnings     = array_merge($warnings, $renderResult['warnings']);
 
         $content = $this->produceOutput(
             htmlContent: $htmlContent,
@@ -254,15 +256,16 @@ class DocumentService
             $warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
         }
 
-        $huisstijl   = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-        $htmlContent = $this->renderWithHuisstijl(
+        $huisstijl    = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+        $renderResult = $this->renderWithHuisstijl(
             templateContent: $template['content'],
             data: $data,
             huisstijl: $huisstijl
         );
+        $warnings     = array_merge($warnings, $renderResult['warnings']);
 
         return [
-            'html'     => $htmlContent,
+            'html'     => $renderResult['html'],
             'warnings' => $warnings,
         ];
 
@@ -475,39 +478,52 @@ class DocumentService
      * @param array      $data            The data context
      * @param array|null $huisstijl       The huisstijl configuration
      *
-     * @return string The rendered HTML
+     * @return array{html: string, warnings: string[]} The rendered HTML plus
+     *         any generation warnings raised by chart()/data_table() calls
      *
      * @throws Exception If rendering fails
+     *
+     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
      */
     private function renderWithHuisstijl(
         string $templateContent,
         array $data,
         ?array $huisstijl
-    ): string {
+    ): array {
         $fullContent = '';
+        $warnings    = [];
 
         if ($huisstijl !== null && empty($huisstijl['headerHtml']) === false) {
             $headerData   = array_merge($data, ['huisstijl' => $huisstijl]);
             $fullContent .= $this->templateRenderer->renderTemplate(
                 templateContent: $huisstijl['headerHtml'],
-                data: $headerData
+                data: $headerData,
+                huisstijl: $huisstijl
             );
+            $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
         }
 
         $fullContent .= $this->templateRenderer->renderTemplate(
             templateContent: $templateContent,
-            data: $data
+            data: $data,
+            huisstijl: $huisstijl
         );
+        $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
 
         if ($huisstijl !== null && empty($huisstijl['footerHtml']) === false) {
             $footerData   = array_merge($data, ['huisstijl' => $huisstijl]);
             $fullContent .= $this->templateRenderer->renderTemplate(
                 templateContent: $huisstijl['footerHtml'],
-                data: $footerData
+                data: $footerData,
+                huisstijl: $huisstijl
             );
+            $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
         }
 
-        return $fullContent;
+        return [
+            'html'     => $fullContent,
+            'warnings' => $warnings,
+        ];
 
     }//end renderWithHuisstijl()
 

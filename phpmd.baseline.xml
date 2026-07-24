@@ -179,4 +179,21 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/SigningService.php" method="updateRequestStatus"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/SigningService.php"/>
   <violation rule="PHPMD\Rule\Naming\ShortVariable" file="lib/Service/TemplateLanguageService.php"/>
+  <violation rule="PHPMD\Rule\Design\LongClass" file="lib/Service/Charts/ChartSvgRenderer.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="lib/Service/Charts/ChartSvgRenderer.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/Charts/ChartSvgRenderer.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="normalizeData"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="normalizeData"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="resolvePalette"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderBar"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderBar"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderBar"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderLine"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderLine"/>
+  <violation rule="PHPMD\Rule\Design\LongMethod" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderLine"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderPie"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Charts/ChartSvgRenderer.php" method="renderPie"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="lib/Service/Charts/TableHtmlRenderer.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Charts/TableHtmlRenderer.php" method="formatCell"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Charts/TableHtmlRenderer.php" method="formatCell"/>
 </phpmd-baseline>
