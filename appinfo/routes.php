@@ -183,6 +183,11 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
         // CnSupportDialog) — served by OpenRegister's AppHost
         // GenericPreferencesController (aliased in Application::register).
-        ['name' => 'AppHost\Controller\GenericPreferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
-        ['name' => 'AppHost\Controller\GenericPreferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+        // Served by lib/Controller/PreferencesController (a thin subclass of
+        // OpenRegister's GenericPreferencesController). The route name MUST
+        // stay `preferences#…`: Nextcloud resolves `foo#bar` to
+        // OCA\DocuDesk\Controller\FooController, so a namespaced name here
+        // resolves to a class that does not exist and 500s.
+        ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+        ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
 ]);
