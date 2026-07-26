@@ -671,7 +671,8 @@
         "User": "Gebruiker",
         "Valid from": "Geldig vanaf",
         "Version number": "Versienummer",
-        "Warnings": "Waarschuwingen"
+        "Warnings": "Waarschuwingen",
+        "Branding Configuration": "Huisstijlconfiguratie"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
