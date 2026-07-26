@@ -26,6 +26,8 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Exception\ConversionFailedException;
+use OCA\DocuDesk\Service\Charts\ChartSvgRenderer;
+use OCA\DocuDesk\Service\Charts\TableHtmlRenderer;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use OCA\DocuDesk\Service\PdfService;
 use OCA\DocuDesk\Service\TemplateRenderer;
@@ -72,12 +74,12 @@ class EmlPdfAssemblyServiceTest extends TestCase
 
         $pdfService = new PdfService(
             $logger,
-            new TemplateRenderer($logger)
+            new TemplateRenderer($logger, new ChartSvgRenderer(), new TableHtmlRenderer())
         );
 
         $this->service = new EmlPdfAssemblyService(
             $pdfService,
-            new TemplateRenderer($logger),
+            new TemplateRenderer($logger, new ChartSvgRenderer(), new TableHtmlRenderer()),
             $this->appConfig,
             $logger
         );
@@ -131,7 +133,7 @@ class EmlPdfAssemblyServiceTest extends TestCase
     private function tinyPdf(): string
     {
         $logger     = $this->createMock(LoggerInterface::class);
-        $pdfService = new PdfService($logger, new TemplateRenderer($logger));
+        $pdfService = new PdfService($logger, new TemplateRenderer($logger, new ChartSvgRenderer(), new TableHtmlRenderer()));
         return $pdfService->generatePdfFromHtml('<p>Redacted [PERSOON: 9] attachment.</p>', ['pdfa' => true]);
     }//end tinyPdf()
 

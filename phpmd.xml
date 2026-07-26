@@ -59,7 +59,7 @@
     <rule ref="rulesets/naming.xml/ShortVariable">
         <properties>
             <property name="minimum" value="3" />
-            <property name="exceptions" value="id,db,qb,op,ui,io,gc,tz,pk,fk,to,ch,a,b,l,v,c,t,r,f,n,k,e" />
+            <property name="exceptions" value="id,db,qb,op,ui,io,gc,tz,pk,fk,to,ch,a,b,l,v,c,t,r,f,n,k,e,x,y,h,s,m,d,g,x1,y1,x2,y2,cx,cy,px,py,rf,gf,bf" />
         </properties>
     </rule>
     <rule ref="rulesets/naming.xml/LongVariable"/>

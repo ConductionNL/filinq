@@ -82,11 +82,40 @@ export async function dismissOverlays(page: Page): Promise<void> {
 		}
 		await support.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {})
 	}
+
+	// The onboarding walkthrough ("Welcome to DocuDesk") renders a full-viewport
+	// dim layer (.cn-walkthrough__dim--full) that intercepts pointer events, so
+	// every left-navigation click fails with "subtree intercepts pointer events"
+	// even though the target link is visible and enabled. Close it via its own
+	// button; Escape alone does not always dismiss it.
+	const walkthrough = page.locator('.cn-walkthrough, [aria-label="Welcome to DocuDesk"]').first()
+	for (let i = 0; i < 3 && await walkthrough.isVisible().catch(() => false); i++) {
+		const closeTour = page.getByRole('button', { name: /close tour/i }).first()
+		if (await closeTour.isVisible().catch(() => false)) {
+			await closeTour.click().catch(() => {})
+		} else {
+			await page.keyboard.press('Escape').catch(() => {})
+		}
+		await walkthrough.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {})
+	}
+
+	// Belt and braces: if any full-viewport dim layer survived the loops above,
+	// a click would still be swallowed. Wait for it to detach rather than
+	// letting the next action fail with a confusing interception error.
+	await page.locator('.cn-walkthrough__dim--full')
+		.waitFor({ state: 'detached', timeout: 3000 })
+		.catch(() => {})
 }
 
 export async function go(page: Page, route: string): Promise<void> {
 	const url = route ? `/apps/docudesk/${route}` : '/apps/docudesk'
-	await page.goto(url)
+	// Wait for `domcontentloaded`, not the default `load`. Nextcloud keeps
+	// long-lived connections open (notifications polling, user-status
+	// heartbeat), so on a busy instance the `load` event can be minutes late
+	// or never fire at all — every navigation then failed with a 60s timeout
+	// even though the page was interactive. `networkidle` below still gives
+	// the Vue app time to settle, and is already failure-tolerant.
+	await page.goto(url, { waitUntil: 'domcontentloaded' })
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)

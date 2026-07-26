@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping DocuDesk's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "7.5.0"
+        "description": "DocuDesk register v7.6.1 — schema-titles-en: re-authored all Dutch schema property `title` values to English (property names/keys unchanged); Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.0 — document-output-destinations-and-bulk-retention: generatedDocument gains additive, nullable fileId/filePath properties, populated when a generation is stored to Files via the new DocumentStorageService (options.output.mode 'files'/'both' on generate, or the now-persisted async bulk job). hardValidation:false, so existing rows remain valid unchanged. See openspec/changes/document-output-destinations-and-bulk-retention/. Previous v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping DocuDesk's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "7.6.1"
     },
     "x-openregister": {
         "type": "application",
@@ -54,7 +54,7 @@
             "document": {
                 "slug": "document",
                 "title": "Document Register",
-                "version": "2.3.0",
+                "version": "2.4.0",
                 "description": "Register voor correspondentie logging, gegenereerde documenten, huisstijl configuratie, financiële veldextractie, grootboekrekening-suggesties en organisatie-woordenlijsten voor aangepaste entiteitherkenning",
                 "schemas": [
                     "correspondence",
@@ -156,7 +156,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Entiteitstype",
+                        "title": "Entity type",
                         "enum": [
                             "PERSON",
                             "ORGANIZATION",
@@ -170,7 +170,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Entiteit tekst",
+                        "title": "Entity text",
                         "maxLength": 500
                     },
                     "entityKey": {
@@ -179,7 +179,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Entiteit key",
+                        "title": "Entity key",
                         "maxLength": 50
                     },
                     "contactEmail": {
@@ -198,7 +198,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Contact adres",
+                        "title": "Contact address",
                         "maxLength": 500
                     },
                     "contactRef": {
@@ -218,7 +218,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Notificatiestatus",
+                        "title": "Notification status",
                         "enum": [
                             "pending",
                             "sent",
@@ -235,7 +235,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": false,
-                        "title": "Notificatie verzonden op"
+                        "title": "Notification sent at"
                     },
                     "consentStatus": {
                         "description": "Status van de toestemming/bezwaar",
@@ -244,7 +244,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": true,
-                        "title": "Toestemmingsstatus",
+                        "title": "Consent status",
                         "enum": [
                             "pending",
                             "consent_given",
@@ -261,7 +261,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Bezwaar deadline"
+                        "title": "Objection deadline"
                     },
                     "objectionReceivedAt": {
                         "description": "Datum/tijd waarop bezwaar is ontvangen",
@@ -270,7 +270,7 @@
                         "visible": true,
                         "order": 11,
                         "facetable": false,
-                        "title": "Bezwaar ontvangen op"
+                        "title": "Objection received at"
                     },
                     "objectionReason": {
                         "description": "Reden voor bezwaar (indien ingediend)",
@@ -279,7 +279,7 @@
                         "visible": true,
                         "order": 12,
                         "facetable": false,
-                        "title": "Bezwaarreden",
+                        "title": "Objection reason",
                         "maxLength": 2000,
                         "translatable": true
                     },
@@ -290,7 +290,7 @@
                         "visible": true,
                         "order": 13,
                         "facetable": true,
-                        "title": "Publicatiebeslissing",
+                        "title": "Publication decision",
                         "enum": [
                             "pending",
                             "anonymize",
@@ -307,7 +307,7 @@
                         "visible": true,
                         "order": 14,
                         "facetable": true,
-                        "title": "Juridische grondslag",
+                        "title": "Legal basis",
                         "maxLength": 500,
                         "example": "Wet Open Overheid art. 3.1"
                     },
@@ -318,7 +318,7 @@
                         "visible": true,
                         "order": 15,
                         "facetable": false,
-                        "title": "Notities",
+                        "title": "Notes",
                         "maxLength": 2000,
                         "translatable": true
                     },
@@ -354,7 +354,7 @@
                                 }
                             }
                         },
-                        "title": "Matchregels"
+                        "title": "Match rules"
                     },
                     "validFrom": {
                         "description": "Standing-consent validity start (inclusive). Only honoured on `scope=entity` records.",
@@ -364,7 +364,7 @@
                         "visible": true,
                         "order": 101,
                         "facetable": true,
-                        "title": "Geldig vanaf"
+                        "title": "Valid from"
                     },
                     "validUntil": {
                         "description": "Standing-consent validity end (inclusive); `null` means open-ended. Service-level validation surfaces a non-blocking warning when blank.",
@@ -374,7 +374,7 @@
                         "visible": true,
                         "order": 102,
                         "facetable": true,
-                        "title": "Geldig tot"
+                        "title": "Valid until"
                     },
                     "active": {
                         "description": "Master kill-switch on standing consents (`scope=entity`). Only `active=true` records participate in matching.",
@@ -383,7 +383,7 @@
                         "visible": true,
                         "order": 103,
                         "facetable": true,
-                        "title": "Actief",
+                        "title": "Active",
                         "default": true
                     },
                     "consentMethod": {
@@ -399,7 +399,7 @@
                         "visible": true,
                         "order": 104,
                         "facetable": true,
-                        "title": "Toestemmingsmethode"
+                        "title": "Consent method"
                     },
                     "consentDocument": {
                         "description": "Reference to the captured consent document (signed PDF / form upload).",
@@ -409,7 +409,7 @@
                         "visible": true,
                         "order": 105,
                         "facetable": true,
-                        "title": "Toestemmingsdocument"
+                        "title": "Consent document"
                     },
                     "consentScope": {
                         "description": "Free-text limitation describing the scope of the standing consent (e.g. 'all publications referencing the position of burgemeester').",
@@ -417,7 +417,7 @@
                         "required": false,
                         "visible": true,
                         "order": 106,
-                        "title": "Toestemmingsbereik",
+                        "title": "Consent scope",
                         "maxLength": 1024
                     },
                     "policyMatch": {
@@ -457,7 +457,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.1.0",
+                "version": "1.2.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -473,7 +473,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": false,
-                        "title": "Naam",
+                        "title": "Name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -483,7 +483,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Beschrijving",
+                        "title": "Description",
                         "maxLength": 2000,
                         "translatable": true
                     },
@@ -494,7 +494,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Template inhoud",
+                        "title": "Template content",
                         "format": "html",
                         "translatable": true
                     },
@@ -514,7 +514,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Paginaformaat",
+                        "title": "Page format",
                         "default": "A4",
                         "enum": [
                             "A4",
@@ -529,7 +529,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Oriëntatie",
+                        "title": "Orientation",
                         "default": "P",
                         "enum": [
                             "P",
@@ -542,7 +542,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Categorie",
+                        "title": "Category",
                         "maxLength": 128,
                         "translatable": true
                     },
@@ -564,7 +564,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Vergrendeld door",
+                        "title": "Locked by",
                         "maxLength": 64
                     },
                     "lockedAt": {
@@ -574,7 +574,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Vergrendeld op"
+                        "title": "Locked at"
                     }
                 },
                 "archive": [],
@@ -593,7 +593,8 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-shareable": true
                 },
                 "searchable": true
             },
@@ -628,7 +629,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Versienummer"
+                        "title": "Version number"
                     },
                     "content": {
                         "description": "HTML/Twig templateinhoud op het moment van de snapshot",
@@ -637,7 +638,7 @@
                         "visible": false,
                         "order": 3,
                         "facetable": false,
-                        "title": "Inhoud",
+                        "title": "Content",
                         "format": "html"
                     },
                     "name": {
@@ -646,7 +647,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Naam",
+                        "title": "Name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -656,7 +657,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Beschrijving",
+                        "title": "Description",
                         "maxLength": 2000,
                         "translatable": true
                     },
@@ -666,7 +667,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Formaat",
+                        "title": "Format",
                         "default": "A4"
                     },
                     "orientation": {
@@ -675,7 +676,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Oriëntatie",
+                        "title": "Orientation",
                         "default": "P"
                     },
                     "editor": {
@@ -685,7 +686,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": true,
-                        "title": "Bewerker",
+                        "title": "Editor",
                         "maxLength": 64
                     },
                     "changelog": {
@@ -694,7 +695,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Wijzigingsnotitie",
+                        "title": "Changelog note",
                         "maxLength": 2000,
                         "translatable": true
                     }
@@ -779,7 +780,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Template naam",
+                        "title": "Template name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -790,7 +791,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Ontvanger ID"
+                        "title": "Recipient ID"
                     },
                     "recipientType": {
                         "description": "Type ontvanger",
@@ -798,7 +799,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": true,
-                        "title": "Ontvanger type",
+                        "title": "Recipient type",
                         "enum": [
                             "PERSON",
                             "ORGANIZATION"
@@ -813,7 +814,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Zaak referentie"
+                        "title": "Case reference"
                     },
                     "generatedAt": {
                         "description": "Datum/tijd van generatie (ISO 8601)",
@@ -823,7 +824,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Gegenereerd op"
+                        "title": "Generated at"
                     },
                     "format": {
                         "description": "Uitvoerformaat van het document",
@@ -832,7 +833,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Formaat",
+                        "title": "Format",
                         "enum": [
                             "pdf",
                             "docx",
@@ -860,7 +861,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": true,
-                        "title": "Gegenereerd door",
+                        "title": "Generated by",
                         "maxLength": 64
                     },
                     "errorMessage": {
@@ -869,7 +870,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Foutmelding",
+                        "title": "Error message",
                         "maxLength": 2000
                     }
                 },
@@ -934,9 +935,9 @@
                 "uri": null,
                 "slug": "generatedDocument",
                 "title": "Generated Document",
-                "description": "Audit trail voor documenten gegenereerd via DocumentService. Bevat metadata inclusief template UUID, versie, databronnen en resultaat.",
+                "description": "Audit trail voor documenten gegenereerd via DocumentService. Bevat metadata inclusief template UUID, versie, databronnen en resultaat, plus (optioneel) het Nextcloud bestand-ID en -pad wanneer het document is opgeslagen in Files.",
                 "x-schema-org": "schema:DigitalDocument",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -964,7 +965,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Template versie"
+                        "title": "Template version"
                     },
                     "templateName": {
                         "description": "Naam van het gebruikte template",
@@ -972,7 +973,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": true,
-                        "title": "Template naam",
+                        "title": "Template name",
                         "maxLength": 255
                     },
                     "dataRefs": {
@@ -981,7 +982,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Databronnen"
+                        "title": "Data sources"
                     },
                     "format": {
                         "description": "Uitvoerformaat van het document",
@@ -990,7 +991,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Formaat",
+                        "title": "Format",
                         "enum": ["pdf", "odf", "html"]
                     },
                     "status": {
@@ -1011,7 +1012,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Gegenereerd op"
+                        "title": "Generated at"
                     },
                     "generatedBy": {
                         "description": "Nextcloud gebruikers-ID die de generatie heeft gestart",
@@ -1020,7 +1021,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": true,
-                        "title": "Gegenereerd door",
+                        "title": "Generated by",
                         "maxLength": 64
                     },
                     "zaakId": {
@@ -1032,7 +1033,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Zaak ID"
+                        "title": "Case ID"
                     },
                     "warnings": {
                         "description": "Waarschuwingen opgetreden tijdens generatie",
@@ -1040,7 +1041,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Waarschuwingen"
+                        "title": "Warnings"
                     },
                     "errorMessage": {
                         "description": "Foutmelding bij mislukte generatie",
@@ -1048,15 +1049,34 @@
                         "visible": true,
                         "order": 11,
                         "facetable": false,
-                        "title": "Foutmelding",
+                        "title": "Error message",
                         "maxLength": 2000
+                    },
+                    "fileId": {
+                        "description": "Nextcloud bestand-ID van het opgeslagen document in Files, indien options.output.mode 'files' of 'both' was en de opslag geslaagd is (document-output-destinations-and-bulk-retention). Null wanneer niet opgeslagen.",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 12,
+                        "facetable": false,
+                        "title": "File ID"
+                    },
+                    "filePath": {
+                        "description": "Pad van het opgeslagen document in Files, indien opgeslagen (document-output-destinations-and-bulk-retention). Null wanneer niet opgeslagen.",
+                        "type": "string",
+                        "required": false,
+                        "visible": true,
+                        "order": 13,
+                        "facetable": false,
+                        "title": "File path",
+                        "maxLength": 2048
                     }
                 },
                 "archive": [],
                 "source": "internal",
                 "hardValidation": false,
                 "immutable": false,
-                "updated": "2026-06-01T00:00:00+00:00",
+                "updated": "2026-07-24T00:00:00+00:00",
                 "created": "2026-06-01T00:00:00+00:00",
                 "maxDepth": 0,
                 "owner": null,
@@ -1108,7 +1128,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Documenttype",
+                        "title": "Document type",
                         "enum": [
                             "receipt",
                             "supplier-invoice"
@@ -1121,7 +1141,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": true,
-                        "title": "Aangevraagd door",
+                        "title": "Requested by",
                         "maxLength": 64
                     },
                     "sourceApp": {
@@ -1131,7 +1151,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": true,
-                        "title": "Bron-app",
+                        "title": "Source app",
                         "maxLength": 64
                     },
                     "fields": {
@@ -1141,7 +1161,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Velden"
+                        "title": "Fields"
                     },
                     "fieldConfidence": {
                         "description": "Betrouwbaarheidsscore (0..1) per geëxtraheerd veld",
@@ -1150,7 +1170,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Veld-betrouwbaarheid"
+                        "title": "Field confidence"
                     },
                     "overallConfidence": {
                         "description": "Geaggregeerde betrouwbaarheidsscore (0..1) over alle ingevulde velden",
@@ -1159,7 +1179,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Totale betrouwbaarheid"
+                        "title": "Overall confidence"
                     },
                     "corrections": {
                         "description": "Additieve lijst van door mensen gecorrigeerde veldwaarden (field, original, corrected, correctedBy, correctedAt), gekoppeld aan de oorspronkelijke extractie voor toekomstige model-tuning. De oorspronkelijke extractie blijft ongewijzigd.",
@@ -1167,7 +1187,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": false,
-                        "title": "Correcties",
+                        "title": "Corrections",
                         "default": []
                     }
                 },
@@ -1222,7 +1242,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Leverancier-identiteit",
+                        "title": "Supplier identity",
                         "maxLength": 255
                     },
                     "identityType": {
@@ -1232,7 +1252,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Identiteitstype",
+                        "title": "Identity type",
                         "enum": [
                             "kvk",
                             "iban",
@@ -1246,7 +1266,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": true,
-                        "title": "Rekeningcode",
+                        "title": "Account code",
                         "maxLength": 64
                     },
                     "accountLabel": {
@@ -1255,7 +1275,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Rekeninglabel",
+                        "title": "Account label",
                         "maxLength": 255
                     },
                     "bookedAt": {
@@ -1266,7 +1286,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Geboekt op"
+                        "title": "Booked at"
                     },
                     "source": {
                         "description": "Herkomst van deze boeking",
@@ -1275,7 +1295,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": true,
-                        "title": "Bron",
+                        "title": "Source",
                         "enum": [
                             "correction",
                             "suggestion-accepted"
@@ -1287,7 +1307,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Extractie-ID",
+                        "title": "Extraction ID",
                         "maxLength": 255
                     },
                     "sourceApp": {
@@ -1296,7 +1316,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": true,
-                        "title": "Bron-app",
+                        "title": "Source app",
                         "maxLength": 64
                     }
                 },
@@ -1340,7 +1360,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": false,
-                        "title": "Trefwoorden",
+                        "title": "Keywords",
                         "items": {
                             "type": "string"
                         }
@@ -1352,7 +1372,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Rekeningcode",
+                        "title": "Account code",
                         "maxLength": 64
                     },
                     "accountLabel": {
@@ -1361,7 +1381,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Rekeninglabel",
+                        "title": "Account label",
                         "maxLength": 255
                     },
                     "priority": {
@@ -1370,7 +1390,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Prioriteit",
+                        "title": "Priority",
                         "default": 0
                     },
                     "enabled": {
@@ -1379,7 +1399,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Actief",
+                        "title": "Active",
                         "default": true
                     }
                 },
@@ -1432,7 +1452,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Beschrijving",
+                        "title": "Description",
                         "translatable": true
                     },
                     "colour": {
@@ -1441,7 +1461,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Kleur",
+                        "title": "Colour",
                         "pattern": "^#[0-9A-Fa-f]{6}$",
                         "default": "#0082C9"
                     },
@@ -1456,7 +1476,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": true,
-                        "title": "Matchmodus",
+                        "title": "Match mode",
                         "default": "caseInsensitive"
                     },
                     "fuzzy": {
@@ -1465,7 +1485,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Fuzzy matching (nog niet actief)",
+                        "title": "Fuzzy matching (not yet active)",
                         "default": false
                     },
                     "active": {
@@ -1474,7 +1494,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": true,
-                        "title": "Actief",
+                        "title": "Active",
                         "default": true
                     },
                     "termCount": {
@@ -1484,7 +1504,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Aantal termen",
+                        "title": "Term count",
                         "readOnly": true,
                         "default": 0
                     }
@@ -1529,7 +1549,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Waarde",
+                        "title": "Value",
                         "maxLength": 512
                     },
                     "label": {
@@ -1549,7 +1569,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": true,
-                        "title": "Woordenlijst"
+                        "title": "Dictionary"
                     }
                 },
                 "archive": [],
@@ -1588,7 +1608,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": false,
-                        "title": "Naam",
+                        "title": "Name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -1606,7 +1626,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Primaire kleur",
+                        "title": "Primary color",
                         "maxLength": 25
                     },
                     "headerHtml": {
@@ -1615,7 +1635,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Koptekst HTML",
+                        "title": "Header HTML",
                         "format": "html"
                     },
                     "footerHtml": {
@@ -1624,7 +1644,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Voettekst HTML",
+                        "title": "Footer HTML",
                         "format": "html"
                     },
                     "defaultMargins": {
@@ -1633,7 +1653,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Standaard marges"
+                        "title": "Default margins"
                     }
                 },
                 "archive": [],
@@ -1718,7 +1738,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Documentnaam",
+                        "title": "Document name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -1738,7 +1758,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": true,
-                        "title": "Niveau",
+                        "title": "Level",
                         "enum": [
                             "SES",
                             "AdES",
@@ -1753,7 +1773,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Modus",
+                        "title": "Mode",
                         "enum": [
                             "sequential",
                             "parallel"
@@ -1811,7 +1831,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Ondertekenaars"
+                        "title": "Signers"
                     }
                 },
                 "archive": [],
@@ -1978,7 +1998,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Verzoek ID"
+                        "title": "Request ID"
                     },
                     "userId": {
                         "description": "Gebruikers-ID",
@@ -1987,7 +2007,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Gebruiker"
+                        "title": "User"
                     },
                     "displayName": {
                         "description": "Weergavenaam",
@@ -1996,7 +2016,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Naam",
+                        "title": "Name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -2007,7 +2027,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "E-mail",
+                        "title": "Email",
                         "maxLength": 255
                     },
                     "order": {
@@ -2016,7 +2036,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Volgorde",
+                        "title": "Order",
                         "default": 0
                     },
                     "status": {
@@ -2043,7 +2063,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Ondertekend op"
+                        "title": "Signed at"
                     },
                     "declineReason": {
                         "description": "Reden weigering",
@@ -2051,7 +2071,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": false,
-                        "title": "Reden weigering",
+                        "title": "Decline reason",
                         "maxLength": 2000,
                         "translatable": true
                     },
@@ -2061,7 +2081,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "IP-adres",
+                        "title": "IP address",
                         "maxLength": 45
                     },
                     "signatureData": {
@@ -2070,7 +2090,7 @@
                         "visible": false,
                         "order": 10,
                         "facetable": false,
-                        "title": "Handtekeninggegevens"
+                        "title": "Signature data"
                     }
                 },
                 "archive": [],
@@ -2143,7 +2163,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Verzoek ID"
+                        "title": "Request ID"
                     },
                     "action": {
                         "description": "Actie",
@@ -2152,7 +2172,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Actie",
+                        "title": "Action",
                         "enum": [
                             "CREATED",
                             "SIGNED",
@@ -2179,7 +2199,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Actornaam",
+                        "title": "Actor name",
                         "maxLength": 255
                     },
                     "timestamp": {
@@ -2190,7 +2210,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Tijdstip"
+                        "title": "Timestamp"
                     },
                     "ipAddress": {
                         "description": "IP-adres",
@@ -2198,7 +2218,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "IP-adres",
+                        "title": "IP address",
                         "maxLength": 45
                     },
                     "signatureLevel": {
@@ -2207,7 +2227,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Niveau",
+                        "title": "Level",
                         "enum": [
                             "SES",
                             "AdES",
@@ -2280,7 +2300,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Sessie ID",
+                        "title": "Session ID",
                         "maxLength": 128
                     },
                     "documentPath": {
@@ -2290,7 +2310,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": false,
-                        "title": "Documentpad",
+                        "title": "Document path",
                         "maxLength": 4000
                     },
                     "documentName": {
@@ -2300,7 +2320,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Documentnaam",
+                        "title": "Document name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -2310,7 +2330,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Ondertekenaars"
+                        "title": "Signers"
                     },
                     "level": {
                         "description": "Handtekeningsniveau (alleen SES voor de native provider)",
@@ -2318,7 +2338,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Niveau",
+                        "title": "Level",
                         "enum": [
                             "SES"
                         ],
@@ -2347,7 +2367,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": false,
-                        "title": "Handtekeningen"
+                        "title": "Signatures"
                     },
                     "createdAt": {
                         "description": "Aangemaakt (ISO 8601)",
@@ -2356,7 +2376,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": false,
-                        "title": "Aangemaakt"
+                        "title": "Created"
                     },
                     "completedAt": {
                         "description": "Afgerond (ISO 8601), null tot completion",
@@ -2365,7 +2385,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Afgerond"
+                        "title": "Completed"
                     },
                     "signedDocumentPath": {
                         "description": "Pad naar het ondertekende document (kan gelijk zijn aan documentPath totdat SES-marker geschreven is)",
@@ -2373,7 +2393,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Ondertekend pad",
+                        "title": "Signed path",
                         "maxLength": 4000
                     },
                     "markerEmbedded": {
@@ -2382,7 +2402,7 @@
                         "visible": true,
                         "order": 11,
                         "facetable": true,
-                        "title": "Marker ingebed",
+                        "title": "Marker embedded",
                         "default": false
                     }
                 },
@@ -2495,7 +2515,7 @@
                 ],
                 "properties": {
                     "name": {
-                        "title": "Naam",
+                        "title": "Name",
                         "description": "Korte Nederlandstalige naam van de grondslag (zichtbaar in de operator-UI).",
                         "type": "string",
                         "required": true,
@@ -2506,7 +2526,7 @@
                         "translatable": true
                     },
                     "description": {
-                        "title": "Omschrijving",
+                        "title": "Description",
                         "description": "Toelichting op de grondslag, met verwijzing naar Woo Art. 5 en waar relevant AVG-artikelen.",
                         "type": "string",
                         "required": true,
@@ -2551,7 +2571,7 @@
                 ],
                 "properties": {
                     "name": {
-                        "title": "Naam",
+                        "title": "Name",
                         "description": "Naam van het dossier — komt overeen met de naam van de gekoppelde Nextcloud-map op het moment van aanmaken.",
                         "type": "string",
                         "required": true,
@@ -2562,7 +2582,7 @@
                         "translatable": true
                     },
                     "description": {
-                        "title": "Omschrijving",
+                        "title": "Description",
                         "description": "Vrije tekst die het doel van het dossier toelicht (bijv. \"Woo-verzoek Subsidietoekenningen cultuur\").",
                         "type": "string",
                         "required": false,
@@ -2573,7 +2593,7 @@
                         "translatable": true
                     },
                     "bases": {
-                        "title": "Grondslagen",
+                        "title": "Bases",
                         "description": "Array van slugs die verwijzen naar `base`-objecten — de Woo Art. 5 uitzonderingsgronden op basis waarvan het dossier geanonimiseerd wordt. Consumer-side resolution (DocuDesk's anonymisation-grondslagen-summary) zoekt de slug op in het `base`-register.",
                         "type": "array",
                         "required": false,
@@ -2585,7 +2605,7 @@
                         }
                     },
                     "checkedOn": {
-                        "title": "Beoordeeld op",
+                        "title": "Checked on",
                         "description": "Tijdstempel waarop het dossier door een operator is beoordeeld; lege waarde betekent nog niet beoordeeld.",
                         "type": "string",
                         "format": "date-time",
@@ -2647,7 +2667,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Template naam",
+                        "title": "Template name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -2658,7 +2678,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Ontvangers"
+                        "title": "Recipients"
                     },
                     "completedCount": {
                         "description": "Aantal succesvol gegenereerde brieven",
@@ -2667,7 +2687,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": false,
-                        "title": "Geslaagd"
+                        "title": "Succeeded"
                     },
                     "errorCount": {
                         "description": "Aantal mislukte generaties",
@@ -2676,7 +2696,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": false,
-                        "title": "Mislukt"
+                        "title": "Failed"
                     },
                     "status": {
                         "description": "Batchstatus",
@@ -2702,7 +2722,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Gestart door",
+                        "title": "Started by",
                         "maxLength": 64
                     },
                     "startedAt": {
@@ -2713,7 +2733,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": false,
-                        "title": "Gestart"
+                        "title": "Started"
                     },
                     "completedAt": {
                         "description": "Voltooiing (ISO 8601)",
@@ -2723,7 +2743,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Afgerond"
+                        "title": "Completed"
                     },
                     "errorMessage": {
                         "description": "Foutmelding bij volledig mislukte batch",
@@ -2732,7 +2752,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Foutmelding",
+                        "title": "Error message",
                         "maxLength": 2000
                     }
                 },
@@ -2919,7 +2939,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Bron bestands-ID"
+                        "title": "Source file ID"
                     },
                     "sourceFileName": {
                         "description": "Bestandsnaam van het brondocument",
@@ -2928,7 +2948,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Bron bestandsnaam",
+                        "title": "Source file name",
                         "maxLength": 255
                     },
                     "sourceFilePath": {
@@ -2938,7 +2958,7 @@
                         "visible": true,
                         "order": 3,
                         "facetable": false,
-                        "title": "Bron pad",
+                        "title": "Source path",
                         "maxLength": 4096
                     },
                     "anonymizedFileId": {
@@ -2948,7 +2968,7 @@
                         "visible": true,
                         "order": 4,
                         "facetable": true,
-                        "title": "Geanonimiseerd bestands-ID"
+                        "title": "Anonymized file ID"
                     },
                     "anonymizedFileName": {
                         "description": "Bestandsnaam van het geanonimiseerde resultaat",
@@ -2957,7 +2977,7 @@
                         "visible": true,
                         "order": 5,
                         "facetable": true,
-                        "title": "Geanonimiseerde bestandsnaam",
+                        "title": "Anonymized file name",
                         "maxLength": 255
                     },
                     "anonymizedFilePath": {
@@ -2967,7 +2987,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": false,
-                        "title": "Geanonimiseerd pad",
+                        "title": "Anonymized path",
                         "maxLength": 4096
                     },
                     "outputFormat": {
@@ -2977,7 +2997,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Formaat",
+                        "title": "Format",
                         "enum": [
                             "pdf",
                             "docx",
@@ -3006,7 +3026,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": false,
-                        "title": "Vervangingen"
+                        "title": "Replacements"
                     },
                     "runCount": {
                         "description": "Hoe vaak dit bronbestand is geanonimiseerd (opgehoogd bij elke her-anonimisering)",
@@ -3015,7 +3035,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": false,
-                        "title": "Aantal runs",
+                        "title": "Run count",
                         "default": 1
                     },
                     "anonymizedAt": {
@@ -3026,7 +3046,7 @@
                         "visible": true,
                         "order": 11,
                         "facetable": false,
-                        "title": "Geanonimiseerd op"
+                        "title": "Anonymized at"
                     },
                     "anonymizedBy": {
                         "description": "Nextcloud gebruikers-ID dat de anonimisering heeft gestart",
@@ -3035,7 +3055,7 @@
                         "visible": true,
                         "order": 12,
                         "facetable": true,
-                        "title": "Geanonimiseerd door",
+                        "title": "Anonymized by",
                         "maxLength": 64
                     }
                 },
@@ -3090,7 +3110,7 @@
                         "visible": true,
                         "order": 1,
                         "facetable": true,
-                        "title": "Primaire naam",
+                        "title": "Primary name",
                         "maxLength": 255,
                         "translatable": true
                     },
@@ -3106,7 +3126,7 @@
                         "visible": true,
                         "order": 2,
                         "facetable": true,
-                        "title": "Entiteittype"
+                        "title": "Entity type"
                     },
                     "matchRules": {
                         "description": "Array of {type, value} entries; type is one of `exact` (literal), `normalized` (case+accent strip), `bsn` (BSN identifier), `kvk` (KvK identifier).",
@@ -3140,7 +3160,7 @@
                                 }
                             }
                         },
-                        "title": "Matchregels"
+                        "title": "Match rules"
                     },
                     "reason": {
                         "description": "Short justification — gerechtelijk bevel, minderjarige bescherming, undercover, categorical privacy-board.",
@@ -3148,7 +3168,7 @@
                         "required": true,
                         "visible": true,
                         "order": 4,
-                        "title": "Reden",
+                        "title": "Reason",
                         "maxLength": 1024,
                         "translatable": true
                     },
@@ -3158,7 +3178,7 @@
                         "required": false,
                         "visible": true,
                         "order": 5,
-                        "title": "Juridische grondslag",
+                        "title": "Legal basis",
                         "maxLength": 512
                     },
                     "caseReference": {
@@ -3168,7 +3188,7 @@
                         "visible": true,
                         "order": 6,
                         "facetable": true,
-                        "title": "Zaakreferentie",
+                        "title": "Case reference",
                         "maxLength": 128
                     },
                     "severity": {
@@ -3183,7 +3203,7 @@
                         "visible": true,
                         "order": 7,
                         "facetable": true,
-                        "title": "Ernst",
+                        "title": "Severity",
                         "default": "normal"
                     },
                     "jurisdiction": {
@@ -3193,7 +3213,7 @@
                         "visible": true,
                         "order": 8,
                         "facetable": true,
-                        "title": "Jurisdictie",
+                        "title": "Jurisdiction",
                         "maxLength": 128
                     },
                     "addedBy": {
@@ -3203,7 +3223,7 @@
                         "visible": true,
                         "order": 9,
                         "facetable": true,
-                        "title": "Toegevoegd door",
+                        "title": "Added by",
                         "maxLength": 255
                     },
                     "validFrom": {
@@ -3214,7 +3234,7 @@
                         "visible": true,
                         "order": 10,
                         "facetable": true,
-                        "title": "Geldig vanaf"
+                        "title": "Valid from"
                     },
                     "validUntil": {
                         "description": "Einddatum (inclusief) waarop de regel matched; null = onbeperkt.",
@@ -3224,7 +3244,7 @@
                         "visible": true,
                         "order": 11,
                         "facetable": true,
-                        "title": "Geldig tot"
+                        "title": "Valid until"
                     },
                     "active": {
                         "description": "Master kill-switch; alleen `active: true` regels matchen.",
@@ -3233,7 +3253,7 @@
                         "visible": true,
                         "order": 12,
                         "facetable": true,
-                        "title": "Actief",
+                        "title": "Active",
                         "default": true
                     },
                     "notes": {
@@ -3242,7 +3262,7 @@
                         "required": false,
                         "visible": true,
                         "order": 13,
-                        "title": "Notities",
+                        "title": "Notes",
                         "translatable": true
                     }
                 },

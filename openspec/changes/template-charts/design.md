@@ -1,5 +1,13 @@
 # Design: template-charts
 
+> **Descope note (this implementation wave):** D3 (office path) and the
+> `nc_image()` half of D2 are not built — D3 depends on the unbuilt
+> `office-template-authoring` REQ-DDOTA-003 pre-pass slot, and `nc_image()`
+> is not trivial enough to fit the reduced HTML/PDF-only scope this wave
+> covers (`chart()` + `data_table()` only). D5's raster fallback is
+> likewise descoped since it only applies to the (out-of-scope) office/odf
+> conversion paths. See `tasks.md` for the per-task breakdown.
+
 ## Context
 
 Verified current state (HEAD of this worktree):

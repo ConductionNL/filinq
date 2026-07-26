@@ -1753,6 +1753,19 @@ interface Folder extends Node
     public function search(string $query): array;
 
     public function searchByMime(string $mimetype): array;
+
+    /**
+     * Add a suffix to the name in case the file exists, mirroring
+     * OCP\Files\Folder::getNonExistingName() (added for
+     * document-output-destinations-and-bulk-retention's
+     * DocumentStorageService, which dedupes filenames via this platform
+     * helper).
+     *
+     * @param string $name The desired filename
+     *
+     * @return string A non-colliding filename
+     */
+    public function getNonExistingName(string $name): string;
 }//end interface
 
 

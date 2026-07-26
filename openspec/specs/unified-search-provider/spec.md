@@ -46,7 +46,7 @@ reference a schema that is not `searchable: true`.
 - WHEN the user types "Kapvergunning" in the Nextcloud global search bar
 - THEN the signing request appears under the OpenRegister objects provider labelled "Signing request"
 - AND activating it navigates to `/apps/docudesk/signing/{uuid}` and renders the request detail
-- @e2e tests/e2e/spec-coverage/unified-search-provider.spec.ts
+- @e2e exclude blocked upstream — OpenRegister's shared search provider ignores manifest deepLinks and returns the raw `/apps/openregister/api/objects/...` URL (ConductionNL/openregister#2060, live-verified 2026-07-24). Re-enable this scenario as a real e2e once that lands; asserting it today would either fail or have to assert the wrong URL.
 
 #### Scenario: Deep links cover exactly the searchable schemas
 
