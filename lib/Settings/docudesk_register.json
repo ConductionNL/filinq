@@ -457,7 +457,7 @@
                 "slug": "template",
                 "title": "Document Template",
                 "description": "Herbruikbare Twig/HTML templates voor PDF-generatie. Templates zijn gescoped per app via het namespace-veld.",
-                "version": "1.1.0",
+                "version": "1.2.0",
                 "summary": "",
                 "icon": "FileDocument",
                 "required": [
@@ -593,7 +593,8 @@
                 "configuration": {
                     "objectNameField": "name",
                     "objectDescriptionField": "description",
-                    "autoPublish": false
+                    "autoPublish": false,
+                    "x-openregister-shareable": true
                 },
                 "searchable": true
             },
