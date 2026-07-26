@@ -3,12 +3,30 @@
         "%n entities could not be fully removed. Check the file below before using it.": "%n entities could not be fully removed. Check the file below before using it.",
         "%n entities detected": "%n entities detected",
         "%n entities replaced": "%n entities replaced",
-        "%n entity": ["%n entity", "%n entities"],
-        "%n entity could not be fully removed. Check the file below before using it.": ["%n entity could not be fully removed. Check the file below before using it.", "%n entities could not be fully removed. Check the file below before using it."],
-        "%n entity detected": ["%n entity detected", "%n entities detected"],
-        "%n entity replaced": ["%n entity replaced", "%n entities replaced"],
-        "%n item anonymised": ["%n item anonymised", "%n items anonymised"],
-        "%n occurrence": ["%n occurrence", "%n occurrences"],
+        "%n entity": [
+            "%n entity",
+            "%n entities"
+        ],
+        "%n entity could not be fully removed. Check the file below before using it.": [
+            "%n entity could not be fully removed. Check the file below before using it.",
+            "%n entities could not be fully removed. Check the file below before using it."
+        ],
+        "%n entity detected": [
+            "%n entity detected",
+            "%n entities detected"
+        ],
+        "%n entity replaced": [
+            "%n entity replaced",
+            "%n entities replaced"
+        ],
+        "%n item anonymised": [
+            "%n item anonymised",
+            "%n items anonymised"
+        ],
+        "%n occurrence": [
+            "%n occurrence",
+            "%n occurrences"
+        ],
         "(no relation ids — grondslagen will not persist)": "(no relation ids — grondslagen will not persist)",
         "+ Add more files": "+ Add more files",
         "+ Select files": "+ Select files",
@@ -62,7 +80,10 @@
         "Anonymization": "Anonymization",
         "Anonymize": "Anonymize",
         "Anonymize %n entities": "Anonymize %n entities",
-        "Anonymize %n entity": ["Anonymize %n entity", "Anonymize %n entities"],
+        "Anonymize %n entity": [
+            "Anonymize %n entity",
+            "Anonymize %n entities"
+        ],
         "Anonymize all files ({count})": "Anonymize all files ({count})",
         "Anonymize document": "Anonymize document",
         "Anonymized": "Anonymized",
