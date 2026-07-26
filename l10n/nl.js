@@ -648,6 +648,7 @@ OC.L10N.register(
 		"Valid from": "Geldig vanaf",
 		"Version number": "Versienummer",
 		"Warnings": "Waarschuwingen",
+		"Branding Configuration": "Huisstijlconfiguratie",
 	},
 	"nplurals=2; plural=(n != 1);",
 )

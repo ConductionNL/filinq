@@ -833,7 +833,8 @@
         "User": "User",
         "Valid from": "Valid from",
         "Version number": "Version number",
-        "Warnings": "Warnings"
+        "Warnings": "Warnings",
+        "Branding Configuration": "Branding Configuration"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

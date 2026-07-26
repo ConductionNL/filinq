@@ -579,6 +579,7 @@ OC.L10N.register(
 		"Valid from": "Valid from",
 		"Version number": "Version number",
 		"Warnings": "Warnings",
+		"Branding Configuration": "Branding Configuration",
 	},
 	"nplurals=2; plural=(n != 1);",
 )
