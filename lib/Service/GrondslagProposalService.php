@@ -319,7 +319,16 @@ class GrondslagProposalService
                 $slug = (string) ($self['slug'] ?? '');
             }
 
-            $name = (string) ($base['name'] ?? '');
+            // Cast only scalars. An OpenRegister object property may legally be
+            // an array (multi-value / nested), and `(string) $array` emits a
+            // PHP "Array to string conversion" warning for EVERY such field.
+            // Measured 2026-07-28: a single object create produced 6,240 of
+            // these warnings (6,623 log lines total) because this runs on the
+            // OR object-write path — which made every
+            // `POST /apps/openregister/api/objects/...` hang fleet-wide and
+            // grew nextcloud.log without bound (cf. the 163GB log incident
+            // that filled the Docker disk and PANICked Postgres).
+            $name = self::asString($base['name'] ?? '');
             if ($slug === '' || $name === '') {
                 continue;
             }
@@ -327,7 +336,7 @@ class GrondslagProposalService
             $bases[] = [
                 'slug'        => $slug,
                 'name'        => $name,
-                'description' => (string) ($base['description'] ?? ''),
+                'description' => self::asString($base['description'] ?? ''),
             ];
         }//end foreach
 
@@ -512,6 +521,32 @@ class GrondslagProposalService
      * flattened via `jsonSerialize()`, which yields the `@self` + property
      * payload this service reads.
      *
+     * Coerce an OpenRegister property to a string without warning on arrays.
+     *
+     * OR object properties are `mixed`: a field may be a scalar, null, or an
+     * array (multi-value / nested object). A bare `(string) $value` cast on an
+     * array raises "Array to string conversion" — harmless-looking, but on the
+     * object-write path it fires once per field per object and buries the
+     * request (and the log) under thousands of warnings.
+     *
+     * @param mixed $value The raw property value.
+     *
+     * @return string The scalar rendering, or '' when the value is not scalar.
+     *
+     * @psalm-pure
+     */
+    private static function asString(mixed $value): string
+    {
+        if (is_scalar($value) === true) {
+            return (string) $value;
+        }
+
+        return '';
+
+    }//end asString()
+
+
+    /**
      * @param mixed $result The raw search result.
      *
      * @return array<int, array<string, mixed>> The list of object arrays.
