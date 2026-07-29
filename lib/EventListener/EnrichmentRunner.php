@@ -45,6 +45,13 @@ class EnrichmentRunner
     /**
      * Check if enrichment is enabled based on settings
      *
+     * Reads the three toggles ONLY. It must not call `getAllSettings()`: that
+     * assembles the admin-settings payload, including a walk of every register
+     * and every schema on the instance. This runs inside an unrelated app's
+     * object save, and that walk issued 1,471 `SchemaMapper::find()` calls per
+     * create — 96% of all schema reads during an OpenRegister create, measured
+     * 2026-07-29, on a code path whose entire job is to answer a boolean.
+     *
      * @param SettingsService $settingsService The settings service
      *
      * @return bool True if at least one enrichment feature is enabled
@@ -53,7 +60,7 @@ class EnrichmentRunner
      */
     public function isEnrichmentEnabled(SettingsService $settingsService): bool
     {
-        $settings       = $settingsService->getAllSettings();
+        $settings       = $settingsService->getFeatureToggles();
         $enableLanguage = $settings['enable_language_detection'] ?? true;
         $enableKeywords = $settings['enable_keyword_extraction'] ?? true;
         $enableTopic    = $settings['enable_topic_classification'] ?? true;

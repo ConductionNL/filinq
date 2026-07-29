@@ -206,6 +206,33 @@ class SettingsService
     }//end initialize()
 
     /**
+     * The feature toggles alone, without the rest of the settings payload.
+     *
+     * {@see getAllSettings()} assembles what the ADMIN SETTINGS PAGE needs:
+     * every available register with its schemas, the object-type
+     * configuration, OCR status and the grondslag selector data. That is
+     * correct for a settings screen and catastrophic on a write path — the
+     * register/schema discovery alone issued 1,471 `SchemaMapper::find()`
+     * calls (one per schema on the instance) when it was reached from
+     * {@see \OCA\DocuDesk\EventListener\EnrichmentRunner}, which runs inside
+     * an unrelated app's object save. Measured 2026-07-29: 96% of ALL schema
+     * reads during an OpenRegister object create originated there, and the
+     * create took 9-17s.
+     *
+     * Anything that only needs a toggle MUST call this instead. These are
+     * plain IAppConfig reads and touch no register or schema.
+     *
+     * @return array<string, mixed> Feature toggle settings.
+     *
+     * @spec openspec/specs/admin-settings/spec.md
+     */
+    public function getFeatureToggles(): array
+    {
+        return $this->loadFeatureToggles();
+
+    }//end getFeatureToggles()
+
+    /**
      * Load feature toggle settings from app config
      *
      * @return array<string, mixed> Feature toggle settings
