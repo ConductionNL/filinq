@@ -244,6 +244,22 @@ class SettingsInitializer
                 version: $settings['info']['version']
             );
 
+            // Persist the version we just imported. Nothing else writes this
+            // key — not this app, not OpenRegister — so without it
+            // `$currentVersion` above stays at its '0.0.0' default forever, the
+            // version gate can never close, and this import runs on EVERY
+            // request. It is reached from Application::boot(), so that is every
+            // request to the whole instance, not just DocuDesk's own.
+            //
+            // Measured 2026-07-29 on the dev instance, an OpenRegister object
+            // create: 354ms median with the key absent, 255ms with it set —
+            // ~100ms per request, ~28%, plus 14 schema lookups.
+            $this->config->setValueString(
+                $this->appName,
+                'configuration_version',
+                (string) $settings['info']['version']
+            );
+
             $results['configuration'] = true;
             $results['info'][]        = 'Configuration updated to version '.$settings['info']['version'];
         } catch (Exception $e) {
