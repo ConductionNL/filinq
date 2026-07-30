@@ -8,70 +8,70 @@
 		{
 			"id": "Dashboard",
 			"label": "Dashboard",
-			"icon": "icon-category-dashboard",
+			"icon": "ViewDashboardOutline",
 			"route": "Dashboard",
 			"order": 10
 		},
 		{
 			"id": "Consent",
 			"label": "Consent Management",
-			"icon": "icon-user",
+			"icon": "FileCheckOutline",
 			"route": "Consent",
 			"order": 20
 		},
 		{
 			"id": "Anonymization",
 			"label": "Anonymization",
-			"icon": "icon-password",
+			"icon": "EyeOffOutline",
 			"route": "Anonymization",
 			"order": 30
 		},
 		{
 			"id": "MyDocuments",
 			"label": "My Documents",
-			"icon": "icon-file",
+			"icon": "FileDocumentMultipleOutline",
 			"route": "MyDocuments",
 			"order": 35
 		},
 		{
 			"id": "FolderAnonymization",
 			"label": "Folder Analysis",
-			"icon": "icon-folder",
+			"icon": "FolderOutline",
 			"route": "FolderAnonymization",
 			"order": 40
 		},
 		{
 			"id": "Templates",
 			"label": "Templates",
-			"icon": "icon-files-dark",
+			"icon": "FileReplaceOutline",
 			"route": "Templates",
 			"order": 50
 		},
 		{
 			"id": "Correspondence",
 			"label": "Letters & correspondence",
-			"icon": "icon-mail",
+			"icon": "EmailOutline",
 			"route": "Correspondence",
 			"order": 55
 		},
 		{
 			"id": "SigningRequests",
 			"label": "Signing Requests",
-			"icon": "icon-rename",
+			"icon": "SignatureFreehand",
 			"route": "SigningRequests",
 			"order": 60
 		},
 		{
 			"id": "CustomDictionary",
 			"label": "Custom dictionaries",
-			"icon": "icon-category-organization",
+			"icon": "Domain",
 			"route": "CustomDictionary",
 			"order": 70
 		},
 		{
 			"id": "Documentation",
 			"label": "Documentation",
-			"icon": "icon-info",
+			"icon": "BookOpenVariantOutline",
 			"href": "https://docudesk.conduction.nl",
 			"section": "footer",
 			"order": 90
@@ -79,7 +79,7 @@
 		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
-			"icon": "icon-toggle",
+			"icon": "MapMarkerPath",
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 91
