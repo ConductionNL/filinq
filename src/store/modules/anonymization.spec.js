@@ -153,8 +153,15 @@ describe('anonymiseEntry — PATCH suppression when nothing changed', () => {
 		await store.anonymiseEntry(entry)
 
 		expect(axios.patch).toHaveBeenCalledTimes(1)
+		// Skips route through docudesk's OWN guarded endpoint since #164
+		// ("route skips through the guarded endpoint + lock prohibited
+		// entities", 2026-07-08) — it applies the prohibition guard before
+		// forwarding. This assertion still named OpenRegister's
+		// /api/entity-relations/{id}, which the store stopped calling here;
+		// it went unnoticed because the whole suite failed to load on an
+		// unrelated '@nextcloud/axios' resolution error.
 		expect(axios.patch).toHaveBeenCalledWith(
-			'/apps/openregister/api/entity-relations/101',
+			'/apps/docudesk/api/anonymization/relations/101',
 			{ bases: ['persoonsgegevens', 'strafrechtelijk'], skipAnonymization: false },
 		)
 		expect(axios.post).toHaveBeenCalledTimes(1)
