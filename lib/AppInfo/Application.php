@@ -23,6 +23,7 @@ use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCA\DocuDesk\Dashboard\AnonymizationWidget;
 use OCA\DocuDesk\Dashboard\FileEntitiesWidget;
 use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
@@ -121,22 +122,6 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ApprovalStepApprovedEvent::class, ApprovalStepListener::class);
         $context->registerEventListener(ApprovalStepRejectedEvent::class, ApprovalStepListener::class);
         $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
-
-        // Auto-regen dossier grondslagen summary when checkedOn is updated.
-        //
-        // Declares its register/schema interest at REGISTRATION time: the
-        // listener only ever acts on `docudesk`/`dossier` objects (see
-        // DossierCheckedOnListener::REGISTER / ::DOSSIER_SCHEMA), so an
-        // unrelated app's object write no longer constructs it at all. The
-        // in-handler `isDossierObject()` guard stays in place as defence in
-        // depth.
-        $this->registerFilteredObjectListener(
-            context: $context,
-            event: ObjectUpdatedEvent::class,
-            listener: DossierCheckedOnListener::class,
-            registers: ['docudesk'],
-            schemas: ['dossier']
-        );
 
         // Cross-app delegated-signing contract (docudesk-signing-events): any
         // installed consumer app (e.g. shillinq) dispatches
@@ -275,16 +260,26 @@ class Application extends App implements IBootstrap
      * degrades to the plain global registration it replaced, which is exactly
      * the behaviour every listener had before.
      *
-     * @param IRegistrationContext $context   Registration context.
-     * @param string               $event     OpenRegister event class name.
-     * @param string               $listener  Listener class name.
-     * @param array<int,string>    $registers Register slugs the listener reacts to.
-     * @param array<int,string>    $schemas   Schema slugs the listener reacts to.
+     * MUST be called from boot(), never from register(). Nextcloud enables each
+     * app's autoloader immediately before calling that app's own register()
+     * (`OC\AppFramework\Bootstrap\Coordinator::registerApps()`), so at register()
+     * time OpenRegister's classes are only autoloadable to apps that boot after
+     * it. DocuDesk is app 21 of 92 and OpenRegister is 52, so the class_exists()
+     * guard below was ALWAYS false here and this app silently fell back to an
+     * unfiltered registration — one of seven fleet conversions that looked
+     * successful while being inert. boot() runs only after every app's
+     * register() has completed, which makes the guard order-independent.
+     *
+     * @param IEventDispatcher  $dispatcher The live event dispatcher.
+     * @param string            $event      OpenRegister event class name.
+     * @param string            $listener   Listener class name.
+     * @param array<int,string> $registers  Register slugs the listener reacts to.
+     * @param array<int,string> $schemas    Schema slugs the listener reacts to.
      *
      * @return void
      */
     private function registerFilteredObjectListener(
-        IRegistrationContext $context,
+        IEventDispatcher $dispatcher,
         string $event,
         string $listener,
         array $registers,
@@ -292,8 +287,8 @@ class Application extends App implements IBootstrap
     ): void {
         $subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
         if (class_exists($subscription) === true) {
-            $subscription::register(
-                context: $context,
+            $subscription::subscribe(
+                dispatcher: $dispatcher,
                 event: $event,
                 listener: $listener,
                 registers: $registers,
@@ -302,7 +297,16 @@ class Application extends App implements IBootstrap
             return;
         }
 
-        $context->registerEventListener(event: $event, listener: $listener);
+        // Loud on purpose. This fallback is correct but UNFILTERED, and while it
+        // was silent it was indistinguishable from a working narrowing.
+        \OCP\Server::get(LoggerInterface::class)->warning(
+            'OpenRegister ObjectEventSubscription unavailable: '.$listener
+            .' fell back to an UNFILTERED registration for '.$event
+            .' and will be invoked on every object write instance-wide.',
+            ['app' => self::APP_ID]
+        );
+
+        $dispatcher->addServiceListener($event, $listener);
 
     }//end registerFilteredObjectListener()
 
@@ -380,6 +384,17 @@ class Application extends App implements IBootstrap
     public function boot(IBootContext $context): void
     {
         $container = $context->getServerContainer();
+
+        // Auto-regen dossier grondslagen summary when checkedOn is updated.
+        // Declared here rather than in register() so the OpenRegister guard is
+        // independent of this app's position in the bootstrap order.
+        $this->registerFilteredObjectListener(
+            dispatcher: $container->get(IEventDispatcher::class),
+            event: ObjectUpdatedEvent::class,
+            listener: DossierCheckedOnListener::class,
+            registers: ['docudesk'],
+            schemas: ['dossier']
+        );
 
         // Initialize OpenRegister configuration on boot.
         try {
