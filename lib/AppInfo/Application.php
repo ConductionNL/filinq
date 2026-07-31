@@ -100,6 +100,12 @@ class Application extends App implements IBootstrap
         // Register event listeners for OpenRegister events.
         // When documents are created/updated/deleted in OpenRegister,
         // DocuDesk will enrich metadata and manage consent tracking.
+        //
+        // Deliberately NOT narrowed to a register/schema set: DocuDeskEventHandler
+        // identifies its work by PAYLOAD SHAPE (`looksLikeDossier()`,
+        // `detectPolicyShape()`) rather than by schema, and EnrichmentRunner
+        // enriches metadata on EVERY object on the instance regardless of
+        // register. Declaring any slug list here would silently drop work.
         $context->registerEventListener(ObjectCreatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectUpdatedEvent::class, DocuDeskEventListener::class);
         $context->registerEventListener(ObjectDeletedEvent::class, DocuDeskEventListener::class);
@@ -117,7 +123,20 @@ class Application extends App implements IBootstrap
         $context->registerEventListener(ApprovalStepCompletedEvent::class, ApprovalStepListener::class);
 
         // Auto-regen dossier grondslagen summary when checkedOn is updated.
-        $context->registerEventListener(ObjectUpdatedEvent::class, DossierCheckedOnListener::class);
+        //
+        // Declares its register/schema interest at REGISTRATION time: the
+        // listener only ever acts on `docudesk`/`dossier` objects (see
+        // DossierCheckedOnListener::REGISTER / ::DOSSIER_SCHEMA), so an
+        // unrelated app's object write no longer constructs it at all. The
+        // in-handler `isDossierObject()` guard stays in place as defence in
+        // depth.
+        $this->registerFilteredObjectListener(
+            context: $context,
+            event: ObjectUpdatedEvent::class,
+            listener: DossierCheckedOnListener::class,
+            registers: ['docudesk'],
+            schemas: ['dossier']
+        );
 
         // Cross-app delegated-signing contract (docudesk-signing-events): any
         // installed consumer app (e.g. shillinq) dispatches
@@ -245,6 +264,47 @@ class Application extends App implements IBootstrap
             }
         );
     }//end register()
+
+    /**
+     * Register an object-lifecycle listener that declares its interest up front.
+     *
+     * OpenRegister's `ObjectEventSubscription` records the register/schema slugs
+     * a listener reacts to and routes dispatches through a single shared proxy,
+     * so an uninterested listener is neither constructed nor invoked. When
+     * OpenRegister is absent — DocuDesk carries no hard dependency on it — this
+     * degrades to the plain global registration it replaced, which is exactly
+     * the behaviour every listener had before.
+     *
+     * @param IRegistrationContext $context   Registration context.
+     * @param string               $event     OpenRegister event class name.
+     * @param string               $listener  Listener class name.
+     * @param array<int,string>    $registers Register slugs the listener reacts to.
+     * @param array<int,string>    $schemas   Schema slugs the listener reacts to.
+     *
+     * @return void
+     */
+    private function registerFilteredObjectListener(
+        IRegistrationContext $context,
+        string $event,
+        string $listener,
+        array $registers,
+        array $schemas
+    ): void {
+        $subscription = '\\OCA\\OpenRegister\\Event\\ObjectEventSubscription';
+        if (class_exists($subscription) === true) {
+            $subscription::register(
+                context: $context,
+                event: $event,
+                listener: $listener,
+                registers: $registers,
+                schemas: $schemas
+            );
+            return;
+        }
+
+        $context->registerEventListener(event: $event, listener: $listener);
+
+    }//end registerFilteredObjectListener()
 
     /**
      * Wire the AppHost-backed health + metrics controllers.
