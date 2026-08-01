@@ -40,14 +40,28 @@ test.describe('template-management — templates list UI', () => {
 
 	test('templates table shows the expected column headers', async ({ page }) => {
 		// @e2e openspec/specs/template-management/spec.md#list-templates-with-namespace-filter
+		//
+		// The columns are declared once, in src/manifest.json for the Templates
+		// page: `columns: ["name","category","format","namespace","description"]`.
+		// This asserts the rendered header row against exactly that list.
+		//
+		// It previously asserted a "Status" column, which the manifest has never
+		// declared and CnIndexPage therefore never rendered. That went unnoticed
+		// because the whole block sat behind `if (await table.isVisible())`: on
+		// Vue 2 the table did not render here, the condition was false, and the
+		// test passed by asserting NOTHING. The Vue 3 build renders the table, the
+		// guard stopped short-circuiting, and the stale expectation surfaced.
+		// The guard is now an assertion — a missing table is a failure, not a skip.
 		await go(page, 'templates')
 		const table = page.locator('#content table, .app-content table').first()
-		// Data-independent only if a table is present; if empty-state, skip header assert.
-		if (await table.isVisible().catch(() => false)) {
-			await expect(page.getByRole('columnheader', { name: 'Name', exact: true })).toBeVisible()
-			await expect(page.getByRole('columnheader', { name: 'Namespace', exact: true })).toBeVisible()
-			await expect(page.getByRole('columnheader', { name: 'Status', exact: true })).toBeVisible()
+		await expect(table).toBeVisible()
+
+		for (const name of ['Name', 'Category', 'Page format', 'Namespace', 'Description']) {
+			await expect(page.getByRole('columnheader', { name, exact: true })).toBeVisible()
 		}
+		// Nothing claims a Status column; assert its absence so the manifest and
+		// this spec cannot drift apart silently in either direction.
+		await expect(page.getByRole('columnheader', { name: 'Status', exact: true })).toHaveCount(0)
 	})
 
 	test('"New template" navigates to the template create/detail view', async ({ page }) => {
