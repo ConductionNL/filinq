@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    uses: Conduction/.github/.github/workflows/quality.yml@main
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: docudesk
       php-version: "8.3"
@@ -19,5 +19,12 @@ jobs:
       enable-phpmetrics: true
       enable-frontend: true
       enable-eslint: true
+      # `enable-frontend` only buys eslint + stylelint. The repo's own frontend
+      # suites are opt-in through `frontend-checks`, which was never set — so
+      # the 77-test Jest suite, the 45-test Vitest suite, the manifest schema
+      # validation and the l10n key check had NEVER executed on a pull request.
+      # Each entry becomes its own "Frontend Check (<script>)" job and must
+      # exist in package.json and be self-contained.
+      frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n"]'
       enable-phpunit: true
-      additional-apps: '[{"repo":"Conduction/openregister","app":"openregister","ref":"beta"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"beta"}]'
