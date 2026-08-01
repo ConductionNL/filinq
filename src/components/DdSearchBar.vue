@@ -28,7 +28,7 @@
  *
  * - v-model on the search query string.
  * - Optional clear button (X) when there is a value.
- * - Optional debounce on the emitted `input` event so consumers
+ * - Optional debounce on the emitted `update:modelValue` event so consumers
  *   are not hit on every keystroke.
  */
 import DdIcon from './DdIcon.vue'
@@ -36,13 +36,13 @@ import DdIcon from './DdIcon.vue'
 export default {
 	name: 'DdSearchBar',
 	components: { DdIcon },
-	model: {
-		prop: 'value',
-		event: 'input',
-	},
+	// Vue 3 removed the `model: { prop, event }` option. A plain `v-model`
+	// now always binds `modelValue` + `update:modelValue`, so the prop and
+	// the emit are renamed rather than remapped. All four call sites use a
+	// bare `v-model`, so they need no change.
 	props: {
 		/** Current search value (v-model). */
-		value: {
+		modelValue: {
 			type: String,
 			default: '',
 		},
@@ -72,9 +72,10 @@ export default {
 			default: 'Clear',
 		},
 	},
+	emits: ['update:modelValue'],
 	data() {
 		return {
-			localValue: this.value,
+			localValue: this.modelValue,
 			debounceTimer: null,
 		}
 	},
@@ -90,13 +91,13 @@ export default {
 		 *
 		 * @param {string} newValue New value coming from the parent.
 		 */
-		value(newValue) {
+		modelValue(newValue) {
 			if (newValue !== this.localValue) {
 				this.localValue = newValue
 			}
 		},
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.debounceTimer) {
 			clearTimeout(this.debounceTimer)
 		}
@@ -110,11 +111,11 @@ export default {
 				clearTimeout(this.debounceTimer)
 			}
 			if (!this.debounce) {
-				this.$emit('input', this.localValue)
+				this.$emit('update:modelValue', this.localValue)
 				return
 			}
 			this.debounceTimer = setTimeout(() => {
-				this.$emit('input', this.localValue)
+				this.$emit('update:modelValue', this.localValue)
 			}, this.debounce)
 		},
 		/**
@@ -127,7 +128,7 @@ export default {
 				this.debounceTimer = null
 			}
 			this.localValue = ''
-			this.$emit('input', '')
+			this.$emit('update:modelValue', '')
 			this.$nextTick(() => {
 				this.$refs.input?.focus?.()
 			})

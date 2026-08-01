@@ -12,7 +12,7 @@
 					:placeholder="t('docudesk', 'e.g. Documents/contracts')"
 					class="folder-path-input"
 					@keyup.enter="startAnalysis">
-				<NcButton type="primary" :disabled="!folderPath.trim() || store.processing" @click="startAnalysis">
+				<NcButton variant="primary" :disabled="!folderPath.trim() || store.processing" @click="startAnalysis">
 					{{ store.processing ? t('docudesk', 'Starting...') : t('docudesk', 'Analyze Folder') }}
 				</NcButton>
 			</div>
@@ -53,7 +53,7 @@
 					</label>
 				</div>
 				<div class="row">
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="store.dossier.creating || !store.folderId"
 						@click="store.createDossier()">
 						{{ store.dossier.creating ? t('docudesk', 'Creating dossier…') : t('docudesk', 'Create dossier for this folder') }}
@@ -121,10 +121,10 @@
 				{{ t('docudesk', 'This folder is anonymised as one dossier: the same person keeps the same placeholder number ([PERSON: 1], …) across every file. You MUST publish the result as a single publication/dossier — do NOT split these files into separate publications, or the shared numbers would let readers re-link a person across them.') }}
 			</NcNoteCard>
 			<div class="action-bar">
-				<NcButton type="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeFolder()">
+				<NcButton variant="primary" :disabled="store.selectedEntityCount === 0" @click="store.anonymizeFolder()">
 					{{ n('docudesk', 'Anonymize %n entity', 'Anonymize %n entities', store.selectedEntityCount) }}
 				</NcButton>
-				<NcButton type="tertiary" @click="store.reset()">
+				<NcButton variant="tertiary" @click="store.reset()">
 					{{ t('docudesk', 'Cancel') }}
 				</NcButton>
 			</div>
@@ -149,7 +149,7 @@
 					{{ t('docudesk', 'Regenerates grondslagen.pdf at the dossier root, aggregating every anonymised file under this dossier.') }}
 				</p>
 				<div class="action-bar">
-					<NcButton type="secondary"
+					<NcButton variant="secondary"
 						:disabled="store.report.generating"
 						@click="store.generateDossierReport()">
 						{{ store.report.generating ? t('docudesk', 'Generating…') : t('docudesk', 'Generate dossier grondslagen report') }}
@@ -174,7 +174,7 @@
 					would return HTTP 409 / empty. It comes back once per-file results
 					are written back to the batch record (or a client-side summary is built).
 				-->
-				<NcButton type="primary" @click="store.reset()">
+				<NcButton variant="primary" @click="store.reset()">
 					{{ t('docudesk', 'Analyze Another Folder') }}
 				</NcButton>
 			</div>
@@ -185,7 +185,7 @@
 			<NcNoteCard type="error">
 				{{ store.error || t('docudesk', 'An error occurred') }}
 			</NcNoteCard>
-			<NcButton type="primary" @click="store.reset()">
+			<NcButton variant="primary" @click="store.reset()">
 				{{ t('docudesk', 'Try Again') }}
 			</NcButton>
 		</div>
@@ -228,7 +228,7 @@ export default {
 		// see the store's getReportUrl() note. Comes back when the batch report
 		// is wired to the per-file anonymisation results.
 		// downloadReport() {
-		// 	window.open(folderAnonymizationStore.getReportUrl(), '_blank')
+		//     window.open(folderAnonymizationStore.getReportUrl(), '_blank')
 		// },
 	},
 }

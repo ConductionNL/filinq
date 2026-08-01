@@ -123,7 +123,7 @@ export default {
 			this.scheduleHighlights()
 		},
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		if (this.pdfDoc) {
 			this.pdfDoc.destroy()
 			this.pdfDoc = null
@@ -319,17 +319,28 @@ export default {
 .pdf-viewer__canvas {
 	display: block;
 }
-</style>
 
-<style>
 /*
- * Unscoped: pdfjs writes its text-layer spans into our container without our
- * scope hash. These rules mirror the parts of pdfjs' own pdf_viewer.css that
- * the v5 TextLayer relies on — the spans are laid out via CSS custom
- * properties (font-size derived from --font-height, transform from --scale-x /
+ * pdfjs builds the whole text layer at runtime (renderPage() creates
+ * `.pdf-viewer__text-layer` with document.createElement and appends it to the
+ * page wrapper), so none of those nodes carry this component's scope hash and
+ * a plain scoped selector cannot reach them. Everything below is therefore
+ * anchored on `.pdf-viewer__page` — which IS a template element and does carry
+ * the hash — and wrapped in `:deep()`.
+ *
+ * This block used to live in a second, unscoped <style> tag. That leaked every
+ * rule below into the whole page: `.pdf-viewer__text-layer ::selection` in
+ * particular is not namespaced by anything Vue enforces, and an unscoped
+ * `::selection` rule applies wherever a matching ancestor exists. Scoping it
+ * confines the rules to this component, which is what the app's
+ * `vue/enforce-style-attribute` rule exists to guarantee.
+ *
+ * The rules mirror the parts of pdfjs' own pdf_viewer.css that the v5
+ * TextLayer relies on — the spans are laid out via CSS custom properties
+ * (font-size derived from --font-height, transform from --scale-x /
  * --rotate), so they stay invisible-but-selectable on top of the canvas.
  */
-.pdf-viewer__text-layer {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer) {
 	position: absolute;
 	inset: 0;
 	overflow: hidden;
@@ -344,7 +355,7 @@ export default {
 	--min-font-size-inv: calc(1 / var(--min-font-size));
 }
 
-.pdf-viewer__text-layer :is(span, br) {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer :is(span, br)) {
 	color: transparent;
 	position: absolute;
 	white-space: pre;
@@ -352,8 +363,8 @@ export default {
 	transform-origin: 0% 0%;
 }
 
-.pdf-viewer__text-layer > :not(.markedContent),
-.pdf-viewer__text-layer .markedContent span:not(.markedContent) {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer > :not(.markedContent)),
+.pdf-viewer__page :deep(.pdf-viewer__text-layer .markedContent span:not(.markedContent)) {
 	z-index: 1;
 	--font-height: 0;
 	font-size: calc(var(--text-scale-factor) * var(--font-height));
@@ -362,7 +373,7 @@ export default {
 	transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
 }
 
-.pdf-viewer__text-layer .markedContent {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer .markedContent) {
 	display: contents;
 }
 
@@ -386,7 +397,7 @@ export default {
  * the line so following text renders behind them. Forcing them back to a plain
  * inline box lets them flow normally while the parent run keeps its transform.
  */
-.pdf-viewer__text-layer .dd-hl {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer .dd-hl) {
 	position: static;
 	font-size: inherit;
 	transform: none;
@@ -403,7 +414,7 @@ export default {
  * canvas. Forcing the selected colour transparent leaves only the selection
  * background, so the canvas glyphs stay the single source of visible text.
  */
-.pdf-viewer__text-layer ::selection {
+.pdf-viewer__page :deep(.pdf-viewer__text-layer ::selection) {
 	color: transparent;
 	background: rgba(0, 100, 255, 0.4);
 }

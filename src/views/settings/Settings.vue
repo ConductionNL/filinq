@@ -39,9 +39,9 @@
 					{{ t('docudesk', 'Show anonymiser backend warning') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="false"
+					:model-value="false"
 					type="switch"
-					@update:checked="resetAnonymiserWarning" />
+					@update:modelValue="resetAnonymiserWarning" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Re-enable the anonymiser backend warning banner. It was previously dismissed and will appear again on the next page load.') }}
 				</div>
@@ -52,27 +52,27 @@
 					{{ t('docudesk', 'Default output format for anonymised documents') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings['docudesk.anonymisation.default_output_format']"
+					:model-value="settings['docudesk.anonymisation.default_output_format']"
 					value="pdf-only"
 					name="anonymisation_output_format"
 					type="radio"
-					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					@update:modelValue="settings['docudesk.anonymisation.default_output_format'] = $event">
 					{{ t('docudesk', 'PDF only — delete the native anonymised file (recommended)') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:checked="settings['docudesk.anonymisation.default_output_format']"
+					:model-value="settings['docudesk.anonymisation.default_output_format']"
 					value="pdf"
 					name="anonymisation_output_format"
 					type="radio"
-					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					@update:modelValue="settings['docudesk.anonymisation.default_output_format'] = $event">
 					{{ t('docudesk', 'PDF and native file — keep both') }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
-					:checked="settings['docudesk.anonymisation.default_output_format']"
+					:model-value="settings['docudesk.anonymisation.default_output_format']"
 					value="preserve"
 					name="anonymisation_output_format"
 					type="radio"
-					@update:checked="settings['docudesk.anonymisation.default_output_format'] = $event">
+					@update:modelValue="settings['docudesk.anonymisation.default_output_format'] = $event">
 					{{ t('docudesk', 'Native format only — no PDF conversion') }}
 				</NcCheckboxRadioSwitch>
 				<div class="setting-description">
@@ -101,10 +101,10 @@
 						:options="grondslagBaseOptions"
 						:multiple="true"
 						:close-on-select="false"
-						:value="selectedBasesFor(entityType)"
+						:model-value="selectedBasesFor(entityType)"
 						:input-label="t('docudesk', 'Proposed legal basis')"
 						:placeholder="t('docudesk', 'No proposal')"
-						@input="onBasesChange(entityType, $event)" />
+						@update:modelValue="onBasesChange(entityType, $event)" />
 				</div>
 			</div>
 		</NcSettingsSection>
@@ -125,9 +125,9 @@
 					{{ t('docudesk', 'Language Detection') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings.enable_language_detection"
+					:model-value="settings.enable_language_detection"
 					type="switch"
-					@update:checked="settings.enable_language_detection = $event" />
+					@update:modelValue="settings.enable_language_detection = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Automatically detect the language of documents') }}
 				</div>
@@ -138,9 +138,9 @@
 					{{ t('docudesk', 'Keyword Extraction') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings.enable_keyword_extraction"
+					:model-value="settings.enable_keyword_extraction"
 					type="switch"
-					@update:checked="settings.enable_keyword_extraction = $event" />
+					@update:modelValue="settings.enable_keyword_extraction = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Automatically extract keywords from document content') }}
 				</div>
@@ -151,9 +151,9 @@
 					{{ t('docudesk', 'Topic Classification') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings.enable_topic_classification"
+					:model-value="settings.enable_topic_classification"
 					type="switch"
-					@update:checked="settings.enable_topic_classification = $event" />
+					@update:modelValue="settings.enable_topic_classification = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Automatically classify documents by topic') }}
 				</div>
@@ -181,9 +181,9 @@
 					{{ t('docudesk', 'Enable OCR') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings.ocr_enabled"
+					:model-value="settings.ocr_enabled"
 					type="switch"
-					@update:checked="settings.ocr_enabled = $event" />
+					@update:modelValue="settings.ocr_enabled = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Automatically extract text from scanned documents and images using Tesseract OCR') }}
 				</div>
@@ -196,23 +196,23 @@
 				</div>
 				<div class="ocr-languages">
 					<NcCheckboxRadioSwitch
-						:checked="ocrLanguages.nld"
-						@update:checked="ocrLanguages.nld = $event">
+						:model-value="ocrLanguages.nld"
+						@update:modelValue="ocrLanguages.nld = $event">
 						{{ t('docudesk', 'Dutch (nld)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:checked="ocrLanguages.eng"
-						@update:checked="ocrLanguages.eng = $event">
+						:model-value="ocrLanguages.eng"
+						@update:modelValue="ocrLanguages.eng = $event">
 						{{ t('docudesk', 'English (eng)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:checked="ocrLanguages.deu"
-						@update:checked="ocrLanguages.deu = $event">
+						:model-value="ocrLanguages.deu"
+						@update:modelValue="ocrLanguages.deu = $event">
 						{{ t('docudesk', 'German (deu)') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
-						:checked="ocrLanguages.fra"
-						@update:checked="ocrLanguages.fra = $event">
+						:model-value="ocrLanguages.fra"
+						@update:modelValue="ocrLanguages.fra = $event">
 						{{ t('docudesk', 'French (fra)') }}
 					</NcCheckboxRadioSwitch>
 				</div>
@@ -252,9 +252,9 @@
 					{{ t('docudesk', 'Prioritise higher-confidentiality files in batch/folder analysis') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings['docudesk.confidentiality.prioritise_analysis']"
+					:model-value="settings['docudesk.confidentiality.prioritise_analysis']"
 					type="switch"
-					@update:checked="settings['docudesk.confidentiality.prioritise_analysis'] = $event" />
+					@update:modelValue="settings['docudesk.confidentiality.prioritise_analysis'] = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Off by default. When enabled, files with a higher confidentiality label are analysed sooner — a suggestion only, it never skips, blocks or redacts files.') }}
 				</div>
@@ -287,7 +287,7 @@
 					<NcNoteCard type="info">
 						{{ t('docudesk', 'Open Registers is not installed. It is required for DocuDesk to function properly.') }}
 					</NcNoteCard>
-					<NcButton type="primary" @click="openLink('/index.php/settings/apps/organization/openregister', '_blank')">
+					<NcButton variant="primary" @click="openLink('/index.php/settings/apps/organization/openregister', '_blank')">
 						<template #icon>
 							<Restart :size="20" />
 						</template>
@@ -304,7 +304,7 @@
 							:input-label="t('docudesk', 'Register')"
 							:loading="sections[type].loading"
 							:disabled="loading || sections[type].loading"
-							@input="onRegisterChange(type)" />
+							@update:modelValue="onRegisterChange(type)" />
 
 						<NcSelect
 							v-if="sections[type].selectedRegister?.value"
@@ -315,7 +315,7 @@
 							:disabled="loading || sections[type].loading" />
 
 						<NcButton
-							type="primary"
+							variant="primary"
 							:disabled="loading || saving ||
 								sections[type].loading ||
 								!sections[type].selectedRegister?.value ||
@@ -346,9 +346,9 @@
 					{{ t('docudesk', 'Enable Digital Signing') }}
 				</div>
 				<NcCheckboxRadioSwitch
-					:checked="settings.signing_enabled"
+					:model-value="settings.signing_enabled"
 					type="switch"
-					@update:checked="settings.signing_enabled = $event" />
+					@update:modelValue="settings.signing_enabled = $event" />
 				<div class="setting-description">
 					{{ t('docudesk', 'Allow users to create and manage digital signing requests') }}
 				</div>
@@ -431,7 +431,7 @@
 					<NcNoteCard type="info">
 						{{ t('docudesk', 'The verantwoordelijke (controller) identity for the Art. 30 register is maintained centrally in OpenRegister. If it has not been configured, the export still succeeds with identity fields rendered as "not configured". Configure it once in OpenRegister to have it appear on every export.') }}
 					</NcNoteCard>
-					<NcButton type="secondary" @click="openLink('/index.php/settings/admin/openregister', '_blank')">
+					<NcButton variant="secondary" @click="openLink('/index.php/settings/admin/openregister', '_blank')">
 						<template #icon>
 							<OpenInNew :size="20" />
 						</template>
@@ -465,13 +465,13 @@
 						{{ t('docudesk', 'The Art. 30 export and per-subject (betrokkene) inzage extract are produced by OpenRegister, scoped to DocuDesk\'s registers, and never contain literal personal data beyond what the data subject is entitled to. Access is restricted to administrators and the privacy officer (FG) group; non-admins are denied.') }}
 					</div>
 					<div class="processing-export-actions">
-						<NcButton type="primary" @click="openProcessingExport">
+						<NcButton variant="primary" @click="openProcessingExport">
 							<template #icon>
 								<FileExportOutline :size="20" />
 							</template>
 							{{ t('docudesk', 'Open processing-activity log in OpenRegister') }}
 						</NcButton>
-						<NcButton type="secondary" @click="openLink('/index.php/apps/openregister/api/avg/verwerkingen/betrokkene', '_blank')">
+						<NcButton variant="secondary" @click="openLink('/index.php/apps/openregister/api/avg/verwerkingen/betrokkene', '_blank')">
 							<template #icon>
 								<AccountSearchOutline :size="20" />
 							</template>
@@ -486,7 +486,7 @@
 		</NcSettingsSection>
 
 		<div class="button-container">
-			<NcButton type="primary" :disabled="saving" @click="saveAll">
+			<NcButton variant="primary" :disabled="saving" @click="saveAll">
 				<template #icon>
 					<NcLoadingIcon v-if="saving" :size="20" />
 					<Plus v-else :size="20" />

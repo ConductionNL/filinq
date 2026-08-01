@@ -3,8 +3,7 @@
 		:type="type"
 		class="dd-button"
 		:class="`dd-button--${variant}`"
-		v-bind="$attrs"
-		v-on="$listeners">
+		v-bind="$attrs">
 		<DdIcon
 			v-if="icon"
 			:name="icon"
@@ -31,7 +30,9 @@ import DdIcon from './DdIcon.vue'
  * share the same total height. An optional leading icon (resolved by
  * name through `DdIcon`) sits left of the label. All native attributes
  * and listeners (e.g. `disabled`, `@click`) are forwarded to the
- * underlying `<button>`.
+ * underlying `<button>` — in Vue 3 listeners arrive as `onClick`-style
+ * keys inside `$attrs`, so `v-bind="$attrs"` alone carries both and the
+ * old companion `v-on="$listeners"` would be a no-op.
  *
  * Usage:
  *   <DdButton variant="primary" :label="t('docudesk', 'Anonymize')" @click="run" />

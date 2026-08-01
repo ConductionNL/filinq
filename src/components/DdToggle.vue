@@ -32,13 +32,14 @@
  *
  * Usage:
  *   <DdToggle :checked="on" @update:checked="on = $event">Label</DdToggle>
+ *   <DdToggle v-model:checked="on">Label</DdToggle>
  */
 export default {
 	name: 'DdToggle',
-	model: {
-		prop: 'checked',
-		event: 'update:checked',
-	},
+	// Vue 3 removed `model: { prop, event }`. The prop/event pair is kept as
+	// `checked` / `update:checked` — that is the documented API and what the
+	// only call site uses — which in Vue 3 is spelled `v-model:checked` when
+	// two-way binding is wanted.
 	props: {
 		/** Whether the switch is on. */
 		checked: {
@@ -56,6 +57,7 @@ export default {
 			default: false,
 		},
 	},
+	emits: ['update:checked'],
 }
 </script>
 

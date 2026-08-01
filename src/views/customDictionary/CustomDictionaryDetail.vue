@@ -9,7 +9,7 @@
 <template>
 	<div class="custom-dictionary-detail">
 		<div class="custom-dictionary-detail__header">
-			<NcButton type="tertiary" @click="handleBack">
+			<NcButton variant="tertiary" @click="handleBack">
 				{{ t('docudesk', 'Back to custom dictionaries') }}
 			</NcButton>
 			<h2 class="custom-dictionary-detail__title">
@@ -17,7 +17,7 @@
 				{{ displayValue(dictionary.label, t('docudesk', 'Custom dictionary')) }}
 			</h2>
 			<div class="custom-dictionary-detail__header-actions">
-				<NcButton type="secondary" @click="openEditDialog">
+				<NcButton variant="secondary" @click="openEditDialog">
 					{{ t('docudesk', 'Edit') }}
 				</NcButton>
 			</div>
@@ -47,7 +47,7 @@
 				<div class="custom-dictionary-detail__terms-header">
 					<h3>{{ t('docudesk', 'Terms') }}</h3>
 					<div class="custom-dictionary-detail__terms-actions">
-						<NcButton type="secondary" @click="importDialogOpen = true">
+						<NcButton variant="secondary" @click="importDialogOpen = true">
 							{{ t('docudesk', 'Import…') }}
 						</NcButton>
 					</div>
@@ -55,14 +55,14 @@
 
 				<div class="custom-dictionary-detail__add-term">
 					<NcTextField
-						:value.sync="newTermValue"
+						v-model="newTermValue"
 						:label="t('docudesk', 'New term value')"
 						:placeholder="t('docudesk', 'e.g. Operatie Zilverreiger')"
-						@keyup.enter.native="addTerm" />
+						@keyup.enter="addTerm" />
 					<NcTextField
-						:value.sync="newTermLabel"
+						v-model="newTermLabel"
 						:label="t('docudesk', 'Display label (optional)')" />
-					<NcButton type="primary" :disabled="!newTermValue.trim() || addingTerm" @click="addTerm">
+					<NcButton variant="primary" :disabled="!newTermValue.trim() || addingTerm" @click="addTerm">
 						{{ t('docudesk', 'Add term') }}
 					</NcButton>
 				</div>
@@ -84,7 +84,7 @@
 							<td>{{ term.value }}</td>
 							<td>{{ displayValue(term.label, '-') }}</td>
 							<td>
-								<NcButton type="tertiary" @click="removeTerm(term)">
+								<NcButton variant="tertiary" @click="removeTerm(term)">
 									<template #icon>
 										<Delete :size="20" />
 									</template>

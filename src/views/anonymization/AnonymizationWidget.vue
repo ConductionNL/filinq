@@ -73,7 +73,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 				<template v-else>
 					<NcTextField
 						ref="dossierInput"
-						:value.sync="dossierName"
+						v-model="dossierName"
 						:label="t('docudesk', 'Dossier name')"
 						:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
 						:disabled="dossierSubmitting"
@@ -87,8 +87,8 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 
 				<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
 				<NcCheckboxRadioSwitch
+					v-model="grondslagen"
 					type="switch"
-					:checked.sync="grondslagen"
 					:disabled="dossierSubmitting">
 					{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
 				</NcCheckboxRadioSwitch>
@@ -97,10 +97,10 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 				</NcNoteCard>
 			</div>
 			<template #actions>
-				<NcButton type="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
+				<NcButton variant="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
 					{{ t('docudesk', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="dossierSubmitting" @click="confirmDossier">
+				<NcButton variant="primary" :disabled="dossierSubmitting" @click="confirmDossier">
 					<template v-if="dossierSubmitting" #icon>
 						<NcLoadingIcon :size="18" />
 					</template>

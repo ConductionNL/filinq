@@ -9,7 +9,7 @@
 				     the sidebar attaches the anonymised variant via `setAnonymizedVariant`. -->
 				<NcButton
 					v-if="canToggleAnonymized"
-					type="secondary"
+					variant="secondary"
 					:disabled="!fileViewerStore.canToggleVariant"
 					:title="toggleTitle"
 					@click="fileViewerStore.toggleAnonymized()">
@@ -30,7 +30,7 @@
 			<div v-else-if="fileViewerStore.currentFile" class="file-viewer-page__unsupported">
 				<FileAlertOutline :size="48" />
 				<p>{{ t('docudesk', 'This file type cannot be previewed.') }}</p>
-				<NcButton type="primary" @click="downloadCurrent">
+				<NcButton variant="primary" @click="downloadCurrent">
 					<template #icon>
 						<Download :size="18" />
 					</template>

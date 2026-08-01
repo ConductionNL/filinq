@@ -17,7 +17,7 @@ import { consentStore } from '../../store/store.js'
 		] : []">
 		<!-- Back button in header -->
 		<template #header-actions>
-			<NcButton type="tertiary" @click="goBack">
+			<NcButton variant="tertiary" @click="goBack">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
@@ -68,7 +68,7 @@ import { consentStore } from '../../store/store.js'
 					v-model="anonymiseToggle"
 					type="switch"
 					:disabled="toggleLocked"
-					@update:checked="onToggleAnonymise">
+					@update:modelValue="onToggleAnonymise">
 					{{ t('docudesk', 'Anonymise this entity in the published document') }}
 				</NcCheckboxRadioSwitch>
 				<p v-if="policyMatchKind === 'prohibition'" class="toggle-note toggle-note-locked">
@@ -159,7 +159,7 @@ import { consentStore } from '../../store/store.js'
 
 		<!-- Save button -->
 		<div v-if="consentStore.consentItem" class="detail-actions">
-			<NcButton type="primary" :disabled="consentStore.loading" @click="saveChanges">
+			<NcButton variant="primary" :disabled="consentStore.loading" @click="saveChanges">
 				<template #icon>
 					<NcLoadingIcon v-if="consentStore.loading" :size="20" />
 					<ContentSave v-else :size="20" />

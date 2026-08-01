@@ -5,7 +5,7 @@
 		<NcEmptyContent v-else-if="pending.length === 0"
 			:name="t('docudesk', 'No pending signing requests')" />
 		<template v-else>
-			<NcButton type="primary" :disabled="selected.length === 0" @click="bulkSign">
+			<NcButton variant="primary" :disabled="selected.length === 0" @click="bulkSign">
 				{{ t('docudesk', 'Sign Selected') }} ({{ selected.length }})
 			</NcButton>
 			<table class="bulk-table">

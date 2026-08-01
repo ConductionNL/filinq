@@ -37,7 +37,7 @@ SPDX-License-Identifier: EUPL-1.2
 				</ul>
 				<div class="anonymiser-backend-warning__actions">
 					<NcButton
-						type="tertiary"
+						variant="tertiary"
 						@click="dismissWarning">
 						{{ t('docudesk', 'Dismiss') }}
 					</NcButton>

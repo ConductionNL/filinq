@@ -58,7 +58,7 @@ export default {
 			<NcButton @click="close">
 				{{ t('docudesk', 'Keep anonymised') }}
 			</NcButton>
-			<NcButton v-if="releasable" type="warning" @click="confirmForce">
+			<NcButton v-if="releasable" variant="warning" @click="confirmForce">
 				{{ t('docudesk', 'Skip anyway (force)') }}
 			</NcButton>
 		</template>

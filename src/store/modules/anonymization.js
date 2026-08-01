@@ -1275,6 +1275,7 @@ export const useAnonymizationStore = defineStore(
 			 *
 			 * @param {object} entry Queue entry that owns the entity.
 			 * @param {number} idx Index of the entity in `entry.entities`.
+			 * @param {boolean} force Release a sub-threshold prohibition match.
 			 * @return {void}
 			 */
 			async toggleEntity(entry, idx, force = false) {
@@ -1336,6 +1337,7 @@ export const useAnonymizationStore = defineStore(
 			 * @param {object} entry Queue entry that owns the entity.
 			 * @param {number} idx Index of the entity in `entry.entities`.
 			 * @param {boolean} skip New skip state.
+			 * @param {boolean} force Release a sub-threshold prohibition match.
 			 * @return {void}
 			 */
 			async setEntitySkip(entry, idx, skip, force = false) {
@@ -1355,6 +1357,11 @@ export const useAnonymizationStore = defineStore(
 			 *
 			 * @param {object} entity The entity row (mutated on success).
 			 * @param {object} opts Decision: { skip, bases?, force? }.
+			 * @param {boolean} opts.skip Whether the entity is skipped (excluded
+			 * from the document mutation).
+			 * @param {Array<string>} [opts.bases] Legal grounds to persist alongside
+			 * the decision; omitted leaves the stored grounds untouched.
+			 * @param {boolean} [opts.force] Release a sub-threshold prohibition match.
 			 * @return {Promise<{ok: boolean, status: number, body: object}>}
 			 */
 			async _persistEntityDecision(entity, { skip, bases = undefined, force = false }) {
@@ -1389,6 +1396,8 @@ export const useAnonymizationStore = defineStore(
 			 * @param {number} relationId The EntityRelation id.
 			 * @param {boolean} skip Whether to skip (true) or include (false).
 			 * @param {boolean} force Release a sub-threshold prohibition match.
+			 * @param {Array<string>} [bases] Legal grounds to send with the PATCH;
+			 * omitted leaves the stored grounds untouched.
 			 * @return {Promise<{ok: boolean, status: number, body: object}>}
 			 */
 			async setRelationSkip(relationId, skip, force = false, bases = undefined) {
