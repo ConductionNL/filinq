@@ -19,10 +19,10 @@ import singleFileIcon from '../assets/single-file.png'
 		<NcCheckboxRadioSwitch
 			v-if="selectable"
 			class="dd-document-card__select"
-			:checked="selected"
+			:model-value="selected"
 			:aria-label="t('docudesk', 'Select')"
-			@update:checked="$emit('toggle-select', item)"
-			@click.native.stop />
+			@update:modelValue="$emit('toggle-select', item)"
+			@click.stop />
 		<figure class="dd-document-card__icon">
 			<img
 				:src="iconSrc"

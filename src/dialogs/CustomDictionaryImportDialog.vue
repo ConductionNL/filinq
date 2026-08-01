@@ -98,10 +98,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton type="tertiary" @click="onClose">
+			<NcButton variant="tertiary" @click="onClose">
 				{{ t('docudesk', 'Close') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="importing || !canSubmit" @click="submit">
+			<NcButton variant="primary" :disabled="importing || !canSubmit" @click="submit">
 				<template v-if="importing" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

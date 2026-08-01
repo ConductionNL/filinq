@@ -2,7 +2,7 @@
 	<div class="template-detail">
 		<!-- Header bar -->
 		<div class="template-detail__header">
-			<NcButton type="tertiary" @click="handleBack">
+			<NcButton variant="tertiary" @click="handleBack">
 				{{ t('docudesk', 'Back to templates') }}
 			</NcButton>
 			<h2 class="template-detail__title">
@@ -12,10 +12,10 @@
 				<span v-if="lockOwner && !isLockMine" class="template-detail__lock-warning">
 					{{ t('docudesk', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
-				<NcButton type="secondary" :disabled="saving" @click="handleBack">
+				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
 					{{ t('docudesk', 'Cancel') }}
 				</NcButton>
-				<NcButton type="primary" :disabled="saving || (lockOwner && !isLockMine)" @click="saveTemplate">
+				<NcButton variant="primary" :disabled="saving || (lockOwner && !isLockMine)" @click="saveTemplate">
 					{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Save') }}
 				</NcButton>
 			</div>
@@ -42,27 +42,27 @@
 		<div v-if="activeTab === 'edit'" class="template-detail__editor-panel">
 			<!-- Metadata fields -->
 			<div class="template-detail__meta">
-				<NcTextField :value.sync="form.name"
+				<NcTextField v-model="form.name"
 					:label="t('docudesk', 'Name')"
 					:required="true"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.namespace"
+				<NcTextField v-model="form.namespace"
 					:label="t('docudesk', 'Namespace')"
 					:required="true"
 					:disabled="!isNew"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.category"
+				<NcTextField v-model="form.category"
 					:label="t('docudesk', 'Category')"
 					:placeholder="t('docudesk', 'e.g. beschikkingen, brieven')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.tagsInput"
+				<NcTextField v-model="form.tagsInput"
 					:label="t('docudesk', 'Tags (comma-separated)')"
 					:placeholder="t('docudesk', 'tag1, tag2, tag3')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.description"
+				<NcTextField v-model="form.description"
 					:label="t('docudesk', 'Description')"
 					class="template-detail__field" />
-				<NcTextField :value.sync="form.changelog"
+				<NcTextField v-model="form.changelog"
 					:label="t('docudesk', 'Change note (optional)')"
 					:placeholder="t('docudesk', 'Describe what changed...')"
 					class="template-detail__field" />
@@ -156,12 +156,12 @@
 		<div v-else-if="activeTab === 'preview'" class="template-detail__preview-panel">
 			<div class="template-detail__preview-header">
 				<h3>{{ t('docudesk', 'Preview') }}</h3>
-				<NcButton type="secondary" @click="loadPreview">
+				<NcButton variant="secondary" @click="loadPreview">
 					{{ t('docudesk', 'Refresh preview') }}
 				</NcButton>
 			</div>
 			<div class="template-detail__sample-data">
-				<NcTextField :value.sync="sampleDataJson"
+				<NcTextField v-model="sampleDataJson"
 					:label="t('docudesk', 'Sample data (JSON)')"
 					:placeholder="'{ &quot;name&quot;: &quot;Jan de Vries&quot; }'"
 					class="template-detail__field" />
@@ -201,7 +201,7 @@
 						<td>{{ ver.editor }}</td>
 						<td>{{ ver.changelog || '-' }}</td>
 						<td>
-							<NcButton type="tertiary" @click="restoreVersion(ver)">
+							<NcButton variant="tertiary" @click="restoreVersion(ver)">
 								{{ t('docudesk', 'Restore') }}
 							</NcButton>
 						</td>
@@ -425,6 +425,7 @@ export default {
 		/**
 		 * Open the restore confirmation dialog for a version.
 		 *
+		 * @param ver
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 		 */
 		restoreVersion(ver) {

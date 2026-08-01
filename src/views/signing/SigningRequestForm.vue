@@ -37,7 +37,7 @@
 				</option>
 			</select>
 		</div>
-		<NcButton type="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">
+		<NcButton variant="primary" :disabled="!form.documentFileId || !form.documentName" @click="submit">
 			{{ t('docudesk', 'Create Signing Request') }}
 		</NcButton>
 	</div>

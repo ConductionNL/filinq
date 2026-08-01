@@ -8,11 +8,11 @@
 
 			<DdViewToggle
 				v-if="showViewToggle"
-				:value="toggleValue"
+				:model-value="toggleValue"
 				:tiles-label="cardsLabel"
 				:list-label="tableLabel"
 				:aria-label="viewToggleLabel"
-				@input="onToggle" />
+				@update:modelValue="onToggle" />
 		</div>
 
 		<!-- Body: table or cards -->
@@ -34,10 +34,10 @@
 				#[`column-${col}`]="{ row, value }">
 				<slot :name="'column-' + col" :row="row" :value="value" />
 			</template>
-			<template v-if="$scopedSlots['row-actions']" #row-actions="{ row }">
+			<template v-if="$slots['row-actions']" #row-actions="{ row }">
 				<slot name="row-actions" :row="row" />
 			</template>
-			<template v-if="$scopedSlots['actions-header']" #actions-header>
+			<template v-if="$slots['actions-header']" #actions-header>
 				<slot name="actions-header" />
 			</template>
 		</DdDataTable>
@@ -49,7 +49,7 @@
 			:row-key="rowKey"
 			:empty-text="emptyText"
 			@row-click="$emit('row-click', $event)">
-			<template v-if="$scopedSlots.card" #card="{ object }">
+			<template v-if="$slots.card" #card="{ object }">
 				<slot name="card" :object="object" />
 			</template>
 		</DdCardGrid>
@@ -183,7 +183,7 @@ export default {
 		},
 		/** Names of `column-*` slots provided by the parent, for pass-through. */
 		slotColumns() {
-			return Object.keys(this.$scopedSlots)
+			return Object.keys(this.$slots)
 				.filter((name) => name.startsWith('column-'))
 				.map((name) => name.replace('column-', ''))
 		},

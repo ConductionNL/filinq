@@ -311,7 +311,7 @@ export default {
 		myDocumentsStore.fetchDocuments()
 		window.addEventListener('keydown', this.onKeydown)
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		window.removeEventListener('keydown', this.onKeydown)
 	},
 	methods: {
@@ -639,7 +639,7 @@ export default {
 		// definition and template) because this was hardcoded to "Not checked".
 		// /** Placeholder status until the app has a real "checked" signal. */
 		// statusLabel() {
-		// 	return t('docudesk', 'Not checked')
+		//     return t('docudesk', 'Not checked')
 		// },
 		/**
 		 * Format a timestamp (unix seconds or ISO string) as DD-MM-YYYY.

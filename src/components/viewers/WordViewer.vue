@@ -101,7 +101,7 @@ export default {
 			this.scheduleHighlights()
 		},
 	},
-	beforeDestroy() {
+	beforeUnmount() {
 		clearDomHighlights(this.$refs.content)
 	},
 	methods: {

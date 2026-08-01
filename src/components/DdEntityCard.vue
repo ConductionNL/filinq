@@ -70,7 +70,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 		<div class="dd-entity-card__controls">
 			<NcSelect
 				class="dd-entity-card__bases"
-				:value="item._decisionBases || []"
+				:model-value="item._decisionBases || []"
 				:options="basesOptions"
 				label="label"
 				:reduce="(o) => o.value"
@@ -78,7 +78,7 @@ import { entityTypeColor, entityTypeLabel } from '../services/entityTypes.js'
 				:input-label="t('docudesk', 'Grondslagen')"
 				:placeholder="t('docudesk', 'Pick grondslagen…')"
 				:disabled="!editable || !hasRelation"
-				@input="$emit('set-bases', $event)" />
+				@update:modelValue="$emit('set-bases', $event)" />
 		</div>
 		<div v-if="item._patchError" class="dd-entity-card__error" :title="item._patchError">
 			{{ item._patchError }}

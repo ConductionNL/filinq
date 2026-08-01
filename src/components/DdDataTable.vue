@@ -9,10 +9,10 @@
 				<tr>
 					<th v-if="selectable" class="dd-data-table__th dd-data-table__th--select" @click.stop>
 						<NcCheckboxRadioSwitch
-							:checked="allSelected"
+							:model-value="allSelected"
 							:indeterminate="someSelected"
 							:aria-label="selectAllLabel"
-							@update:checked="$emit('toggle-select-all')" />
+							@update:modelValue="$emit('toggle-select-all')" />
 					</th>
 					<th
 						v-for="col in columns"
@@ -21,7 +21,7 @@
 						:style="col.width ? { width: col.width } : null">
 						{{ col.label }}
 					</th>
-					<th v-if="$scopedSlots['row-actions']" class="dd-data-table__th dd-data-table__th--actions">
+					<th v-if="$slots['row-actions']" class="dd-data-table__th dd-data-table__th--actions">
 						<slot name="actions-header" />
 					</th>
 				</tr>
@@ -40,8 +40,8 @@
 					@click="$emit('row-click', row)">
 					<td v-if="selectable" class="dd-data-table__td dd-data-table__td--select" @click.stop>
 						<NcCheckboxRadioSwitch
-							:checked="isSelected(row)"
-							@update:checked="$emit('toggle-select', row)" />
+							:model-value="isSelected(row)"
+							@update:modelValue="$emit('toggle-select', row)" />
 					</td>
 					<td
 						v-for="col in columns"
@@ -54,7 +54,7 @@
 							{{ getCellValue(row, col.key) }}
 						</slot>
 					</td>
-					<td v-if="$scopedSlots['row-actions']" class="dd-data-table__td dd-data-table__td--actions" @click.stop>
+					<td v-if="$slots['row-actions']" class="dd-data-table__td dd-data-table__td--actions" @click.stop>
 						<slot name="row-actions" :row="row" />
 					</td>
 				</tr>
@@ -125,7 +125,7 @@ export default {
 		 */
 		totalColumns() {
 			return this.columns.length
-				+ (this.$scopedSlots['row-actions'] ? 1 : 0)
+				+ (this.$slots['row-actions'] ? 1 : 0)
 				+ (this.selectable ? 1 : 0)
 		},
 		/**

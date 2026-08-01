@@ -116,7 +116,7 @@ export default {
 		@update:open="$emit('update:open', $event)">
 		<div class="standing-consent-form">
 			<NcTextField
-				:value.sync="form.entityText"
+				v-model="form.entityText"
 				:label="t('docudesk', 'Entity text (display name)')"
 				required />
 			<NcSelect
@@ -132,19 +132,19 @@ export default {
 				:label="t('docudesk', 'Consent method')"
 				required />
 			<NcTextField
-				:value.sync="form.consentDocument"
+				v-model="form.consentDocument"
 				:label="t('docudesk', 'Consent document (file id or URL)')" />
 			<NcTextField
-				:value.sync="form.consentScope"
+				v-model="form.consentScope"
 				:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
 			<NcTextField
-				:value.sync="form.legalBasis"
+				v-model="form.legalBasis"
 				:label="t('docudesk', 'Legal basis')" />
 			<NcTextField
-				:value.sync="form.validFrom"
+				v-model="form.validFrom"
 				:label="t('docudesk', 'Valid from (ISO 8601, optional)')" />
 			<NcTextField
-				:value.sync="form.validUntil"
+				v-model="form.validUntil"
 				:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
 			<NcCheckboxRadioSwitch
 				v-model="form.active"
@@ -167,15 +167,15 @@ export default {
 					:input-label="t('docudesk', 'Match type')"
 					:label="t('docudesk', 'Match type')" />
 				<NcTextField
-					:value.sync="rule.value"
+					v-model="rule.value"
 					:label="t('docudesk', 'Match value')" />
-				<NcButton type="tertiary" @click="removeRule(idx)">
+				<NcButton variant="tertiary" @click="removeRule(idx)">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
 				</NcButton>
 			</div>
-			<NcButton type="secondary" @click="addRule">
+			<NcButton variant="secondary" @click="addRule">
 				{{ t('docudesk', 'Add match rule') }}
 			</NcButton>
 
@@ -185,10 +185,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton type="tertiary" @click="onCancel">
+			<NcButton variant="tertiary" @click="onCancel">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton variant="primary" :disabled="saving || !canSubmit" @click="submit">
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

@@ -1,13 +1,30 @@
 // Must stay first: sets __webpack_public_path__ / __webpack_nonce__ — see setPublicPath.js.
 import './setPublicPath.js'
-import Vue from 'vue'
+import { createApp, h } from 'vue'
+import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import pinia from './pinia.js'
 import AdminSettings from './views/settings/Settings.vue'
 import './assets/fonts.css'
 
-Vue.mixin({ methods: { t, n } })
+// `t` / `n` used to be read off Nextcloud's window globals — the old
+// `Vue.mixin({ methods: { t, n } })` referenced undeclared identifiers that
+// only resolved because @nextcloud/eslint-config declares them as globals.
+// Importing them explicitly matches src/main.js and drops the load-order
+// dependency.
+//
+// pinia is installed even though Settings.vue holds no store of its own:
+// the panel renders CnAdminSettingsShell, and nc-vue components reach for
+// the shared object store. Without an active pinia that throws at setup
+// instead of degrading, and Vue 2's global PiniaVuePlugin no longer exists
+// to cover it.
+//
+// Mount target stays `#admin-settings` (templates/settings/admin.php). Vue 3
+// renders INSIDE that div rather than replacing it, so the `section` class the
+// template sets is preserved instead of being discarded by `$mount()`.
+const app = createApp({
+	render: () => h(AdminSettings),
+})
 
-new Vue(
-	{
-		render: h => h(AdminSettings),
-	},
-).$mount('#admin-settings')
+app.mixin({ methods: { t, n } })
+app.use(pinia)
+app.mount('#admin-settings')

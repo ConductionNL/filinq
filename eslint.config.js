@@ -8,11 +8,19 @@
  * (an ESLint 9 feature) and crashes our pinned ESLint 8.57 with
  *   `Key "linterOptions": Unexpected key "reportUnusedInlineConfigs" found.`
  *
- * The actual rule set still lives in `.eslintrc.js` (legacy `eslintrc`
- * format). This file uses `@eslint/eslintrc`'s `FlatCompat` to load the
- * existing `extends: '@nextcloud'` config so we don't have to maintain
- * two parallel rule sets while the rest of the docudesk repo migrates
- * to flat config.
+ * This is the ONLY config ESLint reads. A `.eslintrc.js` used to sit
+ * beside it carrying a near-duplicate rule set; a marker probe (adding a
+ * unique rule to `.eslintrc.js` and re-running `eslint --print-config`)
+ * showed the marker never reached the resolved config, i.e. the file was
+ * dead. It has been removed so there is one rule set, not two that can
+ * drift.
+ *
+ * The `@nextcloud` v8 base is Vue-2 era: on its own it activates ZERO
+ * `vue/no-deprecated-*` rules, so Vue-2 idioms (`beforeDestroy`,
+ * `.sync`, `filters:`) survive a green lint. `conductionVue3Fixes` from
+ * @conduction/nextcloud-vue layers the 25 Vue-3 rules on top and must be
+ * spread LAST so it wins. It registers no plugins, which is why it
+ * layers cleanly onto the @nextcloud base.
  *
  * Follows the same pattern as decidesk's eslint.config.js.
  */
@@ -26,6 +34,12 @@ const js = require('@eslint/js')
 const {
 	FlatCompat,
 } = require('@eslint/eslintrc')
+
+// CJS: the extensionless subpath works because the package ships no
+// `exports` map. From ESM this would need `/eslint/index.js`.
+const {
+	conductionVue3Fixes,
+} = require('@conduction/nextcloud-vue/eslint')
 
 const compat = new FlatCompat({
 	baseDirectory: __dirname,
@@ -54,4 +68,9 @@ module.exports = defineConfig([{
 		// chokes on the @conduction/nextcloud-vue barrel.
 		'n/no-missing-import': 'off',
 	},
-}])
+},
+// Spread LAST so the Vue-3 rules win over the Vue-2 @nextcloud base.
+// This is an array of three layers (shared parserOptions, a `.vue`
+// parser layer, and the 25-rule layer), not a single object.
+...conductionVue3Fixes,
+])

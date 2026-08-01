@@ -123,7 +123,7 @@ export default {
 		@update:open="$emit('update:open', $event)">
 		<div class="prohibition-form">
 			<NcTextField
-				:value.sync="form.primaryName"
+				v-model="form.primaryName"
 				:label="t('docudesk', 'Primary name (Dutch)')"
 				required />
 			<NcSelect
@@ -133,14 +133,14 @@ export default {
 				:label="t('docudesk', 'Entity type')"
 				required />
 			<NcTextField
-				:value.sync="form.reason"
+				v-model="form.reason"
 				:label="t('docudesk', 'Reason (markdown allowed)')"
 				required />
 			<NcTextField
-				:value.sync="form.legalAuthority"
+				v-model="form.legalAuthority"
 				:label="t('docudesk', 'Legal authority (court order, statute, …)')" />
 			<NcTextField
-				:value.sync="form.caseReference"
+				v-model="form.caseReference"
 				:label="t('docudesk', 'Case reference (optional)')" />
 			<NcSelect
 				v-model="form.severity"
@@ -148,10 +148,10 @@ export default {
 				:input-label="t('docudesk', 'Severity')"
 				:label="t('docudesk', 'Severity')" />
 			<NcTextField
-				:value.sync="form.jurisdiction"
+				v-model="form.jurisdiction"
 				:label="t('docudesk', 'Jurisdiction (optional)')" />
 			<NcTextField
-				:value.sync="form.validUntil"
+				v-model="form.validUntil"
 				:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
 			<NcCheckboxRadioSwitch
 				v-model="form.active"
@@ -170,15 +170,15 @@ export default {
 					:input-label="t('docudesk', 'Match type')"
 					:label="t('docudesk', 'Match type')" />
 				<NcTextField
-					:value.sync="rule.value"
+					v-model="rule.value"
 					:label="t('docudesk', 'Match value')" />
-				<NcButton type="tertiary" @click="removeRule(idx)">
+				<NcButton variant="tertiary" @click="removeRule(idx)">
 					<template #icon>
 						<Delete :size="20" />
 					</template>
 				</NcButton>
 			</div>
-			<NcButton type="secondary" @click="addRule">
+			<NcButton variant="secondary" @click="addRule">
 				{{ t('docudesk', 'Add match rule') }}
 			</NcButton>
 
@@ -192,10 +192,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton type="tertiary" @click="onCancel">
+			<NcButton variant="tertiary" @click="onCancel">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton variant="primary" :disabled="saving || !canSubmit" @click="submit">
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

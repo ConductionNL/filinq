@@ -2,8 +2,7 @@
 	<span
 		class="dd-icon"
 		:style="sizeStyle"
-		v-bind="$attrs"
-		v-on="$listeners">
+		v-bind="$attrs">
 		<span v-if="svg" class="dd-icon__svg" v-html="svg" /><!-- eslint-disable-line vue/no-v-html -->
 		<slot v-else />
 	</span>

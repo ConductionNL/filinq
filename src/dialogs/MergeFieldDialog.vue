@@ -2,7 +2,7 @@
 	<NcDialog :name="t('docudesk', 'Insert merge field')"
 		@closing="$emit('close')">
 		<template #default>
-			<NcTextField :value.sync="fieldName"
+			<NcTextField v-model="fieldName"
 				:label="t('docudesk', 'Field name')"
 				:placeholder="t('docudesk', 'e.g. name, address, date')" />
 			<p class="merge-field-dialog__hint">
@@ -13,7 +13,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!fieldName" @click="confirm">
+			<NcButton variant="primary" :disabled="!fieldName" @click="confirm">
 				{{ t('docudesk', 'Insert') }}
 			</NcButton>
 		</template>

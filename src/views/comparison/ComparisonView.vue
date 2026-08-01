@@ -20,22 +20,22 @@ SPDX-License-Identifier: EUPL-1.2
 
 		<div class="comparison-view__pickers">
 			<div class="comparison-view__field">
-				<NcTextField :value.sync="leftFileId"
+				<NcTextField v-model="leftFileId"
 					:label="t('docudesk', 'Left file ID')"
 					type="number" />
-				<NcTextField :value.sync="leftVersion"
+				<NcTextField v-model="leftVersion"
 					:label="t('docudesk', 'Left version timestamp (optional)')"
 					type="number" />
 			</div>
 			<div class="comparison-view__field">
-				<NcTextField :value.sync="rightFileId"
+				<NcTextField v-model="rightFileId"
 					:label="t('docudesk', 'Right file ID')"
 					type="number" />
-				<NcTextField :value.sync="rightVersion"
+				<NcTextField v-model="rightVersion"
 					:label="t('docudesk', 'Right version timestamp (optional)')"
 					type="number" />
 			</div>
-			<NcButton type="primary" :disabled="loading || !canCompare" @click="runComparison">
+			<NcButton variant="primary" :disabled="loading || !canCompare" @click="runComparison">
 				{{ t('docudesk', 'Compare') }}
 			</NcButton>
 		</div>
@@ -83,10 +83,9 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
-import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
-import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
+// @nextcloud/vue v9 dropped the `dist/Components/Nc*.js` path layout in
+// favour of an exports map; the old deep specifiers resolve to nothing.
+import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
 import { compareDocuments } from '../../services/comparisonService.js'
 
 export default {

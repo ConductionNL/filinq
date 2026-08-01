@@ -1,194 +1,213 @@
 [
   {
-    "slug": "admin-settings",
-    "title": "Admin Settings",
-    "summary": "Provides configuration management for DocuDesk, including OpenRegister integration setup, GDPR consent period configuration, and metadata enrichment feature toggles. Settings are exposed both via the Nextcloud Admin Settings panel (under a dedicated DocuDesk section) and via a REST API. On application boot, DocuDesk automatically initializes its OpenRegister configuration by importing the register/schema definitions from `docudesk_register.json`.",
-    "docsUrl": "openspec/specs/admin-settings/spec.md"
+    "slug": "anonymization",
+    "title": "Local document anonymisation",
+    "summary": "Detect and redact personal data on your own instance, never in the cloud.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymization/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "Lokale documentanonimisatie",
+    "summary_nl": "Detecteer en lak persoonsgegevens lokaal weg, nooit in de cloud."
+  },
+  {
+    "slug": "consent-management",
+    "title": "WOO publication consent",
+    "summary": "Track the objection period and the decision with a tight audit trail.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/consent-management/spec.md",
+    "title_nl": "WOO-publicatieconsent",
+    "summary_nl": "Volg de bezwaartermijn en het besluit met een sluitend audit-spoor."
   },
   {
     "slug": "anonymisation-grondslagen-summary",
-    "title": "anonymisation-grondslagen-summary",
-    "summary": "Generates legal-basis (grondslagen) summary documents for anonymised files and dossiers, producing PDF/A-3b reports that list each redacted entity alongside the legal grounds under which it was anonymised. It can append a per-document summary page to an anonymised PDF, render a per-dossier summary aggregating entities by document and by grondslag, and regenerate that dossier summary automatically when a review is recorded. This gives operators an auditable record of what was redacted and why.",
-    "docsUrl": "openspec/specs/anonymisation-grondslagen-summary/spec.md"
+    "title": "Grondslagen summary",
+    "summary": "Show per redacted entity on which legal ground, as a PDF/A.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymisation-grondslagen-summary/spec.md",
+    "title_nl": "Grondslagenoverzicht",
+    "summary_nl": "Laat per gelakte entiteit zien op welke grond, in een PDF/A."
   },
   {
     "slug": "anonymisation-prohibition-gate",
-    "title": "anonymisation-prohibition-gate",
-    "summary": "Enforces publication-prohibition policies during anonymisation by checking every detected entity against active prohibition rules before forwarding a request to OpenRegister. High-confidence prohibited entities must be included in the set to be anonymised or the request is rejected with HTTP 422, while low-confidence matches can be released through acknowledged overrides that record an audit entry and flag the entity to skip redaction. This ensures legally protected entities cannot be left unredacted without an explicit, audited operator decision.",
-    "docsUrl": "openspec/specs/anonymisation-prohibition-gate/spec.md"
-  },
-  {
-    "slug": "anonymization",
-    "title": "Anonymization Pipeline",
-    "summary": "Provides a complete document anonymization pipeline: files are stored as **OR File Attachments**, text extraction and PII entity detection run via **OpenRegister's TextExtractionService**, and anonymization replaces detected entities with pseudonyms via OR's FileService. The pipeline runs 100% locally with no external cloud dependencies, ensuring GDPR/AVG compliance through privacy-by-design processing.",
-    "docsUrl": "openspec/specs/anonymization/spec.md"
+    "title": "Publication prohibition gate",
+    "summary": "Keep protected entities out of publication every time, with audit.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymisation-prohibition-gate/spec.md",
+    "title_nl": "Publicatieverbod-controle",
+    "summary_nl": "Houd beschermde entiteiten altijd uit publicatie, met audit."
   },
   {
     "slug": "anonymization-entity-review",
-    "title": "anonymization-entity-review",
-    "summary": "@e2e exclude entity review UI for batch anonymization is not yet shipped in the current DocuDesk release (v0.0.34) — batch entity consolidation endpoint and review table are unbuilt; covered by PHPUnit and API contract tests when implemented",
-    "docsUrl": "openspec/specs/anonymization-entity-review/spec.md"
-  },
-  {
-    "slug": "anonymization-link",
-    "title": "anonymization-link",
-    "summary": "Records the mapping between a source Nextcloud file and its anonymised counterpart through an `anonymizationLink` schema in the document register. Each successful run persists the source and anonymised file IDs, names, paths, output format, replacement count, and operator, with both file IDs made facetable so links can be looked up in either direction via the OpenRegister search API. This provides a queryable, idempotent record of which documents have been anonymised and into what.",
-    "docsUrl": "openspec/specs/anonymization-link/spec.md"
-  },
-  {
-    "slug": "dashboard",
-    "title": "Dashboard",
-    "summary": "Provides a central overview of DocuDesk activity, including consent tracking statistics, recent consent activity, and a quick anonymization widget. Additionally, DocuDesk registers two Nextcloud Dashboard widgets (AnonymizationWidget and FileEntitiesWidget) that appear on the main Nextcloud Dashboard page, giving users at-a-glance document processing information.",
-    "docsUrl": "openspec/specs/dashboard/spec.md"
-  },
-  {
-    "slug": "docudesk-notifications",
-    "title": "docudesk-notifications",
-    "summary": "Defines the notification rules for DocuDesk's signing, document, consent, and correspondence schemas, declared in OpenRegister's verified `x-openregister-notifications` dialect. Rules route to confirmed Nextcloud user IDs, groups, and object-ACL recipients only, deliberately never notifying external data-subject email addresses, and approximate status-transition triggers where the engine cannot yet express field-change conditions. This keeps DocuDesk's automated notifications staff-safe and aligned with the supported notification engine.",
-    "docsUrl": "openspec/specs/docudesk-notifications/spec.md"
-  },
-  {
-    "slug": "docudesk-or-adoption",
-    "title": "Capability — docudesk-or-adoption",
-    "summary": "DocuDesk adopts OpenRegister's shared abstractions instead of bespoke per-app plumbing: lifecycle/archival/calculation/notification schema annotations, OR object persistence and Background Jobs, manifest version pinning, admin-config for tenant-tunable values, and Accept-Language / tenant-scope composable wiring. Custom code that duplicates these OR primitives is removed; docudesk-specific value-add (NLP/PII detection algorithms) is retained.",
-    "docsUrl": "openspec/specs/docudesk-or-adoption/spec.md"
-  },
-  {
-    "slug": "docudesk-store-migration",
-    "title": "Specification — `docudesk-store-migration` (Phase 1, side-by-side)",
-    "summary": "Phase 1 (side-by-side) adoption of the shared `@conduction/nextcloud-vue` `useObjectStore` as docudesk's canonical OR-CRUD store, registering OR-backed object types at boot while preserving every legacy store and the docudesk-specific settings store. The cutover to the shared store (Phase 2) is documented but deferred.",
-    "docsUrl": "openspec/specs/docudesk-store-migration/spec.md"
-  },
-  {
-    "slug": "document-comparison",
-    "title": "document-comparison",
-    "summary": "Compares two documents or two versions of the same document and returns a structured diff, without copying, persisting, or indexing either subject's content. Each subject is resolved through the requesting user's Nextcloud folder by file ID and optional version timestamp, with access failures returning an IDOR-safe 404. This lets users review what changed between document revisions or between distinct files.",
-    "docsUrl": "openspec/specs/document-comparison/spec.md"
-  },
-  {
-    "slug": "document-creatie-sjablonen",
-    "title": "document-creatie-sjablonen",
-    "summary": "Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.",
-    "docsUrl": "openspec/specs/document-creatie-sjablonen/spec.md"
-  },
-  {
-    "slug": "document-signing",
-    "title": "document-signing",
-    "summary": "Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. At the SES level the native provider embeds a verifiable `/DocuDesk-Signature` marker (HMAC over the document content-hash) on completion and stores the signed artifact as a new Nextcloud file version; the request references that artifact rather than the unsigned original. AdES/QES signature embedding via an external provider (ValidSign) is in progress — a level whose provider cannot yet produce a signed artifact fails loudly rather than presenting the original as signed (issue #304).",
-    "docsUrl": "openspec/specs/document-signing/spec.md"
-  },
-  {
-    "slug": "document-validation-checks",
-    "title": "document-validation-checks",
-    "summary": "Runs a catalogue of document quality checks covering format allowlisting, extension/mime consistency, file integrity, PDF encryption, text-layer presence, and metadata completeness, returning structured findings keyed by a stable check ID and severity. It is a pure computation backend that reads document content and records but never writes fields, creates objects, or modifies files. This lets DocuDesk flag documents that are unreadable, scan-only, encrypted, or missing required metadata before further processing.",
-    "docsUrl": "openspec/specs/document-validation-checks/spec.md"
-  },
-  {
-    "slug": "dossier-register",
-    "title": "dossier-register",
-    "summary": "Defines DocuDesk's `dossier` register in OpenRegister, holding a `dossier` schema for folder-level anonymisation metadata (name, description, legal bases, and review date) and a `base` schema that encodes the Dutch Woo Art. 5 grondslagen vocabulary, seeded with the six canonical exception grounds. The register is installed and upserted idempotently via the existing configuration-import path on app install and upgrade. This gives folder-based anonymisation work a structured, queryable record of which legal grounds apply and when a dossier was last reviewed.",
-    "docsUrl": "openspec/specs/dossier-register/spec.md"
-  },
-  {
-    "slug": "entity-publication-policies",
-    "title": "entity-publication-policies",
-    "summary": "Defines the `publicationProhibition` schema in the consent register, an entity-level deny-list where each rule names a person or organisation that must always be anonymised when detected in a publication-bound document, regardless of any consent. Rules carry match criteria (exact, normalized, BSN, KVK), legal authority, severity, validity window, and active state, and are importable on app install and queryable via the OpenRegister API. This provides the policy data that anonymisation and publication-clearance flows match detected entities against.",
-    "docsUrl": "openspec/specs/entity-publication-policies/spec.md"
-  },
-  {
-    "slug": "folder-analysis-anonymization",
-    "title": "folder-analysis-anonymization",
-    "summary": "Governs where folder-driven anonymisation writes its redacted outputs, placing them in a configured subfolder (default `anonymised`) alongside the source files using the same layout and suffix-stripping rules as the batch flow. Source discovery excludes legacy `_anonymized`-suffixed files so prior runs are never re-redacted, and background anonymisation jobs honour the same layout. This keeps anonymised outputs predictably organised and consistent across the folder and batch flows.",
-    "docsUrl": "openspec/specs/folder-analysis-anonymization/spec.md"
-  },
-  {
-    "slug": "folder-batch-analysis",
-    "title": "folder-batch-analysis",
-    "summary": "Creates anonymisation batches from the files already present in a Nextcloud folder, accepting either a folder ID or a folder path and enumerating the folder's direct file children. The batch stores both the rename-proof folder ID and a human-readable path snapshot, resolves multi-mount folder IDs by preferring a writable node, and processes the files through a background extraction job and entity-consolidation service subject to admin-configurable size limits. This lets operators run analysis and anonymisation over an existing document folder in one batch operation.",
-    "docsUrl": "openspec/specs/folder-batch-analysis/spec.md"
-  },
-  {
-    "slug": "letter-correspondence-generation",
-    "title": "Letter/Correspondence Generation",
-    "summary": "@e2e exclude backend service not yet surfaced in the DocuDesk UI — correspondence generation is API/DI-only; covered by PHPUnit service tests",
-    "docsUrl": "openspec/specs/letter-correspondence-generation/spec.md"
-  },
-  {
-    "slug": "metadata-enrichment",
-    "title": "Metadata Enrichment",
-    "summary": "@e2e exclude pure backend event-driven processing service — no dedicated UI surface; enrichment logic covered by PHPUnit unit tests",
-    "docsUrl": "openspec/specs/metadata-enrichment/spec.md"
+    "title": "Entity review per document",
+    "summary": "Confirm yourself what gets redacted before it becomes final.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/anonymization-entity-review/spec.md",
+    "title_nl": "Entiteitcontrole per document",
+    "summary_nl": "Bevestig zelf wat wordt weggelakt voordat het definitief is."
   },
   {
     "slug": "ocr-document-scanning",
-    "title": "OCR Document Scanning",
-    "summary": "Provides OCR (Optical Character Recognition) text extraction from scanned and image-based documents using Tesseract OCR. Enables the anonymization pipeline to process scanned PDFs, TIFF, PNG, and JPG files by extracting text locally before entity detection. All processing runs 100% on the server with no external cloud dependencies, in compliance with DocuDesk's local processing standard.",
-    "docsUrl": "openspec/specs/ocr-document-scanning/spec.md"
+    "title": "OCR for scanned documents",
+    "summary": "Anonymise scanned PDFs and images too, with graceful fallback.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/ocr-document-scanning/spec.md",
+    "title_nl": "OCR voor gescande documenten",
+    "summary_nl": "Anonimiseer ook gescande PDFs en afbeeldingen, met nette terugval."
   },
   {
-    "slug": "openregister-bridge",
-    "title": "OpenRegister Bridge",
-    "summary": "@e2e exclude pure backend resolver service — no UI surface; all behavior covered by PHPUnit service tests",
-    "docsUrl": "openspec/specs/openregister-bridge/spec.md"
+    "slug": "document-creatie-sjablonen",
+    "title": "Template document generation",
+    "summary": "Generate decisions from case data in your own house style.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-creatie-sjablonen/spec.md",
+    "title_nl": "Documentgeneratie uit sjablonen",
+    "summary_nl": "Genereer beschikkingen uit zaakdata in je eigen huisstijl."
   },
   {
-    "slug": "pdf-conversion",
-    "title": "pdf-conversion",
-    "summary": "Converts Nextcloud files to PDF/A-3b through a `PdfConversionService` that walks a cascade of conversion backends in order, falling through to the next on failure. It accepts any Nextcloud file, leaves the source unchanged, and on total failure throws a typed exception carrying a per-backend report of availability, supported types, and the reason each backend did not apply. This gives DocuDesk a single, archival-grade PDF conversion entry point usable by anonymisation, comparison, and summary flows.",
-    "docsUrl": "openspec/specs/pdf-conversion/spec.md"
-  },
-  {
-    "slug": "pdf-generation",
-    "title": "PDF Generation",
-    "summary": "@e2e exclude pure backend PDF rendering service — no dedicated UI surface; behavior verified by PHPUnit and API contract tests",
-    "docsUrl": "openspec/specs/pdf-generation/spec.md"
-  },
-  {
-    "slug": "preferences-api",
-    "title": "preferences-api",
-    "summary": "Provides a per-user preference API for reading and writing small UI and workflow settings scoped to the authenticated user within a `pref_` key namespace. Both endpoints require authentication, sanitise the requested key to a safe charset, return a default when unset, and clear a preference when an empty value is supplied. This lets the DocuDesk frontend persist user-specific choices without a dedicated schema.",
-    "docsUrl": "openspec/specs/preferences-api/spec.md"
-  },
-  {
-    "slug": "print-preview",
-    "title": "Print Preview",
-    "summary": "Provides browser-based print preview and PDF/A download functionality. Users can preview rendered documents in an iframe, trigger the browser's native print dialog, or download a PDF/A-3b archival-compliant document. Supports both stored templates (via TemplateService) and inline template content.",
-    "docsUrl": "openspec/specs/print-preview/spec.md"
-  },
-  {
-    "slug": "processing-activity-export",
-    "title": "processing-activity-export",
-    "summary": "DocuDesk's contribution to the platform AVG Art. 30 verwerkingsregister owned by OpenRegister (`openregister/processing-activity-register`, OR-PA-1..9): the document-processing activity catalogue (anonymisation, OCR, metadata-enrichment, signing) declared as `x-openregister-processing` annotations, the grondslag/ retention mapping, the per-access read-logging opt-in, and the admin UI window onto the platform register. The aggregate export engine, output formats, the no-literal-PII contract, and access gating are OpenRegister requirements and are deliberately NOT restated here (ADR-022).",
-    "docsUrl": "openspec/specs/processing-activity-export/spec.md"
-  },
-  {
-    "slug": "prometheus-metrics",
-    "title": "Prometheus Metrics Endpoint",
-    "summary": "@e2e exclude pure backend monitoring endpoint — no UI surface; metrics format verified by API/PHPUnit tests",
-    "docsUrl": "openspec/specs/prometheus-metrics/spec.md"
-  },
-  {
-    "slug": "register-i18n",
-    "title": "register-i18n",
-    "summary": "Enables multi-language content for DocuDesk-specific register fields using OpenRegister's `translatable` flag, so template titles, descriptions, field labels, and help text can be stored and displayed in the viewing user's language. Generated documents are explicitly single-language artifacts, not translatable register objects. This lets DocuDesk present its templates and forms in Dutch or English while keeping each produced document in one language.",
-    "docsUrl": "openspec/specs/register-i18n/spec.md"
-  },
-  {
-    "slug": "signing-audit-via-or",
-    "title": "signing-audit-via-or",
-    "summary": "Records every signing action (CREATED, SIGNED, DECLINED, CANCELLED, EXPIRED, COMPLETED, VIEWED) as an OpenRegister audit-trail entry with a `docudesk.signing.{ACTION}` action type, instead of a private app-local audit schema. Each entry is bound to the signing request's UUID, participates in OR's tamper-evident hash chain, carries signing context such as actor, IP, signature level, and provider, and is retrievable through the standard audit-trail API. This gives signing a single, queryable, integrity-protected audit record.",
-    "docsUrl": "openspec/specs/signing-audit-via-or/spec.md"
-  },
-  {
-    "slug": "signing-via-or-approval-with-provider-plugins",
-    "title": "signing-via-or-approval-with-provider-plugins",
-    "summary": "Implements document signing on top of OpenRegister's approval-workflow, creating an `ApprovalChain` with one ordered `ApprovalStep` per signer instead of a DocuDesk-local approval store. Signer decisions are emitted exclusively through OR's approve and reject step endpoints, while pluggable signing providers (the native provider and external providers) present the signing UI and return a sign-or-decline result without mutating step state themselves. This reuses OR's chain orchestration for sequencing and lets DocuDesk integrate alternative signing backends.",
-    "docsUrl": "openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md"
+    "slug": "letter-correspondence-generation",
+    "title": "Correspondence generation",
+    "summary": "Compose letters with merged data and your house style.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/letter-correspondence-generation/spec.md",
+    "title_nl": "Correspondentiegeneratie",
+    "summary_nl": "Stel brieven samen met samengevoegde gegevens en huisstijl."
   },
   {
     "slug": "template-management",
-    "title": "Template Management",
-    "summary": "@e2e exclude template management has no dedicated DocuDesk UI — templates are managed via REST API or TemplateService DI injection from consumer apps; API behavior covered by PHPUnit service and controller tests",
-    "docsUrl": "openspec/specs/template-management/spec.md"
+    "title": "Template management",
+    "summary": "Manage templates with versions in Dutch and English.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/template-management/spec.md",
+    "title_nl": "Sjabloonbeheer",
+    "summary_nl": "Beheer sjablonen met versies in Nederlands en Engels."
+  },
+  {
+    "slug": "document-comparison",
+    "title": "Document comparison",
+    "summary": "See exactly what changed between two versions of a document.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-comparison/spec.md",
+    "title_nl": "Documentvergelijking",
+    "summary_nl": "Zie precies wat er tussen twee versies is veranderd."
+  },
+  {
+    "slug": "document-validation-checks",
+    "title": "Document validation",
+    "summary": "Flag unreadable, encrypted or incomplete documents up front.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-validation-checks/spec.md",
+    "title_nl": "Documentvalidatie",
+    "summary_nl": "Signaleer onleesbare, versleutelde of incomplete documenten vooraf."
+  },
+  {
+    "slug": "pdf-generation",
+    "title": "PDF and PDF/A generation",
+    "summary": "Deliver documents archive-ready as PDF/A-3b.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/pdf-generation/spec.md",
+    "title_nl": "PDF- en PDF/A-generatie",
+    "summary_nl": "Lever documenten archiefklaar af als PDF/A-3b."
+  },
+  {
+    "slug": "print-preview",
+    "title": "Print preview and download",
+    "summary": "Review and download the document before you print it.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/print-preview/spec.md",
+    "title_nl": "Afdrukvoorbeeld en download",
+    "summary_nl": "Bekijk en download het document voor je het print."
+  },
+  {
+    "slug": "document-signing",
+    "title": "Native document signing",
+    "summary": "Sign documents with a multi-party flow and full audit.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/document-signing/spec.md",
+    "title_nl": "Documenten ondertekenen",
+    "summary_nl": "Onderteken documenten met een meervoudige ondertekenflow en audit."
+  },
+  {
+    "slug": "signing-audit-via-or",
+    "title": "Signing audit trail",
+    "summary": "Keep every signing step in a tamper-evident audit trail.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/signing-audit-via-or/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "Ondertekenaudit-spoor",
+    "summary_nl": "Bewaar elke ondertekenstap in een fraudebestendig audit-spoor."
+  },
+  {
+    "slug": "folder-batch-analysis",
+    "title": "Folder and batch anonymisation",
+    "summary": "Anonymise a whole folder in a background job.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/batch-anonymization/spec.md",
+    "title_nl": "Map- en batchanonimisatie",
+    "summary_nl": "Anonimiseer een hele map in een achtergrondklus."
+  },
+  {
+    "slug": "metadata-enrichment",
+    "title": "Metadata enrichment",
+    "summary": "Enrich documents automatically with language and keywords.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/metadata-enrichment/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "Metadataverrijking",
+    "summary_nl": "Verrijk documenten automatisch met taal en trefwoorden."
+  },
+  {
+    "slug": "processing-activity-export",
+    "title": "AVG Art. 30 register",
+    "summary": "Keep your processing register from DocuDesk and OpenRegister.",
+    "status": "beta",
+    "docsUrl": "openspec/specs/processing-activity-export/spec.md",
+    "providedBy": "openregister",
+    "title_nl": "AVG art. 30-register",
+    "summary_nl": "Houd je verwerkingsregister bij vanuit DocuDesk en OpenRegister."
+  },
+  {
+    "slug": "dashboard",
+    "title": "Dashboard and widgets",
+    "summary": "See consent and anonymisation at a glance.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/dashboard/spec.md",
+    "title_nl": "Dashboard en widgets",
+    "summary_nl": "Zie consent en anonimisatie in een oogopslag."
+  },
+  {
+    "slug": "admin-settings",
+    "title": "Admin settings",
+    "summary": "Connect OpenRegister and set deadlines in one place.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/admin-settings/spec.md",
+    "title_nl": "Beheerinstellingen",
+    "summary_nl": "Koppel OpenRegister en stel termijnen in een keer in."
+  },
+  {
+    "slug": "prometheus-metrics",
+    "title": "Prometheus metrics and health",
+    "summary": "Monitor DocuDesk with your own observability stack.",
+    "status": "stable",
+    "docsUrl": "openspec/specs/prometheus-metrics/spec.md",
+    "title_nl": "Prometheus-metrics en health",
+    "summary_nl": "Monitor DocuDesk met je eigen observability-stack."
+  },
+  {
+    "slug": "batch-entity-review",
+    "title": "Batch entity review",
+    "summary": "Review detected entities across a whole stack at once.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/anonymization-entity-review/spec.md",
+    "title_nl": "Batchgewijze entiteitcontrole",
+    "summary_nl": "Beoordeel ontdekte entiteiten over een hele stapel in een keer."
+  },
+  {
+    "slug": "signing-qes-validsign",
+    "title": "eIDAS QES signing",
+    "summary": "Sign with a qualified signature through a trusted provider, soon.",
+    "status": "soon",
+    "docsUrl": "openspec/specs/signing-via-or-approval-with-provider-plugins/spec.md",
+    "title_nl": "eIDAS QES-ondertekening",
+    "summary_nl": "Onderteken straks gekwalificeerd via een vertrouwde aanbieder."
   }
 ]

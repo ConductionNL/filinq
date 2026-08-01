@@ -25,7 +25,7 @@ SPDX-License-Identifier: EUPL-1.2
 					{{ t('docudesk', 'Template ID') }} *
 				</label>
 				<NcTextField id="corr-template-id"
-					:value.sync="store.templateId"
+					v-model="store.templateId"
 					:label="t('docudesk', 'Template UUID')"
 					:placeholder="t('docudesk', 'Enter template UUID')"
 					required />
@@ -54,17 +54,17 @@ SPDX-License-Identifier: EUPL-1.2
 					{{ t('docudesk', 'Case reference') }}
 				</label>
 				<NcTextField id="corr-case-ref"
-					:value.sync="store.caseReference"
+					v-model="store.caseReference"
 					:label="t('docudesk', 'Case reference (optional)')"
 					:placeholder="t('docudesk', 'e.g. Z/2026/001')" />
 			</div>
 
 			<!-- Mode tabs -->
 			<div class="correspondence-index__mode-tabs">
-				<NcButton :type="!batchMode ? 'primary' : 'secondary'" @click="batchMode = false">
+				<NcButton :variant="!batchMode ? 'primary' : 'secondary'" @click="batchMode = false">
 					{{ t('docudesk', 'Single recipient') }}
 				</NcButton>
-				<NcButton :type="batchMode ? 'primary' : 'secondary'" @click="batchMode = true">
+				<NcButton :variant="batchMode ? 'primary' : 'secondary'" @click="batchMode = true">
 					{{ t('docudesk', 'Batch (multiple recipients)') }}
 				</NcButton>
 			</div>
@@ -78,31 +78,31 @@ SPDX-License-Identifier: EUPL-1.2
 					<div v-for="(ref, idx) in store.dataRefs"
 						:key="idx"
 						class="correspondence-index__data-ref">
-						<NcTextField :value.sync="ref.register"
+						<NcTextField v-model="ref.register"
 							:label="t('docudesk', 'Register')"
 							:placeholder="t('docudesk', 'e.g. brp')"
 							class="correspondence-index__ref-field" />
-						<NcTextField :value.sync="ref.schema"
+						<NcTextField v-model="ref.schema"
 							:label="t('docudesk', 'Schema')"
 							:placeholder="t('docudesk', 'e.g. persoon')"
 							class="correspondence-index__ref-field" />
-						<NcTextField :value.sync="ref.id"
+						<NcTextField v-model="ref.id"
 							:label="t('docudesk', 'UUID')"
 							:placeholder="t('docudesk', 'Object UUID')"
 							class="correspondence-index__ref-field" />
-						<NcButton type="tertiary"
+						<NcButton variant="tertiary"
 							:aria-label="t('docudesk', 'Remove data reference')"
 							@click="removeDataRef(idx)">
 							✕
 						</NcButton>
 					</div>
-					<NcButton type="secondary" @click="addDataRef">
+					<NcButton variant="secondary" @click="addDataRef">
 						+ {{ t('docudesk', 'Add data reference') }}
 					</NcButton>
 				</div>
 
 				<div class="correspondence-index__actions">
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="!canGenerate || store.loading"
 						@click="generate">
 						<template #icon>
@@ -148,7 +148,7 @@ SPDX-License-Identifier: EUPL-1.2
 				</div>
 
 				<div class="correspondence-index__actions">
-					<NcButton type="primary"
+					<NcButton variant="primary"
 						:disabled="!canGenerateBatch || store.loading"
 						@click="generateBatch">
 						<template #icon>
@@ -172,7 +172,7 @@ SPDX-License-Identifier: EUPL-1.2
 						}) }}
 					</p>
 					<NcButton v-if="store.jobId && store.jobStatus.status !== 'completed'"
-						type="secondary"
+						variant="secondary"
 						@click="store.pollJobStatus()">
 						{{ t('docudesk', 'Refresh status') }}
 					</NcButton>

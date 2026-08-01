@@ -2,7 +2,7 @@
 	<div class="template-index">
 		<div class="template-index__header">
 			<h2>{{ t('docudesk', 'Templates') }}</h2>
-			<NcButton type="primary" @click="openNewTemplate">
+			<NcButton variant="primary" @click="openNewTemplate">
 				{{ t('docudesk', 'New template') }}
 			</NcButton>
 		</div>
@@ -14,11 +14,11 @@
 				:input-label="t('docudesk', 'Category filter')"
 				class="template-index__filter-select"
 				@update:modelValue="applyFilters" />
-			<NcTextField :value.sync="searchQuery"
+			<NcTextField v-model="searchQuery"
 				:label="t('docudesk', 'Search templates')"
 				:placeholder="t('docudesk', 'Search by name...')"
 				class="template-index__search"
-				@update:value="applyFilters" />
+				@update:modelValue="applyFilters" />
 		</div>
 
 		<NcLoadingIcon v-if="templateStore.loading" />
@@ -55,17 +55,17 @@
 						</span>
 					</td>
 					<td @click.stop>
-						<NcButton type="tertiary"
+						<NcButton variant="tertiary"
 							:aria-label="t('docudesk', 'Edit template')"
 							@click="openTemplate(tmpl)">
 							{{ t('docudesk', 'Edit') }}
 						</NcButton>
-						<NcButton type="tertiary"
+						<NcButton variant="tertiary"
 							:aria-label="t('docudesk', 'Duplicate template')"
 							@click="duplicateTemplate(tmpl)">
 							{{ t('docudesk', 'Duplicate') }}
 						</NcButton>
-						<NcButton type="error"
+						<NcButton variant="error"
 							:aria-label="t('docudesk', 'Delete template')"
 							@click="confirmDelete(tmpl)">
 							{{ t('docudesk', 'Delete') }}

@@ -370,7 +370,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		// results are written back to the batch record (or a client-side
 		// summary is built).
 		// getReportUrl() {
-		// 	return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
+		//     return generateUrl('/apps/docudesk/api/anonymization/batch/' + this.batchId + '/report')
 		// },
 
 		reset() {
