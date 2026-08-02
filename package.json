@@ -30,7 +30,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.29.0",
-    "@conduction/nextcloud-vue": "2.1.0-vue3.13",
+    "@conduction/nextcloud-vue": "2.1.0-vue3.16",
     "@nextcloud/auth": "^2.6.0",
     "@nextcloud/axios": "^2.5.0",
     "@nextcloud/capabilities": "^1.2.1",
