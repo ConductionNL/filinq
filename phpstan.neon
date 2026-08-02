@@ -22,6 +22,7 @@ parameters:
         - lib/Controller/DashboardController.php
         - lib/Controller/HealthController.php
         - lib/Controller/MetricsController.php
+        - lib/Controller/PreferencesController.php
     scanDirectories:
         - vendor/nextcloud/ocp
     reportUnmatchedIgnoredErrors: false

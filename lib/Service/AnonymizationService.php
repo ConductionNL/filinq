@@ -52,11 +52,17 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for orchestrating the document anonymization pipeline
  *
+ * Exceeds PHPMD's 25-method threshold (29 non-accessor methods): the extra
+ * four are private per-entity-kind helpers that have to stay next to the
+ * anonymisation pipeline they feed.
+ *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods)
  *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3

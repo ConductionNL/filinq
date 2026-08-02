@@ -228,10 +228,18 @@ class SigningVerificationService
      * malformed) and reports `unverifiable`/`legacy-assertion-v1` — it MUST
      * NEVER be reported `verified` (fail-closed).
      *
+     * AssertionCanonicalizer::canonicalJson() is intentionally static and
+     * stateless — see the matching note on
+     * {@see \OCA\DocuDesk\Service\Signing\NativeSigningProvider::produceSignedArtifact()}.
+     * Signer and verifier must canonicalise byte-identically or every MAC
+     * check fails.
+     *
      * @param array<string, mixed> $assertion  The decoded signature blob
      * @param string               $pdfContent The full PDF content
      *
      * @return array{status: string, reason: string} The tri-state verification result.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      *
      * @spec openspec/specs/document-signing/spec.md
      */

@@ -293,6 +293,14 @@ class NativeSigningProvider implements SigningProviderInterface
      * @throws RuntimeException When the signing secret is unset or the
      *                          requested level is not SES.
      *
+     * AssertionCanonicalizer::canonicalJson() is intentionally static and
+     * stateless: signer and verifier MUST canonicalise byte-identically, and a
+     * single pure function is the only way to guarantee that. Injecting it
+     * would let the two sides be wired to different implementations and
+     * silently break every MAC verification.
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     *
      * @spec openspec/specs/document-signing/spec.md
      * @spec openspec/specs/portal-signing-surface/spec.md
      */

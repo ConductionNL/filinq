@@ -41,11 +41,18 @@ use Throwable;
 /**
  * Organisation-gated CRUD wrapper for custom dictionaries + terms.
  *
+ * Exceeds PHPMD's class-complexity threshold (77 vs 50): dictionary CRUD, term
+ * CRUD, CSV/plain-text import and export live in one service because they
+ * share the same organisation-permission and de-duplication rules; splitting
+ * them would duplicate those rules.
+ *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
@@ -399,7 +406,9 @@ class CustomDictionaryService
         $seenThisBatch = [];
 
         foreach ($rows as $row) {
-            $value = trim((string) ($row['value'] ?? ''));
+            // The parser always sets `value` to a string, so no null-coalesce
+            // fallback is needed (and phpstan flags one as dead code).
+            $value = trim($row['value']);
             if ($value === '') {
                 $skipped++;
                 continue;
@@ -443,6 +452,12 @@ class CustomDictionaryService
      * working on — can see. Best-effort: any failure returns an empty list
      * rather than throwing, so a detection call degrades to "no dictionary
      * hits" instead of blocking OpenRegister's own detection.
+     *
+     * Cyclomatic complexity sits on PHPMD's threshold (10 vs 10): the branches
+     * are the organisation gate plus the best-effort degradation guards
+     * described above, each of which must be checked before the next is safe.
+     *
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      *
      * @return array<int, array{label: string, matchMode: string, terms: array<int, array{value: string, label: string}>}>
      *

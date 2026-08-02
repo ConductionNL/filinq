@@ -39,6 +39,11 @@ use RuntimeException;
 /**
  * Service for managing signing request lifecycle
  *
+ * Exceeds PHPMD's 1000-line class threshold (1184 lines): the signing
+ * lifecycle (request, remind, sign, decline, revoke, verify) is one state
+ * machine, and splitting it would spread transition guards that must stay
+ * together across classes.
+ *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
@@ -48,6 +53,7 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  *
  * @spec openspec/specs/document-signing/spec.md
  */

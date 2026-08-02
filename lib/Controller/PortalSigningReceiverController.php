@@ -59,6 +59,13 @@ use Throwable;
 /**
  * Receives portaliq's forwarded signing actions on the `signer` audience.
  *
+ * Exceeds PHPMD's class-complexity threshold by one (51 vs 50): the class is a
+ * single inbound webhook surface whose branches are the payload-validation
+ * guards the spec demands. Extracting them would move the guards away from the
+ * endpoint they protect.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
 class PortalSigningReceiverController extends Controller

@@ -43,11 +43,18 @@ use RuntimeException;
 /**
  * `api/custom-dictionaries` CRUD + import endpoints.
  *
+ * Exceeds PHPMD's class-complexity threshold (69 vs 50): the figure is the sum
+ * of ~12 thin CRUD/import/export endpoints, each individually simple. Splitting
+ * the controller would fragment one REST resource across several classes
+ * without reducing any single method's complexity.
+ *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */

@@ -102,17 +102,28 @@ class CustomDictionaryMatchService
      * The `fuzzy` flag is accepted-and-ignored — no approximate matching in
      * this version (design.md Open Questions).
      *
-     * @param string                                           $text  The document text to search.
-     * @param array<int, array{value: string, label?: string}> $terms Candidate terms.
-     * @param string                                           $mode  One of {@see VALID_MODES}; an
-     *                                                                unrecognised value is treated
-     *                                                                as {@see
-     *                                                                MODE_CASE_INSENSITIVE}.
+     * Two PHPMD suppressions below. The `@` on `preg_match_all` is deliberate
+     * and documented at the call site: an operator-supplied term can compile to
+     * an invalid pattern, and one bad term must skip itself rather than abort
+     * matching for every other term. Cyclomatic complexity sits on the
+     * threshold (10 vs 10) because every branch is an overlap/claim rule of the
+     * spec's longest-term-first algorithm, which only reads correctly as one
+     * pass.
+     *
+     * @param string                                            $text  The document text to search.
+     * @param array<int, array{value?: string, label?: string}> $terms Candidate terms.
+     * @param string                                            $mode  One of {@see VALID_MODES}; an
+     *                                                                 unrecognised value is treated
+     *                                                                 as {@see
+     *                                                                 MODE_CASE_INSENSITIVE}.
      *
      * @return array<int, array{value: string, label: string, positionStart: int, positionEnd: int}>
      *         Occurrences in document order. `value` is the literal substring
      *         found at that position (which may differ in case from the
      *         declared term under `caseInsensitive`/`wordBoundary`).
+     *
+     * @SuppressWarnings(PHPMD.ErrorControlOperator)
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
@@ -207,7 +218,7 @@ class CustomDictionaryMatchService
      * its own value, preserving the original index for a stable sort
      * tie-break.
      *
-     * @param array<int, array{value: string, label?: string}> $terms Raw term rows.
+     * @param array<int, array{value?: string, label?: string}> $terms Raw term rows.
      *
      * @return array<int, array{value: string, label: string, originalIndex: int}> Sanitised candidates.
      */

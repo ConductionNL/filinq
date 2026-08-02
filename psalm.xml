@@ -80,6 +80,13 @@
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <!--
+                  GdprEntity is instantiated from an FQCN string in
+                  AnonymizationService::lookupOrCreateCustomDictionaryEntity()
+                  so DocuDesk stays loadable without OpenRegister installed.
+                  Same lazy-resolution convention as the mappers above.
+                -->
+                <referencedClass name="OCA\OpenRegister\Db\GdprEntity"/>
                 <!-- OpenRegister DB types used in signing/approval events -->
                 <referencedClass name="OCA\OpenRegister\Db\ApprovalChain"/>
                 <referencedClass name="OCA\OpenRegister\Db\ApprovalStep"/>

@@ -39,11 +39,17 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling settings-related operations in DocuDesk
  *
+ * Sits on PHPMD's object-coupling threshold (13 vs 13): this service is the
+ * single read/write point for every DocuDesk app setting, so it necessarily
+ * names each settings-bearing collaborator exactly once.
+ *
  * @category Service
  * @package  OCA\DocuDesk\Service
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
