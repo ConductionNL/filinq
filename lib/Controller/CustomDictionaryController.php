@@ -87,20 +87,11 @@ class CustomDictionaryController extends Controller
      */
     public function index(): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            return new JSONResponse($this->service->listDictionaries());
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to list custom dictionaries: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->listDictionaries(),
+            failureMessage: 'Failed to list custom dictionaries: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end index()
 
@@ -120,24 +111,11 @@ class CustomDictionaryController extends Controller
      */
     public function show(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            return new JSONResponse($this->service->getDictionary(uuid: $id));
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to load custom dictionary: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->getDictionary(uuid: $id),
+            failureMessage: 'Failed to load custom dictionary: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end show()
 
@@ -153,23 +131,12 @@ class CustomDictionaryController extends Controller
      */
     public function create(): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            $data = $this->request->getParams();
-            return new JSONResponse($this->service->createDictionary(data: $data), 201);
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to create custom dictionary: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->createDictionary(data: $this->request->getParams()),
+            failureMessage: 'Failed to create custom dictionary: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found'),
+            status: Http::STATUS_CREATED
+        );
 
     }//end create()
 
@@ -189,27 +156,14 @@ class CustomDictionaryController extends Controller
      */
     public function update(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            $data = $this->request->getParams();
-            return new JSONResponse($this->service->updateDictionary(uuid: $id, data: $data));
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to update custom dictionary: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->updateDictionary(
+                uuid: $id,
+                data: $this->request->getParams()
+            ),
+            failureMessage: 'Failed to update custom dictionary: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end update()
 
@@ -229,25 +183,14 @@ class CustomDictionaryController extends Controller
      */
     public function destroy(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            $this->service->deleteDictionary(uuid: $id);
-            return new JSONResponse(['deleted' => $id]);
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to delete custom dictionary: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: function () use ($id): array {
+                $this->service->deleteDictionary(uuid: $id);
+                return ['deleted' => $id];
+            },
+            failureMessage: 'Failed to delete custom dictionary: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end destroy()
 
@@ -267,24 +210,11 @@ class CustomDictionaryController extends Controller
      */
     public function indexTerms(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            return new JSONResponse($this->service->listTerms(dictionaryUuid: $id));
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to list terms: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->listTerms(dictionaryUuid: $id),
+            failureMessage: 'Failed to list terms: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end indexTerms()
 
@@ -304,27 +234,15 @@ class CustomDictionaryController extends Controller
      */
     public function createTerm(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            $data = $this->request->getParams();
-            return new JSONResponse($this->service->createTerm(dictionaryUuid: $id, data: $data), 201);
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to create term: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: fn (): array => $this->service->createTerm(
+                dictionaryUuid: $id,
+                data: $this->request->getParams()
+            ),
+            failureMessage: 'Failed to create term: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found'),
+            status: Http::STATUS_CREATED
+        );
 
     }//end createTerm()
 
@@ -345,25 +263,14 @@ class CustomDictionaryController extends Controller
      */
     public function deleteTerm(string $id, string $termId): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
-
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
-
-        try {
-            $this->service->deleteTerm(dictionaryUuid: $id, termUuid: $termId);
-            return new JSONResponse(['deleted' => $termId]);
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Term not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to delete term: ', exception: $e);
-        }
+        return $this->dispatch(
+            operation: function () use ($id, $termId): array {
+                $this->service->deleteTerm(dictionaryUuid: $id, termUuid: $termId);
+                return ['deleted' => $termId];
+            },
+            failureMessage: 'Failed to delete term: ',
+            notFoundMessage: $this->l10n->t('Term not found')
+        );
 
     }//end deleteTerm()
 
@@ -385,31 +292,25 @@ class CustomDictionaryController extends Controller
      */
     public function import(string $id): JSONResponse
     {
-        $unauthenticated = $this->requireAuthenticated();
-        if ($unauthenticated !== null) {
-            return $unauthenticated;
-        }
+        $noContentMessage = $this->l10n->t('No import content provided');
 
-        if ($this->service->isAvailable() === false) {
-            return $this->unavailable();
-        }
+        return $this->dispatch(
+            operation: function () use ($id, $noContentMessage): array {
+                [$content, $isCsv] = $this->readImportPayload();
+                if ($content === null) {
+                    // Mapped to HTTP 400 with this message by dispatch().
+                    throw new InvalidArgumentException($noContentMessage);
+                }
 
-        try {
-            [$content, $isCsv] = $this->readImportPayload();
-            if ($content === null) {
-                return new JSONResponse(['error' => $this->l10n->t('No import content provided')], 400);
-            }
-
-            return new JSONResponse($this->service->importTerms(dictionaryUuid: $id, content: $content, isCsv: $isCsv));
-        } catch (DoesNotExistException $e) {
-            return new JSONResponse(['error' => $this->l10n->t('Custom dictionary not found')], Http::STATUS_NOT_FOUND);
-        } catch (RuntimeException $e) {
-            return $this->forbidden();
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to import terms: ', exception: $e);
-        }
+                return $this->service->importTerms(
+                    dictionaryUuid: $id,
+                    content: $content,
+                    isCsv: $isCsv
+                );
+            },
+            failureMessage: 'Failed to import terms: ',
+            notFoundMessage: $this->l10n->t('Custom dictionary not found')
+        );
 
     }//end import()
 
@@ -450,6 +351,73 @@ class CustomDictionaryController extends Controller
         return [$content, $isCsv];
 
     }//end readImportPayload()
+
+    /**
+     * Run one endpoint operation behind the shared guard, mapping the
+     * exceptions every endpoint can raise to their standard responses.
+     *
+     * Centralising this keeps each endpoint a single expression, and keeps
+     * the guard order identical everywhere: unauthenticated (401) is checked
+     * before OpenRegister availability (503), and only then does the
+     * operation run.
+     *
+     * @param callable():array<string, mixed> $operation       The gated operation.
+     * @param string                          $failureMessage  Log/response prefix for an unexpected failure.
+     * @param string                          $notFoundMessage Already-translated 404 message.
+     * @param int                             $status          Success HTTP status.
+     *
+     * @return JSONResponse
+     *
+     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+     */
+    private function dispatch(
+        callable $operation,
+        string $failureMessage,
+        string $notFoundMessage,
+        int $status=Http::STATUS_OK
+    ): JSONResponse {
+        $blocked = $this->guard();
+        if ($blocked !== null) {
+            return $blocked;
+        }
+
+        try {
+            return new JSONResponse($operation(), $status);
+        } catch (DoesNotExistException $e) {
+            return new JSONResponse(['error' => $notFoundMessage], Http::STATUS_NOT_FOUND);
+        } catch (RuntimeException $e) {
+            return $this->forbidden();
+        } catch (InvalidArgumentException $e) {
+            return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+        } catch (Exception $e) {
+            return $this->error(message: $failureMessage, exception: $e);
+        }//end try
+
+    }//end dispatch()
+
+    /**
+     * The guard every endpoint shares: an authenticated session, and an
+     * installed OpenRegister.
+     *
+     * @return JSONResponse|null The blocking response, or null when the
+     *                           caller may proceed.
+     *
+     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+     */
+    private function guard(): ?JSONResponse
+    {
+        $unauthenticated = $this->requireAuthenticated();
+        if ($unauthenticated !== null) {
+            return $unauthenticated;
+        }
+
+        if ($this->service->isAvailable() === false) {
+            return $this->unavailable();
+        }
+
+        return null;
+
+    }//end guard()
 
     /**
      * Require an authenticated session.
