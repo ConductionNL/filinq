@@ -32,8 +32,6 @@ namespace OCA\DocuDesk\Service;
 use Exception;
 use RuntimeException;
 use OCP\IAppConfig;
-use OCP\App\IAppManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -59,43 +57,15 @@ class SettingsService
     private readonly string $appName;
 
     /**
-     * The unique identifier for the OpenRegister application
-     *
-     * @var string The ID of the OpenRegister app
-     */
-    private const OPENREGISTER_APP_ID = 'openregister';
-
-    /**
-     * Fallback minimum OpenRegister version if the manifest cannot be read.
-     *
-     * The canonical source of truth is `openspec/manifest.yaml`
-     * (`dependencies.openregister.minVersion`) per
-     * docudesk-adopt-or-abstractions task 1. This constant is only used when
-     * the manifest is missing/unreadable so the runtime still has a defensive
-     * floor; the manifest validator enforces parity.
-     *
-     * @var string Fallback minimum required version of OpenRegister.
-     */
-    private const FALLBACK_MIN_OPENREGISTER_VERSION = '0.2.10';
-
-    /**
-     * Cached minimum OpenRegister version resolved from the manifest.
-     *
-     * @var string|null
-     */
-    private ?string $minOpenRegisterVersion = null;
-
-    /**
      * SettingsService constructor
      *
-     * @param IAppConfig               $config            App configuration interface
-     * @param ContainerInterface       $container         Container for DI
-     * @param IAppManager              $appManager        App manager interface
-     * @param LoggerInterface          $logger            Logger interface
-     * @param RegisterDiscoveryService $discoveryService  Register discovery service
-     * @param SettingsInitializer      $initializer       Settings initializer
-     * @param OcrService               $ocrService        OCR service for Tesseract status
-     * @param GrondslagProposalService $grondslagProposal Grondslag-per-entity-type proposal service
+     * @param IAppConfig                        $config            App configuration interface
+     * @param LoggerInterface                   $logger            Logger interface
+     * @param RegisterDiscoveryService          $discoveryService  Register discovery service
+     * @param SettingsInitializer               $initializer       Settings initializer
+     * @param OcrService                        $ocrService        OCR service for Tesseract status
+     * @param GrondslagProposalService          $grondslagProposal Grondslag-per-entity-type proposal service
+     * @param OpenRegisterAvailabilityService   $openRegister      OpenRegister availability resolver
      *
      * @return void
      *
@@ -103,13 +73,12 @@ class SettingsService
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
         private readonly LoggerInterface $logger,
         private readonly RegisterDiscoveryService $discoveryService,
         private readonly SettingsInitializer $initializer,
         private readonly OcrService $ocrService,
-        private readonly GrondslagProposalService $grondslagProposal
+        private readonly GrondslagProposalService $grondslagProposal,
+        private readonly OpenRegisterAvailabilityService $openRegister
     ) {
         $this->appName = 'docudesk';
 
@@ -122,49 +91,9 @@ class SettingsService
      */
     private function isOpenRegisterInstalled(): bool
     {
-        if ($this->appManager->isInstalled(self::OPENREGISTER_APP_ID) === false) {
-            return false;
-        }
-
-        $currentVersion = $this->appManager->getAppVersion(self::OPENREGISTER_APP_ID);
-        return version_compare($currentVersion, $this->getMinOpenRegisterVersion(), '>=') === true;
+        return $this->openRegister->isInstalled();
 
     }//end isOpenRegisterInstalled()
-
-    /**
-     * Resolve the minimum supported OpenRegister version.
-     *
-     * Reads `dependencies.openregister.minVersion` from the project's
-     * `openspec/manifest.yaml`. Falls back to FALLBACK_MIN_OPENREGISTER_VERSION
-     * when the manifest is missing, unreadable, or shaped unexpectedly so the
-     * boot path stays defensive. The result is memoised per-instance.
-     *
-     * @return string Semantic version of the minimum supported OpenRegister.
-     */
-    private function getMinOpenRegisterVersion(): string
-    {
-        if ($this->minOpenRegisterVersion !== null) {
-            return $this->minOpenRegisterVersion;
-        }
-
-        $manifestPath = dirname(__DIR__, 2).'/openspec/manifest.yaml';
-        $minVersion   = self::FALLBACK_MIN_OPENREGISTER_VERSION;
-        if (is_file($manifestPath) === true && is_readable($manifestPath) === true) {
-            $contents = file_get_contents($manifestPath);
-            if (is_string($contents) === true && preg_match(
-                '/dependencies:\s*\n(?:\s+#[^\n]*\n)*\s+openregister:\s*\n(?:\s+#[^\n]*\n)*\s+minVersion:\s*["\']?([0-9][0-9A-Za-z\.\-+]*)["\']?/m',
-                $contents,
-                $matches
-            ) === 1
-            ) {
-                $minVersion = $matches[1];
-            }
-        }
-
-        $this->minOpenRegisterVersion = $minVersion;
-        return $minVersion;
-
-    }//end getMinOpenRegisterVersion()
 
     /**
      * Attempts to retrieve the OpenRegister service from the container
@@ -177,16 +106,7 @@ class SettingsService
      */
     public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
     {
-        if (in_array(
-            self::OPENREGISTER_APP_ID,
-            $this->appManager->getInstalledApps(),
-            true
-        ) === true
-        ) {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        }
-
-        throw new RuntimeException('OpenRegister service is not available.');
+        return $this->openRegister->getObjectService();
 
     }//end getObjectService()
 

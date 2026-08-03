@@ -22,14 +22,13 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\GrondslagProposalService;
 use OCA\DocuDesk\Service\OcrService;
+use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
 use OCA\DocuDesk\Service\SettingsInitializer;
 use OCA\DocuDesk\Service\SettingsService;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -58,14 +57,9 @@ class SettingsServiceTest extends TestCase
     private IAppConfig|MockObject $mockConfig;
 
     /**
-     * @var ContainerInterface|MockObject
+     * @var OpenRegisterAvailabilityService|MockObject
      */
-    private ContainerInterface|MockObject $mockContainer;
-
-    /**
-     * @var IAppManager|MockObject
-     */
-    private IAppManager|MockObject $mockAppManager;
+    private OpenRegisterAvailabilityService|MockObject $mockOpenRegister;
 
     /**
      * @var LoggerInterface|MockObject
@@ -103,23 +97,21 @@ class SettingsServiceTest extends TestCase
         parent::setUp();
 
         $this->mockConfig            = $this->createMock(IAppConfig::class);
-        $this->mockContainer         = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager        = $this->createMock(IAppManager::class);
         $this->mockLogger            = $this->createMock(LoggerInterface::class);
         $this->mockDiscoveryService  = $this->createMock(RegisterDiscoveryService::class);
         $this->mockInitializer       = $this->createMock(SettingsInitializer::class);
         $this->mockOcrService        = $this->createMock(OcrService::class);
         $this->mockGrondslagProposal = $this->createMock(GrondslagProposalService::class);
+        $this->mockOpenRegister      = $this->createMock(OpenRegisterAvailabilityService::class);
 
         $this->settingsService = new SettingsService(
             $this->mockConfig,
-            $this->mockContainer,
-            $this->mockAppManager,
             $this->mockLogger,
             $this->mockDiscoveryService,
             $this->mockInitializer,
             $this->mockOcrService,
-            $this->mockGrondslagProposal
+            $this->mockGrondslagProposal,
+            $this->mockOpenRegister
         );
 
     }//end setUp()
@@ -135,8 +127,8 @@ class SettingsServiceTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('OpenRegister service is not available');
 
-        $this->mockAppManager->method('getInstalledApps')
-            ->willReturn([]);
+        $this->mockOpenRegister->method('getObjectService')
+            ->willThrowException(new RuntimeException('OpenRegister service is not available.'));
 
         $this->settingsService->getObjectService();
 
@@ -169,7 +161,7 @@ class SettingsServiceTest extends TestCase
      */
     public function testGetAllSettingsReturnsExpectedStructure(): void
     {
-        $this->mockAppManager->method('isInstalled')
+        $this->mockOpenRegister->method('isInstalled')
             ->willReturn(false);
 
         $this->mockDiscoveryService->method('loadObjectTypeConfiguration')

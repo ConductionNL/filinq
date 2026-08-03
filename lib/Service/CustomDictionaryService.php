@@ -30,10 +30,7 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use InvalidArgumentException;
-use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
-use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -74,27 +71,6 @@ class CustomDictionaryService
     public const SCHEMA_TERM = 'customDictionaryTerm';
 
     /**
-     * OpenRegister's app id, used for the install-presence check.
-     *
-     * @var string
-     */
-    private const OPENREGISTER_APP_ID = 'openregister';
-
-    /**
-     * Valid `matchMode` values (mirrors the schema enum).
-     *
-     * @var array<int, string>
-     */
-    private const VALID_MATCH_MODES = ['exact', 'caseInsensitive', 'wordBoundary'];
-
-    /**
-     * Default match mode when unset/invalid.
-     *
-     * @var string
-     */
-    private const DEFAULT_MATCH_MODE = 'caseInsensitive';
-
-    /**
      * Maximum number of term rows accepted in a single import call —
      * bounds the request against a denial-of-service via an oversized
      * upload (design.md §Security Considerations).
@@ -113,17 +89,15 @@ class CustomDictionaryService
     /**
      * Constructor.
      *
-     * @param SettingsService    $settingsService Provides OpenRegister's ObjectService.
-     * @param ContainerInterface $container       DI container for lazy OpenRegister service resolution.
-     * @param IAppManager        $appManager      App manager (OpenRegister availability check).
-     * @param IUserSession       $userSession     Current-user lookup for the organisation gate.
-     * @param LoggerInterface    $logger          Structured logger.
+     * @param CustomDictionaryRepository         $repository Persistence primitives.
+     * @param CustomDictionaryAccessGate         $accessGate Fail-closed organisation gate.
+     * @param CustomDictionaryPayloadNormaliser  $normaliser Import parsing and payload coercion.
+     * @param LoggerInterface                    $logger     Structured logger.
      */
     public function __construct(
-        private readonly SettingsService $settingsService,
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
-        private readonly IUserSession $userSession,
+        private readonly CustomDictionaryRepository $repository,
+        private readonly CustomDictionaryAccessGate $accessGate,
+        private readonly CustomDictionaryPayloadNormaliser $normaliser,
         private readonly LoggerInterface $logger
     ) {
 
@@ -139,7 +113,7 @@ class CustomDictionaryService
      */
     public function isAvailable(): bool
     {
-        return in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true);
+        return $this->accessGate->isAvailable();
 
     }//end isAvailable()
 
@@ -157,11 +131,11 @@ class CustomDictionaryService
             return [];
         }
 
-        $rows       = $this->listByRegisterSchema(schema: self::SCHEMA_DICTIONARY);
+        $rows       = $this->repository->listBySchema(schema: self::SCHEMA_DICTIONARY);
         $accessible = array_values(
             array_filter(
                 $rows,
-                fn (array $record): bool => $this->callerHasAccess(record: $record)
+                fn (array $record): bool => $this->accessGate->callerHasAccess(record: $record)
             )
         );
 
@@ -207,12 +181,12 @@ class CustomDictionaryService
      */
     public function createDictionary(array $data): array
     {
-        $payload = $this->stripFrameworkParams(data: $data);
+        $payload = $this->normaliser->stripFrameworkParams(data: $data);
         unset($payload['termCount']);
         $payload['active']    = ($payload['active'] ?? true);
-        $payload['matchMode'] = $this->sanitizeMatchMode(mode: ($payload['matchMode'] ?? null));
+        $payload['matchMode'] = $this->normaliser->sanitizeMatchMode(mode: ($payload['matchMode'] ?? null));
 
-        $saved = $this->saveObject(schema: self::SCHEMA_DICTIONARY, data: $payload);
+        $saved = $this->repository->save(schema: self::SCHEMA_DICTIONARY, data: $payload);
         return $this->enrichWithTermCount(dictionary: $saved);
 
     }//end createDictionary()
@@ -236,11 +210,11 @@ class CustomDictionaryService
     {
         $existing = $this->findDictionaryOrFail(uuid: $uuid);
 
-        $payload = array_merge($existing, $this->stripFrameworkParams(data: $data));
+        $payload = array_merge($existing, $this->normaliser->stripFrameworkParams(data: $data));
         unset($payload['termCount'], $payload['@self']);
-        $payload['matchMode'] = $this->sanitizeMatchMode(mode: ($payload['matchMode'] ?? null));
+        $payload['matchMode'] = $this->normaliser->sanitizeMatchMode(mode: ($payload['matchMode'] ?? null));
 
-        $saved = $this->saveObject(schema: self::SCHEMA_DICTIONARY, data: $payload, uuid: $uuid);
+        $saved = $this->repository->save(schema: self::SCHEMA_DICTIONARY, data: $payload, uuid: $uuid);
         return $this->enrichWithTermCount(dictionary: $saved);
 
     }//end updateDictionary()
@@ -264,11 +238,11 @@ class CustomDictionaryService
         foreach ($this->listTermsForDictionary(dictionary: $existing) as $term) {
             $termId = (string) ($term['id'] ?? '');
             if ($termId !== '') {
-                $this->deleteObject(schema: self::SCHEMA_TERM, uuid: $termId);
+                $this->repository->delete(schema: self::SCHEMA_TERM, uuid: $termId);
             }
         }
 
-        $this->deleteObject(schema: self::SCHEMA_DICTIONARY, uuid: $uuid);
+        $this->repository->delete(schema: self::SCHEMA_DICTIONARY, uuid: $uuid);
 
     }//end deleteDictionary()
 
@@ -313,11 +287,11 @@ class CustomDictionaryService
             throw new InvalidArgumentException('Term value must not be blank.');
         }
 
-        return $this->saveObject(
+        return $this->repository->save(
             schema: self::SCHEMA_TERM,
             data: [
                 'value'      => $value,
-                'label'      => $this->stringOrNull(value: ($data['label'] ?? null)),
+                'label'      => $this->normaliser->stringOrNull(value: ($data['label'] ?? null)),
                 'dictionary' => (string) ($dictionary['id'] ?? $dictionaryUuid),
             ]
         );
@@ -342,12 +316,12 @@ class CustomDictionaryService
     {
         $dictionary = $this->findDictionaryOrFail(uuid: $dictionaryUuid);
 
-        $term = $this->findOne(schema: self::SCHEMA_TERM, uuid: $termUuid);
+        $term = $this->repository->findOne(schema: self::SCHEMA_TERM, uuid: $termUuid);
         if ($term === null || $this->termBelongsToDictionary(term: $term, dictionary: $dictionary) === false) {
             throw new DoesNotExistException('Term not found for this dictionary.');
         }
 
-        $this->deleteObject(schema: self::SCHEMA_TERM, uuid: $termUuid);
+        $this->repository->delete(schema: self::SCHEMA_TERM, uuid: $termUuid);
 
     }//end deleteTerm()
 
@@ -381,7 +355,11 @@ class CustomDictionaryService
             );
         }
 
-        $rows = $this->parseImportContent(content: $content, isCsv: $isCsv);
+        $rows = $this->normaliser->parseList(content: $content);
+        if ($isCsv === true) {
+            $rows = $this->normaliser->parseCsv(content: $content);
+        }
+
         if (count($rows) > self::MAX_IMPORT_ROWS) {
             throw new InvalidArgumentException(
                 sprintf('Import exceeds the %d row limit.', self::MAX_IMPORT_ROWS)
@@ -399,7 +377,7 @@ class CustomDictionaryService
         $seenThisBatch = [];
 
         foreach ($rows as $row) {
-            // parseImportContent() always emits a string `value` (a missing CSV
+            // The normaliser always emits a string `value` (a missing CSV
             // column is coerced to ''), so no null-coalesce is needed here.
             $value = trim($row['value']);
             if ($value === '') {
@@ -415,11 +393,11 @@ class CustomDictionaryService
 
             $seenThisBatch[$key] = true;
 
-            $this->saveObject(
+            $this->repository->save(
                 schema: self::SCHEMA_TERM,
                 data: [
                     'value'      => $value,
-                    'label'      => $this->stringOrNull(value: ($row['label'] ?? null)),
+                    'label'      => $this->normaliser->stringOrNull(value: ($row['label'] ?? null)),
                     'dictionary' => $dictionaryReference,
                 ]
             );
@@ -470,7 +448,7 @@ class CustomDictionaryService
 
                 $result[] = [
                     'label'     => (string) ($dictionary['label'] ?? ''),
-                    'matchMode' => $this->sanitizeMatchMode(mode: ($dictionary['matchMode'] ?? null)),
+                    'matchMode' => $this->normaliser->sanitizeMatchMode(mode: ($dictionary['matchMode'] ?? null)),
                     'terms'     => $termRows,
                 ];
             }//end foreach
@@ -534,12 +512,12 @@ class CustomDictionaryService
      */
     private function findDictionaryOrFail(string $uuid): array
     {
-        $record = $this->findOne(schema: self::SCHEMA_DICTIONARY, uuid: $uuid);
+        $record = $this->repository->findOne(schema: self::SCHEMA_DICTIONARY, uuid: $uuid);
         if ($record === null) {
             throw new DoesNotExistException(sprintf('Custom dictionary %s not found.', $uuid));
         }
 
-        if ($this->callerHasAccess(record: $record) === false) {
+        if ($this->accessGate->callerHasAccess(record: $record) === false) {
             throw new RuntimeException('You do not have access to this custom dictionary.');
         }
 
@@ -558,7 +536,7 @@ class CustomDictionaryService
      */
     private function listTermsForDictionary(array $dictionary): array
     {
-        $rows = $this->listByRegisterSchema(schema: self::SCHEMA_TERM);
+        $rows = $this->repository->listBySchema(schema: self::SCHEMA_TERM);
         return array_values(
             array_filter(
                 $rows,
@@ -584,7 +562,7 @@ class CustomDictionaryService
         }
 
         $dictionaryId   = (string) ($dictionary['id'] ?? '');
-        $dictionarySlug = (string) ($this->selfMeta(record: $dictionary)['slug'] ?? ($dictionary['slug'] ?? ''));
+        $dictionarySlug = (string) ($this->accessGate->selfMeta(record: $dictionary)['slug'] ?? ($dictionary['slug'] ?? ''));
 
         return $reference === $dictionaryId || ($dictionarySlug !== '' && $reference === $dictionarySlug);
 
@@ -604,319 +582,4 @@ class CustomDictionaryService
 
     }//end enrichWithTermCount()
 
-    /**
-     * Fail-closed organisation-membership check for one record.
-     *
-     * A record without an organisation, or any failure resolving
-     * OpenRegister's `OrganisationService`, is treated as inaccessible —
-     * never as "everyone may access it".
-     *
-     * @param array<string, mixed> $record The record to check.
-     *
-     * @return bool True when the current caller may read/write this record.
-     */
-    private function callerHasAccess(array $record): bool
-    {
-        $organisationUuid = (string) ($this->selfMeta(record: $record)['organisation'] ?? '');
-        if ($organisationUuid === '') {
-            return false;
-        }
-
-        if ($this->userSession->getUser() === null) {
-            return false;
-        }
-
-        try {
-            $organisationService = $this->getOrganisationService();
-            return $organisationService->hasAccessToOrganisation($organisationUuid);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[CustomDictionaryService] organisation-access check failed; denying access (fail-closed).',
-                ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
-            );
-            return false;
-        }
-
-    }//end callerHasAccess()
-
-    /**
-     * Lazily resolve OpenRegister's `OrganisationService` by FQCN via the
-     * DI container (same cross-app pattern used throughout DocuDesk), so
-     * this class stays loadable without OpenRegister installed.
-     *
-     * @return object OpenRegister's `OrganisationService`.
-     *
-     * @throws RuntimeException When OpenRegister is not installed.
-     */
-    private function getOrganisationService(): object
-    {
-        if ($this->isAvailable() === false) {
-            throw new RuntimeException('OpenRegister is not available.');
-        }
-
-        return $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-
-    }//end getOrganisationService()
-
-    /**
-     * Extract the `@self` metadata block from a record, defensively.
-     *
-     * @param array<string, mixed> $record The record.
-     *
-     * @return array<string, mixed>
-     */
-    private function selfMeta(array $record): array
-    {
-        $self = $record['@self'] ?? [];
-        if (is_array($self) === false) {
-            return [];
-        }
-
-        return $self;
-
-    }//end selfMeta()
-
-    /**
-     * Sanitise a `matchMode` value against the schema enum.
-     *
-     * @param mixed $mode Raw value.
-     *
-     * @return string A value from {@see VALID_MATCH_MODES}.
-     */
-    private function sanitizeMatchMode(mixed $mode): string
-    {
-        if (is_string($mode) === true && in_array($mode, self::VALID_MATCH_MODES, true) === true) {
-            return $mode;
-        }
-
-        return self::DEFAULT_MATCH_MODE;
-
-    }//end sanitizeMatchMode()
-
-    /**
-     * Parse import content into `{value, label}` rows.
-     *
-     * @param string $content Raw content.
-     * @param bool   $isCsv   True for CSV parsing, false for newline-list parsing.
-     *
-     * @return array<int, array{value: string, label: string|null}>
-     */
-    private function parseImportContent(string $content, bool $isCsv): array
-    {
-        // Normalise line endings so a Windows-authored CSV/list parses the
-        // same as a Unix one.
-        $normalized = str_replace(["\r\n", "\r"], "\n", $content);
-
-        // Drop exactly one trailing newline artifact (a pasted textarea
-        // value or an uploaded file almost always ends with one) so it is
-        // not counted as an extra blank line. Every OTHER blank/whitespace-
-        // only line is preserved as a row — importTerms() counts it toward
-        // `skipped` per REQ-DDCDR-005's scenario numbers (blank lines are
-        // part of the reported total, not silently dropped pre-count).
-        if (str_ends_with($normalized, "\n") === true) {
-            $normalized = substr($normalized, 0, -1);
-        }
-
-        $lines = explode("\n", $normalized);
-
-        $rows = [];
-        foreach ($lines as $line) {
-            if ($isCsv === true) {
-                // Explicit $escape (PHP 8.4 deprecates the implicit default) —
-                // no escape character: dictionary term CSVs are simple
-                // value[,label] rows, never quoted-and-escaped fields.
-                $columns = str_getcsv(string: $line, separator: ',', enclosure: '"', escape: '');
-                $rows[]  = [
-                    'value' => (string) ($columns[0] ?? ''),
-                    'label' => ($columns[1] ?? null),
-                ];
-                continue;
-            }
-
-            $rows[] = [
-                'value' => $line,
-                'label' => null,
-            ];
-        }//end foreach
-
-        return $rows;
-
-    }//end parseImportContent()
-
-    /**
-     * Strip framework-injected request params before persistence.
-     *
-     * @param array<string, mixed> $data Raw incoming data.
-     *
-     * @return array<string, mixed>
-     */
-    private function stripFrameworkParams(array $data): array
-    {
-        unset($data['_route'], $data['_method'], $data['id'], $data['uuid']);
-        return $data;
-
-    }//end stripFrameworkParams()
-
-    /**
-     * Coerce a value to a trimmed string, or null when blank/absent.
-     *
-     * @param mixed $value Raw value.
-     *
-     * @return string|null
-     */
-    private function stringOrNull(mixed $value): ?string
-    {
-        if (is_string($value) === false) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return $trimmed;
-
-    }//end stringOrNull()
-
-    /**
-     * List records by schema slug (register is always {@see REGISTER}) and
-     * serialise them to plain arrays.
-     *
-     * @param string $schema Schema slug.
-     *
-     * @return array<int, array<string, mixed>>
-     *
-     * @throws Exception On query failure.
-     */
-    private function listByRegisterSchema(string $schema): array
-    {
-        $objectService = $this->settingsService->getObjectService();
-        // Slug-aware variant — OR's standard searchObjects requires numeric
-        // register/schema ids and silently returns nothing otherwise.
-        $results = $objectService->searchObjectsBySlug(
-            registerSlug: self::REGISTER,
-            schemaSlug: $schema,
-            _rbac: false,
-            _multitenancy: false
-        );
-
-        if (is_int($results) === true) {
-            return [];
-        }
-
-        $rows = [];
-        foreach ($results as $result) {
-            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $rows[] = $result->jsonSerialize();
-                continue;
-            }
-
-            if (is_array($result) === true) {
-                $rows[] = $result;
-            }
-        }
-
-        return $rows;
-
-    }//end listByRegisterSchema()
-
-    /**
-     * Look up one record by UUID.
-     *
-     * @param string $schema Schema slug.
-     * @param string $uuid   Record UUID.
-     *
-     * @return array<string, mixed>|null
-     *
-     * @throws Exception On lookup failure.
-     */
-    private function findOne(string $schema, string $uuid): ?array
-    {
-        $objectService = $this->settingsService->getObjectService();
-        $object        = $objectService->find(
-            id: $uuid,
-            register: self::REGISTER,
-            schema: $schema,
-            _rbac: false,
-            _multitenancy: false
-        );
-
-        if ($object === null) {
-            return null;
-        }
-
-        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            return $object->jsonSerialize();
-        }
-
-        return (array) $object;
-
-    }//end findOne()
-
-    /**
-     * Persist a record via `ObjectService::saveObject`.
-     *
-     * @param string               $schema Schema slug.
-     * @param array<string, mixed> $data   Record payload.
-     * @param string|null          $uuid   Optional UUID for updates.
-     *
-     * @return array<string, mixed>
-     *
-     * @throws Exception On write failure.
-     */
-    private function saveObject(string $schema, array $data, ?string $uuid=null): array
-    {
-        try {
-            $objectService = $this->settingsService->getObjectService();
-            $saved         = $objectService->saveObject(
-                object: $data,
-                register: self::REGISTER,
-                schema: $schema,
-                uuid: $uuid,
-                _rbac: false,
-                _multitenancy: false
-            );
-
-            if (is_object($saved) === true && method_exists($saved, 'jsonSerialize') === true) {
-                return $saved->jsonSerialize();
-            }
-
-            return (array) $saved;
-        } catch (Exception $e) {
-            $this->logger->error(
-                'CustomDictionaryService: save failed',
-                ['schema' => $schema, 'uuid' => $uuid, 'error' => $e->getMessage()]
-            );
-            throw $e;
-        }//end try
-
-    }//end saveObject()
-
-    /**
-     * Delete a record via `ObjectService::deleteObject`.
-     *
-     * @param string $schema Schema slug.
-     * @param string $uuid   Record UUID.
-     *
-     * @return void
-     *
-     * @throws Exception On deletion failure.
-     */
-    private function deleteObject(string $schema, string $uuid): void
-    {
-        $objectService = $this->settingsService->getObjectService();
-        // NOTE: unlike find()/saveObject() (whose first param is $id / a
-        // $uuid keyword respectively), ObjectService::deleteObject()'s first
-        // parameter is named $uuid — verified against
-        // OCA\OpenRegister\Service\ObjectService::deleteObject() at HEAD.
-        $objectService->deleteObject(
-            uuid: $uuid,
-            register: self::REGISTER,
-            schema: $schema,
-            _rbac: false,
-            _multitenancy: false
-        );
-
-    }//end deleteObject()
 }//end class
