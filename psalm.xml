@@ -65,6 +65,15 @@
                 <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrail"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrailMapper"/>
+                <!--
+                  GdprEntity is instantiated by FQCN string in
+                  AnonymizationService::lookupOrCreateCustomDictionaryEntity()
+                  precisely so this app stays loadable without OpenRegister
+                  installed. Same category (and same file) as the OR Db
+                  classes above; the real class lives in
+                  openregister/lib/Db/GdprEntity.php.
+                -->
+                <referencedClass name="OCA\OpenRegister\Db\GdprEntity"/>
                 <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
                 <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>

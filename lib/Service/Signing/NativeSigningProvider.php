@@ -52,16 +52,18 @@ class NativeSigningProvider implements SigningProviderInterface
     /**
      * Constructor
      *
-     * @param LoggerInterface $logger          Logger interface
-     * @param SettingsService $settingsService Settings service (provides OR ObjectService)
-     * @param IAppConfig      $config          App config (resolves session register/schema)
+     * @param LoggerInterface        $logger          Logger interface
+     * @param SettingsService        $settingsService Settings service (provides OR ObjectService)
+     * @param IAppConfig             $config          App config (resolves session register/schema)
+     * @param AssertionCanonicalizer $canonicalizer   Canonical-JSON encoder shared with the verifier
      *
      * @return void
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config
+        private readonly IAppConfig $config,
+        private readonly AssertionCanonicalizer $canonicalizer=new AssertionCanonicalizer()
     ) {
 
     }//end __construct()
@@ -341,7 +343,7 @@ class NativeSigningProvider implements SigningProviderInterface
         // over the hash of that canonical form so the MAC cannot cover itself.
         $canonical   = $this->assembleSignedBytes(documentContent: $documentContent, payload: '');
         $contentHash = hash('sha256', $canonical);
-        $payloadCore = AssertionCanonicalizer::canonicalJson(data: $assertion);
+        $payloadCore = $this->canonicalizer->canonicalJson(data: $assertion);
         $mac         = hash_hmac('sha256', $contentHash."\n".$payloadCore, $secret);
 
         $assertion['mac'] = $mac;

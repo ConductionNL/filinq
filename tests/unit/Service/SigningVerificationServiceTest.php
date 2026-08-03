@@ -218,7 +218,7 @@ class SigningVerificationServiceTest extends TestCase
 
         $canonical   = $assemble($original, '');
         $contentHash = hash('sha256', $canonical);
-        $payloadCore = \OCA\DocuDesk\Service\Signing\AssertionCanonicalizer::canonicalJson(data: $assertion);
+        $payloadCore = (new \OCA\DocuDesk\Service\Signing\AssertionCanonicalizer())->canonicalJson(data: $assertion);
 
         $mac              = hash_hmac('sha256', $contentHash."\n".$payloadCore, $secret);
         $assertion['mac'] = $mac;

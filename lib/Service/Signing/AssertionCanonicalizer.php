@@ -33,20 +33,16 @@ namespace OCA\DocuDesk\Service\Signing;
  * this class is the single source of truth for that encoding so the two
  * sides can never drift.
  *
+ * Stateless but deliberately NOT static: the writer
+ * ({@see \OCA\DocuDesk\Service\Signing\NativeSigningProvider}) and the verifier
+ * ({@see \OCA\DocuDesk\Service\SigningVerificationService}) take it as an
+ * injected collaborator, so the encoding is a substitutable dependency rather
+ * than a hard-wired static call.
+ *
  * @spec openspec/specs/document-signing/spec.md
  */
 final class AssertionCanonicalizer
 {
-    /**
-     * Private constructor — static-only utility class.
-     *
-     * @return void
-     */
-    private function __construct()
-    {
-
-    }//end __construct()
-
     /**
      * Canonical-JSON encode an assertion payload with recursively sorted keys.
      *
@@ -56,9 +52,9 @@ final class AssertionCanonicalizer
      *
      * @spec openspec/specs/document-signing/spec.md
      */
-    public static function canonicalJson(array $data): string
+    public function canonicalJson(array $data): string
     {
-        $sorted = self::sortRecursive(data: $data);
+        $sorted = $this->sortRecursive(data: $data);
 
         return (string) json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
@@ -71,11 +67,11 @@ final class AssertionCanonicalizer
      *
      * @return array<mixed, mixed> The recursively key-sorted data.
      */
-    private static function sortRecursive(array $data): array
+    private function sortRecursive(array $data): array
     {
         foreach ($data as $key => $value) {
             if (is_array($value) === true) {
-                $data[$key] = self::sortRecursive(data: $value);
+                $data[$key] = $this->sortRecursive(data: $value);
             }
         }
 
