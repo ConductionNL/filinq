@@ -186,6 +186,52 @@ IMPORTED_REGISTERS="${IMPORT_COUNTS% *}"
 IMPORTED_SCHEMAS="${IMPORT_COUNTS#* }"
 echo "[ci-seed] importer reports ${IMPORTED_REGISTERS} register(s), ${IMPORTED_SCHEMAS} schema(s) written."
 
+# Surface per-entity import failures.
+#
+# OpenRegister's `ImportHandler` imports schemas one at a time and swallows a
+# per-schema `Exception` with "Continue with other schemas instead of failing
+# the entire import" — it logs the reason and moves on. So a partial import
+# still answers **HTTP 200 "Import successful"**, and the only record of WHY a
+# schema is missing lives in `data/nextcloud.log`. Without this, the verification
+# below can only say WHICH slugs are absent, never why.
+NC_LOG="${NC_ROOT}/data/nextcloud.log"
+if [ -f "$NC_LOG" ]; then
+	python3 - "$NC_LOG" <<'PY' || true
+import json, sys
+
+hits = []
+with open(sys.argv[1], errors='replace') as fh:
+    for line in fh:
+        line = line.strip()
+        if 'ImportHandler' not in line or 'Failed to' not in line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            hits.append(line[:400])
+            continue
+        message = entry.get('message')
+        if isinstance(message, dict):
+            text = message.get('message', '')
+            context = message
+        else:
+            text = str(message)
+            context = entry.get('data') or {}
+        key = context.get('schemaKey') or context.get('registerKey') or context.get('slug') or '?'
+        error = context.get('error') or ''
+        hits.append(f'{text} [{key}] {error}'[:400])
+
+if hits:
+    print(f'[ci-seed] OpenRegister reported {len(hits)} per-entity import failure(s):')
+    for hit in hits:
+        print(f'[ci-seed]   {hit}')
+else:
+    print('[ci-seed] no per-entity import failures logged by OpenRegister.')
+PY
+else
+	echo "[ci-seed] (no ${NC_LOG} to inspect for per-entity import failures)"
+fi
+
 # ── 2. Verify the registers and schemas are actually there ───────────────────
 # The importer reporting success is not the same as the registers existing.
 # Verify against OpenRegister directly, and require exactly the slugs declared
