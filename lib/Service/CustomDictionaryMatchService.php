@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use ErrorException;
+
 /**
  * Deterministic term-matching engine for custom dictionaries.
  *
@@ -147,17 +149,9 @@ class CustomDictionaryMatchService
 
         foreach ($candidates as $candidate) {
             $pattern = $this->buildPattern(needle: $candidate['value'], mode: $normalizedMode);
-            $matches = [];
-            // Regex compile failures (malformed Unicode in an operator-
-            // supplied term) are swallowed per-term: a bad term is skipped
-            // rather than aborting the whole matching pass for every other
-            // term in the dictionary.
-            $count = @preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
-            if ($count === false || $count === 0) {
-                continue;
-            }
+            $rawHits = $this->findRawHits(pattern: $pattern, text: $text);
 
-            foreach ($matches[0] as $rawMatch) {
+            foreach ($rawHits as $rawMatch) {
                 [$matchedText, $start] = $rawMatch;
                 $start = (int) $start;
                 $end   = ($start + strlen((string) $matchedText));
@@ -186,6 +180,50 @@ class CustomDictionaryMatchService
     }//end match()
 
     /**
+     * Run one term's compiled pattern over the text, returning the raw
+     * `PREG_OFFSET_CAPTURE` hits for group 0.
+     *
+     * A malformed operator-supplied term can produce a pattern PCRE refuses to
+     * compile. PHP signals that with a `preg_match_all(): Compilation failed`
+     * WARNING plus a `false` return. Rather than suppressing the warning with
+     * `@` (which also hides every unrelated diagnostic the call could raise),
+     * the warning is converted into an `ErrorException` by a narrowly scoped
+     * error handler, caught here, and turned into "this one term matched
+     * nothing" — every other term in the dictionary still gets its pass.
+     *
+     * @param string $pattern The compiled pattern from {@see buildPattern()}.
+     * @param string $text    The document text to search.
+     *
+     * @return array<int, array{0: string, 1: int}> Raw `[matchedText, byteOffset]` hits.
+     */
+    private function findRawHits(string $pattern, string $text): array
+    {
+        $matches = [];
+
+        set_error_handler(
+            static function (int $severity, string $message, string $file, int $line): bool {
+                throw new ErrorException($message, 0, $severity, $file, $line);
+            }
+        );
+
+        try {
+            $count = preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
+        } catch (ErrorException) {
+            // Uncompilable term — skip it, keep matching the rest.
+            return [];
+        } finally {
+            restore_error_handler();
+        }//end try
+
+        if ($count === false || $count === 0) {
+            return [];
+        }
+
+        return $matches[0];
+
+    }//end findRawHits()
+
+    /**
      * Sanitise the caller-supplied match mode.
      *
      * @param string $mode Raw mode value.
@@ -207,7 +245,12 @@ class CustomDictionaryMatchService
      * its own value, preserving the original index for a stable sort
      * tie-break.
      *
-     * @param array<int, array{value: string, label?: string}> $terms Raw term rows.
+     * This is the sanitisation seam, so it takes the RAW row shape — both keys
+     * optional — rather than {@see match()}'s already-validated public
+     * contract: a dictionary row loaded from OpenRegister is arbitrary JSON and
+     * may legitimately arrive without a `value`.
+     *
+     * @param array<int, array{value?: string, label?: string}> $terms Raw term rows.
      *
      * @return array<int, array{value: string, label: string, originalIndex: int}> Sanitised candidates.
      */

@@ -399,7 +399,9 @@ class CustomDictionaryService
         $seenThisBatch = [];
 
         foreach ($rows as $row) {
-            $value = trim((string) ($row['value'] ?? ''));
+            // parseImportContent() always emits a string `value` (a missing CSV
+            // column is coerced to ''), so no null-coalesce is needed here.
+            $value = trim($row['value']);
             if ($value === '') {
                 $skipped++;
                 continue;
@@ -461,24 +463,7 @@ class CustomDictionaryService
                     continue;
                 }
 
-                $termRows = [];
-                foreach ($this->listTermsForDictionary(dictionary: $dictionary) as $term) {
-                    $value = trim((string) ($term['value'] ?? ''));
-                    if ($value === '') {
-                        continue;
-                    }
-
-                    $label = $term['label'] ?? null;
-                    if (is_string($label) === false || trim($label) === '') {
-                        $label = ($dictionary['label'] ?? $value);
-                    }
-
-                    $termRows[] = [
-                        'value' => $value,
-                        'label' => (string) $label,
-                    ];
-                }
-
+                $termRows = $this->buildDetectionTermRows(dictionary: $dictionary);
                 if (empty($termRows) === true) {
                     continue;
                 }
@@ -500,6 +485,41 @@ class CustomDictionaryService
         }//end try
 
     }//end listActiveDictionariesForDetection()
+
+    /**
+     * Build one dictionary's detection-shaped term rows: non-blank values
+     * only, each carrying a resolved label (the term's own label, else the
+     * dictionary's label, else the term value itself).
+     *
+     * @param array<string, mixed> $dictionary The parent dictionary record.
+     *
+     * @return array<int, array{value: string, label: string}> Term rows, possibly empty.
+     *
+     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+     */
+    private function buildDetectionTermRows(array $dictionary): array
+    {
+        $termRows = [];
+        foreach ($this->listTermsForDictionary(dictionary: $dictionary) as $term) {
+            $value = trim((string) ($term['value'] ?? ''));
+            if ($value === '') {
+                continue;
+            }
+
+            $label = $term['label'] ?? null;
+            if (is_string($label) === false || trim($label) === '') {
+                $label = ($dictionary['label'] ?? $value);
+            }
+
+            $termRows[] = [
+                'value' => $value,
+                'label' => (string) $label,
+            ];
+        }//end foreach
+
+        return $termRows;
+
+    }//end buildDetectionTermRows()
 
     /**
      * Resolve a dictionary by UUID, enforcing the organisation gate.

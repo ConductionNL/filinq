@@ -22,6 +22,17 @@ parameters:
         - lib/Controller/DashboardController.php
         - lib/Controller/HealthController.php
         - lib/Controller/MetricsController.php
+    scanFiles:
+        # AppHost generic preferences controller stub, so the thin
+        # OCA\DocuDesk\Controller\PreferencesController subclass resolves its
+        # parent during static analysis when the openregister sibling app is
+        # absent from the analysis path. PHPStan refuses to let an
+        # "extends unknown class" error be silenced through ignoreErrors, and a
+        # truthful stub (mirroring the real engine constructor) beats an
+        # excludePaths suppression: it also type-checks the named arguments
+        # Application::register() passes to the engine constructor.
+        # The real class lives in openregister/lib/AppHost/Controller/.
+        - tests/stubs/openregister-apphost.stub.php
     scanDirectories:
         - vendor/nextcloud/ocp
     reportUnmatchedIgnoredErrors: false

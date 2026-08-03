@@ -45,14 +45,16 @@ class SigningVerificationService
     /**
      * Constructor
      *
-     * @param IRootFolder $rootFolder Root folder
-     * @param IAppConfig  $config     App config
+     * @param IRootFolder            $rootFolder    Root folder
+     * @param IAppConfig             $config        App config
+     * @param AssertionCanonicalizer $canonicalizer Canonical-JSON encoder shared with the writer
      *
      * @return void
      */
     public function __construct(
         private readonly IRootFolder $rootFolder,
-        private readonly IAppConfig $config
+        private readonly IAppConfig $config,
+        private readonly AssertionCanonicalizer $canonicalizer=new AssertionCanonicalizer()
     ) {
 
     }//end __construct()
@@ -279,7 +281,7 @@ class SigningVerificationService
         // or a bound portal-identity claim) invalidates the MAC.
         $assertionWithoutMac = $assertion;
         unset($assertionWithoutMac['mac']);
-        $payloadCore = AssertionCanonicalizer::canonicalJson(data: $assertionWithoutMac);
+        $payloadCore = $this->canonicalizer->canonicalJson(data: $assertionWithoutMac);
 
         $expected = hash_hmac('sha256', $contentHash."\n".$payloadCore, $secret);
 
