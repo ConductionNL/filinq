@@ -50,7 +50,6 @@ use Throwable;
  */
 class PortalSigningDocumentResolver
 {
-
     /**
      * Constructor.
      *

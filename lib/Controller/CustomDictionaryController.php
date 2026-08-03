@@ -361,7 +361,9 @@ class CustomDictionaryController extends Controller
      * before OpenRegister availability (503), and only then does the
      * operation run.
      *
-     * @param callable():array<string, mixed> $operation       The gated operation.
+     * @param callable():array<array-key, mixed> $operation    The gated operation. Returns either a
+     *                                                         single record (string-keyed) or a list
+     *                                                         of records (int-keyed).
      * @param string                          $failureMessage  Log/response prefix for an unexpected failure.
      * @param string                          $notFoundMessage Already-translated 404 message.
      * @param int                             $status          Success HTTP status.

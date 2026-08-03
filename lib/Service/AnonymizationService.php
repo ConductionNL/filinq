@@ -119,46 +119,49 @@ class AnonymizationService
     /**
      * Constructor for AnonymizationService
      *
-     * @param LoggerInterface              $logger                Logger for error reporting
-     * @param ContainerInterface           $container             Container for dependency injection
-     * @param IAppManager                  $appManager            App manager interface
-     * @param EntityDetectionService       $entityDetection       Entity detection and mapping service
-     * @param IAppConfig                   $appConfig             App configuration for threshold settings
-     * @param ConsentCrudService           $consentCrud           Consent CRUD service for register/schema config
-     * @param ConsentService               $consentService        Consent service for creating publication consents
-     * @param GrondslagenSummaryService    $grondslagenSummary    Renderer for the per-document grondslagen
-     *                                                            summary page (Wave 4a — opt-in via
-     *                                                            `appendBasisSummary: true` on the
-     *                                                            request).
-     * @param FileEntityStatsService       $fileEntityStats       Service for entity statistics and risk levels.
-     * @param PdfConversionService         $pdfConversion         Cascade orchestrator that converts the
-     *                                                            anonymised intermediate to PDF when
-     *                                                            `outputFormat: "pdf"` is in effect.
-     * @param EmlPdfAssemblyService        $emlAssembly           Assembles OR's redacted anonymise-EML
-     *                                                            result into a PDF/A-3b. EML inputs
-     *                                                            are routed here directly because OR's
-     *                                                            `anonymizeDocument()` throws on
-     *                                                            `message/rfc822`.
-     * @param CustomDictionaryService      $customDictionary      Organisation-managed term-list CRUD +
-     *                                                            detection-scoped listing
-     *                                                            (custom-dictionary-recognition). Safe
-     *                                                            to construct without OpenRegister
-     *                                                            installed — its own methods degrade
-     *                                                            internally.
-     * @param ConfidentialityLabelService  $confidentialityLabel  Reads a file's existing
-     *                                                            files_confidential TSCP/BAILS
-     *                                                            classification (availability-
-     *                                                            guarded; null when absent) so
-     *                                                            it can be surfaced alongside
-     *                                                            detected entities and risk
-     *                                                            (files-confidential-labels).
+     * @param LoggerInterface                 $logger                    Logger for error reporting
+     * @param ContainerInterface              $container                 Container for dependency injection
+     * @param IAppManager                     $appManager                App manager interface
+     * @param EntityDetectionService          $entityDetection           Entity detection and mapping service
+     * @param IAppConfig                      $appConfig                 App configuration for threshold settings
+     * @param ConsentCrudService              $consentCrud               Consent CRUD service for register/schema config
+     * @param ConsentService                  $consentService            Consent service for creating publication consents
+     * @param GrondslagenSummaryService       $grondslagenSummary        Renderer for the per-document grondslagen
+     *                                                                   summary page (Wave 4a — opt-in via
+     *                                                                   `appendBasisSummary: true` on the
+     *                                                                   request).
+     * @param FileEntityStatsService          $fileEntityStats           Service for entity statistics and risk levels.
+     * @param PdfConversionService            $pdfConversion             Cascade orchestrator that converts the
+     *                                                                   anonymised intermediate to PDF when
+     *                                                                   `outputFormat: "pdf"` is in effect.
+     * @param EmlPdfAssemblyService           $emlAssembly               Assembles OR's redacted anonymise-EML
+     *                                                                   result into a PDF/A-3b. EML inputs
+     *                                                                   are routed here directly because OR's
+     *                                                                   `anonymizeDocument()` throws on
+     *                                                                   `message/rfc822`.
+     * @param CustomDictionaryService         $customDictionary          Organisation-managed term-list CRUD +
+     *                                                                   detection-scoped listing
+     *                                                                   (custom-dictionary-recognition). Safe
+     *                                                                   to construct without OpenRegister
+     *                                                                   installed — its own methods degrade
+     *                                                                   internally.
+     * @param ConfidentialityLabelService     $confidentialityLabel      Reads a file's existing
+     *                                                                   files_confidential
+     *                                                                   TSCP/BAILS
+     *                                                                   classification
+     *                                                                   (availability- guarded;
+     *                                                                   null when absent) so it
+     *                                                                   can be surfaced
+     *                                                                   alongside detected
+     *                                                                   entities and risk
+     *                                                                   (files-confidential-labels).
      * @param CustomDictionaryDetectionRunner $customDictionaryDetection The custom-dictionary
-     *                                                            detection pass
-     *                                                            (custom-dictionary-recognition
-     *                                                            design.md §D3). Best-effort — it
-     *                                                            returns a warning string rather
-     *                                                            than throwing, so OpenRegister's
-     *                                                            own detections always survive.
+     *                                                                   detection pass
+     *                                                                   (custom-dictionary-recognition
+     *                                                                   design.md §D3). Best-effort — it
+     *                                                                   returns a warning string rather
+     *                                                                   than throwing, so OpenRegister's
+     *                                                                   own detections always survive.
      *
      * @return void
      */

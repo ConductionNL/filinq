@@ -84,14 +84,14 @@ class PortalSigningReceiverController extends Controller
     /**
      * Constructor.
      *
-     * @param string                  $appName         App name.
-     * @param IRequest                $request         Request object.
-     * @param PortalAssertionVerifier $verifier        Verifies the X-Portal-Subject assertion.
-     * @param SigningService          $signingService  The honest signing primitive.
-     * @param SettingsService         $settingsService Settings service (resolves OR's ObjectService).
-     * @param IAppConfig                     $config           App config (resolves signerRecord/signingRequest register/schema).
-     * @param LoggerInterface                $logger           Logger.
-     * @param PortalSigningDocumentResolver  $documentResolver Resolves the target document for viewDocument.
+     * @param string                        $appName          App name.
+     * @param IRequest                      $request          Request object.
+     * @param PortalAssertionVerifier       $verifier         Verifies the X-Portal-Subject assertion.
+     * @param SigningService                $signingService   The honest signing primitive.
+     * @param SettingsService               $settingsService  Settings service (resolves OR's ObjectService).
+     * @param IAppConfig                    $config           App config (resolves signerRecord/signingRequest register/schema).
+     * @param LoggerInterface               $logger           Logger.
+     * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
      *
      * @return void
      */

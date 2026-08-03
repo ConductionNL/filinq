@@ -59,13 +59,13 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig                        $config            App configuration interface
-     * @param LoggerInterface                   $logger            Logger interface
-     * @param RegisterDiscoveryService          $discoveryService  Register discovery service
-     * @param SettingsInitializer               $initializer       Settings initializer
-     * @param OcrService                        $ocrService        OCR service for Tesseract status
-     * @param GrondslagProposalService          $grondslagProposal Grondslag-per-entity-type proposal service
-     * @param OpenRegisterAvailabilityService   $openRegister      OpenRegister availability resolver
+     * @param IAppConfig                      $config            App configuration interface
+     * @param LoggerInterface                 $logger            Logger interface
+     * @param RegisterDiscoveryService        $discoveryService  Register discovery service
+     * @param SettingsInitializer             $initializer       Settings initializer
+     * @param OcrService                      $ocrService        OCR service for Tesseract status
+     * @param GrondslagProposalService        $grondslagProposal Grondslag-per-entity-type proposal service
+     * @param OpenRegisterAvailabilityService $openRegister      OpenRegister availability resolver
      *
      * @return void
      *

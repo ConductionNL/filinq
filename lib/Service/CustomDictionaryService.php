@@ -89,10 +89,10 @@ class CustomDictionaryService
     /**
      * Constructor.
      *
-     * @param CustomDictionaryRepository         $repository Persistence primitives.
-     * @param CustomDictionaryAccessGate         $accessGate Fail-closed organisation gate.
-     * @param CustomDictionaryPayloadNormaliser  $normaliser Import parsing and payload coercion.
-     * @param LoggerInterface                    $logger     Structured logger.
+     * @param CustomDictionaryRepository        $repository Persistence primitives.
+     * @param CustomDictionaryAccessGate        $accessGate Fail-closed organisation gate.
+     * @param CustomDictionaryPayloadNormaliser $normaliser Import parsing and payload coercion.
+     * @param LoggerInterface                   $logger     Structured logger.
      */
     public function __construct(
         private readonly CustomDictionaryRepository $repository,
@@ -581,5 +581,4 @@ class CustomDictionaryService
         return $dictionary;
 
     }//end enrichWithTermCount()
-
 }//end class

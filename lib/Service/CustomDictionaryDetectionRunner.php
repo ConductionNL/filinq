@@ -69,11 +69,11 @@ class CustomDictionaryDetectionRunner
     /**
      * Constructor.
      *
-     * @param LoggerInterface              $logger                Logger for error reporting.
-     * @param ContainerInterface           $container             Container for lazy OpenRegister resolution.
-     * @param IAppManager                  $appManager            App manager (OpenRegister availability).
-     * @param CustomDictionaryService      $customDictionary      Detection-scoped dictionary listing.
-     * @param CustomDictionaryMatchService $matcher Pure matcher run per active dictionary.
+     * @param LoggerInterface              $logger           Logger for error reporting.
+     * @param ContainerInterface           $container        Container for lazy OpenRegister resolution.
+     * @param IAppManager                  $appManager       App manager (OpenRegister availability).
+     * @param CustomDictionaryService      $customDictionary Detection-scoped dictionary listing.
+     * @param CustomDictionaryMatchService $matcher          Pure matcher run per active dictionary.
      *
      * @return void
      */

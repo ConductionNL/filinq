@@ -25,10 +25,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\DocuDesk\Event\SigningConcludedEvent;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -72,30 +69,30 @@ class SigningService
     /**
      * Constructor
      *
-     * @param SettingsService        $settingsService     Settings service
-     * @param SigningAuditService    $auditService        Audit service
-     * @param SigningProviderFactory $providerFactory     Provider factory
-     * @param IAppConfig             $config              App config
-     * @param IUserSession           $userSession         User session
-     * @param INotificationManager   $notificationManager Notification manager
-     * @param LoggerInterface        $logger              Logger
-     * @param IRequest               $request             HTTP request
-     * @param IEventDispatcher       $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
-     * @param IRootFolder            $rootFolder          Root folder (reads the document, stores the signed version)
+     * @param SettingsService         $settingsService     Settings service
+     * @param SigningAuditService     $auditService        Audit service
+     * @param IAppConfig              $config              App config
+     * @param IUserSession            $userSession         User session
+     * @param INotificationManager    $notificationManager Notification manager
+     * @param LoggerInterface         $logger              Logger
+     * @param IRequest                $request             HTTP request
+     * @param IEventDispatcher        $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
+     * @param SignedArtifactProducer  $artifactProducer    Produces + stores the verifiable signed artifact
+     * @param SigningRequestValidator $validator           Validates request data + the provider/level pair
      *
      * @return void
      */
     public function __construct(
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
-        private readonly SigningProviderFactory $providerFactory,
         private readonly IAppConfig $config,
         private readonly IUserSession $userSession,
         private readonly INotificationManager $notificationManager,
         private readonly LoggerInterface $logger,
         private readonly IRequest $request,
         private readonly IEventDispatcher $eventDispatcher,
-        private readonly IRootFolder $rootFolder
+        private readonly SignedArtifactProducer $artifactProducer,
+        private readonly SigningRequestValidator $validator
     ) {
 
     }//end __construct()
@@ -153,14 +150,17 @@ class SigningService
             'signerIds'       => [],
         ];
 
-        $this->validateRequestData(data: $request);
+        $this->validator->validateRequestData(data: $request);
 
         // Provider/level honesty at creation time (signing-trust-rebuild
         // REQ-DDSTR-002 point 1): reject an unsupported provider/level pair
         // with 400 BEFORE any object is persisted, so a QES request can never
         // be routed to a provider that will later silently complete it with a
         // lower-assurance (e.g. native SES) artifact.
-        $this->validateProviderLevelPair(provider: (string) $request['provider'], level: (string) $request['signatureLevel']);
+        $this->validator->validateProviderLevelPair(
+            provider: (string) $request['provider'],
+            level: (string) $request['signatureLevel']
+        );
 
         // Cross-app delegated-signing contract (docudesk-signing-events): when a
         // consumer raised this request through DocumentSigningRequestedEvent it
@@ -776,73 +776,6 @@ class SigningService
     }//end isValidTransition()
 
     /**
-     * Validate signing request data
-     *
-     * @param array<string, mixed> $data The request data
-     *
-     * @return void
-     *
-     * @throws RuntimeException If validation fails
-     */
-    private function validateRequestData(array $data): void
-    {
-        if (empty($data['documentFileId']) === true) {
-            throw new RuntimeException('Document file ID is required', 400);
-        }
-
-        if (empty($data['documentName']) === true) {
-            throw new RuntimeException('Document name is required', 400);
-        }
-
-        if (in_array($data['signatureLevel'] ?? '', ['SES', 'AdES', 'QES'], true) === false) {
-            throw new RuntimeException('Invalid signature level', 400);
-        }
-
-        if (in_array($data['signingMode'] ?? '', ['sequential', 'parallel'], true) === false) {
-            throw new RuntimeException('Invalid signing mode', 400);
-        }
-
-    }//end validateRequestData()
-
-    /**
-     * Validate that the requested provider actually supports the requested level.
-     *
-     * Provider/level honesty at request creation (signing-trust-rebuild
-     * REQ-DDSTR-002 point 1): an unknown provider, or a provider that does not
-     * support the requested signature level (via
-     * `SigningProviderInterface::supportsLevel()`), is rejected with HTTP 400
-     * before anything is persisted — the completion path (REQ-DDSTR-002 point
-     * 2) never has to silently substitute a provider or level because an
-     * invalid pair can never be created in the first place.
-     *
-     * @param string $provider The requested provider identifier.
-     * @param string $level    The requested signature level.
-     *
-     * @return void
-     *
-     * @throws RuntimeException With HTTP code 400 when the provider is unknown
-     *                          or does not support the requested level.
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     */
-    private function validateProviderLevelPair(string $provider, string $level): void
-    {
-        try {
-            $providerInstance = $this->providerFactory->getProvider(identifier: $provider);
-        } catch (\Throwable $e) {
-            throw new RuntimeException('Unknown signing provider: '.$provider, 400);
-        }
-
-        if ($providerInstance->supportsLevel(level: $level) === false) {
-            throw new RuntimeException(
-                'Signing provider "'.$provider.'" does not support signature level "'.$level.'"',
-                400
-            );
-        }
-
-    }//end validateProviderLevelPair()
-
-    /**
      * Update the signing request status based on signer progress
      *
      * @param string                    $requestId     The signing request ID
@@ -928,7 +861,7 @@ class SigningService
             );
         }
 
-        $signedDocumentRef = $this->produceAndStoreSignedArtifact(request: $freshRequest, verifiedActor: $verifiedActor);
+        $signedDocumentRef = $this->artifactProducer->produce(request: $freshRequest, verifiedActor: $verifiedActor);
 
         $freshRequest['status']            = 'COMPLETED';
         $freshRequest['signedDocumentRef'] = $signedDocumentRef;
@@ -945,182 +878,6 @@ class SigningService
         );
 
     }//end updateRequestStatus()
-
-    /**
-     * Produce the signed artifact and store it as a new Nextcloud file version.
-     *
-     * Resolves the active provider (via SigningProviderFactory), reads the
-     * original document bytes, asks the provider to produce the signed artifact,
-     * and writes the result back to the same Nextcloud file — which creates a
-     * new file version of the prior content via `files_versions`. Returns a
-     * reference to the stored artifact (`<fileId>:<versionMtime>`).
-     *
-     * Honest-completion gate: any failure (no file, unreadable, provider cannot
-     * produce an artifact) throws, so the caller never marks the request
-     * COMPLETED without a real signed document. Provider/level honesty
-     * (signing-trust-rebuild REQ-DDSTR-002 point 2): the request's named
-     * provider is resolved STRICTLY — an unknown provider name fails the
-     * completion loudly and is never silently substituted with
-     * `getActiveProvider()` / the native provider.
-     *
-     * @param array<string, mixed>      $request       The completing signing-request array.
-     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
-     *                                                 this act, when portal-originated —
-     *                                                 folded into the produced artifact's
-     *                                                 evidence binding (portal-signing-surface
-     *                                                 REQ-DDPSS-004).
-     *
-     * @return string The stored signed-artifact reference (file id + version).
-     *
-     * @throws RuntimeException When no verifiable artifact can be produced/stored,
-     *                          or when the request names an unregistered provider.
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     * @spec openspec/specs/portal-signing-surface/spec.md
-     */
-    private function produceAndStoreSignedArtifact(array $request, ?array $verifiedActor=null): string
-    {
-        $fileId = (int) ($request['documentFileId'] ?? 0);
-        if ($fileId <= 0) {
-            throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
-        }
-
-        $file = $this->resolveDocumentFile(fileId: $fileId, request: $request);
-
-        try {
-            $originalContent = $file->getContent();
-        } catch (\Throwable $e) {
-            throw new RuntimeException('Cannot read the document to sign: '.$e->getMessage());
-        }
-
-        // Provider/level honesty (REQ-DDSTR-002 point 2): resolve the request's
-        // named provider strictly. An unknown provider name MUST fail the
-        // completion loudly — no fallback to getActiveProvider()/native. This
-        // is the honest-completion gate closing the #304 residual where a
-        // request naming a misconfigured/unregistered provider silently
-        // completed with a substituted (native) artifact.
-        $providerName = (string) ($request['provider'] ?? 'native');
-        $provider     = $this->providerFactory->getProvider(identifier: $providerName);
-
-        $context = [
-            'signer'    => $this->resolveSignerLabel(verifiedActor: $verifiedActor),
-            'signers'   => ($request['signerIds'] ?? []),
-            'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
-            'ip'        => $this->getClientIp(),
-            'level'     => (string) ($request['signatureLevel'] ?? 'SES'),
-        ];
-
-        if ($verifiedActor !== null) {
-            // Portal-signature evidence binding (portal-signing-surface
-            // REQ-DDPSS-004): fold the verified assertion's portal subject
-            // claims into the provider context so they land inside the SAME
-            // MAC as the rest of the assertion. Sourced ONLY from the
-            // already-verified actor (never the request body).
-            $portalFieldMap = [
-                'subjectRef'  => 'portalSubjectRef',
-                'identityRef' => 'portalIdentityRef',
-                'trust'       => 'portalTrust',
-                'jti'         => 'portalJti',
-            ];
-
-            foreach ($portalFieldMap as $actorKey => $contextKey) {
-                if (empty($verifiedActor[$actorKey]) === false) {
-                    $context[$contextKey] = (string) $verifiedActor[$actorKey];
-                }
-            }
-        }
-
-        $signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
-
-        // Writing new content to the existing file creates a new Nextcloud file
-        // version of the prior (unsigned) content automatically (files_versions).
-        try {
-            $file->putContent($signedBytes);
-        } catch (\Throwable $e) {
-            throw new RuntimeException('Cannot store the signed artifact as a new file version: '.$e->getMessage());
-        }
-
-        // The signed-artifact reference is the file id plus a content-derived
-        // version tag identifying this specific signed version — never the bare
-        // original file id.
-        return $fileId.':signed:'.substr(hash('sha256', $signedBytes), 0, 16);
-
-    }//end produceAndStoreSignedArtifact()
-
-    /**
-     * Resolve the document File node for the signing request.
-     *
-     * Resolves through the initiator's user folder (the request owner), falling
-     * back to the current signer's folder — either way a node that is not a
-     * readable/writeable file throws rather than silently skipping the artifact.
-     *
-     * @param int                  $fileId  The Nextcloud file id.
-     * @param array<string, mixed> $request The signing-request array.
-     *
-     * @return File The resolved file node.
-     *
-     * @throws RuntimeException When the file cannot be resolved.
-     */
-    private function resolveDocumentFile(int $fileId, array $request): File
-    {
-        $candidates = [];
-        $initiator  = (string) ($request['initiatorUserId'] ?? '');
-        if ($initiator !== '') {
-            $candidates[] = $initiator;
-        }
-
-        $current = $this->userSession->getUser();
-        if ($current !== null) {
-            $candidates[] = $current->getUID();
-        }
-
-        foreach (array_unique($candidates) as $uid) {
-            try {
-                $nodes = $this->rootFolder->getUserFolder($uid)->getById($fileId);
-            } catch (\Throwable $e) {
-                continue;
-            }
-
-            foreach ($nodes as $node) {
-                if ($node instanceof File) {
-                    return $node;
-                }
-            }
-        }
-
-        throw new RuntimeException('Cannot resolve the document file to sign: '.$fileId);
-
-    }//end resolveDocumentFile()
-
-    /**
-     * Resolve a human label for the completing signer.
-     *
-     * @param array<string, mixed>|null $verifiedActor The verified external actor completing
-     *                                                 this act, when portal-originated.
-     *
-     * @return string The signer display name, verified portal email, UID, or 'Unknown'.
-     */
-    private function resolveSignerLabel(?array $verifiedActor=null): string
-    {
-        if ($verifiedActor !== null) {
-            $email = (string) ($verifiedActor['email'] ?? '');
-            if ($email !== '') {
-                return $email;
-            }
-
-            return 'External signer';
-        }
-
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return 'Unknown';
-        }
-
-        // IUser::getDisplayName() is guaranteed non-empty by contract — it
-        // falls back to the UID itself when no display name is set.
-        return $user->getDisplayName();
-
-    }//end resolveSignerLabel()
 
     /**
      * Emit a terminal SigningConcludedEvent for an expired request.
