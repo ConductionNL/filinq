@@ -452,6 +452,17 @@ dav() {
 	fi
 }
 echo "[ci-seed] remote.php on disk: $(ls -l "${NC_ROOT}/remote.php" 2>&1 | head -1)"
+# WHICH ENTRY POINT ANSWERS? `/remote.php/<unknown-service>` is the crisp
+# discriminator: remote.php itself answers with printErrorPage('Path not
+# found', '', 404) — message, NO hint — while index.php's OC::handleRequest()
+# answers printErrorPage('404', 'The page could not be found on the server.',
+# 404) — message AND hint. core/templates/error.php renders the hint in
+# <p class='hint'>, so the presence of that element says which file ran.
+for probe in "/remote.php/zzz" "/remote.php" "/status.php" "/ocs/v2.php/cloud/capabilities"; do
+	code="$(curl -sS -o "$DAV_OUT" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "${BASE}${probe}" || echo 000)"
+	echo "[ci-seed] entrypoint ${probe} -> ${code} :: $(grep -oE "<p>[^<]*</p>|<p class='hint'>[^<]*" "$DAV_OUT" | head -2 | tr '\n' ' ' | head -c 160)"
+done
 echo "[ci-seed] dav GET / -> $(curl -sS -o "$DAV_OUT" -w '%{http_code}' \
 	-u "${USER_NAME}:${USER_PASS}" "${DAV_ROOT}/" || echo 000)"
 echo "[ci-seed]   title: $(grep -oE '<h2>[^<]*</h2>|<p class=.hint.>[^<]*' "$DAV_OUT" | head -2 | tr '\n' ' ')"
