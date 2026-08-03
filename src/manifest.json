@@ -169,7 +169,10 @@
 				"schema": "template",
 				"columns": ["name", "category", "format", "namespace", "description"],
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://docudesk.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New template",
+				"emptyText": "No templates found"
 			},
 			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/docudesk_register.json — it was `docudesk` from Phase 8 until 2026-08-03, a register DocuDesk has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
 		},
@@ -200,6 +203,8 @@
 				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://docudesk.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No signing requests",
 				"actionToggles": { "showAdd": false }
 			},
 			"primaryAction": {

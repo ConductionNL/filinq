@@ -406,7 +406,20 @@ PY
 
 echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned."
 
-# ── 4b. Probe WebDAV, which the file-backed workflow specs depend on ─────────
+# ── 4b. Materialise the admin user's home, then probe WebDAV ────────────────
+# `occ maintenance:install` creates the admin ACCOUNT but not its files home —
+# that is built lazily, the first time something initialises the user's mount
+# points. Until then WebDAV answers 404 for `/files/admin/...` (Sabre cannot
+# find the collection), which is exactly what the workflow fixtures' MKCOL got
+# on run 30801457803: a 404 that reads like a bad path rather than an
+# uninitialised account.
+#
+# `files:scan` initialises the mount points, so it creates the home as a side
+# effect. Non-fatal: the probe below is what reports the resulting state.
+echo "[ci-seed] initialising ${USER_NAME}'s files home (occ files:scan)…"
+php "${NC_ROOT}/occ" files:scan "${USER_NAME}" 2>&1 | tail -5 || echo "[ci-seed] files:scan returned non-zero (continuing)"
+
+# ── Probe WebDAV, which the file-backed workflow specs depend on ────────────
 # `tests/e2e/workflows/_fixtures.ts` seeds real Nextcloud files through
 # `/remote.php/dav/files/admin/...` for the signing and anonymisation journeys.
 # On run 30801457803 the MKCOL came back 404 with nothing in nextcloud.log, and
@@ -420,15 +433,25 @@ echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned
 # whether the journeys work.
 DAV_ROOT="${BASE}/remote.php/dav/files/${USER_NAME}"
 DAV_PROBE="ci-seed-probe-$$"
+DAV_OUT="$(mktemp)"
 dav() {
-	curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
-		-X "$1" "${DAV_ROOT}/${2}" ${3:+--data-binary "$3"} || echo 000
+	local method="$1" path="$2" body="${3:-}" code
+	code="$(
+		curl -sS -o "$DAV_OUT" -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+			-X "$method" ${body:+--data-binary "$body"} "${DAV_ROOT}/${path}" || echo 000
+	)"
+	echo "[ci-seed] dav ${method} /${path} -> ${code}"
+	# The status code alone is ambiguous: Sabre answers 404 both for a missing
+	# parent collection and for a principal it will not admit to knowing. Print
+	# the body so the reason is in the log rather than inferred.
+	if [ "$code" != "201" ] && [ "$code" != "204" ] && [ "$code" != "207" ]; then
+		echo "[ci-seed]   body: $(head -c 400 "$DAV_OUT" | tr '\n' ' ')"
+	fi
 }
-echo "[ci-seed] dav PROPFIND root      -> $(curl -sS -o /dev/null -w '%{http_code}' \
-	-u "${USER_NAME}:${USER_PASS}" -X PROPFIND -H 'Depth: 0' "${DAV_ROOT}/" || echo 000)"
-echo "[ci-seed] dav MKCOL   ${DAV_PROBE} -> $(dav MKCOL "$DAV_PROBE")"
-echo "[ci-seed] dav PUT     ${DAV_PROBE}/x.txt -> $(dav PUT "${DAV_PROBE}/x.txt" 'probe')"
-echo "[ci-seed] dav DELETE  ${DAV_PROBE} -> $(dav DELETE "$DAV_PROBE")"
+dav PROPFIND ""
+dav MKCOL "$DAV_PROBE"
+dav PUT "${DAV_PROBE}/x.txt" 'probe'
+dav DELETE "$DAV_PROBE"
 
 # ── 5. Warm the SPA so the first spec doesn't pay the cold start ─────────────
 # The runner serves Nextcloud with `php -S`. Even with PHP_CLI_SERVER_WORKERS=8
