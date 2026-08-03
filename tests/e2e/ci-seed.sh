@@ -631,21 +631,3 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; then
 fi
 
 echo "[ci-seed] done."
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ⚠️ TEMPORARY — POSITIVE CONTROL. REVERT BEFORE MERGE. ⚠️
-#
-# Proves the suite actually exercises the DocuDesk frontend rather than passing
-# against a page that never mounted.
-#
-# TRUNCATE, do not delete. `tests/e2e/global-setup.ts`'s ensureBundleBuilt()
-# gates on fs.existsSync(), so a deleted bundle is silently rebuilt (or, on CI
-# now, throws) — either way the control proves nothing about the SPECS. A
-# truncated file still exists and still serves as `application/javascript`, so
-# it also walks straight past this script's own bundle gate above. That is why
-# this runs at the very END: after the gate, after the warm-up.
-BUNDLE_FILE="${APP_ROOT}/js/docudesk-main.js"
-echo "[ci-seed][CONTROL] bytes before: $(wc -c < "$BUNDLE_FILE")"
-printf '/* truncated by the e2e positive control */\n' > "$BUNDLE_FILE"
-echo "[ci-seed][CONTROL] bytes after:  $(wc -c < "$BUNDLE_FILE")"
-# ─────────────────────────────────────────────────────────────────────────────
