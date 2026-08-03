@@ -26,7 +26,10 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
-const APP = '/apps/docudesk'
+// `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
+// prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
+// PHP's own 404 page instead of Nextcloud).
+const APP = '/index.php/apps/docudesk'
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
@@ -89,7 +92,7 @@ test.describe('dashboard — main view', () => {
 test.describe('dashboard — NC dashboard widgets', () => {
 	test('Nextcloud Dashboard page is accessible and DocuDesk widgets can be added', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#widgets-available-on-nextcloud-dashboard
-		await page.goto('/apps/dashboard')
+		await page.goto('/index.php/apps/dashboard')
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(800)
@@ -101,7 +104,7 @@ test.describe('dashboard — NC dashboard widgets', () => {
 	test('DocuDesk navigation entry icon is app.svg', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#navigation-icon
 		// Navigate to NC and check DocuDesk nav entry
-		await page.goto('/apps/files')
+		await page.goto('/index.php/apps/files')
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(600)
@@ -166,7 +169,7 @@ test.describe('dashboard — icon files', () => {
 	test('DocuDesk admin settings page loads (settings icon uses app-dark.svg)', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-widget-icon
 		// @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
-		await page.goto('/settings/admin/docudesk')
+		await page.goto('/index.php/settings/admin/docudesk')
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(600)

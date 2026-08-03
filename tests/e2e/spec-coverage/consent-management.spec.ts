@@ -15,7 +15,10 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
-const APP = '/apps/docudesk'
+// `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
+// prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
+// PHP's own 404 page instead of Nextcloud).
+const APP = '/index.php/apps/docudesk'
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
