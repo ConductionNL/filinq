@@ -98,11 +98,11 @@ export default {
 		@update:open="onCancel">
 		<div class="custom-dictionary-form">
 			<NcTextField
-				:value.sync="form.label"
+				v-model="form.label"
 				:label="t('docudesk', 'Label')"
 				required />
 			<NcTextField
-				:value.sync="form.description"
+				v-model="form.description"
 				:label="t('docudesk', 'Description (optional)')" />
 			<div class="custom-dictionary-form__colour-row">
 				<label class="custom-dictionary-form__colour-label" for="custom-dictionary-colour">
@@ -114,7 +114,7 @@ export default {
 					type="color"
 					class="custom-dictionary-form__colour-input">
 				<NcTextField
-					:value.sync="form.colour"
+					v-model="form.colour"
 					:label="t('docudesk', 'Hex value')"
 					class="custom-dictionary-form__colour-hex" />
 			</div>
@@ -142,10 +142,10 @@ export default {
 		</div>
 
 		<template #actions>
-			<NcButton type="tertiary" @click="onCancel">
+			<NcButton variant="tertiary" @click="onCancel">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving || !canSubmit" @click="submit">
+			<NcButton variant="primary" :disabled="saving || !canSubmit" @click="submit">
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>

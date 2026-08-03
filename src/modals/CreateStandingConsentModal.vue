@@ -7,7 +7,7 @@
 			<form @submit.prevent="handleSubmit">
 				<!-- Entity Text -->
 				<NcTextField
-					:value.sync="form.entityText"
+					v-model="form.entityText"
 					:label="t('docudesk', 'Entity Name')"
 					:placeholder="t('docudesk', 'e.g. Acme Corp')" />
 
@@ -43,13 +43,13 @@
 
 				<!-- Valid From -->
 				<NcTextField
-					:value.sync="form.validFrom"
+					v-model="form.validFrom"
 					:label="t('docudesk', 'Valid From')"
 					type="date" />
 
 				<!-- Valid Until -->
 				<NcTextField
-					:value.sync="form.validUntil"
+					v-model="form.validUntil"
 					:label="t('docudesk', 'Valid Until')"
 					type="date" />
 
@@ -77,8 +77,8 @@
 						{{ t('docudesk', 'Cancel') }}
 					</NcButton>
 					<NcButton
-						type="primary"
-						native-type="submit"
+						variant="primary"
+						type="submit"
 						:disabled="saving">
 						{{ saving ? t('docudesk', 'Saving…') : t('docudesk', 'Create') }}
 					</NcButton>

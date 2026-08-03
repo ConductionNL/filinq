@@ -104,7 +104,14 @@ describe('myDocuments store — concept/anonymized collapsing (via links)', () =
 		const anonymized = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true })
 		store.documents = [original, anonymized]
 		store.anonymizationLinks = [link(1, 2)]
-		expect(store.conceptFor(anonymized)).toBe(original)
+		// Strict identity against the entry the store HOLDS. Vue 3 wraps
+		// anything written into reactive state in a Proxy, so `toBe(original)`
+		// against the raw literal fails even though the store stored exactly
+		// that object. `toEqual` would weaken this into a shape check and stop
+		// it catching a copy-instead-of-reference regression, so the reference
+		// is re-anchored on store.documents[0] instead.
+		expect(store.conceptFor(anonymized)).toBe(store.documents[0])
+		expect(store.documents[0]).toEqual(original)
 		expect(store.conceptFor(original)).toBeUndefined()
 	})
 
@@ -114,7 +121,8 @@ describe('myDocuments store — concept/anonymized collapsing (via links)', () =
 		const anonymized = doc('report_anonymized.pdf', { fileId: 2, isAnonymized: true })
 		store.documents = [original, anonymized]
 		store.anonymizationLinks = [link(1, 2)]
-		expect(store.anonymizedFor(original)).toBe(anonymized)
+		expect(store.anonymizedFor(original)).toBe(store.documents[1])
+		expect(store.documents[1]).toEqual(anonymized)
 		expect(store.anonymizedFor(anonymized)).toBeUndefined()
 	})
 
@@ -155,7 +163,12 @@ describe('myDocuments store — duplicate anonymized outputs (feat #107, dedupe)
 		const newOutput = doc('report_anonymized (2).pdf', { fileId: 3, isAnonymized: true, modified: 200 })
 		store.documents = [source, oldOutput, newOutput]
 		store.anonymizationLinks = [link(1, 2), link(1, 3)]
-		expect(store.anonymizedFor(source)).toBe(newOutput)
+		// documents[2] is newOutput — the NEWER of the two outputs. Asserting
+		// the reference (not just the shape) is what makes this test able to
+		// fail if the getter ever returns the older output or a copy.
+		expect(store.anonymizedFor(source)).toBe(store.documents[2])
+		expect(store.documents[2]).toEqual(newOutput)
+		expect(store.anonymizedFor(source)).not.toBe(store.documents[1])
 	})
 
 	it('ignores a degenerate self-referential link so a file is not masked as its own output', () => {

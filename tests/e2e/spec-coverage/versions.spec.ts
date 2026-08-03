@@ -47,7 +47,19 @@ test.describe('document-versions — Versies view UI', () => {
 		// @e2e openspec/specs/document-versions/spec.md#compare-is-not-offered-for-non-extractable-versions
 		await go(page, 'versions?fileId=1')
 		const table = page.locator('[data-testid="versions-table"]').first()
-		if (await table.isVisible().catch(() => false)) {
+		// Branch on ROWS, not on the table element.
+		//
+		// The versions table always renders its header row, even when the file
+		// cannot be resolved — the body then holds a single "No items found"
+		// cell and the page shows a "Document not found" alert. Branching on
+		// `table.isVisible()` therefore entered the populated branch on an
+		// instance where fileId=1 does not exist (a freshly installed CI
+		// Nextcloud starts numbering above 1) and asserted a Download button
+		// that no row could offer. The row-level check makes the precondition
+		// this scenario needs — at least one version row — explicit instead of
+		// assumed, and the empty case still asserts a real surfaced state.
+		const dataRows = table.locator('tbody tr').filter({ hasNotText: 'No items found' })
+		if (await dataRows.count() > 0) {
 			// The current version row offers Download; a prior version additionally
 			// offers Restore and (for text-extractable documents) Compare.
 			await expect(page.getByRole('button', { name: 'Download' }).first()).toBeVisible()
@@ -57,7 +69,14 @@ test.describe('document-versions — Versies view UI', () => {
 			// controls are wired (present or absent, never erroring).
 			await expect(restore.or(compare).or(page.getByRole('button', { name: 'Download' }).first())).toBeVisible()
 		} else {
-			await expect(page.locator('[data-testid="versions-unavailable"]').first()).toBeVisible()
+			// No rows: VersionsView must have said WHY — either the
+			// files_versions-disabled note (`versions-unavailable`) or the error
+			// note it renders for any other failure ("Document not found" when the
+			// fileId does not resolve). Never a silent empty table.
+			const unavailable = page.locator('[data-testid="versions-unavailable"]').first()
+			const errorNote = page.locator('.notecard--error, [class*="notecard"]')
+				.filter({ hasText: /not found|Could not list versions/i }).first()
+			await expect(unavailable.or(errorNote)).toBeVisible()
 		}
 	})
 })

@@ -16,6 +16,7 @@ import { chromium, request, type FullConfig } from '@playwright/test'
 import { execSync } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
+import { resolveBaseUrl } from './base-url'
 
 const AUTH_DIR = path.resolve(__dirname, '.auth')
 const STORAGE_STATE = path.join(AUTH_DIR, 'admin.json')
@@ -25,19 +26,35 @@ const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'docudesk-main.js')
 /**
  * Ensure the webpack bundle exists before specs hit `/apps/docudesk/`.
  *
- * The shared `ConductionNL/.github/quality.yml` Playwright job runs
- * `npm ci` + `npx playwright install` before the spec run, but never
- * `npm run build`. On a fresh CI VM the `js/docudesk-main.js` artefact
- * doesn't exist, so the rendered page loads a 404 script tag and the
- * Vue app never mounts — every selector wait then times out.
+ * On CI this is a HARD ERROR, not something to repair. The shared
+ * `ConductionNL/.github/quality.yml` Playwright job now has a dedicated
+ * "Build app frontend" step (`npm run build`) that runs before the specs,
+ * so by the time we get here a missing `js/docudesk-main.js` means that
+ * step did not produce one. Silently rebuilding here would turn a broken
+ * build into a green run with nothing to show for it.
  *
- * Locally, the dev container typically mounts a *separate* checkout
- * into `custom_apps/docudesk` and serves that build, so this step is
- * a no-op when the bundle is already present.
+ * It also makes the bundle genuinely untestable: a positive control that
+ * REMOVES the bundle to prove the specs depend on it gets healed right back
+ * before the first spec runs, and the suite passes. (Observed on opencatalogi:
+ * run 30791459241 passed 82/82 with the bundle deleted, because this function
+ * rebuilt it — the control proved nothing until it was changed to truncate the
+ * file instead.)
+ *
+ * Locally the rebuild stays, because there it is a genuine convenience: the
+ * dev container typically mounts a *separate* checkout into
+ * `custom_apps/docudesk` and serves that build, and a fresh checkout has no
+ * `js/` at all with nothing else to build it.
  */
 function ensureBundleBuilt(): void {
 	if (fs.existsSync(BUNDLE_PATH)) {
 		return
+	}
+	if (process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true') {
+		throw new Error(
+			`[playwright globalSetup] bundle missing at ${BUNDLE_PATH} on CI. `
+			+ 'The workflow\'s "Build app frontend" step should already have produced it — '
+			+ 'check that step rather than rebuilding here, because a rebuild would hide it.',
+		)
 	}
 	// eslint-disable-next-line no-console
 	console.log(`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`)
@@ -95,10 +112,12 @@ async function ensureNextcloudReachable(baseURL: string): Promise<void> {
 }
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
+	// Take the resolved config value when Playwright supplies one, otherwise
+	// resolve it the same way playwright.config.ts does. No `localhost:8080`
+	// fallback — this used to disagree with the config's own resolver, so the
+	// login went to one instance and the specs to another (see base-url.ts).
 	const baseURL = (config.projects[0]?.use?.baseURL as string | undefined)
-		?? process.env.NEXTCLOUD_URL
-		?? process.env.NC_BASE_URL
-		?? 'http://localhost:8080'
+		?? resolveBaseUrl()
 	const username = process.env.NC_ADMIN_USER ?? 'admin'
 	const password = process.env.NC_ADMIN_PASS ?? 'admin'
 

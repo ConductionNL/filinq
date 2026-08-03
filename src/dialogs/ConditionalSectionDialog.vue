@@ -2,14 +2,14 @@
 	<NcDialog :name="t('docudesk', 'Insert conditional section')"
 		@closing="$emit('close')">
 		<template #default>
-			<NcTextField :value.sync="condField"
+			<NcTextField v-model="condField"
 				:label="t('docudesk', 'Field name')"
 				:placeholder="t('docudesk', 'e.g. zaaktype')" />
 			<NcSelect v-model="condOp"
 				:options="opOptions"
 				:input-label="t('docudesk', 'Operator')" />
 			<NcTextField v-if="needsValue"
-				:value.sync="condValue"
+				v-model="condValue"
 				:label="t('docudesk', 'Value')"
 				:placeholder="t('docudesk', 'e.g. omgevingsvergunning')" />
 			<p class="conditional-dialog__hint">
@@ -20,7 +20,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" @click="confirm">
+			<NcButton variant="primary" @click="confirm">
 				{{ t('docudesk', 'Insert') }}
 			</NcButton>
 		</template>

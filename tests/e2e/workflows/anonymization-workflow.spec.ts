@@ -37,7 +37,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { dismissOverlays } from '../spec-coverage/_helpers'
+import { APP, dismissOverlays } from '../spec-coverage/_helpers'
 import {
 	harvestToken, jsonHeaders, API, TEST_PREFIX, TEST_FAMILY,
 	createDavFolder, createDavFile,
@@ -70,10 +70,11 @@ test.afterAll(async ({ request }) => {
  * @return Resolves once the route has loaded and overlays are dismissed.
  */
 async function goRoute(page, route: string): Promise<void> {
-	await page.goto('/apps/docudesk')
+	// `index.php`-prefixed — see the APP constant in ../spec-coverage/_helpers.ts.
+	await page.goto(APP)
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
-	await page.goto(`/apps/docudesk/${route}`)
+	await page.goto(`${APP}/${route}`)
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
 	await page.waitForTimeout(1200)

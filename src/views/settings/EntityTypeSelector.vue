@@ -7,9 +7,9 @@
 			<NcCheckboxRadioSwitch
 				v-for="type in options"
 				:key="type"
-				:checked="isEnabled(type)"
+				:model-value="isEnabled(type)"
 				type="switch"
-				@update:checked="toggle(type, $event)">
+				@update:modelValue="toggle(type, $event)">
 				{{ entityTypeLabel(type) }}
 			</NcCheckboxRadioSwitch>
 		</div>

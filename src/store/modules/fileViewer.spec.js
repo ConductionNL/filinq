@@ -133,7 +133,14 @@ describe('fileViewer store — add mode & highlight state', () => {
 
 		store.setAnonymizedVariant(anon)
 		expect(store.showAnonymized).toBe(true)
-		expect(store.currentFile).toBe(anon)
+		// Strict identity against what the store HOLDS, not the raw literal:
+		// Vue 3 wraps anything written into reactive state in a Proxy, so
+		// `Object.is(store.anonymizedFile, anon)` is false even though the
+		// store stored exactly that object. See the note in
+		// tests/vitest/anonymizationGetters.spec.js. Swapping to `toEqual`
+		// would stop this catching a copy-instead-of-reference bug.
+		expect(store.currentFile).toBe(store.anonymizedFile)
+		expect(store.currentFile).toEqual(anon)
 		expect(store.canToggleVariant).toBe(true)
 	})
 
@@ -147,7 +154,14 @@ describe('fileViewer store — add mode & highlight state', () => {
 		// Linked (toggle available) but still showing the file the user opened.
 		expect(store.canToggleVariant).toBe(true)
 		expect(store.showAnonymized).toBe(false)
-		expect(store.currentFile).toBe(original)
-		expect(store.anonymizedFile).toBe(anon)
+		// The store's contract is that `currentFile` is always a REFERENCE to
+		// one of `originalFile` / `anonymizedFile`. Asserting that reference
+		// directly is the strong form and survives Vue 3's reactive proxies
+		// (see the note on the previous test); the `toEqual` lines then pin
+		// down which of the two files each accessor holds.
+		expect(store.currentFile).toBe(store.originalFile)
+		expect(store.currentFile).not.toBe(store.anonymizedFile)
+		expect(store.currentFile).toEqual(original)
+		expect(store.anonymizedFile).toEqual(anon)
 	})
 })

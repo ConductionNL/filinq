@@ -54,7 +54,12 @@ export const API = '/index.php/apps/docudesk/api'
  * @return The request-token string (empty if the app hasn't mounted).
  */
 export async function harvestToken(page: Page): Promise<string> {
-	await page.goto('/apps/docudesk')
+	// `index.php`-prefixed for the same reason `API` above is: nothing rewrites
+	// `/apps/...` on a `php -S` runner, so the unprefixed form returns PHP's own
+	// 404 page — which has no `requesttoken` meta and no `window.OC`, making
+	// this helper fail with "CSRF request-token must be harvestable" and
+	// accusing the session instead of the URL.
+	await page.goto('/index.php/apps/docudesk')
 	await page.waitForLoadState('networkidle').catch(() => {})
 	const token = await page.evaluate(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any

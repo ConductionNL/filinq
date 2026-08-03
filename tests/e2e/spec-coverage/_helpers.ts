@@ -107,8 +107,28 @@ export async function dismissOverlays(page: Page): Promise<void> {
 		.catch(() => {})
 }
 
+/**
+ * App root, `index.php`-prefixed.
+ *
+ * ⚠️ The prefix is load-bearing on CI and must not be dropped. The shared
+ * `E2E Tests (Playwright)` workflow serves Nextcloud with `php -S 0.0.0.0:8080`
+ * and NO router script, so nothing rewrites `/apps/docudesk` onto `index.php`
+ * the way Nextcloud's `.htaccess` does under Apache. PHP's built-in server
+ * resolves the path against the document root itself, finds no matching file,
+ * and answers its OWN 404 page — "The requested resource /apps/docudesk was not
+ * found on this server". That page has a `<body>`, is not `/login`, and carries
+ * no `#header` and no `requesttoken` meta, so it fails every spec at a
+ * *selector* while looking like an app that would not mount. (Measured: 37 of
+ * 66 specs failed this way on run 30797589151.)
+ *
+ * `/index.php/apps/docudesk` is served correctly BOTH with and without URL
+ * rewriting, so it is the portable form — the same reasoning that already put
+ * `index.php` in `workflows/_fixtures.ts`'s API constant.
+ */
+export const APP = '/index.php/apps/docudesk'
+
 export async function go(page: Page, route: string): Promise<void> {
-	const url = route ? `/apps/docudesk/${route}` : '/apps/docudesk'
+	const url = route ? `${APP}/${route}` : APP
 	// Wait for `domcontentloaded`, not the default `load`. Nextcloud keeps
 	// long-lived connections open (notifications polling, user-status
 	// heartbeat), so on a busy instance the `load` event can be minutes late

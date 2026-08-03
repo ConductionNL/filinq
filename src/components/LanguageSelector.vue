@@ -13,14 +13,14 @@ The selected language persists across navigation via the template store (REQ-I18
 <template>
 	<div class="language-selector">
 		<NcSelect v-if="hasMultipleLanguages"
-			:value="currentOption"
+			:model-value="currentOption"
 			:options="languageOptions"
 			:clearable="false"
 			:input-label="t('docudesk', 'Content language')"
 			label="label"
 			track-by="value"
 			class="language-selector__select"
-			@input="onLanguageChange" />
+			@update:modelValue="onLanguageChange" />
 		<span v-if="isFallbackLanguage" class="language-selector__fallback-badge">
 			{{ t('docudesk', 'Showing fallback language') }}
 		</span>

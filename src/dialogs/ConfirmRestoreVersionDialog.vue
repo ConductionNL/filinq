@@ -10,7 +10,7 @@
 			<NcButton @click="$emit('cancel')">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" @click="$emit('confirm')">
+			<NcButton variant="primary" @click="$emit('confirm')">
 				{{ t('docudesk', 'Restore') }}
 			</NcButton>
 		</template>

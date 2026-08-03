@@ -17,8 +17,9 @@
  *                      Output lands in
  *                      `docs/static/screenshots/tutorials/{user,admin}/`.
  *
- * Point at a running Nextcloud with NEXTCLOUD_URL (default
- * http://localhost:8080). `globalSetup` logs in once (admin/admin by
+ * Point at a running Nextcloud with PLAYWRIGHT_BASE_URL (or BASE_URL, which
+ * is what the shared quality workflow exports). There is NO default — see
+ * tests/e2e/base-url.ts for why. `globalSetup` logs in once (admin/admin by
  * default; override with NC_ADMIN_USER / NC_ADMIN_PASS) and persists
  * the session to `tests/e2e/.auth/admin.json`; every spec reuses it via
  * `use.storageState`.
@@ -26,6 +27,7 @@
 
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
+import { resolveBaseUrl } from './tests/e2e/base-url'
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -48,7 +50,11 @@ export default defineConfig({
 	outputDir: 'tests/e2e/test-results',
 
 	use: {
-		baseURL: process.env.NEXTCLOUD_URL || 'http://localhost:8080',
+		// Single source of truth — see tests/e2e/base-url.ts. Never reintroduce
+		// a `|| 'http://localhost:8080'` fallback here: it silently pointed the
+		// whole suite at the SHARED dev container while global-setup logged in
+		// somewhere else.
+		baseURL: resolveBaseUrl(),
 		storageState: path.resolve(__dirname, 'tests/e2e/.auth/admin.json'),
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',

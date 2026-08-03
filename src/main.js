@@ -8,14 +8,14 @@
 // any CSS or asset/resource URL or lazy chunk URL is evaluated. See
 // setPublicPath.js — docudesk lives under apps-extra, not the baked-in /apps/.
 import './setPublicPath.js'
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import { PiniaVuePlugin } from 'pinia'
+import { createApp, h } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
 import { translate as t, translatePlural as n, loadTranslations } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
 	CnPageRenderer,
 	defaultPageTypes,
+	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
 } from '@conduction/nextcloud-vue'
@@ -29,15 +29,26 @@ import { initializeStores } from './store/store.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
+// gridstack is an nc-vue peerDependency that the library deliberately does NOT
+// bundle, stylesheet included. CnDashboardPage → CnDashboardGrid drives it, and
+// without this stylesheet v12 sizes items with an undefined
+// `--gs-column-width`, so every dashboard item renders 0 px wide with NO error
+// and nothing in the console. nc-vue's own CSS carries the `.grid-stack`
+// overrides but none of the sizing primitives.
+import 'gridstack/dist/gridstack.min.css'
 import './assets/fonts.css'
 import './assets/app.css'
 
-Vue.mixin({ methods: { t, n } })
-Vue.use(PiniaVuePlugin)
-Vue.use(VueRouter)
-
 // Register library-side icon set + lib translations once at bootstrap.
 registerIcons(appIcons)
+
+// nc-vue marks itself `sideEffects: ["**/*.css", ...]`, so webpack is free to
+// drop the bare imports that register the built-in `stat` / `object-table`
+// dashboard widgets. When that happens the widgets render "Widget not
+// available" with no error (larpingapp lost 5 of 7). Registering explicitly at
+// bootstrap makes it a real call webpack cannot tree-shake.
+registerBuiltinDashboardWidgets()
+
 try {
 	registerTranslations()
 } catch (e) {
@@ -61,12 +72,11 @@ function tryLoadTranslations() {
 	}
 }
 
-// Shallow-clone CnPageRenderer because the lib's barrel exports are
-// non-extensible (webpack ESM module records). Vue 2's `Vue.extend()`
-// adds an internal `_Ctor` cache to the component definition; mutating
-// a non-extensible export throws "Cannot add property _Ctor, object is
-// not extensible". Cloning gives Vue Router an extensible
-// component-options object without altering the lib's internals.
+// Shallow-clone CnPageRenderer: the lib's barrel exports are non-extensible
+// (webpack ESM module records) and frozen in some bundle shapes. Vue 3 no
+// longer attaches a `_Ctor` cache the way Vue 2's `Vue.extend()` did, but the
+// router and the renderer still write bookkeeping onto component options, so
+// handing them an extensible copy keeps this independent of bundle shape.
 const RoutePageRenderer = { ...CnPageRenderer }
 
 /**
@@ -275,7 +285,7 @@ const manifest = applyMenuLayout(bundledManifest)
  * `props: true` so the renderer receives params as props.
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
- * @return {Array<object>} vue-router 3 routes config.
+ * @return {Array<object>} vue-router 4 routes config.
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -284,14 +294,16 @@ function routesFromManifest(manifest) {
 		component: RoutePageRenderer,
 		props: page.route.includes(':'),
 	}))
-	// Catch-all redirect to dashboard.
-	routes.push({ path: '*', redirect: '/' })
+	// Catch-all redirect to dashboard. vue-router 4 REMOVED the bare `'*'`
+	// path — it matches nothing and throws no error, so the shell renders
+	// with an empty <main> on any unknown route. The named-param form below
+	// is the v4 replacement.
+	routes.push({ path: '/:pathMatch(.*)*', redirect: '/' })
 	return routes
 }
 
-const router = new VueRouter({
-	mode: 'history',
-	base: generateUrl('/apps/docudesk'),
+const router = createRouter({
+	history: createWebHistory(generateUrl('/apps/docudesk')),
 	routes: routesFromManifest(manifest),
 })
 
@@ -336,16 +348,25 @@ try {
 	console.warn('[docudesk] initializeStores threw synchronously', e)
 }
 
-// Create and mount Vue instance immediately so the App renders.
-new Vue({
-	pinia,
-	router,
-	render: (h) => h(App, {
-		props: {
-			manifest,
-			customComponents: customComponentsProp,
-			pageTypes: pageTypesProp,
-			registry: registryProp,
-		},
+// Create and mount the app immediately so the App renders.
+//
+// ⚠️ Mount target is `#docudesk-app`, NOT `#content`. Vue 2's `$mount()`
+// REPLACED the matched element, so mounting on templates/index.php's
+// `<div id="content">` quietly replaced Nextcloud's own `#content` wrapper
+// from layout.user.php and the duplicate id never showed. Vue 3's `mount()`
+// renders INSIDE the match, so the app would end up nested in core's wrapper
+// — and with two `#content` elements it is undefined which one is matched.
+// A dedicated host id removes the ambiguity entirely.
+const app = createApp({
+	render: () => h(App, {
+		manifest,
+		customComponents: customComponentsProp,
+		pageTypes: pageTypesProp,
+		registry: registryProp,
 	}),
-}).$mount('#content')
+})
+
+app.mixin({ methods: { t, n } })
+app.use(pinia)
+app.use(router)
+app.mount('#docudesk-app')

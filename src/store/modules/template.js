@@ -32,7 +32,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Build the Accept-Language header value for the current preference.
 		 *
-		 * @return {Object} Headers object, potentially with Accept-Language
+		 * @return {object} Headers object, potentially with Accept-Language
 		 *
 		 * @spec openspec/changes/register-i18n/tasks.md#task-1
 		 */
@@ -49,7 +49,7 @@ export const useTemplateStore = defineStore('template', {
 		/**
 		 * Record language negotiation headers from an OR response.
 		 *
-		 * @param {Object} response The axios response object
+		 * @param {object} response The axios response object
 		 *
 		 * @spec openspec/changes/register-i18n/tasks.md#task-1
 		 */

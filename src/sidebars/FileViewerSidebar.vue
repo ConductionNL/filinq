@@ -37,7 +37,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 						@update:checked="fileViewerStore.setGrondslagen($event)">
 						{{ t('docudesk', 'Use legal grounds (grondslagen)') }}
 					</DdToggle>
-					<NcButton type="secondary" @click="onEdit">
+					<NcButton variant="secondary" @click="onEdit">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -212,11 +212,11 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		     entity" adds it and closes the panel; "Cancel" leaves without
 		     adding. -->
 		<div v-if="entry && entry.status === 'extracted' && isAdding" class="sidebar-action-bar">
-			<NcButton type="tertiary" :disabled="savingNew" @click="onCancelEdit">
+			<NcButton variant="tertiary" :disabled="savingNew" @click="onCancelEdit">
 				{{ t('docudesk', 'Cancel') }}
 			</NcButton>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="!canSaveNew || savingNew"
 				@click="onSaveNew">
 				<template v-if="savingNew" #icon>
@@ -235,7 +235,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			<NcButton
 				v-if="batchCount > 0 || batchState.running"
 				wide
-				type="primary"
+				variant="primary"
 				:disabled="batchState.running || batchCount === 0"
 				@click="anonymizeAll">
 				<template #icon>
@@ -253,7 +253,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			<NcButton
 				v-if="isReanonymizable"
 				wide
-				type="secondary"
+				variant="secondary"
 				:disabled="reanonymising"
 				@click="onReanonymise">
 				<template #icon>
@@ -267,7 +267,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			<NcButton
 				v-if="reanonReviewActive"
 				wide
-				type="primary"
+				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
@@ -280,7 +280,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			<NcButton
 				v-if="completedCount > 0 && !batchState.running"
 				wide
-				type="secondary"
+				variant="secondary"
 				:disabled="zipping"
 				@click="downloadAll">
 				<template #icon>
@@ -298,7 +298,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		<!-- Single-file review: per-file anonymise button. -->
 		<div v-else-if="entry && entry.status === 'extracted'" class="sidebar-action-bar">
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
@@ -313,7 +313,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 		     existing `_anonymized` output. -->
 		<div v-else-if="isAnonymizedSource" class="sidebar-action-bar">
 			<NcButton
-				type="primary"
+				variant="primary"
 				wide
 				:disabled="reanonymising"
 				@click="onReanonymise">
@@ -333,7 +333,7 @@ import { fileViewerStore, anonymizationStore, myDocumentsStore } from '../store/
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
 				wide
-				type="primary"
+				variant="primary"
 				:disabled="exporting"
 				@click="onExport">
 				<template #icon>

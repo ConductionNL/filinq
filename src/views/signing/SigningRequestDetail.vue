@@ -10,7 +10,7 @@
 				<div><strong>{{ t('docudesk', 'Provider') }}</strong>: {{ signingStore.signingRequest.provider }}</div>
 			</div>
 			<NcButton v-if="signingStore.signingRequest.documentFileId"
-				type="secondary"
+				variant="secondary"
 				@click="openVerify">
 				{{ t('docudesk', 'Verify') }}
 			</NcButton>

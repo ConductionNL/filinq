@@ -30,17 +30,17 @@ SPDX-License-Identifier: EUPL-1.2
 			:table-label="t('docudesk', 'Versions')"
 			data-testid="versions-table">
 			<template #actions="{ row }">
-				<NcButton type="tertiary" @click="download(row)">
+				<NcButton variant="tertiary" @click="download(row)">
 					{{ t('docudesk', 'Download') }}
 				</NcButton>
 				<NcButton v-if="!row.isCurrent"
-					type="tertiary"
+					variant="tertiary"
 					data-testid="version-restore"
 					@click="promptRestore(row)">
 					{{ t('docudesk', 'Restore') }}
 				</NcButton>
 				<NcButton v-if="canCompare(row)"
-					type="tertiary"
+					variant="tertiary"
 					data-testid="version-compare"
 					@click="compare(row)">
 					{{ t('docudesk', 'Compare with current') }}

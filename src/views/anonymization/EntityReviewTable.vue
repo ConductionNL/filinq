@@ -14,13 +14,13 @@
 			</select>
 		</div>
 		<div class="bulk-actions">
-			<NcButton type="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">
+			<NcButton variant="tertiary" @click="$emit('bulk-select', filteredEntities.map(i => i.idx))">
 				{{ t('docudesk', 'Select All Visible') }}
 			</NcButton>
-			<NcButton type="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">
+			<NcButton variant="tertiary" @click="$emit('bulk-deselect', filteredEntities.map(i => i.idx))">
 				{{ t('docudesk', 'Deselect All Visible') }}
 			</NcButton>
-			<NcButton v-if="defaultBases.length > 0" type="tertiary" @click="applyDefaultBasesToVisible">
+			<NcButton v-if="defaultBases.length > 0" variant="tertiary" @click="applyDefaultBasesToVisible">
 				{{ t('docudesk', 'Apply dossier grondslagen to visible') }}
 			</NcButton>
 		</div>
@@ -49,7 +49,7 @@
 					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
 						<NcSelect
-							:value="item.e._decisionBases || []"
+							:model-value="item.e._decisionBases || []"
 							:options="basesOptions"
 							label="label"
 							:reduce="(o) => o.value"
@@ -57,7 +57,7 @@
 							:input-label="t('docudesk', 'Grondslagen')"
 							:placeholder="t('docudesk', 'Pick grondslagen…')"
 							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0"
-							@input="onBasesChange(item.idx, $event)" />
+							@update:modelValue="onBasesChange(item.idx, $event)" />
 						<div v-if="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0" class="warn-text">
 							{{ t('docudesk', '(no relation ids — grondslagen will not persist)') }}
 						</div>
@@ -67,9 +67,9 @@
 					</td>
 					<td>
 						<NcCheckboxRadioSwitch
-							:checked="!!item.e._decisionSkip"
+							:model-value="!!item.e._decisionSkip"
 							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0 || !!(item.e.prohibitionMatch && item.e.prohibitionMatch.highConfidence)"
-							@update:checked="onSkipChange(item.idx, $event)" />
+							@update:modelValue="onSkipChange(item.idx, $event)" />
 					</td>
 				</tr>
 			</tbody>

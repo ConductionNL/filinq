@@ -3,7 +3,7 @@
 		<h2>{{ t('docudesk', 'Signature Verification') }}</h2>
 		<div class="verify-form">
 			<input v-model="verifyFileId" type="text" :placeholder="t('docudesk', 'Enter file ID')">
-			<NcButton type="primary" :disabled="!verifyFileId" @click="verify">
+			<NcButton variant="primary" :disabled="!verifyFileId" @click="verify">
 				{{ t('docudesk', 'Verify') }}
 			</NcButton>
 		</div>

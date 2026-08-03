@@ -328,7 +328,7 @@ class GrondslagProposalService
             // `POST /apps/openregister/api/objects/...` hang fleet-wide and
             // grew nextcloud.log without bound (cf. the 163GB log incident
             // that filled the Docker disk and PANICked Postgres).
-            $name = self::asString($base['name'] ?? '');
+            $name = self::asString(value: $base['name'] ?? '');
             if ($slug === '' || $name === '') {
                 continue;
             }
@@ -336,7 +336,7 @@ class GrondslagProposalService
             $bases[] = [
                 'slug'        => $slug,
                 'name'        => $name,
-                'description' => self::asString($base['description'] ?? ''),
+                'description' => self::asString(value: $base['description'] ?? ''),
             ];
         }//end foreach
 
@@ -545,8 +545,9 @@ class GrondslagProposalService
 
     }//end asString()
 
-
     /**
+     * Normalise a raw OpenRegister search result into a plain list of objects.
+     *
      * @param mixed $result The raw search result.
      *
      * @return array<int, array<string, mixed>> The list of object arrays.
