@@ -898,6 +898,36 @@ class SigningService
         // COMPLETED with the unsigned original as its signed reference. If the
         // artifact cannot be produced, the request stays IN_PROGRESS and the
         // failure surfaces loudly to the completing signer.
+        // Step through IN_PROGRESS when the request is still PENDING.
+        //
+        // A single-signer request is fully signed the moment that one signer
+        // signs, so control reaches here with the request still PENDING — the
+        // `$allSigned === false` branch above, which is what normally moves it
+        // to IN_PROGRESS, never ran. Writing COMPLETED straight from PENDING is
+        // not a legal move: `self::STATUS_TRANSITIONS` allows PENDING only to
+        // IN_PROGRESS / CANCELLED / EXPIRED, and the `x-openregister-lifecycle`
+        // block on the signingRequest schema declares exactly the same edges
+        // (`start`: PENDING -> IN_PROGRESS, `complete`: IN_PROGRESS ->
+        // COMPLETED). OpenRegister enforces that declaration on save, so the
+        // jump was rejected with 'No transition allows moving "status" from
+        // "PENDING" to "COMPLETED"' and the whole sign action 500'd — every
+        // single-signer request was impossible to complete.
+        //
+        // Take the declared `start` edge explicitly rather than widening the
+        // state machine: "a signer has opened the request" is exactly what
+        // happened, and the intermediate state is what the audit trail and the
+        // list view expect to see.
+        if (($freshRequest['status'] ?? '') === 'PENDING') {
+            $freshRequest['status'] = 'IN_PROGRESS';
+            $freshRequest           = $this->toArray(
+                object: $objectService->saveObject(
+                    object: $freshRequest,
+                    register: $register,
+                    schema: $schema
+                )
+            );
+        }
+
         $signedDocumentRef = $this->produceAndStoreSignedArtifact(request: $freshRequest, verifiedActor: $verifiedActor);
 
         $freshRequest['status']            = 'COMPLETED';

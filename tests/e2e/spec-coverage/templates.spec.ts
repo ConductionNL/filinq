@@ -64,17 +64,41 @@ test.describe('template-management — templates list UI', () => {
 		await expect(page.getByRole('columnheader', { name: 'Status', exact: true })).toHaveCount(0)
 	})
 
-	test('"New template" navigates to the template create/detail view', async ({ page }) => {
+	test('"New template" opens a create surface', async ({ page }) => {
 		// @e2e openspec/specs/template-management/spec.md#create-a-template
+		//
+		// REWRITTEN, not weakened. The previous body asserted that clicking
+		// "New template" NAVIGATED away — "TemplateNew route renders the
+		// TemplateDetail editor (not the list)" — and checked the button was
+		// gone afterwards. That journey belonged to `src/views/templates/
+		// TemplateIndex.vue`, the bespoke list this page had before the Phase 8
+		// decomposition (a406583d) replaced it with a manifest `type:"index"`
+		// page. TemplateIndex.vue is still on disk but is registered by NOTHING
+		// (src/registry.js says so in as many words, and tests/unit/
+		// reachability.spec.js keeps it in a KNOWN_HEADLESS allow-list), so no
+		// route has rendered its markup — its <h2>Templates</h2>, its
+		// "New template" button, its <table> — for months. There is no
+		// `/templates/new` route in the manifest either.
+		//
+		// What the page actually offers is CnIndexPage's create affordance: its
+		// Add button (labelled "New template" via `config.addLabel`) opens the
+		// built-in object form dialog rather than routing. That is the create
+		// entry point REQ "create a template" now has, so that is what is
+		// asserted — the affordance exists, activating it surfaces a create
+		// form, and nothing 5xx's on the way.
 		const guard = attachConsoleGuard(page)
 		await go(page, 'templates')
 		await dismissOverlays(page)
 		await page.getByRole('button', { name: 'New template' }).click()
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await page.waitForTimeout(800)
-		// TemplateNew route renders the TemplateDetail editor (not the list).
-		await expect(page.getByRole('button', { name: 'New template' })).toHaveCount(0)
-		await expect(page.locator('#content, .app-content').first()).toBeVisible()
+		// The create surface is a dialog. Asserting it directly, rather than
+		// `dialog.or(content)`: `.or()` on two locators that BOTH resolve is a
+		// strict-mode violation, and "the content area is visible" is true on
+		// every page anyway, so it could never have failed.
+		const dialog = page.locator('[role="dialog"]').first()
+		await expect(dialog).toBeVisible()
+		await expect(dialog).toContainText(/Template/i)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 

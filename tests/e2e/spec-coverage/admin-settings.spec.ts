@@ -33,8 +33,14 @@ async function dismissOverlays(page: Page): Promise<void> {
 	}
 }
 
+// `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
+// prefix is required on CI (`php -S` does not rewrite, so an unprefixed path
+// hits PHP's own 404 page instead of Nextcloud). It matters MORE here than
+// elsewhere: most assertions in this file only require a `<body>` and a
+// non-`/login` URL, both of which PHP's 404 page satisfies — so these specs
+// passed against it.
 async function goSettings(page: Page): Promise<void> {
-	await page.goto('/settings/admin/docudesk')
+	await page.goto('/index.php/settings/admin/docudesk')
 	await page.waitForLoadState('networkidle').catch(() => {})
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
@@ -65,7 +71,7 @@ test.describe('admin-settings — admin panel integration', () => {
 
 	test('DocuDesk appears in admin settings navigation', async ({ page }) => {
 		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
-		await page.goto('/settings/admin')
+		await page.goto('/index.php/settings/admin')
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(600)

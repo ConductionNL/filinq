@@ -27,4 +27,28 @@ jobs:
       # exist in package.json and be self-contained.
       frontend-checks: '["test", "test:unit", "check:manifest", "test:l10n"]'
       enable-phpunit: true
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"beta"}]'
+      # OpenRegister is a hard dependency: DocuDesk stores every template,
+      # signing request and consent record as an OpenRegister object, and
+      # `tests/e2e/ci-seed.sh` provisions the registers through OpenRegister's
+      # own admin importer. Tracking `development` rather than `beta` so CI
+      # exercises the same OpenRegister the rest of the fleet integrates
+      # against; `beta` lags and the importer contract this seed relies on
+      # (`POST /api/configurations/import`) is read from `development`.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
+      # Shared `E2E Tests (Playwright)` job.
+      #
+      # `playwright-test-path` does double duty: it is where the job looks for
+      # spec files AND the first place it looks for a config. The workflow runs
+      # `npx playwright test --config=<path>/playwright.config.ts` with NO
+      # `--project`, so every project in whichever config it picks would run.
+      # Pointing it at `tests/e2e` selects the CI-only config declared there,
+      # which has just the regression project — the root `playwright.config.ts`
+      # also declares `docs-capture` (owned by the Journeydoc job) and `visual`
+      # (whose PNG baselines are host-font/GPU specific and cannot byte-match on
+      # a CI Linux runner).
+      enable-playwright: true
+      playwright-test-path: tests/e2e
+      # Provisions the OpenRegister registers/schemas and the app-config
+      # object-type bindings DocuDesk needs, then gates on the frontend bundle
+      # actually serving as JavaScript. Runs with cwd = Nextcloud server root.
+      playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'

@@ -165,13 +165,16 @@
 			"type": "index",
 			"title": "Templates",
 			"config": {
-				"register": "docudesk",
+				"register": "templates",
 				"schema": "template",
 				"columns": ["name", "category", "format", "namespace", "description"],
 				"sidebar": { "enabled": true, "showMetadata": true },
-				"documentationUrl": "https://docudesk.conduction.nl"
+				"documentationUrl": "https://docudesk.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New template",
+				"emptyText": "No templates found"
 			},
-			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered (register docudesk), so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail."
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/docudesk_register.json — it was `docudesk` from Phase 8 until 2026-08-03, a register DocuDesk has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`."
 		},
 		{
 			"id": "TemplateDetail",
@@ -195,11 +198,13 @@
 			"type": "index",
 			"title": "Signing Requests",
 			"config": {
-				"register": "docudesk",
+				"register": "signing",
 				"schema": "signingRequest",
 				"columns": ["documentName", "signingMode", "signatureLevel", "status", "provider", "deadline"],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://docudesk.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No signing requests",
 				"actionToggles": { "showAdd": false }
 			},
 			"primaryAction": {
@@ -208,7 +213,7 @@
 				"icon": "Plus",
 				"route": "SigningRequestForm"
 			},
-			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered (register docudesk), so CnIndexPage lists the requests directly. Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
+			"_note": "Decomposed to type:index (Phase 8): signingRequest is OR-registered in the `signing` register, so CnIndexPage lists the requests directly. (`register` was `docudesk` from Phase 8 until 2026-08-03 — a register DocuDesk has never shipped; see the Templates note.) Per-request signing actions live on SigningRequestDetail. actionToggles.showAdd:false + primaryAction (openspec/changes/orphaned-surface-restoration, REQ-DDOSR-004) replace the generic bare-object Add dialog with the signer-chain SigningRequestForm page — the index's own create path was a dead end (writes a signingRequest with no signer chain, fields or provider)."
 		},
 		{
 			"id": "SigningRequestForm",
@@ -409,7 +414,7 @@
 						},
 						"advanceOn": {
 							"type": "object-created",
-							"register": "docudesk",
+							"register": "templates",
 							"schema": "template",
 							"capture": {
 								"templateId": ":id"
@@ -444,7 +449,7 @@
 						},
 						"advanceOn": {
 							"type": "object-created",
-							"register": "docudesk",
+							"register": "signing",
 							"schema": "signingRequest",
 							"capture": {
 								"signingRequestId": ":id"
