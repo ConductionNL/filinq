@@ -112,6 +112,66 @@ echo "[ci-seed] target:    ${BASE}"
 echo "[ci-seed] app root:  ${APP_ROOT}"
 echo "[ci-seed] nc root:   ${NC_ROOT}"
 
+# ── -1. Restart `php -S` behind a router so PATH_INFO entry points work ─────
+# The shared workflow starts `php -S 0.0.0.0:8080` with NO router script, and on
+# the GitHub runner that server does not perform the PATH_INFO dispatch
+# Nextcloud is built on: anything that is not an existing file is answered by
+# the document root's index.php. Measured on run 30807123258:
+#
+#     /status.php                     -> 200  (exact file)
+#     /remote.php                     -> 404 "Path not found"   (remote.php ran)
+#     /remote.php/dav/files/admin/x   -> 404 index.php's router page
+#     /ocs/v2.php/cloud/capabilities  -> 404 index.php's router page
+#
+# So WebDAV and OCS are both unreachable, and `/index.php/apps/...` works only
+# because index.php is the fallback. Two of DocuDesk's workflow specs seed a
+# real file node over WebDAV; they cannot be written around a server that does
+# not route to remote.php.
+#
+# ⚠️ THE REAL FIX BELONGS IN `ConductionNL/.github` — the `php -S` command lives
+# there and a caller cannot influence it, and every fleet app that touches files
+# or OCS has this problem. This block is a local stand-in; delete it and
+# tests/e2e/ci-router.php once the shared workflow ships its own router.
+#
+# Only on CI, and only when the symptom is actually present: off CI this script
+# must never restart somebody's server, and on a correctly-routing server there
+# is nothing to repair.
+CAPABILITIES_URL="${BASE}/ocs/v2.php/cloud/capabilities"
+ROUTING_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+	-H 'OCS-APIRequest: true' "$CAPABILITIES_URL" || echo 000)"
+echo "[ci-seed] PATH_INFO check ${CAPABILITIES_URL} -> ${ROUTING_CODE}"
+
+if { [ "${GITHUB_ACTIONS:-}" = "true" ] || [ "${CI:-}" = "true" ]; } && [ "$ROUTING_CODE" != "200" ]; then
+	echo "[ci-seed] PATH_INFO dispatch is broken on this server; restarting php -S with a router."
+	if [ -f /tmp/php-server.pid ]; then
+		kill "$(cat /tmp/php-server.pid)" 2>/dev/null || true
+	fi
+	pkill -f 'php -S 0.0.0.0:8080' 2>/dev/null || true
+	sleep 1
+	(
+		cd "$NC_ROOT" || exit 1
+		PHP_CLI_SERVER_WORKERS=8 nohup php -S 0.0.0.0:8080 "${SCRIPT_DIR}/ci-router.php" \
+			> /tmp/php-server-router.log 2>&1 &
+		echo $! > /tmp/php-server.pid
+	)
+	# Poll rather than sleep: `curl -sf` fails instantly on connection refused,
+	# so a single probe races the bind.
+	if ! timeout 20 bash -c 'until curl -sf -o /dev/null http://localhost:8080/status.php; do sleep 0.5; done'; then
+		echo "::error::The routed php -S did not come up on :8080."
+		tail -20 /tmp/php-server-router.log || true
+		exit 1
+	fi
+	ROUTING_CODE="$(curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-H 'OCS-APIRequest: true' "$CAPABILITIES_URL" || echo 000)"
+	echo "[ci-seed] PATH_INFO re-check ${CAPABILITIES_URL} -> ${ROUTING_CODE}"
+	if [ "$ROUTING_CODE" != "200" ]; then
+		echo "::error::PATH_INFO entry points are still unreachable after installing the router (OCS capabilities -> ${ROUTING_CODE})."
+		echo "::error::WebDAV and OCS would stay dead, so any spec that seeds a file or reads capabilities fails for an environment reason."
+		tail -20 /tmp/php-server-router.log || true
+		exit 1
+	fi
+fi
+
 # ── 0. Let DocuDesk's own boot-time import run once, first ───────────────────
 # `Application::boot()` calls `SettingsService::initialize()` on EVERY request
 # until `docudesk/configuration_version` has been written, and that call
