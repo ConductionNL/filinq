@@ -445,9 +445,16 @@ dav() {
 	# parent collection and for a principal it will not admit to knowing. Print
 	# the body so the reason is in the log rather than inferred.
 	if [ "$code" != "201" ] && [ "$code" != "204" ] && [ "$code" != "207" ]; then
-		echo "[ci-seed]   body: $(head -c 400 "$DAV_OUT" | tr '\n' ' ')"
+		# Nextcloud's HTML error page carries the reason in an <h2>/hint; a Sabre
+		# XML fault carries it in <s:message>. Pull whichever is present instead
+		# of the first 400 bytes of boilerplate <head>.
+		echo "[ci-seed]   reason: $(grep -oE '<h2>[^<]*</h2>|<s:message>[^<]*|<p class=.hint.>[^<]*' "$DAV_OUT" | head -2 | tr '\n' ' ')"
 	fi
 }
+echo "[ci-seed] remote.php on disk: $(ls -l "${NC_ROOT}/remote.php" 2>&1 | head -1)"
+echo "[ci-seed] dav GET / -> $(curl -sS -o "$DAV_OUT" -w '%{http_code}' \
+	-u "${USER_NAME}:${USER_PASS}" "${DAV_ROOT}/" || echo 000)"
+echo "[ci-seed]   title: $(grep -oE '<h2>[^<]*</h2>|<p class=.hint.>[^<]*' "$DAV_OUT" | head -2 | tr '\n' ' ')"
 dav PROPFIND ""
 dav MKCOL "$DAV_PROBE"
 dav PUT "${DAV_PROBE}/x.txt" 'probe'

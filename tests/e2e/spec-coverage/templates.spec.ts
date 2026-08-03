@@ -92,12 +92,13 @@ test.describe('template-management — templates list UI', () => {
 		await page.getByRole('button', { name: 'New template' }).click()
 		await page.waitForLoadState('networkidle').catch(() => {})
 		await page.waitForTimeout(800)
-		// Either a create dialog opened, or the click routed to an editor —
-		// both are a create surface; a click that does nothing is not.
-		const dialog = page.locator('[role="dialog"], .modal-container').first()
-		const routed = page.locator('#content, .app-content').first()
-		await expect(dialog.or(routed)).toBeVisible()
-		await expect(page.locator('[role="dialog"], .modal-container')).toHaveCount(1)
+		// The create surface is a dialog. Asserting it directly, rather than
+		// `dialog.or(content)`: `.or()` on two locators that BOTH resolve is a
+		// strict-mode violation, and "the content area is visible" is true on
+		// every page anyway, so it could never have failed.
+		const dialog = page.locator('[role="dialog"]').first()
+		await expect(dialog).toBeVisible()
+		await expect(dialog).toContainText(/Template/i)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
