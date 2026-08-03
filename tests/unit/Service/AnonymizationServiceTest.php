@@ -591,8 +591,10 @@ class AnonymizationServiceTest extends TestCase
             pdfConversion: $pdfConversion,
             emlAssembly: $emlAssembly,
             customDictionary: $this->makeNoOpCustomDictionaryService(),
-            customDictionaryMatch: new \OCA\DocuDesk\Service\CustomDictionaryMatchService(),
-            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class)
+            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class),
+            customDictionaryDetection: $this->createMock(
+                \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
+            )
         );
 
     }//end buildServiceWithoutDependencies()
@@ -675,8 +677,10 @@ class AnonymizationServiceTest extends TestCase
             pdfConversion: $this->createMock(PdfConversionService::class),
             emlAssembly: $this->createMock(EmlPdfAssemblyService::class),
             customDictionary: $this->makeNoOpCustomDictionaryService(),
-            customDictionaryMatch: new \OCA\DocuDesk\Service\CustomDictionaryMatchService(),
-            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class)
+            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class),
+            customDictionaryDetection: $this->createMock(
+                \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
+            )
         );
 
     }//end makeServiceWithMatcher()

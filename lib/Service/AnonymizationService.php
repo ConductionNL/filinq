@@ -41,7 +41,6 @@ use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCA\DocuDesk\Exception\ProhibitionGateException;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use RuntimeException;
-use Symfony\Component\Uid\Uuid;
 use Throwable;
 use OCP\App\IAppManager;
 use OCP\Files\File;
@@ -146,8 +145,6 @@ class AnonymizationService
      *                                                            to construct without OpenRegister
      *                                                            installed — its own methods degrade
      *                                                            internally.
-     * @param CustomDictionaryMatchService $customDictionaryMatch Pure matcher run per active
-     *                                                            dictionary during detection.
      * @param ConfidentialityLabelService  $confidentialityLabel  Reads a file's existing
      *                                                            files_confidential TSCP/BAILS
      *                                                            classification (availability-
@@ -155,6 +152,13 @@ class AnonymizationService
      *                                                            it can be surfaced alongside
      *                                                            detected entities and risk
      *                                                            (files-confidential-labels).
+     * @param CustomDictionaryDetectionRunner $customDictionaryDetection The custom-dictionary
+     *                                                            detection pass
+     *                                                            (custom-dictionary-recognition
+     *                                                            design.md §D3). Best-effort — it
+     *                                                            returns a warning string rather
+     *                                                            than throwing, so OpenRegister's
+     *                                                            own detections always survive.
      *
      * @return void
      */
@@ -171,8 +175,8 @@ class AnonymizationService
         private readonly PdfConversionService $pdfConversion,
         private readonly EmlPdfAssemblyService $emlAssembly,
         private readonly CustomDictionaryService $customDictionary,
-        private readonly CustomDictionaryMatchService $customDictionaryMatch,
-        private readonly ConfidentialityLabelService $confidentialityLabel
+        private readonly ConfidentialityLabelService $confidentialityLabel,
+        private readonly CustomDictionaryDetectionRunner $customDictionaryDetection
     ) {
 
     }//end __construct()
@@ -276,7 +280,7 @@ class AnonymizationService
             // back below, so freshly-written CUSTOM_DICTIONARY relations are
             // included in `$entities`. Best-effort — a failure here is logged
             // and surfaced as a warning but never blocks OR's own detection.
-            $customDictionaryWarning = $this->runCustomDictionaryDetection(
+            $customDictionaryWarning = $this->customDictionaryDetection->run(
                 fileId: $fileId,
                 entityTypeWhitelist: $entityTypes
             );
@@ -345,273 +349,6 @@ class AnonymizationService
         }//end try
 
     }//end extractAndDetectEntities()
-
-    /**
-     * Custom-dictionary detection pass hooked into
-     * `extractAndDetectEntities()` (custom-dictionary-recognition,
-     * design.md §D3).
-     *
-     * For every active dictionary visible to the caller's accessible
-     * organisations, matches its terms against the file's already-extracted
-     * chunks (`CustomDictionaryMatchService::match()`, per-dictionary match
-     * mode) and writes each occurrence into OpenRegister's shared catalogue
-     * as a `CUSTOM_DICTIONARY` entity/relation — entity `type` =
-     * `CUSTOM_DICTIONARY`, `category` = `contextual_data`, relation
-     * `detectionMethod` = `custom_dictionary`, `confidence` = `1.0`, and the
-     * matching dictionary/term label carried on `context` (the only
-     * free-text field `EntityRelation` exposes for this purpose).
-     *
-     * Idempotent: this file's prior `custom_dictionary` relations are
-     * cleared before re-matching so re-running detection never appends
-     * duplicates. Cross-chunk / cross-dictionary overlaps are resolved
-     * longest-match-first by absolute document position (mirrors both
-     * `CustomDictionaryMatchService`'s own per-dictionary overlap rule and
-     * OpenRegister's `ChunkTextMatcher` dedup convention), so a match
-     * straddling two overlapping chunks is written only once.
-     *
-     * Best-effort: any failure is logged and returned as a human-readable
-     * warning string; it never throws, so OpenRegister's own detections are
-     * always returned by the caller regardless.
-     *
-     * @param int                     $fileId              The Nextcloud file ID.
-     * @param array<int, string>|null $entityTypeWhitelist The operator's enabled-type
-     *                                                     selection (null = all types).
-     *                                                     When non-null and it does not
-     *                                                     contain `CUSTOM_DICTIONARY`, the
-     *                                                     pass is skipped entirely.
-     *
-     * @return string|null Null on success (or when skipped), a warning message on failure.
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    private function runCustomDictionaryDetection(int $fileId, ?array $entityTypeWhitelist): ?string
-    {
-        if ($entityTypeWhitelist !== null && in_array('CUSTOM_DICTIONARY', $entityTypeWhitelist, true) === false) {
-            // Operator has disabled automatic custom-dictionary detection.
-            return null;
-        }
-
-        try {
-            $dictionaries = $this->customDictionary->listActiveDictionariesForDetection();
-            if (empty($dictionaries) === true) {
-                return null;
-            }
-
-            $chunkMapper = $this->getOpenRegisterService(className: 'OCA\OpenRegister\Db\ChunkMapper');
-            $chunks      = $chunkMapper->findBySource('file', $fileId);
-            if (empty($chunks) === true) {
-                return null;
-            }
-
-            $entityRelationMapper = $this->getOpenRegisterService(
-                className: 'OCA\OpenRegister\Db\EntityRelationMapper'
-            );
-            $gdprEntityMapper     = $this->getOpenRegisterService(
-                className: 'OCA\OpenRegister\Db\GdprEntityMapper'
-            );
-
-            $this->clearCustomDictionaryRelations(fileId: $fileId, entityRelationMapper: $entityRelationMapper);
-
-            $rowsToInsert = $this->matchDictionariesAgainstChunks(
-                chunks: $chunks,
-                dictionaries: $dictionaries,
-                fileId: $fileId,
-                gdprEntityMapper: $gdprEntityMapper
-            );
-
-            if (empty($rowsToInsert) === false) {
-                $entityRelationMapper->insertBatch(rows: $rowsToInsert);
-            }
-
-            return null;
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[AnonymizationService] Custom dictionary matching failed; continuing with OpenRegister detection only.',
-                ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-            );
-            return 'Custom dictionary matching did not run: '.$e->getMessage();
-        }//end try
-
-    }//end runCustomDictionaryDetection()
-
-    /**
-     * Run every active dictionary's matcher against every chunk and build
-     * the `EntityRelationMapper::insertBatch()` row set.
-     *
-     * @param array<int, mixed> $chunks           OpenRegister `Chunk` entities, chunk-index ascending.
-     * @param array<int, mixed> $dictionaries     Active dictionaries + terms (see
-     *                                            {@see CustomDictionaryService::listActiveDictionariesForDetection()}
-     *                                            for the exact row shape).
-     * @param int               $fileId           The Nextcloud file ID.
-     * @param mixed             $gdprEntityMapper OpenRegister `GdprEntityMapper` instance.
-     *
-     * @return array<int, array<string, mixed>> Rows ready for `EntityRelationMapper::insertBatch()`.
-     */
-    private function matchDictionariesAgainstChunks(
-        array $chunks,
-        array $dictionaries,
-        int $fileId,
-        mixed $gdprEntityMapper
-    ): array {
-        $globalClaimed = [];
-        $entityCache   = [];
-        $rowsToInsert  = [];
-
-        foreach ($chunks as $chunk) {
-            $chunkText = (string) $chunk->getTextContent();
-            if ($chunkText === '') {
-                continue;
-            }
-
-            $chunkOccurrences = [];
-            foreach ($dictionaries as $dictionary) {
-                foreach ($this->customDictionaryMatch->match(
-                        text: $chunkText,
-                        terms: $dictionary['terms'],
-                        mode: $dictionary['matchMode']
-                    ) as $occurrence
-                ) {
-                    $chunkOccurrences[] = $occurrence;
-                }
-            }
-
-            if (empty($chunkOccurrences) === true) {
-                continue;
-            }
-
-            // Longest-match-first so a shorter cross-dictionary match cannot
-            // pre-empt a longer one at an overlapping position — mirrors
-            // CustomDictionaryMatchService's own per-dictionary overlap rule.
-            usort(
-                $chunkOccurrences,
-                static fn (array $a, array $b): int => (
-                    ($b['positionEnd'] - $b['positionStart']) <=> ($a['positionEnd'] - $a['positionStart'])
-                )
-            );
-
-            $startOffset = (int) $chunk->getStartOffset();
-            foreach ($chunkOccurrences as $occurrence) {
-                $absoluteStart = ($startOffset + $occurrence['positionStart']);
-                $absoluteEnd   = ($startOffset + $occurrence['positionEnd']);
-
-                if ($this->rangeOverlapsAny(start: $absoluteStart, end: $absoluteEnd, claimed: $globalClaimed) === true) {
-                    // Already matched at this absolute document position —
-                    // typically the same occurrence seen again in an
-                    // overlap region shared by two adjacent chunks.
-                    continue;
-                }
-
-                $globalClaimed[] = [$absoluteStart, $absoluteEnd];
-
-                $entityKey = ('CUSTOM_DICTIONARY|'.$occurrence['value']);
-                if (isset($entityCache[$entityKey]) === false) {
-                    $entityCache[$entityKey] = $this->lookupOrCreateCustomDictionaryEntity(
-                        value: $occurrence['value'],
-                        gdprEntityMapper: $gdprEntityMapper
-                    );
-                }
-
-                $rowsToInsert[] = [
-                    'entityId'          => $entityCache[$entityKey],
-                    'fileId'            => $fileId,
-                    'chunkId'           => (int) $chunk->getId(),
-                    'positionStart'     => $occurrence['positionStart'],
-                    'positionEnd'       => $occurrence['positionEnd'],
-                    'confidence'        => 1.0,
-                    'detectionMethod'   => 'custom_dictionary',
-                    // The only free-text field EntityRelation exposes; carries
-                    // the matching term/dictionary label for the review UI
-                    // (design.md §D3 — "per-list label carried on the relation").
-                    'context'           => $occurrence['label'],
-                    'anonymized'        => false,
-                    'skipAnonymization' => false,
-                    'createdAt'         => new DateTime(),
-                ];
-            }//end foreach
-        }//end foreach
-
-        return $rowsToInsert;
-
-    }//end matchDictionariesAgainstChunks()
-
-    /**
-     * Look up an existing `CUSTOM_DICTIONARY` catalogue entry for `$value`,
-     * or create one. Mirrors OpenRegister's own manual-entity lookup-or-
-     * create convention (`ManualEntityService::lookupOrCreateEntity`) so
-     * repeated matches of the same literal value share one catalogue row.
-     *
-     * @param string $value            The matched term text.
-     * @param mixed  $gdprEntityMapper OpenRegister `GdprEntityMapper` instance.
-     *
-     * @return int The catalogue entity id.
-     */
-    private function lookupOrCreateCustomDictionaryEntity(string $value, mixed $gdprEntityMapper): int
-    {
-        $existing = $gdprEntityMapper->findOneByValueAndType(value: $value, type: 'CUSTOM_DICTIONARY');
-        if ($existing !== null) {
-            return (int) $existing->getId();
-        }
-
-        // Instantiated by FQCN string (not a hard `use` import) so this class
-        // stays loadable without OpenRegister installed, mirroring
-        // `getOpenRegisterService()`'s own lazy-resolution convention. A
-        // fresh instance is required per call — the container's `get()`
-        // would return a shared, mutable singleton, which is wrong for an
-        // Entity that is set up differently on every insert.
-        $entityClass = 'OCA\OpenRegister\Db\GdprEntity';
-        $now         = new DateTime();
-        $entity      = new $entityClass();
-        $entity->setUuid(Uuid::v4()->toRfc4122());
-        $entity->setValue($value);
-        $entity->setType('CUSTOM_DICTIONARY');
-        $entity->setCategory('contextual_data');
-        $entity->setDetectedAt($now);
-        $entity->setUpdatedAt($now);
-
-        $inserted = $gdprEntityMapper->insert($entity);
-        return (int) $inserted->getId();
-
-    }//end lookupOrCreateCustomDictionaryEntity()
-
-    /**
-     * Clear this file's prior `custom_dictionary` relations so a re-run
-     * never appends duplicates (design.md §D3 idempotency rule).
-     *
-     * @param int   $fileId               The Nextcloud file ID.
-     * @param mixed $entityRelationMapper OpenRegister `EntityRelationMapper` instance.
-     *
-     * @return void
-     */
-    private function clearCustomDictionaryRelations(int $fileId, mixed $entityRelationMapper): void
-    {
-        foreach ($entityRelationMapper->findByFileId($fileId) as $relation) {
-            if ($relation->getDetectionMethod() === 'custom_dictionary') {
-                $entityRelationMapper->delete($relation);
-            }
-        }
-
-    }//end clearCustomDictionaryRelations()
-
-    /**
-     * Whether `[start, end)` overlaps any already-claimed absolute-position range.
-     *
-     * @param int                            $start   Candidate match start.
-     * @param int                            $end     Candidate match end.
-     * @param array<int, array{0:int,1:int}> $claimed Already-claimed `[start, end]` pairs.
-     *
-     * @return bool True when the candidate overlaps a claimed range.
-     */
-    private function rangeOverlapsAny(int $start, int $end, array $claimed): bool
-    {
-        foreach ($claimed as [$claimedStart, $claimedEnd]) {
-            if ($start < $claimedEnd && $end > $claimedStart) {
-                return true;
-            }
-        }
-
-        return false;
-
-    }//end rangeOverlapsAny()
 
     /**
      * Try to get PolicyMatchService from the container without throwing
