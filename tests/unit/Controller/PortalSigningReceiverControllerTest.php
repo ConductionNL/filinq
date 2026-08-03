@@ -37,6 +37,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\PortalSigningReceiverController;
 use OCA\DocuDesk\Portal\PortalAssertionVerifier;
+use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -152,8 +153,8 @@ class PortalSigningReceiverControllerTest extends TestCase
             signingService: $this->mockSigningService,
             settingsService: $this->mockSettingsService,
             config: $this->mockConfig,
-            rootFolder: $this->mockRootFolder,
-            logger: $this->mockLogger
+            logger: $this->mockLogger,
+            documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder)
         );
 
     }//end controller()
