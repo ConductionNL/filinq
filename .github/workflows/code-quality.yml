@@ -9,7 +9,7 @@ on:
 
 jobs:
   quality:
-    uses: Conduction/.github/.github/workflows/quality.yml@main
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: docudesk
       php-version: "8.3"
@@ -20,4 +20,4 @@ jobs:
       enable-frontend: true
       enable-eslint: true
       enable-phpunit: true
-      additional-apps: '[{"repo":"Conduction/openregister","app":"openregister","ref":"beta"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"beta"}]'
