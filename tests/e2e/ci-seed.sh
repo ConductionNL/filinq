@@ -425,6 +425,25 @@ while IFS=$'\t' read -r key value; do
 done < "$BINDINGS"
 echo "[ci-seed] bound ${BOUND} DocuDesk object-type config keys."
 
+# The native signing provider refuses to produce an SES artifact without a
+# verification secret — `NativeSigningProvider` throws 'Cannot produce a native
+# SES artifact: signing_verification_secret is unset. Configure the signing
+# secret in DocuDesk admin settings before enabling signing.' A fresh install
+# has no secret, so `POST /api/signing/requests/{id}/sign` answers 500 and the
+# signing journey cannot complete. This is an ADMIN SETUP step, exactly like
+# the register bindings above, so it belongs here.
+#
+# Deliberately NOT written through `POST /api/settings`: `SettingsService`'s
+# WRITABLE_KEYS allowlist excludes this key on purpose ('secret keys must be
+# managed through dedicated, separately-secured endpoints'), so occ is the
+# right channel. The value is throwaway — this instance is destroyed with the
+# runner — but it is generated rather than a literal, so nothing here can ever
+# become a copied-and-pasted production secret.
+SIGNING_SECRET="ci-$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+php "${NC_ROOT}/occ" config:app:set docudesk signing_verification_secret \
+	--value="$SIGNING_SECRET" --output=plain > /dev/null
+echo "[ci-seed] provisioned signing_verification_secret (${#SIGNING_SECRET} chars, ephemeral)."
+
 # ── 4. Verify the bindings through the app's own settings endpoint ───────────
 # `SettingsController::index` is the exact read path `OpenRegisterResolver`
 # consumes, so verifying HERE proves the binding is visible to the code that
