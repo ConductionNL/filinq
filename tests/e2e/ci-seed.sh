@@ -406,6 +406,30 @@ PY
 
 echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned."
 
+# ── 4b. Probe WebDAV, which the file-backed workflow specs depend on ─────────
+# `tests/e2e/workflows/_fixtures.ts` seeds real Nextcloud files through
+# `/remote.php/dav/files/admin/...` for the signing and anonymisation journeys.
+# On run 30801457803 the MKCOL came back 404 with nothing in nextcloud.log, and
+# a 404 from DAV is ambiguous: it is what you get from a missing service
+# mapping, from a user whose home has not been initialised, AND from a genuinely
+# absent parent collection. Probing here — with the same admin credentials, at
+# the point the environment is being prepared — turns that into a printed fact
+# instead of a spec failure that accuses the fixture.
+#
+# Informational: it prints, it does not gate. The specs remain the authority on
+# whether the journeys work.
+DAV_ROOT="${BASE}/remote.php/dav/files/${USER_NAME}"
+DAV_PROBE="ci-seed-probe-$$"
+dav() {
+	curl -sS -o /dev/null -w '%{http_code}' -u "${USER_NAME}:${USER_PASS}" \
+		-X "$1" "${DAV_ROOT}/${2}" ${3:+--data-binary "$3"} || echo 000
+}
+echo "[ci-seed] dav PROPFIND root      -> $(curl -sS -o /dev/null -w '%{http_code}' \
+	-u "${USER_NAME}:${USER_PASS}" -X PROPFIND -H 'Depth: 0' "${DAV_ROOT}/" || echo 000)"
+echo "[ci-seed] dav MKCOL   ${DAV_PROBE} -> $(dav MKCOL "$DAV_PROBE")"
+echo "[ci-seed] dav PUT     ${DAV_PROBE}/x.txt -> $(dav PUT "${DAV_PROBE}/x.txt" 'probe')"
+echo "[ci-seed] dav DELETE  ${DAV_PROBE} -> $(dav DELETE "$DAV_PROBE")"
+
 # ── 5. Warm the SPA so the first spec doesn't pay the cold start ─────────────
 # The runner serves Nextcloud with `php -S`. Even with PHP_CLI_SERVER_WORKERS=8
 # the first hit pays a cold opcache, the first parse of the webpack bundle, and
