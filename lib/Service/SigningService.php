@@ -45,9 +45,17 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * Exceeds PHPMD's class-length threshold (1214 lines vs 1000). The class is the
+ * whole signing-request lifecycle, and the bulk of those lines are the
+ * documented per-state transition rules rather than logic density. This is
+ * flagged as a candidate for a genuine split (extracting the provider-dispatch
+ * and verification halves), which is a behavioural refactor and deliberately
+ * not folded into a quality-gate change.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  *
  * @spec openspec/specs/document-signing/spec.md
  */

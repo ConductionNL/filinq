@@ -45,6 +45,14 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * Sits on PHPMD's object-coupling threshold (13 vs 13). This service is the
+ * single read/write point for every DocuDesk app setting, so it necessarily
+ * touches one type per settings domain it serves. The coupling is a
+ * consequence of centralising settings access rather than scattering it, which
+ * is the property we want to keep.
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-4.1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
  */

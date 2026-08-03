@@ -49,6 +49,14 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * Exceeds PHPMD's class-complexity threshold (69 vs 50). The figure is the sum
+ * of roughly a dozen thin CRUD/import/export endpoints, each individually
+ * simple; no single method is near the per-method thresholds. Splitting the
+ * class would fragment one REST resource across several controllers without
+ * reducing any method's complexity.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
 class CustomDictionaryController extends Controller

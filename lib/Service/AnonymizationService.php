@@ -58,6 +58,13 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * Exceeds PHPMD's 25-method threshold (29 non-accessor methods). The extra
+ * four are private per-entity-kind helpers that exist to keep each entity's
+ * anonymisation rule next to the pipeline that applies it; moving them to a
+ * sibling class would separate the rule from its only caller.
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ *
  * @spec openspec/specs/anonymization/spec.md
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
