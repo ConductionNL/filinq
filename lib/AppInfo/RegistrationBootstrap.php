@@ -44,11 +44,10 @@ class RegistrationBootstrap
      * Register every DocuDesk service, listener and middleware.
      *
      * @param IRegistrationContext $context The registration context.
-     * @param string               $appName The docudesk app id.
      *
      * @return void
      */
-    public function register(IRegistrationContext $context, string $appName): void
+    public function register(IRegistrationContext $context): void
     {
         (new ObjectEventRegistrar())->register(context: $context);
         (new SigningEventRegistrar())->register(context: $context);
@@ -66,8 +65,25 @@ class RegistrationBootstrap
         // objects to the right variant.
         $context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
-        (new ObservabilityRegistrar())->register(context: $context, appName: $appName);
-        (new AppHostControllerRegistrar())->register(context: $context, appName: $appName);
+        // AppHost observability adoption (ADR-006 / ADR-040). Registers only the
+        // MetricsEngine; the Health/Metrics controllers auto-wire from OCP and
+        // resolve the engine by FQCN string at dispatch time.
+        //
+        // AppHost boilerplate adoption (ADR-040) has deliberately NO registrar
+        // of its own. The `/` + `/{path}` and `/api/preferences/{key}` routes
+        // are named `dashboard#…` / `preferences#…`, which Nextcloud resolves to
+        // OCA\DocuDesk\Controller\{Dashboard,Preferences}Controller. Both are
+        // real classes in this app that extend OCP\AppFramework\Controller and
+        // take only auto-wirable OCP dependencies, so neither needs an explicit
+        // registration and neither can drag OpenRegister into the router's
+        // reflection pass. templates/index.php and the `pref_` user-value
+        // namespace stay scoped to docudesk via Application::APP_ID.
+        //
+        // ⚠️ Do NOT re-introduce container aliases binding leaf AppHost class
+        // names to the OpenRegister generics — that is what docudesk#369
+        // removed to stop a 500 on EVERY docudesk route when openregister is
+        // absent. See ObservabilityRegistrar::register() for the full rationale.
+        (new ObservabilityRegistrar())->register(context: $context);
 
     }//end register()
 

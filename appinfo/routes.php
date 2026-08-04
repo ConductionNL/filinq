@@ -17,12 +17,21 @@
 
 // The mechanical boilerplate routes — `dashboard#page` (`/`) and the SPA
 // catch-all (`/{path}`, `dashboard#catchAll`) — are supplied by
-// `Routes::standard()`; both resolve to docudesk's `DashboardController`
-// (which extends the AppHost `GenericDashboardController`), so the route name
-// `docudesk.dashboard.page` that the navigation (info.xml) and the dashboard
-// widgets link to is defined. The app-specific API routes below are passed
-// through as `$extra` and inserted before the catch-all.
-return \OCA\OpenRegister\AppHost\Routes::standard([
+// `Routes::standard()`; both resolve to docudesk's `DashboardController`, so
+// the route name `docudesk.dashboard.page` that the navigation (info.xml) and
+// the dashboard widgets link to is defined. The app-specific API routes below
+// are passed through as `$extra` and inserted before the catch-all.
+//
+// ⚠️ The AppHost builder is invoked through a `class_exists()` guard. Nextcloud
+// `include`s this file for EVERY docudesk request, so an unguarded static call
+// to a class in another app makes every route in the app fatal with HTTP 500
+// when openregister is absent — not just the AppHost ones. DocuDesk does not
+// declare `<app>openregister</app>`, so an admin can create exactly that
+// configuration. Fixing only the controllers MOVES the fatal here rather than
+// removing it. The `$fallback` branch below reproduces `Routes::standard()`'s
+// output locally so docudesk still routes (and degrades per-endpoint) without
+// openregister. See decidesk#377 / #388.
+$extra = [
         // Metrics and health.
         ['name' => 'metrics#index', 'url' => 'api/metrics', 'verb' => 'GET'],
         ['name' => 'health#index', 'url' => 'api/health', 'verb' => 'GET'],
@@ -183,11 +192,61 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g.
         // CnSupportDialog) — served by OpenRegister's AppHost
         // GenericPreferencesController (aliased in Application::register).
-        // Served by lib/Controller/PreferencesController (a thin subclass of
-        // OpenRegister's GenericPreferencesController). The route name MUST
-        // stay `preferences#…`: Nextcloud resolves `foo#bar` to
+        // Served by lib/Controller/PreferencesController (a local OCP-only
+        // implementation of OpenRegister's GenericPreferencesController). The
+        // route name MUST stay `preferences#…`: Nextcloud resolves `foo#bar` to
         // OCA\DocuDesk\Controller\FooController, so a namespaced name here
         // resolves to a class that does not exist and 500s.
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
-]);
+];
+
+// Preferred path: the OpenRegister AppHost owns the canonical route table.
+// `class_exists()` autoloads without fatalling when the class is unavailable.
+if (class_exists('OCA\OpenRegister\AppHost\Routes') === true) {
+    return \OCA\OpenRegister\AppHost\Routes::standard($extra);
+}
+
+// Fallback: openregister is not installed. Reproduce `Routes::standard()`
+// locally — canonical routes first (minus any name `$extra` overrides), then
+// `$extra`, then the SPA catch-all LAST so it never shadows a real route.
+$canonicalRoutes = [
+    ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
+    ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
+    ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+    ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
+    ['name' => 'settings#load', 'url' => '/api/settings/load', 'verb' => 'POST'],
+    ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
+    ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+    ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
+    ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+];
+
+$catchAllRoute = [
+    'name'         => 'dashboard#catchAll',
+    'url'          => '/{path}',
+    'verb'         => 'GET',
+    'requirements' => ['path' => '.+'],
+    'defaults'     => ['path' => ''],
+];
+
+$extraNames = [];
+foreach ($extra as $extraRoute) {
+    if (isset($extraRoute['name']) === true) {
+        $extraNames[(string) $extraRoute['name']] = true;
+    }
+}
+
+$mergedRoutes = [];
+foreach ($canonicalRoutes as $canonicalRoute) {
+    if (isset($extraNames[$canonicalRoute['name']]) === true) {
+        continue;
+    }
+
+    $mergedRoutes[] = $canonicalRoute;
+}
+
+$mergedRoutes   = array_merge($mergedRoutes, $extra);
+$mergedRoutes[] = $catchAllRoute;
+
+return ['routes' => $mergedRoutes];

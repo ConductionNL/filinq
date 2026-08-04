@@ -70,7 +70,7 @@ class Application extends App implements IBootstrap
     public function register(IRegistrationContext $context): void
     {
         $bootstrap = new RegistrationBootstrap();
-        $bootstrap->register(context: $context, appName: self::APP_ID);
+        $bootstrap->register(context: $context);
 
     }//end register()
 

@@ -8,6 +8,16 @@
  * `openregister` app container and is not visible here, so the engine and each
  * of its metric sources are resolved by hand. Extracted from `Application`.
  *
+ * ⚠️ Every OpenRegister class name in this file is a STRING resolved inside the
+ * method body, and `build()` returns `object` rather than `MetricsEngine`. That
+ * is deliberate. DocuDesk does not declare `<app>openregister</app>`, so an
+ * admin can run it with OpenRegister absent; a return type is resolved when the
+ * method is invoked, and an `use` import is one refactor away from becoming a
+ * class-declaration-time reference. Keeping the file free of both means nothing
+ * here can fatal while OpenRegister is missing — the caller simply never gets
+ * an engine and MetricsController degrades to 503. See docudesk#369 /
+ * decidesk#377.
+ *
  * @category  AppInfo
  * @package   OCA\DocuDesk\AppInfo
  * @author    Conduction B.V. <info@conduction.nl>
@@ -26,13 +36,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\AppInfo;
 
-use OCA\OpenRegister\AppHost\Observability\ManifestLoader;
-use OCA\OpenRegister\AppHost\Observability\MetricsEngine;
-use OCA\OpenRegister\AppHost\Observability\PrometheusRenderer;
-use OCA\OpenRegister\AppHost\Observability\Source\AppConfigMetricSource;
-use OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource;
-use OCA\OpenRegister\AppHost\Observability\Source\ProviderMetricSource;
-use OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource;
 use OCP\ICacheFactory;
 use OCP\IConfig;
 use Psr\Container\ContainerInterface;
@@ -46,27 +49,34 @@ use Psr\Log\LoggerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
+ *
+ * @spec openspec/specs/adopt-apphost/spec.md
  */
 class MetricsEngineFactory
 {
     /**
      * Build the metrics engine.
      *
+     * Returns `object`, not the engine's own type — see the file docblock.
+     *
      * @param ContainerInterface $container The server container.
      *
-     * @return MetricsEngine The constructed engine.
+     * @return object The constructed OpenRegister AppHost MetricsEngine.
      *
      * @spec openspec/specs/adopt-apphost/spec.md
      */
-    public function build(ContainerInterface $container): MetricsEngine
+    public function build(ContainerInterface $container): object
     {
-        return new MetricsEngine(
-            objectSource: $container->get(ObjectMetricSource::class),
-            tableSource: $container->get(TableMetricSource::class),
-            appConfigSource: $container->get(AppConfigMetricSource::class),
-            providerSource: $container->get(ProviderMetricSource::class),
-            renderer: $container->get(PrometheusRenderer::class),
-            manifestLoader: $container->get(ManifestLoader::class),
+        $namespace = '\\OCA\\OpenRegister\\AppHost\\Observability\\';
+        $engine    = $namespace.'MetricsEngine';
+
+        return new $engine(
+            objectSource: $container->get($namespace.'Source\\ObjectMetricSource'),
+            tableSource: $container->get($namespace.'Source\\TableMetricSource'),
+            appConfigSource: $container->get($namespace.'Source\\AppConfigMetricSource'),
+            providerSource: $container->get($namespace.'Source\\ProviderMetricSource'),
+            renderer: $container->get($namespace.'PrometheusRenderer'),
+            manifestLoader: $container->get($namespace.'ManifestLoader'),
             cacheFactory: $container->get(ICacheFactory::class),
             config: $container->get(IConfig::class),
             logger: $container->get(LoggerInterface::class)
