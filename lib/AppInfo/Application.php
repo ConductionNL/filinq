@@ -45,10 +45,6 @@ use OCA\OpenRegister\Event\ApprovalStepRejectedEvent;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
-use OCA\DocuDesk\Controller\HealthController;
-use OCA\DocuDesk\Controller\MetricsController;
-use OCA\OpenRegister\AppHost\Controller\GenericDashboardController;
-use OCA\OpenRegister\AppHost\Controller\GenericPreferencesController;
 use OCP\Files\Conversion\IConversionManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -179,25 +175,32 @@ class Application extends App implements IBootstrap
         // objects to the right variant.
         $context->registerMiddleware(LanguageNegotiationMiddleware::class);
 
-        // AppHost observability adoption (ADR-006 / ADR-040). The thin
-        // HealthController / MetricsController subclasses of OpenRegister's
-        // engine-owned generic controllers serve /api/health and /api/metrics
-        // (URLs unchanged in appinfo/routes.php) — driven by the declarative
-        // `observability` block in src/manifest.json. The bespoke checks /
-        // metric lines / MetricsCollector are gone. Auth posture is owned by
-        // the controllers (health public, metrics admin-only). These factories
-        // supply the engine dependencies the subclasses inherit from the
-        // generic controllers' constructors.
+        // AppHost observability adoption (ADR-006 / ADR-040). DocuDesk's
+        // HealthController / MetricsController serve /api/health and
+        // /api/metrics (URLs unchanged in appinfo/routes.php) — driven by the
+        // declarative `observability` block in src/manifest.json. The bespoke
+        // checks / metric lines / MetricsCollector are gone. Auth posture is
+        // owned by the controllers (health public, metrics admin-only).
+        //
+        // Both controllers now auto-wire from OCP alone and resolve the engine
+        // by FQCN string at dispatch time, so the only thing left to bind is
+        // the MetricsEngine itself (see below for why it needs a factory).
         $this->registerAppHostObservability(context: $context);
 
-        // AppHost boilerplate adoption (ADR-040). The bespoke DashboardController
+        // AppHost boilerplate adoption (ADR-040). The DashboardController
         // (SPA page + catch-all) and PreferencesController (per-user key/value
-        // UI flags) were byte-for-byte copies of OpenRegister's shared AppHost
-        // generics, so bind docudesk's conventional AppHost controller class
-        // names to the engine generics with docudesk's app id injected as
-        // $appName. URLs, route names' targets and JSON contracts are unchanged;
-        // the engine owns the (identical) auth posture so the leaf cannot drift
-        // it. The bespoke classes were deleted.
+        // UI flags) implement the AppHost boilerplate LOCALLY against OCP.
+        // URLs, route names' targets, auth posture and JSON contracts are
+        // unchanged from the engine generics they used to subclass.
+        //
+        // ⚠️ Do NOT re-introduce container aliases that bind leaf AppHost class
+        // names to the OpenRegister generics, and do NOT turn those controllers
+        // back into subclasses. Nextcloud's router `ReflectionClass()`es every
+        // file in lib/Controller/ while MATCHING a route, so one unresolvable
+        // parent returns HTTP 500 for EVERY docudesk route — and DocuDesk does
+        // not declare `<app>openregister</app>`, so an admin can create exactly
+        // that configuration. `extends` is resolved by the AUTOLOADER, not this
+        // container, so lazy registration cannot rescue it. See decidesk#377.
         //
         // NOT adopted (kept bespoke — domain-entangled): SettingsController
         // (its index() merges the openregister-installed flag + isAdmin +
@@ -208,46 +211,14 @@ class Application extends App implements IBootstrap
         // none of that), the DocuDeskAdmin AdminSettings, and the GDPR/consent,
         // anonymisation, PDF/print, signing and dossier domain controllers.
         //
-        // The /api/preferences/{key} and / + /{path} routes resolve to
-        // leaf-namespaced AppHost controller class names
-        // (OCA\DocuDesk\AppHost\Controller\Generic{Dashboard,Preferences}Controller)
-        // that do not physically exist in this app — same pattern as the
-        // Health/Metrics adoption above. Register them as services that
-        // construct the OpenRegister generics with docudesk's id injected as
-        // $appName, so templates/index.php and the `pref_` user-value namespace
-        // are scoped to docudesk, never OpenRegister.
-        $context->registerService(
-            'OCA\\DocuDesk\\AppHost\\Controller\\GenericDashboardController',
-            static function (ContainerInterface $container): GenericDashboardController {
-                return new GenericDashboardController(
-                    appName: self::APP_ID,
-                    request: $container->get(\OCP\IRequest::class)
-                );
-            }
-        );
-        // The conventional `dashboard#page` route resolves to this real
-        // DashboardController subclass; register it explicitly (mirroring
-        // procest) so NC's DI constructs it from IRequest — the AppHost engine
-        // base otherwise expects an injected `string $appName`.
-        $context->registerService(
-            \OCA\DocuDesk\Controller\DashboardController::class,
-            static function (ContainerInterface $container): \OCA\DocuDesk\Controller\DashboardController {
-                return new \OCA\DocuDesk\Controller\DashboardController(
-                    request: $container->get(\OCP\IRequest::class)
-                );
-            }
-        );
-        $context->registerService(
-            'OCA\\DocuDesk\\AppHost\\Controller\\GenericPreferencesController',
-            static function (ContainerInterface $container): GenericPreferencesController {
-                return new GenericPreferencesController(
-                    appName: self::APP_ID,
-                    request: $container->get(\OCP\IRequest::class),
-                    config: $container->get(\OCP\IConfig::class),
-                    userSession: $container->get(\OCP\IUserSession::class)
-                );
-            }
-        );
+        // The `/` + `/{path}` and `/api/preferences/{key}` routes are named
+        // `dashboard#…` / `preferences#…`, which Nextcloud resolves to
+        // OCA\DocuDesk\Controller\{Dashboard,Preferences}Controller. Both are
+        // real classes in this app that extend OCP\AppFramework\Controller and
+        // take only auto-wirable OCP dependencies, so neither needs an explicit
+        // registration and neither can drag OpenRegister into the router's
+        // reflection pass. templates/index.php and the `pref_` user-value
+        // namespace stay scoped to docudesk via Application::APP_ID.
     }//end register()
 
     /**
@@ -311,48 +282,40 @@ class Application extends App implements IBootstrap
     }//end registerFilteredObjectListener()
 
     /**
-     * Wire the AppHost-backed health + metrics controllers.
+     * Wire the AppHost metrics engine into DocuDesk's container.
      *
-     * Registers DocuDesk's HealthController / MetricsController (thin subclasses
-     * of OpenRegister's GenericHealthController / GenericMetricsController) with
-     * `appName = docudesk`, so the engine loads docudesk's src/manifest.json
-     * `observability` block. ManifestLoader + HealthCheckExecutor resolve
-     * through the server container; MetricsEngine is built explicitly because
-     * OpenRegister's own MetricsEngine factory is registered under the
-     * `openregister` app container and is not visible here (auto-wiring it
-     * fresh would fail on the multi-arg constructor).
+     * DocuDesk's HealthController / MetricsController no longer subclass the
+     * OpenRegister generics, and no longer take engine collaborators as
+     * constructor parameters — they resolve them out of the container BY FQCN
+     * STRING at dispatch time and degrade (health `degraded` / metrics 503)
+     * when the lookup fails. Both auto-wire from OCP alone, so neither needs a
+     * factory here any more.
+     *
+     * MetricsEngine still does: OpenRegister's own MetricsEngine factory is
+     * registered under the `openregister` app container and is not visible
+     * here, and auto-wiring it fresh would fail on the multi-arg constructor.
+     * Registering it under its own FQCN string keeps that explicit construction
+     * while letting MetricsController find it with a plain `$container->get()`.
+     *
+     * ⚠️ The closure body is the ONLY place these OpenRegister class names are
+     * resolved, and a closure body runs on `get()`, never at registration. The
+     * closure therefore must NOT declare an OpenRegister return type — that
+     * would be resolved on invocation too, but more importantly it keeps this
+     * file free of any import that a static analyser or a future refactor could
+     * promote into a class-declaration-time reference. See decidesk#377.
      *
      * @param IRegistrationContext $context The registration context.
      *
      * @return void
      *
      * @spec openspec/specs/adopt-apphost/spec.md
-     *
-     * Health/MetricsController extend OpenRegister AppHost base classes that
-     * are absent during static analysis, so Psalm sees no constructor on them
-     * (TooManyArguments) and cannot see $container used inside the flagged
-     * construction (UnusedClosureParam). Both resolve at runtime.
-     *
-     * @psalm-suppress TooManyArguments, UnusedClosureParam
      */
     private function registerAppHostObservability(IRegistrationContext $context): void
     {
         $context->registerService(
-            HealthController::class,
-            static function (ContainerInterface $container): HealthController {
-                return new HealthController(
-                    appName: self::APP_ID,
-                    request: $container->get(\OCP\IRequest::class),
-                    manifestLoader: $container->get(\OCA\OpenRegister\AppHost\Observability\ManifestLoader::class),
-                    executor: $container->get(\OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor::class)
-                );
-            }
-        );
-
-        $context->registerService(
-            MetricsController::class,
-            static function (ContainerInterface $container): MetricsController {
-                $engine = new \OCA\OpenRegister\AppHost\Observability\MetricsEngine(
+            'OCA\\OpenRegister\\AppHost\\Observability\\MetricsEngine',
+            static function (ContainerInterface $container): object {
+                return new \OCA\OpenRegister\AppHost\Observability\MetricsEngine(
                     objectSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource::class),
                     tableSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource::class),
                     appConfigSource: $container->get(\OCA\OpenRegister\AppHost\Observability\Source\AppConfigMetricSource::class),
@@ -362,13 +325,6 @@ class Application extends App implements IBootstrap
                     cacheFactory: $container->get(\OCP\ICacheFactory::class),
                     config: $container->get(\OCP\IConfig::class),
                     logger: $container->get(\Psr\Log\LoggerInterface::class)
-                );
-
-                return new MetricsController(
-                    appName: self::APP_ID,
-                    request: $container->get(\OCP\IRequest::class),
-                    manifestLoader: $container->get(\OCA\OpenRegister\AppHost\Observability\ManifestLoader::class),
-                    engine: $engine
                 );
             }
         );
