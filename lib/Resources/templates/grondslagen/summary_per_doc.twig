@@ -25,45 +25,27 @@
 <body>
 
 <h1>Anonimisatie-samenvatting</h1>
-
-<table class="header-grid">
-  <tr>
-    <td class="label">Bestand</td>
-    <td>{{ document.filename|default('—')|escape }}</td>
-  </tr>
-  <tr>
-    <td class="label">Geanonimiseerd op</td>
-    <td>{{ document.anonymisedAt|default('—')|escape }}</td>
-  </tr>
-  <tr>
-    <td class="label">Operator</td>
-    <td>{{ document.operator|default('—')|escape }}</td>
-  </tr>
-  <tr>
-    <td class="label">Hulpmiddel</td>
-    <td>{{ document.tool|default('—')|escape }}</td>
-  </tr>
-</table>
-
-{% if entities|length == 0 %}
+{% if byType|default([])|length == 0 %}
   <p class="empty-note">In dit document zijn geen geanonimiseerde entiteiten geregistreerd.</p>
 {% else %}
   <table class="summary">
     <thead>
       <tr>
-        <th>Placeholder</th>
-        <th class="numeric">Aantal keer geanonimiseerd</th>
+        <th>Type</th>
+        <th class="numeric">Entiteiten</th>
+        <th class="numeric">Keer verwijderd</th>
         <th>Grondslag</th>
       </tr>
     </thead>
     <tbody>
-      {% for entity in entities %}
+      {% for row in byType %}
         <tr>
-          <td class="placeholder-cell">{{ entity.placeholder|escape }}</td>
-          <td class="numeric">{{ entity.count|default(0) }}</td>
+          <td>{{ row.type|escape }}</td>
+          <td class="numeric">{{ row.entityCount|default(0) }}</td>
+          <td class="numeric">{{ row.occurrenceCount|default(0) }}</td>
           <td>
-            {% if entity.basesText|default('') != '' %}
-              {{ entity.basesText|escape }}
+            {% if row.basesText|default('') != '' %}
+              {{ row.basesText|escape }}
             {% else %}
               <span class="empty-note">geen grondslag</span>
             {% endif %}

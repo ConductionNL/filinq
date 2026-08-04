@@ -318,6 +318,7 @@ class GrondslagenSummaryService
             ],
             'generatedAt' => date('c'),
             'rows'        => $aggregated['rows'],
+            'byType'      => $this->summariseEntitiesByType(entities: $aggregated['rows']),
             'totals'      => $aggregated['totals'],
             'bases'       => $this->collectAssignedBases(entities: $allEntities),
         ];
@@ -1420,6 +1421,11 @@ class GrondslagenSummaryService
         }
 
         $data = [
+            // Retained for callers/templates that still reference it, but the
+            // per-document template no longer renders a metadata header: the
+            // summary is appended to the anonymised document itself, which
+            // already carries its own filename and provenance, so repeating
+            // them added a block without adding information.
             'document' => [
                 'filename'     => $anonymisedFile->getName(),
                 'anonymisedAt' => date('c'),
@@ -1427,6 +1433,7 @@ class GrondslagenSummaryService
                 'tool'         => 'OpenAnonymiser via OpenRegister',
             ],
             'entities' => $entities,
+            'byType'   => $this->summariseEntitiesByType(entities: $entities),
             'totals'   => [
                 'entityCount'         => $totalOccurrences,
                 'distinctEntityCount' => count($entities),
@@ -1522,6 +1529,96 @@ class GrondslagenSummaryService
         }//end try
 
     }//end mergeSummaryIntoPdf()
+
+
+    /**
+     * Collapse per-entity rows into one row per (entity type, grondslag set).
+     *
+     * The per-entity table listed one row per placeholder, which on a real
+     * document runs to dozens of rows saying substantially the same thing. This
+     * summarises to "N entities of type X, removed M times, on grondslagen
+     * [a, b, c]".
+     *
+     * Grouping is by type AND the distinct SET of grondslagen, not by type
+     * alone. When every entity of a type shares one basis — the common case —
+     * that still collapses to a single row. When they differ it splits, because
+     * a grondslagen report whose whole purpose is to justify each removal must
+     * not report "PERSOON: 5 entities, grondslagen [a, b]" and leave the reader
+     * unable to tell which basis covered which removals.
+     *
+     * Both counts are carried. `entityCount` is distinct people/values;
+     * `occurrenceCount` is how many times they were replaced. They answer
+     * different questions ("how many individuals" vs "how much text") and the
+     * totals line already reported both, so collapsing to one would lose
+     * information the previous table had.
+     *
+     * @param array<int, array<string, mixed>> $entities Per-entity rows carrying
+     *                                                   entityType, count and baseLabels.
+     *
+     * @return array<int, array<string, mixed>> Rows of {type, rawType, entityCount,
+     *                                          occurrenceCount, baseLabels, basesText,
+     *                                          files, fileCount}.
+     */
+    private function summariseEntitiesByType(array $entities): array
+    {
+        $groups = [];
+        foreach ($entities as $entity) {
+            $rawType = (string) ($entity['entityType'] ?? '');
+            $labels  = ($entity['baseLabels'] ?? []);
+            if (is_array($labels) === false) {
+                $labels = [];
+            }
+
+            // Normalise the label set so two entities with the same grondslagen
+            // in a different order land in one group rather than two.
+            $labels = array_values(array_unique(array_map('strval', $labels)));
+            sort($labels);
+
+            $key = $rawType.'|'.implode('␟', $labels);
+            if (isset($groups[$key]) === false) {
+                $groups[$key] = [
+                    'type'            => $this->localizeEntityType(entityType: $rawType),
+                    'rawType'         => $rawType,
+                    'entityCount'     => 0,
+                    'occurrenceCount' => 0,
+                    'baseLabels'      => $labels,
+                    'fileSet'         => [],
+                ];
+            }
+
+            $groups[$key]['entityCount']++;
+            $groups[$key]['occurrenceCount'] += (int) ($entity['count'] ?? 0);
+
+            // Dossier rows carry the files an entity appeared in; per-document
+            // rows do not. Union them when present so the dossier report can
+            // still say how many files a type spanned.
+            foreach (($entity['files'] ?? []) as $file) {
+                $groups[$key]['fileSet'][(string) $file] = true;
+            }
+        }//end foreach
+
+        $rows = [];
+        foreach ($groups as $group) {
+            $group['basesText'] = implode(', ', $group['baseLabels']);
+            $group['files']     = array_keys($group['fileSet']);
+            $group['fileCount'] = count($group['files']);
+            unset($group['fileSet']);
+            sort($group['files']);
+            $rows[] = $group;
+        }
+
+        // Deterministic order: localised type, then the grondslag set, so
+        // re-running on unchanged input yields an identical document.
+        usort(
+            $rows,
+            static function (array $left, array $right): int {
+                return ([$left['type'], $left['basesText']] <=> [$right['type'], $right['basesText']]);
+            }
+        );
+
+        return $rows;
+
+    }//end summariseEntitiesByType()
 
 
     /**
