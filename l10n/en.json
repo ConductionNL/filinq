@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Exact match": "Exact match",
+        "Stored as: {value}": "Stored as: {value}",
+        "Match on an identifier (BSN / KvK) instead of a name": "Match on an identifier (BSN / KvK) instead of a name",
+        "An identifier rule matches a resolved BSN or KvK number rather than the text in the document. Use * to match any value of that identifier.": "An identifier rule matches a resolved BSN or KvK number rather than the text in the document. Use * to match any value of that identifier.",
+        "Identifier (or * for any)": "Identifier (or * for any)",
+        "Add BSN rule": "Add BSN rule",
+        "Add KvK rule": "Add KvK rule",
+        "Record legal documentation (optional)": "Record legal documentation (optional)",
+        "Case reference": "Case reference",
+        "Jurisdiction": "Jurisdiction",
+        "Valid from (ISO 8601)": "Valid from (ISO 8601)",
+        "Valid until (ISO 8601)": "Valid until (ISO 8601)",
         "Add publish-always rule": "Add publish-always rule",
         "Add publish-never rule": "Add publish-never rule",
         "Edit publish-always rule": "Edit publish-always rule",

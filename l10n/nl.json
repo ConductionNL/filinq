@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Exact match": "Exacte match",
+        "Stored as: {value}": "Opgeslagen als: {value}",
+        "Match on an identifier (BSN / KvK) instead of a name": "Matchen op identificatiegegevens (BSN / KvK) in plaats van een naam",
+        "An identifier rule matches a resolved BSN or KvK number rather than the text in the document. Use * to match any value of that identifier.": "Een identificatieregel matcht op een vastgesteld BSN- of KvK-nummer in plaats van op de tekst in het document. Gebruik * om elke waarde van dat nummer te matchen.",
+        "Identifier (or * for any)": "Identificatie (of * voor alle)",
+        "Add BSN rule": "BSN-regel toevoegen",
+        "Add KvK rule": "KvK-regel toevoegen",
+        "Record legal documentation (optional)": "Juridische vastlegging (optioneel)",
+        "Case reference": "Zaakreferentie",
+        "Jurisdiction": "Rechtsgebied",
+        "Valid from (ISO 8601)": "Geldig vanaf (ISO 8601)",
+        "Valid until (ISO 8601)": "Geldig tot (ISO 8601)",
         "Add publish-always rule": "Altijd-publiceren-regel toevoegen",
         "Add publish-never rule": "Nooit-publiceren-regel toevoegen",
         "Edit publish-always rule": "Altijd-publiceren-regel bewerken",
