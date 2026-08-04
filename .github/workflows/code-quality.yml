@@ -68,3 +68,32 @@ jobs:
       # object-type bindings DocuDesk needs, then gates on the frontend bundle
       # actually serving as JavaScript. Runs with cwd = Nextcloud server root.
       playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'
+
+      # ── Integration tests ────────────────────────────────────────────────
+      # `enable-newman` defaults to FALSE and this caller never set it, so
+      # tests/integration/docudesk.postman_collection.json had never executed in
+      # CI. It sits at the default `newman-collection-path` (tests/integration),
+      # which is both the directory the validator counts collections in and the
+      # directory the run step globs `*.postman_collection.json` in — flat, not
+      # recursively.
+      enable-newman: true
+
+      # ── Coverage ratchet ─────────────────────────────────────────────────
+      # `enable-coverage-guard` defaults to FALSE, which is why both
+      # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
+      # ever reported `skipped`. It needs two inputs this repo did not have,
+      # both added in this commit: `scripts/coverage-guard.php` (byte-identical
+      # to openregister's) and `.coverage-baseline` = 52.88, this repo's own
+      # measured coverage (5796 of 10961 statements) read from clover.xml in the
+      # `coverage-report` artifact of run 30911556572.
+      enable-coverage-guard: true
+
+      # ── Hydra mechanical gates ───────────────────────────────────────────
+      # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
+      # here — the job reported `skipped`, which the Quality Report renders
+      # identically to a pass. Pinned to v1.0.1 so a change to the gate package
+      # cannot move this repo's verdict without a commit here.
+      # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
+      # serious/critical violations from core's own UI.
+      enable-hydra-gates: true
+      hydra-gates-ref: v1.0.1
