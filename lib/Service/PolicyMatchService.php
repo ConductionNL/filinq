@@ -42,8 +42,8 @@ use Exception;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
+use OCA\DocuDesk\Service\Policy\MatchValueNormaliser;
 use Psr\Log\LoggerInterface;
-use Transliterator;
 
 /**
  * Detection-time policy matcher.
@@ -82,13 +82,6 @@ class PolicyMatchService
      * @var array<int, array<string, mixed>>|null
      */
     private ?array $rulesCache = null;
-
-    /**
-     * Pre-built ASCII transliterator for the `normalized` match type.
-     *
-     * @var Transliterator|null
-     */
-    private ?Transliterator $normaliser = null;
 
 
     /**
@@ -370,20 +363,12 @@ class PolicyMatchService
      */
     private function normalise(string $value): string
     {
-        if ($this->normaliser === null) {
-            $this->normaliser = Transliterator::create(
-                'Any-Latin; Latin-ASCII; Lower'
-            );
-        }
-
-        if ($this->normaliser !== null) {
-            $transliterated = $this->normaliser->transliterate($value);
-            if (is_string($transliterated) === true) {
-                return trim($transliterated);
-            }
-        }
-
-        return trim(mb_strtolower($value));
+        // Delegates to the shared definition. Extracted because the CRUD layer
+        // now normalises a rule's value at WRITE time (so the stored criterion is
+        // what the operator was shown), and the two MUST agree — two copies of a
+        // transliteration rule would drift silently and only show up as rules
+        // that quietly stop matching.
+        return MatchValueNormaliser::normalise(value: $value);
 
     }//end normalise()
 

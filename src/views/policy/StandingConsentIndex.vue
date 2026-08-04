@@ -123,21 +123,28 @@ import { standingConsentStore } from '../../store/store.js'
 					:input-label="t('docudesk', 'Consent method')"
 					:label="t('docudesk', 'Consent method')"
 					required />
-				<NcTextField
-					:value.sync="form.consentDocument"
-					:label="t('docudesk', 'Consent document (file id or URL)')" />
-				<NcTextField
-					:value.sync="form.consentScope"
-					:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
-				<NcTextField
-					:value.sync="form.legalBasis"
-					:label="t('docudesk', 'Legal basis')" />
-				<NcTextField
-					:value.sync="form.validFrom"
-					:label="t('docudesk', 'Valid from (ISO 8601, optional)')" />
-				<NcTextField
-					:value.sync="form.validUntil"
-					:label="t('docudesk', 'Valid until (ISO 8601, optional)')" />
+				<NcCheckboxRadioSwitch
+					v-model="showLegal"
+					type="switch">
+					{{ t('docudesk', 'Record legal documentation (optional)') }}
+				</NcCheckboxRadioSwitch>
+				<div v-if="showLegal" class="policy-form-section">
+					<NcTextField
+						:value.sync="form.consentDocument"
+						:label="t('docudesk', 'Consent document (file id or URL)')" />
+					<NcTextField
+						:value.sync="form.consentScope"
+						:label="t('docudesk', 'Consent scope (e.g. \'2024-2025 municipal decisions\')')" />
+					<NcTextField
+						:value.sync="form.legalBasis"
+						:label="t('docudesk', 'Legal basis')" />
+					<NcTextField
+						:value.sync="form.validFrom"
+						:label="t('docudesk', 'Valid from (ISO 8601)')" />
+					<NcTextField
+						:value.sync="form.validUntil"
+						:label="t('docudesk', 'Valid until (ISO 8601)')" />
+				</div>
 				<NcCheckboxRadioSwitch
 					v-model="form.active"
 					type="switch">
@@ -152,16 +159,20 @@ import { standingConsentStore } from '../../store/store.js'
 				<div v-if="!form.matchRules?.length" class="form-warning">
 					{{ t('docudesk', 'Add at least one match rule. Prefer stable identifiers (BSN/KvK) over name-only matches.') }}
 				</div>
-				<div v-for="(rule, idx) in form.matchRules" :key="idx" class="match-rule-row">
-					<NcSelect
-						v-model="rule.type"
-						:options="matchTypeOptions"
-						:input-label="t('docudesk', 'Match type')"
-						:label="t('docudesk', 'Match type')" />
+				<div v-for="rule in textRules" :key="`text-${indexOfRule(rule)}`" class="match-rule-row">
 					<NcTextField
 						:value.sync="rule.value"
 						:label="t('docudesk', 'Match value')" />
-					<NcButton type="tertiary" @click="removeRule(idx)">
+					<NcCheckboxRadioSwitch
+						type="switch"
+						:checked="isExact(rule)"
+						@update:checked="setExact(rule, $event)">
+						{{ t('docudesk', 'Exact match') }}
+					</NcCheckboxRadioSwitch>
+					<span v-if="!isExact(rule) && rule.value" class="match-rule-hint">
+						{{ t('docudesk', 'Stored as: {value}', { value: normalisedPreview(rule.value) }) }}
+					</span>
+					<NcButton type="tertiary" @click="removeRule(rule)">
 						<template #icon>
 							<Delete :size="20" />
 						</template>
@@ -170,6 +181,34 @@ import { standingConsentStore } from '../../store/store.js'
 				<NcButton type="secondary" @click="addRule">
 					{{ t('docudesk', 'Add match rule') }}
 				</NcButton>
+
+				<NcCheckboxRadioSwitch
+					v-model="showIdentifierRules"
+					type="switch">
+					{{ t('docudesk', 'Match on an identifier (BSN / KvK) instead of a name') }}
+				</NcCheckboxRadioSwitch>
+				<div v-if="showIdentifierRules" class="policy-form-section">
+					<p class="policy-form-note">
+						{{ t('docudesk', 'An identifier rule matches a resolved BSN or KvK number rather than the text in the document. Use * to match any value of that identifier.') }}
+					</p>
+					<div v-for="rule in identifierRules" :key="`id-${indexOfRule(rule)}`" class="match-rule-row">
+						<span class="match-rule-kind">{{ rule.type.toUpperCase() }}</span>
+						<NcTextField
+							:value.sync="rule.value"
+							:label="t('docudesk', 'Identifier (or * for any)')" />
+						<NcButton type="tertiary" @click="removeRule(rule)">
+							<template #icon>
+								<Delete :size="20" />
+							</template>
+						</NcButton>
+					</div>
+					<NcButton type="secondary" @click="addIdentifierRule('bsn')">
+						{{ t('docudesk', 'Add BSN rule') }}
+					</NcButton>
+					<NcButton type="secondary" @click="addIdentifierRule('kvk')">
+						{{ t('docudesk', 'Add KvK rule') }}
+					</NcButton>
+				</div>
 
 				<div v-if="formError" class="form-error">
 					{{ formError }}
@@ -269,9 +308,29 @@ export default {
 			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
 			consentMethodOptions: ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
+			// Collapsed by default. Every field behind these is OPTIONAL in the
+			// publicationConsent schema (required is: entityType, entityText), so
+			// nothing here blocks saving — they were simply rendered at equal weight.
+			showLegal: false,
+			showIdentifierRules: false,
 		}
 	},
 	computed: {
+		textRules() {
+			return this.form.matchRules.filter(r => r.type === 'exact' || r.type === 'normalized')
+		},
+		identifierRules() {
+			return this.form.matchRules.filter(r => r.type !== 'exact' && r.type !== 'normalized')
+		},
+		legalFieldsInUse() {
+			return [
+				this.form.consentDocument,
+				this.form.consentScope,
+				this.form.legalBasis,
+				this.form.validFrom,
+				this.form.validUntil,
+			].some(v => (v || '').toString().trim() !== '')
+		},
 		tableColumns() {
 			return [
 				{ key: 'entityText', label: t('docudesk', 'Entity'), sortable: true },
@@ -356,13 +415,43 @@ export default {
 				notificationStatus: row.notificationStatus || 'skipped',
 			}
 			this.formError = ''
+			// Reveal the collapsed sections when the record already uses them,
+			// or an operator editing an existing consent would think its legal
+			// documentation and identifier rules had been lost.
+			this.showLegal = this.legalFieldsInUse
+			this.showIdentifierRules = this.identifierRules.length > 0
 			this.dialogOpen = true
 		},
-		addRule() {
-			this.form.matchRules.push({ type: 'exact', value: '' })
+		indexOfRule(rule) {
+			return this.form.matchRules.indexOf(rule)
 		},
-		removeRule(idx) {
-			this.form.matchRules.splice(idx, 1)
+		isExact(rule) {
+			return rule.type === 'exact'
+		},
+		setExact(rule, exact) {
+			const idx = this.indexOfRule(rule)
+			if (idx !== -1) {
+				this.$set(this.form.matchRules, idx, { ...rule, type: exact ? 'exact' : 'normalized' })
+			}
+		},
+		normalisedPreview(value) {
+			// Display only. The authoritative normalisation runs server-side in
+			// PolicyCrudService using the same rule as the matcher.
+			return (value || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim()
+		},
+		addRule() {
+			// Not-exact by default so accents and casing do not defeat the rule.
+			this.form.matchRules.push({ type: 'normalized', value: '' })
+		},
+		addIdentifierRule(type) {
+			this.form.matchRules.push({ type, value: '' })
+			this.showIdentifierRules = true
+		},
+		removeRule(rule) {
+			const idx = this.indexOfRule(rule)
+			if (idx !== -1) {
+				this.form.matchRules.splice(idx, 1)
+			}
 		},
 		async submit() {
 			this.saving = true
@@ -410,6 +499,29 @@ export default {
 	gap: 12px;
 	padding: 8px;
 }
+.policy-form-section {
+	margin: 4px 0 8px 12px;
+	padding-left: 8px;
+	border-left: 2px solid var(--color-border);
+}
+
+.policy-form-note {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+	margin: 4px 0;
+}
+
+.match-rule-hint {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+	font-family: monospace;
+}
+
+.match-rule-kind {
+	font-weight: bold;
+	min-width: 3.5em;
+}
+
 .match-rule-row {
 	display: grid;
 	grid-template-columns: 180px 1fr 40px;

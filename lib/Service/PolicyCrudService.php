@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use OCA\DocuDesk\Service\Policy\MatchValueNormaliser;
+
 use Exception;
 use InvalidArgumentException;
 use OCP\IGroupManager;
@@ -233,7 +235,7 @@ class PolicyCrudService
     {
         $this->assertProhibitionPermission(action: 'create');
 
-        $payload = $this->stripFrameworkParams(data: $data);
+        $payload = $this->normaliseMatchRuleValues(payload: $this->stripFrameworkParams(data: $data));
 
         // Defaults the spec requires the record to carry.
         $payload['active'] = ($payload['active'] ?? true);
@@ -261,7 +263,7 @@ class PolicyCrudService
     {
         $this->assertProhibitionPermission(action: 'update');
 
-        $payload = $this->stripFrameworkParams(data: $data);
+        $payload = $this->normaliseMatchRuleValues(payload: $this->stripFrameworkParams(data: $data));
         return $this->saveObject(
             register: self::REGISTER,
             schema: self::SCHEMA_PROHIBITION,
@@ -313,7 +315,7 @@ class PolicyCrudService
     {
         $this->assertStandingConsentPermission(action: 'create');
 
-        $payload           = $this->stripFrameworkParams(data: $data);
+        $payload           = $this->normaliseMatchRuleValues(payload: $this->stripFrameworkParams(data: $data));
         $payload['scope']  = 'entity';
         $payload['active'] = ($payload['active'] ?? true);
 
@@ -347,7 +349,7 @@ class PolicyCrudService
             throw new Exception('Standing consent not found: '.$uuid);
         }
 
-        $payload          = array_merge($existing, $this->stripFrameworkParams(data: $data));
+        $payload          = $this->normaliseMatchRuleValues(payload: array_merge($existing, $this->stripFrameworkParams(data: $data)));
         $payload['scope'] = 'entity';
 
         $this->consentService->validatePublicationConsentData(data: $payload);
@@ -476,6 +478,41 @@ class PolicyCrudService
         );
 
     }//end assertProhibitionPermission()
+
+
+    /**
+     * Normalise the values of any `normalized` match rules before persisting.
+     *
+     * The form offers an exact / not-exact switch rather than the four raw match
+     * types, and when "not exact" is chosen the STORED criterion is the normalised
+     * form — so a record reads as what it actually matches on, instead of leaving
+     * the operator to guess how their input would be folded.
+     *
+     * Done server-side on purpose. Normalising in the browser would duplicate the
+     * transliteration rule, and the JS equivalent of intl's `Any-Latin` is not
+     * equivalent: an NFD diacritic strip handles Latin but leaves Cyrillic and
+     * Greek untouched. One implementation, applied here, cannot drift from the
+     * matcher.
+     *
+     * Safe to apply on update as well as create because the operation is
+     * idempotent — re-saving an unchanged record does not progressively mangle
+     * the value.
+     *
+     * @param array<string, mixed> $payload The record payload.
+     *
+     * @return array<string, mixed> The payload with normalised rule values.
+     */
+    private function normaliseMatchRuleValues(array $payload): array
+    {
+        if (isset($payload['matchRules']) === false || is_array($payload['matchRules']) === false) {
+            return $payload;
+        }
+
+        $payload['matchRules'] = MatchValueNormaliser::normaliseRuleValues(matchRules: $payload['matchRules']);
+
+        return $payload;
+
+    }//end normaliseMatchRuleValues()
 
 
     /**
