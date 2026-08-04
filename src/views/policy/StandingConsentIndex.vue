@@ -59,13 +59,13 @@ import { standingConsentStore } from '../../store/store.js'
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
+					:label="entityTypeLabel(row.entityType) || t('docudesk', 'Unknown')"
 					:color-map="entityTypeColorMap" />
 			</template>
 
 			<template #column-consentMethod="{ row }">
 				<CnStatusBadge
-					:label="row.consentMethod || '-'"
+					:label="consentMethodLabel(row.consentMethod) || '-'"
 					:color-map="methodColorMap" />
 			</template>
 
@@ -114,14 +114,16 @@ import { standingConsentStore } from '../../store/store.js'
 				<NcSelect
 					v-model="form.entityType"
 					:options="entityTypeOptions"
+					label="label"
+					:reduce="(o) => o.value"
 					:input-label="t('docudesk', 'Entity type')"
-					:label="t('docudesk', 'Entity type')"
 					required />
 				<NcSelect
 					v-model="form.consentMethod"
 					:options="consentMethodOptions"
+					label="label"
+					:reduce="(o) => o.value"
 					:input-label="t('docudesk', 'Consent method')"
-					:label="t('docudesk', 'Consent method')"
 					required />
 				<NcCheckboxRadioSwitch
 					v-model="showLegal"
@@ -243,6 +245,8 @@ import {
 } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { ENTITY_TYPES, entityTypeLabel } from '../../services/entityTypes.js'
+import { consentMethodLabel, consentMethodOptions } from '../../services/policyLabels.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 
@@ -305,8 +309,13 @@ export default {
 				[t('docudesk', 'Active')]: 'success',
 				[t('docudesk', 'Inactive')]: 'default',
 			},
-			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
-			consentMethodOptions: ['paper', 'digital_signature', 'verbal_recorded', 'opt_in_form'],
+			// `{label, value}` so the LABEL translates while the stored VALUE stays
+			// the raw schema token — a translated value would fail OpenRegister's
+			// write-time enum validation.
+			entityTypeOptions: ENTITY_TYPES
+				.filter(type => ['PERSON', 'ORGANIZATION', 'OTHER'].includes(type))
+				.map(value => ({ label: entityTypeLabel(value), value })),
+			consentMethodOptions: consentMethodOptions(),
 			matchTypeOptions: ['exact', 'normalized', 'bsn', 'kvk'],
 			// Collapsed by default. Every field behind these is OPTIONAL in the
 			// publicationConsent schema (required is: entityType, entityText), so
@@ -368,6 +377,8 @@ export default {
 		standingConsentStore.fetchStandingConsents()
 	},
 	methods: {
+		entityTypeLabel,
+		consentMethodLabel,
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {

@@ -59,13 +59,13 @@ import { prohibitionStore } from '../../store/store.js'
 
 			<template #column-entityType="{ row }">
 				<CnStatusBadge
-					:label="row.entityType || t('docudesk', 'Unknown')"
+					:label="entityTypeLabel(row.entityType) || t('docudesk', 'Unknown')"
 					:color-map="entityTypeColorMap" />
 			</template>
 
 			<template #column-severity="{ row }">
 				<CnStatusBadge
-					:label="row.severity || '-'"
+					:label="severityLabel(row.severity) || '-'"
 					:color-map="severityColorMap" />
 			</template>
 
@@ -123,6 +123,8 @@ import {
 } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { entityTypeLabel } from '../../services/entityTypes.js'
+import { severityLabel } from '../../services/policyLabels.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ProhibitionFormModal from './ProhibitionFormModal.vue'
@@ -195,6 +197,8 @@ export default {
 		prohibitionStore.fetchProhibitions()
 	},
 	methods: {
+		entityTypeLabel,
+		severityLabel,
 		async handleRefresh() {
 			this.isRefreshing = true
 			try {

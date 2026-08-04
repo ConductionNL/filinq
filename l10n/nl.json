@@ -1,5 +1,15 @@
 {
     "translations": {
+        "Paper": "Papier",
+        "Digital signature": "Digitale ondertekening",
+        "Verbal (recorded)": "Mondeling (vastgelegd)",
+        "Opt-in form": "Aanmeldformulier",
+        "Batch not found": "Batch niet gevonden",
+        "No entities provided": "Geen entiteiten opgegeven",
+        "Invalid appendBasisSummary: must be a boolean": "Ongeldige appendBasisSummary: moet een booleaanse waarde zijn",
+        "Invalid format": "Ongeldig formaat",
+        "Profile updated": "Profiel bijgewerkt",
+        "Could not render EML preview.": "Kon de EML-voorbeeldweergave niet genereren.",
         "Exact match": "Exacte match",
         "Stored as: {value}": "Opgeslagen als: {value}",
         "Match on an identifier (BSN / KvK) instead of a name": "Matchen op identificatiegegevens (BSN / KvK) in plaats van een naam",

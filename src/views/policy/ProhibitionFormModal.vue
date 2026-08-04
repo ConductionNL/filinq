@@ -9,6 +9,8 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import { ENTITY_TYPES, entityTypeLabel } from '../../services/entityTypes.js'
+import { severityOptions } from '../../services/policyLabels.js'
 
 const blankForm = () => ({
 	primaryName: '',
@@ -50,12 +52,17 @@ export default {
 	data() {
 		return {
 			form: blankForm(),
-			entityTypeOptions: ['PERSON', 'ORGANIZATION', 'OTHER'],
+			// `{label, value}` so the LABEL can be translated while the stored
+			// VALUE stays the raw schema token — translating the value would fail
+			// OpenRegister's write-time enum validation.
+			entityTypeOptions: ENTITY_TYPES
+				.filter(type => ['PERSON', 'ORGANIZATION', 'OTHER'].includes(type))
+				.map(value => ({ label: entityTypeLabel(value), value })),
 			// Canonical set per the publicationProhibition schema's severity
 			// enum in docudesk_register.json. Keep in lock-step with the
 			// register; widening here without widening the schema would
 			// silently fail the OR write-time validation.
-			severityOptions: ['high', 'medium', 'low'],
+			severityOptions: severityOptions(),
 			// Collapsed by default. Every field behind these is OPTIONAL in the
 			// schema (required is: primaryName, entityType, matchRules, reason,
 			// active), so nothing here blocks saving a rule — they were simply
@@ -222,6 +229,8 @@ export default {
 			<NcSelect
 				v-model="form.entityType"
 				:options="entityTypeOptions"
+				label="label"
+				:reduce="(o) => o.value"
 				:input-label="t('docudesk', 'Entity type')"
 				:label="t('docudesk', 'Entity type')"
 				required />
@@ -310,6 +319,8 @@ export default {
 				<NcSelect
 					v-model="form.severity"
 					:options="severityOptions"
+					label="label"
+					:reduce="(o) => o.value"
 					:input-label="t('docudesk', 'Severity')"
 					:label="t('docudesk', 'Severity')" />
 				<NcTextField

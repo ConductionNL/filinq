@@ -77,7 +77,7 @@ import { consentStore } from '../../store/store.js'
 		<!-- Entity type badge -->
 		<template #column-entityType="{ row }">
 			<CnStatusBadge
-				:label="row.entityType || t('docudesk', 'Unknown')"
+				:label="entityTypeLabel(row.entityType) || t('docudesk', 'Unknown')"
 				:color-map="entityTypeColorMap" />
 		</template>
 
@@ -128,6 +128,7 @@ import { consentStore } from '../../store/store.js'
 import { NcActions, NcActionButton } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
+import { entityTypeLabel } from '../../services/entityTypes.js'
 import Eye from 'vue-material-design-icons/Eye.vue'
 
 export default {
@@ -204,6 +205,7 @@ export default {
 		consentStore.fetchConsents()
 	},
 	methods: {
+		entityTypeLabel,
 		viewConsent(consent) {
 			consentStore.setConsentItem(consent)
 			this.$router.push({ name: 'ConsentDetail', params: { id: consent.id || consent.uuid } })

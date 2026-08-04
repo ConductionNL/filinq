@@ -1,5 +1,15 @@
 {
     "translations": {
+        "Paper": "Paper",
+        "Digital signature": "Digital signature",
+        "Verbal (recorded)": "Verbal (recorded)",
+        "Opt-in form": "Opt-in form",
+        "Batch not found": "Batch not found",
+        "No entities provided": "No entities provided",
+        "Invalid appendBasisSummary: must be a boolean": "Invalid appendBasisSummary: must be a boolean",
+        "Invalid format": "Invalid format",
+        "Profile updated": "Profile updated",
+        "Could not render EML preview.": "Could not render EML preview.",
         "Exact match": "Exact match",
         "Stored as: {value}": "Stored as: {value}",
         "Match on an identifier (BSN / KvK) instead of a name": "Match on an identifier (BSN / KvK) instead of a name",

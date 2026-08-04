@@ -275,7 +275,7 @@ class BatchAnonymizationController extends Controller
         try {
             $batch = $this->stateService->getBatch($batchId);
             if ($batch === null) {
-                return new JSONResponse(['error' => 'Batch not found'], 404);
+                return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
             }
 
             if (in_array($batch['status'], ['extracting', 'review'], true) === false) {
@@ -322,7 +322,7 @@ class BatchAnonymizationController extends Controller
             $params   = $this->request->getParams();
             $entities = $params['entities'] ?? [];
             if (is_array($entities) === false || empty($entities) === true) {
-                return new JSONResponse(['error' => 'No entities provided'], 400);
+                return new JSONResponse(['error' => $this->l10n->t('No entities provided')], 400);
             }
 
             // Wave 4a: optional `appendBasisSummary` flag — applied per file.
@@ -330,7 +330,7 @@ class BatchAnonymizationController extends Controller
             if (array_key_exists('appendBasisSummary', $params) === true) {
                 if (is_bool($params['appendBasisSummary']) === false) {
                     return new JSONResponse(
-                        ['error' => 'Invalid appendBasisSummary: must be a boolean'],
+                        ['error' => $this->l10n->t('Invalid appendBasisSummary: must be a boolean')],
                         400
                     );
                 }
@@ -468,11 +468,11 @@ class BatchAnonymizationController extends Controller
         try {
             $p = $this->request->getParams();
             if (is_array($p['anonymize'] ?? null) === false || is_array($p['keep'] ?? null) === false) {
-                return new JSONResponse(['error' => 'Invalid format'], 400);
+                return new JSONResponse(['error' => $this->l10n->t('Invalid format')], 400);
             }
 
             $this->profileService->saveProfile(['anonymize' => $p['anonymize'], 'keep' => $p['keep']]);
-            return new JSONResponse(['message' => 'Profile updated']);
+            return new JSONResponse(['message' => $this->l10n->t('Profile updated')]);
         } catch (Exception $e) {
             return $this->err(msg: 'Failed to update profile', e: $e);
         }
