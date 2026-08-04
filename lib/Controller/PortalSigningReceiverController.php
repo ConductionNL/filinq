@@ -42,6 +42,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use OCA\DocuDesk\Portal\PortalAssertionVerifier;
+use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningService;
 use OCP\AppFramework\Controller;
@@ -49,8 +50,6 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Files\File;
-use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
@@ -58,13 +57,6 @@ use Throwable;
 
 /**
  * Receives portaliq's forwarded signing actions on the `signer` audience.
- *
- * Exceeds PHPMD's class-complexity threshold by one (51 vs 50). This is a
- * single inbound webhook surface, and its branches are the payload-validation
- * guards the spec requires. Extracting them would move the guards away from
- * the endpoint they protect, which is the wrong trade for one point.
- *
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
@@ -92,14 +84,14 @@ class PortalSigningReceiverController extends Controller
     /**
      * Constructor.
      *
-     * @param string                  $appName         App name.
-     * @param IRequest                $request         Request object.
-     * @param PortalAssertionVerifier $verifier        Verifies the X-Portal-Subject assertion.
-     * @param SigningService          $signingService  The honest signing primitive.
-     * @param SettingsService         $settingsService Settings service (resolves OR's ObjectService).
-     * @param IAppConfig              $config          App config (resolves signerRecord/signingRequest register/schema).
-     * @param IRootFolder             $rootFolder      Root folder (reads the target document for viewDocument).
-     * @param LoggerInterface         $logger          Logger.
+     * @param string                        $appName          App name.
+     * @param IRequest                      $request          Request object.
+     * @param PortalAssertionVerifier       $verifier         Verifies the X-Portal-Subject assertion.
+     * @param SigningService                $signingService   The honest signing primitive.
+     * @param SettingsService               $settingsService  Settings service (resolves OR's ObjectService).
+     * @param IAppConfig                    $config           App config (resolves signerRecord/signingRequest register/schema).
+     * @param LoggerInterface               $logger           Logger.
+     * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
      *
      * @return void
      */
@@ -110,8 +102,8 @@ class PortalSigningReceiverController extends Controller
         private readonly SigningService $signingService,
         private readonly SettingsService $settingsService,
         private readonly IAppConfig $config,
-        private readonly IRootFolder $rootFolder,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
+        private readonly PortalSigningDocumentResolver $documentResolver
     ) {
         parent::__construct(appName: $appName, request: $request);
 
@@ -250,7 +242,7 @@ class PortalSigningReceiverController extends Controller
             return $this->forbidden();
         }
 
-        $file = $this->resolveDocumentFile(signingRequest: $signingRequest);
+        $file = $this->documentResolver->resolve(signingRequest: $signingRequest);
         if ($file === null) {
             return new JSONResponse(['error' => 'document_unavailable'], Http::STATUS_NOT_FOUND);
         }
@@ -414,40 +406,6 @@ class PortalSigningReceiverController extends Controller
         return null;
 
     }//end resolveInvitedSigner()
-
-    /**
-     * Resolve the target document's File node for viewDocument.
-     *
-     * Resolves through the request's initiator folder — a portal signer has
-     * no Nextcloud session of their own to fall back to.
-     *
-     * @param array<string, mixed> $signingRequest The resolved signing-request array.
-     *
-     * @return File|null The resolved file node, or null when unavailable.
-     */
-    private function resolveDocumentFile(array $signingRequest): ?File
-    {
-        $fileId    = (int) ($signingRequest['documentFileId'] ?? 0);
-        $initiator = (string) ($signingRequest['initiatorUserId'] ?? '');
-        if ($fileId <= 0 || $initiator === '') {
-            return null;
-        }
-
-        try {
-            $nodes = $this->rootFolder->getUserFolder($initiator)->getById($fileId);
-        } catch (Throwable $e) {
-            return null;
-        }
-
-        foreach ($nodes as $node) {
-            if ($node instanceof File) {
-                return $node;
-            }
-        }
-
-        return null;
-
-    }//end resolveDocumentFile()
 
     /**
      * Normalise an OpenRegister result (array or ObjectEntity) to an array.

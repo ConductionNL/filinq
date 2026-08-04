@@ -22,6 +22,9 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Service\CustomDictionaryAccessGate;
+use OCA\DocuDesk\Service\CustomDictionaryPayloadNormaliser;
+use OCA\DocuDesk\Service\CustomDictionaryRepository;
 use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -89,10 +92,17 @@ class CustomDictionaryServiceTest extends TestCase
         }
 
         return new CustomDictionaryService(
-            settingsService: $settingsService,
-            container: $container,
-            appManager: $appManager,
-            userSession: $userSession,
+            repository: new CustomDictionaryRepository(
+                settingsService: $settingsService,
+                logger: new NullLogger()
+            ),
+            accessGate: new CustomDictionaryAccessGate(
+                container: $container,
+                appManager: $appManager,
+                userSession: $userSession,
+                logger: new NullLogger()
+            ),
+            normaliser: new CustomDictionaryPayloadNormaliser(),
             logger: new NullLogger()
         );
 

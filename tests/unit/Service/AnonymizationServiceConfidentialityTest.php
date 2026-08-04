@@ -152,8 +152,10 @@ class AnonymizationServiceConfidentialityTest extends TestCase
             pdfConversion: $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class),
             emlAssembly: $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
             customDictionary: $customDictionary,
-            customDictionaryMatch: new CustomDictionaryMatchService(),
-            confidentialityLabel: $this->mockConfidentialityLabel
+            confidentialityLabel: $this->mockConfidentialityLabel,
+            customDictionaryDetection: $this->createMock(
+                originalClassName: \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
+            )
         );
 
     }//end makeService()

@@ -26,6 +26,7 @@ use OCA\DocuDesk\Service\AnonymizationResultParser;
 use OCA\DocuDesk\Service\AnonymizationService;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCA\DocuDesk\Service\ConsentService;
+use OCA\DocuDesk\Service\CustomDictionaryDetectionRunner;
 use OCA\DocuDesk\Service\CustomDictionaryMatchService;
 use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
@@ -160,8 +161,14 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase
             pdfConversion: $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class),
             emlAssembly: $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
             customDictionary: $customDictionary,
-            customDictionaryMatch: new CustomDictionaryMatchService(),
-            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class)
+            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class),
+            customDictionaryDetection: new CustomDictionaryDetectionRunner(
+                logger: new NullLogger(),
+                container: $this->mockContainer,
+                appManager: $appManager,
+                customDictionary: $customDictionary,
+                matcher: new CustomDictionaryMatchService()
+            )
         );
 
     }//end makeService()

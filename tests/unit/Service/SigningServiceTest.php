@@ -25,6 +25,8 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCA\DocuDesk\Service\SigningAuditService;
+use OCA\DocuDesk\Service\SignedArtifactProducer;
+use OCA\DocuDesk\Service\SigningRequestValidator;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -160,14 +162,19 @@ class SigningServiceTest extends TestCase
         $this->service = new SigningService(
             settingsService: $this->settingsService,
             auditService: $this->auditService,
-            providerFactory: $this->providerFactory,
             config: $this->config,
             userSession: $this->userSession,
             notificationManager: $notificationManager,
             logger: $logger,
             request: $this->request,
             eventDispatcher: $eventDispatcher,
-            rootFolder: $this->rootFolder
+            artifactProducer: new SignedArtifactProducer(
+                providerFactory: $this->providerFactory,
+                userSession: $this->userSession,
+                request: $this->request,
+                rootFolder: $this->rootFolder
+            ),
+            validator: new SigningRequestValidator(providerFactory: $this->providerFactory)
         );
 
     }//end setUp()
