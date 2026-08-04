@@ -267,8 +267,6 @@ class ConsentController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/consent-management/spec.md
      */
     public function show(string $id): JSONResponse
@@ -318,8 +316,6 @@ class ConsentController extends Controller
      * @return JSONResponse JSON response with updated consent record
      *
      * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/consent-management/spec.md
      */

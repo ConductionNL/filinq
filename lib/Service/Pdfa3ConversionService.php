@@ -44,7 +44,6 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
-use DOMDocument;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Output\Destination;
@@ -52,7 +51,6 @@ use OCA\DocuDesk\Exception\Pdfa3ConversionException;
 use OCP\Files\File;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use setasign\Fpdi\PdfParser\StreamReader;
 use Throwable;
 
 /**
@@ -89,11 +87,6 @@ class Pdfa3ConversionService
     private const CFG_MAX_INPUT_BYTES = 'docudesk.pdfa3.max_input_bytes';
 
     /**
-     * App config key: maximum size of a single embedded attachment, in bytes.
-     */
-    private const CFG_MAX_ATTACHMENT_BYTES = 'docudesk.pdfa3.max_attachment_bytes';
-
-    /**
      * App config key: wall-clock time budget for one conversion, in seconds.
      */
     private const CFG_MAX_SECONDS = 'docudesk.pdfa3.max_seconds';
@@ -102,11 +95,6 @@ class Pdfa3ConversionService
      * Default cap: 50 MiB source PDF.
      */
     private const DEFAULT_MAX_INPUT_BYTES = 52428800;
-
-    /**
-     * Default cap: 20 MiB per attachment.
-     */
-    private const DEFAULT_MAX_ATTACHMENT_BYTES = 20971520;
 
     /**
      * Default cap: 60 seconds per conversion.
@@ -121,34 +109,44 @@ class Pdfa3ConversionService
     private const PDFA_VERSION = '3-B';
 
     /**
-     * Metadata keys handled by dedicated mPDF setters; every other key
-     * in the caller-supplied metadata array is folded into the MDTO
-     * XMP sidecar block instead of being silently dropped.
+     * Serialises MDTO/archival metadata into the XMP packet and the
+     * embedded-attachment set.
      *
-     * @var array<int, string>
+     * @var Pdfa3MetadataAssembler
      */
-    private const STANDARD_METADATA_KEYS = [
-        'title',
-        'author',
-        'creator',
-        'subject',
-        'keywords',
-    ];
+    private readonly Pdfa3MetadataAssembler $metadataAssembler;
+
+    /**
+     * Builds FPDI stream readers over in-memory PDF byte strings.
+     *
+     * @var PdfStreamReaderFactory
+     */
+    private readonly PdfStreamReaderFactory $streamReaderFactory;
 
     /**
      * Constructor.
      *
-     * @param PdfService      $pdfService Shared font-directory resolution (keeps
-     *                                    the embedded DejaVu Sans set in lockstep
-     *                                    with print-preview / renderPdfA).
-     * @param IAppConfig      $appConfig  Tenant configuration provider.
-     * @param LoggerInterface $logger     Logger for diagnostics.
+     * @param PdfService                  $pdfService          Shared font-directory resolution (keeps
+     *                                                         the embedded DejaVu Sans set in lockstep
+     *                                                         with print-preview / renderPdfA).
+     * @param IAppConfig                  $appConfig           Tenant configuration provider.
+     * @param LoggerInterface             $logger              Logger for diagnostics.
+     * @param Pdfa3MetadataAssembler|null $metadataAssembler   MDTO metadata assembler; autowired in
+     *                                                         production, defaulted here so existing
+     *                                                         call sites stay source-compatible.
+     * @param PdfStreamReaderFactory|null $streamReaderFactory FPDI stream-reader seam; autowired in
+     *                                                         production, defaulted here so existing
+     *                                                         call sites stay source-compatible.
      */
     public function __construct(
         private readonly PdfService $pdfService,
         private readonly IAppConfig $appConfig,
         private readonly LoggerInterface $logger,
+        ?Pdfa3MetadataAssembler $metadataAssembler=null,
+        ?PdfStreamReaderFactory $streamReaderFactory=null,
     ) {
+        $this->metadataAssembler   = ($metadataAssembler ?? new Pdfa3MetadataAssembler($appConfig));
+        $this->streamReaderFactory = ($streamReaderFactory ?? new PdfStreamReaderFactory());
 
     }//end __construct()
 
@@ -287,10 +285,17 @@ class Pdfa3ConversionService
         string $defaultTitle,
         float $deadline
     ): array {
-        $associatedFiles = $this->buildAssociatedFiles(attachments: $attachments, metadata: $metadata);
+        $associatedFiles = $this->metadataAssembler->buildAssociatedFiles(
+            attachments: $attachments,
+            metadata: $metadata
+        );
         $mpdf            = $this->instantiateMpdf(options: $options);
 
-        $this->applyMetadata(mpdf: $mpdf, metadata: $metadata, defaultTitle: $defaultTitle);
+        $this->metadataAssembler->applyMetadata(
+            mpdf: $mpdf,
+            metadata: $metadata,
+            defaultTitle: $defaultTitle
+        );
 
         if (empty($associatedFiles) === false) {
             $mpdf->SetAssociatedFiles(files: $associatedFiles);
@@ -447,14 +452,11 @@ class Pdfa3ConversionService
      * @return void
      *
      * @throws Pdfa3ConversionException REASON_SOURCE_UNREADABLE or REASON_TIME_LIMIT_EXCEEDED.
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess) StreamReader::createByString() is FPDI's
-     *     documented factory for parsing an in-memory PDF without a temp file.
      */
     private function importAllPages(Mpdf $mpdf, string $raw, float $deadline): void
     {
         try {
-            $pageCount = $mpdf->setSourceFile(file: StreamReader::createByString($raw));
+            $pageCount = $mpdf->setSourceFile(file: $this->streamReaderFactory->fromString($raw));
         } catch (Throwable $e) {
             throw new Pdfa3ConversionException(
                 reason: Pdfa3ConversionException::REASON_SOURCE_UNREADABLE,
@@ -507,224 +509,6 @@ class Pdfa3ConversionService
         );
 
     }//end timeLimitExceeded()
-
-    /**
-     * Apply title/author/subject/keywords via mPDF's dedicated setters
-     * and fold every other metadata key into an MDTO XMP sidecar block
-     * via SetAdditionalXmpRdf() so archival fields (identifier,
-     * caseReference, archiefvormer, aggregatieniveau, ...) are
-     * genuinely part of the PDF/A-3's XMP packet, not just crammed
-     * into /Keywords.
-     *
-     * @param Mpdf                $mpdf         Target document.
-     * @param array<string,mixed> $metadata     Caller-supplied metadata.
-     * @param string              $defaultTitle Fallback title.
-     *
-     * @return void
-     */
-    private function applyMetadata(Mpdf $mpdf, array $metadata, string $defaultTitle): void
-    {
-        $title = (string) ($metadata['title'] ?? $defaultTitle);
-        if ($title !== '') {
-            $mpdf->SetTitle($title);
-        }
-
-        $author = (string) ($metadata['author'] ?? $metadata['creator'] ?? 'DocuDesk');
-        $mpdf->SetAuthor($author);
-        $mpdf->SetCreator('DocuDesk PDF/A-3 Conversion');
-
-        if (isset($metadata['subject']) === true) {
-            $mpdf->SetSubject((string) $metadata['subject']);
-        }
-
-        if (isset($metadata['keywords']) === true) {
-            $keywords = $metadata['keywords'];
-            if (is_array($keywords) === true) {
-                $keywords = implode(', ', $keywords);
-            }
-
-            $mpdf->SetKeywords((string) $keywords);
-        }
-
-        $xmp = $this->buildMdtoXmpRdf(metadata: $metadata);
-        if ($xmp !== '') {
-            $mpdf->SetAdditionalXmpRdf($xmp);
-        }
-
-    }//end applyMetadata()
-
-    /**
-     * Serialise every non-standard metadata key into a custom XMP RDF
-     * description block under the `docudesk` namespace. Values are
-     * HTML/XML-escaped; keys are sanitised to valid XML local names.
-     *
-     * @param array<string,mixed> $metadata Caller-supplied metadata.
-     *
-     * @return string RDF/XML fragment, or '' when no archival fields were given.
-     */
-    private function buildMdtoXmpRdf(array $metadata): string
-    {
-        $archivalFields = array_diff_key($metadata, array_flip(self::STANDARD_METADATA_KEYS));
-        if (empty($archivalFields) === true) {
-            return '';
-        }
-
-        $xml = '   <rdf:Description rdf:about="" xmlns:docudesk="https://www.docudesk.app/ns/mdto/1.0/">'."\n";
-        foreach ($archivalFields as $key => $value) {
-            if (is_array($value) === true || is_object($value) === true) {
-                $value = json_encode($value);
-                if ($value === false) {
-                    continue;
-                }
-            }
-
-            $tag = $this->sanitiseXmlLocalName(name: (string) $key);
-            if ($tag === '') {
-                continue;
-            }
-
-            $escaped = htmlspecialchars((string) $value, (ENT_QUOTES | ENT_XML1), 'UTF-8');
-            $xml    .= '    <docudesk:'.$tag.'>'.$escaped.'</docudesk:'.$tag.'>'."\n";
-        }
-
-        $xml .= '   </rdf:Description>'."\n";
-
-        return $xml;
-
-    }//end buildMdtoXmpRdf()
-
-    /**
-     * Sanitise a metadata key into a valid XML local name (letters,
-     * digits, underscore, hyphen; must not start with a digit).
-     *
-     * @param string $name Raw metadata key.
-     *
-     * @return string Valid XML local name, or '' when nothing usable remains.
-     */
-    private function sanitiseXmlLocalName(string $name): string
-    {
-        $clean = preg_replace('/[^A-Za-z0-9_-]/', '', $name);
-        if ($clean === null || $clean === '') {
-            return '';
-        }
-
-        if (preg_match('/^[0-9-]/', $clean) === 1) {
-            $clean = 'f_'.$clean;
-        }
-
-        return $clean;
-
-    }//end sanitiseXmlLocalName()
-
-    /**
-     * Validate and normalise caller-supplied attachments, and append an
-     * auto-generated MDTO metadata sidecar (XML) when metadata was
-     * given and the caller did not already supply one — this is the
-     * concrete realisation of PDF/A-3's embedded-attachment feature.
-     *
-     * @param array<int,array<string,mixed>> $attachments Caller-supplied attachments.
-     * @param array<string,mixed>            $metadata    MDTO/archival metadata.
-     *
-     * @return array<int,array<string,mixed>> mPDF-shaped associated-file records.
-     *
-     * @throws Pdfa3ConversionException REASON_ATTACHMENT_TOO_LARGE.
-     */
-    private function buildAssociatedFiles(array $attachments, array $metadata): array
-    {
-        $maxAttachmentBytes = $this->resolveMaxAttachmentBytes();
-        $files         = [];
-        $hasXmlSidecar = false;
-
-        foreach ($attachments as $attachment) {
-            $content = (string) ($attachment['content'] ?? '');
-            if (strlen($content) > $maxAttachmentBytes) {
-                throw new Pdfa3ConversionException(
-                    reason: Pdfa3ConversionException::REASON_ATTACHMENT_TOO_LARGE,
-                    message: sprintf(
-                        'Attachment "%s" (%d bytes) exceeds the configured cap (%d bytes).',
-                        ($attachment['name'] ?? '(unnamed)'),
-                        strlen($content),
-                        $maxAttachmentBytes
-                    ),
-                    adminHint: sprintf(
-                        'Increase %s in app config, or omit this attachment.',
-                        self::CFG_MAX_ATTACHMENT_BYTES
-                    ),
-                    code: 413
-                );
-            }
-
-            $name = (string) ($attachment['name'] ?? 'attachment.bin');
-            if (str_ends_with(strtolower($name), '.xml') === true) {
-                $hasXmlSidecar = true;
-            }
-
-            $files[] = [
-                'content'        => $content,
-                'name'           => $name,
-                'mime'           => (string) ($attachment['mime'] ?? 'application/octet-stream'),
-                'description'    => (string) ($attachment['description'] ?? ''),
-                'AFRelationship' => (string) ($attachment['AFRelationship'] ?? 'Supplement'),
-            ];
-        }//end foreach
-
-        if (empty($metadata) === false && $hasXmlSidecar === false) {
-            $files[] = [
-                'content'        => $this->buildMetadataSidecarXml(metadata: $metadata),
-                'name'           => 'mdto-metadata.xml',
-                'mime'           => 'text/xml',
-                'description'    => 'MDTO/archival metadata for this document',
-                'AFRelationship' => 'Source',
-            ];
-        }
-
-        return $files;
-
-    }//end buildAssociatedFiles()
-
-    /**
-     * Serialise the MDTO/archival metadata array into a small XML
-     * document for embedding as a PDF/A-3 attachment (the "source/XML
-     * alongside" pattern the A-3 conformance level exists for).
-     *
-     * @param array<string,mixed> $metadata Caller-supplied metadata.
-     *
-     * @return string UTF-8 XML document.
-     */
-    private function buildMetadataSidecarXml(array $metadata): string
-    {
-        $doc = new DOMDocument(version: '1.0', encoding: 'UTF-8');
-        $doc->formatOutput = true;
-
-        $root = $doc->createElement('docudeskMetadata');
-        $doc->appendChild($root);
-
-        foreach ($metadata as $key => $value) {
-            $tag = $this->sanitiseXmlLocalName(name: (string) $key);
-            if ($tag === '') {
-                continue;
-            }
-
-            if (is_array($value) === true || is_object($value) === true) {
-                $value = json_encode($value);
-                if ($value === false) {
-                    continue;
-                }
-            }
-
-            $element = $doc->createElement($tag);
-            $element->appendChild($doc->createTextNode((string) $value));
-            $root->appendChild($element);
-        }
-
-        $xml = $doc->saveXML();
-        if ($xml === false) {
-            return '';
-        }
-
-        return $xml;
-
-    }//end buildMetadataSidecarXml()
 
     /**
      * No-silent-passthrough guardrail: assert the assembled bytes carry
@@ -855,27 +639,6 @@ class Pdfa3ConversionService
         return $parsed;
 
     }//end resolveMaxInputBytes()
-
-    /**
-     * Read the max-attachment-bytes tenant config. Defaults to 20 MiB.
-     *
-     * @return int Positive byte cap.
-     */
-    private function resolveMaxAttachmentBytes(): int
-    {
-        $raw    = $this->appConfig->getValueString(
-            self::APP_ID,
-            self::CFG_MAX_ATTACHMENT_BYTES,
-            (string) self::DEFAULT_MAX_ATTACHMENT_BYTES
-        );
-        $parsed = (int) $raw;
-        if ($parsed <= 0) {
-            return self::DEFAULT_MAX_ATTACHMENT_BYTES;
-        }
-
-        return $parsed;
-
-    }//end resolveMaxAttachmentBytes()
 
     /**
      * Read the max-seconds tenant config. Defaults to 60 seconds.

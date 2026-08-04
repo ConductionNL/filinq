@@ -83,17 +83,21 @@ class SigningExpirationJob extends TimedJob
      * Fetches all active signing requests and marks those past their deadline
      * as EXPIRED.
      *
-     * @param mixed $argument Job arguments (unused)
+     * @param mixed $argument Job arguments. The job is registered as a bare
+     *                        TimedJob and takes no arguments, so this is
+     *                        normally null; it is echoed into the start log so
+     *                        an unexpected payload is visible to operators.
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      *
      * @spec openspec/changes/document-signing/tasks.md#task-1
      */
     protected function run(mixed $argument): void
     {
-        $this->logger->info('[SigningExpirationJob] Starting deadline enforcement check');
+        $this->logger->info(
+            '[SigningExpirationJob] Starting deadline enforcement check',
+            ['argument' => $argument]
+        );
 
         $objectService = $this->settingsService->getObjectService();
         if ($objectService === null) {
@@ -125,14 +129,8 @@ class SigningExpirationJob extends TimedJob
                 );
 
                 foreach ($results as $result) {
-                    if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                        $request = $result->jsonSerialize();
-                    } else {
-                        $request = (array) $result;
-                    }
-
                     $this->maybeExpire(
-                        request: $request,
+                        request: $this->normaliseResult(result: $result),
                         now: $now,
                         objectService: $objectService,
                         register: $register,
@@ -151,6 +149,26 @@ class SigningExpirationJob extends TimedJob
         $this->logger->info('[SigningExpirationJob] Done. Expired '.$expired.' request(s).');
 
     }//end run()
+
+    /**
+     * Normalise one findAll() result row into a plain associative array
+     *
+     * OpenRegister returns ObjectEntity instances, but a raw array is also
+     * accepted so the job keeps working against simplified test doubles.
+     *
+     * @param mixed $result A single row returned by ObjectService::findAll()
+     *
+     * @return array<string, mixed> The request data as a plain array
+     */
+    private function normaliseResult(mixed $result): array
+    {
+        if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
+            return $result->jsonSerialize();
+        }
+
+        return (array) $result;
+
+    }//end normaliseResult()
 
     /**
      * Expire a single request if its deadline has passed
@@ -177,11 +195,12 @@ class SigningExpirationJob extends TimedJob
             return;
         }
 
-        $deadlineDate = DateTimeImmutable::createFromFormat(DateTimeInterface::ATOM, $deadline);
-        if ($deadlineDate === false) {
-            // Non-ISO-8601 deadline — try a lenient parse.
-            $deadlineDate = new DateTimeImmutable($deadline);
-        }
+        // Deadlines are persisted as ISO-8601/ATOM strings, which the
+        // DateTimeImmutable constructor parses natively; it also accepts the
+        // looser formats older records may carry, so it covers both the strict
+        // and the lenient path in one step. An unparseable value throws, and
+        // the caller's try/catch turns that into a logged, non-fatal skip.
+        $deadlineDate = new DateTimeImmutable($deadline);
 
         if ($deadlineDate > $now) {
             return;

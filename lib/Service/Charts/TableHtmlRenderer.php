@@ -50,6 +50,36 @@ class TableHtmlRenderer
     private const DEFAULT_MAX_ROWS = 500;
 
     /**
+     * Row and column shape normalizer.
+     *
+     * @var TableDataNormalizer
+     */
+    private readonly TableDataNormalizer $normalizer;
+
+    /**
+     * Cell value formatter.
+     *
+     * @var TableCellFormatter
+     */
+    private readonly TableCellFormatter $cells;
+
+    /**
+     * Constructor.
+     *
+     * Collaborators are pure, stateless helpers with no I/O, so they are
+     * composed here rather than injected — this keeps the public constructor
+     * argument-free for both the DI container and direct instantiation.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->normalizer = new TableDataNormalizer();
+        $this->cells      = new TableCellFormatter();
+
+    }//end __construct()
+
+    /**
      * Render a collection as an HTML table.
      *
      * Never throws: malformed columns are skipped individually, and an
@@ -69,13 +99,13 @@ class TableHtmlRenderer
      */
     public function render($collection, array $columns, array $options=[]): string
     {
-        $rows = $this->normalizeCollection(collection: $collection);
+        $rows = $this->normalizer->normalizeCollection(collection: $collection);
 
         if ($columns === [] && $rows !== []) {
-            $columns = $this->deriveColumns(firstRow: $rows[0]);
+            $columns = $this->normalizer->deriveColumns(firstRow: $rows[0]);
         }
 
-        $columns = $this->normalizeColumns(columns: $columns);
+        $columns = $this->normalizer->normalizeColumns(columns: $columns);
 
         $maxRows = self::DEFAULT_MAX_ROWS;
         if (is_numeric($options['maxRows'] ?? null) === true) {
@@ -134,112 +164,6 @@ class TableHtmlRenderer
     }//end renderBody()
 
     /**
-     * Normalize the incoming collection into a plain array of associative
-     * rows, tolerating iterables and array-accessible objects.
-     *
-     * @param mixed $collection Raw collection value.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function normalizeCollection($collection): array
-    {
-        if (is_array($collection) === false && $collection instanceof \Traversable) {
-            $collection = iterator_to_array($collection);
-        }
-
-        if (is_array($collection) === false) {
-            return [];
-        }
-
-        $rows = [];
-        foreach ($collection as $item) {
-            if (is_array($item) === true) {
-                $rows[] = $item;
-                continue;
-            }
-
-            if ($item instanceof \ArrayAccess || is_object($item) === true) {
-                $rows[] = (array) $item;
-                continue;
-            }
-
-            // Scalars in the collection are not row-shaped: skip silently
-            // (forgiving; the row simply does not appear).
-        }
-
-        return $rows;
-
-    }//end normalizeCollection()
-
-    /**
-     * Derive a default column list from the keys of the first row when the
-     * caller supplies no explicit `columns` definition.
-     *
-     * @param array $firstRow The first normalized row.
-     *
-     * @return array<int, array{key: string, label: string}>
-     */
-    private function deriveColumns(array $firstRow): array
-    {
-        $columns = [];
-        foreach (array_keys($firstRow) as $key) {
-            if (is_string($key) === false) {
-                continue;
-            }
-
-            $columns[] = ['key' => $key, 'label' => $key];
-        }
-
-        return $columns;
-
-    }//end deriveColumns()
-
-    /**
-     * Normalize/validate the column definitions, skipping malformed entries.
-     *
-     * @param array $columns Raw column definitions.
-     *
-     * @return array<int, array{key: string, label: string, align: string, format: string}>
-     */
-    private function normalizeColumns(array $columns): array
-    {
-        $validFormats = ['text', 'number', 'date', 'currency'];
-        $validAligns  = ['left', 'right', 'center'];
-
-        $normalized = [];
-        foreach ($columns as $column) {
-            if (is_array($column) === false || isset($column['key']) === false || is_string($column['key']) === false) {
-                continue;
-            }
-
-            $format = (string) ($column['format'] ?? 'text');
-            if (in_array(needle: $format, haystack: $validFormats, strict: true) === false) {
-                $format = 'text';
-            }
-
-            $defaultAlign = 'left';
-            if ($format === 'number' || $format === 'currency') {
-                $defaultAlign = 'right';
-            }
-
-            $align = (string) ($column['align'] ?? $defaultAlign);
-            if (in_array(needle: $align, haystack: $validAligns, strict: true) === false) {
-                $align = 'left';
-            }
-
-            $normalized[] = [
-                'key'    => $column['key'],
-                'label'  => (string) ($column['label'] ?? $column['key']),
-                'align'  => $align,
-                'format' => $format,
-            ];
-        }//end foreach
-
-        return $normalized;
-
-    }//end normalizeColumns()
-
-    /**
      * Render the `<thead>` row.
      *
      * @param array $columns Normalized columns.
@@ -274,7 +198,7 @@ class TableHtmlRenderer
         $html = '<tr>';
         foreach ($columns as $column) {
             $value     = $row[$column['key']] ?? null;
-            $formatted = $this->formatCell(value: $value, format: $column['format']);
+            $formatted = $this->cells->format(value: $value, format: $column['format']);
             $html     .= '<td style="padding:6px 8px;border:1px solid #DDDDDD;text-align:'.$column['align'].';">'
                 .$this->escape(value: $formatted).'</td>';
         }
@@ -284,108 +208,6 @@ class TableHtmlRenderer
         return $html;
 
     }//end renderRow()
-
-    /**
-     * Format a single cell value according to its column format. Missing or
-     * malformed values are skipped/rendered blank rather than erroring.
-     *
-     * @param mixed  $value  Raw cell value.
-     * @param string $format 'text'|'number'|'date'|'currency'.
-     *
-     * @return string Formatted (unescaped) text — escaping happens by the caller.
-     */
-    private function formatCell($value, string $format): string
-    {
-        if ($value === null) {
-            return '';
-        }
-
-        if ($format === 'number' || $format === 'currency') {
-            if (is_numeric($value) === false) {
-                return (string) $value;
-            }
-
-            $numeric = (float) $value;
-
-            $decimals = 2;
-            if (floor($numeric) === $numeric) {
-                $decimals = 0;
-            }
-
-            $formatted = $this->formatThousands(value: $numeric, decimals: $decimals);
-
-            if ($format === 'currency') {
-                return '€ '.$formatted;
-            }
-
-            return $formatted;
-        }
-
-        if ($format === 'date') {
-            if (is_string($value) === false && is_numeric($value) === false) {
-                return (string) $value;
-            }
-
-            $timestamp = strtotime((string) $value);
-            if (is_numeric($value) === true) {
-                $timestamp = (int) $value;
-            }
-
-            if ($timestamp === false) {
-                return (string) $value;
-            }
-
-            return date('d-m-Y', $timestamp);
-        }
-
-        return (string) $value;
-
-    }//end formatCell()
-
-    /**
-     * Format a number with NL-style thousands separators, independent of
-     * environment locale.
-     *
-     * @param float $value    Value to format.
-     * @param int   $decimals Number of decimal places.
-     *
-     * @return string Formatted number, e.g. '1.234,56'.
-     */
-    private function formatThousands(float $value, int $decimals): string
-    {
-        $fixed    = sprintf('%.'.$decimals.'f', $value);
-        $negative = str_starts_with($fixed, '-');
-        if ($negative === true) {
-            $fixed = substr($fixed, 1);
-        }
-
-        $parts       = explode('.', $fixed);
-        $wholePart   = $parts[0];
-        $decimalPart = $parts[1] ?? '';
-
-        $grouped = '';
-        $len     = strlen($wholePart);
-        for ($i = 0; $i < $len; $i++) {
-            if ($i > 0 && ($len - $i) % 3 === 0) {
-                $grouped .= '.';
-            }
-
-            $grouped .= $wholePart[$i];
-        }
-
-        $result = $grouped;
-        if ($decimals > 0) {
-            $result .= ','.$decimalPart;
-        }
-
-        $sign = '';
-        if ($negative === true) {
-            $sign = '-';
-        }
-
-        return $sign.$result;
-
-    }//end formatThousands()
 
     /**
      * Escape a data-derived value for safe embedding as HTML text content.

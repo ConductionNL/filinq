@@ -130,11 +130,8 @@ class BatchPrintJob extends QueuedJob
         array $options,
         string $userId
     ): void {
-        $total         = count($items);
-        $completed     = 0;
-        $errors        = 0;
-        $manifestItems = [];
-        $printConfig   = $this->printJobSvc->buildPrintConfig(options: $options);
+        $total       = count($items);
+        $printConfig = $this->printJobSvc->buildPrintConfig(options: $options);
 
         $this->printJobSvc->storeJobStatus(
             jobId: $jobId,
@@ -152,27 +149,113 @@ class BatchPrintJob extends QueuedJob
         try {
             $template = $this->templateSvc->getTemplate(id: $templateId);
         } catch (Exception $e) {
-            $this->logger->error(
-                message: 'BatchPrintJob: failed to load template: '.$e->getMessage(),
-                context: ['jobId' => $jobId, 'templateId' => $templateId]
-            );
-            $this->printJobSvc->storeJobStatus(
+            $this->failTemplateLoad(
                 jobId: $jobId,
-                data: [
-                    'status'      => 'failed',
-                    'total'       => $total,
-                    'completed'   => 0,
-                    'errors'      => $total,
-                    'ownerUserId' => $userId,
-                    'printConfig' => $printConfig,
-                    'manifest'    => [],
-                    'error'       => 'Template not found',
-                ]
+                templateId: $templateId,
+                reason: $e->getMessage(),
+                total: $total,
+                userId: $userId,
+                printConfig: $printConfig
             );
             return;
         }//end try
 
-        $pdfOptions          = array_merge(
+        $outcome = $this->renderItems(
+            jobId: $jobId,
+            items: $items,
+            template: $template,
+            pdfOptions: $this->buildPdfOptions(template: $template, options: $options),
+            userId: $userId,
+            printConfig: $printConfig,
+            total: $total
+        );
+
+        $completed     = $outcome['completed'];
+        $errors        = $outcome['errors'];
+        $manifestItems = $outcome['manifestItems'];
+
+        $this->printJobSvc->storeJobStatus(
+            jobId: $jobId,
+            data: [
+                'status'      => 'completed',
+                'total'       => $total,
+                'completed'   => $completed,
+                'errors'      => $errors,
+                'ownerUserId' => $userId,
+                'printConfig' => $printConfig,
+                'manifest'    => $this->printJobSvc->buildManifest(
+                    items: $manifestItems,
+                    printConfig: $printConfig
+                ),
+            ]
+        );
+
+        $this->logger->info(
+            message: "BatchPrintJob completed: {$completed}/{$total} successful, {$errors} errors",
+            context: ['jobId' => $jobId]
+        );
+
+    }//end processItems()
+
+    /**
+     * Record a failed job whose template could not be loaded
+     *
+     * @param string $jobId       Job UUID
+     * @param string $templateId  Template UUID that could not be loaded
+     * @param string $reason      Underlying exception message
+     * @param int    $total       Total number of items in the batch
+     * @param string $userId      Requesting user UID
+     * @param array  $printConfig Resolved print configuration
+     *
+     * @return void
+     *
+     * @spec openspec/changes/print-functionality/tasks.md#task-4
+     */
+    private function failTemplateLoad(
+        string $jobId,
+        string $templateId,
+        string $reason,
+        int $total,
+        string $userId,
+        array $printConfig
+    ): void {
+        $this->logger->error(
+            message: 'BatchPrintJob: failed to load template: '.$reason,
+            context: ['jobId' => $jobId, 'templateId' => $templateId]
+        );
+
+        $this->printJobSvc->storeJobStatus(
+            jobId: $jobId,
+            data: [
+                'status'      => 'failed',
+                'total'       => $total,
+                'completed'   => 0,
+                'errors'      => $total,
+                'ownerUserId' => $userId,
+                'printConfig' => $printConfig,
+                'manifest'    => [],
+                'error'       => 'Template not found',
+            ]
+        );
+
+    }//end failTemplateLoad()
+
+    /**
+     * Build the per-item PDF rendering options from the template and job options
+     *
+     * Template-level page setup provides the defaults; the caller's job options
+     * override them. Title and PDF/A flag are always derived last.
+     *
+     * @param array $template The loaded template record
+     * @param array $options  Print generation options supplied with the job
+     *
+     * @return array The merged PDF options
+     *
+     * @spec openspec/changes/print-functionality/tasks.md#task-4
+     */
+    private function buildPdfOptions(array $template, array $options): array
+    {
+        $pdfOptions = array_merge(
             [
                 'format'      => $template['format'] ?? 'A4',
                 'orientation' => $template['orientation'] ?? 'P',
@@ -183,8 +266,44 @@ class BatchPrintJob extends QueuedJob
             ],
             $options
         );
+
         $pdfOptions['title'] = $template['name'] ?? 'document';
         $pdfOptions['pdfa']  = ($options['pdfa'] ?? false) === true;
+
+        return $pdfOptions;
+
+    }//end buildPdfOptions()
+
+    /**
+     * Render every batch item, storing progress after each one
+     *
+     * An individual item failure is recorded in the manifest and counted, but
+     * never aborts the batch.
+     *
+     * @param string $jobId       Job UUID
+     * @param array  $items       Array of items to process
+     * @param array  $template    The loaded template record
+     * @param array  $pdfOptions  Merged PDF rendering options
+     * @param string $userId      Requesting user UID
+     * @param array  $printConfig Resolved print configuration
+     * @param int    $total       Total number of items in the batch
+     *
+     * @return array{completed: int, errors: int, manifestItems: array<int, array<string, mixed>>}
+     *
+     * @spec openspec/changes/print-functionality/tasks.md#task-4
+     */
+    private function renderItems(
+        string $jobId,
+        array $items,
+        array $template,
+        array $pdfOptions,
+        string $userId,
+        array $printConfig,
+        int $total
+    ): array {
+        $completed     = 0;
+        $errors        = 0;
+        $manifestItems = [];
 
         foreach ($items as $index => $item) {
             $itemData     = $item['data'] ?? [];
@@ -233,26 +352,11 @@ class BatchPrintJob extends QueuedJob
             );
         }//end foreach
 
-        $this->printJobSvc->storeJobStatus(
-            jobId: $jobId,
-            data: [
-                'status'      => 'completed',
-                'total'       => $total,
-                'completed'   => $completed,
-                'errors'      => $errors,
-                'ownerUserId' => $userId,
-                'printConfig' => $printConfig,
-                'manifest'    => $this->printJobSvc->buildManifest(
-                    items: $manifestItems,
-                    printConfig: $printConfig
-                ),
-            ]
-        );
+        return [
+            'completed'     => $completed,
+            'errors'        => $errors,
+            'manifestItems' => $manifestItems,
+        ];
 
-        $this->logger->info(
-            message: "BatchPrintJob completed: {$completed}/{$total} successful, {$errors} errors",
-            context: ['jobId' => $jobId]
-        );
-
-    }//end processItems()
+    }//end renderItems()
 }//end class

@@ -40,7 +40,6 @@ use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
  * Proposes grondslagen per entity type and pre-fills them at detection time.
@@ -77,13 +76,6 @@ class GrondslagProposalService
      * @var string
      */
     private const APP_ID = 'docudesk';
-
-    /**
-     * The OpenRegister app id.
-     *
-     * @var string
-     */
-    private const OPENREGISTER_APP_ID = 'openregister';
 
     /**
      * Curated list of entity types offered in the settings selector (v1).
@@ -124,21 +116,35 @@ class GrondslagProposalService
     ];
 
     /**
+     * OpenRegister-facing reads (service resolution + `base` records).
+     *
+     * @var GrondslagBaseCatalog
+     */
+    private readonly GrondslagBaseCatalog $baseCatalog;
+
+    /**
      * Constructor for GrondslagProposalService.
      *
-     * @param IAppConfig         $config     App configuration (mapping storage).
-     * @param IAppManager        $appManager App manager (OpenRegister availability).
-     * @param ContainerInterface $container  DI container resolving OpenRegister services at runtime.
-     * @param LoggerInterface    $logger     Logger for best-effort diagnostics.
+     * The catalog is an injected collaborator; the null default keeps the
+     * historical four-argument signature usable, in which case an equivalent
+     * catalog is built from the same three dependencies.
+     *
+     * @param IAppConfig                $config      App configuration (mapping storage).
+     * @param IAppManager               $appManager  App manager (OpenRegister availability).
+     * @param ContainerInterface        $container   DI container resolving OpenRegister services at runtime.
+     * @param LoggerInterface           $logger      Logger for best-effort diagnostics.
+     * @param GrondslagBaseCatalog|null $baseCatalog OpenRegister-facing reads; built from the above when null.
      *
      * @return void
      */
     public function __construct(
         private readonly IAppConfig $config,
-        private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
+        IAppManager $appManager,
+        ContainerInterface $container,
         private readonly LoggerInterface $logger,
+        ?GrondslagBaseCatalog $baseCatalog=null,
     ) {
+        $this->baseCatalog = ($baseCatalog ?? new GrondslagBaseCatalog($appManager, $container, $logger));
 
     }//end __construct()
 
@@ -286,61 +292,7 @@ class GrondslagProposalService
      */
     public function getAvailableBases(): array
     {
-        $objectService = $this->resolveOpenRegister(className: 'OCA\\OpenRegister\\Service\\ObjectService');
-        if ($objectService === null) {
-            return [];
-        }
-
-        try {
-            $result = $objectService->searchObjectsBySlug(
-                registerSlug: 'dossier',
-                schemaSlug: 'base',
-                filters: [],
-                _rbac: false,
-                _multitenancy: false
-            );
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'GrondslagProposalService: failed to load `base` records',
-                ['error' => $e->getMessage()]
-            );
-            return [];
-        }
-
-        $bases = [];
-        foreach ($this->extractObjects(result: $result) as $base) {
-            if (is_array($base) === false) {
-                continue;
-            }
-
-            $self = ($base['@self'] ?? []);
-            $slug = '';
-            if (is_array($self) === true) {
-                $slug = (string) ($self['slug'] ?? '');
-            }
-
-            // Cast only scalars. An OpenRegister object property may legally be
-            // an array (multi-value / nested), and `(string) $array` emits a
-            // PHP "Array to string conversion" warning for EVERY such field.
-            // Measured 2026-07-28: a single object create produced 6,240 of
-            // these warnings (6,623 log lines total) because this runs on the
-            // OR object-write path — which made every
-            // `POST /apps/openregister/api/objects/...` hang fleet-wide and
-            // grew nextcloud.log without bound (cf. the 163GB log incident
-            // that filled the Docker disk and PANICked Postgres).
-            $name = self::asString(value: $base['name'] ?? '');
-            if ($slug === '' || $name === '') {
-                continue;
-            }
-
-            $bases[] = [
-                'slug'        => $slug,
-                'name'        => $name,
-                'description' => self::asString(value: $base['description'] ?? ''),
-            ];
-        }//end foreach
-
-        return $bases;
+        return $this->baseCatalog->getAvailableBases();
 
     }//end getAvailableBases()
 
@@ -363,7 +315,7 @@ class GrondslagProposalService
             return 0;
         }
 
-        $mapper = $this->resolveOpenRegister(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
+        $mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
         if ($mapper === null) {
             return 0;
         }
@@ -453,7 +405,7 @@ class GrondslagProposalService
      */
     public function enrichEntitiesWithBases(array $entities, int $fileId): array
     {
-        $mapper = $this->resolveOpenRegister(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
+        $mapper = $this->baseCatalog->resolve(className: 'OCA\\OpenRegister\\Db\\EntityRelationMapper');
         if ($mapper === null) {
             return $entities;
         }
@@ -483,132 +435,4 @@ class GrondslagProposalService
         return $entities;
 
     }//end enrichEntitiesWithBases()
-
-    /**
-     * Resolve an OpenRegister service/mapper by class name, or null.
-     *
-     * Returns null (best-effort) when OpenRegister is not installed or the
-     * container cannot resolve the class — callers degrade gracefully.
-     *
-     * @param string $className Fully-qualified OpenRegister class name.
-     *
-     * @return mixed The resolved instance, or null.
-     */
-    private function resolveOpenRegister(string $className): mixed
-    {
-        if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === false) {
-            return null;
-        }
-
-        try {
-            return $this->container->get($className);
-        } catch (Exception $e) {
-            $this->logger->warning(
-                'GrondslagProposalService: OpenRegister service unavailable',
-                ['class' => $className, 'error' => $e->getMessage()]
-            );
-            return null;
-        }
-
-    }//end resolveOpenRegister()
-
-    /**
-     * Normalise an ObjectService search result into a list of object arrays.
-     *
-     * Mirrors the extraction GrondslagenSummaryService uses: the result may be
-     * a paginated envelope (`['results' => [...]]`) or a bare list, and each
-     * item may be an `ObjectEntity` (not an array). ObjectEntity items are
-     * flattened via `jsonSerialize()`, which yields the `@self` + property
-     * payload this service reads.
-     *
-     * Coerce an OpenRegister property to a string without warning on arrays.
-     *
-     * OR object properties are `mixed`: a field may be a scalar, null, or an
-     * array (multi-value / nested object). A bare `(string) $value` cast on an
-     * array raises "Array to string conversion" — harmless-looking, but on the
-     * object-write path it fires once per field per object and buries the
-     * request (and the log) under thousands of warnings.
-     *
-     * @param mixed $value The raw property value.
-     *
-     * @return string The scalar rendering, or '' when the value is not scalar.
-     *
-     * @psalm-pure
-     */
-    private static function asString(mixed $value): string
-    {
-        if (is_scalar($value) === true) {
-            return (string) $value;
-        }
-
-        return '';
-
-    }//end asString()
-
-    /**
-     * Normalise a raw OpenRegister search result into a plain list of objects.
-     *
-     * @param mixed $result The raw search result.
-     *
-     * @return array<int, array<string, mixed>> The list of object arrays.
-     */
-    private function extractObjects(mixed $result): array
-    {
-        if (is_array($result) === true && isset($result['results']) === true && is_array($result['results']) === true) {
-            $result = $result['results'];
-        }
-
-        if (is_iterable($result) === false) {
-            return [];
-        }
-
-        $out = [];
-        foreach ($result as $item) {
-            $row = $this->normaliseSearchItem(item: $item);
-            if ($row !== null) {
-                $out[] = $row;
-            }
-        }
-
-        return $out;
-
-    }//end extractObjects()
-
-    /**
-     * Normalise a single search-result item to an array, or null to skip it.
-     *
-     * Items may be plain arrays or `ObjectEntity` objects; the latter are
-     * flattened via `jsonSerialize()` to the `@self` + property payload.
-     *
-     * @param mixed $item One search-result item.
-     *
-     * @return array<string, mixed>|null The flattened object, or null.
-     */
-    private function normaliseSearchItem(mixed $item): ?array
-    {
-        if (is_array($item) === true) {
-            return $item;
-        }
-
-        $objectEntityClass = '\OCA\OpenRegister\Db\ObjectEntity';
-        if (is_object($item) === false
-            || class_exists($objectEntityClass) === false
-            || ($item instanceof $objectEntityClass) === false
-        ) {
-            return null;
-        }
-
-        try {
-            $payload = $item->jsonSerialize();
-        } catch (\Throwable $e) {
-            return null;
-        }
-
-        if (is_array($payload) === true) {
-            return $payload;
-        }
-
-        return null;
-
-    }//end normaliseSearchItem()
 }//end class

@@ -34,6 +34,7 @@ namespace OCA\DocuDesk\Service\Conversion;
 use OCA\DocuDesk\Exception\ConversionFailedException;
 use OCP\Files\Conversion\IConversionManager;
 use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -165,7 +166,10 @@ class OfficeAppBackend implements ConversionBackendInterface
      * Declare whether any registered conversion provider can map this source MIME to PDF.
      *
      * @param string $mimeType  Source MIME.
-     * @param string $extension Source extension (lowercased, no dot). Unused here.
+     * @param string $extension Source extension (lowercased, no dot). Matching is
+     *                          MIME-driven — providers advertise MIME tuples, not
+     *                          extensions — so this is carried into the decline
+     *                          diagnostics only.
      *
      * @return bool True iff some registered provider can convert this MIME → application/pdf.
      */
@@ -183,6 +187,14 @@ class OfficeAppBackend implements ConversionBackendInterface
                 return true;
             }
         }
+
+        // Declining here is the single most common reason the cascade falls
+        // through to a lower-fidelity backend; record both coordinates of the
+        // input so operators can match them against the registered providers.
+        $this->logger->debug(
+            '[OfficeAppBackend] No registered provider maps this input to PDF',
+            ['mimeType' => $mimeType, 'extension' => $extension]
+        );
 
         return false;
 
@@ -263,13 +275,39 @@ class OfficeAppBackend implements ConversionBackendInterface
             );
         }
 
-        // Manager returned a path; resolve it to a File node for the
-        // caller. The path is in the user's filesystem view.
-        $userFolder = $this->rootFolder->getUserFolder($user->getUID());
+        // Manager returned a path; resolve it to a File node for the caller.
+        return $this->resolveConvertedFile(
+            sourceFolder: $sourceFolder,
+            targetBaseName: $targetBaseName,
+            destFullPath: $destFullPath,
+            writtenPath: $writtenPath
+        );
+
+    }//end convert()
+
+    /**
+     * Resolve the file the conversion manager reported it wrote.
+     *
+     * The manager returns a path relative to the user folder OR an absolute
+     * one depending on the provider, so the lookup is normalised by going
+     * through the source's parent folder plus the target basename.
+     *
+     * @param Folder $sourceFolder   Folder that holds the source (and the output).
+     * @param string $targetBaseName Basename of the expected PDF.
+     * @param string $destFullPath   Full destination path handed to the manager.
+     * @param mixed  $writtenPath    Whatever the manager returned, for diagnostics.
+     *
+     * @return File The converted PDF node.
+     *
+     * @throws ConversionFailedException When the node cannot be found or is not a file.
+     */
+    private function resolveConvertedFile(
+        Folder $sourceFolder,
+        string $targetBaseName,
+        string $destFullPath,
+        mixed $writtenPath
+    ): File {
         try {
-            // The manager returns a path relative to the user folder OR
-            // an absolute one depending on provider; normalise by
-            // looking up the file via the parent + basename.
             $resolved = $sourceFolder->get($targetBaseName);
         } catch (Throwable $e) {
             $this->logger->warning(
@@ -310,7 +348,7 @@ class OfficeAppBackend implements ConversionBackendInterface
 
         return $resolved;
 
-    }//end convert()
+    }//end resolveConvertedFile()
 
     /**
      * Cached accessor for the provider list. Memoised per request to

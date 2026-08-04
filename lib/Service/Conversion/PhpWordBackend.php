@@ -96,19 +96,31 @@ class PhpWordBackend implements ConversionBackendInterface
     ];
 
     /**
+     * Seam over PhpWord's reader/writer construction.
+     *
+     * @var PhpWordIo
+     */
+    private readonly PhpWordIo $phpWordIo;
+
+    /**
      * Constructor.
      *
      * @param IAppConfig      $appConfig   Tenant configuration provider.
      * @param ITempManager    $tempManager Provides Nextcloud-managed temp paths.
      * @param PdfService      $pdfService  Renders the HTML produced by PhpWord to PDF/A-3b.
      * @param LoggerInterface $logger      Logger for diagnostics.
+     * @param PhpWordIo|null  $phpWordIo   Seam over PhpWord reader/writer construction;
+     *                                     autowired in production, defaulted here so
+     *                                     existing call sites stay source-compatible.
      */
     public function __construct(
         private readonly IAppConfig $appConfig,
         private readonly ITempManager $tempManager,
         private readonly PdfService $pdfService,
         private readonly LoggerInterface $logger,
+        ?PhpWordIo $phpWordIo=null,
     ) {
+        $this->phpWordIo = ($phpWordIo ?? new PhpWordIo());
 
     }//end __construct()
 
@@ -182,14 +194,54 @@ class PhpWordBackend implements ConversionBackendInterface
      */
     public function convert(File $source): File
     {
-        $name   = $source->getName();
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            $extension = '';
-        } else {
-            $extension = strtolower(substr($name, ($dotPos + 1)));
+        $name       = $source->getName();
+        $extension  = $this->extractExtension(name: $name);
+        $readerName = $this->resolveReaderName(extension: $extension);
+        $sourceTmp  = $this->materialiseSource(source: $source, extension: $extension);
+
+        $html     = $this->renderHtml(sourceTmp: $sourceTmp, readerName: $readerName);
+        $pdfBytes = $this->renderPdf(html: $html, name: $name);
+
+        $parent     = $source->getParent();
+        $outputName = $this->stripExtension(name: $name).'.pdf';
+        if ($parent->nodeExists($outputName) === true) {
+            $parent->get($outputName)->delete();
         }
 
+        return $parent->newFile($outputName, $pdfBytes);
+
+    }//end convert()
+
+    /**
+     * Return the lowercased extension of $name without the leading dot.
+     *
+     * @param string $name File name, with or without an extension.
+     *
+     * @return string Lowercased extension, or an empty string when the name
+     *                carries no dot.
+     */
+    private function extractExtension(string $name): string
+    {
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            return '';
+        }
+
+        return strtolower(substr($name, ($dotPos + 1)));
+
+    }//end extractExtension()
+
+    /**
+     * Map a source extension onto the PhpWord reader that handles it.
+     *
+     * @param string $extension Lowercased extension without the dot.
+     *
+     * @return string PhpWord reader short name.
+     *
+     * @throws ConversionFailedException When no reader is mapped for $extension.
+     */
+    private function resolveReaderName(string $extension): string
+    {
         $readerName = self::READER_BY_EXT[$extension] ?? null;
         if ($readerName === null) {
             throw new ConversionFailedException(
@@ -205,10 +257,45 @@ class PhpWordBackend implements ConversionBackendInterface
             );
         }
 
-        // Materialise the source bytes to a temp file: PhpWord readers
-        // operate on file paths, not streams.
+        return $readerName;
+
+    }//end resolveReaderName()
+
+    /**
+     * Write the source bytes to a Nextcloud-managed temp file.
+     *
+     * PhpWord readers operate on file paths, not streams, so the node's
+     * content has to be materialised on disk first.
+     *
+     * @param File   $source    Source file node.
+     * @param string $extension Lowercased extension, used for the temp suffix.
+     *
+     * @return string Absolute path of the temp file holding the source bytes.
+     *
+     * @throws ConversionFailedException When the node yields no readable content,
+     *                                   or no temp file could be allocated.
+     */
+    private function materialiseSource(File $source, string $extension): string
+    {
+        // ITempManager::getTemporaryFile() returns string|false — false when
+        // the temp directory is not writable. Failing closed here beats
+        // handing `false` to file_put_contents() and writing to './'.
         $sourceTmp = $this->tempManager->getTemporaryFile('.'.$extension);
-        $bytes     = $source->getContent();
+        if (is_string($sourceTmp) === false) {
+            throw new ConversionFailedException(
+                message: 'PhpWord backend could not allocate a temporary file.',
+                attempts: [
+                    [
+                        'name'      => $this->name(),
+                        'available' => true,
+                        'supports'  => true,
+                        'reason'    => 'getTemporaryFile returned false',
+                    ],
+                ]
+            );
+        }
+
+        $bytes = $source->getContent();
         if (is_string($bytes) === false) {
             throw new ConversionFailedException(
                 message: 'PhpWord backend could not read source content.',
@@ -225,8 +312,24 @@ class PhpWordBackend implements ConversionBackendInterface
 
         file_put_contents($sourceTmp, $bytes);
 
+        return $sourceTmp;
+
+    }//end materialiseSource()
+
+    /**
+     * Parse the source with PhpWord and render it to the HTML intermediate.
+     *
+     * @param string $sourceTmp  Path of the materialised source document.
+     * @param string $readerName PhpWord reader short name.
+     *
+     * @return string Non-empty HTML, with PhpWord's `@page` rules stripped.
+     *
+     * @throws ConversionFailedException On read failure, writer failure, or empty output.
+     */
+    private function renderHtml(string $sourceTmp, string $readerName): string
+    {
         try {
-            $phpWord = IOFactory::load($sourceTmp, $readerName);
+            $phpWord = $this->phpWordIo->load($sourceTmp, $readerName);
         } catch (Throwable $e) {
             throw new ConversionFailedException(
                 message: 'PhpWord could not read source ('.$readerName.'): '.$e->getMessage(),
@@ -235,7 +338,7 @@ class PhpWordBackend implements ConversionBackendInterface
                         'name'      => $this->name(),
                         'available' => true,
                         'supports'  => true,
-                        'reason'    => 'IOFactory::load failed: '.$e->getMessage(),
+                        'reason'    => 'reader load failed: '.$e->getMessage(),
                     ],
                 ],
                 previous: $e
@@ -243,10 +346,7 @@ class PhpWordBackend implements ConversionBackendInterface
         }
 
         try {
-            $htmlWriter = IOFactory::createWriter($phpWord, 'HTML');
-            // @phpstan-ignore-next-line method.notFound (createWriter() is typed WriterInterface, but the concrete HTML writer exposes getContent()).
-            $html = $htmlWriter->getContent();
-            $html = $this->stripAtPageRules(html: $html);
+            $html = $this->stripAtPageRules(html: $this->phpWordIo->toHtml($phpWord));
         } catch (Throwable $e) {
             throw new ConversionFailedException(
                 message: 'PhpWord HTML writer failed: '.$e->getMessage(),
@@ -255,14 +355,14 @@ class PhpWordBackend implements ConversionBackendInterface
                         'name'      => $this->name(),
                         'available' => true,
                         'supports'  => true,
-                        'reason'    => 'createWriter(HTML)/getContent failed: '.$e->getMessage(),
+                        'reason'    => 'HTML writer getContent failed: '.$e->getMessage(),
                     ],
                 ],
                 previous: $e
             );
         }
 
-        if (is_string($html) === false || $html === '') {
+        if ($html === '') {
             throw new ConversionFailedException(
                 message: 'PhpWord HTML writer produced empty output.',
                 attempts: [
@@ -276,13 +376,30 @@ class PhpWordBackend implements ConversionBackendInterface
             );
         }
 
+        return $html;
+
+    }//end renderHtml()
+
+    /**
+     * Render the HTML intermediate to PDF/A-3b bytes.
+     *
+     * Mirrors MpdfBackend: request PDF/A-3b output and a known page format so
+     * the docx PDF carries the same normalization print CSS
+     * (PdfService::buildPrintCss) and archival container as every other
+     * anonymised output. Without these options the renderer skips the PDF/A +
+     * print-CSS branch entirely, leaving the docx PDF non-conformant and
+     * un-normalized.
+     *
+     * @param string $html HTML produced by PhpWord's HTML writer.
+     * @param string $name Source file name, used to derive the PDF title.
+     *
+     * @return string Non-empty PDF bytes.
+     *
+     * @throws ConversionFailedException On renderer failure or empty output.
+     */
+    private function renderPdf(string $html, string $name): string
+    {
         try {
-            // Mirror MpdfBackend: request PDF/A-3b output and a known page
-            // format so the docx PDF carries the same normalization print
-            // CSS (PdfService::buildPrintCss) and archival container as every
-            // other anonymised output. Without these options the renderer
-            // skips the PDF/A + print-CSS branch entirely, leaving the docx
-            // PDF non-conformant and un-normalized.
             $pdfBytes = $this->pdfService->generatePdfFromHtml(
                 html: $html,
                 options: [
@@ -320,15 +437,9 @@ class PhpWordBackend implements ConversionBackendInterface
             );
         }
 
-        $parent     = $source->getParent();
-        $outputName = $this->stripExtension(name: $name).'.pdf';
-        if ($parent->nodeExists($outputName) === true) {
-            $parent->get($outputName)->delete();
-        }
+        return $pdfBytes;
 
-        return $parent->newFile($outputName, $pdfBytes);
-
-    }//end convert()
+    }//end renderPdf()
 
     /**
      * Strip CSS `@page` rules emitted by PhpWord's HTML writer.

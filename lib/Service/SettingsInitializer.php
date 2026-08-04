@@ -319,42 +319,19 @@ class SettingsInitializer
             // Prefer the register the templates themselves live in so version
             // snapshots are co-located; fall back to any register that holds
             // the templateVersion schema.
-            $templateRegister   = $this->config->getValueString($this->appName, 'template_register', '');
-            $fallbackRegisterId = '';
-            $schemaId           = '';
+            $templateRegister = $this->config->getValueString($this->appName, 'template_register', '');
 
-            foreach ($registers as $register) {
-                $registerArr = $register->jsonSerialize();
-                $registerId  = (string) ($registerArr['id'] ?? '');
+            $location = $this->resolveTemplateVersionLocation(
+                registers: $registers,
+                schemaMapper: $schemaMapper,
+                templateRegister: $templateRegister
+            );
 
-                foreach (($registerArr['schemas'] ?? []) as $candidateSchemaId) {
-                    try {
-                        $schema    = $schemaMapper->find(id: $candidateSchemaId);
-                        $schemaArr = $schema->jsonSerialize();
-                    } catch (Exception $schemaError) {
-                        continue;
-                    }
-
-                    if (($schemaArr['slug'] ?? '') !== 'templateVersion') {
-                        continue;
-                    }
-
-                    $schemaId = (string) ($schemaArr['id'] ?? '');
-
-                    if ($registerId === $templateRegister) {
-                        // Exact co-location with the templates register.
-                        $this->writeTemplateVersionConfig(registerId: $registerId, schemaId: $schemaId);
-                        return;
-                    }
-
-                    if ($fallbackRegisterId === '') {
-                        $fallbackRegisterId = $registerId;
-                    }
-                }//end foreach
-            }//end foreach
-
-            if ($fallbackRegisterId !== '' && $schemaId !== '') {
-                $this->writeTemplateVersionConfig(registerId: $fallbackRegisterId, schemaId: $schemaId);
+            if ($location !== null) {
+                $this->writeTemplateVersionConfig(
+                    registerId: $location['registerId'],
+                    schemaId: $location['schemaId']
+                );
                 return;
             }
 
@@ -370,6 +347,73 @@ class SettingsInitializer
         }//end try
 
     }//end provisionTemplateVersionConfig()
+
+    /**
+     * Locate the register + schema IDs that should hold templateVersion objects
+     *
+     * Scans every register's schema list for the `templateVersion` slug. An
+     * exact match with the templates' own register wins immediately; otherwise
+     * the first register carrying the schema is used as a fallback. A schema
+     * that cannot be loaded is skipped rather than aborting the scan.
+     *
+     * @param iterable<mixed> $registers        Registers returned by OpenRegister's RegisterService.
+     * @param mixed           $schemaMapper     OpenRegister's SchemaMapper, used to resolve schema IDs.
+     * @param string          $templateRegister The register ID the templates themselves live in.
+     *
+     * @return array{registerId: string, schemaId: string}|null The resolved location, or null when absent.
+     *
+     * @spec openspec/specs/template-management/spec.md
+     */
+    private function resolveTemplateVersionLocation(
+        iterable $registers,
+        mixed $schemaMapper,
+        string $templateRegister
+    ): ?array {
+        $fallbackRegisterId = '';
+        $schemaId           = '';
+
+        foreach ($registers as $register) {
+            $registerArr = $register->jsonSerialize();
+            $registerId  = (string) ($registerArr['id'] ?? '');
+
+            foreach (($registerArr['schemas'] ?? []) as $candidateSchemaId) {
+                try {
+                    $schema    = $schemaMapper->find(id: $candidateSchemaId);
+                    $schemaArr = $schema->jsonSerialize();
+                } catch (Exception $schemaError) {
+                    continue;
+                }
+
+                if (($schemaArr['slug'] ?? '') !== 'templateVersion') {
+                    continue;
+                }
+
+                $schemaId = (string) ($schemaArr['id'] ?? '');
+
+                if ($registerId === $templateRegister) {
+                    // Exact co-location with the templates register.
+                    return [
+                        'registerId' => $registerId,
+                        'schemaId'   => $schemaId,
+                    ];
+                }
+
+                if ($fallbackRegisterId === '') {
+                    $fallbackRegisterId = $registerId;
+                }
+            }//end foreach
+        }//end foreach
+
+        if ($fallbackRegisterId !== '' && $schemaId !== '') {
+            return [
+                'registerId' => $fallbackRegisterId,
+                'schemaId'   => $schemaId,
+            ];
+        }
+
+        return null;
+
+    }//end resolveTemplateVersionLocation()
 
     /**
      * Write the resolved templateVersion register/schema config keys

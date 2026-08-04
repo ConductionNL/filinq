@@ -60,8 +60,6 @@ use Psr\Log\LoggerInterface;
  * request lifecycle.
  *
  * @package OCA\DocuDesk\Middleware
- *
- * @SuppressWarnings(PHPMD.StaticAccess)
  */
 class LanguageNegotiationMiddleware extends Middleware
 {
@@ -90,15 +88,19 @@ class LanguageNegotiationMiddleware extends Middleware
     }//end __construct()
 
     /**
+     * {@inheritDoc}
+     *
      * Resolve the preferred language and write-side target language
      * from the incoming request and stash them on OR's LanguageService.
+     *
+     * `$controller` and `$methodName` are pinned by the inherited
+     * `OCP\AppFramework\Middleware::beforeController()` signature; negotiation
+     * is route-agnostic so neither is consulted.
      *
      * @param mixed  $controller The controller instance.
      * @param string $methodName The method name being called.
      *
      * @return void
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      *
      * @spec openspec/changes/register-i18n/tasks.md#task-3-2
      */
@@ -112,17 +114,7 @@ class LanguageNegotiationMiddleware extends Middleware
         }
 
         // 2. Accept-Language header is the next priority.
-        $acceptLanguage = $this->request->getHeader('Accept-Language');
-        if ($acceptLanguage !== '' && $acceptLanguage !== null) {
-            $acceptedLanguages = LanguageService::parseAcceptLanguageHeader($acceptLanguage);
-            $this->languageService->setAcceptedLanguages($acceptedLanguages);
-
-            if (empty($acceptedLanguages) === false && $resolvedFromQuery === null) {
-                $preferred = strtolower(explode('-', $acceptedLanguages[0])[0]);
-                $this->languageService->setPreferredLanguage($preferred);
-                $this->languageService->setRequestedLanguageSource('header');
-            }
-        }
+        $this->applyAcceptLanguageHeader(queryOverride: $resolvedFromQuery);
 
         // 3. _translations=all (return-all override).
         $translations = $this->request->getParam('_translations');
@@ -131,37 +123,96 @@ class LanguageNegotiationMiddleware extends Middleware
         }
 
         // 4. Write-side X-Translation-Target-Language on mutating verbs.
-        $method = strtoupper((string) $this->request->getMethod());
-        if (in_array($method, ['POST', 'PUT', 'PATCH'], true) === true) {
-            $targetHeader = $this->request->getHeader('X-Translation-Target-Language');
-            if ($targetHeader !== '' && $targetHeader !== null) {
-                $targetTrim = trim($targetHeader);
-                if (preg_match(self::BCP47_PATTERN, $targetTrim) !== 1) {
-                    $this->logger->warning(
-                        sprintf(
-                            '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
-                            $targetTrim
-                        )
-                    );
-                    return;
-                }
-
-                $this->languageService->setTargetLanguage($targetTrim);
-            }
-        }
+        $this->applyTargetLanguageHeader();
     }//end beforeController()
 
     /**
+     * Apply the `Accept-Language` header to OR's LanguageService.
+     *
+     * Always records the parsed priority list. Only promotes the top entry to
+     * the preferred language when no higher-priority query override was found.
+     *
+     * @param string|null $queryOverride The language already resolved from query params, or null.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+     */
+    private function applyAcceptLanguageHeader(?string $queryOverride): void
+    {
+        // IRequest::getHeader() returns a string ('' when absent), never null.
+        $acceptLanguage = $this->request->getHeader('Accept-Language');
+        if ($acceptLanguage === '') {
+            return;
+        }
+
+        // Instance dispatch on the injected collaborator — the parser is a
+        // static utility on OR's LanguageService, but routing it through the
+        // injected instance keeps the class dependency substitutable.
+        $acceptedLanguages = $this->languageService->parseAcceptLanguageHeader($acceptLanguage);
+        $this->languageService->setAcceptedLanguages($acceptedLanguages);
+
+        if (empty($acceptedLanguages) === true || $queryOverride !== null) {
+            return;
+        }
+
+        $preferred = strtolower(explode('-', $acceptedLanguages[0])[0]);
+        $this->languageService->setPreferredLanguage($preferred);
+        $this->languageService->setRequestedLanguageSource('header');
+    }//end applyAcceptLanguageHeader()
+
+    /**
+     * Apply the write-side `X-Translation-Target-Language` header on mutating verbs.
+     *
+     * Only POST/PUT/PATCH carry a write-side target. A malformed tag is logged
+     * and ignored — we never 400 on a malformed language tag.
+     *
+     * @return void
+     *
+     * @spec openspec/changes/register-i18n/tasks.md#task-3-2
+     */
+    private function applyTargetLanguageHeader(): void
+    {
+        $method = strtoupper((string) $this->request->getMethod());
+        if (in_array($method, ['POST', 'PUT', 'PATCH'], true) === false) {
+            return;
+        }
+
+        // IRequest::getHeader() returns a string ('' when absent), never null.
+        $targetHeader = $this->request->getHeader('X-Translation-Target-Language');
+        if ($targetHeader === '') {
+            return;
+        }
+
+        $targetTrim = trim($targetHeader);
+        if (preg_match(self::BCP47_PATTERN, $targetTrim) !== 1) {
+            $this->logger->warning(
+                sprintf(
+                    '[DocuDesk LanguageNegotiationMiddleware] Invalid X-Translation-Target-Language "%s" — ignoring.',
+                    $targetTrim
+                )
+            );
+            return;
+        }
+
+        $this->languageService->setTargetLanguage($targetTrim);
+    }//end applyTargetLanguageHeader()
+
+    /**
+     * {@inheritDoc}
+     *
      * Emit language response headers so docudesk responses surface the
      * resolved language the same way OR responses do.
+     *
+     * `$controller` and `$methodName` are pinned by the inherited
+     * `OCP\AppFramework\Middleware::afterController()` signature; the emitted
+     * headers are route-agnostic so neither is consulted.
      *
      * @param mixed    $controller The controller instance.
      * @param string   $methodName The method name that was called.
      * @param Response $response   The response object.
      *
      * @return Response The modified response with language headers.
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function afterController($controller, $methodName, Response $response): Response
     {

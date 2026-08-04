@@ -73,3 +73,9 @@ if (is_dir($ocpSystemTagDir) === true) {
 
 // Load OpenRegister stubs for mocking.
 require_once __DIR__.'/stubs/OpenRegisterStubs.php';
+
+// Shared test-only trait. The composer PSR-4 dev prefix maps
+// OCA\DocuDesk\Tests\ to tests/, which cannot resolve the lower-cased
+// tests/unit/ directory segment, so non-test helper classes under tests/unit
+// are required explicitly (PHPUnit loads *Test.php files by path).
+require_once __DIR__.'/unit/Service/BuildsAnonymizationService.php';

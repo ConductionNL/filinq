@@ -30,12 +30,7 @@ use Exception;
 use OCA\DocuDesk\BackgroundJob\FolderExtractionJob;
 use OCA\DocuDesk\Service\Conversion\OutputLayoutResolver;
 use OCP\BackgroundJob\IJobList;
-use OCP\Constants;
-use OCP\Files\File;
-use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\Files\Node;
-use OCP\Files\NotFoundException;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -59,15 +54,17 @@ use Psr\Log\LoggerInterface;
  */
 class FolderBatchService
 {
+
     /**
-     * App config key for the optional confidentiality-based analysis-priority
-     * hint. Defaults to off — ordering is byte-for-byte identical to the
-     * pre-change behaviour until an admin opts in (files-confidential-labels,
-     * design.md D3).
+     * Resolves the source folder and enumerates its analysable files.
      *
-     * @var string
+     * Composed from the injected layout / confidentiality / app-config
+     * collaborators rather than injected directly, so the constructor's
+     * published shape stays unchanged.
+     *
+     * @var FolderFileEnumerator
      */
-    private const PRIORITISE_ANALYSIS_KEY = 'docudesk.confidentiality.prioritise_analysis';
+    private readonly FolderFileEnumerator $enumerator;
 
     /**
      * Constructor for FolderBatchService
@@ -99,10 +96,15 @@ class FolderBatchService
         private readonly BatchStateService $stateService,
         private readonly IJobList $jobList,
         private readonly AnonymizationService $anonService,
-        private readonly OutputLayoutResolver $layout,
-        private readonly ConfidentialityLabelService $confidentialityLabel,
-        private readonly IAppConfig $appConfig
+        OutputLayoutResolver $layout,
+        ConfidentialityLabelService $confidentialityLabel,
+        IAppConfig $appConfig
     ) {
+        $this->enumerator = new FolderFileEnumerator(
+            layout: $layout,
+            confidentialityLabel: $confidentialityLabel,
+            appConfig: $appConfig
+        );
 
     }//end __construct()
 
@@ -128,13 +130,13 @@ class FolderBatchService
         $userId     = $this->getCurrentUserId();
         $userFolder = $this->rootFolder->getUserFolder($userId);
 
-        $node = $this->resolveFolderNode(folderId: $folderId, folderPath: $folderPath, userFolder: $userFolder);
+        $node = $this->enumerator->resolveFolder(
+            folderId: $folderId,
+            folderPath: $folderPath,
+            userFolder: $userFolder
+        );
 
-        if (($node instanceof Folder) === false) {
-            throw new Exception('Path is not a folder', 400);
-        }
-
-        $files = $this->enumerateFiles(folder: $node);
+        $files = $this->enumerator->enumerate(folder: $node);
 
         if (empty($files) === true) {
             throw new Exception('No files found in folder', 400);
@@ -198,81 +200,6 @@ class FolderBatchService
         return $batch;
 
     }//end createFolderBatch()
-
-    /**
-     * Resolve the folder node from either a folder ID or folder path
-     *
-     * Enforces XOR on the inputs (exactly one must be provided). When ID is
-     * used, chooses a writable mount first, falling back to the first
-     * readable node. When path is used, preserves the existing lookup via
-     * Folder::get(). Maps the "not found" case to HTTP 404 for both inputs.
-     *
-     * @param int|null    $folderId   Node ID of the folder, or null
-     * @param string|null $folderPath Relative path of the folder, or null
-     * @param Folder      $userFolder The current user's root folder
-     *
-     * @return Node The resolved node (type is validated by caller)
-     *
-     * @throws Exception If neither/both inputs provided (400), or folder not found (404)
-     *
-     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
-     * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
-     */
-    private function resolveFolderNode(?int $folderId, ?string $folderPath, Folder $userFolder): Node
-    {
-        $hasId   = $folderId !== null;
-        $hasPath = $folderPath !== null && $folderPath !== '';
-
-        if ($hasId === false && $hasPath === false) {
-            throw new Exception('Either folderId or folderPath must be provided', 400);
-        }
-
-        if ($hasId === true && $hasPath === true) {
-            throw new Exception('Provide only one of folderId or folderPath', 400);
-        }
-
-        if ($hasId === true) {
-            $nodes = $userFolder->getById($folderId);
-            if (empty($nodes) === true) {
-                throw new Exception('Folder not found', 404);
-            }
-
-            return $this->pickPreferredNode(nodes: $nodes);
-        }
-
-        try {
-            return $userFolder->get($folderPath);
-        } catch (NotFoundException $e) {
-            throw new Exception('Folder not found', 404, $e);
-        }
-
-    }//end resolveFolderNode()
-
-    /**
-     * Pick the preferred node when getById returns multiple mounts
-     *
-     * The same file ID can surface through multiple mounts in one user's
-     * tree (personal storage + share + group folder). Prefer a writable
-     * mount because the batch anonymization flow writes output files back
-     * into the source folder; a read-only mount would succeed at extraction
-     * but fail at write-back time. Fall back to the first readable node
-     * when no writable mount exists — extraction-only use remains valid.
-     *
-     * @param Node[] $nodes Non-empty array of nodes returned by getById
-     *
-     * @return Node The preferred node
-     */
-    private function pickPreferredNode(array $nodes): Node
-    {
-        foreach ($nodes as $candidate) {
-            if (($candidate->getPermissions() & Constants::PERMISSION_UPDATE) === Constants::PERMISSION_UPDATE) {
-                return $candidate;
-            }
-        }
-
-        return $nodes[0];
-
-    }//end pickPreferredNode()
 
     /**
      * Schedule extraction to run after the HTTP response is flushed
@@ -341,99 +268,6 @@ class FolderBatchService
         );
 
     }//end scheduleExtraction()
-
-    /**
-     * Enumerate direct file children of a folder (flat, no recursion)
-     *
-     * Files whose base name ends with the legacy `_anonymized` suffix are
-     * excluded so a re-run of folder-analysis on a folder that already
-     * contains prior anonymisation outputs does not pick up the redacted
-     * copies as fresh source material. The discriminator lives on
-     * `OutputLayoutResolver::isLegacyAnonymizedOutput()` so the same
-     * filter is reused across `FolderBatchService` and any future
-     * folder-flow integration point.
-     *
-     * @param Folder $folder The folder to enumerate
-     *
-     * @return File[] Array of file nodes
-     *
-     * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
-     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
-     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
-     */
-    private function enumerateFiles(Folder $folder): array
-    {
-        $files = [];
-        foreach ($folder->getDirectoryListing() as $node) {
-            if ($node instanceof File === false) {
-                continue;
-            }
-
-            $baseName = pathinfo($node->getName(), PATHINFO_FILENAME);
-            if ($this->layout->isLegacyAnonymizedOutput(baseName: $baseName) === true) {
-                continue;
-            }
-
-            $files[] = $node;
-        }
-
-        return $this->applyConfidentialityPriorityOrdering(files: $files);
-
-    }//end enumerateFiles()
-
-    /**
-     * Optionally reorder enumerated files by confidentiality level.
-     *
-     * A pure suggestion signal: when
-     * `docudesk.confidentiality.prioritise_analysis` is off (default),
-     * returns `$files` untouched — ordering stays byte-for-byte identical to
-     * today. When on, sorts by the normalised confidentiality level
-     * descending (unlabelled files = level 0), using each file's original
-     * position as an explicit, deterministic tie-break — it never skips,
-     * blocks or redacts anything, it only reorders the work queue
-     * (files-confidential-labels, design.md D3).
-     *
-     * @param File[] $files Enumerated files, in their original (directory-listing) order
-     *
-     * @return File[] Files in analysis order
-     *
-     * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
-     */
-    private function applyConfidentialityPriorityOrdering(array $files): array
-    {
-        if ($this->appConfig->getValueBool('docudesk', self::PRIORITISE_ANALYSIS_KEY, false) === false) {
-            return $files;
-        }
-
-        $decorated = [];
-        foreach (array_values($files) as $index => $file) {
-            $level = 0;
-            $label = $this->confidentialityLabel->getLabelForFile($file->getId());
-            if ($label !== null) {
-                $level = $label->getLevel();
-            }
-
-            $decorated[] = [
-                'level' => $level,
-                'index' => $index,
-                'file'  => $file,
-            ];
-        }
-
-        usort(
-            $decorated,
-            static function (array $a, array $b): int {
-                if ($a['level'] !== $b['level']) {
-                    return $b['level'] <=> $a['level'];
-                }
-
-                return $a['index'] <=> $b['index'];
-            }
-        );
-
-        return array_map(static fn (array $entry) => $entry['file'], $decorated);
-
-    }//end applyConfidentialityPriorityOrdering()
 
     /**
      * Get the current user ID

@@ -90,33 +90,24 @@ class PolicyMatchService
     private ?array $rulesCache = null;
 
     /**
-     * Pre-built ASCII transliterator for the `normalized` match type.
-     * Null when PHP intl extension is not loaded (falls back to mb_strtolower).
-     *
-     * @var object|null
-     */
-    private ?object $normaliser = null;
-
-    /**
-     * Whether a Transliterator instance has been attempted (to avoid retrying).
-     *
-     * @var boolean
-     */
-    private bool $normaliserAttempted = false;
-
-    /**
      * Constructor.
      *
-     * @param LoggerInterface    $logger     Structured log sink.
-     * @param ContainerInterface $container  DI container for OpenRegister lookup.
-     * @param IAppManager        $appManager App manager (used to confirm OR is installed).
-     * @param IAppConfig         $config     App config (prohibition high-confidence threshold).
+     * @param LoggerInterface       $logger          Structured log sink.
+     * @param ContainerInterface    $container       DI container for OpenRegister lookup.
+     * @param IAppManager           $appManager      App manager (used to confirm OR is installed).
+     * @param IAppConfig            $config          App config (prohibition high-confidence threshold).
+     * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
+     * @param TextNormaliser        $textNormaliser  Accent-stripping text normaliser.
+     * @param PolicyRuleNormaliser  $ruleNormaliser  Admission + normalisation of stored policy rows.
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly IAppManager $appManager,
-        private readonly IAppConfig $config
+        private readonly IAppConfig $config,
+        private readonly ObjectResultExtractor $resultExtractor=new ObjectResultExtractor(),
+        private readonly TextNormaliser $textNormaliser=new TextNormaliser(),
+        private readonly PolicyRuleNormaliser $ruleNormaliser=new PolicyRuleNormaliser()
     ) {
 
     }//end __construct()
@@ -258,7 +249,7 @@ class PolicyMatchService
             static fn (array $a, array $b): int => strcmp($a['uuid'], $b['uuid'])
         );
 
-        $entityTextNormalised = $this->normalise(value: $entityText);
+        $entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
 
         foreach ($candidates as $rule) {
             foreach ($rule['matchRules'] as $matchRule) {
@@ -304,7 +295,7 @@ class PolicyMatchService
         string $entityText,
         array $resolvedIdentifiers=[]
     ): bool {
-        $entityTextNormalised = $this->normalise(value: $entityText);
+        $entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
         foreach ($matchRules as $rule) {
             if ($this->ruleMatches(
                 type: (string) ($rule['type'] ?? ''),
@@ -345,7 +336,7 @@ class PolicyMatchService
                 return $entityText === $value;
 
             case 'normalized':
-                return $entityTextNormalised === $this->normalise(value: $value);
+                return $entityTextNormalised === $this->textNormaliser->normalise(value: $value);
 
             case 'bsn':
                 $bsn = (string) ($resolvedIdentifiers['bsn'] ?? '');
@@ -370,38 +361,6 @@ class PolicyMatchService
         }//end switch
 
     }//end ruleMatches()
-
-    /**
-     * Lower-case + accent-strip a string for `normalized` matching.
-     *
-     * Falls back to mb_strtolower when the PHP intl extension is not available
-     * (e.g. in bare-CLI CI environments that do not install ext-intl).
-     *
-     * @param string $value Source string.
-     *
-     * @return string Normalised string.
-     */
-    private function normalise(string $value): string
-    {
-        if ($this->normaliserAttempted === false) {
-            $this->normaliserAttempted = true;
-            if (class_exists('Transliterator') === true) {
-                // @phpstan-ignore-next-line — Transliterator is not always available (no ext-intl in CI)
-                $this->normaliser = \Transliterator::create('Any-Latin; Latin-ASCII; Lower');
-            }
-        }
-
-        if ($this->normaliser !== null) {
-            // @phpstan-ignore-next-line — method exists when ext-intl is loaded
-            $transliterated = $this->normaliser->transliterate($value);
-            if (is_string($transliterated) === true) {
-                return trim($transliterated);
-            }
-        }
-
-        return trim(mb_strtolower($value));
-
-    }//end normalise()
 
     /**
      * Load both rule sources and normalise into a single cache.
@@ -460,8 +419,8 @@ class PolicyMatchService
         }
 
         $rules = [];
-        foreach ($this->extractObjects(result: $result) as $obj) {
-            $normalised = $this->normaliseRule(
+        foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
+            $normalised = $this->ruleNormaliser->normaliseRule(
                 kind: self::KIND_PROHIBITION,
                 object: $obj
             );
@@ -504,12 +463,12 @@ class PolicyMatchService
         }
 
         $rules = [];
-        foreach ($this->extractObjects(result: $result) as $obj) {
+        foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
             if (($obj['scope'] ?? 'document') !== 'entity') {
                 continue;
             }
 
-            $normalised = $this->normaliseRule(
+            $normalised = $this->ruleNormaliser->normaliseRule(
                 kind: self::KIND_STANDING_CONSENT,
                 object: $obj
             );
@@ -521,148 +480,6 @@ class PolicyMatchService
         return $rules;
 
     }//end loadStandingConsents()
-
-    /**
-     * Extract plain-array objects from an ObjectService findAll result.
-     *
-     * The service returns ObjectEntity instances; we want the plain data.
-     *
-     * @param mixed $result Whatever findAll returned.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function extractObjects($result): array
-    {
-        // Newer OR versions return ['results' => [...]] or just [...].
-        if (is_array($result) === true) {
-            $candidates = $result['results'] ?? $result;
-            if (is_array($candidates) === false) {
-                return [];
-            }
-        } else if ($result instanceof \Traversable) {
-            $candidates = iterator_to_array(iterator: $result);
-        } else {
-            return [];
-        }
-
-        $objects = [];
-        foreach ($candidates as $candidate) {
-            if (is_array($candidate) === true) {
-                $objects[] = $candidate;
-                continue;
-            }
-
-            // Common ObjectEntity / Magic accessors.
-            if (is_object($candidate) === true) {
-                if (method_exists($candidate, 'getObject') === true) {
-                    $payload = $candidate->getObject();
-                    if (is_array($payload) === true) {
-                        $self = null;
-                        if (method_exists($candidate, 'getUuid') === true) {
-                            $self = $candidate->getUuid();
-                        }
-
-                        if ($self !== null && isset($payload['@self']) === false) {
-                            $payload['@self'] = ['id' => $self];
-                        }
-
-                        $objects[] = $payload;
-                        continue;
-                    }
-                }
-
-                if (method_exists($candidate, 'jsonSerialize') === true) {
-                    $payload = $candidate->jsonSerialize();
-                    if (is_array($payload) === true) {
-                        $objects[] = $payload;
-                        continue;
-                    }
-                }
-            }//end if
-        }//end foreach
-
-        return $objects;
-
-    }//end extractObjects()
-
-    /**
-     * Normalise a raw object into the cache shape.
-     *
-     * Applies time-bound + active filters; returns null when the row should
-     * not be matched (inactive, validity-window closed, missing match rules).
-     *
-     * @param string               $kind   Rule kind.
-     * @param array<string, mixed> $object Raw object data.
-     *
-     * @return array<string, mixed>|null
-     */
-    private function normaliseRule(string $kind, array $object): ?array
-    {
-        if (($object['active'] ?? true) !== true) {
-            return null;
-        }
-
-        $matchRules = $object['matchRules'] ?? null;
-        if (is_array($matchRules) === false || count($matchRules) === 0) {
-            return null;
-        }
-
-        $now        = new \DateTimeImmutable();
-        $validFrom  = $this->parseDateTime(value: (string) ($object['validFrom'] ?? ''));
-        $validUntil = $this->parseDateTime(value: (string) ($object['validUntil'] ?? ''));
-
-        if ($validFrom !== null && $validFrom > $now) {
-            return null;
-        }
-
-        if ($validUntil !== null && $validUntil < $now) {
-            return null;
-        }
-
-        $self = $object['@self'] ?? [];
-        $uuid = (string) ($self['id'] ?? $self['uuid'] ?? $object['id'] ?? $object['uuid'] ?? '');
-        if ($uuid === '') {
-            return null;
-        }
-
-        return [
-            'uuid'        => $uuid,
-            'kind'        => $kind,
-            'entityType'  => (string) ($object['entityType'] ?? 'OTHER'),
-            'matchRules'  => array_values(
-                    array_filter(
-                $matchRules,
-                static fn ($r): bool => is_array($r) === true
-                    && isset($r['type'], $r['value']) === true
-            )
-                    ),
-            'validFrom'   => $validFrom,
-            'validUntil'  => $validUntil,
-            'primaryName' => (string) ($object['primaryName'] ?? $object['entityText'] ?? ''),
-        ];
-
-    }//end normaliseRule()
-
-    /**
-     * Parse an ISO-8601 string into DateTimeImmutable; null on failure.
-     *
-     * @param string $value The raw value (may be empty).
-     *
-     * @return \DateTimeImmutable|null
-     */
-    private function parseDateTime(string $value): ?\DateTimeImmutable
-    {
-        if ($value === '') {
-            return null;
-        }
-
-        try {
-            return new \DateTimeImmutable($value);
-        } catch (Exception) {
-            return null;
-        }
-
-    }//end parseDateTime()
 
     /**
      * Match a detected entity against prohibition rules only.

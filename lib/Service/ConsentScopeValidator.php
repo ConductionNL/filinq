@@ -208,6 +208,24 @@ class ConsentScopeValidator
      */
     private function assertEntityScope(array $consent): void
     {
+        $this->assertEntityHasNoDocumentId(consent: $consent);
+        $this->assertEntityMatchRules(consent: $consent);
+        $this->assertEntityConsentMethod(consent: $consent);
+        $this->assertEntityHasNoPolicyMatch(consent: $consent);
+
+    }//end assertEntityScope()
+
+    /**
+     * Enforce that an entity-scope record carries no documentId.
+     *
+     * @param array<string, mixed> $consent Candidate publicationConsent record.
+     *
+     * @throws InvalidArgumentException When a documentId is present.
+     *
+     * @return void
+     */
+    private function assertEntityHasNoDocumentId(array $consent): void
+    {
         $documentId = $consent['documentId'] ?? null;
         if ($documentId !== null && $documentId !== '') {
             throw new InvalidArgumentException(
@@ -215,6 +233,19 @@ class ConsentScopeValidator
             );
         }
 
+    }//end assertEntityHasNoDocumentId()
+
+    /**
+     * Enforce that an entity-scope record carries at least one well-formed matchRule.
+     *
+     * @param array<string, mixed> $consent Candidate publicationConsent record.
+     *
+     * @throws InvalidArgumentException When matchRules are missing or malformed.
+     *
+     * @return void
+     */
+    private function assertEntityMatchRules(array $consent): void
+    {
         $matchRules = $consent['matchRules'] ?? null;
         if (is_array($matchRules) === false || count($matchRules) === 0) {
             throw new InvalidArgumentException(
@@ -223,22 +254,51 @@ class ConsentScopeValidator
         }
 
         foreach ($matchRules as $idx => $rule) {
-            if (is_array($rule) === false
-                || isset($rule['type'], $rule['value']) === false
-            ) {
-                throw new InvalidArgumentException(
-                    'scope=entity publicationConsent matchRules['.(string) $idx.'] must be a {type, value} object'
-                );
-            }
-
-            $type = (string) $rule['type'];
-            if (in_array($type, ['exact', 'normalized', 'bsn', 'kvk'], true) === false) {
-                throw new InvalidArgumentException(
-                    'scope=entity publicationConsent matchRules['.(string) $idx.'].type must be one of exact|normalized|bsn|kvk (got "'.$type.'")'
-                );
-            }
+            $this->assertEntityMatchRule(rule: $rule, idx: (string) $idx);
         }
 
+    }//end assertEntityMatchRules()
+
+    /**
+     * Enforce the shape and type vocabulary of a single matchRule.
+     *
+     * @param mixed  $rule The candidate matchRule entry.
+     * @param string $idx  The rule's index, used in the error message.
+     *
+     * @throws InvalidArgumentException When the rule is malformed or the type is unknown.
+     *
+     * @return void
+     */
+    private function assertEntityMatchRule(mixed $rule, string $idx): void
+    {
+        if (is_array($rule) === false
+            || isset($rule['type'], $rule['value']) === false
+        ) {
+            throw new InvalidArgumentException(
+                'scope=entity publicationConsent matchRules['.$idx.'] must be a {type, value} object'
+            );
+        }
+
+        $type = (string) $rule['type'];
+        if (in_array($type, ['exact', 'normalized', 'bsn', 'kvk'], true) === false) {
+            throw new InvalidArgumentException(
+                'scope=entity publicationConsent matchRules['.$idx.'].type must be one of exact|normalized|bsn|kvk (got "'.$type.'")'
+            );
+        }
+
+    }//end assertEntityMatchRule()
+
+    /**
+     * Enforce that an entity-scope record declares a recognised consentMethod.
+     *
+     * @param array<string, mixed> $consent Candidate publicationConsent record.
+     *
+     * @throws InvalidArgumentException When the consentMethod is missing or unknown.
+     *
+     * @return void
+     */
+    private function assertEntityConsentMethod(array $consent): void
+    {
         $consentMethod = (string) ($consent['consentMethod'] ?? '');
         if (in_array(
             $consentMethod,
@@ -251,8 +311,22 @@ class ConsentScopeValidator
             );
         }
 
-        // Standing-consent rows are never themselves matched — they are
-        // referenced from scope=document rows via policyMatch.
+    }//end assertEntityConsentMethod()
+
+    /**
+     * Enforce that an entity-scope record carries no policyMatch.
+     *
+     * Standing-consent rows are never themselves matched — they are
+     * referenced from scope=document rows via policyMatch.
+     *
+     * @param array<string, mixed> $consent Candidate publicationConsent record.
+     *
+     * @throws InvalidArgumentException When a policyMatch is present.
+     *
+     * @return void
+     */
+    private function assertEntityHasNoPolicyMatch(array $consent): void
+    {
         if (isset($consent['policyMatch']) === true
             && $consent['policyMatch'] !== null
             && $consent['policyMatch'] !== ''
@@ -262,5 +336,5 @@ class ConsentScopeValidator
             );
         }
 
-    }//end assertEntityScope()
+    }//end assertEntityHasNoPolicyMatch()
 }//end class

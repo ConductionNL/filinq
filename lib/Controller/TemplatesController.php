@@ -3,7 +3,9 @@
  * Templates Controller
  *
  * Controller for managing reusable document templates.
- * Provides CRUD endpoints plus version history, preview, duplication, and locking.
+ * Provides CRUD endpoints plus duplication and edit locking. Version history
+ * lives in {@see TemplateVersionsController}, preview rendering in
+ * {@see TemplatePreviewController}.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
@@ -25,9 +27,7 @@ namespace OCA\DocuDesk\Controller;
 
 use Exception;
 use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\TemplatePreviewService;
 use OCA\DocuDesk\Service\TemplateService;
-use OCA\DocuDesk\Service\TemplateVersionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -36,15 +36,13 @@ use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
- * Controller for template CRUD, versioning, preview, duplication and locking
+ * Controller for template CRUD, duplication and locking
  *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TemplatesController extends Controller
 {
@@ -55,8 +53,6 @@ class TemplatesController extends Controller
      * @param IRequest               $request         The request object
      * @param TemplateService        $templateService Service for template operations
      * @param TemplateRequestHandler $requestHandler  Request param parser and error handler
-     * @param TemplateVersionService $versionService  Service for version operations
-     * @param TemplatePreviewService $previewService  Service for preview rendering
      * @param IUserSession           $userSession     User session for current user
      * @param LoggerInterface        $logger          Logger for not-configured info messages
      *
@@ -67,8 +63,6 @@ class TemplatesController extends Controller
         IRequest $request,
         private readonly TemplateService $templateService,
         private readonly TemplateRequestHandler $requestHandler,
-        private readonly TemplateVersionService $versionService,
-        private readonly TemplatePreviewService $previewService,
         private readonly IUserSession $userSession,
         private readonly LoggerInterface $logger,
     ) {
@@ -151,8 +145,6 @@ class TemplatesController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function show(string $id): JSONResponse
@@ -212,8 +204,6 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function update(string $id): JSONResponse
@@ -245,8 +235,6 @@ class TemplatesController extends Controller
      *
      * @NoAdminRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function destroy(string $id): JSONResponse
@@ -269,201 +257,6 @@ class TemplatesController extends Controller
     }//end destroy()
 
     /**
-     * List version history for a template
-     *
-     * @param string $id The template UUID
-     *
-     * @return JSONResponse JSON response with version list
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
-     * @spec openspec/specs/template-management/spec.md
-     */
-    public function versions(string $id): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
-
-            $limit  = (int) $this->request->getParam('_limit', '20');
-            $offset = (int) $this->request->getParam('_offset', '0');
-            $result = $this->versionService->getVersions(
-                templateId: $id,
-                limit: $limit,
-                offset: $offset
-            );
-            return new JSONResponse(data: $result);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to list versions: ');
-        }
-
-    }//end versions()
-
-    /**
-     * Restore a template to a previous version
-     *
-     * @param string $id        The template UUID
-     * @param string $versionId The version UUID to restore
-     *
-     * @return JSONResponse JSON response with the restored template object
-     *
-     * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
-     * @spec openspec/specs/template-management/spec.md
-     */
-    public function restoreVersion(string $id, string $versionId): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
-
-            $editor = $this->getCurrentUserId();
-            $result = $this->versionService->restoreVersion(
-                templateId: $id,
-                versionId: $versionId,
-                editor: $editor,
-                service: $this->templateService
-            );
-            return new JSONResponse(data: $result);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to restore version: ');
-        }
-
-    }//end restoreVersion()
-
-    /**
-     * Get two versions for diff comparison
-     *
-     * @param string $id The template UUID
-     *
-     * @return JSONResponse JSON response with both version objects
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     *
-     * @spec openspec/specs/template-management/spec.md
-     */
-    public function diffVersions(string $id): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
-
-            $from = $this->request->getParam('from', '');
-            $to   = $this->request->getParam('to', '');
-
-            if (empty($from) === true || empty($to) === true) {
-                throw new Exception(
-                    message: 'Both "from" and "to" version UUIDs are required',
-                    code: 400
-                );
-            }
-
-            $result = $this->versionService->getDiff(
-                versionIdFrom: $from,
-                versionIdTo: $to
-            );
-            return new JSONResponse(data: $result);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to get version diff: ');
-        }//end try
-
-    }//end diffVersions()
-
-    /**
-     * Preview raw template content with sample data
-     *
-     * @return JSONResponse JSON response with rendered HTML
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
-     */
-    public function preview(): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
-
-            $data    = $this->requestHandler->parseBodyParams(request: $this->request);
-            $content = $data['content'] ?? '';
-            $context = $data['data'] ?? [];
-
-            if (empty($content) === true) {
-                throw new Exception(message: 'Content is required for preview', code: 400);
-            }
-
-            $html = $this->previewService->preview(content: $content, data: $context);
-            return new JSONResponse(data: ['html' => $html]);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
-        }//end try
-
-    }//end preview()
-
-    /**
-     * Preview an existing template with sample data
-     *
-     * @param string $id The template UUID
-     *
-     * @return JSONResponse JSON response with rendered HTML
-     *
-     * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
-     * @spec openspec/changes/advanced-template-management/tasks.md#task-5
-     */
-    public function previewTemplate(string $id): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => 'Not authenticated'],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
-
-            $data    = $this->requestHandler->parseBodyParams(request: $this->request);
-            $context = $data['data'] ?? [];
-            $html    = $this->previewService->previewTemplate(templateId: $id, data: $context);
-            return new JSONResponse(data: ['html' => $html]);
-        } catch (Exception $e) {
-            return $this->requestHandler->buildErrorResponse($e, 'Failed to preview template: ');
-        }
-
-    }//end previewTemplate()
-
-    /**
      * Duplicate a template
      *
      * @param string $id The template UUID to duplicate
@@ -471,8 +264,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the duplicated template object
      *
      * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */
@@ -503,8 +294,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the locked template
      *
      * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */
@@ -545,8 +334,6 @@ class TemplatesController extends Controller
      * @return JSONResponse JSON response with the unlocked template
      *
      * @NoAdminRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */

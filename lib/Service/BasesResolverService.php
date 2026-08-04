@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use OCP\App\IAppManager;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -135,31 +136,89 @@ class BasesResolverService
     private function collectFolderIds(array $batch): array
     {
         // Folder-based batch — parent folder is known.
-        if (isset($batch['folderId']) === true && $batch['folderId'] !== null) {
-            $folderId = (int) $batch['folderId'];
-            if ($folderId > 0) {
-                return [$folderId];
-            }
+        $explicitFolderId = $this->extractExplicitFolderId(batch: $batch);
+        if ($explicitFolderId !== null) {
+            return [$explicitFolderId];
         }
 
         // Upload batch — resolve parent folder for each file.
-        $user = $this->userSession->getUser();
-        if ($user === null) {
+        $userFolder = $this->getUserFolder();
+        if ($userFolder === null) {
             return [];
         }
 
+        return $this->resolveParentFolderIds(userFolder: $userFolder, files: $batch['files']);
+
+    }//end collectFolderIds()
+
+    /**
+     * Read the explicitly-supplied folder ID from a folder-based batch.
+     *
+     * Returns null when the batch carries no usable `folderId`, which signals
+     * the caller to fall back to per-file parent resolution.
+     *
+     * @param array<string, mixed> $batch Batch record.
+     *
+     * @return int|null Positive folder node ID, or null when absent/invalid.
+     */
+    private function extractExplicitFolderId(array $batch): ?int
+    {
+        // An isset() check is already false for a null value, so no separate null check.
+        if (isset($batch['folderId']) === false) {
+            return null;
+        }
+
+        $folderId = (int) $batch['folderId'];
+        if ($folderId > 0) {
+            return $folderId;
+        }
+
+        return null;
+
+    }//end extractExplicitFolderId()
+
+    /**
+     * Resolve the current user's home folder.
+     *
+     * Returns null when there is no active user session or when the home
+     * folder cannot be opened — callers treat that as "no folders to inspect".
+     *
+     * @return Folder|null The user's home folder, or null.
+     */
+    private function getUserFolder(): ?Folder
+    {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return null;
+        }
+
         try {
-            $userFolder = $this->rootFolder->getUserFolder(userId: $user->getUID());
+            return $this->rootFolder->getUserFolder(userId: $user->getUID());
         } catch (\Throwable $e) {
             $this->logger->debug(
                 'BasesResolverService: could not get user folder',
                 ['error' => $e->getMessage()]
             );
-            return [];
+            return null;
         }
 
+    }//end getUserFolder()
+
+    /**
+     * Resolve the distinct parent folder IDs of a batch's files.
+     *
+     * Files that cannot be located are skipped; a failure to resolve one file
+     * never aborts the resolution of the remaining files.
+     *
+     * @param Folder                           $userFolder The user's home folder.
+     * @param array<int, array<string, mixed>> $files      File records from the batch.
+     *
+     * @return array<int, int> Distinct parent folder node IDs.
+     */
+    private function resolveParentFolderIds(Folder $userFolder, array $files): array
+    {
         $folderIds = [];
-        foreach ($batch['files'] as $file) {
+        foreach ($files as $file) {
             $fileId = (int) ($file['fileId'] ?? 0);
             if ($fileId <= 0) {
                 continue;
@@ -181,7 +240,7 @@ class BasesResolverService
 
         return array_values($folderIds);
 
-    }//end collectFolderIds()
+    }//end resolveParentFolderIds()
 
     /**
      * Load the `bases[]` array from all dossiers matching a given folder ID.
@@ -243,46 +302,85 @@ class BasesResolverService
      */
     private function extractObjects(mixed $result): array
     {
-        if (is_array($result) === true) {
-            $candidates = $result['results'] ?? $result;
-            if (is_array($candidates) === false) {
-                return [];
-            }
-        } else if ($result instanceof \Traversable) {
-            $candidates = iterator_to_array(iterator: $result);
-        } else {
-            return [];
-        }
-
         $objects = [];
-        foreach ($candidates as $candidate) {
-            if (is_array($candidate) === true) {
-                $objects[] = $candidate;
-                continue;
+        foreach ($this->extractCandidates(result: $result) as $candidate) {
+            $payload = $this->normaliseCandidate(candidate: $candidate);
+            if ($payload !== null) {
+                $objects[] = $payload;
             }
-
-            if (is_object($candidate) === true) {
-                if (method_exists($candidate, 'getObject') === true) {
-                    $payload = $candidate->getObject();
-                    if (is_array($payload) === true) {
-                        $objects[] = $payload;
-                        continue;
-                    }
-                }
-
-                if (method_exists($candidate, 'jsonSerialize') === true) {
-                    $payload = $candidate->jsonSerialize();
-                    if (is_array($payload) === true) {
-                        $objects[] = $payload;
-                        continue;
-                    }
-                }
-            }//end if
-        }//end foreach
+        }
 
         return $objects;
 
     }//end extractObjects()
+
+    /**
+     * Unwrap a findAll return value into a flat list of candidate entries.
+     *
+     * Accepts both the paginated `['results' => [...]]` envelope and a bare
+     * list, as well as any Traversable. Anything else yields an empty list.
+     *
+     * @param mixed $result Raw findAll return value.
+     *
+     * @return array<int|string, mixed> Candidate entries.
+     */
+    private function extractCandidates(mixed $result): array
+    {
+        if ($result instanceof \Traversable) {
+            return iterator_to_array(iterator: $result);
+        }
+
+        if (is_array($result) === false) {
+            return [];
+        }
+
+        $candidates = $result['results'] ?? $result;
+        if (is_array($candidates) === false) {
+            return [];
+        }
+
+        return $candidates;
+
+    }//end extractCandidates()
+
+    /**
+     * Normalise a single candidate entry into a plain array payload.
+     *
+     * Plain arrays are returned unchanged; objects are unwrapped via
+     * `getObject()` and then `jsonSerialize()`. Returns null when the
+     * candidate cannot be represented as an array.
+     *
+     * @param mixed $candidate Candidate entry from a findAll result.
+     *
+     * @return array<string, mixed>|null Plain array payload, or null.
+     */
+    private function normaliseCandidate(mixed $candidate): ?array
+    {
+        if (is_array($candidate) === true) {
+            return $candidate;
+        }
+
+        if (is_object($candidate) === false) {
+            return null;
+        }
+
+        if (method_exists($candidate, 'getObject') === true) {
+            $payload = $candidate->getObject();
+            if (is_array($payload) === true) {
+                return $payload;
+            }
+        }
+
+        if (method_exists($candidate, 'jsonSerialize') === true) {
+            $payload = $candidate->jsonSerialize();
+            if (is_array($payload) === true) {
+                return $payload;
+            }
+        }
+
+        return null;
+
+    }//end normaliseCandidate()
 
     /**
      * Try to obtain OpenRegister's ObjectService from the DI container.

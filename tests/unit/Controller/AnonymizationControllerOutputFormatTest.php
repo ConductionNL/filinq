@@ -234,7 +234,6 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             ->with(
                 fileId: 1,
                 entities: $this->anything(),
-                appendBasisSummary: false,
                 outputFormat: 'pdf'
             )
             ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
@@ -265,7 +264,6 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             ->with(
                 fileId: 2,
                 entities: $this->anything(),
-                appendBasisSummary: false,
                 outputFormat: 'preserve'
             )
             ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'y']);
@@ -303,7 +301,6 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             ->with(
                 fileId: 5,
                 entities: $this->anything(),
-                appendBasisSummary: false,
                 outputFormat: 'preserve'
             )
             ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'z']);
@@ -337,7 +334,6 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             ->with(
                 fileId: 6,
                 entities: $this->anything(),
-                appendBasisSummary: false,
                 outputFormat: 'pdf'
             )
             ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'a']);
@@ -374,7 +370,6 @@ class AnonymizationControllerOutputFormatTest extends TestCase
             ->with(
                 fileId: 7,
                 entities: $this->anything(),
-                appendBasisSummary: false,
                 outputFormat: 'pdf'
             )
             ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'b']);

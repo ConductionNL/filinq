@@ -44,8 +44,6 @@ use Psr\Container\ContainerInterface;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class TemplateService
 {
@@ -161,8 +159,6 @@ class TemplateService
      *
      * @throws Exception If the template is not found
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function getTemplate(string $id): array
@@ -255,8 +251,6 @@ class TemplateService
      *
      * @throws Exception If the template is not found or update fails
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function updateTemplate(string $id, array $data): array
@@ -314,8 +308,6 @@ class TemplateService
      *
      * @throws Exception If the template is not found or update fails
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function updateTemplateWithoutVersion(string $id, array $data): array
@@ -355,8 +347,6 @@ class TemplateService
      * @return bool True if deletion succeeded
      *
      * @throws Exception If the template is not found or deletion fails
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */
@@ -404,8 +394,6 @@ class TemplateService
      * @return array The duplicated template object
      *
      * @throws Exception If the template is not found or duplication fails
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */
@@ -456,8 +444,6 @@ class TemplateService
      *
      * @throws Exception If the template is locked by another user (code 409)
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/specs/template-management/spec.md
      */
     public function acquireLock(string $id, string $userId): array
@@ -505,8 +491,6 @@ class TemplateService
      * @return array The updated template object with lock cleared
      *
      * @throws Exception If the template is not locked by this user
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/specs/template-management/spec.md
      */

@@ -29,15 +29,12 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Controller;
 
-use Exception;
 use OCA\DocuDesk\Exception\ConversionFailedException;
-use OCA\DocuDesk\Exception\ProhibitionGateException;
 use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\AnonymizeRequestService;
 use OCA\DocuDesk\Service\FileListingService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IL10N;
@@ -58,6 +55,16 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationController extends Controller
 {
+
+    /**
+     * Workflow behind the anonymize endpoints: authentication, per-user file
+     * access verification, body validation, the prohibition guards and the
+     * anonymisation call itself.
+     *
+     * @var AnonymizeRequestService
+     */
+    private readonly AnonymizeRequestService $anonymizeRequest;
+
     /**
      * Constructor for AnonymizationController
      *
@@ -86,6 +93,14 @@ class AnonymizationController extends Controller
         private readonly IRootFolder $rootFolder,
     ) {
         parent::__construct(appName: $appName, request: $request);
+
+        $this->anonymizeRequest = new AnonymizeRequestService(
+            logger: $this->logger,
+            anonymizationService: $this->anonymizationService,
+            l10n: $this->l10n,
+            rootFolder: $this->rootFolder,
+            userSession: $this->userSession
+        );
 
     }//end __construct()
 
@@ -123,8 +138,9 @@ class AnonymizationController extends Controller
     public function files(): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            $authError = $this->anonymizeRequest->requireAuthenticated();
+            if ($authError !== null) {
+                return new JSONResponse($authError['body'], $authError['status']);
             }
 
             $result = $this->fileListingService->listProcessedFiles();
@@ -163,8 +179,9 @@ class AnonymizationController extends Controller
     public function upload(): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            $authError = $this->anonymizeRequest->requireAuthenticated();
+            if ($authError !== null) {
+                return new JSONResponse($authError['body'], $authError['status']);
             }
 
             $file = $this->request->getUploadedFile('file');
@@ -215,46 +232,6 @@ class AnonymizationController extends Controller
     }//end upload()
 
     /**
-     * Verify the current user has access to the given file ID
-     *
-     * Resolves the file via the user's own file tree so that an authenticated
-     * user cannot operate on files they do not own (security finding C3 —
-     * file IDOR). Returns 404 on failure so callers cannot probe for existence.
-     *
-     * @param int $fileId The Nextcloud file ID to check
-     *
-     * @return JSONResponse|null Null when access is granted, 404 response otherwise
-     */
-    private function verifyFileAccess(int $fileId): ?JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Not authenticated')],
-                Http::STATUS_UNAUTHORIZED
-            );
-        }
-
-        $nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-        if (empty($nodes) === true) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('File not found')],
-                Http::STATUS_NOT_FOUND
-            );
-        }
-
-        if (($nodes[0] instanceof File) === false) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('File not found')],
-                Http::STATUS_NOT_FOUND
-            );
-        }
-
-        return null;
-
-    }//end verifyFileAccess()
-
-    /**
      * Extract text and detect entities in a file
      *
      * Runs text extraction and entity recognition on the specified file.
@@ -270,21 +247,24 @@ class AnonymizationController extends Controller
     public function extract(int $fileId): JSONResponse
     {
         try {
-            if ($this->userSession->getUser() === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            $authError = $this->anonymizeRequest->requireAuthenticated();
+            if ($authError !== null) {
+                return new JSONResponse($authError['body'], $authError['status']);
             }
 
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            $accessError = $this->anonymizeRequest->verifyFileAccess(fileId: $fileId);
             if ($accessError !== null) {
-                return $accessError;
+                return new JSONResponse($accessError['body'], $accessError['status']);
             }
 
             // Default: resume (cached) — reuse existing entities when the file
             // is unchanged. `force=true` requests an explicit re-analysis.
-            $force  = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
-            $result = $this->anonymizationService->extractAndDetectEntities($fileId, $force);
+            $force = filter_var($this->request->getParam('force', false), FILTER_VALIDATE_BOOLEAN);
+            if ($force === true) {
+                return new JSONResponse($this->anonymizationService->reExtractAndDetectEntities($fileId));
+            }
 
-            return new JSONResponse($result);
+            return new JSONResponse($this->anonymizationService->extractAndDetectEntities($fileId));
         } catch (\Throwable $e) {
             $this->logger->error(
                 'Failed to extract and detect entities: '.$e->getMessage(),
@@ -323,91 +303,33 @@ class AnonymizationController extends Controller
     public function anonymize(int $fileId): JSONResponse
     {
         try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+            $authError = $this->anonymizeRequest->requireAuthenticated();
+            if ($authError !== null) {
+                return new JSONResponse($authError['body'], $authError['status']);
             }
 
             // Validate request body BEFORE file-access checks so that malformed
             // input always yields HTTP 400 regardless of whether the file exists.
-            $params   = $this->request->getParams();
-            $entities = $params['entities'] ?? [];
-
-            if (is_array($entities) === false || empty($entities) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('No entities provided for anonymization')],
-                    400
-                );
-            }
-
-            // Detect stray bases fields for ignoredFields hint (GDPR accountability).
-            $hasStrayBases = false;
-            foreach ($entities as $entity) {
-                if (is_array($entity) === true && array_key_exists('bases', $entity) === true) {
-                    $hasStrayBases = true;
-                    break;
-                }
-            }
-
-            $appendBasisSummary = $this->extractAppendBasisSummary(params: $params);
-            if ($appendBasisSummary instanceof JSONResponse) {
-                return $appendBasisSummary;
-            }
-
-            $unredactedEntities = $params['unredactedEntities'] ?? [];
-            if (is_array($unredactedEntities) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities must be an array')],
-                    400
-                );
-            }
-
-            if (empty($unredactedEntities) === false) {
-                $validationError = $this->validateUnredactedEntities(entries: $unredactedEntities);
-                if ($validationError !== null) {
-                    return $validationError;
-                }
-            }//end if
-
-            // Parse and validate acknowledgedOverrides.
-            $acknowledgedOverrides = $params['acknowledgedOverrides'] ?? [];
-            if (is_array($acknowledgedOverrides) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('acknowledgedOverrides must be an array')],
-                    400
-                );
-            }
-
-            $overridesError = $this->validateAcknowledgedOverrides(overrides: $acknowledgedOverrides);
-            if ($overridesError !== null) {
-                return $overridesError;
+            $params    = $this->request->getParams();
+            $validated = $this->anonymizeRequest->validateBody(params: $params);
+            if ($validated['error'] !== null) {
+                return new JSONResponse($validated['error']['body'], $validated['error']['status']);
             }
 
             // File access check MUST precede the prohibition oracle so that unauthenticated
             // or unauthorized callers cannot probe prohibition rules by supplying arbitrary
             // entity names without holding access to the target file (OWASP A01:2021).
-            $accessError = $this->verifyFileAccess(fileId: $fileId);
+            $accessError = $this->anonymizeRequest->verifyFileAccess(fileId: $fileId);
             if ($accessError !== null) {
-                return $accessError;
+                return new JSONResponse($accessError['body'], $accessError['status']);
             }
 
-            if (empty($unredactedEntities) === false) {
-                $violations = $this->anonymizationService->checkUnredactedProhibitions(
-                    unredactedEntities: $unredactedEntities
-                );
-                if (empty($violations) === false) {
-                    return new JSONResponse(
-                        [
-                            'error'             => $this->l10n->t(
-                                'One or more unredacted entities match a publication-prohibition rule. '
-                                .'Move those entities to entities[] to anonymize them instead.'
-                            ),
-                            'prohibitedEntries' => $violations,
-                        ],
-                        422
-                    );
-                }
-            }//end if
+            $prohibited = $this->anonymizeRequest->checkUnredactedProhibitions(
+                unredactedEntities: $validated['request']['unredactedEntities']
+            );
+            if ($prohibited !== null) {
+                return new JSONResponse($prohibited['body'], $prohibited['status']);
+            }
 
             // Anonymise-output-as-pdf-by-default: optional `outputFormat`
             // selects PDF conversion vs native-format preservation.
@@ -428,90 +350,13 @@ class AnonymizationController extends Controller
                 );
             }
 
-            $entities = $this->filterByExcludeTypes(entities: $entities, params: $params);
-            $entities = $this->filterByConfidence(entities: $entities, params: $params);
-
-            // Placeholder-numbering scope (anonymisation-placeholder-id-scope):
-            // forwarded to OpenRegister. 'document' (default) numbers entities
-            // locally to this file; 'dossier' makes the number consistent across
-            // the dossier folder's files. `dossierKey` is the stable folder id;
-            // when omitted under scope=dossier, OpenRegister falls back to the
-            // file's parent folder. Any value other than 'dossier' normalises to
-            // per-document.
-            $scopeParam = (string) ($params['scope'] ?? 'document');
-            $scope      = 'document';
-            if ($scopeParam === 'dossier') {
-                $scope = 'dossier';
-            }
-
-            $dossierKeyParam = $params['dossierKey'] ?? null;
-            $dossierKey      = null;
-            if ($dossierKeyParam !== null && $dossierKeyParam !== '') {
-                $dossierKey = (string) $dossierKeyParam;
-            }
-
-            // Defence-in-depth backstop (Robert): refuse if an absolute-tier
-            // prohibition entity would be left un-redacted (e.g. skipped by
-            // bypassing the guarded skip endpoint and PATCHing OpenRegister
-            // directly). Complements the request-payload prohibition gate that
-            // runProhibitionGate() enforces inside anonymizeDocument().
-            $violations = $this->anonymizationService->absoluteProhibitionViolations($fileId);
-            if (empty($violations) === false) {
-                return new JSONResponse(
-                    [
-                        'error'                     => $this->l10n->t(
-                            'Anonymisation blocked: prohibition-listed entities would be left un-redacted.'
-                        ),
-                        'missingProhibitionMatches' => $violations,
-                    ],
-                    422
-                );
-            }
-
             try {
-                $result = $this->anonymizationService->anonymizeDocument(
+                $result = $this->anonymizeRequest->executeAnonymize(
                     fileId: $fileId,
-                    entities: $entities,
-                    appendBasisSummary: $appendBasisSummary,
-                    outputFormat: $outputFormat,
-                    unredactedEntities: $unredactedEntities,
-                    acknowledgedOverrides: $acknowledgedOverrides,
-                    userId: $user->getUID(),
-                    scope: $scope,
-                    dossierKey: $dossierKey
-                );
-            } catch (ProhibitionGateException $e) {
-                // Fail-closed (backend outage) → 503 so clients can retry;
-                // rule-match block → 422 with structured missing/rejected
-                // body so the UI can prompt for overrides.
-                $backendReason = $e->getBackendUnavailable();
-                if ($backendReason !== null) {
-                    $this->logger->warning(
-                        'ProhibitionGate failed closed: '.$backendReason,
-                        ['fileId' => $fileId]
-                    );
-                    return new JSONResponse(
-                        [
-                            'error'              => $this->l10n->t(
-                                'Anonymisation temporarily unavailable: the prohibition gate could not '
-                                .'verify the document. Please retry shortly.'
-                            ),
-                            'backendUnavailable' => $backendReason,
-                        ],
-                        503
-                    );
-                }
-
-                return new JSONResponse(
-                    [
-                        'error'                     => $this->l10n->t(
-                            'Anonymisation blocked: one or more prohibition-listed entities are missing '
-                            .'from the to-be-anonymised set or an override was rejected.'
-                        ),
-                        'missingProhibitionMatches' => $e->getMissingProhibitionMatches(),
-                        'rejectedOverrides'         => $e->getRejectedOverrides(),
-                    ],
-                    422
+                    userId: $this->anonymizeRequest->currentUserId(),
+                    params: $params,
+                    request: $validated['request'],
+                    outputFormat: $outputFormat
                 );
             } catch (ConversionFailedException $e) {
                 $this->logger->warning(
@@ -533,11 +378,7 @@ class AnonymizationController extends Controller
                 );
             }//end try
 
-            if ($hasStrayBases === true) {
-                $result['ignoredFields'] = ['bases'];
-            }
-
-            return new JSONResponse($result);
+            return new JSONResponse($result['body'], $result['status']);
         } catch (\Throwable $e) {
             $this->logger->error(
                 'Failed to anonymize document: '.$e->getMessage(),
@@ -550,126 +391,6 @@ class AnonymizationController extends Controller
         }//end try
 
     }//end anonymize()
-
-    /**
-     * Extract and validate the appendBasisSummary flag from request params.
-     *
-     * Returns a JSONResponse (HTTP 400) when the field is present but not boolean.
-     *
-     * @param array<string, mixed> $params Request parameters
-     *
-     * @return bool|JSONResponse False when omitted, true when set, 400 response on type error.
-     *
-     * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
-     */
-    private function extractAppendBasisSummary(array $params): bool|JSONResponse
-    {
-        if (array_key_exists('appendBasisSummary', $params) === false) {
-            return false;
-        }
-
-        $value = $params['appendBasisSummary'];
-        if (is_bool($value) === false) {
-            return new JSONResponse(
-                ['error' => $this->l10n->t('appendBasisSummary must be a boolean')],
-                400
-            );
-        }
-
-        return $value;
-
-    }//end extractAppendBasisSummary()
-
-    /**
-     * Validate the unredactedEntities[] payload entries.
-     *
-     * Each entry must have:
-     *   - entityId   (int, required)
-     *   - entityText (string, required)
-     *   - entityType (string, required)
-     *   - publicationBases (array of strings, required, non-empty)
-     * Optional:
-     *   - contactEmail   (string)
-     *   - contactAddress (string)
-     *
-     * @param array<int, mixed> $entries The unredactedEntities array from the request
-     *
-     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-1
-     */
-    private function validateUnredactedEntities(array $entries): ?JSONResponse
-    {
-        foreach ($entries as $idx => $entry) {
-            if (is_array($entry) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Each unredactedEntities entry must be an object (index %s)', [$idx])],
-                    400
-                );
-            }
-
-            if (isset($entry['entityId']) === false || is_int($entry['entityId']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].entityId is required and must be an integer', [$idx])],
-                    400
-                );
-            }
-
-            if (empty($entry['entityText']) === true || is_string($entry['entityText']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].entityText is required and must be a string', [$idx])],
-                    400
-                );
-            }
-
-            if (empty($entry['entityType']) === true || is_string($entry['entityType']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].entityType is required and must be a string', [$idx])],
-                    400
-                );
-            }
-
-            if (isset($entry['publicationBases']) === false || is_array($entry['publicationBases']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases is required and must be an array', [$idx])],
-                    400
-                );
-            }
-
-            if (empty($entry['publicationBases']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].publicationBases must contain at least one basis', [$idx])],
-                    400
-                );
-            }
-
-            foreach ($entry['publicationBases'] as $base) {
-                if (is_string($base) === false) {
-                    return new JSONResponse(
-                        ['error' => $this->l10n->t('Each entry in unredactedEntities[%s].publicationBases must be a string', [$idx])],
-                        400
-                    );
-                }
-            }
-
-            if (isset($entry['contactEmail']) === true && is_string($entry['contactEmail']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].contactEmail must be a string', [$idx])],
-                    400
-                );
-            }
-
-            if (isset($entry['contactAddress']) === true && is_string($entry['contactAddress']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('unredactedEntities[%s].contactAddress must be a string', [$idx])],
-                    400
-                );
-            }
-        }//end foreach
-
-        return null;
-
-    }//end validateUnredactedEntities()
 
     /**
      * Record a per-entity skip/include decision, guarded by the prohibition policy.
@@ -686,49 +407,17 @@ class AnonymizationController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
      */
     public function updateRelation(int $id): JSONResponse
     {
-        try {
-            $params = $this->request->getParams();
+        $result = $this->anonymizeRequest->applyRelationDecision(
+            relationId: $id,
+            params: $this->request->getParams()
+        );
 
-            $skip = false;
-            if (array_key_exists('skipAnonymization', $params) === true) {
-                if (is_bool($params['skipAnonymization']) === false) {
-                    return new JSONResponse(
-                        ['error' => $this->l10n->t('Invalid skipAnonymization: must be a boolean')],
-                        400
-                    );
-                }
-
-                $skip = $params['skipAnonymization'];
-            }
-
-            $bases = null;
-            if (array_key_exists('bases', $params) === true && is_array($params['bases']) === true) {
-                $bases = array_values($params['bases']);
-            }
-
-            $force = filter_var(($params['force'] ?? false), FILTER_VALIDATE_BOOLEAN);
-
-            $result = $this->anonymizationService->applyRelationSkipDecision(
-                relationId: $id,
-                skip: $skip,
-                bases: $bases,
-                force: $force
-            );
-
-            return new JSONResponse($result['body'], $result['status']);
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to update entity relation decision: '.$e->getMessage(),
-                ['exception' => $e]
-            );
-            return new JSONResponse(
-                ['error' => $this->l10n->t('Failed to update entity relation decision')],
-                500
-            );
-        }//end try
+        return new JSONResponse($result['body'], $result['status']);
 
     }//end updateRelation()
 
@@ -745,6 +434,8 @@ class AnonymizationController extends Controller
      *
      * @return string|null Resolved outputFormat ('pdf-only'|'pdf'|'preserve'),
      *                     or null when an invalid value was supplied.
+     *
+     * @spec openspec/specs/anonymization/spec.md
      */
     private function resolveOutputFormat(array $params): ?string
     {
@@ -774,113 +465,4 @@ class AnonymizationController extends Controller
         return $tenantDefault;
 
     }//end resolveOutputFormat()
-
-    /**
-     * Validate the acknowledgedOverrides[] payload entries.
-     *
-     * Each entry must have:
-     *   - ruleId   (string, required)
-     *   - entityId (int, required)
-     * Optional:
-     *   - reason (string)
-     *
-     * @param array<int, mixed> $overrides The acknowledgedOverrides array from the request.
-     *
-     * @return JSONResponse|null HTTP 400 on the first invalid entry, null when all valid.
-     *
-     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
-     */
-    private function validateAcknowledgedOverrides(array $overrides): ?JSONResponse
-    {
-        foreach ($overrides as $idx => $override) {
-            if (is_array($override) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('Each acknowledgedOverrides entry must be an object (index %s)', [$idx])],
-                    400
-                );
-            }
-
-            if (empty($override['ruleId']) === true || is_string($override['ruleId']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].ruleId is required and must be a string', [$idx])],
-                    400
-                );
-            }
-
-            if (isset($override['entityId']) === false || is_int($override['entityId']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].entityId is required and must be an integer', [$idx])],
-                    400
-                );
-            }
-
-            if (isset($override['reason']) === true && is_string($override['reason']) === false) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('acknowledgedOverrides[%s].reason must be a string', [$idx])],
-                    400
-                );
-            }
-        }//end foreach
-
-        return null;
-
-    }//end validateAcknowledgedOverrides()
-
-    /**
-     * Filter entities by excluded types
-     *
-     * @param array<int, array<string, mixed>> $entities The entities
-     * @param array<string, mixed>             $params   Request parameters
-     *
-     * @return array<int, array<string, mixed>> Filtered entities
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function filterByExcludeTypes(array $entities, array $params): array
-    {
-        $excludeTypes = $params['excludeTypes'] ?? [];
-        if (is_array($excludeTypes) === false || empty($excludeTypes) === true) {
-            return $entities;
-        }
-
-        return array_values(
-            array_filter(
-                $entities,
-                static function (array $entity) use ($excludeTypes): bool {
-                    $type = $entity['type'] ?? $entity['entityType'] ?? '';
-                    return in_array($type, $excludeTypes, true) === false;
-                }
-            )
-        );
-
-    }//end filterByExcludeTypes()
-
-    /**
-     * Filter entities by minimum confidence threshold
-     *
-     * @param array<int, array<string, mixed>> $entities The entities
-     * @param array<string, mixed>             $params   Request parameters
-     *
-     * @return array<int, array<string, mixed>> Filtered entities
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function filterByConfidence(array $entities, array $params): array
-    {
-        if (isset($params['minConfidence']) === false) {
-            return $entities;
-        }
-
-        $minConfidence = (float) $params['minConfidence'];
-
-        return array_values(
-            array_filter(
-                $entities,
-                static function (array $entity) use ($minConfidence): bool {
-                    return (float) ($entity['confidence'] ?? 0.0) >= $minConfidence;
-                }
-            )
-        );
-
-    }//end filterByConfidence()
 }//end class

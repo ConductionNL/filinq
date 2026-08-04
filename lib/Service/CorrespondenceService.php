@@ -48,7 +48,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-2

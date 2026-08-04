@@ -116,68 +116,18 @@ class FolderExtractionJob extends QueuedJob
 
         $userId = ($batch['userId'] ?? '');
 
-        foreach ($batch['files'] as $i => $file) {
+        foreach ($batch['files'] as $index => $file) {
             // Skip files that are not freshly uploaded (idempotent retry:
             // already-anonymized / skipped / error entries are left as-is).
             if (($file['status'] ?? '') !== 'uploaded') {
                 continue;
             }
 
-            $fileName = ($file['fileName'] ?? '');
-
-            // Source-discovery filter: a `_anonymized`-suffixed file is a prior
-            // anonymisation output and must not be re-processed.
-            if ($this->layoutResolver->hasAnonymizedSuffix($fileName) === true) {
-                $batch['files'][$i]['status'] = 'skipped';
-                $this->stateService->updateBatch($batchId, $batch);
-                continue;
-            }
-
-            try {
-                $extraction = $this->anonService->extractAndDetectEntities((int) $file['fileId']);
-                $batch['files'][$i]['entityCount'] = ($extraction['entityCount'] ?? 0);
-            } catch (Exception $e) {
-                $this->logger->warning(
-                    'FolderExtractionJob: extraction failed for file',
-                    ['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
-                );
-                $batch['files'][$i]['status'] = 'error';
-                $batch['files'][$i]['error']  = $e->getMessage();
-                $this->stateService->updateBatch($batchId, $batch);
-                continue;
-            }
-
-            try {
-                $anonResult = $this->anonService->anonymizeDocument(
-                    (int) $file['fileId'],
-                    ($extraction['entities'] ?? [])
-                );
-            } catch (Exception $e) {
-                $this->logger->warning(
-                    'FolderExtractionJob: anonymization failed for file',
-                    ['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
-                );
-                $batch['files'][$i]['status'] = 'error';
-                $batch['files'][$i]['error']  = $e->getMessage();
-                $this->stateService->updateBatch($batchId, $batch);
-                continue;
-            }
-
-            $batch['files'][$i]['status'] = 'anonymized';
-            $batch['files'][$i]['anonymizedFilePath'] = ($anonResult['anonymizedFilePath'] ?? null);
-
-            // Apply the output-folder layout: move the redacted copy into the
-            // configured subfolder, recording the new path or a move-failure
-            // warning. Only attempted when OR produced a real file node.
-            $anonymizedFileId = ($anonResult['anonymizedFileId'] ?? null);
-            if ($anonymizedFileId !== null) {
-                $batch['files'][$i] = $this->applyOutputLayout(
-                    fileEntry: $batch['files'][$i],
-                    userId: $userId,
-                    anonymizedFileId: (int) $anonymizedFileId,
-                    legacyPath: ($anonResult['anonymizedFilePath'] ?? '')
-                );
-            }
+            $batch['files'][$index] = $this->processFileEntry(
+                fileEntry: $batch['files'][$index],
+                batchId: $batchId,
+                userId: $userId
+            );
 
             $this->stateService->updateBatch($batchId, $batch);
         }//end foreach
@@ -185,22 +135,141 @@ class FolderExtractionJob extends QueuedJob
         $batch['status'] = 'completed';
         $this->stateService->updateBatch($batchId, $batch);
 
-        $anonymized = 0;
-        $errors     = 0;
-        foreach ($batch['files'] as $f) {
-            if ($f['status'] === 'anonymized') {
-                $anonymized++;
-            } else if ($f['status'] === 'error') {
-                $errors++;
-            }
-        }
+        $summary = $this->summariseOutcome(files: $batch['files']);
 
         $this->logger->info(
-            "FolderExtractionJob completed: {$anonymized} anonymized, {$errors} errors",
+            "FolderExtractionJob completed: {$summary['anonymized']} anonymized, {$summary['errors']} errors",
             ['batchId' => $batchId]
         );
 
     }//end run()
+
+    /**
+     * Extract, anonymise and re-file a single freshly-uploaded batch entry.
+     *
+     * Returns the updated entry; the caller persists the batch afterwards. A
+     * prior `_anonymized` output is skipped, and either processing step failing
+     * marks the entry as `error` without aborting the batch.
+     *
+     * @param array<string, mixed> $fileEntry The batch file entry to process.
+     * @param string               $batchId   The batch id, for log context.
+     * @param string               $userId    Owning user id.
+     *
+     * @return array<string, mixed> The updated file entry.
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+     */
+    private function processFileEntry(array $fileEntry, string $batchId, string $userId): array
+    {
+        $fileName = ($fileEntry['fileName'] ?? '');
+
+        // Source-discovery filter: a `_anonymized`-suffixed file is a prior
+        // anonymisation output and must not be re-processed.
+        if ($this->layoutResolver->hasAnonymizedSuffix($fileName) === true) {
+            $fileEntry['status'] = 'skipped';
+            return $fileEntry;
+        }
+
+        try {
+            $extraction = $this->anonService->extractAndDetectEntities((int) $fileEntry['fileId']);
+            $fileEntry['entityCount'] = ($extraction['entityCount'] ?? 0);
+        } catch (Exception $e) {
+            return $this->markEntryFailed(
+                fileEntry: $fileEntry,
+                batchId: $batchId,
+                message: 'FolderExtractionJob: extraction failed for file',
+                error: $e->getMessage()
+            );
+        }
+
+        try {
+            $anonResult = $this->anonService->anonymizeDocument(
+                (int) $fileEntry['fileId'],
+                ($extraction['entities'] ?? [])
+            );
+        } catch (Exception $e) {
+            return $this->markEntryFailed(
+                fileEntry: $fileEntry,
+                batchId: $batchId,
+                message: 'FolderExtractionJob: anonymization failed for file',
+                error: $e->getMessage()
+            );
+        }
+
+        $fileEntry['status'] = 'anonymized';
+        $fileEntry['anonymizedFilePath'] = ($anonResult['anonymizedFilePath'] ?? null);
+
+        // Apply the output-folder layout: move the redacted copy into the
+        // configured subfolder, recording the new path or a move-failure
+        // warning. Only attempted when OR produced a real file node.
+        $anonymizedFileId = ($anonResult['anonymizedFileId'] ?? null);
+        if ($anonymizedFileId !== null) {
+            $fileEntry = $this->applyOutputLayout(
+                fileEntry: $fileEntry,
+                userId: $userId,
+                anonymizedFileId: (int) $anonymizedFileId,
+                legacyPath: ($anonResult['anonymizedFilePath'] ?? '')
+            );
+        }
+
+        return $fileEntry;
+
+    }//end processFileEntry()
+
+    /**
+     * Mark a batch entry as failed and log the underlying reason.
+     *
+     * @param array<string, mixed> $fileEntry The batch file entry to mark.
+     * @param string               $batchId   The batch id, for log context.
+     * @param string               $message   The log message describing the failed step.
+     * @param string               $error     The underlying exception message.
+     *
+     * @return array<string, mixed> The updated file entry.
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+     */
+    private function markEntryFailed(array $fileEntry, string $batchId, string $message, string $error): array
+    {
+        $this->logger->warning(
+            $message,
+            ['batchId' => $batchId, 'fileId' => $fileEntry['fileId'], 'error' => $error]
+        );
+
+        $fileEntry['status'] = 'error';
+        $fileEntry['error']  = $error;
+
+        return $fileEntry;
+
+    }//end markEntryFailed()
+
+    /**
+     * Count anonymised and errored entries for the completion log line.
+     *
+     * @param array<int|string, array<string, mixed>> $files The batch's file entries.
+     *
+     * @return array{anonymized: int, errors: int} The outcome tally.
+     *
+     * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
+     */
+    private function summariseOutcome(array $files): array
+    {
+        $anonymized = 0;
+        $errors     = 0;
+
+        foreach ($files as $entry) {
+            if ($entry['status'] === 'anonymized') {
+                $anonymized++;
+            } else if ($entry['status'] === 'error') {
+                $errors++;
+            }
+        }
+
+        return [
+            'anonymized' => $anonymized,
+            'errors'     => $errors,
+        ];
+
+    }//end summariseOutcome()
 
     /**
      * Move the anonymized output into the configured output subfolder.

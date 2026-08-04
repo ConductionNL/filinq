@@ -57,6 +57,7 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationServiceProhibitionTest extends TestCase
 {
+    use BuildsAnonymizationService;
 
     /**
      * @var LoggerInterface|MockObject
@@ -114,41 +115,17 @@ class AnonymizationServiceProhibitionTest extends TestCase
      */
     private function makeService(): AnonymizationService
     {
-        return new AnonymizationService(
-            logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $this->mockAppManager,
-            entityDetection: $this->entityDetection,
-            appConfig: $this->mockAppConfig,
-            consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
-            consentService: $this->createMock(originalClassName: ConsentService::class),
-            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
-            fileEntityStats: $this->createMock(originalClassName: \OCA\DocuDesk\Service\FileEntityStatsService::class),
-            pdfConversion: $this->createMock(originalClassName: \OCA\DocuDesk\Service\PdfConversionService::class),
-            emlAssembly: $this->createMock(originalClassName: \OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
-            customDictionary: $this->makeNoOpCustomDictionaryService(),
-            confidentialityLabel: $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConfidentialityLabelService::class),
-            customDictionaryDetection: $this->createMock(
-                originalClassName: \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
-            )
+        return $this->makeAnonymizationServiceFrom(
+            [
+                'logger'          => $this->mockLogger,
+                'container'       => $this->mockContainer,
+                'appManager'      => $this->mockAppManager,
+                'appConfig'       => $this->mockAppConfig,
+                'entityDetection' => $this->entityDetection,
+            ]
         );
 
     }//end makeService()
-
-    /**
-     * Build a CustomDictionaryService mock that reports no active
-     * dictionaries, so the custom-dictionary detection pass is a no-op for
-     * these prohibition-focused tests.
-     *
-     * @return CustomDictionaryService
-     */
-    private function makeNoOpCustomDictionaryService(): CustomDictionaryService
-    {
-        $service = $this->createMock(originalClassName: CustomDictionaryService::class);
-        $service->method('listActiveDictionariesForDetection')->willReturn([]);
-        return $service;
-
-    }//end makeNoOpCustomDictionaryService()
 
 
     /**

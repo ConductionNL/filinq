@@ -20,8 +20,9 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\AnonymizationService;
+use OCA\DocuDesk\Service\AnonymizationPersistenceService;
 use OCA\DocuDesk\Service\ConsentCrudService;
+use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\CustomDictionaryMatchService;
 use OCA\DocuDesk\Service\CustomDictionaryService;
@@ -152,13 +153,18 @@ class AnonymizationLinkServiceTest extends TestCase
 
 
     /**
-     * Build an AnonymizationService whose container resolves the given fake ObjectService.
+     * Build the persistence service whose container resolves the fake ObjectService.
+     *
+     * `recordAnonymizationLink()` is owned by AnonymizationPersistenceService —
+     * the collaborator AnonymizationService delegates the post-run persistence to
+     * — so the behaviour is exercised on its owner instead of through a private
+     * pass-through on the orchestrator.
      *
      * @param object $objectService The fake OR object service.
      *
-     * @return AnonymizationService
+     * @return AnonymizationPersistenceService
      */
-    private function buildService(object $objectService): AnonymizationService
+    private function buildService(object $objectService): AnonymizationPersistenceService
     {
         $container = $this->createMock(originalClassName: ContainerInterface::class);
         $container->method('get')->willReturn($objectService);
@@ -166,48 +172,37 @@ class AnonymizationLinkServiceTest extends TestCase
         $appManager = $this->createMock(originalClassName: IAppManager::class);
         $appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-        return new AnonymizationService(
+        return new AnonymizationPersistenceService(
             logger: new NullLogger(),
-            container: $container,
-            appManager: $appManager,
-            entityDetection: $this->createMock(originalClassName: EntityDetectionService::class),
-            appConfig: $this->createMock(originalClassName: IAppConfig::class),
+            locator: new OpenRegisterServiceLocator($appManager, $container),
             consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
-            consentService: $this->createMock(originalClassName: ConsentService::class),
-            grondslagenSummary: $this->createMock(originalClassName: GrondslagenSummaryService::class),
-            fileEntityStats: $this->createMock(originalClassName: FileEntityStatsService::class),
-            pdfConversion: $this->createMock(originalClassName: PdfConversionService::class),
-            emlAssembly: $this->createMock(originalClassName: EmlPdfAssemblyService::class),
-            customDictionary: $this->createMock(originalClassName: CustomDictionaryService::class),
-            confidentialityLabel: $this->createMock(originalClassName: \OCA\DocuDesk\Service\ConfidentialityLabelService::class),
-            customDictionaryDetection: $this->createMock(
-                originalClassName: \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
-            )
+            consentService: $this->createMock(originalClassName: ConsentService::class)
         );
 
     }//end buildService()
 
 
     /**
-     * Invoke the private recordAnonymizationLink() via reflection.
+     * Record an anonymisation link through the owning service.
      *
-     * @param AnonymizationService $service    The service under test.
-     * @param int                  $fileId     Source file id.
-     * @param mixed                $sourceNode Source node (or null).
-     * @param array<string, mixed> $resultInfo Anonymisation result info.
+     * @param AnonymizationPersistenceService $service    The service under test.
+     * @param int                             $fileId     Source file id.
+     * @param mixed                           $sourceNode Source node (or null).
+     * @param array<string, mixed>            $resultInfo Anonymisation result info.
      *
      * @return array<string, mixed> The (possibly enriched) result info.
      */
     private function invokeRecord(
-        AnonymizationService $service,
+        AnonymizationPersistenceService $service,
         int $fileId,
         mixed $sourceNode,
         array $resultInfo
     ): array {
-        $method = new ReflectionMethod(objectOrMethod: $service, method: 'recordAnonymizationLink');
-        $method->setAccessible(accessible: true);
-
-        return $method->invokeArgs($service, [$fileId, $sourceNode, $resultInfo]);
+        return $service->recordAnonymizationLink(
+            fileId: $fileId,
+            sourceNode: $sourceNode,
+            resultInfo: $resultInfo
+        );
 
     }//end invokeRecord()
 

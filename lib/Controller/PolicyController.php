@@ -2,9 +2,9 @@
 /**
  * Policy Controller
  *
- * Controller for CRUD on the two policy surfaces — `publicationProhibition`
- * records (deny-list) and `publicationConsent` records with `scope: "entity"`
- * (standing consents). Backs the three admin pages in the Vue UI.
+ * Controller for CRUD on the `publicationProhibition` policy surface
+ * (deny-list). The sibling `publicationConsent` / `scope: "entity"` surface
+ * (standing consents) lives in {@see StandingConsentController}.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
@@ -32,10 +32,9 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 
 /**
- * Policy-surface CRUD endpoints.
+ * Prohibition policy-surface CRUD endpoints.
  *
  * @category Controller
  * @package  OCA\DocuDesk\Controller
@@ -82,7 +81,10 @@ class PolicyController extends Controller
         }
 
         try {
-            $this->crudService->requireProhibitionPermission(action: 'read');
+            $this->crudService->requirePolicyPermission(
+                surface: PolicyCrudService::SURFACE_PROHIBITION,
+                action: 'read'
+            );
             return new JSONResponse($this->crudService->listProhibitions());
         } catch (Exception $e) {
             return $this->error(message: 'Failed to list prohibitions: ', exception: $e);
@@ -99,8 +101,6 @@ class PolicyController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function showProhibition(string $id): JSONResponse
     {
@@ -109,7 +109,10 @@ class PolicyController extends Controller
         }
 
         try {
-            $this->crudService->requireProhibitionPermission(action: 'read');
+            $this->crudService->requirePolicyPermission(
+                surface: PolicyCrudService::SURFACE_PROHIBITION,
+                action: 'read'
+            );
             $record = $this->crudService->getProhibition(uuid: $id);
             if ($record === null) {
                 return new JSONResponse(['error' => $this->l10n->t('Prohibition not found')], 404);
@@ -137,7 +140,10 @@ class PolicyController extends Controller
         }
 
         try {
-            $this->crudService->requireProhibitionPermission(action: 'create');
+            $this->crudService->requirePolicyPermission(
+                surface: PolicyCrudService::SURFACE_PROHIBITION,
+                action: 'create'
+            );
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->createProhibition(data: $data), 201);
         } catch (InvalidArgumentException $e) {
@@ -157,8 +163,6 @@ class PolicyController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function updateProhibition(string $id): JSONResponse
     {
@@ -167,7 +171,10 @@ class PolicyController extends Controller
         }
 
         try {
-            $this->crudService->requireProhibitionPermission(action: 'update');
+            $this->crudService->requirePolicyPermission(
+                surface: PolicyCrudService::SURFACE_PROHIBITION,
+                action: 'update'
+            );
             $data = $this->request->getParams();
             return new JSONResponse($this->crudService->updateProhibition(uuid: $id, data: $data));
         } catch (InvalidArgumentException $e) {
@@ -187,8 +194,6 @@ class PolicyController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function deleteProhibition(string $id): JSONResponse
     {
@@ -197,7 +202,10 @@ class PolicyController extends Controller
         }
 
         try {
-            $this->crudService->requireProhibitionPermission(action: 'delete');
+            $this->crudService->requirePolicyPermission(
+                surface: PolicyCrudService::SURFACE_PROHIBITION,
+                action: 'delete'
+            );
             $this->crudService->deleteProhibition(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
         } catch (Exception $e) {
@@ -205,153 +213,6 @@ class PolicyController extends Controller
         }
 
     }//end deleteProhibition()
-
-    /**
-     * List standing consents.
-     *
-     * @return JSONResponse
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function indexStandingConsents(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $this->crudService->requireStandingConsentPermission(action: 'read');
-            return new JSONResponse($this->crudService->listStandingConsents());
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to list standing consents: ', exception: $e);
-        }
-
-    }//end indexStandingConsents()
-
-    /**
-     * Show a single standing consent.
-     *
-     * @param string $id Record UUID.
-     *
-     * @return JSONResponse
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     */
-    public function showStandingConsent(string $id): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $this->crudService->requireStandingConsentPermission(action: 'read');
-            $record = $this->crudService->getStandingConsent(uuid: $id);
-            if ($record === null) {
-                return new JSONResponse(['error' => $this->l10n->t('Standing consent not found')], 404);
-            }
-
-            return new JSONResponse($record);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to load standing consent: ', exception: $e);
-        }
-
-    }//end showStandingConsent()
-
-    /**
-     * Create a standing consent.
-     *
-     * @return JSONResponse
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function createStandingConsent(): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $this->crudService->requireStandingConsentPermission(action: 'create');
-            $data = $this->request->getParams();
-            return new JSONResponse($this->crudService->createStandingConsent(data: $data), 201);
-        } catch (RuntimeException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 403);
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to create standing consent: ', exception: $e);
-        }
-
-    }//end createStandingConsent()
-
-    /**
-     * Update a standing consent.
-     *
-     * @param string $id Record UUID.
-     *
-     * @return JSONResponse
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     */
-    public function updateStandingConsent(string $id): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $this->crudService->requireStandingConsentPermission(action: 'update');
-            $data = $this->request->getParams();
-            return new JSONResponse(
-                $this->crudService->updateStandingConsent(uuid: $id, data: $data)
-            );
-        } catch (RuntimeException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 403);
-        } catch (InvalidArgumentException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to update standing consent: ', exception: $e);
-        }
-
-    }//end updateStandingConsent()
-
-    /**
-     * Delete a standing consent.
-     *
-     * @param string $id Record UUID.
-     *
-     * @return JSONResponse
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     */
-    public function deleteStandingConsent(string $id): JSONResponse
-    {
-        if ($this->userSession->getUser() === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
-        }
-
-        try {
-            $this->crudService->requireStandingConsentPermission(action: 'delete');
-            $this->crudService->deleteStandingConsent(uuid: $id);
-            return new JSONResponse(['deleted' => $id]);
-        } catch (RuntimeException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 403);
-        } catch (Exception $e) {
-            return $this->error(message: 'Failed to delete standing consent: ', exception: $e);
-        }
-
-    }//end deleteStandingConsent()
 
     /**
      * Wrap an exception into a 500 JSON response and log it.

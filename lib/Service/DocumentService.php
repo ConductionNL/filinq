@@ -31,9 +31,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
-use RuntimeException;
 use OCA\DocuDesk\BackgroundJob\BatchDocumentJob;
-use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -48,9 +46,6 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.DocuDesk.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveClassLength)
  */
 class DocumentService
 {
@@ -100,53 +95,29 @@ class DocumentService
     /**
      * Constructor for DocumentService.
      *
-     * @param TemplateService        $templateService  Service for template CRUD
-     * @param DataResolverService    $dataResolver     Service for OpenRegister data resolution
-     * @param TemplateRenderer       $templateRenderer Service for Twig rendering
-     * @param PdfService             $pdfService       Service for PDF generation
-     * @param DocumentStorageService $storageService   Service for storing output in Files
-     * @param ContainerInterface     $container        Container for dependency injection
-     * @param IAppManager            $appManager       App manager interface
-     * @param IJobList               $jobList          Nextcloud job list for async processing
-     * @param LoggerInterface        $logger           Logger for error reporting
+     * @param TemplateService         $templateService Service for template CRUD
+     * @param DataResolverService     $dataResolver    Service for OpenRegister data resolution
+     * @param DocumentRenderPipeline  $renderPipeline  Huisstijl + Twig rendering and output production
+     * @param DocumentStorageService  $storageService  Service for storing output in Files
+     * @param GeneratedDocumentLogger $documentLogger  Audit-trail writer for generated documents
+     * @param ContainerInterface      $container       Container for dependency injection
+     * @param IJobList                $jobList         Nextcloud job list for async processing
+     * @param LoggerInterface         $logger          Logger for error reporting
      *
      * @return void
      */
     public function __construct(
         private readonly TemplateService $templateService,
         private readonly DataResolverService $dataResolver,
-        private readonly TemplateRenderer $templateRenderer,
-        private readonly PdfService $pdfService,
+        private readonly DocumentRenderPipeline $renderPipeline,
         private readonly DocumentStorageService $storageService,
+        private readonly GeneratedDocumentLogger $documentLogger,
         private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
         private readonly IJobList $jobList,
         private readonly LoggerInterface $logger
     ) {
 
     }//end __construct()
-
-    /**
-     * Get the ObjectService from OpenRegister.
-     *
-     * @return \OCA\OpenRegister\Service\ObjectService The ObjectService instance
-     *
-     * @throws RuntimeException If OpenRegister is not available
-     */
-    private function getObjectService(): \OCA\OpenRegister\Service\ObjectService
-    {
-        if (in_array(
-            needle: 'openregister',
-            haystack: $this->appManager->getInstalledApps(),
-            strict: true
-        ) === true
-        ) {
-            return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-        }
-
-        throw new RuntimeException(message: 'OpenRegister service is not available.');
-
-    }//end getObjectService()
 
     /**
      * Generate a single document from a template and data references.
@@ -202,13 +173,13 @@ class DocumentService
             $warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
         }
 
-        $huisstijl    = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-        $pdfOptions   = $this->buildPdfOptions(
+        $huisstijl    = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+        $pdfOptions   = $this->renderPipeline->buildPdfOptions(
             template: $template,
             huisstijl: $huisstijl,
             options: $options
         );
-        $renderResult = $this->renderWithHuisstijl(
+        $renderResult = $this->renderPipeline->renderWithHuisstijl(
             templateContent: $template['content'],
             data: $data,
             huisstijl: $huisstijl
@@ -216,7 +187,7 @@ class DocumentService
         $htmlContent  = $renderResult['html'];
         $warnings     = array_merge($warnings, $renderResult['warnings']);
 
-        $content = $this->produceOutput(
+        $content = $this->renderPipeline->produceOutput(
             htmlContent: $htmlContent,
             format: $format,
             pdfOptions: $pdfOptions
@@ -233,20 +204,23 @@ class DocumentService
         );
         $warnings = $stored['warnings'];
 
-        $templateVersion = (int) ($template['version'] ?? 1);
-        $metadata        = $this->logGeneratedDocument(
-            templateId: $templateId,
-            templateVersion: $templateVersion,
-            templateName: ($template['name'] ?? ''),
+        $metadata = $this->documentLogger->log(
+            template: [
+                'id'      => $templateId,
+                'version' => (int) ($template['version'] ?? 1),
+                'name'    => ($template['name'] ?? ''),
+            ],
             dataRefs: $dataRefs,
             format: $format,
-            status: 'generated',
-            warnings: $warnings,
-            zaakId: ($options['zaakId'] ?? null),
-            errorMessage: null,
-            options: $options,
-            fileId: $stored['fileId'],
-            filePath: $stored['path']
+            outcome: [
+                'status'       => 'generated',
+                'warnings'     => $warnings,
+                'zaakId'       => ($options['zaakId'] ?? null),
+                'errorMessage' => null,
+                'fileId'       => $stored['fileId'],
+                'filePath'     => $stored['path'],
+            ],
+            userId: (string) ($options['userId'] ?? '')
         );
 
         return [
@@ -306,8 +280,8 @@ class DocumentService
             $warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
         }
 
-        $huisstijl    = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-        $renderResult = $this->renderWithHuisstijl(
+        $huisstijl    = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+        $renderResult = $this->renderPipeline->renderWithHuisstijl(
             templateContent: $template['content'],
             data: $data,
             huisstijl: $huisstijl
@@ -676,323 +650,6 @@ class DocumentService
     }//end storeOutputIfRequested()
 
     /**
-     * Load the huisstijl configuration from OpenRegister.
-     *
-     * @param string|null $huisstijlId UUID of the huisstijl object, or null
-     *
-     * @return array|null The huisstijl configuration or null if not configured
-     */
-    private function loadHuisstijl(?string $huisstijlId): ?array
-    {
-        if (empty($huisstijlId) === true) {
-            return null;
-        }
-
-        try {
-            $objectService = $this->getObjectService();
-            $result        = $objectService->find(
-                id: $huisstijlId,
-                register: 'document',
-                schema: 'huisstijl'
-            );
-
-            if (empty($result) === true) {
-                return null;
-            }
-
-            if (is_object($result) === true
-                && method_exists(object_or_class: $result, method: 'jsonSerialize') === true
-            ) {
-                return $result->jsonSerialize();
-            }
-
-            return $result;
-        } catch (Exception $e) {
-            $this->logger->warning(
-                message: 'Failed to load huisstijl: '.$e->getMessage(),
-                context: ['huisstijlId' => $huisstijlId]
-            );
-            return null;
-        }//end try
-
-    }//end loadHuisstijl()
-
-    /**
-     * Build PDF generation options from template and huisstijl config.
-     *
-     * @param array      $template  The template object
-     * @param array|null $huisstijl The huisstijl configuration
-     * @param array      $options   The request options
-     *
-     * @return array The merged PDF options
-     */
-    private function buildPdfOptions(array $template, ?array $huisstijl, array $options): array
-    {
-        $pdfOptions = [
-            'format'      => $template['format'] ?? 'A4',
-            'orientation' => $template['orientation'] ?? 'P',
-        ];
-
-        if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
-            $pdfOptions['margin'] = $huisstijl['defaultMargins'];
-        }
-
-        if (isset($options['pdfOptions']) === true) {
-            $pdfOptions = array_merge($pdfOptions, $options['pdfOptions']);
-        }
-
-        return $pdfOptions;
-
-    }//end buildPdfOptions()
-
-    /**
-     * Render template content with optional huisstijl header and footer.
-     *
-     * @param string     $templateContent The Twig template content
-     * @param array      $data            The data context
-     * @param array|null $huisstijl       The huisstijl configuration
-     *
-     * @return array{html: string, warnings: string[]} The rendered HTML plus
-     *         any generation warnings raised by chart()/data_table() calls
-     *
-     * @throws Exception If rendering fails
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-002
-     */
-    private function renderWithHuisstijl(
-        string $templateContent,
-        array $data,
-        ?array $huisstijl
-    ): array {
-        $fullContent = '';
-        $warnings    = [];
-
-        if ($huisstijl !== null && empty($huisstijl['headerHtml']) === false) {
-            $headerData   = array_merge($data, ['huisstijl' => $huisstijl]);
-            $fullContent .= $this->templateRenderer->renderTemplate(
-                templateContent: $huisstijl['headerHtml'],
-                data: $headerData,
-                huisstijl: $huisstijl
-            );
-            $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
-        }
-
-        $fullContent .= $this->templateRenderer->renderTemplate(
-            templateContent: $templateContent,
-            data: $data,
-            huisstijl: $huisstijl
-        );
-        $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
-
-        if ($huisstijl !== null && empty($huisstijl['footerHtml']) === false) {
-            $footerData   = array_merge($data, ['huisstijl' => $huisstijl]);
-            $fullContent .= $this->templateRenderer->renderTemplate(
-                templateContent: $huisstijl['footerHtml'],
-                data: $footerData,
-                huisstijl: $huisstijl
-            );
-            $warnings     = array_merge($warnings, $this->templateRenderer->getLastRenderWarnings());
-        }
-
-        return [
-            'html'     => $fullContent,
-            'warnings' => $warnings,
-        ];
-
-    }//end renderWithHuisstijl()
-
-    /**
-     * Produce output in the requested format.
-     *
-     * @param string $htmlContent The rendered HTML content
-     * @param string $format      The output format (pdf, odf, html)
-     * @param array  $pdfOptions  The PDF generation options
-     *
-     * @return string The generated content (binary for pdf/odf, string for html)
-     *
-     * @throws Exception If output generation fails
-     */
-    private function produceOutput(string $htmlContent, string $format, array $pdfOptions): string
-    {
-        switch ($format) {
-            case 'html':
-                return $htmlContent;
-
-            case 'odf':
-                return $this->convertToOdf(
-                    htmlContent: $htmlContent,
-                    pdfOptions: $pdfOptions
-                );
-
-            case 'pdf':
-            default:
-                return $this->pdfService->renderPdf(
-                    templateContent: $htmlContent,
-                    data: [],
-                    options: $pdfOptions
-                );
-        }//end switch
-
-    }//end produceOutput()
-
-    /**
-     * Convert HTML to ODF (.odt) using LibreOffice headless.
-     *
-     * @param string $htmlContent The HTML content to convert
-     * @param array  $pdfOptions  The page configuration options (reserved)
-     *
-     * @return string The ODT binary content
-     *
-     * @throws Exception If LibreOffice is not available or conversion fails
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter) $pdfOptions reserved for future page config
-     *
-     * @psalm-suppress UnusedParam $pdfOptions reserved for future page config
-     * @psalm-suppress ForbiddenCode shell_exec is required to locate the LibreOffice binary
-     */
-    private function convertToOdf(string $htmlContent, array $pdfOptions): string
-    {
-        $soffice = trim((string) shell_exec('which soffice 2>/dev/null'));
-        if (empty($soffice) === true) {
-            throw new Exception(
-                message: 'ODF conversion service unavailable: LibreOffice is not installed',
-                code: 503
-            );
-        }
-
-        $tempDir = '/tmp/docudesk_odf_convert';
-        if (file_exists($tempDir) === false) {
-            mkdir($tempDir, 0700, true);
-        }
-
-        $tempFile = $tempDir.'/'.uniqid('odf_').'.html';
-        file_put_contents($tempFile, $htmlContent);
-
-        try {
-            $outDir  = escapeshellarg($tempDir);
-            $inFile  = escapeshellarg($tempFile);
-            $command = escapeshellcmd($soffice)." --headless --convert-to odt --outdir {$outDir} {$inFile} 2>&1";
-
-            $output     = [];
-            $returnCode = 0;
-            exec($command, $output, $returnCode);
-
-            if ($returnCode !== 0) {
-                throw new Exception(
-                    message: 'ODF conversion failed: '.implode("\n", $output),
-                    code: 500
-                );
-            }
-
-            $odtFile = preg_replace('/\.html$/', '.odt', $tempFile);
-            if (file_exists($odtFile) === false) {
-                throw new Exception(
-                    message: 'ODF output file not found after conversion',
-                    code: 500
-                );
-            }
-
-            $content = file_get_contents($odtFile);
-            unlink($odtFile);
-
-            return $content;
-        } finally {
-            if (file_exists($tempFile) === true) {
-                unlink($tempFile);
-            }
-        }//end try
-
-    }//end convertToOdf()
-
-    /**
-     * Log a generated document to the document register for audit trail (DCS-072).
-     *
-     * Stores template UUID + version number per DCS-051, data sources, format,
-     * status, and generating user.
-     *
-     * @param string      $templateId      The template UUID
-     * @param int         $templateVersion The template version number
-     * @param string      $templateName    The template name
-     * @param array       $dataRefs        The data references used
-     * @param string      $format          The output format
-     * @param string      $status          'generated' or 'failed'
-     * @param string[]    $warnings        Any warnings encountered
-     * @param string|null $zaakId          Optional zaak UUID to link
-     * @param string|null $errorMessage    Error message if status is failed
-     * @param array       $options         The request options (for userId)
-     * @param int|null    $fileId          The stored file's Nextcloud file id, if stored
-     * @param string|null $filePath        The stored file's path, if stored
-     *
-     * @return array The created document register entry
-     *
-     * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-     * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-004
-     */
-    private function logGeneratedDocument(
-        string $templateId,
-        int $templateVersion,
-        string $templateName,
-        array $dataRefs,
-        string $format,
-        string $status,
-        array $warnings,
-        ?string $zaakId,
-        ?string $errorMessage,
-        array $options,
-        ?int $fileId=null,
-        ?string $filePath=null
-    ): array {
-        try {
-            $objectService = $this->getObjectService();
-
-            $entry = [
-                'templateId'      => $templateId,
-                'templateVersion' => $templateVersion,
-                'templateName'    => $templateName,
-                'dataRefs'        => $dataRefs,
-                'format'          => $format,
-                'status'          => $status,
-                'generatedAt'     => date('c'),
-                'generatedBy'     => $options['userId'] ?? '',
-                'warnings'        => $warnings,
-                'zaakId'          => $zaakId,
-                'errorMessage'    => $errorMessage,
-                'fileId'          => $fileId,
-                'filePath'        => $filePath,
-            ];
-
-            $result = $objectService->saveObject(
-                object: $entry,
-                register: 'document',
-                schema: 'generatedDocument'
-            );
-
-            if (is_object($result) === true
-                && method_exists(object_or_class: $result, method: 'jsonSerialize') === true
-            ) {
-                return $result->jsonSerialize();
-            }
-
-            if (is_array($result) === true) {
-                return $result;
-            }
-
-            return [];
-        } catch (Exception $e) {
-            $this->logger->error(
-                message: 'Failed to log generated document: '.$e->getMessage(),
-                context: [
-                    'templateId'      => $templateId,
-                    'templateVersion' => $templateVersion,
-                    'status'          => $status,
-                ]
-            );
-            return [];
-        }//end try
-
-    }//end logGeneratedDocument()
-
-    /**
      * Process a bulk generation request synchronously.
      *
      * Honours `options.output.mode` per object exactly as single-generate
@@ -1059,17 +716,23 @@ class DocumentService
                     'error'    => $e->getMessage(),
                 ];
 
-                $this->logGeneratedDocument(
-                    templateId: $templateId,
-                    templateVersion: 0,
-                    templateName: '',
+                $this->documentLogger->log(
+                    template: [
+                        'id'      => $templateId,
+                        'version' => 0,
+                        'name'    => '',
+                    ],
                     dataRefs: $dataRefs,
                     format: ($options['format'] ?? self::DEFAULT_FORMAT),
-                    status: 'failed',
-                    warnings: [],
-                    zaakId: null,
-                    errorMessage: $e->getMessage(),
-                    options: $options
+                    outcome: [
+                        'status'       => 'failed',
+                        'warnings'     => [],
+                        'zaakId'       => null,
+                        'errorMessage' => $e->getMessage(),
+                        'fileId'       => null,
+                        'filePath'     => null,
+                    ],
+                    userId: (string) ($options['userId'] ?? '')
                 );
             }//end try
         }//end foreach

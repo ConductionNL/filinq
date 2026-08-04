@@ -92,26 +92,9 @@ class MetadataController extends Controller
 
             $data = $this->request->getParams();
 
-            // Validate required fields.
-            if (isset($data['objectId']) === false || empty($data['objectId']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('objectId is required')],
-                    400
-                );
-            }
-
-            if (isset($data['register']) === false || empty($data['register']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('register is required')],
-                    400
-                );
-            }
-
-            if (isset($data['schema']) === false || empty($data['schema']) === true) {
-                return new JSONResponse(
-                    ['error' => $this->l10n->t('schema is required')],
-                    400
-                );
+            $validationError = $this->validateEnrichParams(data: $data);
+            if ($validationError !== null) {
+                return $validationError;
             }
 
             // Get object data for enrichment.
@@ -120,28 +103,28 @@ class MetadataController extends Controller
             // Run metadata enhancement.
             $metadata = $this->metadataService->enhanceMetadata($objectData);
 
-            if (empty($metadata) === false) {
-                // Save enriched metadata back to OpenRegister.
-                $result = $this->metadataService->saveEnrichedMetadata(
-                    $data['objectId'],
-                    $data['register'],
-                    $data['schema'],
-                    $metadata
-                );
-
+            if (empty($metadata) === true) {
                 return new JSONResponse(
                         [
-                            'success'        => true,
-                            'enrichedFields' => array_keys($metadata),
-                            'object'         => $result,
+                            'success' => true,
+                            'message' => $this->l10n->t('No metadata enrichment needed'),
                         ]
                         );
             }
 
+            // Save enriched metadata back to OpenRegister.
+            $result = $this->metadataService->saveEnrichedMetadata(
+                $data['objectId'],
+                $data['register'],
+                $data['schema'],
+                $metadata
+            );
+
             return new JSONResponse(
                     [
-                        'success' => true,
-                        'message' => $this->l10n->t('No metadata enrichment needed'),
+                        'success'        => true,
+                        'enrichedFields' => array_keys($metadata),
+                        'object'         => $result,
                     ]
                     );
         } catch (Exception $e) {
@@ -158,4 +141,31 @@ class MetadataController extends Controller
         }//end try
 
     }//end enrich()
+
+    /**
+     * Validate the required enrichment request parameters.
+     *
+     * @param array<string, mixed> $data The raw request parameters.
+     *
+     * @return JSONResponse|null A 400 response naming the first missing field, or null when valid.
+     *
+     * @spec openspec/specs/metadata-enrichment/spec.md
+     */
+    private function validateEnrichParams(array $data): ?JSONResponse
+    {
+        if (empty($data['objectId']) === true) {
+            return new JSONResponse(['error' => $this->l10n->t('objectId is required')], 400);
+        }
+
+        if (empty($data['register']) === true) {
+            return new JSONResponse(['error' => $this->l10n->t('register is required')], 400);
+        }
+
+        if (empty($data['schema']) === true) {
+            return new JSONResponse(['error' => $this->l10n->t('schema is required')], 400);
+        }
+
+        return null;
+
+    }//end validateEnrichParams()
 }//end class

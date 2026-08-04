@@ -287,7 +287,7 @@ version — privileged users MAY write directly.
 
 Standing-consent creation MUST flow through exactly one service entry point,
 `PolicyCrudService::createStandingConsent()` (reached over HTTP via
-`PolicyController::createStandingConsent`). There MUST NOT be a second,
+`StandingConsentController::create`). There MUST NOT be a second,
 divergent create path for the same records: any superseded duplicate (e.g. a
 never-called `ConsentService::createEntityConsent()`) MUST be removed so the
 scope-write RBAC contract is enforced in exactly one place.

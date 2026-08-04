@@ -67,36 +67,47 @@ class DocumentSigningRequestedEvent extends Event
     /**
      * Construct the request event.
      *
-     * @param string            $sourceApp         The consumer app requesting the signature
-     * @param string            $subjectRegister   OpenRegister register of the originating object
-     * @param string            $subjectSchema     OpenRegister schema of the originating object
-     * @param string            $subjectId         OpenRegister id of the originating object
+     * The six provenance fields (sourceApp, subjectRegister, subjectSchema,
+     * subjectId, externalReference, correlationId) are grouped into
+     * {@see SigningProvenance} — the same value object its sibling
+     * {@see SigningConcludedEvent} already takes. The two events describe the
+     * two ends of one exchange, so they now carry provenance the same way.
+     *
+     * The READ surface is unchanged: every flat accessor below still exists and
+     * still returns what it did, so listeners and consumers that only read the
+     * event need no change. Only construction moved.
+     *
+     * @param SigningProvenance $provenance        Who asked, and about which object.
      * @param string            $subjectLabel      Human display label for the subject
      * @param string            $documentReference NC Files file id / path or document content reference
      * @param array<int, mixed> $signers           Ordered signers list (userId/displayName/email/order)
      * @param string            $signatureLevel    Signature level (SES|AdES|QES)
      * @param string            $signingMode       Signing mode (sequential|parallel)
-     * @param string            $externalReference Consumer's own reference (idempotency/linking)
-     * @param string            $correlationId     Correlation id echoed on the conclusion event
      *
      * @return void
      */
     public function __construct(
-        private readonly string $sourceApp,
-        private readonly string $subjectRegister,
-        private readonly string $subjectSchema,
-        private readonly string $subjectId,
+        private readonly SigningProvenance $provenance,
         private readonly string $subjectLabel='',
         private readonly string $documentReference='',
         private readonly array $signers=[],
         private readonly string $signatureLevel='SES',
         private readonly string $signingMode='sequential',
-        private readonly string $externalReference='',
-        private readonly string $correlationId='',
     ) {
         parent::__construct();
 
     }//end __construct()
+
+    /**
+     * Get the provenance block.
+     *
+     * @return SigningProvenance The provenance.
+     */
+    public function getProvenance(): SigningProvenance
+    {
+        return $this->provenance;
+
+    }//end getProvenance()
 
     /**
      * Get the consumer app that requested the signature.
@@ -105,7 +116,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getSourceApp(): string
     {
-        return $this->sourceApp;
+        return $this->provenance->getSourceApp();
 
     }//end getSourceApp()
 
@@ -116,7 +127,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getSubjectRegister(): string
     {
-        return $this->subjectRegister;
+        return (string) $this->provenance->getSubjectRegister();
 
     }//end getSubjectRegister()
 
@@ -127,7 +138,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getSubjectSchema(): string
     {
-        return $this->subjectSchema;
+        return (string) $this->provenance->getSubjectSchema();
 
     }//end getSubjectSchema()
 
@@ -138,7 +149,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getSubjectId(): string
     {
-        return $this->subjectId;
+        return (string) $this->provenance->getSubjectId();
 
     }//end getSubjectId()
 
@@ -204,7 +215,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getExternalReference(): string
     {
-        return $this->externalReference;
+        return $this->provenance->getExternalReference();
 
     }//end getExternalReference()
 
@@ -215,7 +226,7 @@ class DocumentSigningRequestedEvent extends Event
      */
     public function getCorrelationId(): string
     {
-        return $this->correlationId;
+        return $this->provenance->getCorrelationId();
 
     }//end getCorrelationId()
 

@@ -90,8 +90,6 @@ class DossierController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      */
     public function generateGrondslagenSummary(string $dossierId): JSONResponse
     {

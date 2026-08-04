@@ -10,13 +10,15 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1-2 days.
   the mocking pattern in `tests/unit/Service/PolicyMatchServiceTest.php` /
   `ConsentControllerTest.php` (mock `IUserSession`, `IGroupManager`,
   `ObjectService`/container as needed).
-- [ ] A-1.2 Test `requireProhibitionPermission('read'|'create'|'update'|'delete')`:
-  a user in `docudesk-policy-admins` succeeds (no exception) for all four
-  actions; a user not in the group throws `RuntimeException`; a null
-  current user (unauthenticated) throws.
-- [ ] A-1.3 Test `requireStandingConsentPermission(...)` with the same
-  four-action matrix against `docudesk-standing-consent-admins`
-  (`PolicyCrudService::STANDING_CONSENT_GROUP`).
+- [ ] A-1.2 Test `requirePolicyPermission(PolicyCrudService::SURFACE_PROHIBITION,
+  'read'|'create'|'update'|'delete')`: a user in `docudesk-policy-admins`
+  succeeds (no exception) for all four actions; a user not in the group throws
+  `RuntimeException`; a null current user (unauthenticated) throws.
+- [ ] A-1.3 Test `requirePolicyPermission(PolicyCrudService::SURFACE_STANDING_CONSENT, ...)`
+  with the same four-action matrix against `docudesk-standing-consent-admins`
+  (`PolicyCrudService::STANDING_CONSENT_GROUP`), plus one case asserting an
+  unknown `$surface` throws `InvalidArgumentException` rather than passing
+  silently.
   - **Acceptance:** ≥3 test methods per ADR-008; temporarily commenting out
     the group-membership check in `assertProhibitionPermission()` or
     `assertStandingConsentPermission()` makes at least one new test fail
@@ -41,12 +43,14 @@ All tasks are `[docudesk]`. Estimates: S = half-day, M = 1-2 days.
 
 ### B-2. PolicyControllerTest.php — standing consents (S)
 
-- [ ] B-2.1 Mirror B-1.2–B-1.5 for `indexStandingConsents` /
-  `showStandingConsent` / `createStandingConsent` / `updateStandingConsent`
-  / `deleteStandingConsent`.
-  - **Acceptance:** all 10 routed `PolicyController` methods have at least
-    one happy-path and one auth-rejection test; `composer check:strict`
-    passes with the new files included.
+- [ ] B-2.1 Create `tests/unit/Controller/StandingConsentControllerTest.php`
+  and mirror B-1.2–B-1.5 for `index` / `show` / `create` / `update` /
+  `destroy`. These five moved off `PolicyController` onto
+  `StandingConsentController` when the controller was split; the URLs are
+  unchanged, only the route names and class.
+  - **Acceptance:** all 10 routed policy/standing-consent controller methods
+    have at least one happy-path and one auth-rejection test; `composer
+    check:strict` passes with the new files included.
 
 ## [docudesk] Verification
 

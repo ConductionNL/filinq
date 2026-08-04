@@ -145,14 +145,26 @@ class DocumentServiceTest extends TestCase
                 return null;
             });
 
+        $objectResolver = new \OCA\DocuDesk\Service\DocumentObjectServiceResolver(
+            $container,
+            $appManager
+        );
+
         $this->service = new DocumentService(
             $this->templateSvc,
             $this->dataResolver,
-            $this->renderer,
-            $this->pdfService,
+            new \OCA\DocuDesk\Service\DocumentRenderPipeline(
+                $this->renderer,
+                $this->pdfService,
+                $objectResolver,
+                $logger
+            ),
             $this->storageService,
+            new \OCA\DocuDesk\Service\GeneratedDocumentLogger(
+                $objectResolver,
+                $logger
+            ),
             $container,
-            $appManager,
             $this->jobList,
             $logger
         );

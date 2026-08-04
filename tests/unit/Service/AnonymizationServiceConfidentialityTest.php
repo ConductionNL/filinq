@@ -54,6 +54,7 @@ use Psr\Log\LoggerInterface;
  */
 class AnonymizationServiceConfidentialityTest extends TestCase
 {
+    use BuildsAnonymizationService;
 
     /**
      * @var LoggerInterface|MockObject
@@ -136,26 +137,15 @@ class AnonymizationServiceConfidentialityTest extends TestCase
      */
     private function makeService(): AnonymizationService
     {
-        $customDictionary = $this->createMock(CustomDictionaryService::class);
-        $customDictionary->method('listActiveDictionariesForDetection')->willReturn([]);
-
-        return new AnonymizationService(
-            logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $this->mockAppManager,
-            entityDetection: $this->entityDetection,
-            appConfig: $this->mockAppConfig,
-            consentCrud: $this->createMock(ConsentCrudService::class),
-            consentService: $this->createMock(ConsentService::class),
-            grondslagenSummary: $this->createMock(GrondslagenSummaryService::class),
-            fileEntityStats: $this->createMock(\OCA\DocuDesk\Service\FileEntityStatsService::class),
-            pdfConversion: $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class),
-            emlAssembly: $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
-            customDictionary: $customDictionary,
-            confidentialityLabel: $this->mockConfidentialityLabel,
-            customDictionaryDetection: $this->createMock(
-                originalClassName: \OCA\DocuDesk\Service\CustomDictionaryDetectionRunner::class
-            )
+        return $this->makeAnonymizationServiceFrom(
+            [
+                'logger'               => $this->mockLogger,
+                'container'            => $this->mockContainer,
+                'appManager'           => $this->mockAppManager,
+                'appConfig'            => $this->mockAppConfig,
+                'entityDetection'      => $this->entityDetection,
+                'confidentialityLabel' => $this->mockConfidentialityLabel,
+            ]
         );
 
     }//end makeService()

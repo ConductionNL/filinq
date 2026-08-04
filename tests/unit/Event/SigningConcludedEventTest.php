@@ -4,7 +4,7 @@
  * Unit tests for SigningConcludedEvent.
  *
  * Pins the decidesk delegation seam (signing-trust-rebuild REQ-DDSTR-010): the
- * completion payload built by `fromRequest()` carries a resolved eIDAS
+ * completion payload built by SigningConcludedEventFactory::create() carries a resolved eIDAS
  * `assuranceLevel` alongside the pre-existing response-shape fields —
  * additive only, so `EIDASSignatureService::composeDocudeskSigningRequest()`'s
  * existing expectations keep passing. The native provider only ever produces
@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Event;
 
-use OCA\DocuDesk\Event\SigningConcludedEvent;
+use OCA\DocuDesk\Event\SigningConcludedEventFactory;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -43,6 +43,27 @@ class SigningConcludedEventTest extends TestCase
 {
 
     /**
+     * The request-array -> event mapping under test.
+     *
+     * @var SigningConcludedEventFactory
+     */
+    private SigningConcludedEventFactory $factory;
+
+    /**
+     * Build the factory. It is a stateless mapper with no collaborators — the
+     * mapping moved here from the event's former static `fromRequest()` named
+     * constructor, so these tests exercise exactly the same code as before.
+     *
+     * @return void
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->factory = new SigningConcludedEventFactory();
+
+    }//end setUp()
+
+    /**
      * A native-provider, SES-level request resolves `low` assurance —
      * the ONLY level the native provider can ever actually produce.
      *
@@ -50,7 +71,7 @@ class SigningConcludedEventTest extends TestCase
      */
     public function testNativeSesResolvesLowAssurance(): void
     {
-        $event = SigningConcludedEvent::fromRequest(
+        $event = $this->factory->create(
             request: ['id' => 'req-1', 'provider' => 'native', 'signatureLevel' => 'SES'],
             status: 'signed'
         );
@@ -67,7 +88,7 @@ class SigningConcludedEventTest extends TestCase
      */
     public function testMissingProviderLevelDefaultsToLow(): void
     {
-        $event = SigningConcludedEvent::fromRequest(request: ['id' => 'req-1'], status: 'signed');
+        $event = $this->factory->create(request: ['id' => 'req-1'], status: 'signed');
 
         $this->assertSame('low', $event->getAssuranceLevel());
 
@@ -83,13 +104,13 @@ class SigningConcludedEventTest extends TestCase
      */
     public function testNonNativeProviderResolvesHigherAssurance(): void
     {
-        $adesEvent = SigningConcludedEvent::fromRequest(
+        $adesEvent = $this->factory->create(
             request: ['id' => 'req-1', 'provider' => 'validsign', 'signatureLevel' => 'AdES'],
             status: 'signed'
         );
         $this->assertSame('substantial', $adesEvent->getAssuranceLevel());
 
-        $qesEvent = SigningConcludedEvent::fromRequest(
+        $qesEvent = $this->factory->create(
             request: ['id' => 'req-1', 'provider' => 'validsign', 'signatureLevel' => 'QES'],
             status: 'signed'
         );
@@ -97,7 +118,7 @@ class SigningConcludedEventTest extends TestCase
 
         // A native provider is NEVER granted more than `low`, even if a
         // (creation-time-rejected) higher level ever appeared on the row.
-        $nativeEvent = SigningConcludedEvent::fromRequest(
+        $nativeEvent = $this->factory->create(
             request: ['id' => 'req-1', 'provider' => 'native', 'signatureLevel' => 'QES'],
             status: 'signed'
         );
@@ -106,7 +127,7 @@ class SigningConcludedEventTest extends TestCase
     }//end testNonNativeProviderResolvesHigherAssurance()
 
     /**
-     * Additive-only pin: every pre-existing field `fromRequest()` populated
+     * Additive-only pin: every pre-existing field the mapping populated
      * before REQ-DDSTR-010 still round-trips unchanged (backward-compatible
      * response shape for the decidesk consumer).
      *
@@ -114,7 +135,7 @@ class SigningConcludedEventTest extends TestCase
      */
     public function testPreExistingFieldsStillRoundTrip(): void
     {
-        $event = SigningConcludedEvent::fromRequest(
+        $event = $this->factory->create(
             request: [
                 'id'                => 'req-1',
                 'signerIds'         => ['s1', 's2'],

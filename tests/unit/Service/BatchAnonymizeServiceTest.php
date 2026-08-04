@@ -236,19 +236,14 @@ class BatchAnonymizeServiceTest extends TestCase
         ];
 
         $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
         $this->mockAnonService->expects($this->exactly(2))
-            ->method('anonymizeDocument')
-            ->with(
-                $this->anything(),
-                $this->anything(),
-                true
-            )
+            ->method('anonymizeDocumentWithBasisSummary')
             ->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'f']);
 
-        $result = $this->service->anonymizeBatch(
+        $result = $this->service->anonymizeBatchWithBasisSummary(
             batchId: 'batch-5',
-            entities: [],
-            appendBasisSummary: true
+            entities: []
         );
 
         $this->assertSame(2, $result['processedFiles']);
@@ -274,13 +269,9 @@ class BatchAnonymizeServiceTest extends TestCase
         ];
 
         $this->mockStateService->method('getBatch')->willReturn($batch);
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocumentWithBasisSummary');
         $this->mockAnonService->expects($this->once())
             ->method('anonymizeDocument')
-            ->with(
-                $this->anything(),
-                $this->anything(),
-                false
-            )
             ->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'g']);
 
         $this->service->anonymizeBatch(batchId: 'batch-6', entities: []);
@@ -310,7 +301,7 @@ class BatchAnonymizeServiceTest extends TestCase
         $warning = ['code' => 'SUMMARY_APPEND_FAILED', 'message' => 'Service unavailable.'];
 
         $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocument')
+        $this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
             ->willReturn(
                 [
                     'replacementCount' => 3,
@@ -319,10 +310,9 @@ class BatchAnonymizeServiceTest extends TestCase
                 ]
             );
 
-        $result = $this->service->anonymizeBatch(
+        $result = $this->service->anonymizeBatchWithBasisSummary(
             batchId: 'batch-7',
-            entities: [],
-            appendBasisSummary: true
+            entities: []
         );
 
         $this->assertSame('completed', $result['batchStatus']);
@@ -350,7 +340,7 @@ class BatchAnonymizeServiceTest extends TestCase
         ];
 
         $this->mockStateService->method('getBatch')->willReturn($batch);
-        $this->mockAnonService->method('anonymizeDocument')
+        $this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
             ->willReturn(
                 [
                     'replacementCount' => 1,
@@ -360,10 +350,9 @@ class BatchAnonymizeServiceTest extends TestCase
                 ]
             );
 
-        $result = $this->service->anonymizeBatch(
+        $result = $this->service->anonymizeBatchWithBasisSummary(
             batchId: 'batch-8',
-            entities: [],
-            appendBasisSummary: true
+            entities: []
         );
 
         $this->assertSame(1, $result['processedFiles']);

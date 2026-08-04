@@ -24,13 +24,7 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCA\DocuDesk\Event\SigningConcludedEvent;
-use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
-use OCP\IRequest;
-use OCP\IUserSession;
-use OCP\Notification\IManager as INotificationManager;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -42,16 +36,11 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * The class-length threshold is now met on its own — SignedArtifactProducer and
- * SigningRequestValidator were extracted — so the ExcessiveClassLength
- * suppression is gone. The three below remain and are load-bearing: coupling
- * and class complexity are the sum of the documented per-state transition
- * rules, with no single method near a per-method threshold, and the parameter
- * list mirrors the signing-request shape the OpenRegister schema defines.
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
- * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+ * SignedArtifactProducer and SigningRequestValidator were extracted earlier;
+ * SigningActorResolver (who is acting, and may they act as this signer) and
+ * SigningConclusionEmitter (the cross-app conclusion contract) followed, so
+ * the class now meets the length, coupling, complexity and parameter-list
+ * thresholds on its own — no suppressions.
  *
  * @spec openspec/specs/document-signing/spec.md
  */
@@ -76,16 +65,13 @@ class SigningService
     /**
      * Constructor
      *
-     * @param SettingsService         $settingsService     Settings service
-     * @param SigningAuditService     $auditService        Audit service
-     * @param IAppConfig              $config              App config
-     * @param IUserSession            $userSession         User session
-     * @param INotificationManager    $notificationManager Notification manager
-     * @param LoggerInterface         $logger              Logger
-     * @param IRequest                $request             HTTP request
-     * @param IEventDispatcher        $eventDispatcher     Dispatches the SigningConcludedEvent cross-app contract
-     * @param SignedArtifactProducer  $artifactProducer    Produces + stores the verifiable signed artifact
-     * @param SigningRequestValidator $validator           Validates request data + the provider/level pair
+     * @param SettingsService          $settingsService  Settings service
+     * @param SigningAuditService      $auditService     Audit service
+     * @param IAppConfig               $config           App config
+     * @param SignedArtifactProducer   $artifactProducer Produces + stores the verifiable signed artifact
+     * @param SigningRequestValidator  $validator        Validates request data + the provider/level pair
+     * @param SigningActorResolver     $actorResolver    Resolves the acting identity + authorises it
+     * @param SigningConclusionEmitter $emitter          Emits the cross-app SigningConcludedEvent
      *
      * @return void
      */
@@ -93,13 +79,10 @@ class SigningService
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
         private readonly IAppConfig $config,
-        private readonly IUserSession $userSession,
-        private readonly INotificationManager $notificationManager,
-        private readonly LoggerInterface $logger,
-        private readonly IRequest $request,
-        private readonly IEventDispatcher $eventDispatcher,
         private readonly SignedArtifactProducer $artifactProducer,
-        private readonly SigningRequestValidator $validator
+        private readonly SigningRequestValidator $validator,
+        private readonly SigningActorResolver $actorResolver,
+        private readonly SigningConclusionEmitter $emitter
     ) {
 
     }//end __construct()
@@ -134,10 +117,9 @@ class SigningService
      */
     public function createRequest(array $data): array
     {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new RuntimeException('No authenticated user');
-        }
+        // Throws RuntimeException('No authenticated user') when there is no
+        // session user — exactly as the inline check here did before.
+        [$initiatorUserId, $initiatorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
         $objectService = $this->settingsService->getObjectService();
         $expiryDays    = (int) $this->config->getValueString('docudesk', 'signing_request_expiry_days', '30');
@@ -148,7 +130,7 @@ class SigningService
         $request = [
             'documentFileId'  => $data['documentFileId'] ?? '',
             'documentName'    => $data['documentName'] ?? '',
-            'initiatorUserId' => $user->getUID(),
+            'initiatorUserId' => $initiatorUserId,
             'signatureLevel'  => $data['signatureLevel'] ?? $defaultLevel,
             'signingMode'     => $data['signingMode'] ?? 'sequential',
             'status'          => 'PENDING',
@@ -213,9 +195,9 @@ class SigningService
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'CREATED',
-            actorUserId: $user->getUID(),
-            actorDisplayName: $user->getDisplayName(),
-            ipAddress: $this->getClientIp(),
+            actorUserId: $initiatorUserId,
+            actorDisplayName: $initiatorDisplayName,
+            ipAddress: $this->actorResolver->getClientIp(),
             signatureLevel: $request['signatureLevel'],
             provider: $request['provider']
         );
@@ -227,13 +209,19 @@ class SigningService
     /**
      * Get a signing request by ID
      *
-     * Access control: the caller must be the initiator, a listed signer, or an
-     * admin. Pass callerUserId='' and isAdmin=true to bypass the check (e.g.
-     * when called from an internal method that already verified access).
+     * Access control: a SCOPED caller (non-empty $callerUserId) must be the
+     * initiator or a listed signer. Pass callerUserId='' to read UNSCOPED —
+     * that is the single, explicit bypass, used by an NC admin caller and by
+     * internal methods that have already verified access.
+     *
+     * There is deliberately no separate `isAdmin` flag: the previous guard was
+     * `$callerUserId !== '' && $isAdmin === false`, so an admin caller and an
+     * unscoped caller already took the identical path. Collapsing the two
+     * spellings into one means there is exactly ONE way to bypass scoping, and
+     * it is visible at the call site.
      *
      * @param string $requestId    The signing request ID
-     * @param string $callerUserId UID of the calling user ('' = skip check)
-     * @param bool   $isAdmin      True when the caller is an NC admin
+     * @param string $callerUserId UID to scope the read to ('' = unscoped)
      *
      * @return array<string, mixed>|null The signing request, or null when a
      *                                   scoped caller (callerUserId set,
@@ -254,7 +242,7 @@ class SigningService
      * existence. Not-found now throws a fixed, ID-free message ('Signing
      * request not found') — no UUID is echoed, so nothing is leaked.
      */
-    public function getRequest(string $requestId, string $callerUserId='', bool $isAdmin=false): ?array
+    public function getRequest(string $requestId, string $callerUserId=''): ?array
     {
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -269,16 +257,12 @@ class SigningService
             throw new RuntimeException('Signing request not found');
         }
 
-        if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-            $request = $object->jsonSerialize();
-        } else {
-            $request = (array) $object;
-        }
+        $request = $this->toArray(object: $object);
 
-        // WF2 + Wilco #6 fix: scope single-record access to initiator,
-        // signer, or admin. Access denied collapses to null (same shape as
-        // not-found), so the controller can emit one 404 regardless.
-        if ($callerUserId !== '' && $isAdmin === false) {
+        // WF2 + Wilco #6 fix: scope single-record access to initiator or
+        // signer. Access denied collapses to null (same shape as not-found),
+        // so the controller can emit one 404 regardless.
+        if ($callerUserId !== '') {
             $isInitiator    = ($request['initiatorUserId'] ?? '') === $callerUserId;
             $isSignerInList = in_array($callerUserId, (array) ($request['signerIds'] ?? []), true);
 
@@ -294,18 +278,23 @@ class SigningService
     /**
      * List signing requests scoped to the calling user
      *
-     * Admins see all requests. Regular users see only requests where they are
-     * the initiator or a listed signer (WF2 fix: previously returned all
+     * A SCOPED caller (non-empty $callerUserId) sees only requests where they
+     * are the initiator or a listed signer (WF2 fix: previously returned all
      * requests regardless of ownership — full cross-tenant data disclosure).
+     * Pass callerUserId='' to list UNSCOPED — that is the single, explicit
+     * bypass, used by an NC admin caller.
      *
-     * @param string $callerUserId UID of the calling user
-     * @param bool   $isAdmin      True when the caller is an NC admin
+     * As in getRequest(), there is deliberately no separate `isAdmin` flag:
+     * the previous guard was `$isAdmin === false && $callerUserId !== ''`, so
+     * an admin caller and an unscoped caller already took the identical path.
+     *
+     * @param string $callerUserId UID to scope the listing to ('' = unscoped)
      *
      * @return array<int, array<string, mixed>> List of signing requests
      *
      * @spec openspec/changes/digital-signing-integration/tasks.md#3-1
      */
-    public function listRequests(string $callerUserId='', bool $isAdmin=false): array
+    public function listRequests(string $callerUserId=''): array
     {
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -327,15 +316,11 @@ class SigningService
 
         $requests = [];
         foreach ($results as $result) {
-            if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-                $item = $result->jsonSerialize();
-            } else {
-                $item = (array) $result;
-            }
+            $item = $this->toArray(object: $result);
 
-            // WF2 security fix: non-admins see only requests they initiated or
-            // are listed as a signer on. Admins see all.
-            if ($isAdmin === false && $callerUserId !== '') {
+            // WF2 security fix: a scoped caller sees only requests they
+            // initiated or are listed as a signer on. Unscoped sees all.
+            if ($callerUserId !== '') {
                 $isInitiator    = ($item['initiatorUserId'] ?? '') === $callerUserId;
                 $isSignerInList = in_array($callerUserId, (array) ($item['signerIds'] ?? []), true);
 
@@ -382,7 +367,7 @@ class SigningService
      */
     public function sign(string $requestId, string $signerId, ?array $verifiedActor=null, ?array $signatureData=null): array
     {
-        [$actorUserId, $actorDisplayName] = $this->resolveActingIdentity(verifiedActor: $verifiedActor);
+        [$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
         $objectService = $this->settingsService->getObjectService();
         $request       = $this->getRequest(requestId: $requestId);
@@ -403,34 +388,14 @@ class SigningService
 
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if ($signerObject === null) {
-            throw new RuntimeException('Signer record not found: '.$signerId);
-        }
-
-        if (is_object($signerObject) === true && method_exists($signerObject, 'jsonSerialize') === true) {
-            $signer = $signerObject->jsonSerialize();
-        } else {
-            $signer = (array) $signerObject;
-        }
-
-        // C4 security fix: verify the signer record belongs to this signing
-        // request. Without this check, an attacker who knows any valid
-        // signerId can sign under an arbitrary requestId they do not own.
-        if (($signer['signingRequestId'] ?? '') !== $requestId) {
-            throw new RuntimeException('Signer record does not belong to this signing request');
-        }
-
-        // Security finding #282 / portal-signing-actions REQ-DDPSA-005: ensure
-        // the acting identity is the signer they claim to be — the Nextcloud
-        // session user for an in-app signer, or the verified assertion's
-        // resolved email for an external portal signer. Either way this check
-        // is unchanged in spirit: an actor cannot sign on behalf of another
-        // signer by supplying their signer ID.
-        if ($this->actorMatchesSigner(signer: $signer, verifiedActor: $verifiedActor, actorUserId: $actorUserId) === false) {
-            throw new RuntimeException('Not authorized to sign as this signer');
-        }
+        $signer = $this->actorResolver->loadAuthorisedSigner(
+            requestId: $requestId,
+            signerId: $signerId,
+            verifiedActor: $verifiedActor,
+            actorUserId: $actorUserId,
+            action: 'sign'
+        );
 
         if (($signer['status'] ?? '') !== 'PENDING') {
             throw new RuntimeException('Signer has already responded to this request');
@@ -439,7 +404,7 @@ class SigningService
         $now = new DateTimeImmutable();
         $signer['status']    = 'SIGNED';
         $signer['signedAt']  = $now->format(DateTimeInterface::ATOM);
-        $signer['ipAddress'] = $this->getClientIp();
+        $signer['ipAddress'] = $this->actorResolver->getClientIp();
         if ($signatureData !== null) {
             // Portal-signing-surface REQ-DDPSS-002: consent confirmation +
             // optional drawn signature, recorded into the existing
@@ -454,10 +419,10 @@ class SigningService
             action: 'SIGNED',
             actorUserId: $actorUserId,
             actorDisplayName: $actorDisplayName,
-            ipAddress: $this->getClientIp(),
+            ipAddress: $this->actorResolver->getClientIp(),
             signatureLevel: $request['signatureLevel'] ?? 'SES',
             provider: $request['provider'] ?? 'native',
-            metadata: $this->actorAuditMetadata(verifiedActor: $verifiedActor)
+            metadata: $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor)
         );
 
         $this->updateRequestStatus(requestId: $requestId, request: $request, verifiedActor: $verifiedActor);
@@ -488,7 +453,7 @@ class SigningService
      */
     public function decline(string $requestId, string $signerId, string $reason, ?array $verifiedActor=null): array
     {
-        [$actorUserId, $actorDisplayName] = $this->resolveActingIdentity(verifiedActor: $verifiedActor);
+        [$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
         $objectService = $this->settingsService->getObjectService();
 
@@ -512,27 +477,14 @@ class SigningService
 
         $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
         $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerObject   = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
 
-        if ($signerObject === null) {
-            throw new RuntimeException('Signer record not found: '.$signerId);
-        }
-
-        $signer = $this->toArray(object: $signerObject);
-
-        // C4 security fix: verify the signer record belongs to this signing
-        // request. Without this check, an attacker who knows any valid
-        // signerId can decline under an arbitrary requestId they do not own.
-        if (($signer['signingRequestId'] ?? '') !== $requestId) {
-            throw new RuntimeException('Signer record does not belong to this signing request');
-        }
-
-        // Security finding #282 / portal-signing-actions REQ-DDPSA-005: same
-        // acting-identity check as sign() — Nextcloud uid or verified
-        // assertion email, never the request body.
-        if ($this->actorMatchesSigner(signer: $signer, verifiedActor: $verifiedActor, actorUserId: $actorUserId) === false) {
-            throw new RuntimeException('Not authorized to decline as this signer');
-        }
+        $signer = $this->actorResolver->loadAuthorisedSigner(
+            requestId: $requestId,
+            signerId: $signerId,
+            verifiedActor: $verifiedActor,
+            actorUserId: $actorUserId,
+            action: 'decline'
+        );
 
         $signer['status']        = 'DECLINED';
         $signer['declineReason'] = $reason;
@@ -546,9 +498,9 @@ class SigningService
 
         // Cross-app delegated-signing contract: a declined request is terminal —
         // emit SigningConcludedEvent (status=declined) for a delegated request.
-        $this->emitConclusionIfDelegated(request: $request, status: 'declined');
+        $this->emitter->emitIfDelegated(request: $request, status: 'declined');
 
-        $metadata           = $this->actorAuditMetadata(verifiedActor: $verifiedActor);
+        $metadata           = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
         $metadata['reason'] = $reason;
 
         $this->auditService->logEvent(
@@ -556,7 +508,7 @@ class SigningService
             action: 'DECLINED',
             actorUserId: $actorUserId,
             actorDisplayName: $actorDisplayName,
-            ipAddress: $this->getClientIp(),
+            ipAddress: $this->actorResolver->getClientIp(),
             signatureLevel: $signatureLevel,
             provider: $provider,
             metadata: $metadata
@@ -565,90 +517,6 @@ class SigningService
         return $signer;
 
     }//end decline()
-
-    /**
-     * Resolve the acting identity for `sign()`/`decline()`.
-     *
-     * Default (no verified actor): the Nextcloud session user — behaviour is
-     * byte-identical to before this seam was added. With a verified actor
-     * (portal-signing-actions REQ-DDPSA-005): the resolved portal signer's
-     * email, never a Nextcloud uid.
-     *
-     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
-     *
-     * @return array{0: string, 1: string} [actorUserId, actorDisplayName]
-     *
-     * @throws RuntimeException When no verified actor is supplied and there is
-     *                          no authenticated Nextcloud user.
-     */
-    private function resolveActingIdentity(?array $verifiedActor): array
-    {
-        if ($verifiedActor !== null) {
-            $email = (string) ($verifiedActor['email'] ?? '');
-
-            $displayName = 'External signer';
-            if ($email !== '') {
-                $displayName = $email;
-            }
-
-            // Namespaced so a portal actor identity can never collide with (or
-            // be mistaken for) a Nextcloud uid in the audit trail.
-            return ['portal:'.$email, $displayName];
-        }
-
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new RuntimeException('No authenticated user');
-        }
-
-        return [$user->getUID(), $user->getDisplayName()];
-
-    }//end resolveActingIdentity()
-
-    /**
-     * Check whether the acting identity matches the target signer record.
-     *
-     * @param array<string, mixed>      $signer        The loaded signer record.
-     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
-     * @param string                    $actorUserId   The resolved acting identity (unused for
-     *                                                 the verified-actor branch; kept for the
-     *                                                 in-app branch's exact pre-existing check).
-     *
-     * @return bool True when the actor is authorised to act as this signer.
-     */
-    private function actorMatchesSigner(array $signer, ?array $verifiedActor, string $actorUserId): bool
-    {
-        if ($verifiedActor !== null) {
-            $signerEmail = (string) ($signer['email'] ?? '');
-            $actorEmail  = (string) ($verifiedActor['email'] ?? '');
-
-            return $signerEmail !== '' && $actorEmail !== '' && strcasecmp($signerEmail, $actorEmail) === 0;
-        }
-
-        return ($signer['userId'] ?? '') === $actorUserId;
-
-    }//end actorMatchesSigner()
-
-    /**
-     * Build the audit `metadata` for a portal-originated act.
-     *
-     * Records the assertion `jti` so the portal act is traceable to its
-     * originating portaliq session (portal-signing-actions REQ-DDPSA-005).
-     * Returns an empty array for an in-app (Nextcloud session) actor.
-     *
-     * @param array<string, mixed>|null $verifiedActor The verified external actor, or null.
-     *
-     * @return array<string, mixed>
-     */
-    private function actorAuditMetadata(?array $verifiedActor): array
-    {
-        if ($verifiedActor === null) {
-            return [];
-        }
-
-        return ['portalJti' => (string) ($verifiedActor['jti'] ?? '')];
-
-    }//end actorAuditMetadata()
 
     /**
      * Cancel a signing request
@@ -668,10 +536,9 @@ class SigningService
      */
     public function cancelRequest(string $requestId): ?array
     {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new RuntimeException('No authenticated user');
-        }
+        // Throws RuntimeException('No authenticated user') when there is no
+        // session user — exactly as the inline check here did before.
+        [$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
         $objectService = $this->settingsService->getObjectService();
         $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
@@ -695,14 +562,14 @@ class SigningService
 
         // Cross-app delegated-signing contract: a cancelled request is terminal
         // — emit SigningConcludedEvent (status=cancelled) for a delegated request.
-        $this->emitConclusionIfDelegated(request: $request, status: 'cancelled');
+        $this->emitter->emitIfDelegated(request: $request, status: 'cancelled');
 
         $this->auditService->logEvent(
             signingRequestId: $requestId,
             action: 'CANCELLED',
-            actorUserId: $user->getUID(),
-            actorDisplayName: $user->getDisplayName(),
-            ipAddress: $this->getClientIp()
+            actorUserId: $actorUserId,
+            actorDisplayName: $actorDisplayName,
+            ipAddress: $this->actorResolver->getClientIp()
         );
 
         return $request;
@@ -721,11 +588,10 @@ class SigningService
     public function bulkSign(array $requestIds): array
     {
         $results = [];
-        $user    = $this->userSession->getUser();
-        $userId  = '';
-        if ($user !== null) {
-            $userId = $user->getUID();
-        }
+        // Tolerant lookup: '' when there is no session user, so bulkSign()
+        // reports a per-request failure instead of throwing, exactly as the
+        // inline null-check here did before.
+        $userId = $this->actorResolver->currentUserId();
 
         foreach ($requestIds as $requestId) {
             try {
@@ -741,7 +607,7 @@ class SigningService
                 }
 
                 $signerIds      = $request['signerIds'] ?? [];
-                $targetSignerId = $this->findSignerForUser(signerIds: $signerIds, userId: $userId);
+                $targetSignerId = $this->actorResolver->findSignerForUser(signerIds: $signerIds, userId: $userId);
 
                 $results[$requestId] = [
                     'success' => false,
@@ -807,11 +673,7 @@ class SigningService
 
         foreach ($signerIds as $signerId) {
             $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
-            }
+            $signer    = $this->toArray(object: $signerObj);
 
             if (($signer['status'] ?? '') !== 'SIGNED') {
                 $allSigned = false;
@@ -819,12 +681,8 @@ class SigningService
             }
         }//end foreach
 
-        $freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema);
-        if ($freshObj !== null && is_object($freshObj) === true && method_exists($freshObj, 'jsonSerialize') === true) {
-            $freshRequest = $freshObj->jsonSerialize();
-        } else {
-            $freshRequest = (array) $freshObj;
-        }
+        $freshObj     = $objectService->find(id: $requestId, register: $register, schema: $schema);
+        $freshRequest = $this->toArray(object: $freshObj);
 
         if ($allSigned === false) {
             $freshRequest['status'] = 'IN_PROGRESS';
@@ -878,7 +736,7 @@ class SigningService
         // SigningConcludedEvent (status=signed) for a delegated request. The
         // signed reference is the stored artifact (file id + version), never
         // the unsigned original documentFileId.
-        $this->emitConclusionIfDelegated(
+        $this->emitter->emitIfDelegated(
             request: $freshRequest,
             status: 'signed',
             signedDocumentRef: $signedDocumentRef
@@ -902,100 +760,9 @@ class SigningService
      */
     public function emitExpiredConclusion(array $request): void
     {
-        $this->emitConclusionIfDelegated(request: $request, status: 'expired');
+        $this->emitter->emitIfDelegated(request: $request, status: 'expired');
 
     }//end emitExpiredConclusion()
-
-    /**
-     * Emit a SigningConcludedEvent when a delegated request concludes.
-     *
-     * Cross-app delegated-signing contract (docudesk-signing-events): only
-     * fires for a signing request that carries provenance (`sourceApp` set and
-     * non-empty) — internal DocuDesk requests emit nothing. The outcome
-     * envelope is built from the persisted request fields (signers, signed
-     * document reference) and dispatched via IEventDispatcher so the originating
-     * consumer (e.g. shillinq) can run its own downstream side effects.
-     * Fail-soft: any dispatch error is logged and the already-persisted
-     * terminal transition is never rolled back.
-     *
-     * @param array<string, mixed> $request           The persisted (terminal) signing-request array
-     * @param string               $status            Normalised status (signed|declined|expired|cancelled)
-     * @param string|null          $signedDocumentRef Reference to the signed document, when signed
-     *
-     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
-     *
-     * @return void
-     */
-    private function emitConclusionIfDelegated(array $request, string $status, ?string $signedDocumentRef=null): void
-    {
-        $sourceApp = (string) ($request['sourceApp'] ?? '');
-        if ($sourceApp === '') {
-            // Internal request (no consumer is waiting) — emit nothing.
-            return;
-        }
-
-        try {
-            $event = SigningConcludedEvent::fromRequest(
-                request: $request,
-                status: $status,
-                signedDocumentRef: $signedDocumentRef
-            );
-
-            $this->eventDispatcher->dispatchTyped($event);
-
-            $this->logger->info(
-                'DocuDesk: dispatched SigningConcludedEvent',
-                [
-                    'signingRequestId' => $event->getSigningRequestId(),
-                    'sourceApp'        => $sourceApp,
-                    'status'           => $status,
-                ]
-            );
-        } catch (\Throwable $e) {
-            // The terminal transition has already persisted; a dispatch failure
-            // must not roll it back.
-            $this->logger->error(
-                'DocuDesk: signing request concluded but SigningConcludedEvent dispatch failed',
-                [
-                    'sourceApp' => $sourceApp,
-                    'status'    => $status,
-                    'exception' => $e->getMessage(),
-                ]
-            );
-        }//end try
-
-    }//end emitConclusionIfDelegated()
-
-    /**
-     * Find the signer record ID for a given user
-     *
-     * @param array<string> $signerIds The signer record IDs
-     * @param string        $userId    The user ID to find
-     *
-     * @return string|null The signer record ID, or null
-     */
-    private function findSignerForUser(array $signerIds, string $userId): ?string
-    {
-        $objectService  = $this->settingsService->getObjectService();
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-
-        foreach ($signerIds as $signerId) {
-            $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
-            if ($signerObj !== null && is_object($signerObj) === true && method_exists($signerObj, 'jsonSerialize') === true) {
-                $signer = $signerObj->jsonSerialize();
-            } else {
-                $signer = (array) $signerObj;
-            }
-
-            if (($signer['userId'] ?? '') === $userId && ($signer['status'] ?? '') === 'PENDING') {
-                return $signerId;
-            }
-        }//end foreach
-
-        return null;
-
-    }//end findSignerForUser()
 
     /**
      * Normalise an ObjectService result to an array
@@ -1017,15 +784,4 @@ class SigningService
         return (array) $object;
 
     }//end toArray()
-
-    /**
-     * Get the client IP address
-     *
-     * @return string The client IP address
-     */
-    private function getClientIp(): string
-    {
-        return $this->request->getRemoteAddress();
-
-    }//end getClientIp()
 }//end class

@@ -33,8 +33,6 @@
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
- *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 
 declare(strict_types=1);

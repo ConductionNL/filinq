@@ -293,7 +293,7 @@
 			"type": "custom",
 			"title": "Publish always",
 			"component": "StandingConsentIndex",
-			"_note": "Entity-level publish-always rules (publicationStandingConsent) via PolicyController (indexStandingConsents/createStandingConsent/showStandingConsent/updateStandingConsent/deleteStandingConsent) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
+			"_note": "Entity-level publish-always rules (publicationStandingConsent) via StandingConsentController (index/create/show/update/destroy) + PolicyRetroactiveService. Deep-link reachable, no menu entry — owned by publication-policy-labels-and-nav (see Prohibitions note). This change (orphaned-surface-restoration, REQ-DDOSR-005) only restores reachability. Modal is StandingConsentFormModal (registry kind:modal); the view's previous inline NcDialog was replaced with it to fix the hydra modal-isolation gate."
 		},
 		{
 			"id": "FeaturesRoadmap",

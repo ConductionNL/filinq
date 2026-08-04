@@ -70,8 +70,8 @@ class DossierCheckedOnListener implements IEventListener
     /**
      * Constructor for DossierCheckedOnListener.
      *
-     * @param LoggerInterface           $logger                    Logger for diagnostics
-     * @param GrondslagenSummaryService $grondslagenSummaryService Dossier summary renderer
+     * @param LoggerInterface           $logger         Logger for diagnostics
+     * @param GrondslagenSummaryService $summaryService Dossier grondslagen summary renderer
      *
      * @return void
      *
@@ -79,7 +79,7 @@ class DossierCheckedOnListener implements IEventListener
      */
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly GrondslagenSummaryService $grondslagenSummaryService,
+        private readonly GrondslagenSummaryService $summaryService,
     ) {
 
     }//end __construct()
@@ -163,7 +163,7 @@ class DossierCheckedOnListener implements IEventListener
                 context: ['dossierId' => $dossierId]
             );
 
-            $this->grondslagenSummaryService->renderDossierSummary(dossierUuid: (string) $dossierId);
+            $this->summaryService->renderDossierSummary(dossierUuid: (string) $dossierId);
         } catch (\Throwable $e) {
             // Log but do NOT rethrow — the dossier update must succeed.
             $this->logError(
@@ -201,20 +201,39 @@ class DossierCheckedOnListener implements IEventListener
             $schema = $object->getSchema();
         }
 
-        // Accept both slug and numeric/UUID identifiers conservatively.
-        $registerSlugMatch = (is_object($register) === true
-            && method_exists(object_or_class: $register, method: 'getSlug') === true
-            && $register->getSlug() === self::REGISTER);
-        $registerMatch     = ($register === self::REGISTER || $registerSlugMatch === true);
-
-        $schemaSlugMatch = (is_object($schema) === true
-            && method_exists(object_or_class: $schema, method: 'getSlug') === true
-            && $schema->getSlug() === self::DOSSIER_SCHEMA);
-        $schemaMatch     = ($schema === self::DOSSIER_SCHEMA || $schemaSlugMatch === true);
-
-        return $registerMatch === true && $schemaMatch === true;
+        return $this->matchesSlug(candidate: $register, expected: self::REGISTER) === true
+            && $this->matchesSlug(candidate: $schema, expected: self::DOSSIER_SCHEMA) === true;
 
     }//end isDossierObject()
+
+    /**
+     * Determine whether a register/schema reference matches an expected slug.
+     *
+     * Accepts both a bare slug string and a Register/Schema entity exposing
+     * `getSlug()`, so numeric/UUID-keyed references resolve conservatively.
+     *
+     * @param mixed  $candidate The register or schema reference from the object
+     * @param string $expected  The expected slug
+     *
+     * @return bool True when the reference matches the expected slug
+     */
+    private function matchesSlug(mixed $candidate, string $expected): bool
+    {
+        if ($candidate === $expected) {
+            return true;
+        }
+
+        if (is_object($candidate) === false) {
+            return false;
+        }
+
+        if (method_exists(object_or_class: $candidate, method: 'getSlug') === false) {
+            return false;
+        }
+
+        return $candidate->getSlug() === $expected;
+
+    }//end matchesSlug()
 
     /**
      * Determine whether `checkedOn` has changed between old and new object data.
