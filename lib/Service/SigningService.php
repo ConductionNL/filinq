@@ -42,6 +42,13 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
+ * The class-length threshold is now met on its own — SignedArtifactProducer and
+ * SigningRequestValidator were extracted — so the ExcessiveClassLength
+ * suppression is gone. The three below remain and are load-bearing: coupling
+ * and class complexity are the sum of the documented per-state transition
+ * rules, with no single method near a per-method threshold, and the parameter
+ * list mirrors the signing-request shape the OpenRegister schema defines.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
