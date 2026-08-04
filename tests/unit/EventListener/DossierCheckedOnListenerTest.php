@@ -78,7 +78,7 @@ class DossierCheckedOnListenerTest extends TestCase
 
         $this->listener = new DossierCheckedOnListener(
             logger: $this->logger,
-            grondslagenSummaryService: $this->grondslagenSummaryService,
+            summaryService: $this->grondslagenSummaryService,
         );
 
     }//end setUp()

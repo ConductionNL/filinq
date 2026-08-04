@@ -163,12 +163,12 @@ class BatchAnonymizationControllerSummaryFlagTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->expects($this->never())->method('anonymizeBatch');
         $this->mockAnonService->expects($this->once())
-            ->method('anonymizeBatch')
+            ->method('anonymizeBatchWithBasisSummary')
             ->with(
                 batchId: 'batch-2',
-                entities: $entities,
-                appendBasisSummary: true
+                entities: $entities
             )
             ->willReturn(
                 [
@@ -199,12 +199,12 @@ class BatchAnonymizationControllerSummaryFlagTest extends TestCase
 
         $this->mockRequest->method('getParams')->willReturn(['entities' => $entities]);
 
+        $this->mockAnonService->expects($this->never())->method('anonymizeBatchWithBasisSummary');
         $this->mockAnonService->expects($this->once())
             ->method('anonymizeBatch')
             ->with(
                 batchId: 'batch-3',
-                entities: $entities,
-                appendBasisSummary: false
+                entities: $entities
             )
             ->willReturn(
                 [

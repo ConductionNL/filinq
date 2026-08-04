@@ -200,12 +200,12 @@ class ConsentUpdateHandler
         // yet carry them. This guard is always-on and runs ahead of the
         // policy-pre-emption lock so it cannot be bypassed by either the
         // matched or the unmatched branch (PR #147 sixth-pass).
-        $serverControlledFields = [
+        $serverOwnedFields = [
             'policyMatch',
             'matchKind',
         ];
 
-        foreach ($serverControlledFields as $field) {
+        foreach ($serverOwnedFields as $field) {
             if (array_key_exists($field, $data) === false) {
                 continue;
             }
@@ -273,39 +273,33 @@ class ConsentUpdateHandler
         // policy match must not be coaxed into "publish" via either
         // field. Without this both-fields check, a PATCH carrying only
         // `publicationDecision: "publish"` would bypass the lock.
-        $consentStatusChanged       = (
-            array_key_exists('consentStatus', $data) === true
-            && (string) $data['consentStatus'] !== (string) ($existing['consentStatus'] ?? '')
+        $statusChanged   = $this->isTransitionFieldChanged(
+            existing: $existing,
+            data: $data,
+            field: 'consentStatus'
         );
-        $publicationDecisionChanged = (
-            array_key_exists('publicationDecision', $data) === true
-            && (string) $data['publicationDecision'] !== (string) ($existing['publicationDecision'] ?? '')
+        $decisionChanged = $this->isTransitionFieldChanged(
+            existing: $existing,
+            data: $data,
+            field: 'publicationDecision'
         );
 
-        // Standing-consent carve-out: a record matched to a standing-consent
-        // rule (matchKind === 'standing_consent') still permits the operator
-        // to flip `publicationDecision` (e.g. consent_given → anonymize) as
-        // long as `consentStatus` itself is preserved. Only a prohibition
-        // match locks both transition fields. The carve-out is driven by the
-        // PERSISTED `matchKind` marker (PR #147 Thread B regression: pre-fix
-        // the marker was never persisted, so the carve-out never fired and
-        // the override was 400-locked).
-        $existingMatchKind = (string) ($existing['matchKind'] ?? '');
-        if ($existingMatchKind === 'standing_consent'
-            && $consentStatusChanged === false
-            && $publicationDecisionChanged === true
+        if ($this->isStandingConsentOverride(
+            existing: $existing,
+            statusChanged: $statusChanged,
+            decisionChanged: $decisionChanged
+        ) === true
         ) {
             return;
         }
 
-        if ($consentStatusChanged === false && $publicationDecisionChanged === false) {
+        if ($statusChanged === false && $decisionChanged === false) {
             return;
         }
 
-        if ($consentStatusChanged === true) {
+        $rejectedField = 'publicationDecision';
+        if ($statusChanged === true) {
             $rejectedField = 'consentStatus';
-        } else {
-            $rejectedField = 'publicationDecision';
         }
 
         $rejectedValue = (string) $data[$rejectedField];
@@ -322,6 +316,58 @@ class ConsentUpdateHandler
         );
 
     }//end guardPolicyPreemptedTransition()
+
+    /**
+     * Determine whether an update actually changes a transition field.
+     *
+     * A field that is absent from the payload, or present with the same
+     * stringified value it already holds, is not a change.
+     *
+     * @param array<string, mixed> $existing The record's current data.
+     * @param array<string, mixed> $data     The proposed update.
+     * @param string               $field    The transition field to inspect.
+     *
+     * @return bool True when the payload would change the field's value.
+     */
+    private function isTransitionFieldChanged(array $existing, array $data, string $field): bool
+    {
+        if (array_key_exists($field, $data) === false) {
+            return false;
+        }
+
+        return (string) $data[$field] !== (string) ($existing[$field] ?? '');
+
+    }//end isTransitionFieldChanged()
+
+    /**
+     * Determine whether the update qualifies for the standing-consent carve-out.
+     *
+     * A record matched to a standing-consent rule (matchKind ===
+     * 'standing_consent') still permits the operator to flip
+     * `publicationDecision` (e.g. consent_given → anonymize) as long as
+     * `consentStatus` itself is preserved. Only a prohibition match locks both
+     * transition fields. The carve-out is driven by the PERSISTED `matchKind`
+     * marker (PR #147 Thread B regression: pre-fix the marker was never
+     * persisted, so the carve-out never fired and the override was 400-locked).
+     *
+     * @param array<string, mixed> $existing        The record's current data.
+     * @param bool                 $statusChanged   Whether consentStatus would change.
+     * @param bool                 $decisionChanged Whether publicationDecision would change.
+     *
+     * @return bool True when the update is an allowed standing-consent override.
+     */
+    private function isStandingConsentOverride(
+        array $existing,
+        bool $statusChanged,
+        bool $decisionChanged
+    ): bool {
+        if ((string) ($existing['matchKind'] ?? '') !== 'standing_consent') {
+            return false;
+        }
+
+        return ($statusChanged === false && $decisionChanged === true);
+
+    }//end isStandingConsentOverride()
 
     /**
      * Get all consent records for a specific document

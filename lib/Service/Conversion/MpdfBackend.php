@@ -157,13 +157,8 @@ class MpdfBackend implements ConversionBackendInterface
      */
     public function convert(File $source): File
     {
-        $name   = $source->getName();
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            $extension = '';
-        } else {
-            $extension = strtolower(substr($name, ($dotPos + 1)));
-        }
+        $name      = $source->getName();
+        $extension = $this->extractExtension(name: $name);
 
         $rawContent = $source->getContent();
         if (is_string($rawContent) === false) {
@@ -186,10 +181,9 @@ class MpdfBackend implements ConversionBackendInterface
             true
         );
 
+        $html = $rawContent;
         if ($isPlainText === true) {
             $html = $this->wrapPlainTextAsHtml(text: $rawContent);
-        } else {
-            $html = $rawContent;
         }
 
         try {
@@ -257,6 +251,25 @@ class MpdfBackend implements ConversionBackendInterface
         );
 
     }//end wrapPlainTextAsHtml()
+
+    /**
+     * Return the lowercased extension of $name without the leading dot.
+     *
+     * @param string $name File name, with or without an extension.
+     *
+     * @return string Lowercased extension, or an empty string when the name
+     *                carries no dot.
+     */
+    private function extractExtension(string $name): string
+    {
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            return '';
+        }
+
+        return strtolower(substr($name, ($dotPos + 1)));
+
+    }//end extractExtension()
 
     /**
      * Return $name without its trailing `.ext` suffix, for use as a

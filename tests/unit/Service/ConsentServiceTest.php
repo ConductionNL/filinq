@@ -24,6 +24,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCA\DocuDesk\Service\ConsentNotesHelper;
+use OCA\DocuDesk\Service\ConsentRecordWriter;
 use OCA\DocuDesk\Service\ConsentScopeValidator;
 use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\ConsentUpdateHandler;
@@ -91,6 +92,8 @@ class ConsentServiceTest extends TestCase
     private ConsentUpdateHandler|MockObject $mockUpdateHandler;
 
     /**
+     * Mock consent scope validator.
+     *
      * @var ConsentScopeValidator|MockObject
      */
     private ConsentScopeValidator|MockObject $mockScopeValidator;
@@ -166,18 +169,43 @@ class ConsentServiceTest extends TestCase
 
         $service = new ConsentService(
             logger: $this->mockLogger,
-            container: $container,
-            appManager: $appManager ?? $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            recordWriter: $this->buildRecordWriter(container: $container, appManager: $appManager)
         );
 
         return ['service' => $service, 'capturedSaveArg' => &$capturedSaveArg];
 
     }//end buildService()
+
+    /**
+     * Build the ConsentRecordWriter collaborator over the shared mocks.
+     *
+     * Mirrors, verbatim, the wiring ConsentService performed internally before
+     * the writer became a required constructor dependency, so these tests keep
+     * exercising the real persistence layer against a mocked ObjectService.
+     *
+     * @param ContainerInterface|null $container  Override DI container.
+     * @param IAppManager|null        $appManager Override app manager.
+     *
+     * @return ConsentRecordWriter
+     */
+    private function buildRecordWriter(
+        ?ContainerInterface $container=null,
+        ?IAppManager $appManager=null
+    ): ConsentRecordWriter {
+        return new ConsentRecordWriter(
+            logger: $this->mockLogger,
+            container: $container ?? $this->mockContainer,
+            appManager: $appManager ?? $this->mockAppManager,
+            deadlineChecker: $this->mockDeadlineChecker,
+            notesHelper: $this->notesHelper,
+            scopeValidator: $this->mockScopeValidator
+        );
+
+    }//end buildRecordWriter()
 
     /**
      * Build a minimal saved-object stub whose getObject() returns $data.
@@ -226,13 +254,11 @@ class ConsentServiceTest extends TestCase
         $policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
         $service       = new ConsentService(
             logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            recordWriter: $this->buildRecordWriter()
         );
 
         $this->mockUpdateHandler->method('updateConsentStatus')
@@ -254,13 +280,11 @@ class ConsentServiceTest extends TestCase
         $policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
         $service       = new ConsentService(
             logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            recordWriter: $this->buildRecordWriter()
         );
 
         $this->mockDeadlineChecker->method('checkObjectionDeadline')
@@ -283,13 +307,11 @@ class ConsentServiceTest extends TestCase
         $policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
         $service       = new ConsentService(
             logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $this->mockAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            recordWriter: $this->buildRecordWriter()
         );
 
         $this->mockUpdateHandler->method('getConsentsByDocument')
@@ -318,13 +340,11 @@ class ConsentServiceTest extends TestCase
         $policyMatcher = $this->createMock(originalClassName: PolicyMatchService::class);
         $service       = new ConsentService(
             logger: $this->mockLogger,
-            container: $this->mockContainer,
-            appManager: $noOrAppManager,
             deadlineChecker: $this->mockDeadlineChecker,
             updateHandler: $this->mockUpdateHandler,
             scopeValidator: $this->mockScopeValidator,
             policyMatcher: $policyMatcher,
-            notesHelper: $this->notesHelper
+            recordWriter: $this->buildRecordWriter(appManager: $noOrAppManager)
         );
 
         $service->createConsentRequest(

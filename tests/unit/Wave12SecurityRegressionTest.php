@@ -391,18 +391,18 @@ class Wave12SecurityRegressionTest extends TestCase
     /**
      * WF2: listRequests scoped — user only receives their own requests.
      *
-     * The service is called with callerUserId and isAdmin so it filters
-     * the full list down to requests where the caller is initiator or signer.
+     * The service is called with the caller's UID so it filters the full list
+     * down to requests where the caller is initiator or signer.
      *
      * @return void
      */
     public function testListRequestsPassesCallerContextToService(): void
     {
         $signingService = $this->createMock(SigningService::class);
-        // Expect the service to be called with alice's UID and isAdmin=false.
+        // Expect the service to be called SCOPED to alice's UID.
         $signingService->expects($this->once())
             ->method('listRequests')
-            ->with('alice', false)
+            ->with('alice')
             ->willReturn(
                 [
                     ['id' => 'req-1', 'initiatorUserId' => 'alice', 'status' => 'PENDING'],
@@ -424,7 +424,10 @@ class Wave12SecurityRegressionTest extends TestCase
     }//end testListRequestsPassesCallerContextToService()
 
     /**
-     * WF2: admin listRequests passes isAdmin=true to service.
+     * WF2: an admin lists UNSCOPED — the controller passes callerUserId=''.
+     *
+     * That empty string is the single explicit scoping bypass; it is what the
+     * old `isAdmin: true` spelling already resolved to inside the service.
      *
      * @return void
      */
@@ -433,7 +436,7 @@ class Wave12SecurityRegressionTest extends TestCase
         $signingService = $this->createMock(SigningService::class);
         $signingService->expects($this->once())
             ->method('listRequests')
-            ->with('admin-user', true)
+            ->with('')
             ->willReturn([]);
 
         $controller = $this->makeSigningController(
@@ -495,7 +498,8 @@ class Wave12SecurityRegressionTest extends TestCase
     }//end testSigningServiceListRequestsFiltersForNonAdmin()
 
     /**
-     * WF2: showRequest passes caller context — getRequest is called with correct args.
+     * WF2: showRequest passes caller context — getRequest is called SCOPED to
+     * the caller's UID (a non-admin, so scoping must not be bypassed).
      *
      * @return void
      */
@@ -504,7 +508,7 @@ class Wave12SecurityRegressionTest extends TestCase
         $signingService = $this->createMock(SigningService::class);
         $signingService->expects($this->once())
             ->method('getRequest')
-            ->with('req-1', 'alice', false)
+            ->with('req-1', 'alice')
             ->willReturn(['id' => 'req-1', 'initiatorUserId' => 'alice', 'status' => 'PENDING']);
 
         $controller = $this->makeSigningController(

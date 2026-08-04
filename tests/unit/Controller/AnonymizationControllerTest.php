@@ -614,9 +614,10 @@ class AnonymizationControllerTest extends TestCase
     /**
      * Flag defaults to false: no summary work is triggered.
      *
-     * When appendBasisSummary is not in the request, anonymizeDocument is called
-     * with appendBasisSummary=false and outputFormat='pdf-only' (Robert's merged
-     * tenant default when no per-call outputFormat and no configured default).
+     * When appendBasisSummary is not in the request, the plain anonymizeDocument
+     * entry point is used (never the summary variant) with outputFormat='pdf-only'
+     * (Robert's merged tenant default when no per-call outputFormat and no
+     * configured default).
      *
      * @return void
      *
@@ -628,15 +629,15 @@ class AnonymizationControllerTest extends TestCase
 
         $this->mockRequest->method('getParams')->willReturn(['entities' => $entities]);
 
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocumentWithBasisSummary');
         $this->mockAnonService->expects($this->once())
             ->method('anonymizeDocument')
             ->with(
                 fileId: 42,
                 entities: $entities,
-                appendBasisSummary: false,
                 outputFormat: 'pdf-only',
                 unredactedEntities: [],
-                acknowledgedOverrides: [],
+                overrides: [],
                 userId: 'test-user',
                 scope: 'document',
                 dossierKey: null
@@ -670,12 +671,12 @@ class AnonymizationControllerTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
         $this->mockAnonService->expects($this->once())
-            ->method('anonymizeDocument')
+            ->method('anonymizeDocumentWithBasisSummary')
             ->with(
                 fileId: 10,
                 entities: $entities,
-                appendBasisSummary: true,
                 outputFormat: 'pdf'
             )
             ->willReturn(['replacementCount' => 2, 'anonymizedFileId' => 'file-10']);
@@ -706,12 +707,12 @@ class AnonymizationControllerTest extends TestCase
             ]
         );
 
+        $this->mockAnonService->expects($this->never())->method('anonymizeDocument');
         $this->mockAnonService->expects($this->once())
-            ->method('anonymizeDocument')
+            ->method('anonymizeDocumentWithBasisSummary')
             ->with(
                 fileId: 20,
                 entities: $entities,
-                appendBasisSummary: true,
                 outputFormat: 'preserve'
             )
             ->willReturn(
@@ -753,7 +754,7 @@ class AnonymizationControllerTest extends TestCase
             ]
         );
 
-        $this->mockAnonService->method('anonymizeDocument')
+        $this->mockAnonService->method('anonymizeDocumentWithBasisSummary')
             ->willReturn(
                 [
                     'replacementCount' => 1,

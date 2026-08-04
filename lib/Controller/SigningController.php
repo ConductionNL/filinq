@@ -44,7 +44,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ * @spec openspec/specs/document-signing/spec.md
  */
 class SigningController extends Controller
 {
@@ -127,11 +127,18 @@ class SigningController extends Controller
                 );
             }
 
-            // WF2 security fix: pass caller identity and admin flag so the service
-            // can scope results to requests the caller initiated or is a signer on.
+            // WF2 security fix: pass the caller identity so the service scopes
+            // results to requests the caller initiated or is a signer on. An
+            // admin lists UNSCOPED, which the service spells as callerUserId=''
+            // — the single explicit bypass (see SigningService::listRequests()).
             $uid     = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($uid);
-            $result  = $this->signingService->listRequests(callerUserId: $uid, isAdmin: $isAdmin);
+            $scope   = $uid;
+            if ($isAdmin === true) {
+                $scope = '';
+            }
+
+            $result = $this->signingService->listRequests(callerUserId: $scope);
             return new JSONResponse($result);
         } catch (RegisterNotConfiguredException $e) {
             // Configuration missing is a setup state, not a failure —
@@ -173,15 +180,20 @@ class SigningController extends Controller
                 );
             }
 
-            // WF2 + Wilco #6 fix (docudesk#100, 2026-06-06): pass caller
-            // identity and admin flag so the service enforces that only the
-            // initiator, a signer, or an admin can read a request — and
-            // returns null on BOTH not-found and access-denied so we emit
-            // a single 404 (never a 404-vs-403 split, which would be an
-            // existence-probing oracle).
+            // WF2 + Wilco #6 fix (docudesk#100, 2026-06-06): pass the caller
+            // identity so the service enforces that only the initiator or a
+            // signer can read a request — and returns null on BOTH not-found
+            // and access-denied so we emit a single 404 (never a 404-vs-403
+            // split, which would be an existence-probing oracle). An admin
+            // reads UNSCOPED, which the service spells as callerUserId=''.
             $uid     = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($uid);
-            $result  = $this->signingService->getRequest(requestId: $id, callerUserId: $uid, isAdmin: $isAdmin);
+            $scope   = $uid;
+            if ($isAdmin === true) {
+                $scope = '';
+            }
+
+            $result = $this->signingService->getRequest(requestId: $id, callerUserId: $scope);
             if ($result === null) {
                 return new JSONResponse(
                     data: ['error' => $this->l10n->t('Signing request not found')],
@@ -432,10 +444,10 @@ class SigningController extends Controller
             $uid     = $user->getUID();
             $isAdmin = $this->groupManager->isAdmin($uid);
             if ($isAdmin === false) {
+                // Non-admin branch only, so the read is always scoped to $uid.
                 $request = $this->signingService->getRequest(
                     requestId: $id,
-                    callerUserId: $uid,
-                    isAdmin: false
+                    callerUserId: $uid
                 );
                 if ($request === null) {
                     return new JSONResponse(

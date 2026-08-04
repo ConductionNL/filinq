@@ -45,16 +45,30 @@ use Psr\Log\LoggerInterface;
 class DocuDeskEventHandler
 {
     /**
+     * Constructor for DocuDeskEventHandler
+     *
+     * @param EnrichmentRunner $enrichmentRunner The enrichment runner. Defaults to a
+     *                                           fresh stateless instance; injectable
+     *                                           so tests can substitute a double.
+     *
+     * @return void
+     */
+    public function __construct(
+        private readonly EnrichmentRunner $enrichmentRunner=new EnrichmentRunner()
+    ) {
+
+    }//end __construct()
+
+    /**
      * Handles object creation events
      *
-     * @param ObjectCreatedEvent       $event            The creation event
-     * @param MetadataService          $metadataService  The metadata service
-     * @param SettingsService          $settingsService  The settings service
-     * @param LoggerInterface          $logger           The logger instance
-     * @param EnrichmentRunner         $enrichmentRunner The enrichment runner
-     * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator
-     *                                                   (injected here, not via
-     *                                                   service-locator).
+     * @param ObjectCreatedEvent       $event           The creation event
+     * @param MetadataService          $metadataService The metadata service
+     * @param SettingsService          $settingsService The settings service
+     * @param LoggerInterface          $logger          The logger instance
+     * @param PolicyRetroactiveService $retroactive     Retroactive policy applicator
+     *                                                  (injected here, not via
+     *                                                  service-locator).
      *
      * @return void
      *
@@ -65,7 +79,6 @@ class DocuDeskEventHandler
         MetadataService $metadataService,
         SettingsService $settingsService,
         LoggerInterface $logger,
-        EnrichmentRunner $enrichmentRunner,
         PolicyRetroactiveService $retroactive
     ): void {
         $object = $event->getObject();
@@ -81,7 +94,7 @@ class DocuDeskEventHandler
             retroactive: $retroactive
         );
 
-        $enrichmentRunner->enrichObject(
+        $this->enrichmentRunner->enrichObject(
             $object,
             $metadataService,
             $settingsService,
@@ -94,12 +107,11 @@ class DocuDeskEventHandler
     /**
      * Handles object update events
      *
-     * @param ObjectUpdatedEvent       $event            The update event
-     * @param MetadataService          $metadataService  The metadata service
-     * @param SettingsService          $settingsService  The settings service
-     * @param LoggerInterface          $logger           The logger instance
-     * @param EnrichmentRunner         $enrichmentRunner The enrichment runner
-     * @param PolicyRetroactiveService $retroactive      Retroactive policy applicator.
+     * @param ObjectUpdatedEvent       $event           The update event
+     * @param MetadataService          $metadataService The metadata service
+     * @param SettingsService          $settingsService The settings service
+     * @param LoggerInterface          $logger          The logger instance
+     * @param PolicyRetroactiveService $retroactive     Retroactive policy applicator.
      *
      * @return void
      *
@@ -110,7 +122,6 @@ class DocuDeskEventHandler
         MetadataService $metadataService,
         SettingsService $settingsService,
         LoggerInterface $logger,
-        EnrichmentRunner $enrichmentRunner,
         PolicyRetroactiveService $retroactive
     ): void {
         $object    = $event->getNewObject();
@@ -153,7 +164,7 @@ class DocuDeskEventHandler
             return;
         }
 
-        $enrichmentRunner->enrichObject(
+        $this->enrichmentRunner->enrichObject(
             $object,
             $metadataService,
             $settingsService,
@@ -196,24 +207,11 @@ class DocuDeskEventHandler
         array $oldObjectData,
         LoggerInterface $logger
     ): void {
-        if ($this->looksLikeDossier(objectData: $objectData) === false) {
-            return;
-        }
-
-        $newCheckedOn = ($objectData['checkedOn'] ?? null);
-        $oldCheckedOn = ($oldObjectData['checkedOn'] ?? null);
-        if ($newCheckedOn === null || $newCheckedOn === '' || $newCheckedOn === $oldCheckedOn) {
-            return;
-        }
-
-        $configuration = ($objectData['configuration'] ?? []);
-        $grondslagen   = [];
-        if (is_array($configuration) === true && is_array(($configuration['grondslagen'] ?? null)) === true) {
-            $grondslagen = $configuration['grondslagen'];
-        }
-
-        $autoRegen = ($grondslagen['autoRegenOnReview'] ?? true);
-        if ($autoRegen !== true) {
+        if ($this->shouldRegenerateGrondslagenSummary(
+            objectData: $objectData,
+            oldObjectData: $oldObjectData
+        ) === false
+        ) {
             return;
         }
 
@@ -238,6 +236,56 @@ class DocuDeskEventHandler
         }
 
     }//end maybeRegenerateGrondslagenSummary()
+
+    /**
+     * Decide whether a dossier update warrants a grondslagen-summary regen.
+     *
+     * True only when the payload looks like a dossier, `checkedOn` actually
+     * changed to a non-empty value, and auto-regen is not opted out of.
+     *
+     * @param array<string, mixed> $objectData    The new dossier object data.
+     * @param array<string, mixed> $oldObjectData The previous dossier object data.
+     *
+     * @return bool True when the summary should be regenerated.
+     *
+     * @spec openspec/specs/metadata-enrichment/spec.md
+     */
+    private function shouldRegenerateGrondslagenSummary(array $objectData, array $oldObjectData): bool
+    {
+        if ($this->looksLikeDossier(objectData: $objectData) === false) {
+            return false;
+        }
+
+        $newCheckedOn = ($objectData['checkedOn'] ?? null);
+        $oldCheckedOn = ($oldObjectData['checkedOn'] ?? null);
+        if ($newCheckedOn === null || $newCheckedOn === '' || $newCheckedOn === $oldCheckedOn) {
+            return false;
+        }
+
+        return $this->isGrondslagenAutoRegenEnabled(objectData: $objectData);
+
+    }//end shouldRegenerateGrondslagenSummary()
+
+    /**
+     * Read `configuration.grondslagen.autoRegenOnReview`, defaulting to enabled.
+     *
+     * @param array<string, mixed> $objectData The dossier object data.
+     *
+     * @return bool True when auto-regen is enabled (the default).
+     *
+     * @spec openspec/specs/metadata-enrichment/spec.md
+     */
+    private function isGrondslagenAutoRegenEnabled(array $objectData): bool
+    {
+        $configuration = ($objectData['configuration'] ?? []);
+        $grondslagen   = [];
+        if (is_array($configuration) === true && is_array(($configuration['grondslagen'] ?? null)) === true) {
+            $grondslagen = $configuration['grondslagen'];
+        }
+
+        return ($grondslagen['autoRegenOnReview'] ?? true) === true;
+
+    }//end isGrondslagenAutoRegenEnabled()
 
     /**
      * Shape-detect whether an object looks like a `dossier` register record.
@@ -383,34 +431,65 @@ class DocuDeskEventHandler
      */
     private function detectPolicyShape(array $objectData): ?string
     {
-        // A prohibition is identified by the combination of `reason` + `matchRules`
-        // and the absence of a `consentStatus` field (consent records always carry it).
-        $hasMatchRules     = isset($objectData['matchRules']) === true
-            && is_array($objectData['matchRules']) === true
-            && count($objectData['matchRules']) > 0;
-        $hasReason         = isset($objectData['reason']) === true && (string) $objectData['reason'] !== '';
-        $hasLegalAuthority = isset($objectData['legalAuthority']) === true;
-        $hasConsentStatus  = isset($objectData['consentStatus']) === true;
-
-        if ($hasMatchRules === true
-            && ($hasReason === true || $hasLegalAuthority === true)
-            && $hasConsentStatus === false
-        ) {
+        if ($this->looksLikeProhibition(objectData: $objectData) === true) {
             return 'prohibition';
         }
 
-        if ($hasConsentStatus === true) {
-            $scope = (string) ($objectData['scope'] ?? 'document');
-            if ($scope === 'entity') {
-                return 'standing_consent';
-            }
-
-            return 'document_consent';
+        if (isset($objectData['consentStatus']) === true) {
+            return $this->detectConsentScope(objectData: $objectData);
         }
 
         return null;
 
     }//end detectPolicyShape()
+
+    /**
+     * Structural test for a `publicationProhibition` payload.
+     *
+     * A prohibition is identified by the combination of `matchRules` plus
+     * `reason` or `legalAuthority`, and the absence of a `consentStatus` field
+     * (consent records always carry it).
+     *
+     * @param array<string, mixed> $objectData The changed object's payload.
+     *
+     * @return bool True when the payload is a prohibition record.
+     */
+    private function looksLikeProhibition(array $objectData): bool
+    {
+        $hasMatchRules = isset($objectData['matchRules']) === true
+            && is_array($objectData['matchRules']) === true
+            && count($objectData['matchRules']) > 0;
+        if ($hasMatchRules === false) {
+            return false;
+        }
+
+        if (isset($objectData['consentStatus']) === true) {
+            return false;
+        }
+
+        $hasReason = isset($objectData['reason']) === true && (string) $objectData['reason'] !== '';
+
+        return $hasReason === true || isset($objectData['legalAuthority']) === true;
+
+    }//end looksLikeProhibition()
+
+    /**
+     * Classify a consent payload by its `scope` field.
+     *
+     * @param array<string, mixed> $objectData The changed object's payload.
+     *
+     * @return string 'standing_consent' for scope=entity, otherwise 'document_consent'.
+     */
+    private function detectConsentScope(array $objectData): string
+    {
+        $scope = (string) ($objectData['scope'] ?? 'document');
+        if ($scope === 'entity') {
+            return 'standing_consent';
+        }
+
+        return 'document_consent';
+
+    }//end detectConsentScope()
 
     /**
      * Check if content fields have changed between old and new object data

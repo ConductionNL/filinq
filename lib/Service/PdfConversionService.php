@@ -72,23 +72,16 @@ class PdfConversionService
     /**
      * Convert the source file to PDF via the backend cascade.
      *
-     * @param File                $source Source file (any supported input format).
-     * @param array<string,mixed> $opts   Reserved for future per-call options; currently unused.
+     * @param File $source Source file (any supported input format).
      *
      * @return File The newly written PDF file node.
      *
      * @throws ConversionFailedException When no backend in the cascade succeeded.
      */
-    public function convertToPdf(File $source, array $opts=[]): File
+    public function convertToPdf(File $source): File
     {
         $mimeType = (string) $source->getMimeType();
-        $name     = $source->getName();
-        $dotPos   = strrpos($name, '.');
-        if ($dotPos === false) {
-            $ext = '';
-        } else {
-            $ext = strtolower(substr($name, ($dotPos + 1)));
-        }
+        $ext      = $this->extractExtension(name: $source->getName());
 
         $attempts = [];
 
@@ -115,10 +108,9 @@ class PdfConversionService
 
             $supports = $backend->canHandle($mimeType, $ext);
             if ($supports === false) {
+                $extLabel = $ext;
                 if ($ext === '') {
                     $extLabel = '(none)';
-                } else {
-                    $extLabel = $ext;
                 }
 
                 $attempts[] = [
@@ -172,4 +164,23 @@ class PdfConversionService
         );
 
     }//end convertToPdf()
+
+    /**
+     * Return the lowercased extension of $name without the leading dot.
+     *
+     * @param string $name File name, with or without an extension.
+     *
+     * @return string Lowercased extension, or an empty string when the name
+     *                carries no dot.
+     */
+    private function extractExtension(string $name): string
+    {
+        $dotPos = strrpos($name, '.');
+        if ($dotPos === false) {
+            return '';
+        }
+
+        return strtolower(substr($name, ($dotPos + 1)));
+
+    }//end extractExtension()
 }//end class

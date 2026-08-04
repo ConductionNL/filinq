@@ -114,12 +114,11 @@ class EnrichmentRunner
             // Event listeners run without a user session in webcron/background
             // contexts; persist as a trusted system operation so OpenRegister
             // RBAC does not deny the write as 'Anonymous'.
-            $metadataService->saveEnrichedMetadata(
+            $metadataService->saveEnrichedMetadataAsSystem(
                 $objectId,
                 (string) $object->getRegister(),
                 (string) $object->getSchema(),
-                $metadata,
-                asSystem: true
+                $metadata
             );
 
             $logger->info(

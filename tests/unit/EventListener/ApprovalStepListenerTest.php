@@ -29,6 +29,7 @@ use OCA\DocuDesk\Event\SignerStepApprovedEvent;
 use OCA\DocuDesk\Event\SignerStepPendingEvent;
 use OCA\DocuDesk\Event\SignerStepRejectedEvent;
 use OCA\DocuDesk\EventListener\ApprovalStepListener;
+use OCA\DocuDesk\EventListener\SignerEventTranslator;
 use OCA\DocuDesk\Service\Signing\NativeSigningProvider;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCA\DocuDesk\Service\Signing\SigningProviderInterface;
@@ -113,8 +114,11 @@ final class ApprovalStepListenerTest extends TestCase
         );
 
         $this->listener = new ApprovalStepListener(
-            providerFactory: $this->providerFactory,
-            dispatcher: $this->dispatcher,
+            translator: new SignerEventTranslator(
+                providerFactory: $this->providerFactory,
+                dispatcher: $this->dispatcher,
+                logger: $this->logger
+            ),
             config: $this->config,
             logger: $this->logger
         );
@@ -359,8 +363,11 @@ final class ApprovalStepListenerTest extends TestCase
         $config->method('getValueString')->willReturn('');
 
         $listener = new ApprovalStepListener(
-            providerFactory: $this->providerFactory,
-            dispatcher: $this->dispatcher,
+            translator: new SignerEventTranslator(
+                providerFactory: $this->providerFactory,
+                dispatcher: $this->dispatcher,
+                logger: $this->logger
+            ),
             config: $config,
             logger: $this->logger
         );

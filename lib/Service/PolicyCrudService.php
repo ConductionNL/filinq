@@ -65,6 +65,20 @@ class PolicyCrudService
     public const SCHEMA_CONSENT = 'publicationConsent';
 
     /**
+     * Policy surface selector for the entity-level deny-list.
+     *
+     * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
+     */
+    public const SURFACE_PROHIBITION = 'prohibition';
+
+    /**
+     * Policy surface selector for standing consents (scope=entity records).
+     *
+     * Used as the `$surface` argument to {@see self::requirePolicyPermission()}.
+     */
+    public const SURFACE_STANDING_CONSENT = 'standingConsent';
+
+    /**
      * Group whose members may create/update/delete standing-consent records.
      *
      * Enforced at service level per spec §RBAC scenario "Standing-consent
@@ -141,32 +155,6 @@ class PolicyCrudService
                 );
 
     }//end listStandingConsents()
-
-    /**
-     * List publicationConsent records with `scope: "document"` (workflow records).
-     *
-     * Exposed for the Consent Workflow admin page, which filters out standing
-     * consents from its listing per spec §UI.
-     *
-     * @return array<int, array<string, mixed>>
-     *
-     * @throws Exception On query failure.
-     */
-    public function listDocumentConsents(): array
-    {
-        $rows = $this->listByRegisterSchema(
-            register: self::REGISTER,
-            schema: self::SCHEMA_CONSENT
-        );
-
-        return array_values(
-                array_filter(
-            $rows,
-            static fn (array $r): bool => ($r['scope'] ?? 'document') === 'document'
-        )
-                );
-
-    }//end listDocumentConsents()
 
     /**
      * Get a single prohibition by UUID.
@@ -383,46 +371,42 @@ class PolicyCrudService
     }//end deleteStandingConsent()
 
     /**
-     * Public alias for assertProhibitionPermission — called by PolicyController.
+     * Public entry point to the per-surface permission gates — called by the
+     * PolicyController and the StandingConsentController.
      *
-     * Delegates to the private gate so the controller does not need to duplicate
-     * the permission logic. Throws RuntimeException (mapped to 403) when the
-     * current user is not authorised.
+     * Delegates to the private gate for the requested surface so the controllers
+     * do not need to duplicate the permission logic. Throws RuntimeException
+     * (mapped to 403) when the current user is not authorised, and
+     * InvalidArgumentException — never a silent pass — for an unknown surface.
      *
-     * @param string $action The operation being authorised ('read', 'create', 'update', 'delete').
+     * @param string $surface The policy surface: self::SURFACE_PROHIBITION or self::SURFACE_STANDING_CONSENT.
+     * @param string $action  The operation being authorised ('read', 'create', 'update', 'delete').
      *
      * @return void
      *
-     * @throws RuntimeException When the current user is not authorised.
+     * @throws RuntimeException         When the current user is not authorised.
+     * @throws InvalidArgumentException When $surface names no known policy surface.
      *
      * @spec openspec/changes/archive/2026-06-14-publication-prohibition-schema/tasks.md
-     */
-    public function requireProhibitionPermission(string $action): void
-    {
-        $this->assertProhibitionPermission(action: $action);
-
-    }//end requireProhibitionPermission()
-
-    /**
-     * Public alias for assertStandingConsentPermission — called by PolicyController.
-     *
-     * Delegates to the private gate so the controller does not need to duplicate
-     * the permission logic. Throws RuntimeException (mapped to 403) when the
-     * current user is not authorised.
-     *
-     * @param string $action The operation being authorised ('read', 'create', 'update', 'delete').
-     *
-     * @return void
-     *
-     * @throws RuntimeException When the current user is not authorised.
-     *
      * @spec openspec/changes/archive/2026-06-14-publication-consent-policy-fields/tasks.md
      */
-    public function requireStandingConsentPermission(string $action): void
+    public function requirePolicyPermission(string $surface, string $action): void
     {
-        $this->assertStandingConsentPermission(action: $action);
+        if ($surface === self::SURFACE_PROHIBITION) {
+            $this->assertProhibitionPermission(action: $action);
+            return;
+        }
 
-    }//end requireStandingConsentPermission()
+        if ($surface === self::SURFACE_STANDING_CONSENT) {
+            $this->assertStandingConsentPermission(action: $action);
+            return;
+        }
+
+        throw new InvalidArgumentException(
+            message: 'Unknown policy surface: '.$surface
+        );
+
+    }//end requirePolicyPermission()
 
     /**
      * Enforce service-level standing-consent group membership.

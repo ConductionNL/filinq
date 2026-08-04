@@ -112,8 +112,6 @@ class TemplatesControllerTest extends TestCase
             $this->mockRequest,
             $this->mockTemplateService,
             $this->mockRequestHandler,
-            $this->mockVersionService,
-            $this->mockPreviewService,
             $this->mockUserSession,
             $this->mockLogger
         );

@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Tests\Unit\EventListener;
 
 use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
+use OCA\DocuDesk\Event\SigningProvenance;
 use OCA\DocuDesk\EventListener\DocumentSigningRequestedListener;
 use OCA\DocuDesk\Service\SigningService;
 use OCP\EventDispatcher\Event;
@@ -53,17 +54,19 @@ class DocumentSigningRequestedListenerTest extends TestCase
     private function makeEvent(): DocumentSigningRequestedEvent
     {
         return new DocumentSigningRequestedEvent(
-            sourceApp: 'shillinq',
-            subjectRegister: 'finance',
-            subjectSchema: 'invoice',
-            subjectId: 'inv-42',
+            provenance: new SigningProvenance(
+                sourceApp: 'shillinq',
+                subjectRegister: 'finance',
+                subjectSchema: 'invoice',
+                subjectId: 'inv-42',
+                externalReference: 'ext-42',
+                correlationId: 'corr-42'
+            ),
             subjectLabel: 'Invoice 42',
             documentReference: 'file-99',
             signers: [['userId' => 'bob']],
             signatureLevel: 'SES',
-            signingMode: 'sequential',
-            externalReference: 'ext-42',
-            correlationId: 'corr-42'
+            signingMode: 'sequential'
         );
 
     }//end makeEvent()

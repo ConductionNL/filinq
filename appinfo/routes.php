@@ -85,12 +85,12 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         ['name' => 'policy#updateProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'PUT'],
         ['name' => 'policy#deleteProhibition', 'url' => 'api/policy/prohibitions/{id}', 'verb' => 'DELETE'],
 
-        // Policy — standing consent routes.
-        ['name' => 'policy#indexStandingConsents', 'url' => 'api/policy/standing-consents', 'verb' => 'GET'],
-        ['name' => 'policy#createStandingConsent', 'url' => 'api/policy/standing-consents', 'verb' => 'POST'],
-        ['name' => 'policy#showStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'GET'],
-        ['name' => 'policy#updateStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
-        ['name' => 'policy#deleteStandingConsent', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
+        // Policy — standing consent routes (StandingConsentController).
+        ['name' => 'standingConsent#index', 'url' => 'api/policy/standing-consents', 'verb' => 'GET'],
+        ['name' => 'standingConsent#create', 'url' => 'api/policy/standing-consents', 'verb' => 'POST'],
+        ['name' => 'standingConsent#show', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'GET'],
+        ['name' => 'standingConsent#update', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'PUT'],
+        ['name' => 'standingConsent#destroy', 'url' => 'api/policy/standing-consents/{id}', 'verb' => 'DELETE'],
 
         // Custom dictionaries — organisation-managed term-list CRUD + import
         // (custom-dictionary-recognition).
@@ -137,14 +137,14 @@ return \OCA\OpenRegister\AppHost\Routes::standard([
         // Template routes.
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
-        ['name' => 'templates#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
+        ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
         ['name' => 'templates#destroy', 'url' => 'api/templates/{id}', 'verb' => 'DELETE'],
-        ['name' => 'templates#versions', 'url' => 'api/templates/{id}/versions', 'verb' => 'GET'],
-        ['name' => 'templates#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
-        ['name' => 'templates#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
-        ['name' => 'templates#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'templateVersions#versions', 'url' => 'api/templates/{id}/versions', 'verb' => 'GET'],
+        ['name' => 'templateVersions#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
+        ['name' => 'templateVersions#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
+        ['name' => 'templatePreview#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],

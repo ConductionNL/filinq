@@ -58,6 +58,7 @@ use Psr\Log\NullLogger;
  */
 class AnonymizationServiceCustomDictionaryTest extends TestCase
 {
+    use BuildsAnonymizationService;
 
     /**
      * @var ContainerInterface|MockObject
@@ -148,27 +149,20 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase
         $appManager = $this->createMock(IAppManager::class);
         $appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-        return new AnonymizationService(
-            logger: new NullLogger(),
-            container: $this->mockContainer,
-            appManager: $appManager,
-            entityDetection: new EntityDetectionService(new AnonymizationResultParser()),
-            appConfig: $this->createMock(IAppConfig::class),
-            consentCrud: $this->createMock(ConsentCrudService::class),
-            consentService: $this->createMock(ConsentService::class),
-            grondslagenSummary: $this->createMock(GrondslagenSummaryService::class),
-            fileEntityStats: $this->createMock(FileEntityStatsService::class),
-            pdfConversion: $this->createMock(\OCA\DocuDesk\Service\PdfConversionService::class),
-            emlAssembly: $this->createMock(\OCA\DocuDesk\Service\EmlPdfAssemblyService::class),
-            customDictionary: $customDictionary,
-            confidentialityLabel: $this->createMock(\OCA\DocuDesk\Service\ConfidentialityLabelService::class),
-            customDictionaryDetection: new CustomDictionaryDetectionRunner(
-                logger: new NullLogger(),
-                container: $this->mockContainer,
-                appManager: $appManager,
-                customDictionary: $customDictionary,
-                matcher: new CustomDictionaryMatchService()
-            )
+        return $this->makeAnonymizationServiceFrom(
+            [
+                'logger'          => new NullLogger(),
+                'container'       => $this->mockContainer,
+                'appManager'      => $appManager,
+                'entityDetection' => new EntityDetectionService(new AnonymizationResultParser()),
+                'dictionaryRunner' => new CustomDictionaryDetectionRunner(
+                    logger: new NullLogger(),
+                    container: $this->mockContainer,
+                    appManager: $appManager,
+                    customDictionary: $customDictionary,
+                    matcher: new CustomDictionaryMatchService()
+                ),
+            ]
         );
 
     }//end makeService()

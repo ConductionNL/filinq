@@ -23,9 +23,12 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
+use OCA\DocuDesk\Event\SigningConcludedEventFactory;
 use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCA\DocuDesk\Service\SigningAuditService;
 use OCA\DocuDesk\Service\SignedArtifactProducer;
+use OCA\DocuDesk\Service\SigningActorResolver;
+use OCA\DocuDesk\Service\SigningConclusionEmitter;
 use OCA\DocuDesk\Service\SigningRequestValidator;
 use OCA\DocuDesk\Service\SigningService;
 use OCA\DocuDesk\Service\SettingsService;
@@ -35,7 +38,6 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
-use OCP\Notification\IManager as INotificationManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -154,27 +156,35 @@ class SigningServiceTest extends TestCase
         $this->request->method('getRemoteAddress')->willReturn('127.0.0.1');
 
         $this->providerFactory = $this->createMock(SigningProviderFactory::class);
-        $notificationManager   = $this->createMock(INotificationManager::class);
         $logger          = $this->createMock(LoggerInterface::class);
         $eventDispatcher = $this->createMock(IEventDispatcher::class);
         $this->rootFolder = $this->createMock(\OCP\Files\IRootFolder::class);
 
+        // Real (not mocked) collaborators, so these tests still exercise the
+        // identity-resolution, signer-authorisation and conclusion-emission
+        // code paths end to end after they moved out of SigningService.
         $this->service = new SigningService(
             settingsService: $this->settingsService,
             auditService: $this->auditService,
             config: $this->config,
-            userSession: $this->userSession,
-            notificationManager: $notificationManager,
-            logger: $logger,
-            request: $this->request,
-            eventDispatcher: $eventDispatcher,
             artifactProducer: new SignedArtifactProducer(
                 providerFactory: $this->providerFactory,
                 userSession: $this->userSession,
                 request: $this->request,
                 rootFolder: $this->rootFolder
             ),
-            validator: new SigningRequestValidator(providerFactory: $this->providerFactory)
+            validator: new SigningRequestValidator(providerFactory: $this->providerFactory),
+            actorResolver: new SigningActorResolver(
+                settingsService: $this->settingsService,
+                config: $this->config,
+                userSession: $this->userSession,
+                request: $this->request
+            ),
+            emitter: new SigningConclusionEmitter(
+                eventDispatcher: $eventDispatcher,
+                logger: $logger,
+                eventFactory: new SigningConcludedEventFactory()
+            )
         );
 
     }//end setUp()
@@ -488,7 +498,7 @@ class SigningServiceTest extends TestCase
             ]
         );
 
-        $result = $this->service->listRequests(callerUserId: 'alice', isAdmin: false);
+        $result = $this->service->listRequests(callerUserId: 'alice');
 
         // alice initiated req-001 and signs req-002; req-003 is hidden.
         $this->assertCount(2, $result);
@@ -500,7 +510,10 @@ class SigningServiceTest extends TestCase
     }//end testListRequestsFiltersForNonAdminCaller()
 
     /**
-     * listRequests() returns every request unfiltered for an admin caller.
+     * listRequests() returns every request unfiltered for an UNSCOPED caller.
+     *
+     * callerUserId='' is the single explicit scoping bypass — the spelling an
+     * admin caller uses (SigningController::listRequests()).
      *
      * @return void
      */
@@ -516,11 +529,123 @@ class SigningServiceTest extends TestCase
             ]
         );
 
-        $result = $this->service->listRequests(callerUserId: 'admin', isAdmin: true);
+        $result = $this->service->listRequests(callerUserId: '');
 
         $this->assertCount(2, $result);
 
     }//end testListRequestsReturnsAllForAdminCaller()
+
+    /**
+     * getRequest() denies a SCOPED caller who is neither initiator nor signer.
+     *
+     * NEGATIVE CONTROL for the WF2 / Wilco #6 caller-scoping contract. Before
+     * this test the single-record scoping in getRequest() was pinned by NOTHING
+     * — deleting the guard entirely left the whole suite green. Access denied
+     * must collapse to null, the SAME shape as not-found, so an unrelated user
+     * cannot probe request-ID existence.
+     *
+     * @return void
+     */
+    public function testGetRequestReturnsNullForScopedCallerWhoIsNeitherInitiatorNorSigner(): void
+    {
+        $this->objectService->method('find')->willReturn(
+            $this->makeSigningRequestEntity(
+                [
+                    'id'              => 'req-001',
+                    'status'          => 'PENDING',
+                    'initiatorUserId' => 'bob',
+                    'signerIds'       => ['carol'],
+                ]
+            )
+        );
+
+        $result = $this->service->getRequest(requestId: 'req-001', callerUserId: 'mallory');
+
+        $this->assertNull($result);
+
+    }//end testGetRequestReturnsNullForScopedCallerWhoIsNeitherInitiatorNorSigner()
+
+    /**
+     * getRequest() allows a SCOPED caller who is the initiator.
+     *
+     * Positive control for the test above: proves the scoped path can return a
+     * record at all, so the null assertion there is evidence about the GUARD
+     * and not about a broken fixture.
+     *
+     * @return void
+     */
+    public function testGetRequestAllowsScopedInitiator(): void
+    {
+        $this->objectService->method('find')->willReturn(
+            $this->makeSigningRequestEntity(
+                [
+                    'id'              => 'req-001',
+                    'status'          => 'PENDING',
+                    'initiatorUserId' => 'bob',
+                    'signerIds'       => ['carol'],
+                ]
+            )
+        );
+
+        $result = $this->service->getRequest(requestId: 'req-001', callerUserId: 'bob');
+
+        $this->assertIsArray($result);
+        $this->assertSame('req-001', $result['id']);
+
+    }//end testGetRequestAllowsScopedInitiator()
+
+    /**
+     * getRequest() allows a SCOPED caller who is a listed signer.
+     *
+     * @return void
+     */
+    public function testGetRequestAllowsScopedSigner(): void
+    {
+        $this->objectService->method('find')->willReturn(
+            $this->makeSigningRequestEntity(
+                [
+                    'id'              => 'req-001',
+                    'status'          => 'PENDING',
+                    'initiatorUserId' => 'bob',
+                    'signerIds'       => ['carol'],
+                ]
+            )
+        );
+
+        $result = $this->service->getRequest(requestId: 'req-001', callerUserId: 'carol');
+
+        $this->assertIsArray($result);
+        $this->assertSame('req-001', $result['id']);
+
+    }//end testGetRequestAllowsScopedSigner()
+
+    /**
+     * getRequest() returns the record UNSCOPED for callerUserId=''.
+     *
+     * That is the single explicit bypass an admin caller uses — the caller
+     * would be denied by the scoped test above.
+     *
+     * @return void
+     */
+    public function testGetRequestReturnsRecordForUnscopedCaller(): void
+    {
+        $this->objectService->method('find')->willReturn(
+            $this->makeSigningRequestEntity(
+                [
+                    'id'              => 'req-001',
+                    'status'          => 'PENDING',
+                    'initiatorUserId' => 'bob',
+                    'signerIds'       => ['carol'],
+                ]
+            )
+        );
+
+        $result = $this->service->getRequest(requestId: 'req-001', callerUserId: '');
+
+        $this->assertIsArray($result);
+        $this->assertSame('req-001', $result['id']);
+
+    }//end testGetRequestReturnsRecordForUnscopedCaller()
 
     /**
      * Build an ObjectEntity-like double whose jsonSerialize() returns the

@@ -40,17 +40,11 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\EventListener;
 
-use OCA\DocuDesk\Event\SignerChainCompletedEvent;
-use OCA\DocuDesk\Event\SignerStepApprovedEvent;
-use OCA\DocuDesk\Event\SignerStepPendingEvent;
-use OCA\DocuDesk\Event\SignerStepRejectedEvent;
-use OCA\DocuDesk\Service\Signing\SigningProviderFactory;
 use OCA\OpenRegister\Event\ApprovalStepApprovedEvent;
 use OCA\OpenRegister\Event\ApprovalStepCompletedEvent;
 use OCA\OpenRegister\Event\ApprovalStepInitiatedEvent;
 use OCA\OpenRegister\Event\ApprovalStepRejectedEvent;
 use OCP\EventDispatcher\Event;
-use OCP\EventDispatcher\IEventDispatcher;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -72,22 +66,18 @@ class ApprovalStepListener implements IEventListener
     /**
      * Constructor.
      *
-     * @param SigningProviderFactory $providerFactory Provider factory for invoking
-     *                                                the configured provider on
-     *                                                step-pending transitions.
-     * @param IEventDispatcher       $dispatcher      Dispatcher used to re-emit
-     *                                                typed docudesk-side events.
-     * @param IAppConfig             $config          App config (reads the
-     *                                                docudesk signing-request
-     *                                                register/schema slugs to
-     *                                                filter foreign chains).
-     * @param LoggerInterface        $logger          Logger.
+     * @param SignerEventTranslator $translator Translates OR approval-step
+     *                                          transitions into docudesk signer
+     *                                          events and notifies the provider.
+     * @param IAppConfig            $config     App config (reads the docudesk
+     *                                          signing-request register/schema
+     *                                          slugs to filter foreign chains).
+     * @param LoggerInterface       $logger     Logger.
      *
      * @return void
      */
     public function __construct(
-        private readonly SigningProviderFactory $providerFactory,
-        private readonly IEventDispatcher $dispatcher,
+        private readonly SignerEventTranslator $translator,
         private readonly IAppConfig $config,
         private readonly LoggerInterface $logger
     ) {
@@ -109,22 +99,22 @@ class ApprovalStepListener implements IEventListener
 
         try {
             if ($event instanceof ApprovalStepInitiatedEvent) {
-                $this->onInitiated(event: $event);
+                $this->translator->onInitiated(event: $event);
                 return;
             }
 
             if ($event instanceof ApprovalStepApprovedEvent) {
-                $this->onApproved(event: $event);
+                $this->translator->onApproved(event: $event);
                 return;
             }
 
             if ($event instanceof ApprovalStepRejectedEvent) {
-                $this->onRejected(event: $event);
+                $this->translator->onRejected(event: $event);
                 return;
             }
 
             if ($event instanceof ApprovalStepCompletedEvent) {
-                $this->onCompleted(event: $event);
+                $this->translator->onCompleted(event: $event);
                 return;
             }
         } catch (Throwable $e) {
@@ -192,135 +182,4 @@ class ApprovalStepListener implements IEventListener
         return null;
 
     }//end extractChain()
-
-    /**
-     * Handle a step-initiated event (a step has become `pending`).
-     *
-     * @param ApprovalStepInitiatedEvent $event OR initiated event.
-     *
-     * @return void
-     */
-    private function onInitiated(ApprovalStepInitiatedEvent $event): void
-    {
-        $this->dispatcher->dispatchTyped(
-            new SignerStepPendingEvent(
-                chain: $event->getChain(),
-                step: $event->getStep(),
-                objectUuid: $event->getObjectUuid()
-            )
-        );
-
-        $this->invokeProviderForPendingStep(
-            objectUuid: $event->getObjectUuid(),
-            stepOrder: $event->getStep()->getStepOrder()
-        );
-
-    }//end onInitiated()
-
-    /**
-     * Handle a step-approved event.
-     *
-     * Re-emits the typed approved event and, if the next step is pending,
-     * invokes the configured provider for that next step's signer. When the
-     * chain has no next step the corresponding `ApprovalStepCompletedEvent`
-     * is what closes the chain (handled separately).
-     *
-     * @param ApprovalStepApprovedEvent $event OR approved event.
-     *
-     * @return void
-     */
-    private function onApproved(ApprovalStepApprovedEvent $event): void
-    {
-        $objectUuid = $event->getObjectUuid();
-        $nextStep   = $event->getNextStep();
-
-        $this->dispatcher->dispatchTyped(
-            new SignerStepApprovedEvent(
-                chain: $event->getChain(),
-                step: $event->getStep(),
-                userId: $event->getUserId(),
-                nextStep: $nextStep,
-                objectUuid: $objectUuid
-            )
-        );
-
-        if ($nextStep !== null) {
-            $this->invokeProviderForPendingStep(
-                objectUuid: $objectUuid,
-                stepOrder: $nextStep->getStepOrder()
-            );
-        }
-
-    }//end onApproved()
-
-    /**
-     * Handle a step-rejected event.
-     *
-     * @param ApprovalStepRejectedEvent $event OR rejected event.
-     *
-     * @return void
-     */
-    private function onRejected(ApprovalStepRejectedEvent $event): void
-    {
-        $this->dispatcher->dispatchTyped(
-            new SignerStepRejectedEvent(
-                chain: $event->getChain(),
-                step: $event->getStep(),
-                userId: $event->getUserId(),
-                objectUuid: $event->getObjectUuid()
-            )
-        );
-
-    }//end onRejected()
-
-    /**
-     * Handle a chain-completed event (final step approved).
-     *
-     * @param ApprovalStepCompletedEvent $event OR completed event.
-     *
-     * @return void
-     */
-    private function onCompleted(ApprovalStepCompletedEvent $event): void
-    {
-        $this->dispatcher->dispatchTyped(
-            new SignerChainCompletedEvent(
-                chain: $event->getChain(),
-                finalStep: $event->getFinalStep(),
-                userId: $event->getUserId(),
-                objectUuid: $event->getObjectUuid()
-            )
-        );
-
-    }//end onCompleted()
-
-    /**
-     * Resolve the active provider and ask it to handle a now-pending step.
-     *
-     * The `NativeSigningProvider` is a no-op for this call today: it waits for
-     * the docudesk UI signer-action endpoint, which translates to OR's
-     * `ApprovalService::approveStep`. External providers (`ValidSignProvider`
-     * and future plugins) may use this hook to push a signing-request to the
-     * external service or send the signer email.
-     *
-     * @param string $objectUuid Signing-request UUID.
-     * @param int    $stepOrder  Step order (1-based).
-     *
-     * @return void
-     */
-    private function invokeProviderForPendingStep(string $objectUuid, int $stepOrder): void
-    {
-        try {
-            $provider = $this->providerFactory->getActiveProvider();
-            $this->logger->debug(
-                'ApprovalStepListener: provider '.$provider->getIdentifier()
-                .' notified that step '.$stepOrder.' is pending for sign-request '.$objectUuid
-            );
-        } catch (Throwable $e) {
-            $this->logger->error(
-                'ApprovalStepListener: failed to resolve signing provider for '.$objectUuid.': '.$e->getMessage(),
-                ['exception' => $e]
-            );
-        }
-
-    }//end invokeProviderForPendingStep()
 }//end class

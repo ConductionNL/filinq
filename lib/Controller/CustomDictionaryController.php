@@ -105,8 +105,6 @@ class CustomDictionaryController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
     public function show(string $id): JSONResponse
@@ -150,8 +148,6 @@ class CustomDictionaryController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
     public function update(string $id): JSONResponse
@@ -176,8 +172,6 @@ class CustomDictionaryController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
@@ -204,8 +198,6 @@ class CustomDictionaryController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
     public function indexTerms(string $id): JSONResponse
@@ -227,8 +219,6 @@ class CustomDictionaryController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
@@ -257,8 +247,6 @@ class CustomDictionaryController extends Controller
      * @NoAdminRequired
      * @NoCSRFRequired
      *
-     * @SuppressWarnings(PHPMD.ShortVariable)
-     *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */
     public function deleteTerm(string $id, string $termId): JSONResponse
@@ -285,8 +273,6 @@ class CustomDictionaryController extends Controller
      *
      * @NoAdminRequired
      * @NoCSRFRequired
-     *
-     * @SuppressWarnings(PHPMD.ShortVariable)
      *
      * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
      */

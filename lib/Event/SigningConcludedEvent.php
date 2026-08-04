@@ -34,7 +34,10 @@ use OCP\EventDispatcher\Event;
  * Cross-app conclusion event: DocuDesk reports a concluded delegated signing request.
  *
  * Fully immutable — DocuDesk constructs it from the persisted signing-request
- * array and the normalised terminal status; consumers only read.
+ * array and the normalised terminal status; consumers only read. The
+ * array-to-event mapping (including the eIDAS assurance-level resolution)
+ * lives in the injectable {@see SigningConcludedEventFactory}, not in a static
+ * named constructor on this value object.
  *
  * @category Event
  * @package  OCA\DocuDesk\Event
@@ -54,12 +57,7 @@ class SigningConcludedEvent extends Event
      * @param string|null       $signedDocumentRef Reference to the signed document, when signed
      * @param array<int, mixed> $signers           Resolved signers list
      * @param string|null       $signedAt          When the request concluded
-     * @param string            $sourceApp         Consumer app that requested the signature
-     * @param string|null       $subjectRegister   OpenRegister register of the originating object
-     * @param string|null       $subjectSchema     OpenRegister schema of the originating object
-     * @param string|null       $subjectId         OpenRegister id of the originating object
-     * @param string            $externalReference Consumer's own reference
-     * @param string            $correlationId     Correlation id from the request event
+     * @param SigningProvenance $provenance        Source app, subject reference and consumer references
      * @param string            $assuranceLevel    Resolved eIDAS assurance (low|substantial|high,
      *                                             signing-trust-rebuild REQ-DDSTR-010) — the
      *                                             delegating consumer (e.g. decidesk's
@@ -77,91 +75,12 @@ class SigningConcludedEvent extends Event
         private readonly ?string $signedDocumentRef,
         private readonly array $signers,
         private readonly ?string $signedAt,
-        private readonly string $sourceApp,
-        private readonly ?string $subjectRegister,
-        private readonly ?string $subjectSchema,
-        private readonly ?string $subjectId,
-        private readonly string $externalReference='',
-        private readonly string $correlationId='',
+        private readonly SigningProvenance $provenance,
         private readonly string $assuranceLevel='low',
     ) {
         parent::__construct();
 
     }//end __construct()
-
-    /**
-     * Build a conclusion event from a persisted signing-request array.
-     *
-     * The request array already carries the provenance fields (persisted by
-     * SigningService::createRequest from the request event) and the signers;
-     * the status is the normalised terminal vocabulary value supplied by the
-     * caller.
-     *
-     * @param array<string, mixed> $request           Persisted signing-request object array
-     * @param string               $status            Normalised status (signed|declined|expired|cancelled)
-     * @param string|null          $signedDocumentRef Reference to the signed document, when signed
-     *
-     * @return self
-     *
-     * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
-     */
-    public static function fromRequest(
-        array $request,
-        string $status,
-        ?string $signedDocumentRef=null,
-    ): self {
-        return new self(
-            signingRequestId: (string) ($request['id'] ?? $request['uuid'] ?? ''),
-            status: $status,
-            signedDocumentRef: $signedDocumentRef,
-            signers: (array) ($request['signerIds'] ?? []),
-            signedAt: ($request['signedAt'] ?? null),
-            sourceApp: (string) ($request['sourceApp'] ?? ''),
-            subjectRegister: ($request['subjectRegister'] ?? null),
-            subjectSchema: ($request['subjectSchema'] ?? null),
-            subjectId: ($request['subjectId'] ?? null),
-            externalReference: (string) ($request['externalReference'] ?? ''),
-            correlationId: (string) ($request['correlationId'] ?? ''),
-            assuranceLevel: self::resolveAssuranceLevel(request: $request),
-        );
-
-    }//end fromRequest()
-
-    /**
-     * Resolve the eIDAS assurance level for the completion payload
-     * (signing-trust-rebuild REQ-DDSTR-010).
-     *
-     * Conservative-by-construction: the native provider only ever produces SES
-     * artifacts (`NativeSigningProvider::supportsLevel()`), so a native/SES
-     * request always resolves `low`. Any level this map does not explicitly
-     * recognise falls back to `low` rather than over-claiming an assurance the
-     * request cannot actually evidence. `signer-identity-rails` is expected to
-     * populate a broker-resolved, higher assurance into this SAME field for a
-     * request whose provider actually supports it — this mapping never needs
-     * to change for that, only the request's own `provider`/`signatureLevel`
-     * do.
-     *
-     * @param array<string, mixed> $request The persisted signing-request array.
-     *
-     * @return string One of low|substantial|high.
-     */
-    private static function resolveAssuranceLevel(array $request): string
-    {
-        $provider = (string) ($request['provider'] ?? 'native');
-        $level    = (string) ($request['signatureLevel'] ?? 'SES');
-
-        if ($provider === 'native') {
-            // The native provider only ever produces SES — never claim more.
-            return 'low';
-        }
-
-        return match ($level) {
-            'QES' => 'high',
-            'AdES' => 'substantial',
-            default => 'low',
-        };
-
-    }//end resolveAssuranceLevel()
 
     /**
      * Get the concluded signing-request id.
@@ -237,7 +156,7 @@ class SigningConcludedEvent extends Event
      */
     public function getSourceApp(): string
     {
-        return $this->sourceApp;
+        return $this->provenance->getSourceApp();
 
     }//end getSourceApp()
 
@@ -250,7 +169,7 @@ class SigningConcludedEvent extends Event
      */
     public function getSubjectRegister(): ?string
     {
-        return $this->subjectRegister;
+        return $this->provenance->getSubjectRegister();
 
     }//end getSubjectRegister()
 
@@ -263,7 +182,7 @@ class SigningConcludedEvent extends Event
      */
     public function getSubjectSchema(): ?string
     {
-        return $this->subjectSchema;
+        return $this->provenance->getSubjectSchema();
 
     }//end getSubjectSchema()
 
@@ -276,7 +195,7 @@ class SigningConcludedEvent extends Event
      */
     public function getSubjectId(): ?string
     {
-        return $this->subjectId;
+        return $this->provenance->getSubjectId();
 
     }//end getSubjectId()
 
@@ -289,7 +208,7 @@ class SigningConcludedEvent extends Event
      */
     public function getExternalReference(): string
     {
-        return $this->externalReference;
+        return $this->provenance->getExternalReference();
 
     }//end getExternalReference()
 
@@ -302,7 +221,7 @@ class SigningConcludedEvent extends Event
      */
     public function getCorrelationId(): string
     {
-        return $this->correlationId;
+        return $this->provenance->getCorrelationId();
 
     }//end getCorrelationId()
 

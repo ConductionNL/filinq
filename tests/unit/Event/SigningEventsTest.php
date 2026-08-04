@@ -25,7 +25,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Tests\Unit\Event;
 
 use OCA\DocuDesk\Event\DocumentSigningRequestedEvent;
-use OCA\DocuDesk\Event\SigningConcludedEvent;
+use OCA\DocuDesk\Event\SigningConcludedEventFactory;
+use OCA\DocuDesk\Event\SigningProvenance;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,17 +49,19 @@ class SigningEventsTest extends TestCase
     public function testRequestedEventGettersAndResultSlot(): void
     {
         $event = new DocumentSigningRequestedEvent(
-            sourceApp: 'shillinq',
-            subjectRegister: 'finance',
-            subjectSchema: 'invoice',
-            subjectId: 'inv-1',
+            provenance: new SigningProvenance(
+                sourceApp: 'shillinq',
+                subjectRegister: 'finance',
+                subjectSchema: 'invoice',
+                subjectId: 'inv-1',
+                externalReference: 'ext-1',
+                correlationId: 'corr-1'
+            ),
             subjectLabel: 'Invoice 1',
             documentReference: 'file-1',
             signers: [['userId' => 'bob']],
             signatureLevel: 'AdES',
-            signingMode: 'parallel',
-            externalReference: 'ext-1',
-            correlationId: 'corr-1'
+            signingMode: 'parallel'
         );
 
         $this->assertSame('shillinq', $event->getSourceApp());
@@ -103,7 +106,7 @@ class SigningEventsTest extends TestCase
             'correlationId'     => 'corr-9',
         ];
 
-        $event = SigningConcludedEvent::fromRequest(
+        $event = (new SigningConcludedEventFactory())->create(
             request: $request,
             status: 'signed',
             signedDocumentRef: 'file-signed-9'
@@ -130,7 +133,7 @@ class SigningEventsTest extends TestCase
      */
     public function testConcludedEventFromMinimalRequest(): void
     {
-        $event = SigningConcludedEvent::fromRequest(
+        $event = (new SigningConcludedEventFactory())->create(
             request: ['uuid' => 'req-min'],
             status: 'cancelled'
         );

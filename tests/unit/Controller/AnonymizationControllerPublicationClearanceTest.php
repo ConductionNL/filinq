@@ -404,10 +404,9 @@ class AnonymizationControllerPublicationClearanceTest extends TestCase
             ->with(
                 fileId: 10,
                 entities: $entities,
-                appendBasisSummary: false,
                 outputFormat: 'pdf-only',
                 unredactedEntities: [],
-                acknowledgedOverrides: [],
+                overrides: [],
                 userId: 'test-user',
                 scope: 'document',
                 dossierKey: null

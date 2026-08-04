@@ -354,7 +354,11 @@ class TemplateRenderer
      *
      * @return string The replacement string with Twig conditional
      *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called as the callable array
+     * `[$this, 'replaceConditionalSection']` from preg_replace_callback() at
+     * line 342. PHPMD resolves only direct `$this->method()` calls, so a
+     * callable-array reference reads to it as no caller at all — a false
+     * positive, verified by grep.
      */
     private function replaceConditionalSection(array $matches): string
     {

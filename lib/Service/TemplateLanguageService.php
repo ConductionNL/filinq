@@ -196,12 +196,12 @@ class TemplateLanguageService
             static fn($lang) => $lang !== $preferred
         );
 
-        $parts = [$preferred];
-        $q     = 0.9;
+        $parts   = [$preferred];
+        $quality = 0.9;
 
         foreach ($others as $lang) {
-            $parts[] = sprintf('%s;q=%.1f', $lang, $q);
-            $q      -= 0.1;
+            $parts[]  = sprintf('%s;q=%.1f', $lang, $quality);
+            $quality -= 0.1;
         }
 
         return implode(', ', $parts);

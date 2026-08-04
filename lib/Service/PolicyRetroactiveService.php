@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\Service;
 
+use DateTimeImmutable;
 use Exception;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -72,14 +73,16 @@ class PolicyRetroactiveService
     /**
      * Constructor.
      *
-     * @param LoggerInterface    $logger        Structured log sink.
-     * @param ContainerInterface $container     DI container for OpenRegister lookup.
-     * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
+     * @param LoggerInterface       $logger          Structured log sink.
+     * @param ContainerInterface    $container       DI container for OpenRegister lookup.
+     * @param PolicyMatchService    $policyMatcher   Reusable rule-evaluation primitives.
+     * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
-        private readonly PolicyMatchService $policyMatcher
+        private readonly PolicyMatchService $policyMatcher,
+        private readonly ObjectResultExtractor $resultExtractor=new ObjectResultExtractor()
     ) {
 
     }//end __construct()
@@ -101,10 +104,7 @@ class PolicyRetroactiveService
             return 0;
         }
 
-        $self            = ($prohibition['@self'] ?? []);
-        $prohibitionUuid = (string) (
-            $self['id'] ?? $self['uuid'] ?? $prohibition['id'] ?? $prohibition['uuid'] ?? ''
-        );
+        $prohibitionUuid = $this->readRecordUuid(record: $prohibition);
         if ($prohibitionUuid === '') {
             $this->logger->warning(
                 'PolicyRetroactiveService: prohibition has no UUID; skipping retroactive sweep'
@@ -113,37 +113,15 @@ class PolicyRetroactiveService
         }
 
         $matchRules = ($prohibition['matchRules'] ?? []);
-        $entityType = (string) ($prohibition['entityType'] ?? 'OTHER');
         if (is_array($matchRules) === false || count($matchRules) === 0) {
             return 0;
         }
 
-        $candidates = $this->loadInFlightDocumentRecords(entityType: $entityType);
-        $resolved   = 0;
-
-        foreach ($candidates as $candidate) {
-            $entityText = (string) ($candidate['entityText'] ?? '');
-            if ($entityText === '') {
-                continue;
-            }
-
-            if ($this->policyMatcher->entityMatchesAnyRule(
-                matchRules: $matchRules,
-                entityText: $entityText,
-                resolvedIdentifiers: $this->extractIdentifiers(object: $candidate)
-            ) === false
-            ) {
-                continue;
-            }
-
-            if ($this->forceResolveToAnonymized(
-                record: $candidate,
-                prohibitionUuid: $prohibitionUuid
-            ) === true
-            ) {
-                $resolved++;
-            }
-        }//end foreach
+        $resolved = $this->sweepInFlightRecords(
+            matchRules: $matchRules,
+            entityType: (string) ($prohibition['entityType'] ?? 'OTHER'),
+            prohibitionUuid: $prohibitionUuid
+        );
 
         $this->policyMatcher->invalidateCache();
 
@@ -160,6 +138,80 @@ class PolicyRetroactiveService
         return $resolved;
 
     }//end applyProhibitionMutation()
+
+    /**
+     * Force-resolve every in-flight record the given rules now match.
+     *
+     * @param array<int, array<string, mixed>> $matchRules      The prohibition's match rules.
+     * @param string                           $entityType      Entity type the prohibition targets.
+     * @param string                           $prohibitionUuid UUID recorded on each resolved record.
+     *
+     * @return int Number of records that were successfully force-resolved.
+     */
+    private function sweepInFlightRecords(
+        array $matchRules,
+        string $entityType,
+        string $prohibitionUuid
+    ): int {
+        $resolved = 0;
+
+        foreach ($this->loadInFlightDocumentRecords(entityType: $entityType) as $candidate) {
+            if ($this->candidateMatches(candidate: $candidate, matchRules: $matchRules) === false) {
+                continue;
+            }
+
+            if ($this->forceResolveToAnonymized(
+                record: $candidate,
+                prohibitionUuid: $prohibitionUuid
+            ) === true
+            ) {
+                $resolved++;
+            }
+        }
+
+        return $resolved;
+
+    }//end sweepInFlightRecords()
+
+    /**
+     * Test one in-flight record against the prohibition's match rules.
+     *
+     * @param array<string, mixed>             $candidate  The in-flight record.
+     * @param array<int, array<string, mixed>> $matchRules The prohibition's match rules.
+     *
+     * @return bool True when the record's entity is covered by the rules.
+     */
+    private function candidateMatches(array $candidate, array $matchRules): bool
+    {
+        $entityText = (string) ($candidate['entityText'] ?? '');
+        if ($entityText === '') {
+            return false;
+        }
+
+        return $this->policyMatcher->entityMatchesAnyRule(
+            matchRules: $matchRules,
+            entityText: $entityText,
+            resolvedIdentifiers: $this->extractIdentifiers(object: $candidate)
+        );
+
+    }//end candidateMatches()
+
+    /**
+     * Read a record's UUID from its `@self` envelope or its top-level keys.
+     *
+     * @param array<string, mixed> $record The record's plain data.
+     *
+     * @return string The UUID, or an empty string when the record carries none.
+     */
+    private function readRecordUuid(array $record): string
+    {
+        $self = ($record['@self'] ?? []);
+
+        return (string) (
+            $self['id'] ?? $self['uuid'] ?? $record['id'] ?? $record['uuid'] ?? ''
+        );
+
+    }//end readRecordUuid()
 
     /**
      * Standing-consent mutations are intentionally NOT applied retroactively.
@@ -206,7 +258,7 @@ class PolicyRetroactiveService
             return false;
         }
 
-        $now        = new \DateTimeImmutable();
+        $now        = new DateTimeImmutable();
         $validFrom  = $this->parseDateTime(value: (string) ($prohibition['validFrom'] ?? ''));
         $validUntil = $this->parseDateTime(value: (string) ($prohibition['validUntil'] ?? ''));
 
@@ -258,7 +310,7 @@ class PolicyRetroactiveService
                 _rbac: false
             );
 
-            $records = $this->coerceToArray(result: $result);
+            $records = $this->resultExtractor->extractRows(result: $result);
             return array_values(
                     array_filter(
                 $records,
@@ -358,57 +410,6 @@ class PolicyRetroactiveService
     }//end forceResolveToAnonymized()
 
     /**
-     * Coerce an ObjectService findAll result to a flat array of plain rows.
-     *
-     * @param mixed $result Whatever findAll returned.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    private function coerceToArray($result): array
-    {
-        $candidates = [];
-        if (is_array($result) === true) {
-            $hasResultsKey = (isset($result['results']) === true && is_array($result['results']) === true);
-            if ($hasResultsKey === true) {
-                $candidates = $result['results'];
-            } else {
-                $candidates = $result;
-            }
-        } else if ($result instanceof \Traversable) {
-            $candidates = iterator_to_array(iterator: $result);
-        }
-
-        $rows = [];
-        foreach ($candidates as $candidate) {
-            if (is_array($candidate) === true) {
-                $rows[] = $candidate;
-                continue;
-            }
-
-            if (is_object($candidate) === true && method_exists($candidate, 'getObject') === true) {
-                $payload = $candidate->getObject();
-                if (is_array($payload) === true) {
-                    if (isset($payload['@self']) === false) {
-                        $self = null;
-                        if (method_exists($candidate, 'getUuid') === true) {
-                            $self = $candidate->getUuid();
-                        }
-
-                        if ($self !== null) {
-                            $payload['@self'] = ['id' => $self];
-                        }
-                    }
-
-                    $rows[] = $payload;
-                }
-            }
-        }//end foreach
-
-        return $rows;
-
-    }//end coerceToArray()
-
-    /**
      * Pull `bsn` / `kvk` identifiers from a record if present.
      *
      * The schema does not currently formalise these fields on
@@ -448,16 +449,16 @@ class PolicyRetroactiveService
      *
      * @param string $value Raw value.
      *
-     * @return \DateTimeImmutable|null
+     * @return DateTimeImmutable|null
      */
-    private function parseDateTime(string $value): ?\DateTimeImmutable
+    private function parseDateTime(string $value): ?DateTimeImmutable
     {
         if ($value === '') {
             return null;
         }
 
         try {
-            return new \DateTimeImmutable($value);
+            return new DateTimeImmutable($value);
         } catch (Exception) {
             return null;
         }

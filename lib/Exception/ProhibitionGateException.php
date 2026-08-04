@@ -6,11 +6,11 @@
  * The gate can fire in two modes:
  *   1. **Backend unavailable**: the PolicyMatchService or EntityRelationMapper
  *      could not be reached (fail-closed mode). `$backendUnavailable` is set to
- *      a non-null string describing the outage; `$missingProhibitionMatches` and
+ *      a non-null string describing the outage; `$missingMatches` and
  *      `$rejectedOverrides` are empty.
  *   2. **Rule block**: one or more prohibition-listed entities are absent from
  *      the to-be-anonymised set, or a user-submitted override was rejected.
- *      `$missingProhibitionMatches` and/or `$rejectedOverrides` are populated;
+ *      `$missingMatches` and/or `$rejectedOverrides` are populated;
  *      `$backendUnavailable` is null.
  *
  * @category Exception
@@ -40,15 +40,15 @@ class ProhibitionGateException extends \RuntimeException
     /**
      * Construct a new ProhibitionGateException.
      *
-     * @param array<int, array<string, mixed>> $missingProhibitionMatches Prohibition-listed entities absent from anonymised set.
-     * @param array<int, array<string, mixed>> $rejectedOverrides         User-submitted overrides rejected by the gate.
-     * @param string|null                      $backendUnavailable        Non-null when gate failed closed due to backend outage.
-     * @param string                           $message                   Exception message.
-     * @param int                              $code                      Exception code.
-     * @param \Throwable|null                  $previous                  Previous exception for chaining.
+     * @param array<int, array<string, mixed>> $missingMatches     Prohibition-listed entities absent from anonymised set.
+     * @param array<int, array<string, mixed>> $rejectedOverrides  User-submitted overrides rejected by the gate.
+     * @param string|null                      $backendUnavailable Non-null when gate failed closed due to backend outage.
+     * @param string                           $message            Exception message.
+     * @param int                              $code               Exception code.
+     * @param \Throwable|null                  $previous           Previous exception for chaining.
      */
     public function __construct(
-        private readonly array $missingProhibitionMatches=[],
+        private readonly array $missingMatches=[],
         private readonly array $rejectedOverrides=[],
         private readonly ?string $backendUnavailable=null,
         string $message='Anonymisation prohibition gate blocked the request.',
@@ -65,7 +65,7 @@ class ProhibitionGateException extends \RuntimeException
      */
     public function getMissingProhibitionMatches(): array
     {
-        return $this->missingProhibitionMatches;
+        return $this->missingMatches;
     }//end getMissingProhibitionMatches()
 
     /**

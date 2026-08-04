@@ -65,7 +65,6 @@ class DocuDeskEventListener implements IEventListener
             $settingsService = \OC::$server->get(SettingsService::class);
             $retroactive     = \OC::$server->get(PolicyRetroactiveService::class);
             $eventHandler    = new DocuDeskEventHandler();
-            $enrichRunner    = new EnrichmentRunner();
 
             $logger->info(
                 'DocuDesk: Processing event',
@@ -81,7 +80,6 @@ class DocuDeskEventListener implements IEventListener
                 settingsService: $settingsService,
                 logger: $logger,
                 eventHandler: $eventHandler,
-                enrichRunner: $enrichRunner,
                 retroactive: $retroactive
             );
 
@@ -90,7 +88,11 @@ class DocuDeskEventListener implements IEventListener
             // directly, compute + store the verdict here. The listener only
             // resolves services and delegates; all validation logic lives in
             // DocumentValidationService, all orchestration in ValidationRunner.
-            $this->dispatchValidation(event: $event, metadataService: $metadataService, logger: $logger);
+            (new ValidationRunner())->runFallbackForEvent(
+                event: $event,
+                metadataService: $metadataService,
+                logger: $logger
+            );
         } catch (\Exception $e) {
             $this->logHandlerError(exception: $e, event: $event);
         }//end try
@@ -105,7 +107,6 @@ class DocuDeskEventListener implements IEventListener
      * @param SettingsService          $settingsService The settings service
      * @param LoggerInterface          $logger          The logger instance
      * @param DocuDeskEventHandler     $eventHandler    The event handler
-     * @param EnrichmentRunner         $enrichRunner    The enrichment runner
      * @param PolicyRetroactiveService $retroactive     Retroactive policy applicator.
      *
      * @return void
@@ -118,7 +119,6 @@ class DocuDeskEventListener implements IEventListener
         SettingsService $settingsService,
         LoggerInterface $logger,
         DocuDeskEventHandler $eventHandler,
-        EnrichmentRunner $enrichRunner,
         PolicyRetroactiveService $retroactive
     ): void {
         if ($event instanceof ObjectCreatedEvent) {
@@ -127,7 +127,6 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner,
                 $retroactive
             );
             return;
@@ -139,7 +138,6 @@ class DocuDeskEventListener implements IEventListener
                 $metadataService,
                 $settingsService,
                 $logger,
-                $enrichRunner,
                 $retroactive
             );
             return;
@@ -158,53 +156,6 @@ class DocuDeskEventListener implements IEventListener
         );
 
     }//end dispatchEvent()
-
-    /**
-     * Dispatch the validation-verdict fallback for create/update events.
-     *
-     * Resolves the changed object from the event and hands it to the
-     * ValidationRunner. Best-effort and contains no validation logic itself.
-     *
-     * @param Event           $event           The event.
-     * @param MetadataService $metadataService The metadata save path.
-     * @param LoggerInterface $logger          Logger.
-     *
-     * @return void
-     *
-     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
-     * @psalm-suppress UnusedParam — both params are passed to validateObject() below.
-     * @spec           openspec/specs/document-validation-checks/spec.md
-     */
-    private function dispatchValidation(Event $event, MetadataService $metadataService, LoggerInterface $logger): void
-    {
-        $object = null;
-        if ($event instanceof ObjectCreatedEvent) {
-            $object = $event->getObject();
-        } else if ($event instanceof ObjectUpdatedEvent) {
-            $object = $event->getNewObject();
-        }
-
-        if ($object === null) {
-            return;
-        }
-
-        try {
-            $validationService = \OC::$server->get(\OCA\DocuDesk\Service\DocumentValidationService::class);
-            $rootFolder        = \OC::$server->get(\OCP\Files\IRootFolder::class);
-            $runner            = new ValidationRunner();
-            $runner->validateObject(
-                object: $object,
-                validationService: $validationService,
-                metadataService: $metadataService,
-                rootFolder: $rootFolder,
-                logger: $logger,
-                logContext: 'validation fallback'
-            );
-        } catch (\Throwable $e) {
-            $logger->debug('DocuDesk: validation fallback skipped: '.$e->getMessage());
-        }
-
-    }//end dispatchValidation()
 
     /**
      * Log an error from the event handler

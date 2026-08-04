@@ -29,6 +29,9 @@ namespace OCA\DocuDesk\EventListener;
 
 use OCA\DocuDesk\Service\DocumentValidationService;
 use OCA\DocuDesk\Service\MetadataService;
+use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCP\EventDispatcher\Event;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
@@ -47,6 +50,51 @@ use Throwable;
  */
 class ValidationRunner
 {
+    /**
+     * Run the validation-verdict fallback for an object create/update event.
+     *
+     * Resolves the changed object from the event, then resolves the validation
+     * service and root folder at runtime and hands everything to
+     * {@see validateObject()}. Best-effort: any resolution failure is logged at
+     * debug level and swallowed, so the fallback can never break the event flow.
+     *
+     * @param Event           $event           The dispatched OpenRegister event.
+     * @param MetadataService $metadataService The metadata save path.
+     * @param LoggerInterface $logger          Logger.
+     *
+     * @return void
+     *
+     * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
+     * @spec           openspec/specs/document-validation-checks/spec.md
+     */
+    public function runFallbackForEvent(Event $event, MetadataService $metadataService, LoggerInterface $logger): void
+    {
+        $object = null;
+        if ($event instanceof ObjectCreatedEvent) {
+            $object = $event->getObject();
+        } else if ($event instanceof ObjectUpdatedEvent) {
+            $object = $event->getNewObject();
+        }
+
+        if ($object === null) {
+            return;
+        }
+
+        try {
+            $this->validateObject(
+                object: $object,
+                validationService: \OC::$server->get(DocumentValidationService::class),
+                metadataService: $metadataService,
+                rootFolder: \OC::$server->get(IRootFolder::class),
+                logger: $logger,
+                logContext: 'validation fallback'
+            );
+        } catch (Throwable $e) {
+            $logger->debug('DocuDesk: validation fallback skipped: '.$e->getMessage());
+        }
+
+    }//end runFallbackForEvent()
+
     /**
      * Compute + store the validation verdict for an OpenRegister object.
      *
@@ -94,15 +142,14 @@ class ValidationRunner
             // Event listeners run without a user session in webcron/background
             // contexts; persist as a trusted system operation so OpenRegister
             // RBAC does not deny the write as 'Anonymous'.
-            $metadataService->saveEnrichedMetadata(
+            $metadataService->saveEnrichedMetadataAsSystem(
                 $object->getUuid(),
                 (string) $object->getRegister(),
                 (string) $object->getSchema(),
                 [
                     'validationStatus'   => $verdict['validationStatus'],
                     'validationFindings' => $verdict['validationFindings'],
-                ],
-                asSystem: true
+                ]
             );
 
             $logger->info(

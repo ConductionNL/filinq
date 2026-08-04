@@ -159,7 +159,10 @@ class RegisterDiscoveryService
      *
      * @return array<string, mixed> Serialized register with filtered schemas
      *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called as the callable array
+     * `[$this, 'filterSchemas']` from array_map() at line 129. PHPMD resolves
+     * only direct `$this->method()` calls, so a callable-array reference reads
+     * to it as no caller at all — a false positive, verified by grep.
      *
      * @spec openspec/specs/admin-settings/spec.md
      */
@@ -183,7 +186,11 @@ class RegisterDiscoveryService
      *
      * @return mixed The filtered schema
      *
-     * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+     * @SuppressWarnings(PHPMD.UnusedPrivateMethod) Called as the callable array
+     * `[$this, 'filterSchemaProperties']` from array_map() at line 168. PHPMD
+     * resolves only direct `$this->method()` calls, so a callable-array
+     * reference reads to it as no caller at all — a false positive, verified
+     * by grep.
      *
      * @spec openspec/specs/admin-settings/spec.md
      */
