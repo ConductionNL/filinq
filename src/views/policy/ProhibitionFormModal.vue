@@ -234,7 +234,6 @@ export default {
 				label="label"
 				:reduce="(o) => o.value"
 				:input-label="t('docudesk', 'Entity type')"
-				:label="t('docudesk', 'Entity type')"
 				required />
 			<NcTextField
 				:value.sync="form.reason"
@@ -257,8 +256,7 @@ export default {
 					:options="severityOptions"
 					label="label"
 					:reduce="(o) => o.value"
-					:input-label="t('docudesk', 'Severity')"
-					:label="t('docudesk', 'Severity')" />
+					:input-label="t('docudesk', 'Severity')" />
 				<NcTextField
 					:value.sync="form.jurisdiction"
 					:label="t('docudesk', 'Jurisdiction')" />
