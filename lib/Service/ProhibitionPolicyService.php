@@ -49,22 +49,22 @@ use Throwable;
  */
 class ProhibitionPolicyService
 {
-
-    /**
-     * Guard for the per-relation skip decision taken in the review UI.
-     *
-     * @var RelationSkipDecisionService
-     */
-    private readonly RelationSkipDecisionService $skipDecisions;
-
     /**
      * Constructor for ProhibitionPolicyService
      *
-     * @param LoggerInterface            $logger    Logger for best-effort policy failures.
-     * @param ContainerInterface         $container Container the PolicyMatchService is resolved from.
-     * @param OpenRegisterServiceLocator $locator   Resolver for OpenRegister services and mappers.
-     * @param ProhibitionGateService     $gate      The gate that runs before any OpenRegister
-     *                                              interaction on an anonymise call.
+     * `$skipDecisions` is INJECTED rather than constructed here. It used to be
+     * `new`ed in this constructor, which meant every dependency it needed had to
+     * be threaded through this class as well — adding its authorisation
+     * collaborators (IUserSession + IRootFolder) that way pushed this class over
+     * PHPMD's CouplingBetweenObjects limit for dependencies it never uses.
+     * Letting the container build it keeps that coupling where it belongs.
+     *
+     * @param LoggerInterface             $logger        Logger for best-effort policy failures.
+     * @param ContainerInterface          $container     Container the PolicyMatchService is resolved from.
+     * @param OpenRegisterServiceLocator  $locator       Resolver for OpenRegister services and mappers.
+     * @param ProhibitionGateService      $gate          The gate that runs before any OpenRegister
+     *                                                   interaction on an anonymise call.
+     * @param RelationSkipDecisionService $skipDecisions Guard + apply for the per-relation skip decision.
      *
      * @return void
      */
@@ -72,14 +72,9 @@ class ProhibitionPolicyService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly OpenRegisterServiceLocator $locator,
-        private readonly ProhibitionGateService $gate
+        private readonly ProhibitionGateService $gate,
+        private readonly RelationSkipDecisionService $skipDecisions
     ) {
-        $this->skipDecisions = new RelationSkipDecisionService(
-            logger: $logger,
-            container: $container,
-            locator: $locator
-        );
-
     }//end __construct()
 
     /**

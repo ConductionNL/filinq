@@ -186,4 +186,67 @@ class SettingsController extends Controller
         }//end try
 
     }//end create()
+
+    /**
+     * Update settings — the canonical ADR-066 write verb.
+     *
+     * `OCA\OpenRegister\AppHost\Routes::standard()` ships `settings#update`
+     * (PUT /api/settings) for EVERY app, and DocuDesk's own SettingsController
+     * had no `update()`: the route existed, resolved to this class, and blew up
+     * on dispatch. Same write path (and the same admin guard) as
+     * {@see create()}, which stays for the fleet's legacy POST dialect.
+     *
+     * @return JSONResponse JSON response containing the updated settings
+     *
+     * @spec openspec/specs/admin-settings/spec.md
+     */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+    public function update(): JSONResponse
+    {
+        return $this->create();
+
+    }//end update()
+
+    /**
+     * Re-run the register/schema initialisation from the app's register JSON.
+     *
+     * Counterpart to `settings#load` (POST /api/settings/load) in the canonical
+     * AppHost route table — likewise routed for every app and likewise missing
+     * here until now.
+     *
+     * @return JSONResponse The initialisation result.
+     *
+     * @spec openspec/specs/admin-settings/spec.md
+     */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+    public function load(): JSONResponse
+    {
+        try {
+            $user = $this->userSession->getUser();
+            if ($user === null) {
+                return new JSONResponse(
+                    data: ['error' => 'Not authenticated'],
+                    statusCode: Http::STATUS_UNAUTHORIZED
+                );
+            }
+
+            if ($this->groupManager->isAdmin($user->getUID()) === false) {
+                return new JSONResponse(
+                    data: ['error' => 'Admin privileges required'],
+                    statusCode: Http::STATUS_FORBIDDEN
+                );
+            }
+
+            return new JSONResponse($this->settingsService->initialize());
+        } catch (Exception $e) {
+            $this->logger->error(
+                'Failed to load register configuration',
+                [
+                    'exception' => $e->getMessage(),
+                ]
+            );
+            return new JSONResponse(['error' => $e->getMessage()], 500);
+        }//end try
+
+    }//end load()
 }//end class

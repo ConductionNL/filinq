@@ -174,9 +174,15 @@ $extra = [
         // calls server-to-server on behalf of an external, accountless
         // signer — #[PublicPage] because the caller is portaliq's backend,
         // never a browser; the X-Portal-Subject assertion IS the auth.
-        ['name' => 'portalsigningreceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
-        ['name' => 'portalsigningreceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
-        ['name' => 'portalsigningreceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
+        //
+        // ⚠️ The controller segment is CASE-SENSITIVE. Nextcloud builds the
+        // class name with `ucfirst()` only — it does NOT re-case the rest — so
+        // `portalsigningreceiver#…` resolved to `PortalsigningreceiverController`,
+        // a class that does not exist, and all three endpoints were dead. Keep
+        // the segment spelled exactly as the class: `portalSigningReceiver`.
+        ['name' => 'portalSigningReceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
 
         // Financial extraction routes (scan-en-herken).
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
