@@ -76,7 +76,6 @@ class ProhibitionPolicyService
         private readonly ProhibitionGateService $gate,
         private readonly RelationSkipDecisionService $skipDecisions
     ) {
-
     }//end __construct()
 
     /**
