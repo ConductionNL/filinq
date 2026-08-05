@@ -401,9 +401,16 @@ class AnonymizationController extends Controller
      * unless `force`). Include / non-skip decisions are always allowed and
      * forwarded to OpenRegister.
      *
+     * `$id` is a caller-supplied primary key into a table that is NOT scoped to
+     * the caller, so the decision path is authorised twice: authentication here,
+     * and per-document ownership inside RelationSkipDecisionService (which is
+     * where the relation — and therefore its Nextcloud file id — is loaded). A
+     * relation on a document the caller cannot reach yields the same 404 as one
+     * that does not exist.
+     *
      * @param int $id The EntityRelation id.
      *
-     * @return JSONResponse Success, or 422 with `{threshold, prohibitionMatch}`.
+     * @return JSONResponse Success, or 401 / 404 / 422 with `{threshold, prohibitionMatch}`.
      *
      * @NoAdminRequired
      * @NoCSRFRequired
@@ -412,6 +419,11 @@ class AnonymizationController extends Controller
      */
     public function updateRelation(int $id): JSONResponse
     {
+        $denied = $this->anonymizeRequest->requireAuthenticated();
+        if ($denied !== null) {
+            return new JSONResponse($denied['body'], $denied['status']);
+        }
+
         $result = $this->anonymizeRequest->applyRelationDecision(
             relationId: $id,
             params: $this->request->getParams()
