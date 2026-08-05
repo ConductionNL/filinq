@@ -49,7 +49,6 @@ use Throwable;
  */
 class ProhibitionPolicyService
 {
-
     /**
      * Constructor for ProhibitionPolicyService
      *
