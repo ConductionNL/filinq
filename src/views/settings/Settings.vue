@@ -902,7 +902,7 @@ export default {
 		 * by `saveAll`). Invalid JSON shows an inline error and leaves the
 		 * previously-saved vocabulary untouched (files-confidential-labels).
 		 *
-		 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-read-a-files-confidentiality-label-availability-guarded-req-ddfcl-001
+		 * @spec openspec/specs/files-confidential-labels/spec.md#requirement-read-a-files-confidentiality-label-availability-guarded-req-ddfcl-001
 		 */
 		onConfidentialityVocabularyBlur() {
 			let parsed
