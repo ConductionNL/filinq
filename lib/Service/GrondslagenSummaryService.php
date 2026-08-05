@@ -88,30 +88,6 @@ class GrondslagenSummaryService
      */
     private const SUMMARY_FILE_SUFFIX = '_grondslagen.pdf';
 
-    /**
-     * Entity-type labels localised in the placeholder, mirroring
-     * OpenRegister's `DocumentProcessingHandler::LOCALIZABLE_ENTITY_TYPES`
-     * (the `EntityRecognitionHandler::ENTITY_TYPE_*` values). Only these are
-     * translated so the summary legend reads the same as the labels
-     * OpenRegister wrote into the redacted document; an unknown type falls
-     * back to its raw string. DocuDesk's `l10n/` carries the same Dutch
-     * translations so the two apps resolve identically for a given language.
-     *
-     * @var array<int, string>
-     */
-    private const LOCALIZABLE_ENTITY_TYPES = [
-        'PERSON',
-        'ORGANIZATION',
-        'LOCATION',
-        'EMAIL',
-        'PHONE',
-        'ADDRESS',
-        'DATE',
-        'IBAN',
-        'SSN',
-        'IP_ADDRESS',
-    ];
-
 
     /**
      * Constructor.
@@ -1366,10 +1342,12 @@ class GrondslagenSummaryService
     /**
      * Localise an entity-type label for the summary placeholder so it reads
      * the same as the label OpenRegister wrote into the redacted document
-     * (anonymisation-placeholder-id-scope). Only the enumerated
-     * `LOCALIZABLE_ENTITY_TYPES` set is translated; an unknown / free-form type
-     * is returned unchanged. When no `IL10N` is injected the raw label is
-     * returned (the `en` / untranslated behaviour).
+     * (anonymisation-placeholder-id-scope).
+     *
+     * ANY type is translated, not an enumerated subset: `IL10N::t()` already
+     * returns the msgid unchanged when no translation exists, so an unknown or
+     * free-form type still falls back to its raw label. When no `IL10N` is
+     * injected the raw label is returned (the `en` / untranslated behaviour).
      *
      * @param string $entityType The raw entity type (e.g. 'PERSON').
      *
@@ -1377,13 +1355,26 @@ class GrondslagenSummaryService
      */
     private function localizeEntityType(string $entityType): string
     {
-        if ($this->l10n === null
-            || in_array($entityType, self::LOCALIZABLE_ENTITY_TYPES, true) === false
-        ) {
+        if ($this->l10n === null) {
             return $entityType;
         }
 
-        return $this->l10n->t($entityType);
+        $upper = trim(mb_strtoupper($entityType));
+        if ($upper === '') {
+            return $entityType;
+        }
+
+        // No whitelist. `IL10N::t()` returns the msgid unchanged when there is no
+        // translation, so an unknown type falls back to its raw label anyway —
+        // and a whitelist only adds a second place to forget. It had already been
+        // forgotten: openregister localises five GLiNER / OpenAnonymiser tags
+        // (STREET_ADDRESS, BSN, KENTEKEN, INCOME, EDUCATION_LEVEL) that this list
+        // never gained, so the summary rendered them raw even though this app's
+        // own l10n carries the Dutch for all five. The frontend's
+        // `entityTypeLabel()` in services/entityTypes.js has never had a
+        // whitelist either, which is why the UI translated them and the appended
+        // summary did not.
+        return $this->l10n->t($upper);
 
     }//end localizeEntityType()
 

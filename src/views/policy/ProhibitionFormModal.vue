@@ -241,6 +241,32 @@ export default {
 				:label="t('docudesk', 'Reason (markdown allowed)')"
 				required />
 			<NcCheckboxRadioSwitch
+				v-model="showLegal"
+				type="switch">
+				{{ t('docudesk', 'Record legal documentation (optional)') }}
+			</NcCheckboxRadioSwitch>
+			<div v-if="showLegal" class="policy-form-section">
+				<NcTextField
+					:value.sync="form.legalAuthority"
+					:label="t('docudesk', 'Legal authority (court order, statute, …)')" />
+				<NcTextField
+					:value.sync="form.caseReference"
+					:label="t('docudesk', 'Case reference')" />
+				<NcSelect
+					v-model="form.severity"
+					:options="severityOptions"
+					label="label"
+					:reduce="(o) => o.value"
+					:input-label="t('docudesk', 'Severity')"
+					:label="t('docudesk', 'Severity')" />
+				<NcTextField
+					:value.sync="form.jurisdiction"
+					:label="t('docudesk', 'Jurisdiction')" />
+				<NcTextField
+					:value.sync="form.validUntil"
+					:label="t('docudesk', 'Valid until (ISO 8601)')" />
+			</div>
+			<NcCheckboxRadioSwitch
 				v-model="form.active"
 				type="switch">
 				{{ t('docudesk', 'Active') }}
@@ -307,32 +333,6 @@ export default {
 				</NcButton>
 			</div>
 
-			<NcCheckboxRadioSwitch
-				v-model="showLegal"
-				type="switch">
-				{{ t('docudesk', 'Record legal documentation (optional)') }}
-			</NcCheckboxRadioSwitch>
-			<div v-if="showLegal" class="policy-form-section">
-				<NcTextField
-					:value.sync="form.legalAuthority"
-					:label="t('docudesk', 'Legal authority (court order, statute, …)')" />
-				<NcTextField
-					:value.sync="form.caseReference"
-					:label="t('docudesk', 'Case reference')" />
-				<NcSelect
-					v-model="form.severity"
-					:options="severityOptions"
-					label="label"
-					:reduce="(o) => o.value"
-					:input-label="t('docudesk', 'Severity')"
-					:label="t('docudesk', 'Severity')" />
-				<NcTextField
-					:value.sync="form.jurisdiction"
-					:label="t('docudesk', 'Jurisdiction')" />
-				<NcTextField
-					:value.sync="form.validUntil"
-					:label="t('docudesk', 'Valid until (ISO 8601)')" />
-			</div>
 
 			<div v-if="formError" class="form-error">
 				{{ formError }}

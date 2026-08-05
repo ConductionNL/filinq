@@ -287,6 +287,54 @@ class GrondslagenSummaryByTypeTest extends TestCase
 
 
     /**
+     * ANY entity type is localised, not an enumerated subset.
+     *
+     * Regression: the summary carried its own LOCALIZABLE_ENTITY_TYPES whitelist
+     * that openregister's equivalent had outgrown. openregister localises five
+     * GLiNER / OpenAnonymiser tags as literals — STREET_ADDRESS, BSN, KENTEKEN,
+     * INCOME, EDUCATION_LEVEL — none of which the whitelist gained, so the
+     * appended summary rendered them raw even though this app's own l10n carries
+     * the Dutch for all five. The frontend's `entityTypeLabel()` never had a
+     * whitelist, which is why the UI translated them and the summary did not.
+     *
+     * @return void
+     */
+    public function testAnyEntityTypeIsLocalisedNotAWhitelistedSubset(): void
+    {
+        $reflection = new \ReflectionClass(GrondslagenSummaryService::class);
+        $service    = $reflection->newInstanceWithoutConstructor();
+
+        // An IL10N that upper-cases and prefixes, so a translated call is
+        // distinguishable from the raw-passthrough fallback.
+        $l10n = $this->createMock(\OCP\IL10N::class);
+        $l10n->method('t')->willReturnCallback(
+            static function (string $text): string {
+                return 'X-'.$text;
+            }
+        );
+
+        $property = new \ReflectionProperty(GrondslagenSummaryService::class, 'l10n');
+        $property->setAccessible(true);
+        $property->setValue($service, $l10n);
+
+        $method = new ReflectionMethod(GrondslagenSummaryService::class, 'localizeEntityType');
+        $method->setAccessible(true);
+
+        foreach (['PERSON', 'STREET_ADDRESS', 'BSN', 'KENTEKEN', 'INCOME', 'EDUCATION_LEVEL'] as $type) {
+            $this->assertSame(
+                'X-'.$type,
+                $method->invoke($service, $type),
+                $type.' must be passed to the translator, not returned raw'
+            );
+        }
+
+        // A type nobody enumerated anywhere still reaches the translator; IL10N
+        // returning the msgid unchanged is what provides the fallback.
+        $this->assertSame('X-SOMETHING_NEW', $method->invoke($service, 'SOMETHING_NEW'));
+    }//end testAnyEntityTypeIsLocalisedNotAWhitelistedSubset()
+
+
+    /**
      * An empty entity list yields no rows rather than erroring.
      *
      * @return void
