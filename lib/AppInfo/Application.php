@@ -69,6 +69,23 @@ class Application extends App implements IBootstrap
      */
     public function register(IRegistrationContext $context): void
     {
+        // LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
+        // Coordinator::registerApps() calls registerAutoloading() then register()
+        // one app at a time, so this method runs BEFORE OCA\OpenRegister\ is
+        // autoloadable (this app sorts before `openregister`). Any AppHost
+        // reference here — including a class_exists() probe — therefore answers
+        // FALSE on a perfectly healthy instance. Put OpenRegister's prefix on the
+        // autoloader ourselves; registerAutoloading() touches only the autoloader
+        // and is idempotent ($alreadyRegistered key guard). Deliberately NOT
+        // IAppManager::loadApp(), which would mark OpenRegister loaded and boot it
+        // before its own register() had run.
+        try {
+            $openRegisterPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
+            \OC_App::registerAutoloading('openregister', $openRegisterPath);
+        } catch (\Throwable) {
+            // OpenRegister absent/disabled — fall through to the degraded path.
+        }
+
         $bootstrap = new RegistrationBootstrap();
         $bootstrap->register(context: $context);
 
