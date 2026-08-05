@@ -43,6 +43,10 @@ use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCP\App\IAppManager;
 use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\IUser;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,6 +66,18 @@ use Psr\Log\NullLogger;
 class AnonymizationServiceTest extends TestCase
 {
     use BuildsAnonymizationService;
+
+    /**
+     * The Nextcloud file id carried by the relation fixture — the acting user
+     * CAN reach this one.
+     */
+    private const RELATION_FILE_ID = 4242;
+
+    /**
+     * A file id the acting user can NOT reach; used to prove the relation
+     * ownership guard denies rather than merely existing.
+     */
+    private const FOREIGN_FILE_ID = 9999;
 
     /**
      * Test that the source file exists
@@ -630,7 +646,7 @@ class AnonymizationServiceTest extends TestCase
 
         $mapper = $this->mapperWithProhibitedRelation(0.62);
         $mapper->expects($this->once())->method('updateDecisionMetadata')
-            ->with($this->anything(), ['skipAnonymization' => true]);
+            ->with($this->anything(), ['skipAnonymization' => true], $this->anything());
         $allowed = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
             ->applyRelationSkipDecision(relationId: 7, skip: true, bases: null, force: true);
         $this->assertSame(200, $allowed['status']);
@@ -646,10 +662,13 @@ class AnonymizationServiceTest extends TestCase
     public function testIncludeDecisionIsAlwaysForwarded(): void
     {
         $relation = new EntityRelation();
-        $mapper   = $this->createMock(EntityRelationMapper::class);
+        $relation->setFileId(self::RELATION_FILE_ID);
+        $mapper = $this->createMock(EntityRelationMapper::class);
         $mapper->method('find')->with(7)->willReturn($relation);
+        // The acting user is forwarded as the audit actor: OpenRegister records
+        // every decision flip, and an entry with no actor is an audit gap.
         $mapper->expects($this->once())->method('updateDecisionMetadata')
-            ->with($relation, ['skipAnonymization' => false]);
+            ->with($relation, ['skipAnonymization' => false], $this->anything());
 
         $result = $this->makeServiceWithMatcher($this->prohibitionMatcher(), $mapper)
             ->applyRelationSkipDecision(relationId: 7, skip: false, bases: null, force: false);
@@ -657,6 +676,70 @@ class AnonymizationServiceTest extends TestCase
         $this->assertSame(200, $result['status']);
 
     }//end testIncludeDecisionIsAlwaysForwarded()
+
+    /**
+     * A relation whose document is NOT in the acting user's file tree is
+     * refused with the same 404 an unknown relation gets — and NOTHING is
+     * written.
+     *
+     * `EntityRelationMapper::find()` is an unscoped primary-key lookup, so
+     * without this guard the endpoint let any authenticated user flip
+     * `skipAnonymization` on someone else's document and leave its PII
+     * un-redacted (OWASP A01:2021, IDOR).
+     *
+     * @return void
+     */
+    public function testRelationOnAForeignDocumentIsRefusedAndWritesNothing(): void
+    {
+        $relation = new EntityRelation();
+        $relation->setFileId(self::FOREIGN_FILE_ID);
+
+        $mapper = $this->createMock(EntityRelationMapper::class);
+        $mapper->method('find')->with(7)->willReturn($relation);
+        $mapper->expects($this->never())->method('updateDecisionMetadata');
+
+        $service = $this->makeAnonymizationServiceFrom(
+            [
+                'logger'      => $this->createMock(LoggerInterface::class),
+                'container'   => $this->matcherContainer($this->prohibitionMatcher(), $mapper),
+                'appManager'  => $this->openRegisterAppManager(),
+                'userSession' => $this->grantingSession(),
+                // Resolves only RELATION_FILE_ID, so FOREIGN_FILE_ID is out of reach.
+                'rootFolder'  => $this->rootFolderResolving(self::RELATION_FILE_ID),
+            ]
+        );
+
+        $result = $service->applyRelationSkipDecision(relationId: 7, skip: false, bases: null, force: false);
+
+        $this->assertSame(404, $result['status']);
+
+    }//end testRelationOnAForeignDocumentIsRefusedAndWritesNothing()
+
+    /**
+     * With no signed-in user there is nobody to scope the document to, so the
+     * decision is refused 401 before the relation is even loaded.
+     *
+     * @return void
+     */
+    public function testRelationDecisionWithoutASessionIsRefused(): void
+    {
+        $mapper = $this->createMock(EntityRelationMapper::class);
+        $mapper->expects($this->never())->method('updateDecisionMetadata');
+
+        $service = $this->makeAnonymizationServiceFrom(
+            [
+                'logger'     => $this->createMock(LoggerInterface::class),
+                'container'  => $this->matcherContainer($this->prohibitionMatcher(), $mapper),
+                'appManager' => $this->openRegisterAppManager(),
+                // Default IUserSession mock: getUser() returns null.
+            ]
+        );
+
+        $result = $service->applyRelationSkipDecision(relationId: 7, skip: false, bases: null, force: false);
+
+        $this->assertSame(401, $result['status']);
+
+    }//end testRelationDecisionWithoutASessionIsRefused()
 
     /**
      * The policy pass flags prohibition matches (with the correct high/low
@@ -1065,13 +1148,63 @@ class AnonymizationServiceTest extends TestCase
     {
         return $this->makeAnonymizationServiceFrom(
             [
-                'logger'     => $this->createMock(LoggerInterface::class),
-                'container'  => $this->matcherContainer($matcher, $mapper),
-                'appManager' => $this->openRegisterAppManager(),
+                'logger'      => $this->createMock(LoggerInterface::class),
+                'container'   => $this->matcherContainer($matcher, $mapper),
+                'appManager'  => $this->openRegisterAppManager(),
+                'userSession' => $this->grantingSession(),
+                'rootFolder'  => $this->rootFolderResolving(self::RELATION_FILE_ID),
             ]
         );
 
     }//end makeServiceWithMatcher()
+
+    /**
+     * A session whose acting user is `alice`.
+     *
+     * @return IUserSession The session double.
+     */
+    private function grantingSession(): IUserSession
+    {
+        $user = $this->createMock(IUser::class);
+        $user->method('getUID')->willReturn('alice');
+
+        $session = $this->createMock(IUserSession::class);
+        $session->method('getUser')->willReturn($user);
+
+        return $session;
+
+    }//end grantingSession()
+
+    /**
+     * A root folder whose user folder resolves EXACTLY the given file id — any
+     * other id resolves to nothing, which is what "the file is not in this
+     * user's tree" looks like to the ownership guard.
+     *
+     * @param int $resolvableFileId The only file id this user can reach.
+     *
+     * @return IRootFolder The root-folder double.
+     */
+    private function rootFolderResolving(int $resolvableFileId): IRootFolder
+    {
+        $node = $this->createMock(File::class);
+
+        $userFolder = $this->createMock(Folder::class);
+        $userFolder->method('getById')->willReturnCallback(
+            static function (int $fileId) use ($resolvableFileId, $node) {
+                if ($fileId === $resolvableFileId) {
+                    return [$node];
+                }
+
+                return [];
+            }
+        );
+
+        $rootFolder = $this->createMock(IRootFolder::class);
+        $rootFolder->method('getUserFolder')->willReturn($userFolder);
+
+        return $rootFolder;
+
+    }//end rootFolderResolving()
 
     /**
      * Build a ProhibitionPolicyService whose container resolves the matcher.
@@ -1096,7 +1229,9 @@ class AnonymizationServiceTest extends TestCase
                 appConfig: $this->createMock(\OCP\IAppConfig::class),
                 container: $container,
                 locator: $locator
-            )
+            ),
+            userSession: $this->grantingSession(),
+            rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID)
         );
 
     }//end policyWithMatcher()
@@ -1151,7 +1286,11 @@ class AnonymizationServiceTest extends TestCase
     private function mapperWithProhibitedRelation(float $confidence): EntityRelationMapper
     {
         // EntityRelation uses magic getters (can't be mocked); use a real one.
+        // The file id is what the ownership guard resolves against, so it must
+        // be set — and must DIFFER from the "foreign" id used by the denial
+        // tests, otherwise granting and denying look identical.
         $relation = new EntityRelation();
+        $relation->setFileId(self::RELATION_FILE_ID);
 
         $mapper = $this->createMock(EntityRelationMapper::class);
         $mapper->method('find')->with(7)->willReturn($relation);

@@ -49,7 +49,9 @@ use OCA\DocuDesk\Service\ProhibitionGateService;
 use OCA\DocuDesk\Service\ProhibitionPolicyService;
 use OCA\DocuDesk\Service\ReplacementVerificationService;
 use OCP\App\IAppManager;
+use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
@@ -64,7 +66,14 @@ trait BuildsAnonymizationService
      * Recognised `$deps` keys: logger, container, appManager, appConfig,
      * entityDetection, consentCrud, consentService, grondslagenSummary,
      * fileEntityStats, pdfConversion, emlAssembly, confidentialityLabel,
-     * dictionaryRunner. Anything omitted gets a permissive mock.
+     * dictionaryRunner, userSession, rootFolder. Anything omitted gets a
+     * permissive mock.
+     *
+     * NOTE on `userSession` / `rootFolder`: the DEFAULT mocks deny — an
+     * IUserSession mock returns null from getUser(), so the relation
+     * skip-decision ownership guard refuses. Tests that exercise that path must
+     * pass doubles that grant (see AnonymizationServiceTest::grantingSession()
+     * and ::rootFolderResolving()).
      *
      * @param array<string, object> $deps Dependency overrides.
      *
@@ -89,7 +98,9 @@ trait BuildsAnonymizationService
                 appConfig: $appConfig,
                 container: $container,
                 locator: $locator
-            )
+            ),
+            userSession: ($deps['userSession'] ?? $this->createMock(IUserSession::class)),
+            rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class))
         );
 
         $anonymizeRunner = new DocumentAnonymizeRunner(

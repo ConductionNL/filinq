@@ -32,6 +32,8 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\Exception\ProhibitionGateException;
+use OCP\Files\IRootFolder;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -60,11 +62,15 @@ class ProhibitionPolicyService
     /**
      * Constructor for ProhibitionPolicyService
      *
-     * @param LoggerInterface            $logger    Logger for best-effort policy failures.
-     * @param ContainerInterface         $container Container the PolicyMatchService is resolved from.
-     * @param OpenRegisterServiceLocator $locator   Resolver for OpenRegister services and mappers.
-     * @param ProhibitionGateService     $gate      The gate that runs before any OpenRegister
-     *                                              interaction on an anonymise call.
+     * @param LoggerInterface            $logger      Logger for best-effort policy failures.
+     * @param ContainerInterface         $container   Container the PolicyMatchService is resolved from.
+     * @param OpenRegisterServiceLocator $locator     Resolver for OpenRegister services and mappers.
+     * @param ProhibitionGateService     $gate        The gate that runs before any OpenRegister
+     *                                                interaction on an anonymise call.
+     * @param IUserSession               $userSession The acting session, forwarded to the skip-decision
+     *                                                ownership guard.
+     * @param IRootFolder                $rootFolder  Root folder, forwarded to the skip-decision
+     *                                                ownership guard.
      *
      * @return void
      */
@@ -72,12 +78,16 @@ class ProhibitionPolicyService
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
         private readonly OpenRegisterServiceLocator $locator,
-        private readonly ProhibitionGateService $gate
+        private readonly ProhibitionGateService $gate,
+        IUserSession $userSession,
+        IRootFolder $rootFolder
     ) {
         $this->skipDecisions = new RelationSkipDecisionService(
             logger: $logger,
             container: $container,
-            locator: $locator
+            locator: $locator,
+            userSession: $userSession,
+            rootFolder: $rootFolder
         );
 
     }//end __construct()

@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Service;
 
 use Exception;
+use OCP\Files\IRootFolder;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -52,16 +54,20 @@ class RelationSkipDecisionService
     /**
      * Constructor for RelationSkipDecisionService
      *
-     * @param LoggerInterface            $logger    Logger for blocked decisions and outages.
-     * @param ContainerInterface         $container Container the PolicyMatchService is resolved from.
-     * @param OpenRegisterServiceLocator $locator   Resolver for OpenRegister services and mappers.
+     * @param LoggerInterface            $logger      Logger for blocked decisions and outages.
+     * @param ContainerInterface         $container   Container the PolicyMatchService is resolved from.
+     * @param OpenRegisterServiceLocator $locator     Resolver for OpenRegister services and mappers.
+     * @param IUserSession               $userSession The acting session, for the ownership guard + audit actor.
+     * @param IRootFolder                $rootFolder  Root folder, used to resolve the acting user's own file tree.
      *
      * @return void
      */
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly ContainerInterface $container,
-        private readonly OpenRegisterServiceLocator $locator
+        private readonly OpenRegisterServiceLocator $locator,
+        private readonly IUserSession $userSession,
+        private readonly IRootFolder $rootFolder
     ) {
         $this->tier = new ProhibitionSkipTier();
 
@@ -70,28 +76,53 @@ class RelationSkipDecisionService
     /**
      * Guard + apply a per-relation skip/include decision from the review UI.
      *
-     * Setting `skipAnonymization = true` on a prohibition-matched relation is
-     * guarded per {@see ProhibitionSkipTier::classify}. Include / non-skip
-     * decisions are always allowed. Allowed decisions are forwarded to
-     * OpenRegister via `updateDecisionMetadata` (so OR's audit-trail records the
-     * flip). A blocked decision performs no OpenRegister write.
+     * TWO independent guards run before any write:
+     *
+     *  1. Authorisation (`requireRelationAccess`). `EntityRelationMapper::find()`
+     *     is an unscoped primary-key lookup, so the caller-supplied `relationId`
+     *     addresses EVERY relation in the instance, not just the caller's own.
+     *     Without an ownership check this endpoint was an IDOR: any authenticated
+     *     user could flip `skipAnonymization` on a relation belonging to someone
+     *     else's document and thereby leave that document's PII un-redacted.
+     *     The relation carries the Nextcloud file id of the document it was
+     *     detected in, so access is decided the same way `AnonymizeRequestService
+     *     ::verifyFileAccess()` decides it for extract/anonymize — resolution
+     *     through the acting user's OWN file tree. A relation the caller cannot
+     *     reach returns the SAME 404 as a relation that does not exist, so the
+     *     endpoint is not an existence oracle.
+     *  2. Prohibition policy ({@see ProhibitionSkipTier::classify}) — unchanged.
+     *     Include / non-skip decisions are always allowed by this guard.
+     *
+     * Allowed decisions are forwarded to OpenRegister via
+     * `updateDecisionMetadata`, WITH the acting user, so OR's audit trail records
+     * who flipped the decision rather than an anonymous entry. A blocked decision
+     * performs no OpenRegister write.
      *
      * @param int        $relationId The EntityRelation id.
      * @param bool       $skip       The requested skipAnonymization value.
      * @param array|null $bases      Optional bases to set alongside the decision.
      * @param bool       $force      Release a sub-threshold prohibition match.
      *
-     * @return array{status: 200|404|422, body: array<string, mixed>} HTTP status + response body.
+     * @return array{status: 200|401|404|422, body: array<string, mixed>} HTTP status + response body.
      *
      * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
      */
     public function apply(int $relationId, bool $skip, ?array $bases, bool $force): array
     {
+        $user = $this->userSession->getUser();
+        if ($user === null) {
+            return ['status' => 401, 'body' => ['error' => 'Not authenticated']];
+        }
+
         $mapper = $this->locator->get(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
 
         try {
             $relation = $mapper->find($relationId);
         } catch (Exception $e) {
+            return ['status' => 404, 'body' => ['error' => 'Entity relation not found']];
+        }
+
+        if ($this->requireRelationAccess(relation: $relation, userId: $user->getUID()) === false) {
             return ['status' => 404, 'body' => ['error' => 'Entity relation not found']];
         }
 
@@ -112,11 +143,48 @@ class RelationSkipDecisionService
             $fields['bases'] = $bases;
         }
 
-        $mapper->updateDecisionMetadata($relation, $fields);
+        $mapper->updateDecisionMetadata($relation, $fields, $user);
 
         return ['status' => 200, 'body' => ['status' => 'ok', 'skipAnonymization' => $skip]];
 
     }//end apply()
+
+    /**
+     * Whether the acting user may decide on this relation.
+     *
+     * The relation is reachable exactly when the document it was detected in is
+     * reachable, and a Nextcloud file is reachable exactly when it resolves
+     * inside the user's OWN folder tree — `IRootFolder::getById()` would search
+     * every storage and therefore answer for documents the caller has no claim
+     * to. A relation with no file id is unattributable and is refused.
+     *
+     * @param mixed  $relation The EntityRelation being decided.
+     * @param string $userId   UID of the acting user.
+     *
+     * @return bool True when the decision may proceed.
+     *
+     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-6
+     */
+    private function requireRelationAccess(mixed $relation, string $userId): bool
+    {
+        $fileId = (int) $relation->getFileId();
+        if ($fileId === 0) {
+            return false;
+        }
+
+        try {
+            $nodes = $this->rootFolder->getUserFolder($userId)->getById($fileId);
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Relation decision denied: could not resolve the acting user file tree',
+                ['relationFileId' => $fileId, 'exception' => $e->getMessage()]
+            );
+            return false;
+        }
+
+        return empty($nodes) === false;
+
+    }//end requireRelationAccess()
 
     /**
      * Evaluate the prohibition guard for a skip on one relation.
