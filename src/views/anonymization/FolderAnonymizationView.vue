@@ -9,6 +9,7 @@
 				<input
 					v-model="folderPath"
 					type="text"
+					:aria-label="t('docudesk', 'Folder path to analyse')"
 					:placeholder="t('docudesk', 'e.g. Documents/contracts')"
 					class="folder-path-input"
 					@keyup.enter="startAnalysis">

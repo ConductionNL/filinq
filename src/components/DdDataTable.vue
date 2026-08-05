@@ -40,6 +40,7 @@
 					@click="$emit('row-click', row)">
 					<td v-if="selectable" class="dd-data-table__td dd-data-table__td--select" @click.stop>
 						<NcCheckboxRadioSwitch
+							:aria-label="rowSelectLabel(row)"
 							:model-value="isSelected(row)"
 							@update:modelValue="$emit('toggle-select', row)" />
 					</td>
@@ -64,6 +65,7 @@
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcCheckboxRadioSwitch } from '@nextcloud/vue'
 
 /**
@@ -170,6 +172,28 @@ export default {
 				return key.split('.').reduce((obj, k) => obj?.[k], row)
 			}
 			return row[key]
+		},
+		/**
+		 * Accessible name for a row's select checkbox.
+		 *
+		 * Without one, every row's checkbox announces as an unnamed
+		 * "checkbox, not checked" — on a twenty-row table that is twenty
+		 * indistinguishable controls (WCAG 2.2 AA SC 4.1.2). The first
+		 * column's rendered value is used because it is what identifies the
+		 * row on screen, so what is announced matches what is read; the row
+		 * key is the fallback when that cell is empty.
+		 *
+		 * @param {object} row Row object.
+		 * @return {string} Label such as `Select invoice-2026-01`.
+		 *
+		 * @spec exclude Generic presentational label derivation for a table row checkbox; no domain semantics.
+		 */
+		rowSelectLabel(row) {
+			const first = this.columns.length ? this.getCellValue(row, this.columns[0].key) : undefined
+			const name = (first === undefined || first === null || first === '')
+				? row[this.rowKey]
+				: first
+			return t('docudesk', 'Select {row}', { row: String(name ?? '') })
 		},
 	},
 }

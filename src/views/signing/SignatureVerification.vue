@@ -2,7 +2,10 @@
 	<div class="signature-verification">
 		<h2>{{ t('docudesk', 'Signature Verification') }}</h2>
 		<div class="verify-form">
-			<input v-model="verifyFileId" type="text" :placeholder="t('docudesk', 'Enter file ID')">
+			<input v-model="verifyFileId"
+				type="text"
+				:aria-label="t('docudesk', 'File ID to verify')"
+				:placeholder="t('docudesk', 'Enter file ID')">
 			<NcButton variant="primary" :disabled="!verifyFileId" @click="verify">
 				{{ t('docudesk', 'Verify') }}
 			</NcButton>

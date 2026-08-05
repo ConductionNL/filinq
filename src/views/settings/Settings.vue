@@ -39,6 +39,7 @@
 					{{ t('docudesk', 'Show anonymiser backend warning') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Show anonymiser backend warning')"
 					:model-value="false"
 					type="switch"
 					@update:modelValue="resetAnonymiserWarning" />
@@ -125,6 +126,7 @@
 					{{ t('docudesk', 'Language Detection') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Language Detection')"
 					:model-value="settings.enable_language_detection"
 					type="switch"
 					@update:modelValue="settings.enable_language_detection = $event" />
@@ -138,6 +140,7 @@
 					{{ t('docudesk', 'Keyword Extraction') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Keyword Extraction')"
 					:model-value="settings.enable_keyword_extraction"
 					type="switch"
 					@update:modelValue="settings.enable_keyword_extraction = $event" />
@@ -151,6 +154,7 @@
 					{{ t('docudesk', 'Topic Classification') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Topic Classification')"
 					:model-value="settings.enable_topic_classification"
 					type="switch"
 					@update:modelValue="settings.enable_topic_classification = $event" />
@@ -181,6 +185,7 @@
 					{{ t('docudesk', 'Enable OCR') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Enable OCR')"
 					:model-value="settings.ocr_enabled"
 					type="switch"
 					@update:modelValue="settings.ocr_enabled = $event" />
@@ -252,6 +257,7 @@
 					{{ t('docudesk', 'Prioritise higher-confidentiality files in batch/folder analysis') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Prioritise higher-confidentiality files in batch/folder analysis')"
 					:model-value="settings['docudesk.confidentiality.prioritise_analysis']"
 					type="switch"
 					@update:modelValue="settings['docudesk.confidentiality.prioritise_analysis'] = $event" />
@@ -346,6 +352,7 @@
 					{{ t('docudesk', 'Enable Digital Signing') }}
 				</div>
 				<NcCheckboxRadioSwitch
+					:aria-label="t('docudesk', 'Enable Digital Signing')"
 					:model-value="settings.signing_enabled"
 					type="switch"
 					@update:modelValue="settings.signing_enabled = $event" />

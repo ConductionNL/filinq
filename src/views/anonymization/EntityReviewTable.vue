@@ -4,7 +4,10 @@
 			{{ t('docudesk', '{selected} of {total} entities selected across {files} files', { selected: selectedCount, total: entities.length, files: fileCount }) }}
 		</div>
 		<div class="filter-bar">
-			<input v-model="searchQuery" type="text" :placeholder="t('docudesk', 'Search entities...')">
+			<input v-model="searchQuery"
+				type="text"
+				:aria-label="t('docudesk', 'Search entities')"
+				:placeholder="t('docudesk', 'Search entities...')">
 			<select v-model="typeFilter">
 				<option value="">
 					{{ t('docudesk', 'All types') }}
@@ -44,7 +47,12 @@
 			</thead>
 			<tbody>
 				<tr v-for="item in filteredEntities" :key="item.idx">
-					<td><input type="checkbox" :checked="item.e.included" @change="$emit('toggle', item.idx)"></td>
+					<td>
+						<input type="checkbox"
+							:aria-label="t('docudesk', 'Include {entity} in anonymisation', { entity: item.e.value })"
+							:checked="item.e.included"
+							@change="$emit('toggle', item.idx)">
+					</td>
 					<td><span class="badge">{{ entityTypeLabel(item.e.type) }}</span></td><td>{{ item.e.value }}</td>
 					<td>{{ ((item.e.highestConfidence||0)*100).toFixed(1) }}%</td><td>{{ item.e.fileCount }}</td>
 					<td class="bases-cell">
@@ -67,6 +75,7 @@
 					</td>
 					<td>
 						<NcCheckboxRadioSwitch
+							:aria-label="t('docudesk', 'Skip {entity}', { entity: item.e.value })"
 							:model-value="!!item.e._decisionSkip"
 							:disabled="!Array.isArray(item.e.relationIds) || item.e.relationIds.length === 0 || !!(item.e.prohibitionMatch && item.e.prohibitionMatch.highConfidence)"
 							@update:modelValue="onSkipChange(item.idx, $event)" />

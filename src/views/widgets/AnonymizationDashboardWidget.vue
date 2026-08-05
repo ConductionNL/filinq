@@ -110,6 +110,7 @@ import { anonymizationStore } from '../../store/store.js'
 					ref="fileInput"
 					type="file"
 					multiple
+					:aria-label="t('docudesk', 'Select files to anonymise')"
 					accept=".docx,.txt,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/pdf"
 					class="file-input"
 					@change="handleFileSelect">

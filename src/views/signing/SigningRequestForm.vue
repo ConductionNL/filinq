@@ -5,12 +5,12 @@
 			{{ t('docudesk', 'This composes a draft signing request only. Sending for signature, provider binding and signer-identity assertion are not available yet — the signature level below records your intent but is not yet cryptographically enforced.') }}
 		</NcNoteCard>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Document File ID') }}</label>
-			<input v-model="form.documentFileId" type="text">
+			<label for="signing-request-document-file-id">{{ t('docudesk', 'Document File ID') }}</label>
+			<input id="signing-request-document-file-id" v-model="form.documentFileId" type="text">
 		</div>
 		<div class="form-group">
-			<label>{{ t('docudesk', 'Document Name') }}</label>
-			<input v-model="form.documentName" type="text">
+			<label for="signing-request-document-name">{{ t('docudesk', 'Document Name') }}</label>
+			<input id="signing-request-document-name" v-model="form.documentName" type="text">
 		</div>
 		<div class="form-group">
 			<label>{{ t('docudesk', 'Signature Level') }}</label>
