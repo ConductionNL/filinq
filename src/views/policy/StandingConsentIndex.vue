@@ -171,6 +171,7 @@ import { standingConsentStore } from '../../store/store.js'
 						@update:checked="setExact(rule, $event)">
 						{{ t('docudesk', 'Exact match') }}
 					</NcCheckboxRadioSwitch>
+					<MatchRuleHelp />
 					<span v-if="!isExact(rule) && rule.value" class="match-rule-hint">
 						{{ t('docudesk', 'Stored as: {value}', { value: normalisedPreview(rule.value) }) }}
 					</span>
@@ -245,6 +246,7 @@ import {
 } from '@nextcloud/vue'
 import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import MatchRuleHelp from '../../components/MatchRuleHelp.vue'
 import { ENTITY_TYPES, entityTypeLabel } from '../../services/entityTypes.js'
 import { consentMethodLabel, consentMethodOptions } from '../../services/policyLabels.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -269,6 +271,7 @@ const blankForm = () => ({
 export default {
 	name: 'StandingConsentIndex',
 	components: {
+		MatchRuleHelp,
 		CnIndexPage,
 		CnStatsBlock,
 		CnStatusBadge,
@@ -534,10 +537,13 @@ export default {
 }
 
 .match-rule-row {
-	display: grid;
-	grid-template-columns: 180px 1fr 40px;
+	/* Was a 3-column grid; the row now carries value, switch, help button, hint
+	   and delete, and the help panel spans the full width, so it wraps instead. */
+	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 	align-items: center;
+	margin-bottom: 4px;
 }
 .form-warning {
 	background: var(--color-warning, #fff3cd);

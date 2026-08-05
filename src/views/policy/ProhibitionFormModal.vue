@@ -9,6 +9,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import MatchRuleHelp from '../../components/MatchRuleHelp.vue'
 import { ENTITY_TYPES, entityTypeLabel } from '../../services/entityTypes.js'
 import { severityOptions } from '../../services/policyLabels.js'
 
@@ -41,6 +42,7 @@ export default {
 		NcSelect,
 		NcTextField,
 		Delete,
+		MatchRuleHelp,
 	},
 	props: {
 		open: { type: Boolean, required: true },
@@ -259,6 +261,7 @@ export default {
 					@update:checked="setExact(rule, $event)">
 					{{ t('docudesk', 'Exact match') }}
 				</NcCheckboxRadioSwitch>
+				<MatchRuleHelp />
 				<span v-if="!isExact(rule) && rule.value" class="match-rule-hint">
 					{{ t('docudesk', 'Stored as: {value}', { value: normalisedPreview(rule.value) }) }}
 				</span>
@@ -351,6 +354,14 @@ export default {
 </template>
 
 <style scoped>
+.match-rule-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin-bottom: 4px;
+}
+
 .policy-form-section {
 	margin: 4px 0 8px 12px;
 	padding-left: 8px;
