@@ -32,8 +32,6 @@ namespace OCA\DocuDesk\Service;
 
 use Exception;
 use OCA\DocuDesk\Exception\ProhibitionGateException;
-use OCP\Files\IRootFolder;
-use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -53,24 +51,21 @@ class ProhibitionPolicyService
 {
 
     /**
-     * Guard for the per-relation skip decision taken in the review UI.
-     *
-     * @var RelationSkipDecisionService
-     */
-    private readonly RelationSkipDecisionService $skipDecisions;
-
-    /**
      * Constructor for ProhibitionPolicyService
      *
-     * @param LoggerInterface            $logger      Logger for best-effort policy failures.
-     * @param ContainerInterface         $container   Container the PolicyMatchService is resolved from.
-     * @param OpenRegisterServiceLocator $locator     Resolver for OpenRegister services and mappers.
-     * @param ProhibitionGateService     $gate        The gate that runs before any OpenRegister
-     *                                                interaction on an anonymise call.
-     * @param IUserSession               $userSession The acting session, forwarded to the skip-decision
-     *                                                ownership guard.
-     * @param IRootFolder                $rootFolder  Root folder, forwarded to the skip-decision
-     *                                                ownership guard.
+     * `$skipDecisions` is INJECTED rather than constructed here. It used to be
+     * `new`ed in this constructor, which meant every dependency it needed had to
+     * be threaded through this class as well — adding its authorisation
+     * collaborators (IUserSession + IRootFolder) that way pushed this class over
+     * PHPMD's CouplingBetweenObjects limit for dependencies it never uses.
+     * Letting the container build it keeps that coupling where it belongs.
+     *
+     * @param LoggerInterface             $logger        Logger for best-effort policy failures.
+     * @param ContainerInterface          $container     Container the PolicyMatchService is resolved from.
+     * @param OpenRegisterServiceLocator  $locator       Resolver for OpenRegister services and mappers.
+     * @param ProhibitionGateService      $gate          The gate that runs before any OpenRegister
+     *                                                   interaction on an anonymise call.
+     * @param RelationSkipDecisionService $skipDecisions Guard + apply for the per-relation skip decision.
      *
      * @return void
      */
@@ -79,16 +74,8 @@ class ProhibitionPolicyService
         private readonly ContainerInterface $container,
         private readonly OpenRegisterServiceLocator $locator,
         private readonly ProhibitionGateService $gate,
-        IUserSession $userSession,
-        IRootFolder $rootFolder
+        private readonly RelationSkipDecisionService $skipDecisions
     ) {
-        $this->skipDecisions = new RelationSkipDecisionService(
-            logger: $logger,
-            container: $container,
-            locator: $locator,
-            userSession: $userSession,
-            rootFolder: $rootFolder
-        );
 
     }//end __construct()
 

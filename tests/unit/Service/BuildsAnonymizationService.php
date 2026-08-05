@@ -47,6 +47,7 @@ use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
 use OCA\DocuDesk\Service\PdfConversionService;
 use OCA\DocuDesk\Service\ProhibitionGateService;
 use OCA\DocuDesk\Service\ProhibitionPolicyService;
+use OCA\DocuDesk\Service\RelationSkipDecisionService;
 use OCA\DocuDesk\Service\ReplacementVerificationService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
@@ -99,8 +100,13 @@ trait BuildsAnonymizationService
                 container: $container,
                 locator: $locator
             ),
-            userSession: ($deps['userSession'] ?? $this->createMock(IUserSession::class)),
-            rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class))
+            skipDecisions: new RelationSkipDecisionService(
+                logger: $logger,
+                container: $container,
+                locator: $locator,
+                userSession: ($deps['userSession'] ?? $this->createMock(IUserSession::class)),
+                rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class))
+            )
         );
 
         $anonymizeRunner = new DocumentAnonymizeRunner(

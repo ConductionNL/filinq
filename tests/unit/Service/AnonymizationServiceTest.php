@@ -38,6 +38,7 @@ use OCA\DocuDesk\Service\PolicyMatchService;
 use OCA\DocuDesk\Service\ProhibitionGateService;
 use OCA\DocuDesk\Service\ProhibitionPolicyService;
 use OCA\DocuDesk\Service\ProhibitionSkipTier;
+use OCA\DocuDesk\Service\RelationSkipDecisionService;
 use OCA\DocuDesk\Service\ReplacementVerificationService;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
@@ -1230,8 +1231,13 @@ class AnonymizationServiceTest extends TestCase
                 container: $container,
                 locator: $locator
             ),
-            userSession: $this->grantingSession(),
-            rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID)
+            skipDecisions: new RelationSkipDecisionService(
+                logger: $logger,
+                container: $container,
+                locator: $locator,
+                userSession: $this->grantingSession(),
+                rootFolder: $this->rootFolderResolving(self::RELATION_FILE_ID)
+            )
         );
 
     }//end policyWithMatcher()
