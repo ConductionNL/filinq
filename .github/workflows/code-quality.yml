@@ -91,9 +91,17 @@ jobs:
       # ── Hydra mechanical gates ───────────────────────────────────────────
       # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
       # here — the job reported `skipped`, which the Quality Report renders
-      # identically to a pass. Pinned to v1.0.1 so a change to the gate package
+      # identically to a pass. Pinned to v1.3.0 so a change to the gate package
       # cannot move this repo's verdict without a commit here.
       # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
       # serious/critical violations from core's own UI.
       enable-hydra-gates: true
-      hydra-gates-ref: v1.0.1
+      # PIN MOVED v1.0.1 -> v1.3.0. `hydra-gates-require-full-coverage`
+      # (default ON) fails a run when a gate whose subject matter EXISTS did
+      # not report; its contract is that a not-applicable gate must DECLARE
+      # itself. v1.0.1 contains ZERO `_skip` calls — no na/structural/wiring
+      # vocabulary at all — so such a gate emits NOTHING and is counted as
+      # "DID NOT RUN". v1.3.0 ships 36 such declarations. Measured on doriath
+      # (PR #160): gates 4/24/33 went from unexplained "DID NOT RUN" to
+      # explicit NOT APPLICABLE, and Hydra Gates went failure -> success.
+      hydra-gates-ref: v1.3.0
