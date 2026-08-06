@@ -148,4 +148,4 @@ jobs:
       # reproducible and a later gate change cannot move this repo's verdict
       # without a commit here.
       enable-hydra-gates: true
-      hydra-gates-ref: v1.3.0
+      hydra-gates-ref: v1.5.0
