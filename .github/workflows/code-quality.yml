@@ -103,6 +103,34 @@ jobs:
       # recursively.
       enable-newman: true
 
+      # The Newman job needs the SAME provisioning the Playwright job gets, and
+      # for the same reason: DocuDesk resolves every template / consent /
+      # signing write through app-config bindings
+      # (`<schemaSlug>_register` / `_schema`) that an ADMINISTRATOR sets in the
+      # admin settings UI. Nothing auto-provisions them on a fresh install
+      # except `templateVersion_*`. `newman-seed-command` was never set, so the
+      # collection ran against an instance where they were all empty.
+      #
+      # Measured on run 31074205317 (job 92528887929, branch development):
+      # 19 of 66 assertions failed, and every one of them traced to that.
+      # `OpenRegisterResolver::getRegisterAndSchema()` throws
+      # RegisterNotConfiguredException with code 0, so
+      # `TemplateRequestHandler::buildErrorResponse()` maps it to 500 — hence
+      # the 500s on template create/show/update/delete and on signing
+      # create/show/cancel. Consent has its own shape:
+      # `ConsentController::notConfiguredResponse()` answers 400, which is the
+      # two `/api/consents` failures. The two endpoints that DID pass
+      # (`GET /api/templates`, `GET /api/signing/requests`) are precisely the
+      # two that catch RegisterNotConfiguredException and return an empty
+      # `notConfigured: true` list — a green assertion over a store the
+      # collection could never write to.
+      #
+      # `ci-seed.sh` already documents and performs exactly this provisioning
+      # for Playwright; the `api` argument reuses it verbatim and only skips
+      # the closing SPA-bundle gate, which would `exit 1` here because the
+      # Newman job has no frontend build step.
+      newman-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh api'
+
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
       # "Coverage Baseline Protection" and "Coverage Baseline Check" have only
