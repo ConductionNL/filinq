@@ -152,8 +152,19 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	await userField.waitFor({ state: 'visible', timeout: 30_000 })
 	// The login form is a Vue app: the markup exists before its submit handler
 	// is attached, so clicking too early silently does nothing and the page
-	// simply stays on /login. Let the login bundle settle before interacting.
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// simply stays on /login. Wait for the bundle to have mounted the form.
+	//
+	// This used to be a swallowed `networkidle` load-state wait, which
+	// ADR-074 rule 4 forbids (gate-58 e2e-networkidle) for a good reason:
+	// Nextcloud holds long-lived connections open (notifications polling,
+	// user-status heartbeat), so `networkidle` NEVER fires. The wait therefore
+	// always ran to its own timeout and was swallowed by `.catch()` — it did
+	// not "let the bundle settle", it just burned the budget and then
+	// proceeded at exactly the moment it would have anyway. Waiting on the
+	// submit control instead is the deterministic form of the same intent:
+	// the button is rendered by the same bundle that attaches the handler.
+	await page.locator('button[type="submit"]').first()
+		.waitFor({ state: 'visible', timeout: 30_000 })
 	await userField.fill(username)
 	await passwordField.fill(password)
 	// Bind the navigation wait BEFORE clicking, so a fast redirect cannot be
@@ -174,6 +185,42 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 			`Check NC_ADMIN_USER / NC_ADMIN_PASS (defaults admin/admin).`,
 		)
 	}
+
+	// Bake the nc-vue support-dialog "seen" flag into the persisted storage
+	// state so CnSupportDialog never auto-opens during a spec.
+	//
+	// `_helpers.ts:dismissOverlays()` already CLOSES this dialog, and that is
+	// why DocuDesk's suite is currently clean — but closing it is inherently
+	// racy and only reactive. CnAppRoot calls
+	// `useSupportDialog(appId, { persistence: 'server' })`
+	// (nextcloud-vue CnAppRoot.vue:1297); in server mode `visible` starts FALSE
+	// and only flips true once
+	// `GET /apps/docudesk/api/preferences/support-dialog-seen` RESOLVES — i.e.
+	// asynchronously, at an arbitrary point that can land AFTER dismissOverlays
+	// has run and a spec has started clicking. The modal then mounts a
+	// full-viewport `.modal-mask` that swallows pointer events and the click
+	// retries until the test times out, which reads as a broken nav entry
+	// rather than an overlay.
+	//
+	// That is not hypothetical: sibling repo opencatalogi hit exactly this on
+	// run 31167878145 (`1 flaky`, call log naming
+	// `data-testid-modal="cn-support-dialog" … subtree intercepts pointer
+	// events`). globalSetup here never visits an app page, so the flag was
+	// never in admin.json and the dialog was armed on every spec — DocuDesk has
+	// simply been winning the race so far.
+	//
+	// `resolveServerVisibility()` checks the local flag FIRST and returns early
+	// when it reads exactly '1' (useSupportDialog.js `hasRealFlag`), so seeding
+	// it means the dialog is never scheduled at all. dismissOverlays() stays as
+	// the fallback. No spec asserts on CnSupportDialog — it is an nc-vue
+	// one-time nag unrelated to any DocuDesk scenario — so nothing is weakened.
+	await page.evaluate(() => {
+		try {
+			window.localStorage.setItem('cn-support-dialog-shown:docudesk', '1')
+		} catch (e) {
+			/* private mode / quota — the dismissOverlays fallback still applies */
+		}
+	})
 
 	await context.storageState({ path: STORAGE_STATE })
 	await browser.close()
