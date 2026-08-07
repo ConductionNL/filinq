@@ -61,7 +61,23 @@ Create a [feature request](https://codeberg.org/Conduction/docudesk/issues/new)
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="30" max-version="34"/>
+        <!--
+        App dependency (not expressible in app-info.xsd): OpenRegister — Docudesk's
+        documents, templates and reports are OpenRegister objects, and
+        src/manifest.json lists "openregister" as a required dependency.
+
+        min-version is therefore 32, NOT 30: openregister declares min-version="32"
+        because its lib/ContextChat/ContentProvider.php implements
+        OCP\ContextChat\IContentProvider, an interface core does not have before
+        Nextcloud 32. On NC 30-31 openregister refuses to install ("cannot be
+        installed because it is not compatible with this version of the server"), so
+        the app cannot function there. Declaring 30 advertised a range this app
+        cannot deliver. Same defect as openconnector#1173.
+
+        CI already tests stable32 only, so this changes the advertised app-store
+        range and nothing about what runs.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
     </dependencies>
     <background-jobs>
         <job>OCA\DocuDesk\BackgroundJob\SigningExpirationJob</job>
