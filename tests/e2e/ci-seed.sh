@@ -5,13 +5,19 @@
 #
 # Provision DocuDesk's OpenRegister registers + schemas, and the app-config
 # object-type bindings that depend on them, on a freshly installed Nextcloud
-# for the shared `E2E Tests (Playwright)` CI job.
+# for the shared `E2E Tests (Playwright)` and `Integration Tests (Newman)` CI
+# jobs.
 #
-# Wired up as the workflow's `playwright-seed-command`. That step runs AFTER
-# `php -S` is up and with cwd set to the Nextcloud server root, so this is
-# invoked as:
+# Wired up as the workflow's `playwright-seed-command` / `newman-seed-command`.
+# Both steps run AFTER `php -S` is up and with cwd set to the Nextcloud server
+# root, so this is invoked as:
 #
 #     playwright-seed-command: 'bash apps/docudesk/tests/e2e/ci-seed.sh'
+#     newman-seed-command:     'bash apps/docudesk/tests/e2e/ci-seed.sh api'
+#
+# The optional first argument selects the MODE — see "Mode" below. Everything
+# that provisions state is shared; the only difference is the SPA bundle gate,
+# which is meaningless for an API-only suite that never renders a page.
 #
 # WHY THIS IS NEEDED — TWO SEPARATE GAPS
 # --------------------------------------
@@ -62,6 +68,31 @@
 # re-verifies.
 
 set -euo pipefail
+
+# ── Mode ─────────────────────────────────────────────────────────────────────
+# `e2e` (default) — the Playwright job. Everything below runs, including the
+#                   final GATE that the DocuDesk frontend bundle serves as
+#                   JavaScript.
+# `api`           — the Newman job. Identical provisioning, but the SPA bundle
+#                   warm-up and its gate are skipped.
+#
+# The gate exists because a MISSING bundle does not 404 in Nextcloud: it serves
+# the HTML error page with HTTP 200, so a UI suite would fail later on selector
+# timeouts with a misleading cause. That reasoning is specific to a suite that
+# mounts the SPA. The Newman job never does — and, decisively, it never runs
+# `npm run build` either (the shared workflow's `newman` job has no frontend
+# build step at all, unlike `playwright`). Running the gate there would abort
+# the seed with `exit 1` on a bundle that was never meant to exist, turning a
+# fix for 19 failing assertions into a hard job failure. Skipping it removes no
+# coverage: no Newman assertion loads a page.
+SEED_MODE="${1:-e2e}"
+case "$SEED_MODE" in
+	e2e | api) ;;
+	*)
+		echo "::error::unknown seed mode '${SEED_MODE}' — expected 'e2e' or 'api'."
+		exit 1
+		;;
+esac
 
 # ── Locations ────────────────────────────────────────────────────────────────
 # Resolve from the script's own path so the script does not depend on the
@@ -572,6 +603,13 @@ do
 		-H 'OCS-APIRequest: true' "${BASE}${path}" || echo 000)"
 	echo "[ci-seed] warm ${path} -> ${code}"
 done
+
+if [ "$SEED_MODE" = "api" ]; then
+	echo "[ci-seed] api mode: skipping the SPA bundle warm-up and gate — the Newman"
+	echo "[ci-seed] suite is HTTP-only and its job never builds the frontend."
+	echo "[ci-seed] done."
+	exit 0
+fi
 
 # Pull the main webpack bundle once so it is in the page cache.
 #

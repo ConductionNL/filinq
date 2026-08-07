@@ -26,7 +26,7 @@
 // @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
 // @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-the-dead-legacy-router-is-deleted-req-ddosr-001
 
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('orphaned-surface-restoration — correspondence', () => {
@@ -64,7 +64,12 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 			.first()
 		await expect(primaryAction).toBeVisible()
 		await primaryAction.click()
-		await page.waitForLoadState('networkidle').catch(() => {})
+		// No `networkidle` load-state wait here — ADR-074 rule 4 / gate-58.
+		// Nextcloud keeps long-lived connections open (notifications polling,
+		// user-status heartbeat), so networkidle never fires and the wait only
+		// burned its timeout before being swallowed by `.catch()`. The two
+		// web-first assertions below already retry until the SPA has routed,
+		// so the wait bought nothing it does not already provide.
 		await page.waitForTimeout(800)
 
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/new/)
@@ -117,7 +122,9 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 			return
 		}
 		await firstRow.click()
-		await page.waitForLoadState('networkidle').catch(() => {})
+		// No `networkidle` load-state wait here — ADR-074 rule 4 / gate-58;
+		// it never fires on Nextcloud. The `toHaveURL` / `toBeVisible`
+		// assertions below retry until the detail surface has rendered.
 		await page.waitForTimeout(800)
 		const verifyButton = page.getByRole('button', { name: 'Verify' })
 		// The Verify action is only rendered when the request carries a
@@ -174,13 +181,43 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])
 	})
 
+	/*
+	 * The two tests below used to locate the Add action with
+	 *   page.getByRole('button', { name: 'Add', exact: true })
+	 * and, when it did not match, call
+	 *   test.skip(true, 'index Add action not rendered on this environment')
+	 *
+	 * That selector CANNOT match, on any environment. CnIndexPage renders the
+	 * primary CTA through CnActionsBar with `:add-label="resolvedAddLabel"`,
+	 * and `resolvedAddLabel` is (verified in the shipped dist of the pinned
+	 * @conduction/nextcloud-vue 2.2.0-vue3.3):
+	 *
+	 *     if (this.addLabel) return this.addLabel
+	 *     return 'Add ' + (this.effectiveSchema?.title || 'Item')
+	 *
+	 * Neither ProhibitionIndex.vue nor StandingConsentIndex.vue passes
+	 * `add-label`, so the button's accessible name is always "Add <Something>"
+	 * — never the bare, `exact: true` string "Add". The `isVisible()` probe
+	 * therefore resolved false on EVERY run, the self-skip fired every time,
+	 * and both tests reported as skipped with a reason ("not rendered on this
+	 * environment") that was simply untrue. In a summary line that is
+	 * indistinguishable from a healthy suite: run 31167880581 counted them in
+	 * its "6 skipped" and nobody looked further.
+	 *
+	 * Both components declare `:show-add="true"`, so the CTA is REQUIRED to be
+	 * there — its absence is a defect, not an environment condition. Target the
+	 * stable `data-testid="cn-cta-primary"` that CnActionsBar puts on the
+	 * button (with a name-prefix fallback for older shells) and assert it hard.
+	 */
+	const addCta = (page: Page) =>
+		page.locator('[data-testid="cn-cta-primary"]')
+			.or(page.getByRole('button', { name: /^Add\b/ }))
+			.first()
+
 	test('the "Add" action on Prohibitions opens the extracted ProhibitionFormModal (not an inline dialog)', async ({ page }) => {
 		await go(page, 'policy/prohibitions')
-		const addButton = page.getByRole('button', { name: 'Add', exact: true })
-		if (!(await addButton.isVisible().catch(() => false))) {
-			test.skip(true, 'index Add action not rendered on this environment')
-			return
-		}
+		const addButton = addCta(page)
+		await expect(addButton, 'ProhibitionIndex declares :show-add="true" — the primary CTA must render').toBeVisible()
 		await addButton.click()
 		await expect(page.getByRole('heading', { name: 'Add publish-never rule' })).toBeVisible()
 	})
@@ -190,11 +227,8 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 		// previously duplicated this form inline; it now delegates to
 		// StandingConsentFormModal.vue like ProhibitionIndex.vue does.
 		await go(page, 'policy/standing-consents')
-		const addButton = page.getByRole('button', { name: 'Add', exact: true })
-		if (!(await addButton.isVisible().catch(() => false))) {
-			test.skip(true, 'index Add action not rendered on this environment')
-			return
-		}
+		const addButton = addCta(page)
+		await expect(addButton, 'StandingConsentIndex declares :show-add="true" — the primary CTA must render').toBeVisible()
 		await addButton.click()
 		await expect(page.getByRole('heading', { name: 'Add standing consent' })).toBeVisible()
 	})
