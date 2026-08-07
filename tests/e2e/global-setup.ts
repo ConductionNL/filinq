@@ -152,8 +152,19 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 	await userField.waitFor({ state: 'visible', timeout: 30_000 })
 	// The login form is a Vue app: the markup exists before its submit handler
 	// is attached, so clicking too early silently does nothing and the page
-	// simply stays on /login. Let the login bundle settle before interacting.
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// simply stays on /login. Wait for the bundle to have mounted the form.
+	//
+	// This used to be a swallowed `networkidle` load-state wait, which
+	// ADR-074 rule 4 forbids (gate-58 e2e-networkidle) for a good reason:
+	// Nextcloud holds long-lived connections open (notifications polling,
+	// user-status heartbeat), so `networkidle` NEVER fires. The wait therefore
+	// always ran to its own timeout and was swallowed by `.catch()` — it did
+	// not "let the bundle settle", it just burned the budget and then
+	// proceeded at exactly the moment it would have anyway. Waiting on the
+	// submit control instead is the deterministic form of the same intent:
+	// the button is rendered by the same bundle that attaches the handler.
+	await page.locator('button[type="submit"]').first()
+		.waitFor({ state: 'visible', timeout: 30_000 })
 	await userField.fill(username)
 	await passwordField.fill(password)
 	// Bind the navigation wait BEFORE clicking, so a fast redirect cannot be

@@ -64,7 +64,12 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 			.first()
 		await expect(primaryAction).toBeVisible()
 		await primaryAction.click()
-		await page.waitForLoadState('networkidle').catch(() => {})
+		// No `networkidle` load-state wait here — ADR-074 rule 4 / gate-58.
+		// Nextcloud keeps long-lived connections open (notifications polling,
+		// user-status heartbeat), so networkidle never fires and the wait only
+		// burned its timeout before being swallowed by `.catch()`. The two
+		// web-first assertions below already retry until the SPA has routed,
+		// so the wait bought nothing it does not already provide.
 		await page.waitForTimeout(800)
 
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/new/)
@@ -117,7 +122,9 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 			return
 		}
 		await firstRow.click()
-		await page.waitForLoadState('networkidle').catch(() => {})
+		// No `networkidle` load-state wait here — ADR-074 rule 4 / gate-58;
+		// it never fires on Nextcloud. The `toHaveURL` / `toBeVisible`
+		// assertions below retry until the detail surface has rendered.
 		await page.waitForTimeout(800)
 		const verifyButton = page.getByRole('button', { name: 'Verify' })
 		// The Verify action is only rendered when the request carries a
