@@ -18,7 +18,11 @@
 				</thead>
 				<tbody>
 					<tr v-for="req in pending" :key="req.id || req.uuid" @click="toggle(req.id || req.uuid)">
-						<td><input type="checkbox" :checked="selected.includes(req.id || req.uuid)"></td>
+						<td>
+							<input type="checkbox"
+								:aria-label="t('docudesk', 'Select {document}', { document: req.documentName })"
+								:checked="selected.includes(req.id || req.uuid)">
+						</td>
 						<td>{{ req.documentName }}</td>
 						<td>{{ req.signatureLevel }}</td>
 					</tr>

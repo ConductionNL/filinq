@@ -30,6 +30,7 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					ref="fileInput"
 					type="file"
 					multiple
+					:aria-label="t('docudesk', 'Select files to anonymise')"
 					accept=".docx,.odt,.txt,.pdf,.eml,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text,text/plain,application/pdf,message/rfc822"
 					class="file-input"
 					@change="handleFileSelect">

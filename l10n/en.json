@@ -855,7 +855,15 @@
         "Valid from": "Valid from",
         "Version number": "Version number",
         "Warnings": "Warnings",
-        "Branding Configuration": "Branding Configuration"
+        "Branding Configuration": "Branding Configuration",
+        "File ID to verify": "File ID to verify",
+        "Folder path to analyse": "Folder path to analyse",
+        "Include {entity} in anonymisation": "Include {entity} in anonymisation",
+        "Search entities": "Search entities",
+        "Select {document}": "Select {document}",
+        "Select {row}": "Select {row}",
+        "Select files to anonymise": "Select files to anonymise",
+        "Skip {entity}": "Skip {entity}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
