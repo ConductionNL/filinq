@@ -42,8 +42,10 @@ use OCA\DocuDesk\Service\BatchUploadService;
 use OCA\DocuDesk\Service\EntityConsolidationService;
 use OCA\DocuDesk\Service\FolderBatchService;
 use OCA\DocuDesk\Service\WooProfileService;
+use OCA\DocuDesk\Settings\DocuDeskAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -541,10 +543,35 @@ class BatchAnonymizationController extends Controller
     /**
      * Persist a new WOO anonymization profile from the request body.
      *
+     * ADMIN-ONLY, DELIBERATELY. The profile this writes is INSTANCE-WIDE: it
+     * lands in `IAppConfig` under `docudesk_woo_entity_profiles`
+     * ({@see WooProfileService::saveProfile()}), and
+     * {@see EntityConsolidationService} reads it to decide which entity types
+     * are redacted for EVERY user. Moving `PERSON` / `BSN` / `EMAIL` out of the
+     * `anonymize` set therefore leaves other people's PII in place on every
+     * subsequent run.
+     *
+     * ⚠️ The obvious way to satisfy a "missing auth attribute" finding here —
+     * copying the sibling `getProfiles()`'s user-level annotation onto this
+     * method — WOULD INTRODUCE EXACTLY THAT VULNERABILITY. The two are not
+     * symmetric: reading the profile is a user-level concern, writing it is
+     * instance policy. Until this attribute existed the endpoint was admin-only
+     * only by ACCIDENT (Nextcloud defaults an unannotated method to admin), and
+     * the body's lone `getUser() === null` check reads as though user-level
+     * access were intended, which is what makes the wrong fix look right.
+     *
+     * `#[AuthorizedAdminSetting]` matches how every other instance-wide write in
+     * this app declares itself ({@see SettingsController},
+     * {@see AnonymiserWarningController}).
+     *
+     * The null-session check below is retained as defence in depth, not as the
+     * authorization boundary — the attribute is the boundary.
+     *
      * @return JSONResponse Success message, or an error payload when the body is malformed.
      *
      * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
      */
+    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
     public function updateProfiles(): JSONResponse
     {
         try {
