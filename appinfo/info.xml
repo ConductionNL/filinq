@@ -55,7 +55,15 @@ Create a [feature request](https://github.com/docudesk/.github/issues/new/choose
         <database min-version="10">pgsql</database>
         <database>sqlite</database>
         <database min-version="8.0">mysql</database>
-        <nextcloud min-version="30" max-version="34"/>
+        <!--
+            Nextcloud minimum is 32 so this app can require PHP 8.3, which is the
+            fleet-wide standard. It also may not sit below the minimum of an app it
+            depends on: OpenRegister declares a Nextcloud minimum of 32 on its
+            development branch, and advertising a lower minimum here would offer a
+            version range in which that dependency refuses to install and this app
+            is non-functional. See openconnector issues 1172 and 1173.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
     </dependencies>
     <navigations>
         <navigation>
