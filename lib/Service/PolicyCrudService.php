@@ -269,7 +269,7 @@ class PolicyCrudService
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
-            id: $uuid,
+            uuid: $uuid,
             register: self::REGISTER,
             schema: self::SCHEMA_PROHIBITION,
             _rbac: false,
@@ -361,7 +361,7 @@ class PolicyCrudService
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
-            id: $uuid,
+            uuid: $uuid,
             register: self::REGISTER,
             schema: self::SCHEMA_CONSENT,
             _rbac: false,

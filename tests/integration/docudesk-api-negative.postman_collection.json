@@ -20,6 +20,11 @@
       "key": "password",
       "value": "admin",
       "description": "Matches the `admin_password` the CI Newman step provisions."
+    },
+    {
+      "key": "noAuthBase",
+      "value": "http://127.0.0.1:8080/index.php",
+      "description": "A DIFFERENT host alias for the same server, used only by the deliberate 401 tests. Newman keeps one cookie jar for the whole run, and Nextcloud's session cookie is host-scoped — so an unauthenticated request sent to the SAME host as the authenticated ones still carries the session and answers 200. Measured 2026-08-09: both 401 tests failed with 'expected [401, 302] to include 200' for exactly this reason, which reads like an authorization hole and is not one. Same technique as docudesk.postman_collection.json."
     }
   ],
   "auth": {
@@ -115,8 +120,8 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/apps/docudesk/api/templates",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{noAuthBase}}/apps/docudesk/api/templates",
+              "host": ["{{noAuthBase}}"],
               "path": ["apps", "docudesk", "api", "templates"]
             }
           },
@@ -182,8 +187,8 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/apps/docudesk/api/preferences/test-key",
-              "host": ["{{baseUrl}}"],
+              "raw": "{{noAuthBase}}/apps/docudesk/api/preferences/test-key",
+              "host": ["{{noAuthBase}}"],
               "path": ["apps", "docudesk", "api", "preferences", "test-key"]
             }
           },
