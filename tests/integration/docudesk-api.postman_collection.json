@@ -217,7 +217,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 500 for non-existent file', function () { pm.response.to.have.status(500); });",
+                  "// Was `have.status(500)`. AnonymizationController::extract()",
+                  "// calls verifyFileAccess() before doing any work, and that",
+                  "// answers 404 for a file that does not exist — which is the",
+                  "// correct code. The 500 expectation encoded an older, worse",
+                  "// behaviour; asserting it would have demanded a regression.",
+                  "pm.test('Status code is 404 for non-existent file', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -297,7 +302,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Rejects invalid bases (non-array) with 400', function () { pm.response.to.have.status(400); });",
+                  "// This asserted 400 for a per-entity `bases` field that is not",
+                  "// part of the anonymize contract at all — AnonymizeRequestValidator",
+                  "// validates entities/appendBasisSummary/unredactedEntities/",
+                  "// acknowledgedOverrides, and the publication bases live on",
+                  "// unredactedEntities as `publicationBases`. Two SIBLING requests in",
+                  "// this same collection assert that a stray `bases` key is silently",
+                  "// ignored, so the collection demanded both behaviours at once and",
+                  "// one of the two had to be wrong. The unknown key is ignored and the",
+                  "// request proceeds to the file-access check, which 404s on 999999.",
+                  "pm.test('Unknown per-entity key is ignored; file check answers 404', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -337,7 +351,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Rejects invalid bases item (non-string) with 400', function () { pm.response.to.have.status(400); });",
+                  "// See the sibling non-array case: `bases` is not a validated key.",
+                  "pm.test('Unknown per-entity key is ignored; file check answers 404', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -367,10 +382,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Extract on a non-existent file returns 500, but we verify the field shape when entities are returned.",
+                  "// Extract on a non-existent file returns 404 (verifyFileAccess",
+                  "// runs first); the comment below still applies for the shape.",
                   "// For live tests, replace 999999 with a real fileId and assert prohibitionMatch is present.",
                   "pm.test('Response has error for non-existent file (expected)', function () {",
-                  "  pm.response.to.have.status(500);",
+                  "  pm.response.to.have.status(404);",
                   "});"
                 ]
               }
