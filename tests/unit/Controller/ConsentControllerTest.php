@@ -21,6 +21,7 @@
 namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\ConsentController;
+use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
@@ -172,6 +173,116 @@ class ConsentControllerTest extends TestCase
         $this->assertEquals(400, $result->getStatus());
 
     }//end testCreateReturns400WhenMissingFields()
+
+    /**
+     * A brand-new consent record answers HTTP 201.
+     *
+     * Positive control for the 200-on-update test below: without it, a
+     * controller that always answered 200 would pass that test for the wrong
+     * reason.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     */
+    public function testCreateReturns201WhenANewRecordWasCreated(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'documentId' => 'doc-1',
+                'entityType' => 'PERSON',
+                'entityText' => 'Anneke Jansen',
+            ]
+        );
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('createFromRequest')
+            ->willReturn(['id' => 'consent-1', 'wasUpdated' => false]);
+
+        $result = $this->controller->create();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(201, $result->getStatus());
+
+    }//end testCreateReturns201WhenANewRecordWasCreated()
+
+    /**
+     * An idempotent re-submit answers HTTP 200, not 201.
+     *
+     * The service reports the branch it took through `wasUpdated`
+     * (`consent-management`: "The method's return shape MUST include a
+     * `wasUpdated` boolean"). HTTP 201 means a new resource was created
+     * (RFC 9110 §15.3.2); on the update branch nothing is created. The
+     * controller previously hardcoded 201, so the status line contradicted the
+     * `wasUpdated: true` in its own body.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     */
+    public function testCreateReturns200WhenAnExistingRecordWasUpdated(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'documentId' => 'doc-1',
+                'entityType' => 'PERSON',
+                'entityText' => 'Anneke Jansen',
+            ]
+        );
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('createFromRequest')
+            ->willReturn(['id' => 'consent-1', 'wasUpdated' => true]);
+
+        $result = $this->controller->create();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(200, $result->getStatus());
+
+    }//end testCreateReturns200WhenAnExistingRecordWasUpdated()
+
+    /**
+     * A prohibition match answers HTTP 403 carrying the rule identity.
+     *
+     * `PolicyRejectedException` is constructed with `code = 0`, so before this
+     * fix it fell through to `errorResponse()` and was reported as HTTP 500 —
+     * a deliberate business-rule rejection presented as a server crash — while
+     * the rule UUID and name the exception exists to carry were discarded.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     */
+    public function testCreateReturns403WithRuleIdentityOnProhibitionMatch(): void
+    {
+        $this->mockRequest->method('getParams')->willReturn(
+            [
+                'documentId' => 'doc-1',
+                'entityType' => 'PERSON',
+                'entityText' => 'Beschermde Getuige A',
+            ]
+        );
+        $this->mockCrudService->method('getConsentConfig')
+            ->willReturn(['register' => 'reg-1', 'schema' => 'sch-1']);
+        $this->mockCrudService->method('createFromRequest')
+            ->willThrowException(
+                new PolicyRejectedException(
+                    ruleUuid: 'rule-uuid-99',
+                    ruleName: 'Witness Protection Rule'
+                )
+            );
+
+        $result = $this->controller->create();
+
+        $this->assertInstanceOf(JSONResponse::class, $result);
+        $this->assertEquals(403, $result->getStatus());
+
+        $body = $result->getData();
+        $this->assertSame('prohibition', $body['matchKind'] ?? null);
+        $this->assertSame('rule-uuid-99', $body['ruleUuid'] ?? null);
+        $this->assertSame('Witness Protection Rule', $body['ruleName'] ?? null);
+
+    }//end testCreateReturns403WithRuleIdentityOnProhibitionMatch()
 
     /**
      * Test show returns 404 when not found
