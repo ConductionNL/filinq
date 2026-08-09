@@ -24,6 +24,7 @@
 // @e2e openspec/specs/processing-activity-export/spec.md#unconfigured-identity-prompts-not-blocks
 
 import { test, expect, type Page } from '@playwright/test'
+import { waitForNcContentReady } from './_helpers'
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
@@ -40,8 +41,16 @@ async function dismissOverlays(page: Page): Promise<void> {
 // non-`/login` URL, both of which PHP's 404 page satisfies — so these specs
 // passed against it.
 async function goSettings(page: Page): Promise<void> {
-	await page.goto('/index.php/settings/admin/docudesk')
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// `domcontentloaded`, not the default `load` — NC's long-lived polling
+	// connections can delay `load` past any sane timeout. See _helpers.ts.
+	await page.goto('/index.php/settings/admin/docudesk', { waitUntil: 'domcontentloaded' })
+	// Wait for exactly what these specs read next: the settings content region
+	// (`#app-content, .app-content, #content` — asserted verbatim below). The
+	// old `waitForLoadState('networkidle').catch(() => {})` could not settle
+	// anything: Nextcloud never goes network-idle, so it always ran to its own
+	// timeout and the `.catch` silently turned that into a pass. ADR-074
+	// rule 4 / gate-58.
+	await waitForNcContentReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }
@@ -71,8 +80,12 @@ test.describe('admin-settings — admin panel integration', () => {
 
 	test('DocuDesk appears in admin settings navigation', async ({ page }) => {
 		// @e2e openspec/specs/admin-settings/spec.md#admin-opens-docudesk-settings-section
-		await page.goto('/index.php/settings/admin')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.goto('/index.php/settings/admin', { waitUntil: 'domcontentloaded' })
+		// The admin settings overview must have painted its content region
+		// before the assertions below mean anything. Not `networkidle`: it
+		// never settles on Nextcloud (ADR-074 rule 4 / gate-58), and the
+		// `.catch` it needed converted its own timeout into a pass.
+		await waitForNcContentReady(page)
 		await dismissOverlays(page)
 		await page.waitForTimeout(600)
 		// Admin settings sidebar should be visible

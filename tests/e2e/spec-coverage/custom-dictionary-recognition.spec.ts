@@ -23,6 +23,7 @@
 // @e2e openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md#the-dictionaries-page-lists-dictionaries-with-their-term-counts
 
 import { test, expect, type Page } from '@playwright/test'
+import { waitForAppReady } from './_helpers'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
@@ -42,7 +43,10 @@ async function go(page: Page, route: string): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// Not `networkidle` — Nextcloud's long-lived polling means it never fires,
+	// so the old swallowed wait burned its timeout and then proceeded anyway.
+	// See waitForAppReady in ./_helpers (ADR-074 rule 4 / gate-58).
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }
@@ -98,7 +102,15 @@ test.describe('custom-dictionary-recognition — dictionary detail UI', () => {
 		const rowVisible = await row.isVisible().catch(() => false)
 		if (rowVisible) {
 			await row.click()
-			await page.waitForLoadState('networkidle').catch(() => {})
+			// Wait for exactly the transition this test then asserts: the
+			// in-app route moving from the index (`/custom-dictionaries`) to a
+			// detail (`/custom-dictionaries/<id>`). The previous
+			// `waitForLoadState('networkidle').catch(() => {})` waited for a
+			// state Nextcloud never reaches, then swallowed its own timeout —
+			// so the assertions ran against a page that might not have routed
+			// at all (ADR-074 rule 4 / gate-58).
+			await page.waitForURL(/\/custom-dictionaries\/.+/, { timeout: 15_000 })
+			await waitForAppReady(page)
 			await page.waitForTimeout(500)
 			await expect(page).toHaveURL(/\/custom-dictionaries\//)
 			await expect(page.getByText(/terms/i).first()).toBeVisible()

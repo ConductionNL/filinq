@@ -25,6 +25,7 @@
 // @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
 
 import { test, expect, type Page } from '@playwright/test'
+import { waitForAppReady, waitForNcContentReady } from './_helpers'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
@@ -44,7 +45,11 @@ async function go(page: Page, route = ''): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// Not `networkidle` — it never fires on Nextcloud (long-lived notification
+	// polling / user-status heartbeat), so the old swallowed wait spent its
+	// whole timeout and then continued regardless. See waitForAppReady in
+	// ./_helpers (ADR-074 rule 4 / gate-58).
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }
@@ -92,8 +97,12 @@ test.describe('dashboard — main view', () => {
 test.describe('dashboard — NC dashboard widgets', () => {
 	test('Nextcloud Dashboard page is accessible and DocuDesk widgets can be added', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#widgets-available-on-nextcloud-dashboard
-		await page.goto('/index.php/apps/dashboard')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.goto('/index.php/apps/dashboard', { waitUntil: 'domcontentloaded' })
+		// Nextcloud's own Dashboard app, not the DocuDesk SPA — wait for NC's
+		// authenticated content region. Not `networkidle`: it never settles on
+		// Nextcloud, and the `.catch(() => {})` this line used to carry turned
+		// its own timeout into a pass (ADR-074 rule 4 / gate-58).
+		await waitForNcContentReady(page)
 		await dismissOverlays(page)
 		await page.waitForTimeout(800)
 		// Dashboard page should load
@@ -104,12 +113,16 @@ test.describe('dashboard — NC dashboard widgets', () => {
 	test('DocuDesk navigation entry icon is app.svg', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#navigation-icon
 		// Navigate to NC and check DocuDesk nav entry
-		await page.goto('/index.php/apps/files')
-		await page.waitForLoadState('networkidle').catch(() => {})
-		await dismissOverlays(page)
-		await page.waitForTimeout(600)
+		await page.goto('/index.php/apps/files', { waitUntil: 'domcontentloaded' })
 		// NC app list / navigation — DocuDesk should appear with app icon
 		const navMenu = page.locator('#appmenu, nav.app-menu, #navigation').first()
+		// Wait for exactly the element this test then asserts on. The previous
+		// `waitForLoadState('networkidle').catch(() => {})` waited for a state
+		// Nextcloud never reaches (long-lived polling), so it only burned its
+		// timeout and then swallowed the failure. ADR-074 rule 4 / gate-58.
+		await navMenu.waitFor({ state: 'visible', timeout: 30_000 })
+		await dismissOverlays(page)
+		await page.waitForTimeout(600)
 		await expect(navMenu).toBeVisible()
 	})
 
@@ -169,8 +182,11 @@ test.describe('dashboard — icon files', () => {
 	test('DocuDesk admin settings page loads (settings icon uses app-dark.svg)', async ({ page }) => {
 		// @e2e openspec/specs/dashboard/spec.md#dashboard-widget-icon
 		// @e2e openspec/specs/dashboard/spec.md#admin-settings-section-icon
-		await page.goto('/index.php/settings/admin/docudesk')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.goto('/index.php/settings/admin/docudesk', { waitUntil: 'domcontentloaded' })
+		// NC admin settings, not the DocuDesk SPA — wait for NC's authenticated
+		// content region instead of `networkidle`, which never fires here
+		// (ADR-074 rule 4 / gate-58) and was swallowed when it timed out.
+		await waitForNcContentReady(page)
 		await dismissOverlays(page)
 		await page.waitForTimeout(600)
 		// Settings page should load for admin
