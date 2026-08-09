@@ -74,9 +74,9 @@
 				<table v-else class="custom-dictionary-detail__terms-table">
 					<thead>
 						<tr>
-							<th>{{ t('docudesk', 'Value') }}</th>
-							<th>{{ t('docudesk', 'Label') }}</th>
-							<th>{{ t('docudesk', 'Actions') }}</th>
+							<th scope="col">{{ t('docudesk', 'Value') }}</th>
+							<th scope="col">{{ t('docudesk', 'Label') }}</th>
+							<th scope="col">{{ t('docudesk', 'Actions') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -112,6 +112,20 @@
 			:result="importResult"
 			@submit="onImportSubmit"
 			@cancel="closeImportDialog" />
+
+		<!--
+			Removal confirmation. Replaces window.confirm(): the removal below
+			runs only from @confirm, so an explicit confirmation is still
+			required before a term disappears.
+		-->
+		<ConfirmActionDialog
+			v-if="removeTarget"
+			:name="t('docudesk', 'Remove term')"
+			:message="removeMessage"
+			:confirm-label="t('docudesk', 'Remove')"
+			:busy="removing"
+			@confirm="executeRemoveTerm"
+			@cancel="cancelRemoveTerm" />
 	</div>
 </template>
 
@@ -123,6 +137,7 @@ import { customDictionaryStore } from '../../store/store.js'
 import { resolveI18nValue } from '../../utils/registerI18n.js'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
 import CustomDictionaryImportDialog from '../../dialogs/CustomDictionaryImportDialog.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 
 export default {
 	name: 'CustomDictionaryDetail',
@@ -135,6 +150,7 @@ export default {
 		Delete,
 		CustomDictionaryFormDialog,
 		CustomDictionaryImportDialog,
+		ConfirmActionDialog,
 	},
 	data() {
 		return {
@@ -148,6 +164,8 @@ export default {
 			importDialogOpen: false,
 			importing: false,
 			importError: '',
+			removeTarget: null, // term awaiting removal confirmation, or null
+			removing: false,
 			matchModeColorMap: {
 				exact: 'error',
 				caseInsensitive: 'primary',
@@ -168,6 +186,14 @@ export default {
 		},
 		terms() {
 			return customDictionaryStore.terms
+		},
+		/**
+		 * Body text of the term-removal confirmation dialog.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		removeMessage() {
+			return t('docudesk', 'Remove "{value}"?', { value: this.removeTarget?.value || '' })
 		},
 		importResult() {
 			return customDictionaryStore.importResult
@@ -237,16 +263,47 @@ export default {
 				this.addingTerm = false
 			}
 		},
-		async removeTerm(term) {
-			const id = term['@self']?.id || term.id
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Remove "{value}"?', { value: term.value }))) {
+		/**
+		 * Ask for confirmation before removing a term.
+		 *
+		 * Opens ConfirmActionDialog; nothing is removed here.
+		 *
+		 * @param {object} term - The term to remove.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		removeTerm(term) {
+			this.removeTarget = term
+		},
+		/**
+		 * Dismiss the removal confirmation without removing anything.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		cancelRemoveTerm() {
+			this.removeTarget = null
+		},
+		/**
+		 * Remove the confirmed term. Reachable only from the dialog's
+		 * @confirm, so a term is never removed without an explicit
+		 * confirmation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		async executeRemoveTerm() {
+			const term = this.removeTarget
+			if (!term) {
 				return
 			}
+			const id = term['@self']?.id || term.id
+			this.removing = true
 			try {
 				await customDictionaryStore.deleteTerm(this.dictionaryId, id)
+				this.removeTarget = null
 			} catch (err) {
 				console.error('Failed to remove term:', err)
+			} finally {
+				this.removing = false
 			}
 		},
 		closeImportDialog() {

@@ -113,6 +113,19 @@ import { prohibitionStore } from '../../store/store.js'
 			@update:open="dialogOpen = $event"
 			@submit="onModalSubmit"
 			@cancel="dialogOpen = false" />
+
+		<!--
+			Delete confirmation. Replaces window.confirm(): the deletion below
+			runs only from @confirm, so an explicit confirmation is still
+			required before anything is removed.
+		-->
+		<ConfirmActionDialog
+			v-if="deleteTarget"
+			:name="t('docudesk', 'Delete prohibition')"
+			:message="deleteMessage"
+			:busy="deleting"
+			@confirm="executeDelete"
+			@cancel="cancelDelete" />
 	</div>
 </template>
 
@@ -126,6 +139,7 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import ProhibitionFormModal from './ProhibitionFormModal.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 
 export default {
 	name: 'ProhibitionIndex',
@@ -136,6 +150,7 @@ export default {
 		NcActions,
 		NcActionButton,
 		ProhibitionFormModal,
+		ConfirmActionDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
@@ -150,6 +165,8 @@ export default {
 			editing: null, // UUID of the record being edited, or null for create
 			editingRecord: null, // full record passed to the modal so it can hydrate its form
 			formError: '',
+			deleteTarget: null, // row awaiting delete confirmation, or null
+			deleting: false,
 			entityTypeColorMap: {
 				PERSON: 'warning',
 				ORGANIZATION: 'primary',
@@ -189,6 +206,15 @@ export default {
 				return prohibitionStore.error
 			}
 			return t('docudesk', 'No publication prohibitions defined.')
+		},
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		deleteMessage() {
+			const name = this.deleteTarget?.primaryName || t('docudesk', 'this prohibition')
+			return t('docudesk', 'Delete "{name}"? This cannot be undone.', { name })
 		},
 	},
 	mounted() {
@@ -257,17 +283,47 @@ export default {
 				this.saving = false
 			}
 		},
-		async confirmDelete(row) {
-			const id = row['@self']?.id || row.id || row.uuid
-			const name = row.primaryName || t('docudesk', 'this prohibition')
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Delete "{name}"? This cannot be undone.', { name }))) {
+		/**
+		 * Ask for confirmation before deleting a prohibition.
+		 *
+		 * Opens ConfirmActionDialog; nothing is removed here.
+		 *
+		 * @param {object} row - The prohibition row to delete.
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		confirmDelete(row) {
+			this.deleteTarget = row
+		},
+		/**
+		 * Dismiss the delete confirmation without deleting anything.
+		 *
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		cancelDelete() {
+			this.deleteTarget = null
+		},
+		/**
+		 * Delete the confirmed prohibition. Reachable only from the dialog's
+		 * @confirm, so the record is never removed without an explicit
+		 * confirmation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
+		 */
+		async executeDelete() {
+			const row = this.deleteTarget
+			if (!row) {
 				return
 			}
+			const id = row['@self']?.id || row.id || row.uuid
+			this.deleting = true
 			try {
 				await prohibitionStore.deleteProhibition(id)
+				this.deleteTarget = null
 			} catch (err) {
 				console.error('Failed to delete prohibition:', err)
+			} finally {
+				this.deleting = false
 			}
 		},
 	},

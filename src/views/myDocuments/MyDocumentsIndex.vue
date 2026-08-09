@@ -170,6 +170,27 @@ import { myDocumentsStore, fileViewerStore } from '../../store/store.js'
 			:findings="validation.findings"
 			@close="validation.show = false"
 			@ocr="onOcrRequested" />
+
+		<!--
+			Delete confirmation, single row and bulk. Replaces window.confirm():
+			executeDelete()/executeBulkDelete() run only from @confirm, so
+			nothing is removed without an explicit confirmation.
+		-->
+		<ConfirmActionDialog
+			v-if="deleteTarget"
+			:name="t('docudesk', 'Delete document')"
+			:message="deleteMessage"
+			:busy="deleting"
+			@confirm="executeDelete"
+			@cancel="cancelDelete" />
+
+		<ConfirmActionDialog
+			v-if="bulkDeleteNames.length > 0"
+			:name="t('docudesk', 'Delete selected items')"
+			:message="bulkDeleteMessage"
+			:busy="deleting"
+			@confirm="executeBulkDelete"
+			@cancel="cancelBulkDelete" />
 	</div>
 </template>
 
@@ -185,6 +206,7 @@ import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import DdIcon from '../../components/DdIcon.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 import { validateFile } from '../../services/validationService.js'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -234,6 +256,7 @@ export default {
 		DdIcon,
 		FileViewerPage,
 		ValidationResultModal,
+		ConfirmActionDialog,
 		DotsHorizontal,
 		Eye,
 		// TODO: re-enable with the Status column (see import above).
@@ -267,6 +290,9 @@ export default {
 				[t('docudesk', 'Concept')]: 'warning',
 				[t('docudesk', 'Anonymized')]: 'success',
 			},
+			deleteTarget: null, // row awaiting delete confirmation, or null
+			bulkDeleteNames: [], // file names awaiting bulk-delete confirmation
+			deleting: false,
 		}
 	},
 	computed: {
@@ -302,6 +328,28 @@ export default {
 				return myDocumentsStore.error
 			}
 			return t('docudesk', 'No documents found')
+		},
+		/**
+		 * Body text of the single-item delete confirmation dialog.
+		 *
+		 * @spec exclude Presentational string for the delete confirmation dialog.
+		 */
+		deleteMessage() {
+			const row = this.deleteTarget
+			if (!row) {
+				return ''
+			}
+			return row.isFolder
+				? t('docudesk', 'Delete dossier "{name}" and all documents inside it? This cannot be undone.', { name: row.fileName })
+				: t('docudesk', 'Delete "{name}"? This cannot be undone.', { name: this.displayName(row) })
+		},
+		/**
+		 * Body text of the bulk delete confirmation dialog.
+		 *
+		 * @spec exclude Presentational string for the delete confirmation dialog.
+		 */
+		bulkDeleteMessage() {
+			return t('docudesk', 'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.', { count: this.bulkDeleteNames.length })
 		},
 	},
 	/**
@@ -390,15 +438,33 @@ export default {
 		 *
 		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 		 */
-		async bulkDelete() {
+		bulkDelete() {
 			const names = myDocumentsStore.documents
 				.filter((d) => this.selectedIds.includes(d.fileId))
 				.map((d) => d.fileName)
 			if (names.length === 0) return
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Delete {count} selected item(s)? Dossiers and the documents inside them will be removed. This cannot be undone.', { count: names.length }))) {
-				return
-			}
+			this.bulkDeleteNames = names
+		},
+		/**
+		 * Dismiss the bulk-delete confirmation without deleting anything.
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 */
+		cancelBulkDelete() {
+			this.bulkDeleteNames = []
+		},
+		/**
+		 * Delete the confirmed selection. Reachable only from the dialog's
+		 * @confirm, so nothing is removed without an explicit confirmation.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 */
+		async executeBulkDelete() {
+			const names = this.bulkDeleteNames
+			if (names.length === 0) return
+			this.deleting = true
 			try {
 				const failed = await myDocumentsStore.deleteDocuments(names)
 				if (failed.length > 0) {
@@ -411,6 +477,8 @@ export default {
 				showError(t('docudesk', 'Failed to delete the selected items'))
 			} finally {
 				this.selectedIds = []
+				this.bulkDeleteNames = []
+				this.deleting = false
 			}
 		},
 		/**
@@ -477,21 +545,40 @@ export default {
 		 *
 		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
 		 */
-		async confirmDelete(row) {
+		confirmDelete(row) {
 			if (!row || !row.fileName) return
-			const message = row.isFolder
-				? t('docudesk', 'Delete dossier "{name}" and all documents inside it? This cannot be undone.', { name: row.fileName })
-				: t('docudesk', 'Delete "{name}"? This cannot be undone.', { name: this.displayName(row) })
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(message)) {
-				return
-			}
+			this.deleteTarget = row
+		},
+		/**
+		 * Dismiss the delete confirmation without deleting anything.
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 */
+		cancelDelete() {
+			this.deleteTarget = null
+		},
+		/**
+		 * Delete the confirmed file or dossier. Reachable only from the
+		 * dialog's @confirm, so nothing is removed without an explicit
+		 * confirmation.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec exclude UI confirmation wrapper around WebDAV passthrough; auth + ACL enforced by Nextcloud core (no DocuDesk domain semantics).
+		 */
+		async executeDelete() {
+			const row = this.deleteTarget
+			if (!row) return
+			this.deleting = true
 			try {
 				await myDocumentsStore.deleteDocument(row.fileName)
 				showSuccess(t('docudesk', 'Deleted "{name}"', { name: this.displayName(row) }))
 			} catch (err) {
 				console.error('Failed to delete document:', err)
 				showError(t('docudesk', 'Failed to delete "{name}"', { name: this.displayName(row) }))
+			} finally {
+				this.deleteTarget = null
+				this.deleting = false
 			}
 		},
 		/**
@@ -731,6 +818,14 @@ export default {
    NcActions sizes itself off Nextcloud's `--default-clickable-area` token. */
 .my-documents-row-actions {
 	--default-clickable-area: 32px;
+}
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.my-documents-name__icon {
+		transition: none;
+	}
 }
 
 </style>
