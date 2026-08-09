@@ -133,6 +133,12 @@ class PortalSigningReceiverControllerTest extends TestCase
         $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
         $this->mockSettingsService->method('getObjectService')->willReturn($this->mockObjectService);
+        // resolveInvitedSigner() is the anti-IDOR boundary (REQ-DDPSA-004) and
+        // now DENIES when the signerRecord binding is unset, rather than
+        // passing '' through as two of the four filters that scope the lookup.
+        // An unstubbed mock returns null, so the deny path fires.
+        $this->mockSettingsService->method('resolveSignerRecordBinding')
+            ->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
         $this->mockConfig->method('getValueString')->willReturnCallback(
             static fn (string $app, string $key, string $default=''): string => $default
         );

@@ -110,6 +110,11 @@ TEXT;
 
         $this->settingsService = $this->createMock(SettingsService::class);
         $this->settingsService->method('getObjectService')->willReturn($this->objectService);
+        // The binding is resolved through SettingsService and FAILS CLOSED when
+        // unset, instead of defaulting to register '' / schema ''. An unstubbed
+        // mock returns null, which is precisely what the guard exists to catch.
+        $this->settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
 
         $this->config = $this->createMock(IAppConfig::class);
         $this->config->method('getValueString')->willReturnCallback(
