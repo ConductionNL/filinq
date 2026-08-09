@@ -27,6 +27,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use Exception;
 use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
 use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
 use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
@@ -77,6 +78,16 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $this->config = $this->createMock(IAppConfig::class);
         $this->config->method('getValueString')->willReturnCallback(
@@ -100,7 +111,11 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $this->service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $logger,
@@ -403,10 +418,24 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $this->createMock(LoggerInterface::class),
@@ -448,10 +477,24 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $this->createMock(LoggerInterface::class),

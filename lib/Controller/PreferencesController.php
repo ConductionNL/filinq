@@ -46,6 +46,9 @@
  *
  * @link https://www.DocuDesk.app
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * @spec openspec/specs/preferences-api/spec.md
  */
 

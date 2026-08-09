@@ -120,4 +120,100 @@ class OpenRegisterResolver
         return true;
 
     }//end validateNamespace()
+
+    /**
+     * Resolve the financialExtraction register/schema binding, failing closed.
+     *
+     * SettingsService owns the READ and returns null when either half is unset;
+     * this turns that null into the same RegisterNotConfiguredException the
+     * template accessors above already raise. The split exists so the two
+     * concerns sit where they belong — the settings surface reads config, this
+     * resolver decides that an unset binding is an error — and it keeps the
+     * exception type out of SettingsService, whose object coupling is at its
+     * PHPMD ceiling.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException If the binding is not configured.
+     *
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
+     */
+    public function getFinancialExtractionRegisterAndSchema(): array
+    {
+        $binding = $this->settingsService->resolveFinancialExtractionBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'Financial extraction register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end getFinancialExtractionRegisterAndSchema()
+
+    /**
+     * Resolve the glAccountBooking register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException If the binding is not configured.
+     *
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
+     */
+    public function getGlAccountBookingRegisterAndSchema(): array
+    {
+        $binding = $this->settingsService->resolveGlAccountBookingBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'GL account booking register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end getGlAccountBookingRegisterAndSchema()
+
+    /**
+     * Resolve the glAccountMappingRule register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException If the binding is not configured.
+     *
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
+     */
+    public function getGlAccountMappingRuleRegisterAndSchema(): array
+    {
+        $binding = $this->settingsService->resolveGlAccountMappingRuleBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'GL account mapping rule register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end getGlAccountMappingRuleRegisterAndSchema()
+
+    /**
+     * Resolve the signerRecord register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException If the binding is not configured.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    public function getSignerRecordRegisterAndSchema(): array
+    {
+        $binding = $this->settingsService->resolveSignerRecordBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'Signer record register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end getSignerRecordRegisterAndSchema()
 }//end class

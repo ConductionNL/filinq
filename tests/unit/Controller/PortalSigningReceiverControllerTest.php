@@ -37,6 +37,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\PortalSigningReceiverController;
 use OCA\DocuDesk\Portal\PortalAssertionVerifier;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningService;
@@ -133,6 +134,12 @@ class PortalSigningReceiverControllerTest extends TestCase
         $this->mockLogger          = $this->createMock(LoggerInterface::class);
 
         $this->mockSettingsService->method('getObjectService')->willReturn($this->mockObjectService);
+        // resolveInvitedSigner() is the anti-IDOR boundary (REQ-DDPSA-004) and
+        // now DENIES when the signerRecord binding is unset, rather than
+        // passing '' through as two of the four filters that scope the lookup.
+        // An unstubbed mock returns null, so the deny path fires.
+        $this->mockSettingsService->method('resolveSignerRecordBinding')
+            ->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
         $this->mockConfig->method('getValueString')->willReturnCallback(
             static fn (string $app, string $key, string $default=''): string => $default
         );
@@ -152,7 +159,11 @@ class PortalSigningReceiverControllerTest extends TestCase
             verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
             signingService: $this->mockSigningService,
             settingsService: $this->mockSettingsService,
-            config: $this->mockConfig,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset signerRecord binding into a
+            // DENY on the anti-IDOR boundary (REQ-DDPSA-004), so mocking it
+            // away would remove exactly the behaviour under test.
+            registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
             logger: $this->mockLogger,
             documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder)
         );
