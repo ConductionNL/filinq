@@ -127,16 +127,73 @@ export async function dismissOverlays(page: Page): Promise<void> {
  */
 export const APP = '/index.php/apps/docudesk'
 
+/**
+ * Wait until the DocuDesk SPA has actually mounted and painted its content
+ * region.
+ *
+ * ⚠️ This replaces the `await page.waitForLoadState('networkidle').catch(() => {})`
+ * that used to follow every navigation in this suite (ADR-074 rule 4 /
+ * gate-58 e2e-networkidle). That call could never do what it looked like it
+ * did: Nextcloud holds long-lived connections open — notifications polling,
+ * the user-status heartbeat — so the network NEVER goes idle. The wait
+ * therefore always ran to its own timeout and was then swallowed by
+ * `.catch(() => {})`. It did not "let the app settle"; it burned ~30s per
+ * navigation and then continued at exactly the moment it would have anyway,
+ * leaving the assertions to race a possibly-unmounted app. Worse, the swallow
+ * turned that timeout into a pass, so nothing ever reported it.
+ *
+ * The deterministic form of the same intent is two explicit waits:
+ *  1. `#docudesk-app` — the mount point `templates/index.php` server-renders.
+ *     Its presence also separates a real Nextcloud response from PHP's
+ *     built-in-server 404 page (see the `APP` docblock above), which has a
+ *     `<body>` and a non-`/login` URL and so satisfied several assertions.
+ *  2. the content region the manifest shell renders inside it — present only
+ *     once Vue has mounted and the active route has painted.
+ *
+ * Neither wait is swallowed. A page that never mounts must fail here, loudly
+ * and at the navigation, instead of failing later at an assertion where it
+ * reads like an application defect.
+ *
+ * @param page    The Playwright page.
+ * @param timeout Budget for each of the two waits, in ms.
+ * @return Resolves once the SPA has mounted and painted.
+ */
+export async function waitForAppReady(page: Page, timeout = 30_000): Promise<void> {
+	await page.locator('#docudesk-app').waitFor({ state: 'attached', timeout })
+	await page.locator('main, #app-content, .app-content, #content-vue').first()
+		.waitFor({ state: 'visible', timeout })
+}
+
+/**
+ * Wait until a *Nextcloud core* page (admin settings, Dashboard, Files) has
+ * painted its authenticated content region.
+ *
+ * Same rationale as `waitForAppReady` — `networkidle` never fires on
+ * Nextcloud — but these routes are not the DocuDesk SPA, so there is no
+ * `#docudesk-app` to key on. `#content` is rendered by NC's *authenticated*
+ * layout only; the guest/login layout does not have it, so this wait also
+ * fails fast on a session that silently expired instead of letting a
+ * `not.toHaveURL(/\/login/)` assertion decide it much later.
+ *
+ * @param page    The Playwright page.
+ * @param timeout Wait budget in ms.
+ * @return Resolves once the NC content region is visible.
+ */
+export async function waitForNcContentReady(page: Page, timeout = 30_000): Promise<void> {
+	await page.locator('#content, #app-content, .app-content, main').first()
+		.waitFor({ state: 'visible', timeout })
+}
+
 export async function go(page: Page, route: string): Promise<void> {
 	const url = route ? `${APP}/${route}` : APP
 	// Wait for `domcontentloaded`, not the default `load`. Nextcloud keeps
 	// long-lived connections open (notifications polling, user-status
 	// heartbeat), so on a busy instance the `load` event can be minutes late
 	// or never fire at all — every navigation then failed with a 60s timeout
-	// even though the page was interactive. `networkidle` below still gives
-	// the Vue app time to settle, and is already failure-tolerant.
+	// even though the page was interactive. `waitForAppReady` below then waits
+	// on the app itself rather than on the network going quiet.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle').catch(() => {})
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }
@@ -148,6 +205,11 @@ export async function navClick(page: Page, label: string): Promise<void> {
 	// collide with longer labels and "Dashboard" stays unambiguous.
 	const link = page.locator(`#app-navigation a[title="${label}"], .app-navigation a[title="${label}"]`).first()
 	await link.click()
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// The click routes in-app. Re-assert the shell rather than waiting for
+	// network silence (which never arrives): a manifest route that throws
+	// during render unmounts the content region, so requiring it back is a
+	// real check that the destination painted. Callers' `toHaveURL` /
+	// `toBeVisible` expectations then retry over the route-specific markup.
+	await waitForAppReady(page)
 	await page.waitForTimeout(800)
 }
