@@ -461,7 +461,7 @@ class SettingsService
     }//end updateSettings()
 
     /**
-     * Resolve the signingRequest register/schema binding, failing closed.
+     * Resolve the signingRequest register/schema binding, or null when unset.
      *
      * These bindings live here, next to the settings surface that writes them,
      * rather than in each consumer: every call site used to read them inline
@@ -488,7 +488,7 @@ class SettingsService
     }//end resolveSigningRequestBinding()
 
     /**
-     * Resolve the signerRecord register/schema binding, failing closed.
+     * Resolve the signerRecord register/schema binding, or null when unset.
      *
      * A signer record carries the identity a signature is attributed to, so an
      * unconfigured binding loses exactly the evidence a signature exists to
@@ -511,7 +511,7 @@ class SettingsService
     }//end resolveSignerRecordBinding()
 
     /**
-     * Resolve the financialExtraction register/schema binding, failing closed.
+     * Resolve the financialExtraction register/schema binding, or null when unset.
      *
      * @return array{register: string, schema: string}|null The binding, or null when unset.
      *
@@ -530,7 +530,7 @@ class SettingsService
     }//end resolveFinancialExtractionBinding()
 
     /**
-     * Resolve the glAccountBooking register/schema binding, failing closed.
+     * Resolve the glAccountBooking register/schema binding, or null when unset.
      *
      * @return array{register: string, schema: string}|null The binding, or null when unset.
      *
@@ -549,7 +549,7 @@ class SettingsService
     }//end resolveGlAccountBookingBinding()
 
     /**
-     * Resolve the glAccountMappingRule register/schema binding, failing closed.
+     * Resolve the glAccountMappingRule register/schema binding, or null when unset.
      *
      * @return array{register: string, schema: string}|null The binding, or null when unset.
      *
