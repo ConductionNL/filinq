@@ -30,17 +30,17 @@
 		<table class="entity-table">
 			<thead>
 				<tr>
-					<th /><th @click="sortBy('type')">
+					<th /><th scope="col" @click="sortBy('type')">
 						{{ t('docudesk', 'Type') }}
-					</th><th @click="sortBy('value')">
+					</th><th scope="col" @click="sortBy('value')">
 						{{ t('docudesk', 'Value') }}
-					</th><th @click="sortBy('highestConfidence')">
+					</th><th scope="col" @click="sortBy('highestConfidence')">
 						{{ t('docudesk', 'Confidence') }}
-					</th><th @click="sortBy('fileCount')">
+					</th><th scope="col" @click="sortBy('fileCount')">
 						{{ t('docudesk', 'Files') }}
-					</th><th class="bases-col">
+					</th><th scope="col" class="bases-col">
 						{{ t('docudesk', 'Grondslag (bases)') }}
-					</th><th>
+					</th><th scope="col">
 						{{ t('docudesk', 'Skip') }}
 					</th>
 				</tr>

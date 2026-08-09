@@ -7,13 +7,19 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 	<div class="anonymization-widget">
 		<!-- Drop zone -->
 		<div class="upload-area">
+			<!--
+				Drag-and-drop is a pointer-only affordance by nature, so the file
+				picker is opened by a REAL <button> rather than by a click handler
+				on this wrapper. The wrapper used to carry `@click` while the
+				<input type="file"> was `display: none`, which left keyboard users
+				with no way at all to reach the picker (WCAG 2.1.1).
+			-->
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
-				@drop.prevent="handleDrop"
-				@click="$refs.fileInput.click()">
+				@drop.prevent="handleDrop">
 				<img :src="uploadIcon" alt="" class="upload-icon">
 				<div class="drop-content">
 					<p class="drop-title">
@@ -22,9 +28,9 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 					<p class="drop-subtitle">
 						{{ t('docudesk', 'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
-					<span class="fake-button">
+					<button type="button" class="fake-button" @click="$refs.fileInput.click()">
 						{{ t('docudesk', '+ Select files') }}
-					</span>
+					</button>
 				</div>
 				<input
 					ref="fileInput"
@@ -463,7 +469,7 @@ export default {
 	padding: 32px;
 	background-color: var(--dd-surface, #fff);
 	box-shadow: var(--dd-shadow-panel);
-	cursor: pointer;
+	/* Not a click target any more — the picker is opened by .fake-button. */
 	transition: border-color 0.2s, background-color 0.2s;
 }
 
@@ -506,15 +512,25 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* A real <button> now, so the browser's own border/font defaults are reset
+   here to keep the previous appearance byte-for-byte. */
 .fake-button {
 	margin-top: 4px;
 	padding: 8px 16px;
+	border: none;
 	border-radius: var(--border-radius);
 	background-color: var(--color-primary-element);
 	color: var(--color-primary-element-text);
+	font-family: inherit;
 	font-size: 0.9rem;
 	font-weight: 500;
 	white-space: nowrap;
+	cursor: pointer;
+}
+
+.fake-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .file-input {
@@ -571,6 +587,14 @@ export default {
 	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	grid-auto-rows: 1fr;
 	gap: 16px;
+}
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.drop-zone {
+		transition: none;
+	}
 }
 
 </style>

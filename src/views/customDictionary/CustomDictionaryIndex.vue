@@ -93,6 +93,19 @@ import { resolveI18nValue } from '../../utils/registerI18n.js'
 			:form-error="formError"
 			@submit="onCreateSubmit"
 			@cancel="dialogOpen = false" />
+
+		<!--
+			Delete confirmation. Replaces window.confirm(): the deletion below
+			runs only from @confirm, so an explicit confirmation is still
+			required before anything is removed.
+		-->
+		<ConfirmActionDialog
+			v-if="deleteTarget"
+			:name="t('docudesk', 'Delete dictionary')"
+			:message="deleteMessage"
+			:busy="deleting"
+			@confirm="executeDelete"
+			@cancel="cancelDelete" />
 	</div>
 </template>
 
@@ -107,6 +120,7 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import CustomDictionaryFormDialog from '../../dialogs/CustomDictionaryFormDialog.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 
 export default {
 	name: 'CustomDictionaryIndex',
@@ -116,6 +130,7 @@ export default {
 		NcActions,
 		NcActionButton,
 		CustomDictionaryFormDialog,
+		ConfirmActionDialog,
 		Delete,
 		DotsHorizontal,
 		Pencil,
@@ -128,6 +143,8 @@ export default {
 			dialogOpen: false,
 			saving: false,
 			formError: '',
+			deleteTarget: null, // row awaiting delete confirmation, or null
+			deleting: false,
 			matchModeColorMap: {
 				exact: 'error',
 				caseInsensitive: 'primary',
@@ -158,6 +175,15 @@ export default {
 				return customDictionaryStore.error
 			}
 			return t('docudesk', 'No custom dictionaries defined yet.')
+		},
+		/**
+		 * Body text of the delete confirmation dialog.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		deleteMessage() {
+			const name = this.deleteTarget?.label || t('docudesk', 'this dictionary')
+			return t('docudesk', 'Delete "{name}" and all its terms? This cannot be undone.', { name })
 		},
 	},
 	mounted() {
@@ -219,17 +245,47 @@ export default {
 				this.saving = false
 			}
 		},
-		async confirmDelete(row) {
-			const id = row['@self']?.id || row.id || row.uuid
-			const name = row.label || t('docudesk', 'this dictionary')
-			// eslint-disable-next-line no-alert
-			if (!window.confirm(t('docudesk', 'Delete "{name}" and all its terms? This cannot be undone.', { name }))) {
+		/**
+		 * Ask for confirmation before deleting a dictionary.
+		 *
+		 * Opens ConfirmActionDialog; nothing is removed here.
+		 *
+		 * @param {object} row - The dictionary row to delete.
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		confirmDelete(row) {
+			this.deleteTarget = row
+		},
+		/**
+		 * Dismiss the delete confirmation without deleting anything.
+		 *
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		cancelDelete() {
+			this.deleteTarget = null
+		},
+		/**
+		 * Delete the confirmed dictionary and all its terms. Reachable only
+		 * from the dialog's @confirm, so the record is never removed without
+		 * an explicit confirmation.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/custom-dictionary-recognition/spec.md
+		 */
+		async executeDelete() {
+			const row = this.deleteTarget
+			if (!row) {
 				return
 			}
+			const id = row['@self']?.id || row.id || row.uuid
+			this.deleting = true
 			try {
 				await customDictionaryStore.deleteDictionary(id)
+				this.deleteTarget = null
 			} catch (err) {
 				console.error('Failed to delete custom dictionary:', err)
+			} finally {
+				this.deleting = false
 			}
 		},
 	},

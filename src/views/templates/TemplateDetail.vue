@@ -189,10 +189,10 @@
 			<table v-else class="template-detail__versions-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'Version') }}</th>
-						<th>{{ t('docudesk', 'Editor') }}</th>
-						<th>{{ t('docudesk', 'Change note') }}</th>
-						<th>{{ t('docudesk', 'Actions') }}</th>
+						<th scope="col">{{ t('docudesk', 'Version') }}</th>
+						<th scope="col">{{ t('docudesk', 'Editor') }}</th>
+						<th scope="col">{{ t('docudesk', 'Change note') }}</th>
+						<th scope="col">{{ t('docudesk', 'Actions') }}</th>
 					</tr>
 				</thead>
 				<tbody>

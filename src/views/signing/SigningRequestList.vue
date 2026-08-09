@@ -9,11 +9,11 @@
 		<table v-else class="signing-table">
 			<thead>
 				<tr>
-					<th>{{ t('docudesk', 'Document') }}</th>
-					<th>{{ t('docudesk', 'Status') }}</th>
-					<th>{{ t('docudesk', 'Level') }}</th>
-					<th>{{ t('docudesk', 'Mode') }}</th>
-					<th>{{ t('docudesk', 'Deadline') }}</th>
+					<th scope="col">{{ t('docudesk', 'Document') }}</th>
+					<th scope="col">{{ t('docudesk', 'Status') }}</th>
+					<th scope="col">{{ t('docudesk', 'Level') }}</th>
+					<th scope="col">{{ t('docudesk', 'Mode') }}</th>
+					<th scope="col">{{ t('docudesk', 'Deadline') }}</th>
 				</tr>
 			</thead>
 			<tbody>

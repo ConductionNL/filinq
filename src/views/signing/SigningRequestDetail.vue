@@ -18,9 +18,9 @@
 			<table v-if="signingStore.auditTrail.length > 0" class="audit-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'Action') }}</th>
-						<th>{{ t('docudesk', 'Actor') }}</th>
-						<th>{{ t('docudesk', 'Timestamp') }}</th>
+						<th scope="col">{{ t('docudesk', 'Action') }}</th>
+						<th scope="col">{{ t('docudesk', 'Actor') }}</th>
+						<th scope="col">{{ t('docudesk', 'Timestamp') }}</th>
 					</tr>
 				</thead>
 				<tbody>

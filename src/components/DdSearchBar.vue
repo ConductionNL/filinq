@@ -206,4 +206,13 @@ export default {
 	outline: 2px solid var(--color-primary-element);
 	outline-offset: 1px;
 }
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-search-bar__input,
+	.dd-search-bar__clear {
+		transition: none;
+	}
+}
 </style>

@@ -129,4 +129,13 @@ export default {
 	line-height: 140%;
 	color: var(--color-main-text, #02162e);
 }
+
+/* WCAG 2.2 SC 2.3.3 — the knob still moves and the track still recolours, it
+   just arrives instantly for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-toggle__track,
+	.dd-toggle__knob {
+		transition: none;
+	}
+}
 </style>

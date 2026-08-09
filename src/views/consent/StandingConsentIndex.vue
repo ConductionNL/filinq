@@ -128,6 +128,20 @@ import { consentStore } from '../../store/store.js'
 			:show="showCreateModal"
 			@close="closeCreateModal"
 			@created="handleCreate" />
+
+		<!--
+			Revoke confirmation. Replaces window.confirm(): revokeConsent below
+			runs only from @confirm, so the withdrawal still requires an
+			explicit confirmation.
+		-->
+		<ConfirmActionDialog
+			v-if="revokeTarget"
+			:name="t('docudesk', 'Revoke standing consent')"
+			:message="t('docudesk', 'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.')"
+			:confirm-label="t('docudesk', 'Revoke')"
+			:busy="revoking"
+			@confirm="executeRevoke"
+			@cancel="cancelRevoke" />
 	</div>
 </template>
 
@@ -139,6 +153,7 @@ import ClockRemove from 'vue-material-design-icons/ClockRemove.vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 
 import CreateStandingConsentModal from '../../modals/CreateStandingConsentModal.vue'
+import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 
 export default {
 	name: 'StandingConsentIndex',
@@ -152,6 +167,7 @@ export default {
 		ClockRemove,
 		Cancel,
 		CreateStandingConsentModal,
+		ConfirmActionDialog,
 	},
 	data() {
 		return {
@@ -159,6 +175,8 @@ export default {
 			currentPage: 1,
 			pageSize: 20,
 			showCreateModal: false,
+			revokeTarget: null, // consent awaiting revoke confirmation, or null
+			revoking: false,
 			entityTypeColorMap: {
 				person: 'warning',
 				organization: 'primary',
@@ -291,27 +309,50 @@ export default {
 			await consentStore.updateConsent(id, { ...consent, active: false })
 		},
 		/**
-		 * Set the consent status to anonymized (revoke it).
+		 * Ask for confirmation before revoking a standing consent.
 		 *
 		 * Revoke is destructive — Art. 7(3) consent withdrawal flips
 		 * `consentStatus` to `anonymized` and `active` to false; the
-		 * record cannot be re-activated. Confirm before submitting so
-		 * a single mis-click in the row-action menu can't silently
-		 * destroy a standing consent.
+		 * record cannot be re-activated. So this only opens
+		 * ConfirmActionDialog; executeRevoke() does the write.
 		 *
 		 * @param consent
 		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
 		 */
-		async revokeConsent(consent) {
-			const id = consent.id || consent.uuid
-			const ok = window.confirm(t(
-				'docudesk',
-				'Revoke this standing consent? This withdraws permission for any in-flight publications and cannot be undone.',
-			))
-			if (!ok) {
+		revokeConsent(consent) {
+			this.revokeTarget = consent
+		},
+		/**
+		 * Dismiss the revoke confirmation without changing anything.
+		 *
+		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
+		 */
+		cancelRevoke() {
+			this.revokeTarget = null
+		},
+		/**
+		 * Apply the confirmed revocation.
+		 *
+		 * Reachable only from ConfirmActionDialog's @confirm, so a single
+		 * mis-click in the row-action menu still cannot destroy a standing
+		 * consent.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/publication-consent-policy-fields/tasks.md#task-11
+		 */
+		async executeRevoke() {
+			const consent = this.revokeTarget
+			if (!consent) {
 				return
 			}
-			await consentStore.updateConsent(id, { ...consent, consentStatus: 'anonymized', active: false })
+			const id = consent.id || consent.uuid
+			this.revoking = true
+			try {
+				await consentStore.updateConsent(id, { ...consent, consentStatus: 'anonymized', active: false })
+				this.revokeTarget = null
+			} finally {
+				this.revoking = false
+			}
 		},
 		/**
 		 * Reload the consent list from the backend.

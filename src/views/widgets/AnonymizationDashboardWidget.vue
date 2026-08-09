@@ -10,14 +10,14 @@ import { anonymizationStore } from '../../store/store.js'
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th class="col-number">
+						<th scope="col">{{ t('docudesk', 'File') }}</th>
+						<th scope="col" class="col-number">
 							{{ t('docudesk', 'Entities') }}
 						</th>
-						<th class="col-number">
+						<th scope="col" class="col-number">
 							{{ t('docudesk', 'Removed') }}
 						</th>
-						<th class="col-action">
+						<th scope="col" class="col-action">
 							{{ t('docudesk', 'Result') }}
 						</th>
 					</tr>
@@ -81,13 +81,19 @@ import { anonymizationStore } from '../../store/store.js'
 
 		<!-- Drop zone -->
 		<div class="upload-area" :class="{ compact: anonymizationStore.hasFiles }">
+			<!--
+				Drag-and-drop is a pointer-only affordance by nature, so the file
+				picker is opened by a REAL <button> rather than by a click handler
+				on this wrapper. The wrapper used to carry `@click` while the
+				<input type="file"> was `display: none`, which left keyboard users
+				with no way at all to reach the picker (WCAG 2.1.1).
+			-->
 			<div
 				class="drop-zone"
 				:class="{ dragging: isDragging }"
 				@dragover.prevent="isDragging = true"
 				@dragleave.prevent="isDragging = false"
-				@drop.prevent="handleDrop"
-				@click="$refs.fileInput.click()">
+				@drop.prevent="handleDrop">
 				<img v-if="!anonymizationStore.hasFiles"
 					:src="uploadIcon"
 					alt=""
@@ -102,9 +108,9 @@ import { anonymizationStore } from '../../store/store.js'
 					<p v-if="!anonymizationStore.hasFiles" class="drop-subtitle">
 						{{ t('docudesk', 'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.') }}
 					</p>
-					<span class="fake-button">
+					<button type="button" class="fake-button" @click="$refs.fileInput.click()">
 						{{ anonymizationStore.hasFiles ? t('docudesk', '+ Add more files') : t('docudesk', '+ Select files') }}
-					</span>
+					</button>
 				</div>
 				<input
 					ref="fileInput"
@@ -490,7 +496,7 @@ export default {
 	border-radius: var(--border-radius-large);
 	padding: 32px;
 	background-color: var(--color-main-background);
-	cursor: pointer;
+	/* Not a click target any more — the picker is opened by .fake-button. */
 	transition: border-color 0.2s, background-color 0.2s;
 }
 
@@ -533,15 +539,25 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* A real <button> now, so the browser's own border/font defaults are reset
+   here to keep the previous appearance byte-for-byte. */
 .fake-button {
 	margin-top: 4px;
 	padding: 8px 16px;
+	border: none;
 	border-radius: var(--border-radius);
 	background-color: var(--color-primary-element);
 	color: var(--color-primary-element-text);
+	font-family: inherit;
 	font-size: 0.9rem;
 	font-weight: 500;
 	white-space: nowrap;
+	cursor: pointer;
+}
+
+.fake-button:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
 }
 
 .file-input {
@@ -575,5 +591,13 @@ export default {
 
 .dossier-dialog :deep(.notecard) {
 	margin: 0;
+}
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.drop-zone {
+		transition: none;
+	}
 }
 </style>

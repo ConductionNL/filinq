@@ -26,12 +26,12 @@
 		<table v-else-if="templateStore.templates.length > 0" class="template-index__table">
 			<thead>
 				<tr>
-					<th>{{ t('docudesk', 'Name') }}</th>
-					<th>{{ t('docudesk', 'Category') }}</th>
-					<th>{{ t('docudesk', 'Namespace') }}</th>
-					<th>{{ t('docudesk', 'Tags') }}</th>
-					<th>{{ t('docudesk', 'Status') }}</th>
-					<th>{{ t('docudesk', 'Actions') }}</th>
+					<th scope="col">{{ t('docudesk', 'Name') }}</th>
+					<th scope="col">{{ t('docudesk', 'Category') }}</th>
+					<th scope="col">{{ t('docudesk', 'Namespace') }}</th>
+					<th scope="col">{{ t('docudesk', 'Tags') }}</th>
+					<th scope="col">{{ t('docudesk', 'Status') }}</th>
+					<th scope="col">{{ t('docudesk', 'Actions') }}</th>
 				</tr>
 			</thead>
 			<tbody>

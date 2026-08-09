@@ -272,4 +272,12 @@ export default {
 	align-items: center;
 	margin-top: 8px;
 }
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-entity-card {
+		transition: none;
+	}
+}
 </style>

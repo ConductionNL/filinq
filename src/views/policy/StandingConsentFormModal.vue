@@ -169,7 +169,16 @@ export default {
 				<NcTextField
 					v-model="rule.value"
 					:label="t('docudesk', 'Match value')" />
-				<NcButton variant="tertiary" @click="removeRule(idx)">
+				<!--
+					Icon-only, so it needs its own name. The row index is part of
+					it: every row renders the same icon, and "Remove match rule"
+					repeated N times tells a screen-reader user nothing about
+					which row focus is on (WCAG 4.1.2).
+				-->
+				<NcButton
+					variant="tertiary"
+					:aria-label="t('docudesk', 'Remove match rule {number}', { number: idx + 1 })"
+					@click="removeRule(idx)">
 					<template #icon>
 						<Delete :size="20" />
 					</template>

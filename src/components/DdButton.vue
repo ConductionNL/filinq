@@ -202,4 +202,12 @@ export default {
 .dd-button__label {
 	white-space: nowrap;
 }
+
+/* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
+   change without the tween. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-button {
+		transition: none;
+	}
+}
 </style>
