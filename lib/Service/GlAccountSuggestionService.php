@@ -178,8 +178,11 @@ class GlAccountSuggestionService
         ];
 
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+        // Fails closed on the WRITE. This is the tuning corpus every future
+        // suggestion is ranked against; writing it to register '' loses the
+        // correction silently, and the next suggestion is then wrong for a
+        // reason nobody can see.
+        ['register' => $register, 'schema' => $schema] = $this->settingsService->requireGlAccountBookingBinding();
         $objectService->saveObject(object: $booking, register: $register, schema: $schema);
 
     }//end recordBooking()
@@ -274,8 +277,13 @@ class GlAccountSuggestionService
     private function findExtractionSafely(string $extractionId): ?array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
+        // Throws when unbound rather than returning null. A lookup against
+        // register '' finds nothing, which is INDISTINGUISHABLE from "that
+        // extraction does not exist" — the caller then reports an unknown
+        // extraction id when the real cause is an unconfigured instance.
+        // Both controllers catch Exception, so this surfaces as an honest
+        // error response instead of a wrong answer.
+        ['register' => $register, 'schema' => $schema] = $this->settingsService->requireFinancialExtractionBinding();
 
         $object = $objectService->find(id: $extractionId, register: $register, schema: $schema);
         if ($object === null) {
@@ -296,8 +304,11 @@ class GlAccountSuggestionService
     private function loadBookingHistory(string $supplierIdentity): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+        // Throws when unbound. "No booking history" and "not configured" both
+        // produced an empty array, and the ranker treats the first as a
+        // legitimate cold start — so an unconfigured instance silently ranked
+        // every supplier as brand new.
+        ['register' => $register, 'schema' => $schema] = $this->settingsService->requireGlAccountBookingBinding();
 
         $query   = [
             '@self'            => ['register' => $register, 'schema' => $schema],
@@ -328,8 +339,11 @@ class GlAccountSuggestionService
     private function loadMappingRules(): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountMappingRule_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountMappingRule_schema', '');
+        // Throws when unbound. Mapping rules are the cold-start path: with no
+        // history AND no rules the service honestly returns nothing. An
+        // unconfigured binding produced that same nothing for a different
+        // reason, and the operator had no way to tell the two apart.
+        ['register' => $register, 'schema' => $schema] = $this->settingsService->requireGlAccountMappingRuleBinding();
 
         $query   = ['@self' => ['register' => $register, 'schema' => $schema]];
         $results = $objectService->searchObjects($query);

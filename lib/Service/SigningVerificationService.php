@@ -255,7 +255,7 @@ class SigningVerificationService
         }
 
         $secret = $this->getSigningSecret();
-        if ($secret === '') {
+        if ($secret === null) {
             // No server secret configured: nothing can be verified.
             return ['status' => 'unverifiable', 'reason' => 'signing-secret-not-configured'];
         }
@@ -334,13 +334,27 @@ class SigningVerificationService
     }//end stripAssertionMac()
 
     /**
-     * Get the server-held signing secret used to verify assertions
+     * Get the server-held signing secret used to verify assertions.
      *
-     * @return string The configured secret, or an empty string if unset
+     * Returns null — not '' — when the secret is unset, so "not configured" is
+     * representable in the type rather than being a magic empty string that
+     * happens to be falsy. The single caller already fails closed on it, but an
+     * empty string is a VALID HMAC key: `hash_hmac('sha256', $payload, '')`
+     * computes a perfectly well-formed MAC that any attacker can also compute.
+     * A future caller that forgets the check would therefore not crash — it
+     * would verify signatures against a publicly-derivable key and report them
+     * genuine. A null cannot be passed to hash_hmac() by accident.
+     *
+     * @return string|null The configured secret, or null when unset.
      */
-    private function getSigningSecret(): string
+    private function getSigningSecret(): ?string
     {
-        return $this->config->getValueString('docudesk', 'signing_verification_secret', '');
+        $secret = $this->config->getValueString('docudesk', 'signing_verification_secret', '');
+        if ($secret === '') {
+            return null;
+        }
+
+        return $secret;
 
     }//end getSigningSecret()
 

@@ -256,10 +256,16 @@ class FinancialExtractionService
         ];
 
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
-        $saved         = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
-        $savedArray    = $this->toArray(object: $saved);
+        // Fails closed when unbound. An administrator sets these in the admin
+        // settings UI and nothing auto-provisions them; unbound, the write
+        // below went to register '' / schema '' and the extraction — supplier,
+        // IBAN, KvK, VAT id and amounts read off an invoice — was silently
+        // lost. An explicit error is diagnosable; a silent empty register is
+        // not.
+        ['register' => $register, 'schema' => $schema] = $this->settingsService->requireFinancialExtractionBinding();
+
+        $saved      = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
+        $savedArray = $this->toArray(object: $saved);
 
         if ($request['callbackEvent'] === true) {
             $this->dispatchCompletionEvent(

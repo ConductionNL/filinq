@@ -459,4 +459,111 @@ class SettingsService
         }//end try
 
     }//end updateSettings()
+
+    /**
+     * Resolve the signingRequest register/schema binding, failing closed.
+     *
+     * These bindings live here, next to the settings surface that writes them,
+     * rather than in each consumer: every call site used to read them inline
+     * with an empty-string default and pass the result straight into
+     * saveObject()/find(). Unconfigured, that wrote signing requests — the
+     * audit trail behind an eIDAS-level signature — into register '' and schema
+     * '', silently. Mirrors OpenRegisterResolver::getRegisterAndSchema(), which
+     * already does exactly this for templates.
+     *
+     * @return array{register: string, schema: string}|null The binding, or null when unset.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    public function resolveSigningRequestBinding(): ?array
+    {
+        $register = $this->config->getValueString('docudesk', 'signingRequest_register', '');
+        $schema   = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end resolveSigningRequestBinding()
+
+    /**
+     * Resolve the signerRecord register/schema binding, failing closed.
+     *
+     * A signer record carries the identity a signature is attributed to, so an
+     * unconfigured binding loses exactly the evidence a signature exists to
+     * provide.
+     *
+     * @return array{register: string, schema: string}|null The binding, or null when unset.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    public function resolveSignerRecordBinding(): ?array
+    {
+        $register = $this->config->getValueString('docudesk', 'signerRecord_register', '');
+        $schema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end resolveSignerRecordBinding()
+
+    /**
+     * Resolve the financialExtraction register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string}|null The binding, or null when unset.
+     *
+     * @spec openspec/specs/financial-document-field-extraction/spec.md
+     */
+    public function resolveFinancialExtractionBinding(): ?array
+    {
+        $register = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
+        $schema   = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end resolveFinancialExtractionBinding()
+
+    /**
+     * Resolve the glAccountBooking register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string}|null The binding, or null when unset.
+     *
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
+     */
+    public function resolveGlAccountBookingBinding(): ?array
+    {
+        $register = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
+        $schema   = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end resolveGlAccountBookingBinding()
+
+    /**
+     * Resolve the glAccountMappingRule register/schema binding, failing closed.
+     *
+     * @return array{register: string, schema: string}|null The binding, or null when unset.
+     *
+     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
+     */
+    public function resolveGlAccountMappingRuleBinding(): ?array
+    {
+        $register = $this->config->getValueString('docudesk', 'glAccountMappingRule_register', '');
+        $schema   = $this->config->getValueString('docudesk', 'glAccountMappingRule_schema', '');
+        if ($register === '' || $schema === '') {
+            return null;
+        }
+
+        return ['register' => $register, 'schema' => $schema];
+
+    }//end resolveGlAccountMappingRuleBinding()
 }//end class
