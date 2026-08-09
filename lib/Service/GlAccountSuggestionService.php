@@ -40,7 +40,6 @@ use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
 use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
 use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\IAppConfig;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
 use OCP\TextProcessing\FreePromptTaskType;
@@ -69,7 +68,7 @@ class GlAccountSuggestionService
      * Constructor.
      *
      * @param SettingsService          $settingsService  Resolves OpenRegister's ObjectService.
-     * @param IAppConfig               $config           App configuration (register/schema ids).
+     * @param OpenRegisterResolver     $registerResolver Resolves register/schema bindings, failing closed.
      * @param IEventDispatcher         $eventDispatcher  Dispatches the sibling suggestion event.
      * @param ContainerInterface       $container        DI container, for the optional AI provider.
      * @param LoggerInterface          $logger           Logger.
@@ -81,7 +80,7 @@ class GlAccountSuggestionService
      */
     public function __construct(
         private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config,
+        private readonly OpenRegisterResolver $registerResolver,
         private readonly IEventDispatcher $eventDispatcher,
         private readonly ContainerInterface $container,
         private readonly LoggerInterface $logger,
@@ -178,8 +177,11 @@ class GlAccountSuggestionService
         ];
 
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+        // Fails closed on the WRITE. This is the tuning corpus every future
+        // suggestion is ranked against; writing it to register '' loses the
+        // correction silently, and the next suggestion is then wrong for a
+        // reason nobody can see.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getGlAccountBookingRegisterAndSchema();
         $objectService->saveObject(object: $booking, register: $register, schema: $schema);
 
     }//end recordBooking()
@@ -274,8 +276,13 @@ class GlAccountSuggestionService
     private function findExtractionSafely(string $extractionId): ?array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
+        // Throws when unbound rather than returning null. A lookup against
+        // register '' finds nothing, which is INDISTINGUISHABLE from "that
+        // extraction does not exist" — the caller then reports an unknown
+        // extraction id when the real cause is an unconfigured instance.
+        // Both controllers catch Exception, so this surfaces as an honest
+        // error response instead of a wrong answer.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
         $object = $objectService->find(id: $extractionId, register: $register, schema: $schema);
         if ($object === null) {
@@ -296,8 +303,11 @@ class GlAccountSuggestionService
     private function loadBookingHistory(string $supplierIdentity): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountBooking_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountBooking_schema', '');
+        // Throws when unbound. "No booking history" and "not configured" both
+        // produced an empty array, and the ranker treats the first as a
+        // legitimate cold start — so an unconfigured instance silently ranked
+        // every supplier as brand new.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getGlAccountBookingRegisterAndSchema();
 
         $query   = [
             '@self'            => ['register' => $register, 'schema' => $schema],
@@ -328,8 +338,11 @@ class GlAccountSuggestionService
     private function loadMappingRules(): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'glAccountMappingRule_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'glAccountMappingRule_schema', '');
+        // Throws when unbound. Mapping rules are the cold-start path: with no
+        // history AND no rules the service honestly returns nothing. An
+        // unconfigured binding produced that same nothing for a different
+        // reason, and the operator had no way to tell the two apart.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getGlAccountMappingRuleRegisterAndSchema();
 
         $query   = ['@self' => ['register' => $register, 'schema' => $schema]];
         $results = $objectService->searchObjects($query);

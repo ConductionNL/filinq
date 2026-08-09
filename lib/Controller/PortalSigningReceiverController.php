@@ -48,7 +48,7 @@ use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -87,7 +87,7 @@ class PortalSigningReceiverController extends Controller
      * @param PortalAssertionVerifier       $verifier         Verifies the X-Portal-Subject assertion.
      * @param SigningService                $signingService   The honest signing primitive.
      * @param SettingsService               $settingsService  Settings service (resolves OR's ObjectService).
-     * @param IAppConfig                    $config           App config (resolves signerRecord/signingRequest register/schema).
+     * @param OpenRegisterResolver          $registerResolver Resolves register/schema bindings, failing closed.
      * @param LoggerInterface               $logger           Logger.
      * @param PortalSigningDocumentResolver $documentResolver Resolves the target document for viewDocument.
      *
@@ -99,7 +99,7 @@ class PortalSigningReceiverController extends Controller
         private readonly PortalAssertionVerifier $verifier,
         private readonly SigningService $signingService,
         private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config,
+        private readonly OpenRegisterResolver $registerResolver,
         private readonly LoggerInterface $logger,
         private readonly PortalSigningDocumentResolver $documentResolver
     ) {
@@ -363,10 +363,22 @@ class PortalSigningReceiverController extends Controller
             return null;
         }
 
-        $register = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $schema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-
+        // This is the anti-IDOR boundary (REQ-DDPSA-004), and the register and
+        // schema are two of the four filters that scope the lookup. They used
+        // to be read here with an empty-string default and passed straight
+        // through, so the boundary's correctness depended entirely on
+        // OpenRegister choosing to match nothing for an empty filter — an
+        // assumption this code never stated and does not control. If findAll
+        // ever read an empty register as "unscoped", this lookup would resolve
+        // a signerRecord from ANY register, which is precisely the
+        // cross-request signer resolution the requirement forbids.
+        //
+        // requireSignerRecordBinding() throws instead. The catch below already
+        // collapses any failure to null, which is the same answer the
+        // wrong-email and wrong-request cases give, so no new signal is
+        // exposed to a caller probing the endpoint.
         try {
+            ['register' => $register, 'schema' => $schema] = $this->registerResolver->getSignerRecordRegisterAndSchema();
             $results = $objectService->findAll(
                 [
                     'filters' => [

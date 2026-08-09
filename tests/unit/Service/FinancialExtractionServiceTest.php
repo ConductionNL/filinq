@@ -31,6 +31,7 @@ use OCA\DocuDesk\Service\Extraction\IbanExtractor;
 use OCA\DocuDesk\Service\Extraction\KvkExtractor;
 use OCA\DocuDesk\Service\Extraction\TotalsReconciler;
 use OCA\DocuDesk\Service\Extraction\VatIdExtractor;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\FinancialExtractionService;
 use OCA\DocuDesk\Service\OcrService;
 use OCA\DocuDesk\Service\SettingsService;
@@ -110,6 +111,11 @@ TEXT;
 
         $this->settingsService = $this->createMock(SettingsService::class);
         $this->settingsService->method('getObjectService')->willReturn($this->objectService);
+        // The binding is resolved through SettingsService and FAILS CLOSED when
+        // unset, instead of defaulting to register '' / schema ''. An unstubbed
+        // mock returns null, which is precisely what the guard exists to catch.
+        $this->settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
 
         $this->config = $this->createMock(IAppConfig::class);
         $this->config->method('getValueString')->willReturnCallback(
@@ -136,7 +142,11 @@ TEXT;
 
         $this->service = new FinancialExtractionService(
             settingsService: $this->settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $this->settingsService),
             userSession: $this->userSession,
             rootFolder: $this->rootFolder,
             ocrService: $this->ocrService,

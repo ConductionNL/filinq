@@ -24,7 +24,7 @@ namespace OCA\DocuDesk\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
-use OCP\IAppConfig;
+use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
 use RuntimeException;
 
 /**
@@ -67,7 +67,6 @@ class SigningService
      *
      * @param SettingsService          $settingsService  Settings service
      * @param SigningAuditService      $auditService     Audit service
-     * @param IAppConfig               $config           App config
      * @param SignedArtifactProducer   $artifactProducer Produces + stores the verifiable signed artifact
      * @param SigningRequestValidator  $validator        Validates request data + the provider/level pair
      * @param SigningActorResolver     $actorResolver    Resolves the acting identity + authorises it
@@ -78,7 +77,6 @@ class SigningService
     public function __construct(
         private readonly SettingsService $settingsService,
         private readonly SigningAuditService $auditService,
-        private readonly IAppConfig $config,
         private readonly SignedArtifactProducer $artifactProducer,
         private readonly SigningRequestValidator $validator,
         private readonly SigningActorResolver $actorResolver,
@@ -122,10 +120,18 @@ class SigningService
         [$initiatorUserId, $initiatorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
         $objectService = $this->settingsService->getObjectService();
-        $expiryDays    = (int) $this->config->getValueString('docudesk', 'signing_request_expiry_days', '30');
-        $deadline      = (new DateTimeImmutable())->modify('+'.$expiryDays.' days');
-        $defaultLevel  = $this->config->getValueString('docudesk', 'signing_default_level', 'SES');
-        $defaultProv   = $this->config->getValueString('docudesk', 'signing_provider', 'native');
+
+        // These three were read straight off IAppConfig here, duplicating both
+        // the keys AND the defaults ('30', 'SES', 'native') that
+        // SettingsService::loadFeatureToggles() already owns — two sources of
+        // truth for the same three settings, free to drift. getFeatureToggles()
+        // is the cheap accessor (plain IAppConfig reads, no register or schema
+        // discovery), which is why it is safe on a write path.
+        $toggles      = $this->settingsService->getFeatureToggles();
+        $expiryDays   = (int) $toggles['signing_request_expiry_days'];
+        $deadline     = (new DateTimeImmutable())->modify('+'.$expiryDays.' days');
+        $defaultLevel = (string) $toggles['signing_default_level'];
+        $defaultProv  = (string) $toggles['signing_provider'];
 
         $request = [
             'documentFileId'  => $data['documentFileId'] ?? '',
@@ -163,15 +169,13 @@ class SigningService
             }
         }
 
-        $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
         $savedRequest   = $objectService->saveObject(object: $request, register: $register, schema: $schema);
         $createdRequest = $this->toArray(object: $savedRequest);
 
-        $signers        = $data['signers'] ?? [];
-        $signerIds      = [];
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+        $signers   = $data['signers'] ?? [];
+        $signerIds = [];
+        ['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
         foreach ($signers as $index => $signerData) {
             $signerRecord = [
@@ -245,8 +249,12 @@ class SigningService
     public function getRequest(string $requestId, string $callerUserId=''): ?array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        // Gate-50 did not flag this pair (the null-check below sits inside its
+        // window), but it carries the same defect: a find() against register ''
+        // returns null, and this method reports null as "not found". An
+        // unconfigured instance therefore answered 404 for every signing
+        // request that does exist.
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
         $object = $objectService->find(id: $requestId, register: $register, schema: $schema);
         if ($object === null) {
@@ -297,8 +305,7 @@ class SigningService
     public function listRequests(string $callerUserId=''): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
         // OpenRegister's findAll() resolves the register/schema from its own
         // context, not from a filters array — passing them as filters yields an
@@ -386,8 +393,7 @@ class SigningService
             throw new RuntimeException('Signing request is not in a signable state: '.$status);
         }
 
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+        ['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
         $signer = $this->actorResolver->loadAuthorisedSigner(
             requestId: $requestId,
@@ -462,8 +468,9 @@ class SigningService
         // REQ-DDSTR-003, closing the #282 residual where decline() skipped
         // isValidTransition() entirely — a COMPLETED/CANCELLED/EXPIRED
         // request could still be flipped to DECLINED).
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        // Same latent defect as getRequest(): unconfigured, find() returns null
+        // and this reports "not found" for a request that exists.
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
         $requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema);
         if ($requestObject === null) {
             throw new RuntimeException('Signing request not found: '.$requestId);
@@ -475,8 +482,7 @@ class SigningService
             throw new RuntimeException('Cannot decline request in status: '.($request['status'] ?? 'unknown'));
         }
 
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
+        ['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
 
         $signer = $this->actorResolver->loadAuthorisedSigner(
             requestId: $requestId,
@@ -541,8 +547,7 @@ class SigningService
         [$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
         // Use getRequest() so not-found / access-denied collapse to the
         // same null shape. The controller already gated on initiator/admin
@@ -663,13 +668,11 @@ class SigningService
      */
     private function updateRequestStatus(string $requestId, array $request, ?array $verifiedActor=null): void
     {
-        $objectService  = $this->settingsService->getObjectService();
-        $register       = $this->config->getValueString('docudesk', 'signingRequest_register', '');
-        $schema         = $this->config->getValueString('docudesk', 'signingRequest_schema', '');
-        $signerRegister = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $signerSchema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-        $signerIds      = $request['signerIds'] ?? [];
-        $allSigned      = true;
+        $objectService = $this->settingsService->getObjectService();
+        ['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+        ['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+        $signerIds = $request['signerIds'] ?? [];
+        $allSigned = true;
 
         foreach ($signerIds as $signerId) {
             $signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema);
@@ -784,4 +787,60 @@ class SigningService
         return (array) $object;
 
     }//end toArray()
+
+    /**
+     * Resolve the signingRequest binding, failing closed when unconfigured.
+     *
+     * Every call site used to read these two keys inline with an empty-string
+     * default and pass the result straight into saveObject()/find(). On an
+     * instance where an administrator has not bound them, that wrote signing
+     * requests — the audit trail behind an eIDAS-level signature — into
+     * register '' and schema '', silently. SettingsService owns the read;
+     * this turns "unset" into the same RegisterNotConfiguredException
+     * SigningController already handles.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException When either half is unset.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    private function requireSigningRequestBinding(): array
+    {
+        $binding = $this->settingsService->resolveSigningRequestBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'Signing request register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end requireSigningRequestBinding()
+
+    /**
+     * Resolve the signerRecord binding, failing closed when unconfigured.
+     *
+     * A signer record carries the identity a signature is attributed to, so an
+     * unconfigured binding loses exactly the evidence a signature exists to
+     * provide.
+     *
+     * @return array{register: string, schema: string} The resolved binding.
+     *
+     * @throws RegisterNotConfiguredException When either half is unset.
+     *
+     * @spec openspec/specs/document-signing/spec.md
+     */
+    private function requireSignerRecordBinding(): array
+    {
+        $binding = $this->settingsService->resolveSignerRecordBinding();
+        if ($binding === null) {
+            throw new RegisterNotConfiguredException(
+                message: 'Signer record register/schema not configured'
+            );
+        }
+
+        return $binding;
+
+    }//end requireSignerRecordBinding()
 }//end class

@@ -127,6 +127,24 @@ class SigningServiceTest extends TestCase
         $this->settingsService = $this->createMock(SettingsService::class);
         $this->settingsService->method('getObjectService')->willReturn($this->objectService);
 
+        // SigningService now resolves its register/schema bindings through
+        // SettingsService and FAILS CLOSED when either half is unset, instead
+        // of reading them inline with an empty-string default and writing to
+        // register '' / schema ''. An unstubbed mock returns null, so these
+        // stubs are what keep the suite exercising the configured path — and
+        // their absence is what the fail-closed guard is there to catch.
+        $this->settingsService->method('resolveSigningRequestBinding')
+            ->willReturn(['register' => 'signing', 'schema' => 'signingRequest']);
+        $this->settingsService->method('resolveSignerRecordBinding')
+            ->willReturn(['register' => 'signing', 'schema' => 'signerRecord']);
+        $this->settingsService->method('getFeatureToggles')->willReturn(
+            [
+                'signing_request_expiry_days' => 30,
+                'signing_default_level'       => 'SES',
+                'signing_provider'            => 'native',
+            ]
+        );
+
         $this->auditService = $this->createMock(SigningAuditService::class);
 
         $this->config = $this->createMock(IAppConfig::class);
@@ -166,7 +184,6 @@ class SigningServiceTest extends TestCase
         $this->service = new SigningService(
             settingsService: $this->settingsService,
             auditService: $this->auditService,
-            config: $this->config,
             artifactProducer: new SignedArtifactProducer(
                 providerFactory: $this->providerFactory,
                 userSession: $this->userSession,

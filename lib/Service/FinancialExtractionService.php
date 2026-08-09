@@ -39,7 +39,6 @@ use OCA\DocuDesk\Service\Extraction\VatIdExtractor;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
-use OCP\IAppConfig;
 use OCP\IUserSession;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -187,26 +186,26 @@ class FinancialExtractionService
     /**
      * Constructor.
      *
-     * @param SettingsService    $settingsService  Resolves OpenRegister's ObjectService.
-     * @param IAppConfig         $config           App configuration (register/schema ids).
-     * @param IUserSession       $userSession      User session, for file resolution.
-     * @param IRootFolder        $rootFolder       Root folder, for file resolution.
-     * @param OcrService         $ocrService       OCR service (text acquisition seam).
-     * @param IEventDispatcher   $eventDispatcher  Dispatches the completion event.
-     * @param ContainerInterface $container        DI container, for the optional AI provider.
-     * @param LoggerInterface    $logger           Logger.
-     * @param IbanExtractor      $ibanExtractor    Pure IBAN extractor.
-     * @param KvkExtractor       $kvkExtractor     Pure KvK extractor.
-     * @param VatIdExtractor     $vatIdExtractor   Pure BTW-nummer extractor.
-     * @param DateExtractor      $dateExtractor    Pure date extractor.
-     * @param AmountExtractor    $amountExtractor  Pure amount extractor.
-     * @param TotalsReconciler   $totalsReconciler Pure totals reconciler.
+     * @param SettingsService      $settingsService  Resolves OpenRegister's ObjectService.
+     * @param OpenRegisterResolver $registerResolver Resolves register/schema bindings, failing closed.
+     * @param IUserSession         $userSession      User session, for file resolution.
+     * @param IRootFolder          $rootFolder       Root folder, for file resolution.
+     * @param OcrService           $ocrService       OCR service (text acquisition seam).
+     * @param IEventDispatcher     $eventDispatcher  Dispatches the completion event.
+     * @param ContainerInterface   $container        DI container, for the optional AI provider.
+     * @param LoggerInterface      $logger           Logger.
+     * @param IbanExtractor        $ibanExtractor    Pure IBAN extractor.
+     * @param KvkExtractor         $kvkExtractor     Pure KvK extractor.
+     * @param VatIdExtractor       $vatIdExtractor   Pure BTW-nummer extractor.
+     * @param DateExtractor        $dateExtractor    Pure date extractor.
+     * @param AmountExtractor      $amountExtractor  Pure amount extractor.
+     * @param TotalsReconciler     $totalsReconciler Pure totals reconciler.
      *
      * @return void
      */
     public function __construct(
         private readonly SettingsService $settingsService,
-        private readonly IAppConfig $config,
+        private readonly OpenRegisterResolver $registerResolver,
         private readonly IUserSession $userSession,
         private readonly IRootFolder $rootFolder,
         private readonly OcrService $ocrService,
@@ -256,10 +255,16 @@ class FinancialExtractionService
         ];
 
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
-        $saved         = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
-        $savedArray    = $this->toArray(object: $saved);
+        // Fails closed when unbound. An administrator sets these in the admin
+        // settings UI and nothing auto-provisions them; unbound, the write
+        // below went to register '' / schema '' and the extraction — supplier,
+        // IBAN, KvK, VAT id and amounts read off an invoice — was silently
+        // lost. An explicit error is diagnosable; a silent empty register is
+        // not.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
+
+        $saved      = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
+        $savedArray = $this->toArray(object: $saved);
 
         if ($request['callbackEvent'] === true) {
             $this->dispatchCompletionEvent(
@@ -377,8 +382,11 @@ class FinancialExtractionService
     public function addCorrection(string $id, array $correctedFields, string $correctedBy): array
     {
         $objectService = $this->settingsService->getObjectService();
-        $register      = $this->config->getValueString('docudesk', 'financialExtraction_register', '');
-        $schema        = $this->config->getValueString('docudesk', 'financialExtraction_schema', '');
+        // Gate-50 did not flag this pair — the null-check below sits inside its
+        // 10-line window — but it carries the same defect: find() against
+        // register '' returns null and this reports 404 "not found", so an
+        // unconfigured instance denied corrections for extractions that exist.
+        ['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
         $object = $objectService->find(id: $id, register: $register, schema: $schema);
         if ($object === null) {
