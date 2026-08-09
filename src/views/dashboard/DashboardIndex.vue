@@ -17,52 +17,73 @@ import { consentStore } from '../../store/store.js'
 			:widgets="widgetDefs"
 			:layout="dashboardLayout"
 			:loading="consentStore.loading">
+			<!--
+				Each KPI tile navigates to the consent overview. That is a
+				navigation, so it ships as a real link: <RouterLink> renders an
+				<a href>, which is focusable, activates on Enter, and supports
+				middle-click / open-in-new-tab. The previous `<div @click>`
+				wrapper was unreachable by keyboard entirely (WCAG 2.1.1).
+				The explicit aria-label names the link, because its visible text
+				lives inside CnStatsBlock.
+			-->
 			<!-- KPI: Total Consents -->
 			<template #widget-total-consents>
-				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="t('docudesk', 'Total Consents — open the consent overview')">
 					<CnStatsBlock
 						:title="t('docudesk', 'Total Consents')"
 						:count="consentStore.consentStats.total"
 						:count-label="t('docudesk', 'records')"
 						variant="default"
 						show-zero-count />
-				</div>
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Pending -->
 			<template #widget-pending>
-				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="t('docudesk', 'Pending consents — open the consent overview')">
 					<CnStatsBlock
 						:title="t('docudesk', 'Pending')"
 						:count="consentStore.consentStats.pending"
 						:count-label="t('docudesk', 'pending')"
 						variant="warning"
 						show-zero-count />
-				</div>
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Approved -->
 			<template #widget-approved>
-				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="t('docudesk', 'Approved consents — open the consent overview')">
 					<CnStatsBlock
 						:title="t('docudesk', 'Approved')"
 						:count="consentStore.consentStats.approved"
 						:count-label="t('docudesk', 'approved')"
 						variant="success"
 						show-zero-count />
-				</div>
+				</RouterLink>
 			</template>
 
 			<!-- KPI: Objected -->
 			<template #widget-objected>
-				<div style="cursor: pointer" @click="$router.push({ name: 'Consent' })">
+				<RouterLink
+					class="dashboard-kpi-link"
+					:to="{ name: 'Consent' }"
+					:aria-label="t('docudesk', 'Objected consents — open the consent overview')">
 					<CnStatsBlock
 						:title="t('docudesk', 'Objected')"
 						:count="consentStore.consentStats.objected"
 						:count-label="t('docudesk', 'objected')"
 						variant="error"
 						show-zero-count />
-				</div>
+				</RouterLink>
 			</template>
 
 			<!-- Pending Consents table -->
@@ -216,3 +237,20 @@ export default {
 	},
 }
 </script>
+
+<style scoped>
+/* The KPI tiles are links, but they must keep the tile look — no underline,
+   no link colour — while retaining a visible keyboard focus ring. */
+.dashboard-kpi-link {
+	display: block;
+	height: 100%;
+	color: inherit;
+	text-decoration: none;
+}
+
+.dashboard-kpi-link:focus-visible {
+	outline: 2px solid var(--color-primary-element);
+	outline-offset: 2px;
+	border-radius: var(--border-radius-large);
+}
+</style>

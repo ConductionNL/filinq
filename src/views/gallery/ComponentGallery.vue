@@ -178,10 +178,12 @@
 				</h2>
 				<p class="dd-section__desc">
 					Responsive tile grid; card content via the <code>card</code> scoped slot.
+					The grid is layout only — a card that should be activatable is
+					an interactive element in the slot, so keyboard users reach it.
 				</p>
 			</div>
 			<div class="dd-demo">
-				<DdCardGrid :objects="documents" row-key="id" @row-click="noop">
+				<DdCardGrid :objects="documents" row-key="id">
 					<template #card="{ object }">
 						<div class="dd-mini-card">
 							<DdIcon :name="object.isFolder ? 'folder' : 'article'" :size="24" />

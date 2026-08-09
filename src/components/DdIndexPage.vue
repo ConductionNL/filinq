@@ -42,13 +42,18 @@
 			</template>
 		</DdDataTable>
 
+		<!--
+			No `@row-click` here: DdCardGrid is layout only and the slotted card
+			owns its own activation. The table path above still forwards
+			`row-click`, because a table row is not an interactive element by
+			itself.
+		-->
 		<DdCardGrid
 			v-else
 			:objects="objects"
 			:loading="loading"
 			:row-key="rowKey"
-			:empty-text="emptyText"
-			@row-click="$emit('row-click', $event)">
+			:empty-text="emptyText">
 			<template v-if="$slots.card" #card="{ object }">
 				<slot name="card" :object="object" />
 			</template>
