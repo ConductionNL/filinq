@@ -516,6 +516,37 @@ PY
 
 echo "[ci-seed] DocuDesk registers, schemas and object-type bindings provisioned."
 
+# ── 4a-bis. Policy RBAC groups ─────────────────────────────────────────────
+# The policy surface is group-gated, not admin-gated:
+#   PolicyCrudService::POLICY_GROUP           = docudesk-policy-admins
+#   PolicyCrudService::STANDING_CONSENT_GROUP = docudesk-standing-consent-admins
+# and docudesk_register.json grants create/update/delete on
+# publicationProhibition to `docudesk-policy-admins`. Neither group exists on a
+# fresh install and nothing creates them, so every prohibition / standing-consent
+# WRITE answered 403 — including from `admin`, because these are group
+# memberships and not the admin flag.
+#
+# The Newman collection papered over exactly this: its seeding requests carried
+# `if (pm.response.code === 403 ...) { pm.test.skip(...); return; }`, which turns
+# a 403 into a NON-FAILING result and then skips the outcome assertions that
+# depended on the seed. The whole "Detection-time outcomes" folder could report
+# green having exercised nothing. Creating the groups here is what makes those
+# assertions able to run — and able to fail.
+for _dd_group in docudesk-policy-admins docudesk-standing-consent-admins; do
+	php "${NC_ROOT}/occ" group:add "${_dd_group}" 2>&1 | tail -1 || true
+	php "${NC_ROOT}/occ" group:adduser "${_dd_group}" "${USER_NAME}" 2>&1 | tail -1 || true
+done
+
+# Fail loudly if the memberships did not take: a silent 403 later reads like an
+# authorization bug in the app rather than an unseeded fixture.
+_dd_groups_actual=$(php "${NC_ROOT}/occ" user:info "${USER_NAME}" --output=json 2>/dev/null || echo '{}')
+for _dd_group in docudesk-policy-admins docudesk-standing-consent-admins; do
+	case "${_dd_groups_actual}" in
+		*"${_dd_group}"*) echo "[ci-seed] ${USER_NAME} is in ${_dd_group}." ;;
+		*) echo "::error::${USER_NAME} is NOT in ${_dd_group} — every policy write will 403."; exit 1 ;;
+	esac
+done
+
 # ── 4b. Materialise the admin user's home, then probe WebDAV ────────────────
 # `occ maintenance:install` creates the admin ACCOUNT but not its files home —
 # that is built lazily, the first time something initialises the user's mount

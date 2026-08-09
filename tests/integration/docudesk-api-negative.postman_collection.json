@@ -8,13 +8,39 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "{{baseUrl}}",
-      "description": "Nextcloud base URL — set via environment (never hardcode)"
+      "value": "http://localhost:8080/index.php",
+      "description": "Nextcloud entry point. This was literally \"{{baseUrl}}\" — a variable whose value referenced itself, so it never resolved and every request in this collection went to an unusable URL. The CI runner supplies `base_url` (snake_case), which never fed this key, so nothing corrected it at run time either."
     },
     {
-      "key": "authToken",
-      "value": "{{authToken}}",
-      "description": "Bearer token or Basic auth — set via environment"
+      "key": "username",
+      "value": "admin",
+      "description": "Matches the `admin_user` the CI Newman step provisions."
+    },
+    {
+      "key": "password",
+      "value": "admin",
+      "description": "Matches the `admin_password` the CI Newman step provisions."
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{username}}", "type": "string" },
+      { "key": "password", "value": "{{password}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Nextcloud rejects state-changing requests without this header with 412,",
+          "// before any controller runs. `upsert` is case-insensitive on the key, so",
+          "// requests that already declare OCS-APIREQUEST are left alone.",
+          "pm.request.headers.upsert({ key: 'OCS-APIRequest', value: 'true' });"
+        ]
+      }
     }
   ],
   "item": [
@@ -26,7 +52,6 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
               { "key": "OCS-APIREQUEST", "value": "true" }
             ],
             "url": {
@@ -60,7 +85,6 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
               { "key": "OCS-APIREQUEST", "value": "true" }
             ],
             "url": {
@@ -87,6 +111,7 @@
         {
           "name": "GET /api/templates - 401 without auth",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
             "url": {
@@ -153,6 +178,7 @@
         {
           "name": "GET /api/preferences/:key - 401 without auth",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
             "url": {
@@ -180,7 +206,6 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
               { "key": "OCS-APIREQUEST", "value": "true" }
             ],
             "url": {
@@ -209,17 +234,16 @@
       "name": "Anonymization Batch",
       "item": [
         {
-          "name": "GET /api/anonymization/batch/:id - 404 for unknown batch",
+          "name": "GET /api/anonymization/batch/:id/status - 404 for unknown batch",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
               { "key": "OCS-APIREQUEST", "value": "true" }
             ],
             "url": {
-              "raw": "{{baseUrl}}/apps/docudesk/api/anonymization/batch/non-existent-batch-id",
+              "raw": "{{baseUrl}}/apps/docudesk/api/anonymization/batch/non-existent-batch-id/status",
               "host": ["{{baseUrl}}"],
-              "path": ["apps", "docudesk", "api", "anonymization", "batch", "non-existent-batch-id"]
+              "path": ["apps", "docudesk", "api", "anonymization", "batch", "non-existent-batch-id", "status"]
             }
           },
           "event": [
@@ -227,7 +251,18 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                  "// This targeted `api/anonymization/batch/{id}`, which is not a route:",
+                  "// appinfo/routes.php only registers batch/{batchId}/status, /extract,",
+                  "// /entities, /anonymize and /report. An unrouted GET falls through to",
+                  "// Nextcloud's SPA shell — 200 with HTML — so the assertion below could",
+                  "// only ever have failed, and a status-only assertion could never have",
+                  "// told the two cases apart. batchStatus() is the method that really",
+                  "// answers 404 ('Batch not found') for an unknown id.",
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('404 is a JSON error, not the SPA HTML fallback', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "    pm.expect(pm.response.json()).to.have.property('error');",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -244,7 +279,6 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" },
               { "key": "OCS-APIREQUEST", "value": "true" }
             ],
             "url": {
