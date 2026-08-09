@@ -89,10 +89,65 @@ class PolicyRuleNormaliser
             'matchRules'  => $this->wellFormedRules(matchRules: $matchRules),
             'validFrom'   => $window['from'],
             'validUntil'  => $window['until'],
-            'primaryName' => (string) ($object['primaryName'] ?? $object['entityText'] ?? ''),
+            'primaryName' => $this->flattenTranslatable(
+                value: ($object['primaryName'] ?? $object['entityText'] ?? '')
+            ),
         ];
 
     }//end normaliseRule()
+
+    /**
+     * Reduce a possibly language-keyed value to a single display string.
+     *
+     * `publicationProhibition.primaryName` is declared `translatable: true` in
+     * `lib/Settings/docudesk_register.json`, and OpenRegister wraps a
+     * translatable scalar under its default language on save
+     * (`SaveObject::…` — "Normalize translatable properties (wrap simple values
+     * under default language)"). So the stored value is `{"en": "…"}`, not a
+     * bare string.
+     *
+     * The HTTP read path never showed this, because DocuDesk registers OR's
+     * TranslationHandler and it resolves the map before the response is built.
+     * PolicyMatchService does NOT go through that path — it calls
+     * `searchObjectsBySlug()` directly — so the raw map reached a `(string)`
+     * cast here and every consumer received the literal string "Array":
+     * the prohibition rejection's `ruleName`, and the `ruleName` that
+     * `anonymisation-prohibition-gate` REQUIRES on the anonymise gate's 422
+     * body ("the prohibition rule's `primaryName`, included to help the
+     * operator understand WHY the entity is required to be anonymised").
+     *
+     * Fallback chain matches TemplateLanguageService::resolveFieldValue():
+     * nl → en → first available. That service is not reused here because it
+     * resolves the *user's* preferred language, and the matcher also runs in
+     * system contexts (cron, event listeners) where there is no user.
+     *
+     * @param mixed $value Raw value: a string, a language-keyed map, or null.
+     *
+     * @return string The display string, or '' when nothing usable is present.
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
+     */
+    private function flattenTranslatable(mixed $value): string
+    {
+        if (is_array($value) === false) {
+            return (string) $value;
+        }
+
+        foreach (['nl', 'en'] as $language) {
+            if (isset($value[$language]) === true && is_scalar($value[$language]) === true) {
+                return (string) $value[$language];
+            }
+        }
+
+        foreach ($value as $candidate) {
+            if (is_scalar($candidate) === true && (string) $candidate !== '') {
+                return (string) $candidate;
+            }
+        }
+
+        return '';
+
+    }//end flattenTranslatable()
 
     /**
      * Resolve the row's validity window, or null when it is currently closed.

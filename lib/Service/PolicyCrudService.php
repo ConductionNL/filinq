@@ -279,6 +279,8 @@ class PolicyCrudService
      * @throws Exception On deletion failure, including OpenRegister's
      *                   ArchivalImmutableException (not type-hinted here: the class is
      *                   absent during static analysis, OpenRegister is a runtime sibling).
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function deleteProhibition(string $uuid): void
     {
@@ -361,11 +363,18 @@ class PolicyCrudService
     /**
      * Delete a standing consent.
      *
+     * Unlike {@see deleteProhibition()} this really can succeed: the
+     * `publicationConsent` schema declares NO `x-openregister-archival` in
+     * `lib/Settings/docudesk_register.json`, so OpenRegister's archival gate
+     * does not apply to it.
+     *
      * @param string $uuid The record UUID.
      *
      * @return void
      *
      * @throws Exception On deletion failure.
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function deleteStandingConsent(string $uuid): void
     {
