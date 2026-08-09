@@ -77,6 +77,16 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $this->config = $this->createMock(IAppConfig::class);
         $this->config->method('getValueString')->willReturnCallback(
@@ -403,6 +413,16 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
@@ -448,6 +468,16 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $settingsService = $this->createMock(SettingsService::class);
         $settingsService->method('getObjectService')->willReturn($this->objectService);
+        // Bindings resolve through SettingsService and FAIL CLOSED when unset,
+        // instead of silently querying register ''. An unstubbed mock returns
+        // null — which is exactly what the guard exists to catch — so the
+        // configured path has to be stated for these tests to exercise it.
+        $settingsService->method('resolveFinancialExtractionBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'financialExtraction']);
+        $settingsService->method('resolveGlAccountBookingBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountBooking']);
+        $settingsService->method('resolveGlAccountMappingRuleBinding')
+            ->willReturn(['register' => 'document', 'schema' => 'glAccountMappingRule']);
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
