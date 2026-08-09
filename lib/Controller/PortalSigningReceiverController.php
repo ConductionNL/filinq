@@ -363,10 +363,22 @@ class PortalSigningReceiverController extends Controller
             return null;
         }
 
-        $register = $this->config->getValueString('docudesk', 'signerRecord_register', '');
-        $schema   = $this->config->getValueString('docudesk', 'signerRecord_schema', '');
-
+        // This is the anti-IDOR boundary (REQ-DDPSA-004), and the register and
+        // schema are two of the four filters that scope the lookup. They used
+        // to be read here with an empty-string default and passed straight
+        // through, so the boundary's correctness depended entirely on
+        // OpenRegister choosing to match nothing for an empty filter — an
+        // assumption this code never stated and does not control. If findAll
+        // ever read an empty register as "unscoped", this lookup would resolve
+        // a signerRecord from ANY register, which is precisely the
+        // cross-request signer resolution the requirement forbids.
+        //
+        // requireSignerRecordBinding() throws instead. The catch below already
+        // collapses any failure to null, which is the same answer the
+        // wrong-email and wrong-request cases give, so no new signal is
+        // exposed to a caller probing the endpoint.
         try {
+            ['register' => $register, 'schema' => $schema] = $this->settingsService->requireSignerRecordBinding();
             $results = $objectService->findAll(
                 [
                     'filters' => [
