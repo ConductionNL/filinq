@@ -25,6 +25,7 @@ namespace OCA\DocuDesk\Controller;
 use Exception;
 use InvalidArgumentException;
 use OCA\DocuDesk\Service\PolicyCrudService;
+use OCA\OpenRegister\Exception\ArchivalImmutableException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -188,12 +189,29 @@ class PolicyController extends Controller
     /**
      * Delete a prohibition.
      *
+     * `publicationProhibition` declares `x-openregister-archival` in
+     * `lib/Settings/docudesk_register.json` (retention P10Y — prohibitions are
+     * court-order-backed and must survive for audit and appeal). OpenRegister
+     * therefore refuses EVERY user-driven delete on this schema: rows expire
+     * only through `OCA\OpenRegister\Cron\ArchivalRetentionTask`. The endpoint
+     * is consequently impossible to satisfy — never merely "currently failing"
+     * — and previously leaked that as an opaque HTTP 500.
+     *
+     * It now answers HTTP 409 Conflict: the request conflicts with the
+     * resource's declared retention state, and no retry, permission change or
+     * payload change can make it succeed. The body names retention as the
+     * reason and carries OpenRegister's own `SCHEMA_ARCHIVAL_IMMUTABLE`
+     * discriminator so a client can tell this apart from the 403 the
+     * permission gate raises.
+     *
      * @param string $id Record UUID.
      *
-     * @return JSONResponse
+     * @return JSONResponse 409 while the schema declares archival retention
      *
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function deleteProhibition(string $id): JSONResponse
     {
@@ -208,11 +226,47 @@ class PolicyController extends Controller
             );
             $this->crudService->deleteProhibition(uuid: $id);
             return new JSONResponse(['deleted' => $id]);
+        } catch (ArchivalImmutableException $e) {
+            return $this->retentionProtectedResponse(id: $id, exception: $e);
         } catch (Exception $e) {
             return $this->error(message: 'Failed to delete prohibition: ', exception: $e);
         }
 
     }//end deleteProhibition()
+
+    /**
+     * Build the 409 response for a retention-protected delete.
+     *
+     * @param string                     $id        The record UUID the caller tried to delete.
+     * @param ArchivalImmutableException $exception OpenRegister's archival refusal.
+     *
+     * @return JSONResponse The 409 Conflict response
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
+     */
+    private function retentionProtectedResponse(string $id, ArchivalImmutableException $exception): JSONResponse
+    {
+        $this->logger->info(
+            'Prohibition delete refused: schema declares archival retention',
+            ['prohibitionId' => $id, 'exception' => $exception]
+        );
+
+        return new JSONResponse(
+            [
+                'error'     => 'SCHEMA_ARCHIVAL_IMMUTABLE',
+                'message'   => $this->l10n->t(
+                    'Publication prohibitions are retained under a declared archival '
+                    .'retention policy and cannot be deleted. Records expire automatically '
+                    .'when their retention period ends.'
+                ),
+                'schema'    => 'publicationProhibition',
+                'operation' => 'delete',
+                'id'        => $id,
+            ],
+            Http::STATUS_CONFLICT
+        );
+
+    }//end retentionProtectedResponse()
 
     /**
      * Wrap an exception into a 500 JSON response and log it.

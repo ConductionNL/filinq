@@ -89,6 +89,14 @@
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
                 <referencedClass name="OCA\OpenRegister\Db\EntityRelationMapper"/>
                 <referencedClass name="OCA\OpenRegister\Service\RiskLevelService"/>
+                <!--
+                  Thrown by OpenRegister's ObjectService::deleteObject() for any
+                  user-driven delete on a schema declaring x-openregister-archival.
+                  PolicyController catches it to answer HTTP 409 instead of leaking a
+                  500; the real class lives in
+                  openregister/lib/Exception/ArchivalImmutableException.php.
+                -->
+                <referencedClass name="OCA\OpenRegister\Exception\ArchivalImmutableException"/>
                 <!-- OpenRegister DB types used in signing/approval events -->
                 <referencedClass name="OCA\OpenRegister\Db\ApprovalChain"/>
                 <referencedClass name="OCA\OpenRegister\Db\ApprovalStep"/>

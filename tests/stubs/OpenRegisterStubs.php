@@ -2099,6 +2099,71 @@ class ApprovalStepMapper
 }//end class
 
 
+namespace OCA\OpenRegister\Exception;
+
+/**
+ * Stub for ArchivalImmutableException.
+ *
+ * Mirrors the real class in `openregister/lib/Exception/`: OpenRegister's
+ * `ObjectService::deleteObject()` throws it for every user-driven delete on a
+ * schema that declares `x-openregister-archival`. DocuDesk's
+ * `publicationProhibition` schema does, so `PolicyController` must translate
+ * this into an honest client status rather than a 500.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Exception
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.DocuDesk.app
+ */
+class ArchivalImmutableException extends \Exception
+{
+    /**
+     * The schema slug that triggered the refusal.
+     *
+     * @var string
+     */
+    private string $schemaIdentifier;
+
+    /**
+     * Construct the stub exception with the real class's signature.
+     *
+     * @param string          $schemaIdentifier The schema slug, UUID or ID.
+     * @param string          $operation        The blocked operation name.
+     * @param \Throwable|null $previous         Previous exception.
+     */
+    public function __construct(
+        string $schemaIdentifier,
+        string $operation='delete',
+        ?\Throwable $previous=null
+    ) {
+        $this->schemaIdentifier = $schemaIdentifier;
+
+        parent::__construct(
+            sprintf(
+                'SCHEMA_ARCHIVAL_IMMUTABLE: Schema "%s" declares x-openregister-archival; '
+                .'user-driven %s operations are not permitted. Rows expire automatically '
+                .'via the ArchivalRetentionTask cron.',
+                $schemaIdentifier,
+                $operation
+            ),
+            403,
+            $previous
+        );
+    }//end __construct()
+
+    /**
+     * Get the schema identifier that triggered this exception.
+     *
+     * @return string
+     */
+    public function getSchemaIdentifier(): string
+    {
+        return $this->schemaIdentifier;
+    }//end getSchemaIdentifier()
+}//end class
+
+
 namespace OCA\OpenRegister\Event;
 
 use OCA\OpenRegister\Db\ApprovalChain;
