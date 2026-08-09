@@ -37,6 +37,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use OCA\DocuDesk\Controller\PortalSigningReceiverController;
 use OCA\DocuDesk\Portal\PortalAssertionVerifier;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\PortalSigningDocumentResolver;
 use OCA\DocuDesk\Service\SettingsService;
 use OCA\DocuDesk\Service\SigningService;
@@ -158,7 +159,11 @@ class PortalSigningReceiverControllerTest extends TestCase
             verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
             signingService: $this->mockSigningService,
             settingsService: $this->mockSettingsService,
-            config: $this->mockConfig,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset signerRecord binding into a
+            // DENY on the anti-IDOR boundary (REQ-DDPSA-004), so mocking it
+            // away would remove exactly the behaviour under test.
+            registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
             logger: $this->mockLogger,
             documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder)
         );

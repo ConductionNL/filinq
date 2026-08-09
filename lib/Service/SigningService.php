@@ -249,7 +249,7 @@ class SigningService
     public function getRequest(string $requestId, string $callerUserId=''): ?array
     {
         $objectService = $this->settingsService->getObjectService();
-        // gate-50 did not flag this pair (the null-check below sits inside its
+        // Gate-50 did not flag this pair (the null-check below sits inside its
         // window), but it carries the same defect: a find() against register ''
         // returns null, and this method reports null as "not found". An
         // unconfigured instance therefore answered 404 for every signing

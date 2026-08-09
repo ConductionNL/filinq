@@ -27,6 +27,7 @@ namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use Exception;
 use OCA\DocuDesk\Service\GlAccountSuggestionService;
+use OCA\DocuDesk\Service\OpenRegisterResolver;
 use OCA\DocuDesk\Service\Suggestion\CategoryKeywordMapper;
 use OCA\DocuDesk\Service\Suggestion\HistoryRanker;
 use OCA\DocuDesk\Service\Suggestion\SupplierIdentityResolver;
@@ -110,7 +111,11 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $this->service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $logger,
@@ -426,7 +431,11 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $this->createMock(LoggerInterface::class),
@@ -481,7 +490,11 @@ class GlAccountSuggestionServiceTest extends TestCase
 
         $service = new GlAccountSuggestionService(
             settingsService: $settingsService,
-            config: $this->config,
+            // A REAL resolver over the stubbed SettingsService, not a mock: it
+            // is the piece that turns an unset binding into
+            // RegisterNotConfiguredException, so mocking it away would remove
+            // the behaviour these tests are meant to run through.
+            registerResolver: new OpenRegisterResolver(settingsService: $settingsService),
             eventDispatcher: $this->eventDispatcher,
             container: $this->container,
             logger: $this->createMock(LoggerInterface::class),
