@@ -56,14 +56,22 @@ export const API = '/index.php/apps/docudesk/api'
 export async function harvestToken(page: Page): Promise<string> {
 	// `index.php`-prefixed for the same reason `API` above is: nothing rewrites
 	// `/apps/...` on a `php -S` runner, so the unprefixed form returns PHP's own
-	// 404 page — which has no `requesttoken` meta and no `window.OC`, making
-	// this helper fail with "CSRF request-token must be harvestable" and
-	// accusing the session instead of the URL.
+	// 404 page — which carries neither the head `data-requesttoken` attribute
+	// nor `window.OC`, making this helper fail with "CSRF request-token must be
+	// harvestable" and accusing the session instead of the URL.
 	await page.goto('/index.php/apps/docudesk', { waitUntil: 'domcontentloaded' })
-	// Wait for exactly what the evaluate below reads: the CSRF request-token.
-	// `window.OC.requestToken` is set by NC core's bundle and the
-	// `meta[name="requesttoken"]` is server-rendered into the head, so the head
-	// tag is the earliest deterministic signal that the token is readable.
+	// Wait for exactly what the evaluate below reads: a non-empty CSRF
+	// request-token.
+	//
+	// Nextcloud does NOT publish the token as `<meta name="requesttoken">` —
+	// that element does not exist on any authenticated page. `layout.user.php`
+	// renders it as an attribute on the head element
+	// (`<head … data-requesttoken="…">`), and NC core's own accessor
+	// `getRequestToken()` (core/src/OC/requesttoken.ts) reads exactly
+	// `document.head.dataset.requesttoken`; `window.OC.requestToken` is that
+	// same value re-exported once the core bundle has evaluated. So the two
+	// readable sources are `window.OC.requestToken` and the head attribute,
+	// and this waits for whichever appears first.
 	//
 	// This replaces `await page.waitForLoadState('networkidle').catch(() => {})`
 	// (ADR-074 rule 4 / gate-58). Nextcloud holds long-lived connections open,
@@ -71,11 +79,21 @@ export async function harvestToken(page: Page): Promise<string> {
 	// the `.catch` turned the timeout into a pass — meaning it gave the token
 	// no guarantee whatsoever, and the "CSRF request-token must be harvestable"
 	// expectation below was left to race the page.
-	await page.locator('meta[name="requesttoken"]').waitFor({ state: 'attached', timeout: 30_000 })
+	//
+	// The wait is not swallowed: on PHP's built-in-server 404 page (see the
+	// `page.goto` note above) neither source ever appears, and this fails here
+	// naming the token, instead of failing later as a mysterious 412 on the
+	// first write request.
+	await page.waitForFunction(
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		() => Boolean((window as any).OC?.requestToken || document.head.dataset.requesttoken),
+		undefined,
+		{ timeout: 30_000 },
+	)
 	const token = await page.evaluate(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		() => (window as any).OC?.requestToken
-			|| document.head.querySelector('meta[name="requesttoken"]')?.getAttribute('content')
+			|| document.head.dataset.requesttoken
 			|| '',
 	)
 	expect(token, 'CSRF request-token must be harvestable from the running app').not.toEqual('')
