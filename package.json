@@ -40,7 +40,7 @@
     "babel-loader": "^10.1.1",
     "css-loader": "^7.1.2",
     "mammoth": "^1.12.0",
-    "pdfjs-dist": "^5.7.284",
+    "pdfjs-dist": "^6.2.108",
     "pinia": "^2.1.7",
     "style-loader": "^4.0.0",
     "vue": "^2.7.14",
@@ -113,7 +113,7 @@
     "http-proxy-middleware": "^2.0.9",
     "node-gettext": "^3.0.1",
     "lodash": "^4.18.1",
-    "immutable": "^4.3.8",
+    "immutable": "^4.3.9",
     "flatted": "^3.4.2",
     "@nextcloud/eslint-plugin": {
       "fast-xml-parser": "^4.5.6"
