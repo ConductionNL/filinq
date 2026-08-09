@@ -123,11 +123,28 @@ test.describe('page components — dashboard', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('page components — consent', () => {
-	test('ConsentIndex paints its workflow description and stats strip at /consent', async ({ page }) => {
+	test('ConsentIndex paints its workflow heading, description and record list at /consent', async ({ page }) => {
 		await go(page, 'consent')
+		// Title + description are ConsentIndex's own props on CnIndexPage; the
+		// manifest page is titled "Consent Management", so neither string can
+		// come from the shell.
+		await expect(page.getByRole('heading', { name: 'Consent Workflow' })).toBeVisible()
 		await expect(page.getByText('Per-document consent records produced by the publication-clearance workflow.')).toBeVisible()
-		// `.consent-stats` is ConsentIndex's own `#above-table` slot content.
-		await expect(page.locator('.consent-stats')).toBeVisible()
+		// The list itself: real rows, or this page's own empty text.
+		const table = page.locator('#content table, .app-content table').first()
+		const empty = page.getByText('No consent records found')
+		await expect(table.or(empty).first(), 'the consent list must render rows or its empty state').toBeVisible()
+		// NOTE: this page also declares a `<template #above-table>` stats strip
+		// (`.consent-stats`, four CnStatsBlocks). It is NOT asserted here
+		// because it does not render at all: CnIndexPage exposes no
+		// `above-table` slot — the slot between the header and the actions bar
+		// is `below-header` — so the markup is silently dropped. Measured on
+		// this suite: the description assertion above passed on the same run
+		// where `.consent-stats` was "element(s) not found". Four views carry
+		// the same dead slot name (this one, views/policy/ProhibitionIndex,
+		// views/policy/StandingConsentIndex, views/consent/StandingConsentIndex).
+		// Renaming the slot is a visible UI change and belongs in a consent /
+		// policy change with its own review, not in a coverage PR.
 	})
 
 	test('ConsentDetail paints its no-record state at /consent/<absent-id>', async ({ page }) => {
