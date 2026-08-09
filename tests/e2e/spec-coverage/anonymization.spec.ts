@@ -15,6 +15,7 @@
 // @e2e openspec/specs/anonymization/spec.md#anonymize-another-document
 
 import { test, expect, type Page } from '@playwright/test'
+import { waitForAppReady } from './_helpers'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
@@ -34,7 +35,10 @@ async function go(page: Page, route: string): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// Not `networkidle` — Nextcloud's long-lived polling means it never fires,
+	// so the old swallowed wait burned its timeout and then proceeded anyway.
+	// See waitForAppReady in ./_helpers (ADR-074 rule 4 / gate-58).
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }

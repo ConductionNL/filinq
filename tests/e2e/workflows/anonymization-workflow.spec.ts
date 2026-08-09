@@ -37,7 +37,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { APP, dismissOverlays } from '../spec-coverage/_helpers'
+import { APP, dismissOverlays, waitForAppReady } from '../spec-coverage/_helpers'
 import {
 	harvestToken, jsonHeaders, API, TEST_PREFIX, TEST_FAMILY,
 	createDavFolder, createDavFile,
@@ -71,11 +71,19 @@ test.afterAll(async ({ request }) => {
  */
 async function goRoute(page, route: string): Promise<void> {
 	// `index.php`-prefixed — see the APP constant in ../spec-coverage/_helpers.ts.
-	await page.goto(APP)
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// `domcontentloaded` + an explicit app-mounted wait, not `networkidle`:
+	// Nextcloud keeps long-lived connections open (notifications polling,
+	// user-status heartbeat) so networkidle never fires. Both calls here used
+	// to be `waitForLoadState('networkidle').catch(() => {})`, i.e. two full
+	// timeouts burned per navigation, each swallowed into a pass, after which
+	// the specs asserted against a possibly-unmounted app. `waitForAppReady`
+	// waits for the DocuDesk mount point and its painted content region
+	// instead, and throws if they never arrive. ADR-074 rule 4 / gate-58.
+	await page.goto(APP, { waitUntil: 'domcontentloaded' })
+	await waitForAppReady(page)
 	await dismissOverlays(page)
-	await page.goto(`${APP}/${route}`)
-	await page.waitForLoadState('networkidle').catch(() => {})
+	await page.goto(`${APP}/${route}`, { waitUntil: 'domcontentloaded' })
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(1200)
 }

@@ -85,8 +85,24 @@ async function go(page: Page, route: string): Promise<void> {
 	const url = route.startsWith('/apps/') || route.startsWith('/settings/')
 		? route
 		: cleaned === '' ? APP : `${APP}/${cleaned}`
-	await page.goto(url).catch(() => { /* tolerate a 404 — caller decides */ })
-	await page.waitForLoadState('networkidle').catch(() => { /* idle never fires on some pages */ })
+	const response = await page.goto(url, { waitUntil: 'domcontentloaded' })
+		.catch(() => null) /* tolerate a 404 — caller decides */
+	// This used to be `waitForLoadState('networkidle').catch(() => {})`, which
+	// ADR-074 rule 4 / gate-58 forbids: Nextcloud holds long-lived connections
+	// open (notifications polling, user-status heartbeat), so the network never
+	// goes idle. The wait always ran to its own timeout and the `.catch`
+	// swallowed it — every screenshot route paid ~30s and still shot a page
+	// that had no guarantee of having painted.
+	//
+	// The 404 tolerance above is deliberate (this spec walks routes that may
+	// legitimately not exist), so the readiness wait is scoped to the success
+	// path — where it is NOT swallowed: if Nextcloud served the page, its
+	// content region must appear, and a screenshot of a page that never
+	// rendered is worthless rather than merely late.
+	if (response?.ok()) {
+		await page.locator('#content, #app-content, .app-content, main').first()
+			.waitFor({ state: 'visible', timeout: 20_000 })
+	}
 	await dismissOverlays(page)
 	await page.waitForTimeout(900)
 }

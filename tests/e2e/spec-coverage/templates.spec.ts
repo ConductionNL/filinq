@@ -90,13 +90,21 @@ test.describe('template-management — templates list UI', () => {
 		await go(page, 'templates')
 		await dismissOverlays(page)
 		await page.getByRole('button', { name: 'New template' }).click()
-		await page.waitForLoadState('networkidle').catch(() => {})
-		await page.waitForTimeout(800)
 		// The create surface is a dialog. Asserting it directly, rather than
 		// `dialog.or(content)`: `.or()` on two locators that BOTH resolve is a
 		// strict-mode violation, and "the content area is visible" is true on
 		// every page anyway, so it could never have failed.
 		const dialog = page.locator('[role="dialog"]').first()
+		// Wait for exactly that dialog. This replaces a
+		// `waitForLoadState('networkidle').catch(() => {})` which never settled
+		// — Nextcloud keeps long-lived connections open, so it always ran to
+		// its own timeout and the `.catch` swallowed the failure (ADR-074
+		// rule 4 / gate-58). Waiting on the dialog is the deterministic form of
+		// the same intent, and its absence now fails here rather than silently.
+		await dialog.waitFor({ state: 'visible', timeout: 15_000 })
+		// Brief settle so the dialog's open animation has finished before the
+		// content assertion reads it.
+		await page.waitForTimeout(400)
 		await expect(dialog).toBeVisible()
 		await expect(dialog).toContainText(/Template/i)
 		expect(guard.server5xx, `5xx: ${guard.server5xx.join(' | ')}`).toEqual([])

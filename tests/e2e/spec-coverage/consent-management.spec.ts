@@ -14,6 +14,7 @@
 // @e2e openspec/specs/consent-management/spec.md#empty-consent-list
 
 import { test, expect, type Page } from '@playwright/test'
+import { waitForAppReady } from './_helpers'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
@@ -33,7 +34,11 @@ async function go(page: Page, route: string): Promise<void> {
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })
-	await page.waitForLoadState('networkidle').catch(() => {})
+	// Not `networkidle` — it never fires on Nextcloud (long-lived notification
+	// polling / user-status heartbeat), so the old swallowed wait burned its
+	// full timeout and then proceeded anyway. See waitForAppReady in
+	// ./_helpers for the full reasoning (ADR-074 rule 4 / gate-58).
+	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
 }
@@ -76,9 +81,14 @@ test.describe('consent-management — consent list UI', () => {
 		const rows = page.locator('tr[data-id], .consent-row, .list-item').first()
 		const rowVisible = await rows.isVisible().catch(() => false)
 		if (rowVisible) {
-			// Click the first consent row to navigate to detail
+			// Click the first consent row to navigate to detail.
 			await rows.click()
-			await page.waitForLoadState('networkidle').catch(() => {})
+			// Wait for the SPA to have painted whatever the click routed to,
+			// rather than for network silence — `networkidle` never fires on
+			// Nextcloud, so the previous swallowed wait only spent its timeout.
+			// A route that throws during render unmounts the content region, so
+			// requiring it back is a real check that something rendered.
+			await waitForAppReady(page)
 			await page.waitForTimeout(500)
 			// Should still be on docudesk (either detail route or unchanged)
 			await expect(page).toHaveURL(/\/apps\/docudesk/)

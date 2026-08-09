@@ -59,8 +59,19 @@ export async function harvestToken(page: Page): Promise<string> {
 	// 404 page — which has no `requesttoken` meta and no `window.OC`, making
 	// this helper fail with "CSRF request-token must be harvestable" and
 	// accusing the session instead of the URL.
-	await page.goto('/index.php/apps/docudesk')
-	await page.waitForLoadState('networkidle').catch(() => {})
+	await page.goto('/index.php/apps/docudesk', { waitUntil: 'domcontentloaded' })
+	// Wait for exactly what the evaluate below reads: the CSRF request-token.
+	// `window.OC.requestToken` is set by NC core's bundle and the
+	// `meta[name="requesttoken"]` is server-rendered into the head, so the head
+	// tag is the earliest deterministic signal that the token is readable.
+	//
+	// This replaces `await page.waitForLoadState('networkidle').catch(() => {})`
+	// (ADR-074 rule 4 / gate-58). Nextcloud holds long-lived connections open,
+	// so networkidle never fires: that wait always ran to its own timeout and
+	// the `.catch` turned the timeout into a pass — meaning it gave the token
+	// no guarantee whatsoever, and the "CSRF request-token must be harvestable"
+	// expectation below was left to race the page.
+	await page.locator('meta[name="requesttoken"]').waitFor({ state: 'attached', timeout: 30_000 })
 	const token = await page.evaluate(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		() => (window as any).OC?.requestToken
