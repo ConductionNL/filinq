@@ -804,10 +804,9 @@
                         ]
                     },
                     "caseReference": {
-                        "description": "UUID verwijzing naar de bron zaak/case in Procest",
+                        "description": "UUID of the source Zaak (case) in Procest. Cross-app reference: the target schema lives in Procest's register, not DocuDesk's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register.",
                         "type": "string",
                         "format": "uuid",
-                        "$ref": "case",
                         "x-external-register": "procest",
                         "visible": true,
                         "order": 5,
@@ -1025,10 +1024,9 @@
                         "maxLength": 64
                     },
                     "zaakId": {
-                        "description": "UUID van de gekoppelde zaak in Procest (optioneel)",
+                        "description": "UUID of the linked Zaak (case) in Procest (optional). Cross-app reference: the target schema lives in Procest's register, not DocuDesk's, so this is a plain identifier rather than an OpenRegister relation — see x-external-register.",
                         "type": "string",
                         "format": "uuid",
-                        "$ref": "case",
                         "x-external-register": "procest",
                         "visible": true,
                         "order": 9,
