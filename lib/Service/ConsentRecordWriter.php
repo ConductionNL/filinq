@@ -348,8 +348,12 @@ class ConsentRecordWriter
     /**
      * Create a brand-new consent record.
      *
-     * Sets notificationStatus=pending and computes objectionDeadline.
-     * No email or postal notification is dispatched (CONS-049).
+     * On the WOO fall-through path (no policy match) the record is created with
+     * notificationStatus=pending and a computed objectionDeadline. No email or
+     * postal notification is dispatched (CONS-049).
+     *
+     * On a standing-consent match the record is instead pre-empted — see
+     * {@see buildNewConsentPayload()} — and carries no objection deadline.
      *
      * The `$context` array carries the caller's inputs plus the resolved
      * policy discriminators:
@@ -401,9 +405,33 @@ class ConsentRecordWriter
     /**
      * Assemble the payload for a brand-new consent record.
      *
+     * Two mutually exclusive outcomes, both mandated by the canonical specs:
+     *
+     * - **No policy match** — the WOO objection workflow runs:
+     *   `consentStatus/publicationDecision/notificationStatus: "pending"` plus a
+     *   computed `objectionDeadline` (`entity-publication-policies`, scenario
+     *   "No policy match falls through to WOO workflow").
+     * - **Standing-consent match** — the record is policy-pre-empted:
+     *   `consentStatus: "consent_given"`, `publicationDecision:
+     *   "publish_with_consent"`, `notificationStatus: "skipped"` and NO
+     *   objection deadline (`consent-management`, scenario "Standing-consent
+     *   match resolves to existing 'consent_given' status"; and
+     *   `entity-publication-policies`, scenario "Standing consent match
+     *   short-circuits when no prohibition match").
+     *
+     * The pre-empted branch was previously unimplemented: every new record got
+     * the `pending` triple, so a matched standing consent silently started the
+     * WOO objection clock it is supposed to short-circuit. A prohibition match
+     * never reaches here — it aborts in `ConsentService` with a
+     * `PolicyRejectedException` — so `standingConsentUuid` is the only match
+     * kind this method has to resolve.
+     *
      * @param array<string, mixed> $context The consent-request context.
      *
      * @return array<string, mixed> The payload to persist.
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     private function buildNewConsentPayload(array $context): array
     {
@@ -434,6 +462,11 @@ class ConsentRecordWriter
             'objectionDeadline'   => $deadline->format(format: 'c'),
         ];
 
+        $consentData = $this->withStandingConsentPreEmption(
+            consentData: $consentData,
+            context: $context
+        );
+
         $entityKey = $context['entityKey'];
         if ($entityKey !== null && $entityKey !== '') {
             $consentData['entityKey'] = $entityKey;
@@ -455,19 +488,54 @@ class ConsentRecordWriter
             $consentData['contactAddress'] = $context['contactAddress'];
         }
 
-        if ($context['standingConsentUuid'] !== null) {
-            $consentData['policyMatch'] = $context['standingConsentUuid'];
-            // Persist the match discriminator so the standing-consent
-            // carve-out in ConsentUpdateHandler::guardPolicyPreemptedTransition
-            // can fire (PR #147 Thread B regression: the carve-out keyed on
-            // `matchKind`, which was never persisted here, so the operator
-            // override on publicationDecision was 400-locked).
-            $consentData['matchKind'] = (string) $context['policyMatchKind'];
-        }
-
         return $consentData;
 
     }//end buildNewConsentPayload()
+
+    /**
+     * Apply standing-consent pre-emption to a new-record payload.
+     *
+     * A standing consent short-circuits the WOO objection workflow: the record
+     * is born in its terminal state and carries no objection deadline. Both
+     * canonical specs state the same triple —
+     * `consentStatus: "consent_given"`, `publicationDecision:
+     * "publish_with_consent"`, `notificationStatus: "skipped"`, with
+     * `objectionDeadline: null` and `policyMatch` referencing the rule.
+     *
+     * No-op when the entity matched no standing consent, in which case the
+     * caller's WOO defaults (`pending` + computed deadline) stand.
+     *
+     * @param array<string, mixed> $consentData The payload assembled so far.
+     * @param array<string, mixed> $context     The consent-request context.
+     *
+     * @return array<string, mixed> The payload, pre-empted where applicable.
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
+     */
+    private function withStandingConsentPreEmption(array $consentData, array $context): array
+    {
+        if ($context['standingConsentUuid'] === null) {
+            return $consentData;
+        }
+
+        $consentData['consentStatus']       = 'consent_given';
+        $consentData['publicationDecision'] = 'publish_with_consent';
+        $consentData['notificationStatus']  = 'skipped';
+        unset($consentData['objectionDeadline']);
+
+        $consentData['policyMatch'] = $context['standingConsentUuid'];
+
+        // Persist the match discriminator so the standing-consent carve-out in
+        // ConsentUpdateHandler::guardPolicyPreemptedTransition can fire (PR #147
+        // Thread B regression: the carve-out keyed on `matchKind`, which was
+        // never persisted here, so the operator override on publicationDecision
+        // was 400-locked).
+        $consentData['matchKind'] = (string) $context['policyMatchKind'];
+
+        return $consentData;
+
+    }//end withStandingConsentPreEmption()
 
     /**
      * Get the ObjectService from OpenRegister.

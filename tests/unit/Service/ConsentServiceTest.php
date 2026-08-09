@@ -568,6 +568,116 @@ class ConsentServiceTest extends TestCase
     }//end testPolicyMatchIsNotClearedOnUpdateWhenNoLongerMatching()
 
     /**
+     * A standing-consent match pre-empts the WOO workflow on a brand-new record.
+     *
+     * `consent-management` — "Standing-consent match resolves to existing
+     * 'consent_given' status" — and `entity-publication-policies` — "Standing
+     * consent match short-circuits when no prohibition match" — both require
+     * `consentStatus: consent_given`, `publicationDecision:
+     * publish_with_consent`, `notificationStatus: skipped` and NO objection
+     * deadline. Before the fix `buildNewConsentPayload()` wrote the `pending`
+     * triple plus a computed deadline for EVERY new record, so a matched
+     * standing consent started the very objection clock it must short-circuit.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     * @spec openspec/specs/entity-publication-policies/spec.md
+     */
+    public function testStandingConsentMatchPreEmptsTheWooWorkflowOnCreate(): void
+    {
+        $standingConsentResult = [
+            'uuid'        => 'standing-uuid-7',
+            'kind'        => PolicyMatchService::KIND_STANDING_CONSENT,
+            'entityType'  => 'PERSON',
+            'primaryName' => 'Burgemeester De Vries',
+        ];
+
+        // No search results => the create branch, not the idempotent update.
+        $bag             = $this->buildService(policyResult: $standingConsentResult);
+        $capturedSaveArg = &$bag['capturedSaveArg'];
+        $service         = $bag['service'];
+
+        $service->createConsentRequest(
+            documentId: 'doc-standing-1',
+            entityType: 'PERSON',
+            entityText: 'Burgemeester De Vries',
+            register: 'reg-1',
+            schema: 'sch-1'
+        );
+
+        $this->assertSame(
+            expected: 'consent_given',
+            actual: $capturedSaveArg['consentStatus'] ?? null,
+            message: 'A standing-consent match must resolve consentStatus to consent_given.'
+        );
+        $this->assertSame(
+            expected: 'publish_with_consent',
+            actual: $capturedSaveArg['publicationDecision'] ?? null,
+            message: 'A standing-consent match must resolve publicationDecision to publish_with_consent.'
+        );
+        $this->assertSame(
+            expected: 'skipped',
+            actual: $capturedSaveArg['notificationStatus'] ?? null,
+            message: 'A standing-consent match must skip the WOO notification.'
+        );
+        $this->assertArrayNotHasKey(
+            key: 'objectionDeadline',
+            array: $capturedSaveArg,
+            message: 'A pre-empted record must carry no objection deadline.'
+        );
+        $this->assertSame(
+            expected: 'standing-uuid-7',
+            actual: $capturedSaveArg['policyMatch'] ?? null,
+            message: 'policyMatch must reference the matching standing consent.'
+        );
+
+    }//end testStandingConsentMatchPreEmptsTheWooWorkflowOnCreate()
+
+    /**
+     * With no policy match at all the WOO objection workflow still runs.
+     *
+     * Positive control for the pre-emption test above: without it, a payload
+     * builder that unconditionally wrote `consent_given` would pass that test
+     * for the wrong reason.
+     *
+     * @return void
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
+     */
+    public function testNoPolicyMatchStillStartsTheWooWorkflowOnCreate(): void
+    {
+        $bag             = $this->buildService(policyResult: null);
+        $capturedSaveArg = &$bag['capturedSaveArg'];
+        $service         = $bag['service'];
+
+        $service->createConsentRequest(
+            documentId: 'doc-woo-1',
+            entityType: 'PERSON',
+            entityText: 'Onbekende Burger',
+            register: 'reg-1',
+            schema: 'sch-1'
+        );
+
+        $this->assertSame(
+            expected: 'pending',
+            actual: $capturedSaveArg['consentStatus'] ?? null,
+            message: 'An unmatched entity must fall through to the pending WOO workflow.'
+        );
+        $this->assertSame(
+            expected: 'pending',
+            actual: $capturedSaveArg['notificationStatus'] ?? null,
+            message: 'An unmatched entity must keep notificationStatus pending.'
+        );
+        $this->assertArrayHasKey(
+            key: 'objectionDeadline',
+            array: $capturedSaveArg,
+            message: 'An unmatched entity must receive a computed objection deadline.'
+        );
+
+    }//end testNoPolicyMatchStillStartsTheWooWorkflowOnCreate()
+
+    /**
      * Prohibition match throws PolicyRejectedException; no record is created or updated.
      *
      * @return void
