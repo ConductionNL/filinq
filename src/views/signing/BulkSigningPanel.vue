@@ -11,9 +11,11 @@
 			<table class="bulk-table">
 				<thead>
 					<tr>
+						<!-- Selection column: a control header with no name of its
+						     own, so scope= would associate nothing. -->
 						<th />
-						<th>{{ t('docudesk', 'Document') }}</th>
-						<th>{{ t('docudesk', 'Level') }}</th>
+						<th scope="col">{{ t('docudesk', 'Document') }}</th>
+						<th scope="col">{{ t('docudesk', 'Level') }}</th>
 					</tr>
 				</thead>
 				<tbody>

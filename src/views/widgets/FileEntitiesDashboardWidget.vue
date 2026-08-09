@@ -34,17 +34,17 @@ import axios from '@nextcloud/axios'
 			<table class="results-table">
 				<thead>
 					<tr>
-						<th>{{ t('docudesk', 'File') }}</th>
-						<th class="col-number">
+						<th scope="col">{{ t('docudesk', 'File') }}</th>
+						<th scope="col" class="col-number">
 							{{ t('docudesk', 'Entities') }}
 						</th>
-						<th class="col-risk">
+						<th scope="col" class="col-risk">
 							{{ t('docudesk', 'Risk') }}
 						</th>
-						<th class="col-status">
+						<th scope="col" class="col-status">
 							{{ t('docudesk', 'Status') }}
 						</th>
-						<th class="col-ocr">
+						<th scope="col" class="col-ocr">
 							{{ t('docudesk', 'OCR') }}
 						</th>
 					</tr>

@@ -14,9 +14,17 @@
 							:aria-label="selectAllLabel"
 							@update:modelValue="$emit('toggle-select-all')" />
 					</th>
+					<!--
+						Column headers name every cell beneath them, so they carry
+						scope="col" (WCAG 1.3.1). The select and row-actions
+						headers above/below have no accessible name of their own —
+						they are control columns — so scope on them would
+						associate nothing and is deliberately absent.
+					-->
 					<th
 						v-for="col in columns"
 						:key="col.key"
+						scope="col"
 						class="dd-data-table__th"
 						:style="col.width ? { width: col.width } : null">
 						{{ col.label }}
@@ -279,5 +287,13 @@ export default {
 	text-align: center;
 	padding: calc(12 * var(--default-grid-baseline)) calc(6 * var(--default-grid-baseline));
 	color: var(--dd-data-table-empty-color, var(--color-text-maxcontrast));
+}
+
+/* WCAG 2.2 SC 2.3.3 — the row hover tint still applies, it just arrives
+   instantly for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-data-table__row {
+		transition: none;
+	}
 }
 </style>

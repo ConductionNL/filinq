@@ -86,11 +86,18 @@ import { consentStore } from '../../store/store.js'
 		<!-- Consent status section -->
 		<div v-if="consentStore.consentItem" class="detail-section">
 			<h3>{{ t('docudesk', 'Consent Status') }}</h3>
+			<!--
+				This is a name/value grid: every row's first cell IS the name of
+				that row, so it is a row header, not data. It shipped as a table
+				of nothing but <td>, which left the values with no header to be
+				announced against at all (WCAG 1.3.1). <th scope="row"> states
+				what was already true of the markup.
+			-->
 			<table class="detail-table">
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Consent Status') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.consentStatus"
@@ -99,9 +106,9 @@ import { consentStore } from '../../store/store.js'
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Notification Status') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.notificationStatus"
@@ -110,9 +117,9 @@ import { consentStore } from '../../store/store.js'
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Publication Decision') }}
-					</td>
+					</th>
 					<td>
 						<NcSelect
 							v-model="editData.publicationDecision"
@@ -121,21 +128,21 @@ import { consentStore } from '../../store/store.js'
 					</td>
 				</tr>
 				<tr>
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Objection Deadline') }}
-					</td>
+					</th>
 					<td>{{ formatDate(consentStore.consentItem.objectionDeadline) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.objectionReceivedAt">
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Objection Received') }}
-					</td>
+					</th>
 					<td>{{ formatDate(consentStore.consentItem.objectionReceivedAt) }}</td>
 				</tr>
 				<tr v-if="consentStore.consentItem.legalBasis">
-					<td class="label">
+					<th scope="row" class="label">
 						{{ t('docudesk', 'Legal Basis') }}
-					</td>
+					</th>
 					<td>{{ consentStore.consentItem.legalBasis }}</td>
 				</tr>
 			</table>
@@ -405,12 +412,16 @@ export default {
 	width: 100%;
 }
 
-.detail-table td {
+.detail-table td,
+.detail-table th {
 	padding: 8px 4px;
 	vertical-align: middle;
 }
 
+/* The row headers are <th> now; neutralise the UA's centred default so the
+   rendering is unchanged. */
 .detail-table .label {
+	text-align: start;
 	font-weight: bold;
 	color: var(--color-text-maxcontrast);
 	width: 200px;
