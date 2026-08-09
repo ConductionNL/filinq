@@ -863,7 +863,19 @@
         "Select {document}": "Select {document}",
         "Select {row}": "Select {row}",
         "Select files to anonymise": "Select files to anonymise",
-        "Skip {entity}": "Skip {entity}"
+        "Skip {entity}": "Skip {entity}",
+        "Approved consents — open the consent overview": "Approved consents — open the consent overview",
+        "Delete dictionary": "Delete dictionary",
+        "Delete document": "Delete document",
+        "Delete prohibition": "Delete prohibition",
+        "Delete selected items": "Delete selected items",
+        "Delete standing consent": "Delete standing consent",
+        "Objected consents — open the consent overview": "Objected consents — open the consent overview",
+        "Pending consents — open the consent overview": "Pending consents — open the consent overview",
+        "Remove match rule {number}": "Remove match rule {number}",
+        "Remove term": "Remove term",
+        "Revoke standing consent": "Revoke standing consent",
+        "Total Consents — open the consent overview": "Total Consents — open the consent overview"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

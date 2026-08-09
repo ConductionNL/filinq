@@ -916,7 +916,19 @@
         "— high accuracy, requires a GPU": "— hoge nauwkeurigheid, vereist een GPU",
         "— lightweight, no GPU required": "— lichtgewicht, geen GPU vereist",
         "— via OpenRegister settings": "— via OpenRegister-instellingen",
-        "“{name}” matches the prohibition rule “{rule}” and must be anonymised.": "“{name}” komt overeen met de verbodsregel “{rule}” en moet worden geanonimiseerd."
+        "“{name}” matches the prohibition rule “{rule}” and must be anonymised.": "“{name}” komt overeen met de verbodsregel “{rule}” en moet worden geanonimiseerd.",
+        "Approved consents — open the consent overview": "Goedgekeurde toestemmingen — open het toestemmingsoverzicht",
+        "Delete dictionary": "Woordenlijst verwijderen",
+        "Delete document": "Document verwijderen",
+        "Delete prohibition": "Verbod verwijderen",
+        "Delete selected items": "Geselecteerde items verwijderen",
+        "Delete standing consent": "Doorlopende toestemming verwijderen",
+        "Objected consents — open the consent overview": "Toestemmingen met bezwaar — open het toestemmingsoverzicht",
+        "Pending consents — open the consent overview": "Toestemmingen in afwachting — open het toestemmingsoverzicht",
+        "Remove match rule {number}": "Matchregel {number} verwijderen",
+        "Remove term": "Term verwijderen",
+        "Revoke standing consent": "Doorlopende toestemming intrekken",
+        "Total Consents — open the consent overview": "Totaal toestemmingen — open het toestemmingsoverzicht"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
