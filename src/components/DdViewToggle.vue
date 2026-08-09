@@ -170,4 +170,13 @@ export default {
 .dd-view-toggle__label {
 	white-space: nowrap;
 }
+
+/* WCAG 2.2 SC 2.3.3 — the thumb still lands under the selected option, it
+   just jumps there for users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-view-toggle__thumb,
+	.dd-view-toggle__btn {
+		transition: none;
+	}
+}
 </style>

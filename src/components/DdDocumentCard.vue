@@ -243,4 +243,12 @@ export default {
 	font-size: 0.8rem;
 	color: var(--color-text-maxcontrast, #6b7280);
 }
+
+/* WCAG 2.2 SC 2.3.3 — the hover lift is decorative; drop it entirely for
+   users who ask the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	.dd-document-card {
+		transition: none;
+	}
+}
 </style>
