@@ -165,9 +165,40 @@ jobs:
       # `enable-hydra-gates` defaults to FALSE, so this tier has never executed
       # here — the job reported `skipped`, which the Quality Report renders
       # identically to a pass.
-      # `enable-axe` deliberately NOT set: a vanilla Nextcloud 34 already carries
-      # serious/critical violations on core's OWN routes that DOM scoping does
-      # not remove. Enabling axe is a separate decision.
+      # `enable-axe` was deliberately NOT set, on the grounds that "a vanilla
+      # Nextcloud 34 already carries serious/critical violations on core's OWN
+      # routes that DOM scoping does not remove". That reasoning was correct
+      # when it was written and is now out of date: ConductionNL/.github#161
+      # ("scope axe to the app's own DOM, and prove the scope is not a mute"),
+      # re-landed as #168, gives the runner an AxeBuilder.include scope, and it
+      # measured /apps/openregister/ 2 serious/critical -> 0 and /apps/hermiq/
+      # 1 -> 0, with every violation removed being core's. So the exclusion the
+      # opt-out was hand-rolling now exists upstream.
+      #
+      # It is a SCOPE, not a mute, and the runner proves that on every run: it
+      # injects a deliberate violation INSIDE the container and asserts axe
+      # reports it, then injects the same violation OUTSIDE and asserts axe does
+      # not. A selector list matching nothing is a hard failure rather than an
+      # empty pass. That is why this is safe to turn on without also taking a
+      # baseline — and a rule/fingerprint baseline would be the wrong tool
+      # anyway: DOM scoping excludes TERRITORY, while a baseline suppresses
+      # FINDINGS, including future ones on our own markup.
+      enable-axe: true
+
+      # NOT the `#content-vue, #content` default. DocuDesk mounts on a dedicated
+      # host element — `templates/index.php` renders exactly
+      # `<div id="docudesk-app"></div>` and `src/main.js` mounts there — for a
+      # documented reason: Vue 3's mount() renders INSIDE the match, so mounting
+      # on `#content` would nest the app inside Nextcloud's own wrapper from
+      # layout.user.php and leave two `#content` elements, with which one gets
+      # matched undefined.
+      #
+      # Core's layout wraps that div in `#content`, so the default selector
+      # WOULD match — and would drag core's chrome (navigation, header, app
+      # menu) back inside the scope, re-attributing core's violations to this
+      # app. `#docudesk-app` is exactly this app's own rendered DOM and nothing
+      # else, which is what the input is for.
+      axe-include-selector: '#docudesk-app'
       enable-hydra-gates: true
       # No `hydra-gates-ref` here on purpose. The shared workflow defaults it
       # to @main, and this workflow is itself consumed at @main, so the two
