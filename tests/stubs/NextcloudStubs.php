@@ -697,6 +697,20 @@ class TemplateResponse
     }//end getStatus()
 
     /**
+     * Get the app the template belongs to.
+     *
+     * Mirrors OCP\AppFramework\Http\TemplateResponse::getApp(), which exists on
+     * the real class; the stub omitted it, so any test asserting which app a
+     * TemplateResponse renders from could not run.
+     *
+     * @return string
+     */
+    public function getApp(): string
+    {
+        return $this->appName;
+    }//end getApp()
+
+    /**
      * Get template name.
      *
      * @return string
