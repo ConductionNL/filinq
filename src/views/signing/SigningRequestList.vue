@@ -1,3 +1,14 @@
+<!--
+	@visual exclude Deliberately unregistered, so no route reaches it and no
+	browser can drive it. Superseded by the type:"index" SigningRequests page
+	(Phase 8 decomposition — see that page's _note in src/manifest.json),
+	which IS covered at /signing by tests/e2e/spec-coverage/signing.spec.ts.
+	This is not an oversight being waived: the same exemption is asserted
+	independently by tests/unit/reachability.spec.js, whose KNOWN_HEADLESS
+	allow-list carries this exact file under kind:"orphaned-view". The day
+	this component is registered, that allow-list entry has to go, and this
+	marker with it — the exclusion cannot outlive its reason silently.
+-->
 <template>
 	<div class="signing-request-list">
 		<div class="signing-header">

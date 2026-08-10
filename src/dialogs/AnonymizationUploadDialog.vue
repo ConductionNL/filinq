@@ -132,6 +132,7 @@ export default {
 		 * Title of the upload modal: single-file vs dossier wording.
 		 *
 		 * @return {string} Localised dialog title.
+		 * @spec openspec/specs/anonymization/spec.md#requirement-file-upload-to-user-scoped-folder-req-anon-01
 		 */
 		dialogName() {
 			return this.singleFile
@@ -139,6 +140,12 @@ export default {
 				: t('docudesk', 'Create dossier')
 		},
 	},
+	/**
+	 * Focus the dossier-name field as the dialog appears.
+	 *
+	 * @return {void}
+	 * @spec openspec/specs/anonymization/spec.md#requirement-file-upload-to-user-scoped-folder-req-anon-01
+	 */
 	mounted() {
 		// The dialog is mounted by a `v-if` at open time, so focusing here is
 		// the same moment the parent used to focus it through a `$refs` hop.

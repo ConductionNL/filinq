@@ -81,6 +81,12 @@ export default {
 		},
 	},
 	emits: ['update:modelValue', 'confirm', 'cancel'],
+	/**
+	 * Focus the dossier-name field as the dialog appears.
+	 *
+	 * @return {void}
+	 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+	 */
 	mounted() {
 		// The dialog is mounted by a `v-if` at open time, so focusing here is
 		// the same moment the parent used to focus it through a `$refs` hop.

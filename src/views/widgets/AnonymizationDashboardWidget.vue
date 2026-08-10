@@ -270,6 +270,12 @@ export default {
 				this.$router.push({ name: 'MyDocuments' }).catch(() => {})
 			}
 		},
+		/**
+		 * Open the dossier-name dialog for a multi-file drop.
+		 *
+		 * @param {File[]} files Files pending upload.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
