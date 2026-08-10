@@ -46,7 +46,24 @@ import { useSigningStore } from '../../store/modules/signing.js'
 export default {
 	name: 'SigningRequestDetail',
 	components: { NcButton, NcLoadingIcon },
-	props: { requestId: { type: String, required: true } },
+	props: {
+		/**
+		 * The signing request to show.
+		 *
+		 * MUST be named `id`, because that is the name of the route
+		 * parameter. src/main.js builds this route with `props: true` for
+		 * any path containing a `:`, and vue-router's `props: true` passes
+		 * `route.params` through BY NAME. The manifest route is
+		 * `/signing/:id`, so a prop called anything else is simply never
+		 * supplied — this was declared `requestId` and arrived `undefined`,
+		 * which made the page fetch `/api/signing/requests/undefined` and
+		 * render blank for every request. Its sibling
+		 * SignatureVerification has always worked because its route is
+		 * `/signing/verify/:fileId` and its prop is `fileId` — the names
+		 * match there by accident of naming, not by design.
+		 */
+		id: { type: String, required: true },
+	},
 	/**
 	 * Load the signing request and its audit trail on mount.
 	 *
@@ -55,8 +72,8 @@ export default {
 	 */
 	setup(props) {
 		const signingStore = useSigningStore()
-		signingStore.fetchSigningRequest(props.requestId)
-		signingStore.fetchAuditTrail(props.requestId)
+		signingStore.fetchSigningRequest(props.id)
+		signingStore.fetchAuditTrail(props.id)
 		return { signingStore, t }
 	},
 	methods: {
