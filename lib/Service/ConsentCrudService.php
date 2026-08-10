@@ -241,8 +241,12 @@ class ConsentCrudService
      * @param string               $register The register ID
      * @param string               $schema   The schema ID
      *
-     * @return array<string, mixed> The created consent record
+     * @return array<string, mixed> The created or idempotently-updated consent
+     *                              record, including the `wasUpdated` discriminator
      *
+     * @throws \OCA\DocuDesk\Exception\PolicyRejectedException Propagated unwrapped when a
+     *                                                         publication-prohibition rule matches; the
+     *                                                         controller maps it to HTTP 403.
      * @throws Exception If creation fails
      *
      * @spec openspec/specs/consent-management/spec.md

@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
+use OCA\DocuDesk\Exception\PolicyRejectedException;
 use OCA\DocuDesk\Service\ConsentCrudService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -210,9 +211,65 @@ class ConsentController extends Controller
     }//end index()
 
     /**
+     * Build the 403 response for a policy-prohibited consent request
+     *
+     * A `PolicyRejectedException` is NOT an internal failure: it is the
+     * deliberate, client-visible outcome mandated by the `consent-management`
+     * capability ("Requirement: Prohibition match MUST throw
+     * `PolicyRejectedException` ... No publicationConsent record MUST be
+     * created or updated"). Routing it through {@see errorResponse()} mapped
+     * its `code = 0` onto HTTP 500 and discarded the rule identity the
+     * exception exists to carry, so every prohibited create looked like a
+     * server crash.
+     *
+     * The rule UUID and name ARE returned to the caller. This is a deliberate,
+     * bounded carve-out from the oracle-free rule on {@see errorResponse()}:
+     * the identical disclosure is already mandated on the anonymise gate's 422
+     * body by `anonymisation-prohibition-gate` ("The `ruleName` MUST be the
+     * prohibition rule's `primaryName`, included to help the operator
+     * understand WHY the entity is required to be anonymised"). The caller
+     * supplied the matching entity text itself, so the response reveals only
+     * which rule answered — not the existence of any record it does not own.
+     *
+     * @param PolicyRejectedException $exception The typed rejection.
+     *
+     * @return JSONResponse The 403 response carrying the rule identity
+     *
+     * @spec openspec/specs/consent-management/spec.md
+     */
+    private function policyRejectedResponse(PolicyRejectedException $exception): JSONResponse
+    {
+        $this->logger->info(
+            'Consent creation rejected by a publication-prohibition rule',
+            [
+                'ruleUuid' => $exception->getRuleUuid(),
+                'ruleName' => $exception->getRuleName(),
+            ]
+        );
+
+        return new JSONResponse(
+            [
+                'error'     => $this->l10n->t('Publication prohibited by policy rule'),
+                'matchKind' => 'prohibition',
+                'ruleUuid'  => $exception->getRuleUuid(),
+                'ruleName'  => $exception->getRuleName(),
+            ],
+            Http::STATUS_FORBIDDEN
+        );
+
+    }//end policyRejectedResponse()
+
+    /**
      * Create a new consent request for a detected entity
      *
-     * @return JSONResponse JSON response with the created consent record
+     * Idempotent on `(documentId, entityKey, scope: "document")`. The service
+     * reports which branch it took through `wasUpdated`; the status line MUST
+     * agree with it. HTTP 201 is reserved for "a new resource was created"
+     * (RFC 9110 §15.3.2), so an idempotent re-submit — which creates nothing —
+     * answers 200. Before this fix the controller returned a hardcoded 201
+     * while the very same body said `wasUpdated: true`.
+     *
+     * @return JSONResponse JSON response with the created (201) or updated (200) consent record
      *
      * @NoAdminRequired
      *
@@ -250,7 +307,14 @@ class ConsentController extends Controller
                 $config['schema']
             );
 
-            return new JSONResponse($result, 201);
+            $statusCode = Http::STATUS_CREATED;
+            if (($result['wasUpdated'] ?? false) === true) {
+                $statusCode = Http::STATUS_OK;
+            }
+
+            return new JSONResponse($result, $statusCode);
+        } catch (PolicyRejectedException $e) {
+            return $this->policyRejectedResponse(exception: $e);
         } catch (Exception $e) {
             return $this->errorResponse(message: 'Failed to create consent', exception: $e);
         }//end try

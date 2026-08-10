@@ -101,6 +101,26 @@ jobs:
       # which is both the directory the validator counts collections in and the
       # directory the run step globs `*.postman_collection.json` in — flat, not
       # recursively.
+      #
+      # THAT FLATNESS HID A SECOND SUITE. `tests/newman/` held two more
+      # collections that no CI step has ever executed, because the glob only
+      # ever visits ONE directory and `newman-collection-path` is never set
+      # away from its default. Measured 2026-08-09:
+      #
+      #   tests/newman/docudesk-api.postman_collection.json
+      #       50 requests / 107 pm.test assertions. NOT ONE request declared
+      #       `OCS-APIRequest`, so all 39 of its writes (34 POST + 5 DELETE)
+      #       would have been rejected 412 by Nextcloud middleware before
+      #       reaching a controller — it had never exercised a write path.
+      #   tests/newman/docudesk-api-collection.json
+      #       8 requests / 15 assertions, and invisible even to the validator:
+      #       its name does not match `*.postman_collection.json`. Its own
+      #       `baseUrl` variable was the literal string "{{baseUrl}}".
+      #
+      # Both are now repaired and moved INTO tests/integration, so the existing
+      # flat glob runs all three. Keeping the default path (rather than
+      # repointing it at tests/newman) is deliberate: repointing would have
+      # de-selected the one collection that does run today.
       enable-newman: true
 
       # The Newman job needs the SAME provisioning the Playwright job gets, and

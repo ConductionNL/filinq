@@ -34,6 +34,25 @@
       }
     ]
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Nextcloud's OCS/CSRF middleware rejects every state-changing request",
+          "// that does not carry `OCS-APIRequest: true` with HTTP 412, BEFORE the",
+          "// request ever reaches a DocuDesk controller. Not one of this",
+          "// collection's requests declared the header, so all 39 of its writes",
+          "// (34 POST + 5 DELETE) were answered 412 and no write path had ever",
+          "// been exercised. Upserting it here covers every request in the",
+          "// collection at once, and `upsert` leaves an explicit per-request",
+          "// header untouched.",
+          "pm.request.headers.upsert({ key: 'OCS-APIRequest', value: 'true' });"
+        ]
+      }
+    }
+  ],
   "item": [
     {
       "name": "Health",
@@ -198,7 +217,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 500 for non-existent file', function () { pm.response.to.have.status(500); });",
+                  "// Was `have.status(500)`. AnonymizationController::extract()",
+                  "// calls verifyFileAccess() before doing any work, and that",
+                  "// answers 404 for a file that does not exist — which is the",
+                  "// correct code. The 500 expectation encoded an older, worse",
+                  "// behaviour; asserting it would have demanded a regression.",
+                  "pm.test('Status code is 404 for non-existent file', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -278,7 +302,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Rejects invalid bases (non-array) with 400', function () { pm.response.to.have.status(400); });",
+                  "// This asserted 400 for a per-entity `bases` field that is not",
+                  "// part of the anonymize contract at all — AnonymizeRequestValidator",
+                  "// validates entities/appendBasisSummary/unredactedEntities/",
+                  "// acknowledgedOverrides, and the publication bases live on",
+                  "// unredactedEntities as `publicationBases`. Two SIBLING requests in",
+                  "// this same collection assert that a stray `bases` key is silently",
+                  "// ignored, so the collection demanded both behaviours at once and",
+                  "// one of the two had to be wrong. The unknown key is ignored and the",
+                  "// request proceeds to the file-access check, which 404s on 999999.",
+                  "pm.test('Unknown per-entity key is ignored; file check answers 404', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -318,7 +351,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Rejects invalid bases item (non-string) with 400', function () { pm.response.to.have.status(400); });",
+                  "// See the sibling non-array case: `bases` is not a validated key.",
+                  "pm.test('Unknown per-entity key is ignored; file check answers 404', function () { pm.response.to.have.status(404); });",
                   "pm.test('Has error field', function () { var json = pm.response.json(); pm.expect(json).to.have.property('error'); });"
                 ]
               }
@@ -348,10 +382,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Extract on a non-existent file returns 500, but we verify the field shape when entities are returned.",
+                  "// Extract on a non-existent file returns 404 (verifyFileAccess",
+                  "// runs first); the comment below still applies for the shape.",
                   "// For live tests, replace 999999 with a real fileId and assert prohibitionMatch is present.",
                   "pm.test('Response has error for non-existent file (expected)', function () {",
-                  "  pm.response.to.have.status(500);",
+                  "  pm.response.to.have.status(404);",
                   "});"
                 ]
               }
@@ -481,19 +516,20 @@
           ]
         },
         {
-          "name": "POST /api/anonymization/batchAnonymize/test-clearance-batch (accepts unredactedEntities)",
+          "name": "POST /api/anonymization/batch/test-clearance-batch/anonymize (accepts unredactedEntities)",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/api/anonymization/batchAnonymize/test-clearance-batch",
+              "raw": "{{baseUrl}}/api/anonymization/batch/test-clearance-batch/anonymize",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "anonymization",
-                "batchAnonymize",
-                "test-clearance-batch"
+                "batch",
+                "test-clearance-batch",
+                "anonymize"
               ]
             },
             "header": [
@@ -829,17 +865,17 @@
       "name": "Consent",
       "item": [
         {
-          "name": "GET /api/consent",
+          "name": "GET /api/consents",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/consent",
+              "raw": "{{baseUrl}}/api/consents",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "consent"
+                "consents"
               ]
             }
           },
@@ -849,8 +885,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 200 or 400', function () { pm.expect([200, 400]).to.include(pm.response.code); });",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                  "// 400 was accepted here because the consent register/schema",
+                  "// bindings were never provisioned for this suite; CI now runs",
+                  "// `ci-seed.sh api`, which binds consent_register/consent_schema,",
+                  "// so ConsentController::notConfiguredResponse() can no longer",
+                  "// fire and a 400 is a real regression.",
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "// An unknown subpath under a Nextcloud app answers 200 with the",
+                  "// SPA HTML shell, so a status assertion alone proves nothing about",
+                  "// whether a controller ran. Pin the content type and the shape.",
+                  "pm.test('Response is JSON, not the SPA HTML fallback', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});",
+                  "// ConsentController::index() returns JSONResponse(listConsents(...)),",
+                  "// and ConsentCrudService::listConsents() builds a PHP list — so the",
+                  "// body is a JSON ARRAY, not an envelope.",
+                  "pm.test('Body is a consent array', function () {",
+                  "    pm.expect(pm.response.json()).to.be.an('array');",
+                  "});"
                 ]
               }
             }
@@ -861,13 +913,13 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/api/consent",
+              "raw": "{{baseUrl}}/api/consents",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "consent"
+                "consents"
               ]
             },
             "header": [
@@ -905,13 +957,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/consent",
+              "raw": "{{baseUrl}}/api/consents",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "consent"
+                "consents"
               ]
             },
             "body": {
@@ -947,13 +999,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/consent",
+              "raw": "{{baseUrl}}/api/consents",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "consent"
+                "consents"
               ]
             },
             "body": {
@@ -988,13 +1040,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/consent",
+              "raw": "{{baseUrl}}/api/consents",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "consent"
+                "consents"
               ]
             },
             "body": {
@@ -1033,9 +1085,26 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
+                  "// CORRECTED ASSERTION. This step used to require 'Seed prohibitions",
+                  "// present' (length >= 1). The premise was false: tests/e2e/ci-seed.sh",
+                  "// creates the three docudesk-*-admins groups but seeds NO",
+                  "// publicationProhibition rows, and this request runs before the",
+                  "// create below, so on a fresh CI instance the honest answer is an",
+                  "// empty list. The old assertion could only ever pass on a dirty",
+                  "// instance — and publicationProhibition is archival-immutable, so",
+                  "// 'dirty' meant leftovers from an earlier run. It is replaced by the",
+                  "// 'listed after create' step further down, which asserts the real",
+                  "// invariant (a created prohibition appears in the list) instead of",
+                  "// asserting the fixture setup of a different script.",
                   "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('Response is JSON array', function () { var json = pm.response.json(); pm.expect(json).to.be.an('array'); });",
-                  "pm.test('Seed prohibitions present', function () { var json = pm.response.json(); pm.expect(json.length).to.be.at.least(1); });"
+                  "pm.test('Every listed prohibition carries an identifier', function () {",
+                  "    var json = pm.response.json();",
+                  "    json.forEach(function (row) {",
+                  "        pm.expect((row['@self'] && row['@self'].id) || row.id || row.uuid).to.be.a('string');",
+                  "    });",
+                  "});",
+                  "pm.collectionVariables.set('prohibitionCountBeforeCreate', String(pm.response.json().length));"
                 ]
               }
             }
@@ -1069,6 +1138,37 @@
           ]
         },
         {
+          "name": "GET /api/policy/prohibitions (created record is listed)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Replaces the false-premise 'Seed prohibitions present' check above.",
+                  "// This one is real: it asserts the list grew by the record THIS run",
+                  "// created, so it fails if the index endpoint stops returning writes.",
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "var json = pm.response.json();",
+                  "pm.test('List grew by exactly the record this run created', function () {",
+                  "    var before = parseInt(pm.collectionVariables.get('prohibitionCountBeforeCreate'), 10);",
+                  "    pm.expect(json.length).to.equal(before + 1);",
+                  "});",
+                  "pm.test('The created prohibition is listed', function () {",
+                  "    var wanted = pm.collectionVariables.get('createdProhibitionId');",
+                  "    var ids = json.map(function (row) { return (row['@self'] && row['@self'].id) || row.id || row.uuid; });",
+                  "    pm.expect(ids).to.include(wanted);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "GET /api/policy/prohibitions/{id}",
           "request": {
             "method": "GET",
@@ -1088,7 +1188,7 @@
           ]
         },
         {
-          "name": "DELETE /api/policy/prohibitions/{id}",
+          "name": "DELETE /api/policy/prohibitions/{id} (409 — archival retention)",
           "request": {
             "method": "DELETE",
             "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
@@ -1099,7 +1199,47 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                  "// CORRECTED ASSERTION. This step used to expect 200. That outcome is",
+                  "// unreachable BY DESIGN: publicationProhibition declares",
+                  "// x-openregister-archival (retention P10Y) in",
+                  "// lib/Settings/docudesk_register.json, and OpenRegister refuses every",
+                  "// user-driven delete on an archival schema",
+                  "// (ArchivalImmutableException; rows expire only via",
+                  "// OCA\\OpenRegister\\Cron\\ArchivalRetentionTask). Prohibitions are",
+                  "// court-order-backed and must survive for audit and appeal, so the",
+                  "// annotation stays. The endpoint was leaking that refusal as an",
+                  "// opaque 500; PolicyController now answers 409 Conflict naming",
+                  "// retention. 500 is deliberately NOT accepted here — that would",
+                  "// enshrine the bug this assertion caught.",
+                  "pm.test('Status code is 409 (retention conflict)', function () { pm.response.to.have.status(409); });",
+                  "var json = pm.response.json();",
+                  "pm.test('Body carries the archival discriminator', function () { pm.expect(json.error).to.equal('SCHEMA_ARCHIVAL_IMMUTABLE'); });",
+                  "pm.test('Body names the schema and the blocked operation', function () {",
+                  "    pm.expect(json.schema).to.equal('publicationProhibition');",
+                  "    pm.expect(json.operation).to.equal('delete');",
+                  "});",
+                  "pm.test('Body explains retention as the reason', function () { pm.expect((json.message || '').toLowerCase()).to.include('retention'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/policy/prohibitions/{id} (still present after the refused delete)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{createdProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{createdProhibitionId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A 409 must mean the record survived. Without this step a controller",
+                  "// that deleted the row AND THEN answered 409 would look identical.",
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('The record is still readable', function () { var json = pm.response.json(); pm.expect(json.primaryName).to.equal('Newman Test Subject'); });"
                 ]
               }
             }
@@ -1187,7 +1327,7 @@
           "name": "no-match: POST /api/consent → WOO default (pending across the board)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "url": { "raw": "{{baseUrl}}/api/consents", "host": ["{{baseUrl}}"], "path": ["api", "consents"] },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
@@ -1200,7 +1340,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured in this env'); return; }",
+                  "// pm.test.skip() guard removed: ci-seed.sh binds consent_register /",
+                  "// consent_schema, so a 400/500 here is a real regression.",
                   "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
                   "pm.test('matchKind is null (no rule fired)', function () { pm.expect(json.matchKind).to.satisfy(function (v) { return v === null || v === undefined; }); });",
@@ -1230,7 +1371,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionProhibitionSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "// The 403/500 guard that stood here called pm.test.skip() and",
+                  "// returned — a skipped test is NON-FAILING, so an unseeded",
+                  "// environment reported green and every outcome assertion below was",
+                  "// skipped too. ci-seed.sh now creates docudesk-policy-admins and puts",
+                  "// the admin user in it, so a 403 here is a real regression.",
                   "pm.collectionVariables.set('detectionProhibitionSeeded', 'true');",
                   "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1242,10 +1387,10 @@
           ]
         },
         {
-          "name": "prohibition: POST /api/consent → prohibition wins (matchKind=prohibition)",
+          "name": "prohibition: POST /api/consent → prohibition rejects the request (403 + rule identity)",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "url": { "raw": "{{baseUrl}}/api/consents", "host": ["{{baseUrl}}"], "path": ["api", "consents"] },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
@@ -1258,22 +1403,76 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
-                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
-                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "// Dead guard removed: the seed step now asserts its own 201 instead of",
+                  "// recording 'false', so this variable can no longer be anything but",
+                  "// 'true' — and a skipped outcome is exactly what hid the failure.",
+                  "// pm.test.skip() guard removed: ci-seed.sh binds consent_register /",
+                  "// consent_schema, so a 400/500 here is a real regression, not an",
+                  "// unconfigured environment.",
+                  "//",
+                  "// CORRECTED ASSERTIONS. This step used to expect 201 plus a persisted",
+                  "// record with matchKind/policyMatch/consentStatus=anonymized/",
+                  "// publicationDecision=anonymize/notificationStatus=skipped. That is not",
+                  "// what this code path does. The consent-management capability states:",
+                  "// 'Requirement: Prohibition match MUST throw PolicyRejectedException ...",
+                  "// No publicationConsent record MUST be created or updated.'",
+                  "// ConsentService::createConsentRequest() implements exactly that, and",
+                  "// tests/unit/Service/ConsentServiceTest.php pins it. So no record is",
+                  "// created, nothing can be read back, and 201 was unreachable.",
+                  "// The assertions below are NOT deleted — they are moved onto the real",
+                  "// contract: the rejection, and the rule identity the exception carries.",
+                  "//",
+                  "// The 500 that this step reported before was a separate, real defect:",
+                  "// PolicyRejectedException is constructed with code 0, so ConsentController",
+                  "// mapped a deliberate business-rule rejection onto an internal server",
+                  "// error and discarded ruleUuid/ruleName. Fixed in the same commit.",
+                  "//",
+                  "// KNOWN SPEC CONFLICT (issue filed, deliberately NOT resolved here):",
+                  "// openspec/specs/entity-publication-policies/spec.md — scenario",
+                  "// 'Prohibition match short-circuits' — instead requires a record with",
+                  "// consentStatus=anonymized. Two canonical specs disagree about this one",
+                  "// path. This collection asserts the SHIPPED, unit-pinned behaviour; it",
+                  "// must be revisited when the product question is answered.",
+                  "pm.test('Status code is 403 (prohibited by policy)', function () { pm.response.to.have.status(403); });",
                   "var json = pm.response.json();",
                   "pm.test('matchKind = prohibition', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
-                  "pm.test('policyMatch = seeded UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionProhibitionId')); });",
-                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
-                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });",
-                  "pm.test('notificationStatus = skipped', function () { pm.expect(json.notificationStatus).to.equal('skipped'); });"
+                  "pm.test('ruleUuid = seeded UUID', function () { pm.expect(json.ruleUuid).to.equal(pm.collectionVariables.get('detectionProhibitionId')); });",
+                  "pm.test('ruleName identifies the matching rule', function () { pm.expect(json.ruleName).to.equal('Newman Detect Prohibition Subject'); });",
+                  "pm.test('An operator-facing error message is present', function () { pm.expect(json.error).to.be.a('string').and.not.empty; });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "prohibition: CLEANUP DELETE seeded prohibition",
+          "name": "prohibition: no publicationConsent record was created",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/consents/document/newman-detect-doc-prohibition", "host": ["{{baseUrl}}"], "path": ["api", "consents", "document", "newman-detect-doc-prohibition"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// The other half of the contract: 'No publicationConsent record MUST be",
+                  "// created or updated' (consent-management). Without this step a",
+                  "// controller that persisted the record AND THEN answered 403 would look",
+                  "// identical to one that rejected cleanly.",
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('No consent record exists for the prohibited document', function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "    pm.expect(json.length).to.equal(0);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "prohibition: TEARDOWN DELETE seeded prohibition (409 — retained by design)",
           "request": {
             "method": "DELETE",
             "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionProhibitionId}}"] }
@@ -1284,8 +1483,27 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionProhibitionSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
-                  "pm.test('Cleanup deleted seeded prohibition', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                  "// Was a pm.test.skip() guard. The seed is asserted now, so there is",
+                  "// always something to clean and a failed teardown must be reported.",
+                  "//",
+                  "// CORRECTED ASSERTION. This step used to expect [200, 204, 404] and",
+                  "// was named CLEANUP. Neither was truthful: publicationProhibition",
+                  "// declares x-openregister-archival, so OpenRegister refuses every",
+                  "// user-driven delete and this fixture CANNOT be cleaned up — it is",
+                  "// retained until ArchivalRetentionTask expires it. The step is kept",
+                  "// (not deleted) because it pins that the refusal is now an honest 409",
+                  "// rather than the 500 it used to leak, and because a future change",
+                  "// that drops the annotation must break here loudly.",
+                  "//",
+                  "// Consequence for suite design: this collection is only safe on a",
+                  "// disposable instance. Every run leaves its prohibition fixtures",
+                  "// behind, which is why the list assertions above compare against a",
+                  "// count captured in the same run instead of an absolute number.",
+                  "pm.test('Seeded prohibition was available to clean up', function () {",
+                  "    pm.expect(pm.collectionVariables.get('detectionProhibitionSeeded')).to.equal('true');",
+                  "});",
+                  "pm.test('Teardown refused with 409 (archival retention)', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Refusal carries the archival discriminator', function () { pm.expect(pm.response.json().error).to.equal('SCHEMA_ARCHIVAL_IMMUTABLE'); });"
                 ]
               }
             }
@@ -1308,7 +1526,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionStandingSeeded', 'false'); pm.test.skip('Seeding requires docudesk-standing-consent-admins group; not configured in env'); return; }",
+                  "// See the prohibition seed above: the pm.test.skip() guard that stood",
+                  "// here made an unseeded 403 non-failing. ci-seed.sh now creates",
+                  "// docudesk-standing-consent-admins and adds the admin user to it.",
                   "pm.collectionVariables.set('detectionStandingSeeded', 'true');",
                   "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1323,7 +1543,7 @@
           "name": "standing-consent: POST /api/consent → consent_given + publish_with_consent",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "url": { "raw": "{{baseUrl}}/api/consents", "host": ["{{baseUrl}}"], "path": ["api", "consents"] },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
@@ -1336,8 +1556,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('Seed step skipped — cannot exercise outcome'); return; }",
-                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
+                  "// Dead guard removed — see the prohibition outcome above.",
+                  "// pm.test.skip() guard removed: ci-seed.sh binds consent_register /",
+                  "// consent_schema, so a 400/500 here is a real regression, not an",
+                  "// unconfigured environment.",
                   "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
                   "pm.test('matchKind = standing_consent', function () { pm.expect(json.matchKind).to.equal('standing_consent'); });",
@@ -1362,7 +1584,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionStandingSeeded') !== 'true') { pm.test.skip('No seed to clean'); return; }",
+                  "pm.test('Seeded standing consent was available to clean up', function () {",
+                  "    pm.expect(pm.collectionVariables.get('detectionStandingSeeded')).to.equal('true');",
+                  "});",
                   "pm.test('Cleanup deleted seeded standing consent', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
                 ]
               }
@@ -1386,7 +1610,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Seeding requires docudesk-policy-admins group; not configured in env'); return; }",
+                  "// pm.test.skip() guard removed — ci-seed.sh now provisions the",
+                  "// docudesk-policy-admins group, so a 403 here is a real regression.",
                   "pm.collectionVariables.set('detectionConflictSeeded', 'partial');",
                   "pm.test('Seed prohibition created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1414,8 +1639,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'partial') { pm.test.skip('Prohibition seed skipped — cannot complete conflict setup'); return; }",
-                  "if (pm.response.code === 403 || pm.response.code === 500) { pm.collectionVariables.set('detectionConflictSeeded', 'false'); pm.test.skip('Standing-consent seeding requires its admin group'); return; }",
+                  "// Both pm.test.skip() guards removed — the prohibition seed above is",
+                  "// now asserted rather than optional, and ci-seed.sh provisions",
+                  "// docudesk-standing-consent-admins.",
                   "pm.collectionVariables.set('detectionConflictSeeded', 'true');",
                   "pm.test('Seed standing-consent created (201)', function () { pm.response.to.have.status(201); });",
                   "var json = pm.response.json();",
@@ -1430,7 +1656,7 @@
           "name": "both-match: POST /api/consent → prohibition wins over standing consent",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/consent", "host": ["{{baseUrl}}"], "path": ["api", "consent"] },
+            "url": { "raw": "{{baseUrl}}/api/consents", "host": ["{{baseUrl}}"], "path": ["api", "consents"] },
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
@@ -1443,21 +1669,30 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (pm.collectionVariables.get('detectionConflictSeeded') !== 'true') { pm.test.skip('Conflict setup incomplete — cannot exercise outcome'); return; }",
-                  "if (pm.response.code === 500 || pm.response.code === 400) { pm.test.skip('Consent register/schema not configured'); return; }",
-                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "// Dead guard removed — both conflict seeds now assert their own status.",
+                  "// pm.test.skip() guard removed: ci-seed.sh binds consent_register /",
+                  "// consent_schema, so a 400/500 here is a real regression, not an",
+                  "// unconfigured environment.",
+                  "//",
+                  "// CORRECTED ASSERTIONS — same reason as the prohibition-only arm above:",
+                  "// a prohibition match rejects the create outright (PolicyRejectedException),",
+                  "// so there is no record to read matchKind/consentStatus/publicationDecision",
+                  "// off. The prohibition-wins property this step exists to prove is still",
+                  "// asserted, and in fact more sharply: the rejection must name the",
+                  "// PROHIBITION rule and not the standing consent that also matched.",
+                  "pm.test('Status code is 403 (prohibited by policy)', function () { pm.response.to.have.status(403); });",
                   "var json = pm.response.json();",
                   "pm.test('matchKind = prohibition (prohibition beats standing consent)', function () { pm.expect(json.matchKind).to.equal('prohibition'); });",
-                  "pm.test('policyMatch = prohibition UUID', function () { pm.expect(json.policyMatch).to.equal(pm.collectionVariables.get('detectionConflictProhibitionId')); });",
-                  "pm.test('consentStatus = anonymized', function () { pm.expect(json.consentStatus).to.equal('anonymized'); });",
-                  "pm.test('publicationDecision = anonymize', function () { pm.expect(json.publicationDecision).to.equal('anonymize'); });"
+                  "pm.test('ruleUuid = prohibition UUID', function () { pm.expect(json.ruleUuid).to.equal(pm.collectionVariables.get('detectionConflictProhibitionId')); });",
+                  "pm.test('ruleUuid is NOT the standing-consent UUID', function () { pm.expect(json.ruleUuid).to.not.equal(pm.collectionVariables.get('detectionConflictStandingId')); });",
+                  "pm.test('ruleName identifies the prohibition rule', function () { pm.expect(json.ruleName).to.equal('Newman Detect Conflict Subject'); });"
                 ]
               }
             }
           ]
         },
         {
-          "name": "both-match: CLEANUP DELETE seeded prohibition",
+          "name": "both-match: TEARDOWN DELETE seeded prohibition (409 — retained by design)",
           "request": {
             "method": "DELETE",
             "url": { "raw": "{{baseUrl}}/api/policy/prohibitions/{{detectionConflictProhibitionId}}", "host": ["{{baseUrl}}"], "path": ["api", "policy", "prohibitions", "{{detectionConflictProhibitionId}}"] }
@@ -1468,8 +1703,14 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.collectionVariables.get('detectionConflictProhibitionId')) { pm.test.skip('No prohibition seed to clean'); return; }",
-                  "pm.test('Cleanup deleted prohibition arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
+                  "// CORRECTED ASSERTION — see the prohibition arm's teardown above.",
+                  "// publicationProhibition is archival-immutable, so [200, 204, 404] was",
+                  "// unreachable. The refusal is asserted instead of being tolerated.",
+                  "pm.test('Conflict prohibition id was captured for teardown', function () {",
+                  "    pm.expect(pm.collectionVariables.get('detectionConflictProhibitionId')).to.be.ok;",
+                  "});",
+                  "pm.test('Teardown refused with 409 (archival retention)', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Refusal carries the archival discriminator', function () { pm.expect(pm.response.json().error).to.equal('SCHEMA_ARCHIVAL_IMMUTABLE'); });"
                 ]
               }
             }
@@ -1487,7 +1728,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.collectionVariables.get('detectionConflictStandingId')) { pm.test.skip('No standing-consent seed to clean'); return; }",
+                  "pm.test('Conflict standing-consent id was captured for cleanup', function () {",
+                  "    pm.expect(pm.collectionVariables.get('detectionConflictStandingId')).to.be.ok;",
+                  "});",
                   "pm.test('Cleanup deleted standing-consent arm', function () { pm.expect([200, 204, 404]).to.include(pm.response.code); });"
                 ]
               }
@@ -1647,8 +1890,17 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 200 or 500', function () { pm.expect([200, 500]).to.include(pm.response.code); });",
-                  "pm.test('Response is JSON', function () { pm.response.to.be.json; });"
+                  "// 500 was accepted here because template_register/template_schema",
+                  "// were never provisioned for this suite, so",
+                  "// OpenRegisterResolver::getRegisterAndSchema() threw",
+                  "// RegisterNotConfiguredException and TemplateRequestHandler mapped it",
+                  "// to 500. `ci-seed.sh api` now binds them, so a 500 is a real",
+                  "// regression and must not be an accepted outcome.",
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "// A status assertion alone passes on Nextcloud's SPA HTML fallback.",
+                  "pm.test('Response is JSON, not the SPA HTML fallback', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+                  "});"
                 ]
               }
             }
@@ -1712,7 +1964,17 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });"
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "// This request is the SPA fallback trap in its purest form: ANY",
+                  "// unknown subpath under /apps/docudesk also answers 200 with the same",
+                  "// HTML shell, so 'status is 200' here was satisfied by a route that",
+                  "// need not exist. Assert that what came back is actually DocuDesk's",
+                  "// own page — the template emits the #docudesk app root that",
+                  "// src/main.js mounts onto.",
+                  "pm.test('Response is the DocuDesk SPA shell, not a generic fallback', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type') || '').to.include('text/html');",
+                  "    pm.expect(pm.response.text()).to.include('docudesk');",
+                  "});"
                 ]
               }
             }

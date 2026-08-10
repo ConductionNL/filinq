@@ -257,11 +257,30 @@ class PolicyCrudService
     /**
      * Delete a prohibition record.
      *
+     * NOTE: this can never succeed while `publicationProhibition` declares
+     * `x-openregister-archival` (see `lib/Settings/docudesk_register.json`).
+     * OpenRegister's `ObjectService::deleteObject()` refuses every user-driven
+     * delete on an archival schema and throws
+     * `OCA\OpenRegister\Exception\ArchivalImmutableException`; rows are removed
+     * only by `OCA\OpenRegister\Cron\ArchivalRetentionTask` once their
+     * retention lapses. `PolicyController::deleteProhibition()` translates that
+     * refusal into HTTP 409 Conflict instead of letting it surface as a 500.
+     *
+     * In practice this method therefore always throws: an
+     * `ArchivalImmutableException` while the annotation is present, or another
+     * `Exception` on an unrelated failure. It is kept (rather than removed)
+     * because the annotation is a policy declaration that may be lifted, and
+     * because the endpoint must keep answering a specific, documented status.
+     *
      * @param string $uuid The record UUID.
      *
      * @return void
      *
-     * @throws Exception On deletion failure.
+     * @throws Exception On deletion failure, including OpenRegister's
+     *                   ArchivalImmutableException (not type-hinted here: the class is
+     *                   absent during static analysis, OpenRegister is a runtime sibling).
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function deleteProhibition(string $uuid): void
     {
@@ -269,7 +288,7 @@ class PolicyCrudService
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
-            id: $uuid,
+            uuid: $uuid,
             register: self::REGISTER,
             schema: self::SCHEMA_PROHIBITION,
             _rbac: false,
@@ -344,11 +363,18 @@ class PolicyCrudService
     /**
      * Delete a standing consent.
      *
+     * Unlike {@see deleteProhibition()} this really can succeed: the
+     * `publicationConsent` schema declares NO `x-openregister-archival` in
+     * `lib/Settings/docudesk_register.json`, so OpenRegister's archival gate
+     * does not apply to it.
+     *
      * @param string $uuid The record UUID.
      *
      * @return void
      *
      * @throws Exception On deletion failure.
+     *
+     * @spec openspec/specs/entity-publication-policies/spec.md
      */
     public function deleteStandingConsent(string $uuid): void
     {
@@ -361,7 +387,7 @@ class PolicyCrudService
 
         $objectService = $this->settingsService->getObjectService();
         $objectService->deleteObject(
-            id: $uuid,
+            uuid: $uuid,
             register: self::REGISTER,
             schema: self::SCHEMA_CONSENT,
             _rbac: false,
