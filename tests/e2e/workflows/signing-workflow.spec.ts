@@ -43,6 +43,7 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 const SIGN_FILE = `${TEST_PREFIX}-sign.txt`
+const DETAIL_FILE = `${TEST_PREFIX}-detail.txt`
 
 test.afterAll(async ({ request }) => {
 	// Purge TEST_FAMILY-prefixed files in the admin Files root.
@@ -208,6 +209,68 @@ test('Create signing request → appears PENDING in the list → sign → status
 		['IN_PROGRESS', 'COMPLETED'].includes(String(afterBody.status).toUpperCase()),
 		'after signing, status must advance past PENDING',
 	).toBe(true)
+
+	// Cleanup.
+	await req.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) }).catch(() => {})
+})
+
+// SigningRequestDetail is the `/signing/:id` page component (registered in
+// src/registry.js, routed from src/manifest.json). Its two neighbours under
+// src/views/signing/ are deliberately unregistered and carry an audited
+// `@visual exclude` in their own files instead; this one is live, so it gets
+// a real browser proof.
+//
+// Their names are deliberately NOT written here. Gate-26 counts a component
+// as covered when any file under tests/e2e/** mentions its file stem, so
+// naming them in a comment would have silently satisfied the gate for two
+// components this suite never drives — a false pass manufactured out of
+// prose. Caught by planting the true positive: with their markers removed
+// the gate still said PASS.
+//
+// Driven against a REAL request rather than an absent id, unlike the
+// ConsentDetail no-record test in page-components.spec.ts: this template has
+// no v-else branch, so an absent id renders the root div EMPTY. Asserting
+// that would prove only that the route resolved, and would keep passing if
+// the store fetch broke entirely.
+test('SigningRequestDetail renders a real request on /signing/:id', async ({ page }) => {
+	const token = await harvestToken(page)
+	const req = page.request
+
+	const file = await createDavFile(req, token, DETAIL_FILE, 'Detail-page fixture.')
+	expect(file.status, 'WebDAV file create').toBeLessThan(300)
+
+	const docName = `${TEST_PREFIX}-detail.pdf`
+	const cr = await req.post(`${API}/signing/requests`, {
+		headers: jsonHeaders(token),
+		data: {
+			documentName: docName,
+			documentFileId: file.fileId,
+			signatureLevel: 'SES',
+			signingMode: 'sequential',
+			signers: [{ userId: 'admin', displayName: 'Admin', email: 'admin@example.com', order: 0 }],
+		},
+	})
+	expect(cr.status(), `create signing request (body: ${await cr.text().catch(() => '')})`).toBeLessThan(300)
+	const created = await cr.json()
+	const id = created.id ?? created.uuid
+	expect(id, 'created request must carry an id').toBeTruthy()
+
+	await go(page, `signing/${id}`)
+
+	// `.signing-request-detail` is written in exactly one template in the app,
+	// and the manifest shell renders no such element — this cannot pass on the
+	// bare shell.
+	const detail = page.locator('.signing-request-detail')
+	await expect(detail, 'the /signing/:id route must resolve to SigningRequestDetail').toBeAttached()
+
+	// The store fetches on mount and the h2 is the document name, so this
+	// asserts the route param actually reached the component.
+	await expect(
+		detail.getByRole('heading', { name: docName }),
+		'the detail page must render the request it was routed to',
+	).toBeVisible({ timeout: 15_000 })
+	await expect(detail).toContainText('Status')
+	await expect(detail).toContainText('Audit Trail')
 
 	// Cleanup.
 	await req.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) }).catch(() => {})

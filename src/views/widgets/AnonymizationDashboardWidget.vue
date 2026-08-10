@@ -128,44 +128,20 @@ import { anonymizationStore } from '../../store/store.js'
 			{{ t('docudesk', 'Open DocuDesk') }}
 		</a>
 
-		<!-- Dossier name dialog (multi-file upload) -->
-		<NcDialog
+		<!-- Dossier name dialog (multi-file upload) — src/dialogs/ per ADR-004 -->
+		<DossierNameDialog
 			v-if="showDossierDialog"
-			:name="t('docudesk', 'Create dossier')"
-			:can-close="!dossierSubmitting"
-			size="normal"
-			@closing="cancelDossier">
-			<div class="dossier-dialog">
-				<NcTextField
-					ref="dossierInput"
-					v-model="dossierName"
-					:label="t('docudesk', 'Dossier name')"
-					:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-					:disabled="dossierSubmitting"
-					:error="!!dossierError"
-					:helper-text="dossierError"
-					@keyup.enter="confirmDossier" />
-				<NcNoteCard type="info">
-					{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
-				</NcNoteCard>
-			</div>
-			<template #actions>
-				<NcButton variant="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton variant="primary" :disabled="dossierSubmitting" @click="confirmDossier">
-					<template v-if="dossierSubmitting" #icon>
-						<NcLoadingIcon :size="18" />
-					</template>
-					{{ t('docudesk', 'Continue to anonymization') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			v-model="dossierName"
+			:submitting="dossierSubmitting"
+			:error="dossierError"
+			@confirm="confirmDossier"
+			@cancel="cancelDossier" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
+import DossierNameDialog from '../../dialogs/DossierNameDialog.vue'
 import { generateUrl, generateRemoteUrl } from '@nextcloud/router'
 import { showError } from '@nextcloud/dialogs'
 import uploadIcon from '../../assets/upload.png'
@@ -194,11 +170,8 @@ function partitionFiles(files) {
 export default {
 	name: 'AnonymizationDashboardWidget',
 	components: {
-		NcButton,
-		NcDialog,
+		DossierNameDialog,
 		NcLoadingIcon,
-		NcNoteCard,
-		NcTextField,
 	},
 	props: {
 		title: {
@@ -297,14 +270,20 @@ export default {
 				this.$router.push({ name: 'MyDocuments' }).catch(() => {})
 			}
 		},
+		/**
+		 * Open the dossier-name dialog for a multi-file drop.
+		 *
+		 * @param {File[]} files Files pending upload.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widgets-req-dash-02
+		 */
 		openDossierDialog(files) {
 			this.pendingFiles = files
 			this.dossierName = ''
 			this.dossierError = ''
+			// DossierNameDialog focuses its own name field when it mounts,
+			// which is this same tick — the parent no longer reaches across
+			// the boundary for it.
 			this.showDossierDialog = true
-			this.$nextTick(() => {
-				this.$refs.dossierInput?.focus?.()
-			})
 		},
 		async confirmDossier() {
 			const name = this.dossierName.trim()
@@ -582,17 +561,6 @@ export default {
 }
 
 /* Dossier dialog */
-.dossier-dialog {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	padding: 20px;
-}
-
-.dossier-dialog :deep(.notecard) {
-	margin: 0;
-}
-
 /* WCAG 2.2 SC 2.3.3 — users who ask the OS for reduced motion get the state
    change without the tween. */
 @media (prefers-reduced-motion: reduce) {

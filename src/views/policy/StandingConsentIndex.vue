@@ -140,7 +140,7 @@ import { CnIndexPage, CnStatsBlock, CnStatusBadge } from '@conduction/nextcloud-
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
-import StandingConsentFormModal from './StandingConsentFormModal.vue'
+import StandingConsentFormModal from '../../dialogs/StandingConsentFormModal.vue'
 import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
 
 export default {
