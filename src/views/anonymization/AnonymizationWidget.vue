@@ -60,68 +60,25 @@ import { anonymizationStore, fileViewerStore, myDocumentsStore } from '../../sto
 			</div>
 		</section>
 
-		<!-- Upload dialog (single document or dossier) -->
-		<NcDialog
+		<!-- Upload dialog (single document or dossier) — src/dialogs/ per ADR-004 -->
+		<AnonymizationUploadDialog
 			v-if="showDossierDialog"
-			:name="dialogName"
-			:can-close="!dossierSubmitting"
-			size="normal"
-			@closing="cancelDossier">
-			<div class="dossier-dialog">
-				<!-- Single file: read-only filename, no dossier name -->
-				<div v-if="isSingleFile" class="single-file">
-					<span class="single-file__label">{{ t('docudesk', 'Document') }}</span>
-					<span class="single-file__name">{{ singleFileName }}</span>
-					<NcNoteCard v-if="dossierError" type="error">
-						{{ dossierError }}
-					</NcNoteCard>
-				</div>
-				<!-- Multiple files: dossier name input -->
-				<template v-else>
-					<NcTextField
-						ref="dossierInput"
-						v-model="dossierName"
-						:label="t('docudesk', 'Dossier name')"
-						:placeholder="t('docudesk', 'e.g. Buurtinitiatieven 2026')"
-						:disabled="dossierSubmitting"
-						:error="!!dossierError"
-						:helper-text="dossierError"
-						@keyup.enter="confirmDossier" />
-					<NcNoteCard type="info">
-						{{ t('docudesk', 'You uploaded multiple documents. Enter a title to automatically create a dossier from them. No title? Then they will stay as separate documents.') }}
-					</NcNoteCard>
-				</template>
-
-				<!-- Grondslagen toggle: drives whether entities are editable in the viewer -->
-				<NcCheckboxRadioSwitch
-					v-model="grondslagen"
-					type="switch"
-					:disabled="dossierSubmitting">
-					{{ t('docudesk', 'Establish legal grounds (grondslagen)') }}
-				</NcCheckboxRadioSwitch>
-				<NcNoteCard type="info">
-					{{ t('docudesk', 'When enabled, you can review and adjust the legal grounds for each detected entity before anonymizing. When disabled, default grounds are applied and you can anonymize right away.') }}
-				</NcNoteCard>
-			</div>
-			<template #actions>
-				<NcButton variant="tertiary" :disabled="dossierSubmitting" @click="cancelDossier">
-					{{ t('docudesk', 'Cancel') }}
-				</NcButton>
-				<NcButton variant="primary" :disabled="dossierSubmitting" @click="confirmDossier">
-					<template v-if="dossierSubmitting" #icon>
-						<NcLoadingIcon :size="18" />
-					</template>
-					{{ t('docudesk', 'Continue to anonymization') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			v-model:dossier-name="dossierName"
+			v-model:grondslagen="grondslagen"
+			:single-file="isSingleFile"
+			:file-name="singleFileName"
+			:submitting="dossierSubmitting"
+			:error="dossierError"
+			@confirm="confirmDossier"
+			@cancel="cancelDossier" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { getCurrentUser } from '@nextcloud/auth'
 import { showError } from '@nextcloud/dialogs'
+import AnonymizationUploadDialog from '../../dialogs/AnonymizationUploadDialog.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
 import uploadIcon from '../../assets/upload.png'
 import { partitionFiles } from '../../services/anonymizationUpload.js'
@@ -133,12 +90,8 @@ import { partitionFiles } from '../../services/anonymizationUpload.js'
 export default {
 	name: 'AnonymizationWidget',
 	components: {
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcDialog,
+		AnonymizationUploadDialog,
 		NcLoadingIcon,
-		NcNoteCard,
-		NcTextField,
 		DdDocumentCard,
 	},
 	data() {
@@ -197,16 +150,6 @@ export default {
 		 */
 		singleFileName() {
 			return this.pendingFiles[0]?.name || ''
-		},
-		/**
-		 * Title of the upload modal: single-file vs dossier wording.
-		 *
-		 * @return {string} Localised dialog title.
-		 */
-		dialogName() {
-			return this.isSingleFile
-				? t('docudesk', 'Anonymize document')
-				: t('docudesk', 'Create dossier')
 		},
 	},
 	mounted() {
@@ -343,8 +286,9 @@ export default {
 		},
 		/**
 		 * Open the upload dialog with a fresh state: empty dossier name,
-		 * grondslagen defaulting to AAN. Focuses the dossier-name input on
-		 * next tick when present (multi-file only).
+		 * grondslagen defaulting to AAN. AnonymizationUploadDialog focuses
+		 * its own name field when it mounts (multi-file only), so the parent
+		 * no longer reaches across the boundary for it.
 		 *
 		 * @param {File[]} files Files pending upload.
 		 */
@@ -354,9 +298,6 @@ export default {
 			this.dossierError = ''
 			this.grondslagen = true
 			this.showDossierDialog = true
-			this.$nextTick(() => {
-				this.$refs.dossierInput?.focus?.()
-			})
 		},
 		/**
 		 * Confirm handler for the dossier dialog. With a title the files are
@@ -535,34 +476,6 @@ export default {
 
 .file-input {
 	display: none;
-}
-
-.dossier-dialog {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	padding: 20px;
-}
-
-.dossier-dialog :deep(.notecard) {
-	margin: 0;
-}
-
-.single-file {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-.single-file__label {
-	font-size: 0.85rem;
-	color: var(--color-text-maxcontrast);
-}
-
-.single-file__name {
-	font-weight: 600;
-	color: var(--color-main-text);
-	word-break: break-word;
 }
 
 .recent-section {

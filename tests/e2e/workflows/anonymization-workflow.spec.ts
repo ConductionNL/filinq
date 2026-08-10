@@ -33,7 +33,7 @@
  * a `test.fixme` so it starts passing once the backend is provisioned and
  * the uncaught-\Error 500 is fixed.
  *
- * @spec openspec/specs/anonymization/spec.md#analyze-a-folder-for-entities
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-folder-batch-initiation-from-existing-nextcloud-folder
  */
 
 import { test, expect } from '@playwright/test'
