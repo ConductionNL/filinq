@@ -5,9 +5,13 @@ layer is twelve times the schema layer here, which is the reverse of most apps.
 
 ## 1. Measure and classify
 
-- [ ] 1.1 Count stored `dossier` objects, excluding soft-deleted rows and reading the
-      per-schema shard table rather than the shared objects table. The count decides
-      whether task 4 exists.
+- [ ] 1.1 Count stored `dossier` objects. Resolve the numeric register and schema ids
+      through `oc_openregister_schemas`, then read the
+      `oc_openregister_table_<reg>_<schema>` shards — matching shard table names against
+      the schema title matches nothing and reports zero for every app, and the shared
+      objects table is empty. Exclude `_deleted`, sum across every register the schema is
+      in, and prove the query can return non-zero before recording a zero. The count
+      decides whether task 4 exists.
 - [ ] 1.2 Determine whether `GrondslagenSummaryService` emits Woo article identifiers as
       data. If it does, those values are preserved and only the identifiers are renamed.
 
@@ -38,6 +42,8 @@ layer is twelve times the schema layer here, which is the reverse of most apps.
 
 - [ ] 4.1 If task 1.1 counted more than zero objects, migrate them to the new schema
       name. If zero, record the measurement — an evidenced skip, not an assumed one.
+      ⚠️ The openbuild pilot was assumed greenfield and held 12 live objects across two
+      registers; only a positive control on the counting query exposed it.
 
 ## 5. Hold the cross-app key
 
