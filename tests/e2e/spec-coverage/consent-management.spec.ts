@@ -14,12 +14,13 @@
 // @e2e openspec/specs/consent-management/spec.md#empty-consent-list
 
 import { test, expect, type Page } from '@playwright/test'
-import { waitForAppReady } from './_helpers'
+import { appUrl, waitForAppReady } from './_helpers'
 
 // `index.php`-prefixed — see the APP constant in ./_helpers.ts for why the
 // prefix is required on CI (`php -S` does not rewrite, so `/apps/...` hits
 // PHP's own 404 page instead of Nextcloud).
-const APP = '/index.php/apps/docudesk'
+// (The local `const APP` that used to sit here is gone — navigation goes
+// through `appUrl()`, which reads the base from the running app.)
 
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
@@ -30,7 +31,13 @@ async function dismissOverlays(page: Page): Promise<void> {
 }
 
 async function go(page: Page, route: string): Promise<void> {
-	const url = `${APP}/${route}`
+	// `appUrl`, not a hardcoded `/index.php/...`. The router base is
+	// `generateUrl('/apps/docudesk')`, which carries the `index.php` segment
+	// only when `OC.config.modRewriteWorking` is false (CI's `php -S`) — on a
+	// rewriting Apache the hardcoded form silently falls back to the app root,
+	// so `toHaveURL(/\/apps\/docudesk/)` below would pass on the DASHBOARD.
+	// See `resolveAppBase` in ./_helpers. No-op on CI.
+	const url = await appUrl(page, route)
 	// `domcontentloaded`, not the default `load` — NC's long-lived polling
 	// connections can delay `load` past any sane timeout. See _helpers.ts.
 	await page.goto(url, { waitUntil: 'domcontentloaded' })

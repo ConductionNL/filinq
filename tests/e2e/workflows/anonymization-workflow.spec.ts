@@ -37,7 +37,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { APP, dismissOverlays, waitForAppReady } from '../spec-coverage/_helpers'
+import { APP, appUrl, dismissOverlays, waitForAppReady } from '../spec-coverage/_helpers'
 import {
 	harvestToken, jsonHeaders, API, TEST_PREFIX, TEST_FAMILY,
 	createDavFolder, createDavFile,
@@ -82,7 +82,16 @@ async function goRoute(page, route: string): Promise<void> {
 	await page.goto(APP, { waitUntil: 'domcontentloaded' })
 	await waitForAppReady(page)
 	await dismissOverlays(page)
-	await page.goto(`${APP}/${route}`, { waitUntil: 'domcontentloaded' })
+	// `appUrl`, not `${APP}/${route}`. The SPA router's base is
+	// `generateUrl('/apps/docudesk')`, which includes the `index.php` segment
+	// only when `OC.config.modRewriteWorking` is false — true on CI's `php -S`,
+	// FALSE on any Apache with mod_rewrite. On a rewriting server the hardcoded
+	// form addressed a path the router does not recognise, so it fell back to
+	// the app root: this file's first test failed with
+	// `getByRole('heading', { name: /Folder Analysis/ })` not found while
+	// sitting on the dashboard, and took the four tests after it with it
+	// ("3 did not run"). See `resolveAppBase` in ../spec-coverage/_helpers.
+	await page.goto(await appUrl(page, route), { waitUntil: 'domcontentloaded' })
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(1200)

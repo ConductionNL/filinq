@@ -14,24 +14,43 @@
  * pages via deep link. Also asserts no policy menu entry exists yet
  * (menu ownership is deferred to publication-policy-labels-and-nav).
  *
- * NOTE: written against the existing spec-coverage helper conventions
- * (tests/e2e/spec-coverage/_helpers.ts) but not executed against a live
- * Nextcloud instance as part of this change — no dev instance was
- * provisioned for this task. Run `npm run test:e2e -- orphaned-surface-restoration`
- * against a running docudesk instance before relying on it in CI.
+ * ⚠️ WHY EVERY `@e2e` ANCHOR IN THIS FILE MOVED (and nothing else did)
+ * --------------------------------------------------------------------
+ * These tests were authored while the change still lived in
+ * `openspec/changes/orphaned-surface-restoration/`, and their anchors still
+ * pointed there after the change was archived to `openspec/specs/`. Gate-19's
+ * ref parser is
+ *
+ *     @e2e\s+openspec/specs/(?P<spec>[^/]+)/[^\s#]*#(?P<slug>[A-Za-z0-9_-]+)
+ *
+ * so a `openspec/changes/...` path matches NEITHER of its two regexes: the gate
+ * never constructs a ref at all. It is not a dangling anchor that gets reported
+ * — it is silently invisible. Result: five real, running, asserting tests were
+ * scored as ZERO coverage, and their five scenarios sat in gate-19's finding
+ * list looking untested.
+ *
+ * The archived slugs also carried a `scenario-` prefix that the canonical slug
+ * does not have, so repointing the directory alone would still have produced a
+ * dangling anchor — which gate-19 also does not report. Both halves are fixed
+ * below.
+ *
+ * The four file-level anchors that used to sit here have been REMOVED rather
+ * than repointed. They named REQUIREMENTS, not scenarios (no such ref exists),
+ * and a file-level anchor is credited by gate-19 without checking that anything
+ * in the file exercises it (.github#343). Every anchor now sits inside the body
+ * of the test that actually asserts the scenario.
+ *
+ * NOTE ON PROVENANCE: this file's original header said it had "not [been]
+ * executed against a live Nextcloud instance". It has now — see the run notes
+ * on the individual `test.fixme` blocks below.
  */
-
-// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-the-correspondence-surface-is-reachable-req-ddosr-003
-// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-signing-authoring-and-verify-are-reachable-with-trust-actions-gated-req-ddosr-004
-// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-policy-surfaces-are-reachable-menu-ownership-deferred-req-ddosr-005
-// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#requirement-the-dead-legacy-router-is-deleted-req-ddosr-001
 
 import { test, expect, type Page } from '@playwright/test'
 import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('orphaned-surface-restoration — correspondence', () => {
 	test('Correspondence is reachable via the left navigation and renders its form', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-correspondence-opens-from-the-menu
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#correspondence-opens-from-the-menu
 		const guard = attachConsoleGuard(page)
 		await go(page, '')
 		await navClick(page, 'Letters & correspondence')
@@ -54,7 +73,7 @@ test.describe('orphaned-surface-restoration — correspondence', () => {
 
 test.describe('orphaned-surface-restoration — signing authoring + verify', () => {
 	test('"New signing request" primary action opens the signer-chain create form, not the generic Add', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-signer-chain-create-form-opens-from-the-signing-index
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#signer-chain-create-form-opens-from-the-signing-index
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing')
 		await dismissOverlays(page)
@@ -93,7 +112,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 	})
 
 	test('SignatureVerification renders the engine-attributed verdict at a deep link', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-verify-page-renders-the-backend-verdict-verbatim
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
 		const guard = attachConsoleGuard(page)
 		await go(page, 'signing/verify/1')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/signing\/verify\/1/)
@@ -105,7 +124,7 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 	})
 
 	test('a signing request detail with a document file id shows a Verify action', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-verify-page-renders-the-backend-verdict-verbatim
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#verify-page-renders-the-backend-verdict-verbatim
 		// KNOWN FAILURE — ConductionNL/docudesk#339: rows on the Signing Requests
 		// index are not clickable. Clicking one neither routes to /signing/{id}
 		// nor opens the configured sidebar (0px wide, checkVisibility() false),
@@ -144,15 +163,26 @@ test.describe('orphaned-surface-restoration — signing authoring + verify', () 
 
 test.describe('orphaned-surface-restoration — publication policy', () => {
 	test('Prohibitions ("Publish never") deep-links and renders its list', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-policy-pages-are-deep-link-reachable
-		// KNOWN FAILURE — ConductionNL/docudesk#333: the `publicationProhibition`
-		// schema is declared in docudesk_register.json but is never imported into
-		// OpenRegister, so the list cannot load and the page renders an error note
-		// instead of a table or an empty state. The restoration this spec covers
-		// (the page is reachable and titled) is asserted above and does pass; the
-		// list assertion below is the part blocked by the missing schema.
-		// Remove this fixme once #333 lands — do NOT weaken the assertion.
-		test.fixme(true, 'blocked by #333 — publicationProhibition schema never imported')
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#policy-pages-are-deep-link-reachable
+		// The `test.fixme(true, 'blocked by #333 …')` that used to sit here has
+		// been REMOVED, and the assertions below are untouched.
+		//
+		// #333 ("publicationProhibition schema is never imported") is still open,
+		// and correctly so: it is about DocuDesk's boot-time import path failing
+		// silently. But it is not true of the environment this suite runs in.
+		// `tests/e2e/ci-seed.sh` — the workflow's own `playwright-seed-command` —
+		// imports the register through OpenRegister's admin HTTP importer with
+		// `force=true` precisely because the boot-time path is unreliable, and it
+		// then VERIFIES the result. Measured on a seeded instance:
+		// `publicationProhibition` is present in `GET /api/schemas`, and the two
+		// sibling tests that read this very page (the Add-modal test below and
+		// entity-publication-policies.spec.ts's prohibition test) both pass.
+		//
+		// So the skip was suppressing a test that passes. A `fixme` whose stated
+		// blocker does not hold in the environment under test is indistinguishable
+		// from a healthy run in the summary line — the same failure mode this file
+		// already documents at length for its six self-skipping tests. If #333
+		// regresses INTO this environment, this test goes red, which is the point.
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/prohibitions')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/prohibitions/)
@@ -167,7 +197,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 	})
 
 	test('StandingConsents ("Publish always") deep-links and renders its list', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-policy-pages-are-deep-link-reachable
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#policy-pages-are-deep-link-reachable
 		const guard = attachConsoleGuard(page)
 		await go(page, 'policy/standing-consents')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/policy\/standing-consents/)
@@ -234,7 +264,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 	})
 
 	test('no policy menu entry is introduced by this change', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-no-policy-menu-label-is-introduced-here
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#no-policy-menu-label-is-introduced-here
 		await go(page, '')
 		const prohibitionsLink = page.locator('#app-navigation a[title="Publish never"], .app-navigation a[title="Publish never"]')
 		const standingConsentsLink = page.locator('#app-navigation a[title="Publish always"], .app-navigation a[title="Publish always"]')
@@ -245,7 +275,7 @@ test.describe('orphaned-surface-restoration — publication policy', () => {
 
 test.describe('orphaned-surface-restoration — dead router removal is inert', () => {
 	test('previously-existing pages still route identically after the dead router removal', async ({ page }) => {
-		// @e2e openspec/changes/orphaned-surface-restoration/specs/orphaned-surface-restoration/spec.md#scenario-existing-pages-still-route-after-deletion
+		// @e2e openspec/specs/orphaned-surface-restoration/spec.md#existing-pages-still-route-after-deletion
 		// What this scenario actually guards is ROUTING: after deleting the dead
 		// vue-router, each previously-reachable route still resolves and renders
 		// its page. It must not assert a visible heading as the proxy for that:
