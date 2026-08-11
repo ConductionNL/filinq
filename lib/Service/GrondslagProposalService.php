@@ -14,7 +14,7 @@
  *     (`docudesk.grondslagen.entity_type_bases`), value
  *     `{ "<TYPE>": ["<base-slug>", ...] }`.
  *   - Bases are stored as plain slug strings, matching the existing
- *     `EntityRelation.bases` shape and `GrondslagenSummaryService` resolver.
+ *     `EntityRelation.bases` shape and `LegalBasesSummaryService` resolver.
  *   - Selectable entity types come from a curated in-DocuDesk list (v1).
  *     Sourcing them live from the anonymiser backend is deferred until that
  *     backend exposes a supported-types endpoint; {@see getSelectableEntityTypes}

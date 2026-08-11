@@ -21,7 +21,7 @@ namespace OCA\DocuDesk\Tests\Unit\Controller;
 
 use Exception;
 use OCA\DocuDesk\Controller\DossierController;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCP\Files\File;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -60,9 +60,9 @@ class DossierControllerTest extends TestCase
     private LoggerInterface|MockObject $mockLogger;
 
     /**
-     * @var GrondslagenSummaryService|MockObject
+     * @var LegalBasesSummaryService|MockObject
      */
-    private GrondslagenSummaryService|MockObject $mockSummaryService;
+    private LegalBasesSummaryService|MockObject $mockSummaryService;
 
     /**
      * @var IL10N|MockObject
@@ -90,7 +90,7 @@ class DossierControllerTest extends TestCase
 
         $this->mockRequest        = $this->createMock(IRequest::class);
         $this->mockLogger         = $this->createMock(LoggerInterface::class);
-        $this->mockSummaryService = $this->createMock(GrondslagenSummaryService::class);
+        $this->mockSummaryService = $this->createMock(LegalBasesSummaryService::class);
         $this->mockL10n           = $this->createMock(IL10N::class);
         $this->mockUserSession    = $this->createMock(IUserSession::class);
 

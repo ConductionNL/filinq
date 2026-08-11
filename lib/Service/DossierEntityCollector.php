@@ -8,7 +8,7 @@
  * `(entity_type, entity_id)`, carrying its scope-local placeholder, occurrence
  * count and the union of its grondslagen.
  *
- * Extracted from {@see GrondslagenSummaryService}. The privacy rule lives here:
+ * Extracted from {@see LegalBasesSummaryService}. The privacy rule lives here:
  * an entity for which no SCOPE-LOCAL placeholder can be established is OMITTED
  * rather than rendered with its global id, because a global id is a relatable
  * cross-disclosure handle.
@@ -173,7 +173,7 @@ class DossierEntityCollector
         $mapper = $this->repository->entityRelationMapper();
         if ($mapper === null) {
             $this->logger->warning(
-                'GrondslagenSummaryService: EntityRelationMapper unavailable; producing empty entity set',
+                'LegalBasesSummaryService: EntityRelationMapper unavailable; producing empty entity set',
                 ['fileId' => $fileId]
             );
             return [];
@@ -183,7 +183,7 @@ class DossierEntityCollector
             $rawRows = $mapper->findAnonymisedEntitiesWithBasesForFile($fileId);
         } catch (Exception $e) {
             $this->logger->error(
-                'GrondslagenSummaryService: findAnonymisedEntitiesWithBasesForFile failed',
+                'LegalBasesSummaryService: findAnonymisedEntitiesWithBasesForFile failed',
                 ['fileId' => $fileId, 'error' => $e->getMessage()]
             );
             return [];
@@ -280,7 +280,7 @@ class DossierEntityCollector
             // PII-free: count only. Surfaces stale relations with no recoverable
             // scope-local placeholder, deliberately left out of the summary.
             $this->logger->info(
-                'GrondslagenSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
+                'LegalBasesSummaryService: omitted entities with no scope-local placeholder (no global-id fallback)',
                 ['fileId' => $fileId, 'omitted' => $omitted]
             );
         }
