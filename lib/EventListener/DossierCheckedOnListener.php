@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\EventListener;
 
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -71,7 +71,7 @@ class DossierCheckedOnListener implements IEventListener
      * Constructor for DossierCheckedOnListener.
      *
      * @param LoggerInterface           $logger         Logger for diagnostics
-     * @param GrondslagenSummaryService $summaryService Dossier grondslagen summary renderer
+     * @param LegalBasesSummaryService $summaryService Dossier grondslagen summary renderer
      *
      * @return void
      *
@@ -79,7 +79,7 @@ class DossierCheckedOnListener implements IEventListener
      */
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly GrondslagenSummaryService $summaryService,
+        private readonly LegalBasesSummaryService $summaryService,
     ) {
 
     }//end __construct()
@@ -168,7 +168,7 @@ class DossierCheckedOnListener implements IEventListener
             // Log but do NOT rethrow — the dossier update must succeed.
             $this->logError(
                 exception: $e,
-                context: 'GrondslagenSummaryService::renderDossierSummary (auto-regen)',
+                context: 'LegalBasesSummaryService::renderDossierSummary (auto-regen)',
                 extra: ['dossierId' => $dossierId]
             );
         }//end try

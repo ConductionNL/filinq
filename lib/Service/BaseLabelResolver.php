@@ -6,7 +6,7 @@
  * Resolves Woo Art. 5 `base` (grondslag) references — slugs or UUIDs — to the
  * human-readable name plus toelichting the grondslagen report renders.
  *
- * Extracted from {@see GrondslagenSummaryService}: the lookup, the
+ * Extracted from {@see LegalBasesSummaryService}: the lookup, the
  * ObjectService result normalisation and the "unresolved reference" fallback
  * are one concern, and the renderer no longer needs to know any of it.
  *
@@ -207,7 +207,7 @@ class BaseLabelResolver
             }
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: failed to load `base` objects for label resolution',
+                'LegalBasesSummaryService: failed to load `base` objects for label resolution',
                 ['error' => $e->getMessage()]
             );
         }//end try

@@ -8,7 +8,7 @@
  * a live anonymise run shows the SAME scope-local number the documents carry
  * (e.g. `[DATUM: 6]`) rather than the global entity id.
  *
- * Extracted from {@see GrondslagenSummaryService}. It is also the single seam
+ * Extracted from {@see LegalBasesSummaryService}. It is also the single seam
  * through which DocuDesk reaches OpenRegister's ranking helper: that helper is
  * a static API on an OPTIONAL app, so — like every other OR reference in this
  * codebase — it is named by string and probed with `class_exists()` before
@@ -117,7 +117,7 @@ class DossierPlaceholderRanker
             $rows = $mapper->findEntityIdsByValueForFiles(fileIds: $fileIds);
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: dossier placeholder recompute failed; falling back to global ids',
+                'LegalBasesSummaryService: dossier placeholder recompute failed; falling back to global ids',
                 ['error' => $e->getMessage()]
             );
             return $empty;
@@ -189,7 +189,7 @@ class DossierPlaceholderRanker
             }
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: dossier file enumeration failed',
+                'LegalBasesSummaryService: dossier file enumeration failed',
                 ['error' => $e->getMessage()]
             );
         }//end try

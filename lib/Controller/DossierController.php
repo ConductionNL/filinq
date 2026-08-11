@@ -6,7 +6,7 @@
  * single endpoint — `POST /api/anonymization/dossier/{dossierId}/grondslagen-pdf`
  * — which (re)generates the per-dossier grondslagen summary PDF aggregating
  * every redacted entity under the dossier's folder. See
- * `GrondslagenSummaryService::renderDossierSummary` for the render itself.
+ * `LegalBasesSummaryService::renderDossierSummary` for the render itself.
  *
  * Authentication is required (the route is `@NoAdminRequired` but
  * non-anonymous). Authorisation: the caller MUST be able to read the
@@ -33,7 +33,7 @@ declare(strict_types=1);
 namespace OCA\DocuDesk\Controller;
 
 use Exception;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -59,7 +59,7 @@ class DossierController extends Controller
      * @param string                    $appName            The application name.
      * @param IRequest                  $request            The current HTTP request.
      * @param LoggerInterface           $logger             Logger for error reporting.
-     * @param GrondslagenSummaryService $grondslagenSummary Per-dossier renderer.
+     * @param LegalBasesSummaryService $grondslagenSummary Per-dossier renderer.
      * @param IL10N                     $l10n               Localisation service.
      * @param IUserSession              $userSession        User session for auth check.
      */
@@ -67,7 +67,7 @@ class DossierController extends Controller
         string $appName,
         IRequest $request,
         private readonly LoggerInterface $logger,
-        private readonly GrondslagenSummaryService $grondslagenSummary,
+        private readonly LegalBasesSummaryService $grondslagenSummary,
         private readonly IL10N $l10n,
         private readonly IUserSession $userSession
     ) {

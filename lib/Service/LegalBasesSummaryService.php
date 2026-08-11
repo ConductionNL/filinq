@@ -1,6 +1,6 @@
 <?php
 /**
- * Grondslagen Summary Service
+ * Legal Bases Summary Service
  *
  * Renders per-document and per-dossier grondslagen summary PDFs. Reads
  * EntityRelation.bases (OpenRegister, Wave 1.3 — entity-relation-grondslagen)
@@ -62,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class GrondslagenSummaryService
+class LegalBasesSummaryService
 {
 
     /**
@@ -191,7 +191,7 @@ class GrondslagenSummaryService
         $this->pdfWriter->appendToPdf(anonymisedFile: $anonymisedFile, summaryBytes: $summaryBytes);
 
         $this->logger->info(
-            'GrondslagenSummaryService: appended summary to anonymised PDF',
+            'LegalBasesSummaryService: appended summary to anonymised PDF',
             [
                 'fileId'       => $anonymisedFile->getId(),
                 'sourceFileId' => $sourceFileId,
@@ -234,9 +234,9 @@ class GrondslagenSummaryService
             summaryBytes: $summaryBytes
         );
 
-        $message = 'GrondslagenSummaryService: wrote beside-file summary';
+        $message = 'LegalBasesSummaryService: wrote beside-file summary';
         if ($written['refreshed'] === true) {
-            $message = 'GrondslagenSummaryService: refreshed beside-file summary';
+            $message = 'LegalBasesSummaryService: refreshed beside-file summary';
         }
 
         $this->logger->info(
@@ -343,7 +343,7 @@ class GrondslagenSummaryService
         );
 
         $this->logger->info(
-            'GrondslagenSummaryService: rendered per-dossier summary',
+            'LegalBasesSummaryService: rendered per-dossier summary',
             [
                 'dossierUuid'   => $dossierUuid,
                 'summaryFileId' => $summaryFile->getId(),

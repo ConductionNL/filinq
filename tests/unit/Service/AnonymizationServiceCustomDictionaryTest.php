@@ -31,7 +31,7 @@ use OCA\DocuDesk\Service\CustomDictionaryMatchService;
 use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\GrondslagProposalService;
 use OCA\OpenRegister\Db\Chunk;
 use OCA\OpenRegister\Db\ChunkMapper;

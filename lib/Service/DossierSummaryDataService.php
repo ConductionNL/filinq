@@ -7,7 +7,7 @@
  * *know* — the dossier's context and folder, the placeholder ranking, the
  * anonymised entity rows, and the resolved grondslag labels — behind one seam.
  *
- * Extracted from {@see GrondslagenSummaryService} together with the four
+ * Extracted from {@see LegalBasesSummaryService} together with the four
  * collaborators it composes ({@see DossierObjectRepository},
  * {@see BaseLabelResolver}, {@see DossierPlaceholderRanker},
  * {@see DossierEntityCollector}), leaving the summary service to do only what

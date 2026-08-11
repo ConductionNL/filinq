@@ -42,7 +42,7 @@ use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
 use OCA\DocuDesk\Service\GrondslagenSummaryAttacher;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
 use OCA\DocuDesk\Service\PdfConversionService;
 use OCA\DocuDesk\Service\ProhibitionGateService;
@@ -131,7 +131,7 @@ trait BuildsAnonymizationService
             ),
             summaryAttacher: new GrondslagenSummaryAttacher(
                 logger: $logger,
-                grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(GrondslagenSummaryService::class))
+                grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
             )
         );
 

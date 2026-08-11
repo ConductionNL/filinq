@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\DocuDesk\EventListener;
 
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\MetadataService;
 use OCA\DocuDesk\Service\PolicyRetroactiveService;
 use OCA\DocuDesk\Service\SettingsService;
@@ -223,7 +223,7 @@ class DocuDeskEventHandler
         }
 
         try {
-            $service = \OC::$server->get(GrondslagenSummaryService::class);
+            $service = \OC::$server->get(LegalBasesSummaryService::class);
             $service->renderDossierSummary(dossierUuid: $dossierUuid);
         } catch (\Throwable $e) {
             $logger->warning(
