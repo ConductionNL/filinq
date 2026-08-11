@@ -99,6 +99,8 @@ class DossierPlaceholderRanker
      * @return array{ranks: array<array-key, int>, types: array<string, string>} Ranks per entity
      *                                                                           id, and each id's
      *                                                                           entity TYPE.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-dossier-summary-must-aggregate-per-document-and-per-grondslag
      */
     public function rank(Folder $folder): array
     {
@@ -165,6 +167,8 @@ class DossierPlaceholderRanker
      * @param Folder $folder The dossier folder.
      *
      * @return array<int, int> Distinct descendant source file ids.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-dossier-summary-must-aggregate-per-document-and-per-grondslag
      */
     public function collectFileIds(Folder $folder): array
     {

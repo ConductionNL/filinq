@@ -179,6 +179,8 @@ class LegalBasesSummaryService
      * @return File The same anonymised file, with the summary page appended.
      *
      * @throws \RuntimeException When template rendering, PDF merging, or file write fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-document-anonymise-endpoint-must-accept-an-optional-appendbasissummary-field
      */
     public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
@@ -218,6 +220,8 @@ class LegalBasesSummaryService
      * @return File The newly-written summary PDF.
      *
      * @throws \RuntimeException When rendering or write fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-document-anonymise-endpoint-must-accept-an-optional-appendbasissummary-field
      */
     public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
@@ -289,6 +293,8 @@ class LegalBasesSummaryService
      *
      * @throws \RuntimeException When the dossier can't be loaded, the folder
      *                           isn't accessible, or rendering fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function renderDossierSummary(string $dossierUuid): File
     {
