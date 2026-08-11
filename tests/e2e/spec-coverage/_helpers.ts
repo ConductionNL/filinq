@@ -184,8 +184,67 @@ export async function waitForNcContentReady(page: Page, timeout = 30_000): Promi
 		.waitFor({ state: 'visible', timeout })
 }
 
+/**
+ * The app base the SPA ROUTER actually uses, read from the running instance.
+ *
+ * ⚠️ `APP` above is the right entry point but the wrong ROUTER BASE, and the
+ * difference is invisible until a test deep-links.
+ *
+ * `src/main.js:306` builds the router as
+ * `createWebHistory(generateUrl('/apps/docudesk'))`, and Nextcloud's
+ * `generateUrl` includes the `index.php` segment only when
+ * `OC.config.modRewriteWorking` is FALSE:
+ *
+ *   - CI (`php -S`, no rewrite)  modRewriteWorking = false
+ *                                -> router base `/index.php/apps/docudesk`
+ *   - Apache with mod_rewrite    modRewriteWorking = true   (measured on a
+ *     (any normal dev/prod NC)   `nextcloud:34-apache` rig)
+ *                                -> router base `/apps/docudesk`
+ *
+ * So on Apache a navigation to `/index.php/apps/docudesk/custom-dictionaries`
+ * lands on a path the router does not recognise and it falls back to the app
+ * root. The failure is quiet and very easy to misread: the page renders fine,
+ * the URL is still under `/apps/docudesk`, and only an assertion that names
+ * the ROUTE catches it. Every assertion in this suite of the shape
+ * `expect(page).toHaveURL(/\/apps\/docudesk/)` passes on the WRONG PAGE.
+ * (Measured: three deep-link specs failed on Apache with
+ *  `Received string: "http://localhost:8097/apps/docudesk/"`.)
+ *
+ * Hardcoding either form is therefore wrong on one of the two environments.
+ * Ask the app instead: land once on `APP` — which is served correctly with and
+ * without rewriting — and read the same `generateUrl` the router itself used.
+ * On CI this resolves to exactly the previous hardcoded value, so the change is
+ * a no-op there and a repair everywhere else.
+ *
+ * Cached per worker: one extra navigation per run, not per test.
+ */
+let cachedAppBase: string | null = null
+
+async function resolveAppBase(page: Page): Promise<string> {
+	if (cachedAppBase !== null) return cachedAppBase
+	await page.goto(APP, { waitUntil: 'domcontentloaded' })
+	await waitForAppReady(page)
+	cachedAppBase = await page.evaluate(() => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const oc = (window as any).OC
+		return (oc?.generateUrl?.('/apps/docudesk') as string) || ''
+	})
+	// An empty answer means `OC` was not on the page — that is a broken load,
+	// not a base to guess around. Fail loudly rather than silently reinstating
+	// the hardcoded value and producing the exact bug this function exists to
+	// remove.
+	if (!cachedAppBase) {
+		throw new Error(
+			'Could not read OC.generateUrl("/apps/docudesk") from the running app. '
+			+ `The page at ${APP} did not expose window.OC, so the SPA router base is unknown.`,
+		)
+	}
+	return cachedAppBase
+}
+
 export async function go(page: Page, route: string): Promise<void> {
-	const url = route ? `${APP}/${route}` : APP
+	const base = await resolveAppBase(page)
+	const url = route ? `${base}/${route}` : base
 	// Wait for `domcontentloaded`, not the default `load`. Nextcloud keeps
 	// long-lived connections open (notifications polling, user-status
 	// heartbeat), so on a busy instance the `load` event can be minutes late
@@ -196,6 +255,22 @@ export async function go(page: Page, route: string): Promise<void> {
 	await waitForAppReady(page)
 	await dismissOverlays(page)
 	await page.waitForTimeout(800)
+}
+
+/**
+ * Build an absolute in-app URL for a route, using the router's real base.
+ *
+ * Use this instead of `${APP}/${route}` whenever a spec needs `page.goto`
+ * directly rather than `go()` — see `resolveAppBase` for why the hardcoded
+ * form is wrong on a rewriting server.
+ *
+ * @param page  A page in the same context (used once to read the base).
+ * @param route The in-app route, without a leading slash.
+ * @return The absolute path to navigate to.
+ */
+export async function appUrl(page: Page, route: string): Promise<string> {
+	const base = await resolveAppBase(page)
+	return route ? `${base}/${route}` : base
 }
 
 /** Click a left-hand app-navigation entry by its `title` attribute. */
