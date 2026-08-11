@@ -194,13 +194,13 @@ class AnonymizationService
             // string class name, to keep this class's coupling in check). It
             // also owns the operator's enabled-entity-type selection, used to
             // scope automatic detection just below.
-            $grondslagProposal = $this->container->get('OCA\DocuDesk\Service\GrondslagProposalService');
+            $legalBasisProposal = $this->container->get('OCA\DocuDesk\Service\LegalBasisProposalService');
 
             // Scope automatic detection to the enabled entity types (null = all
             // types). Manual entities are added through a separate path, so a
             // manually-added type is still anonymised even when its automatic
             // detection is disabled here.
-            $entityTypes = $grondslagProposal->getEntityTypeWhitelist();
+            $entityTypes = $legalBasisProposal->getEntityTypeWhitelist();
             $textExtractor->extractFile($fileId, $force, $entityTypes);
 
             $this->logger->debug(
@@ -226,10 +226,10 @@ class AnonymizationService
             // Pre-fill a proposed grondslag per entity type onto the
             // freshly-detected relations (fill-only-when-empty), then enrich
             // the returned rows with their current bases so the review UI can
-            // show the proposal. $grondslagProposal was resolved above. Both
+            // show the proposal. $legalBasisProposal was resolved above. Both
             // calls are internally best-effort and never block detection.
-            $grondslagProposal->applyProposals(fileId: $fileId);
-            $entities = $grondslagProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
+            $legalBasisProposal->applyProposals(fileId: $fileId);
+            $entities = $legalBasisProposal->enrichEntitiesWithBases(entities: $entities, fileId: $fileId);
 
             $normalized = $this->entityDetection->normalizeEntities(entities: $entities);
 

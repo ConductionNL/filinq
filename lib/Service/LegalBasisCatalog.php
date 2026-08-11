@@ -6,7 +6,7 @@
  * needs: locating OpenRegister services/mappers at runtime, and listing the
  * available `base` records for the settings selector.
  *
- * Extracted from {@see GrondslagProposalService} so that the proposal service
+ * Extracted from {@see LegalBasisProposalService} so that the proposal service
  * keeps a single concern — deciding and writing proposals — while all
  * knowledge of OpenRegister's availability, result envelopes and
  * `ObjectEntity` unwrapping lives here.
@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
-class GrondslagBaseCatalog
+class LegalBasisCatalog
 {
 
     /**
@@ -57,7 +57,7 @@ class GrondslagBaseCatalog
     private const OPENREGISTER_APP_ID = 'openregister';
 
     /**
-     * Constructor for GrondslagBaseCatalog.
+     * Constructor for LegalBasisCatalog.
      *
      * @param IAppManager        $appManager App manager (OpenRegister availability).
      * @param ContainerInterface $container  DI container resolving OpenRegister services at runtime.
@@ -93,7 +93,7 @@ class GrondslagBaseCatalog
             return $this->container->get($className);
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagBaseCatalog: OpenRegister service unavailable',
+                'LegalBasisCatalog: OpenRegister service unavailable',
                 ['class' => $className, 'error' => $e->getMessage()]
             );
             return null;
@@ -128,7 +128,7 @@ class GrondslagBaseCatalog
             );
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagBaseCatalog: failed to load `base` records',
+                'LegalBasisCatalog: failed to load `base` records',
                 ['error' => $e->getMessage()]
             );
             return [];

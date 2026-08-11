@@ -32,7 +32,7 @@ use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
 use OCA\DocuDesk\Service\LegalBasesSummaryService;
-use OCA\DocuDesk\Service\GrondslagProposalService;
+use OCA\DocuDesk\Service\LegalBasisProposalService;
 use OCA\OpenRegister\Db\Chunk;
 use OCA\OpenRegister\Db\ChunkMapper;
 use OCA\OpenRegister\Db\EntityRelation;
@@ -71,9 +71,9 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase
     private EntityRelationMapper|MockObject $mockRelationMapper;
 
     /**
-     * @var GrondslagProposalService|MockObject
+     * @var LegalBasisProposalService|MockObject
      */
-    private GrondslagProposalService|MockObject $mockGrondslag;
+    private LegalBasisProposalService|MockObject $mockGrondslag;
 
     /**
      * Set up shared container wiring for OR's non-custom-dictionary services.
@@ -90,7 +90,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase
             [['entity_type' => 'PERSON', 'entity_value' => 'Jan Janssen', 'confidence' => 0.95]]
         );
 
-        $this->mockGrondslag = $this->createMock(GrondslagProposalService::class);
+        $this->mockGrondslag = $this->createMock(LegalBasisProposalService::class);
         $this->mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
     }//end setUp()
@@ -126,7 +126,7 @@ class AnonymizationServiceCustomDictionaryTest extends TestCase
                     return $this->mockRelationMapper;
                 }
 
-                if ($class === 'OCA\DocuDesk\Service\GrondslagProposalService') {
+                if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
                     return $this->mockGrondslag;
                 }
 

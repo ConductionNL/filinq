@@ -59,13 +59,13 @@ class SettingsService
     /**
      * SettingsService constructor
      *
-     * @param IAppConfig                      $config            App configuration interface
-     * @param LoggerInterface                 $logger            Logger interface
-     * @param RegisterDiscoveryService        $discoveryService  Register discovery service
-     * @param SettingsInitializer             $initializer       Settings initializer
-     * @param OcrService                      $ocrService        OCR service for Tesseract status
-     * @param GrondslagProposalService        $grondslagProposal Grondslag-per-entity-type proposal service
-     * @param OpenRegisterAvailabilityService $openRegister      OpenRegister availability resolver
+     * @param IAppConfig                      $config             App configuration interface
+     * @param LoggerInterface                 $logger             Logger interface
+     * @param RegisterDiscoveryService        $discoveryService   Register discovery service
+     * @param SettingsInitializer             $initializer        Settings initializer
+     * @param OcrService                      $ocrService         OCR service for Tesseract status
+     * @param LegalBasisProposalService       $legalBasisProposal Grondslag-per-entity-type proposal service
+     * @param OpenRegisterAvailabilityService $openRegister       OpenRegister availability resolver
      *
      * @return void
      *
@@ -77,7 +77,7 @@ class SettingsService
         private readonly RegisterDiscoveryService $discoveryService,
         private readonly SettingsInitializer $initializer,
         private readonly OcrService $ocrService,
-        private readonly GrondslagProposalService $grondslagProposal,
+        private readonly LegalBasisProposalService $legalBasisProposal,
         private readonly OpenRegisterAvailabilityService $openRegister
     ) {
         $this->appName = 'docudesk';
@@ -234,12 +234,12 @@ class SettingsService
             // entity type → base slug(s), used to pre-fill a proposed
             // grondslag onto freshly-detected entities. Decoded to an
             // object so the settings UI can bind it directly.
-            'docudesk.grondslagen.entity_type_bases'       => $this->grondslagProposal->getMapping(),
+            'docudesk.grondslagen.entity_type_bases'       => $this->legalBasisProposal->getMapping(),
             // Entity types left enabled for automatic detection. Returned as an
             // explicit list (all curated types when unset) so the settings UI
             // renders the selector all-on by default; an empty/complete
             // selection is treated as "all types" at detection time.
-            'docudesk.anonymisation.enabled_entity_types'  => $this->grondslagProposal->getEnabledEntityTypes(),
+            'docudesk.anonymisation.enabled_entity_types'  => $this->legalBasisProposal->getEnabledEntityTypes(),
             // Files-confidential-labels — read-only sensitivity signal
             // ingested from files_confidential (TSCP/BAILS system tags).
             // The vocabulary maps tag/label name to a normalised level;
@@ -342,14 +342,14 @@ class SettingsService
 
             // Data for the grondslag-per-entity-type selector: the curated
             // entity types and the available `base` records (slug + name).
-            $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
-            $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
+            $data['grondslagEntityTypes'] = $this->legalBasisProposal->getSelectableEntityTypes();
+            $data['grondslagBases']       = $this->legalBasisProposal->getAvailableBases();
 
             // Data for the grondslag-per-entity-type selector: the curated
             // entity types and the available `base` records (slug + name).
             // Both degrade to safe defaults when OpenRegister is absent.
-            $data['grondslagEntityTypes'] = $this->grondslagProposal->getSelectableEntityTypes();
-            $data['grondslagBases']       = $this->grondslagProposal->getAvailableBases();
+            $data['grondslagEntityTypes'] = $this->legalBasisProposal->getSelectableEntityTypes();
+            $data['grondslagBases']       = $this->legalBasisProposal->getAvailableBases();
 
             return $data;
         } catch (Exception $e) {

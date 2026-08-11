@@ -915,7 +915,7 @@ class AnonymizationServiceTest extends TestCase
         $mapper = $this->createMock(EntityRelationMapper::class);
         $mapper->method('findEntitiesForFile')->willReturn([]);
 
-        $grondslag = $this->createMock(\OCA\DocuDesk\Service\GrondslagProposalService::class);
+        $grondslag = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
         $grondslag->method('getEntityTypeWhitelist')->willReturn($whitelist);
         $grondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
 
@@ -925,7 +925,7 @@ class AnonymizationServiceTest extends TestCase
                 return match ($class) {
                     'OCA\OpenRegister\Service\TextExtractionService' => $extractor,
                     'OCA\OpenRegister\Db\EntityRelationMapper'       => $mapper,
-                    'OCA\DocuDesk\Service\GrondslagProposalService'  => $grondslag,
+                    'OCA\DocuDesk\Service\LegalBasisProposalService'  => $grondslag,
                     default => throw new \RuntimeException('Unknown service: '.$class),
                 };
             }

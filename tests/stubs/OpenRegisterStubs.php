@@ -168,7 +168,7 @@ class ObjectService
      *
      * Signature mirrors the real OCA\OpenRegister\Service\ObjectService so
      * PHPUnit-generated mocks accept the named arguments the merged callers use
-     * (PolicyMatchService, GrondslagProposalService).
+     * (PolicyMatchService, LegalBasisProposalService).
      *
      * @param string               $registerSlug  Register slug.
      * @param string               $schemaSlug    Schema slug.
