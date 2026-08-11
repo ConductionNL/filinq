@@ -56,12 +56,12 @@ class DossierController extends Controller
     /**
      * Constructor for DossierController.
      *
-     * @param string                    $appName            The application name.
-     * @param IRequest                  $request            The current HTTP request.
-     * @param LoggerInterface           $logger             Logger for error reporting.
+     * @param string                   $appName            The application name.
+     * @param IRequest                 $request            The current HTTP request.
+     * @param LoggerInterface          $logger             Logger for error reporting.
      * @param LegalBasesSummaryService $grondslagenSummary Per-dossier renderer.
-     * @param IL10N                     $l10n               Localisation service.
-     * @param IUserSession              $userSession        User session for auth check.
+     * @param IL10N                    $l10n               Localisation service.
+     * @param IUserSession             $userSession        User session for auth check.
      */
     public function __construct(
         string $appName,

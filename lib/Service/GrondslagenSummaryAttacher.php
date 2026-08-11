@@ -47,9 +47,9 @@ class GrondslagenSummaryAttacher
     /**
      * Constructor for GrondslagenSummaryAttacher
      *
-     * @param LoggerInterface           $logger             Logger for the non-fatal failure warning.
+     * @param LoggerInterface          $logger             Logger for the non-fatal failure warning.
      * @param LegalBasesSummaryService $grondslagenSummary Renderer for the per-document grondslagen
-     *                                                      summary page.
+     *                                                     summary page.
      *
      * @return void
      */
