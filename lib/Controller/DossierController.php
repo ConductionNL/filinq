@@ -9,10 +9,23 @@
  * `LegalBasesSummaryService::renderDossierSummary` for the render itself.
  *
  * Authentication is required (the route is `@NoAdminRequired` but
- * non-anonymous). Authorisation: the caller MUST be able to read the
- * dossier object via OpenRegister's standard RBAC + the file listing
- * uses the session user's view, so visibility of files under the
- * dossier folder mirrors the operator's permissions.
+ * non-anonymous).
+ *
+ * ⚠️ Authorisation, stated accurately. This header used to say the caller
+ * "MUST be able to read the dossier object via OpenRegister's standard RBAC".
+ * Half of that sentence is enforced and half is not:
+ *
+ *  - The FILE half is real. `renderDossierSummary` walks the dossier folder
+ *    through the session user's view, so a file the operator cannot see does
+ *    not enter the summary.
+ *  - The OBJECT half is not. The pre-render check resolves to an existence
+ *    test only, because the `dossier` schema declares `"authorization": null`
+ *    and OpenRegister treats an unconfigured cascade as open. See
+ *    `DossierSummaryDataService::assertDossierReadable()`.
+ *
+ * So any authenticated user in the organisation can trigger a regen for any
+ * dossier uuid they can name; what they get back is scoped to the files they
+ * can already see. Tracked in ConductionNL/docudesk#441.
  *
  * @category  Controller
  * @package   OCA\DocuDesk\Controller
