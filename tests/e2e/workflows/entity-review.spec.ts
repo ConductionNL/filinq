@@ -130,8 +130,19 @@ async function provision(page: Page, req: APIRequestContext): Promise<Fixture> {
 		data: { folderPath: FOLDER },
 	})
 	expect(batch.status(), `POST ${API}/anonymization/batch/folder must answer 200`).toBe(200)
-	const batchId = (await batch.json()).batchId as string
+	const batchBody = await batch.json()
+	const batchId = batchBody.batchId as string
 	expect(batchId, 'the folder-batch response must carry a batchId').toBeTruthy()
+	// ⚠️ Assert the batch actually PICKED UP the two seeded files. A batchId is
+	// returned even for a folder the service found nothing in, so a truthy
+	// batchId says nothing about the fixture having landed — and the next call
+	// then fails in a way that reads like a broken endpoint. CI run 31527918659
+	// failed at the extract below with a 404 while this assertion did not
+	// exist, so that log cannot distinguish "the fixture never landed" from
+	// "the batch state was lost between two requests". That is why it is here.
+	expect(batchBody.fileCount,
+		`the folder-batch must have found the two seeded files in ${FOLDER}. `
+		+ `Response: ${JSON.stringify(batchBody).slice(0, 400)}`).toBe(2)
 
 	const extract = await req.post(`${API}/anonymization/batch/${batchId}/extract`, {
 		headers: jsonHeaders(token),
