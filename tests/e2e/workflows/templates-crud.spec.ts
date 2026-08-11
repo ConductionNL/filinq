@@ -148,6 +148,14 @@ test('Template update persists new name + content and the renamed row shows in t
 	expect(reread.body.name, 'updated name must persist').toBe(newName)
 	expect(reread.body.content, 'updated content must persist').toContain('UPDATED —')
 
+	// The scenario's second clause: "AND the namespace remains unchanged
+	// (immutable)". Added 2026-08-11 while anchoring this test to
+	// #update-a-template — the test proved the content half and said nothing
+	// about immutability, so the anchor would have claimed a clause no
+	// assertion covered. The PUT above deliberately omits `namespace`; this
+	// pins that omission to "unchanged" rather than "silently cleared".
+	expect(reread.body.namespace, 'namespace must be immutable across an update').toBe('docudesk')
+
 	await go(page, 'templates')
 	await page.waitForTimeout(1500)
 	await expect(page.locator('table tr', { hasText: newName }).first()).toBeVisible()
