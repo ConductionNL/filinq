@@ -307,6 +307,8 @@ class LegalBasisProposalService
      * @param int $fileId Nextcloud file id whose relations were just detected.
      *
      * @return int Number of relations a proposal was written to.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
      */
     public function applyProposals(int $fileId): int
     {
@@ -402,6 +404,8 @@ class LegalBasisProposalService
      * @param int               $fileId   File whose relations supply the bases.
      *
      * @return array<int, mixed> The detection rows with a `bases` key populated.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
      */
     public function enrichEntitiesWithBases(array $entities, int $fileId): array
     {

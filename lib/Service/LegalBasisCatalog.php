@@ -82,6 +82,8 @@ class LegalBasisCatalog
      * @param string $className Fully-qualified OpenRegister class name.
      *
      * @return mixed The resolved instance, or null.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-grondslag-selector-in-admin-settings
      */
     public function resolve(string $className): mixed
     {
@@ -110,6 +112,8 @@ class LegalBasisCatalog
      * fails — the settings page must still render.
      *
      * @return array<int, array{slug: string, name: string, description: string}> Available bases.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-grondslag-selector-in-admin-settings
      */
     public function getAvailableBases(): array
     {
