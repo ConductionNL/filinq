@@ -17,6 +17,7 @@ import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
+import ClipboardCheckOutline from 'vue-material-design-icons/ClipboardCheckOutline.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
@@ -48,6 +49,7 @@ export default {
 	BookAlphabet,
 	BookOpenVariant,
 	BookOpenVariantOutline,
+	ClipboardCheckOutline,
 	Domain,
 	EmailMultipleOutline,
 	EmailOutline,
