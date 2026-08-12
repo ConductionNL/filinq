@@ -130,6 +130,8 @@ class DossierObjectRepository
      * Get the OpenRegister ObjectService, or null when unavailable.
      *
      * @return object|null The ObjectService instance, or null.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function objectService(): ?object
     {
@@ -153,6 +155,8 @@ class DossierObjectRepository
      * Get the OpenRegister EntityRelationMapper, or null when unavailable.
      *
      * @return object|null The EntityRelationMapper instance, or null.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function entityRelationMapper(): ?object
     {
@@ -207,6 +211,8 @@ class DossierObjectRepository
      * @param int    $summaryFileId The newly-written summary file's NC node id.
      *
      * @return void
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function updateDossierConfiguration(string $dossierUuid, int $summaryFileId): void
     {

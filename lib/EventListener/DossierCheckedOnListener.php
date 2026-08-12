@@ -70,7 +70,7 @@ class DossierCheckedOnListener implements IEventListener
     /**
      * Constructor for DossierCheckedOnListener.
      *
-     * @param LoggerInterface           $logger         Logger for diagnostics
+     * @param LoggerInterface          $logger         Logger for diagnostics
      * @param LegalBasesSummaryService $summaryService Dossier grondslagen summary renderer
      *
      * @return void

@@ -147,9 +147,22 @@ class ConsentCrudService
      */
     public function getConsent(string $consentId, string $register, string $schema): ?array
     {
-        // Let OpenRegister enforce per-object RBAC and multitenancy access.
-        // Bypassing these (security finding #283) allowed any authenticated
-        // user to read consent records owned by other users.
+        // Do NOT pass `_rbac: false` / `_multitenancy: false` here — bypassing
+        // them (security finding #283) is a regression and the multitenancy
+        // half is genuinely load-bearing.
+        //
+        // ⚠️ But this is NOT what stops one user reading another's consent
+        // record, and this comment used to imply that it was. The
+        // `publicationConsent` schema declares `"authorization": null` in
+        // `lib/Settings/docudesk_register.json`, and OpenRegister treats an
+        // unconfigured authorization cascade as OPEN — so the per-object RBAC
+        // half permits the read for any authenticated caller in the org.
+        //
+        // The control that actually closes #283 is
+        // `ConsentController::canAccessConsent()`, which compares
+        // `@self.owner` against the session uid with an admin bypass, and the
+        // server-side owner filter on the list paths. Do not delete either as
+        // "redundant with OpenRegister RBAC" — measured, it is not redundant.
         $objectService = $this->settingsService->getObjectService();
         $object        = $objectService->find(
             id: $consentId,
