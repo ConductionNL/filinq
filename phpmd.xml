@@ -1,123 +1,27 @@
 <?xml version="1.0"?>
-<ruleset name="DocuDesk Nextcloud Rules"
+<ruleset name="docudesk"
     xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
-                        http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    <description>docudesk — Conduction PHPMD ruleset (single source: conduction/hydra-gates).</description>
 
-    <description>
-        This is a custom ruleset for DocuDesk Nextcloud.
-    </description>
-
-    <!-- Clean Code Rules -->
-    <rule ref="rulesets/cleancode.xml/BooleanArgumentFlag"/>
-    <rule ref="rulesets/cleancode.xml/ElseExpression"/>
-    <rule ref="rulesets/cleancode.xml/StaticAccess"/>
-    <rule ref="rulesets/cleancode.xml/IfStatementAssignment"/>
-    <rule ref="rulesets/cleancode.xml/DuplicatedArrayKey"/>
-    <rule ref="rulesets/cleancode.xml/MissingImport"/>
-    <rule ref="rulesets/cleancode.xml/UndefinedVariable"/>
-    <rule ref="rulesets/cleancode.xml/ErrorControlOperator"/>
-
-    <!-- Code Size Rules -->
-    <rule ref="rulesets/codesize.xml/CyclomaticComplexity"/>
-    <rule ref="rulesets/codesize.xml/NPathComplexity"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassLength"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveParameterList"/>
-    <rule ref="rulesets/codesize.xml/ExcessivePublicCount"/>
-    <rule ref="rulesets/codesize.xml/TooManyFields"/>
-    <rule ref="rulesets/codesize.xml/TooManyMethods"/>
-    <rule ref="rulesets/codesize.xml/TooManyPublicMethods"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity"/>
-
-    <!-- Controversial Rules -->
-    <rule ref="rulesets/controversial.xml/Superglobals"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseClassName"/>
-    <rule ref="rulesets/controversial.xml/CamelCasePropertyName"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseMethodName"/>
-    <!-- CamelCaseParameterName removed - we allow leading underscores on parameters (convention for unused/config params) -->
-    <!-- <rule ref="rulesets/controversial.xml/CamelCaseParameterName"/> -->
-    <!-- CamelCaseVariableName removed - we allow leading underscores on variables (convention for unused loop vars) -->
-    <!-- <rule ref="rulesets/controversial.xml/CamelCaseVariableName"/> -->
-
-    <!-- Design Rules -->
-    <rule ref="rulesets/design.xml/ExitExpression"/>
-    <rule ref="rulesets/design.xml/EvalExpression"/>
-    <rule ref="rulesets/design.xml/GotoStatement"/>
-    <rule ref="rulesets/design.xml/NumberOfChildren"/>
-    <rule ref="rulesets/design.xml/DepthOfInheritance"/>
-    <rule ref="rulesets/design.xml/CouplingBetweenObjects"/>
-    <!-- DevelopmentCodeFragment MUST carry ignore-namespaces=true, or it is dead
-         code in this ruleset. See ConductionNL/openregister#2286.
-
-         PDepend resolves an unqualified call inside a namespaced file to the
-         CURRENT-NAMESPACE-qualified image, so `var_dump($x)` in
-         `namespace OCA\MyApp\Service;` reaches the rule as
-         `OCA\MyApp\Service\var_dump`, which never matches the
-         `unwanted-functions` list. All of our production PHP is namespaced, so
-         with the default (false) the rule catches nothing anywhere.
-
-         Measured on phpmd 2.15.0 / PHP 8.3.32: byte-identical probe class,
-         namespaced -> exit 0, non-namespaced -> exit 2. With
-         ignore-namespaces=true the rule strips the enclosing namespace before
-         matching, the namespaced probe is reported (exit 2), and a clean
-         namespaced file stays exit 0.
-
-         Note: hydra gate 2 (forbidden-patterns) independently greps lib/ for
-         var_dump / die / error_log / print_r / dd / dump and is the broader
-         control - it also catches calls outside methods, which this rule (a
-         MethodAware/FunctionAware rule) cannot see. This rule is the
-         `composer check:strict` half of the same guard; keep both. -->
-    <rule ref="rulesets/design.xml/DevelopmentCodeFragment">
-        <properties>
-            <property name="ignore-namespaces" value="true"/>
-        </properties>
+    <!-- Deviations from the central ruleset go BELOW this line, each with a
+         reason. Everything else comes from conduction/hydra-gates. -->
+    <rule ref="vendor/conduction/hydra-gates/quality-config/phpmd.xml">
+        <exclude name="ShortVariable"/>
     </rule>
-    <rule ref="rulesets/design.xml/EmptyCatchBlock"/>
-    <rule ref="rulesets/design.xml/CountInLoopExpression"/>
 
-    <!-- Naming Rules -->
-    <rule ref="rulesets/naming.xml/LongClassName"/>
-    <rule ref="rulesets/naming.xml/ShortClassName"/>
-    <!-- ShortVariable configured with allowlist of idiomatic short names -->
+    <!-- ShortVariable: the central allowlist plus this app's geometry names.
+
+         Docudesk does page/PDF layout and colour maths, where x, y, h, s, m, d,
+         g, x1, y1, x2, y2, cx, cy, px, py and the rf/gf/bf channel factors are
+         the conventional names in every reference implementation. The rule is
+         otherwise unchanged, including `minimum`; only the allowlist is longer
+         than the central one, and it is a strict superset of it. -->
     <rule ref="rulesets/naming.xml/ShortVariable">
         <properties>
             <property name="minimum" value="3" />
             <property name="exceptions" value="id,db,qb,op,ui,io,gc,tz,pk,fk,to,ch,a,b,l,v,c,t,r,f,n,k,e,x,y,h,s,m,d,g,x1,y1,x2,y2,cx,cy,px,py,rf,gf,bf" />
         </properties>
     </rule>
-    <rule ref="rulesets/naming.xml/LongVariable"/>
-    <rule ref="rulesets/naming.xml/ShortMethodName"/>
-    <rule ref="rulesets/naming.xml/ConstructorWithNameAsEnclosingClass"/>
-    <rule ref="rulesets/naming.xml/ConstantNamingConventions"/>
-    <rule ref="rulesets/naming.xml/BooleanGetMethodName"/>
-
-    <!-- Unused Code Rules -->
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateField"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod"/>
-    <!-- UnusedFormalParameter is NOT declared here. It lives alone in
-         phpmd-unusedparams.xml, which is run as a second leg by the "phpmd"
-         composer script.
-
-         Why: this rule used to carry a NESTED
-             <exclude-pattern>*Migration*</exclude-pattern>
-         meant to spare lib/Migration, whose changeSchema/preSchemaChange/
-         postSchemaChange signatures are mandated by OCP\Migration\IMigrationStep
-         and cannot drop their unused parameters. That pattern was INERT: PHPMD
-         2.15 reads exclude-patterns in RuleSetFactory::getIgnorePattern(), which
-         walks $xml->children() - i.e. only elements DIRECTLY under <ruleset>. A
-         nested one parses without error and does nothing, so lib/Migration was
-         always scanned by this rule (ConductionNL/.github#155).
-
-         Moving the pattern up to the top level of THIS file would make it
-         effective, but it is applied by PDepend's ExcludePathFilter at
-         file-collection time, so it drops lib/Migration from EVERY rule in the
-         ruleset - real complexity, StaticAccess and method-length findings in
-         migrations would silently vanish.
-
-         Isolating the rule in its own ruleset gives the exclusion a top-level
-         home that scopes it to this one rule, while the main leg above keeps
-         analysing lib/Migration with everything else. -->
 </ruleset>
