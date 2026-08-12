@@ -104,6 +104,10 @@ class CustomDictionaryMatchService {
 	 * The `fuzzy` flag is accepted-and-ignored — no approximate matching in
 	 * this version (design.md Open Questions).
 	 *
+	 * Occurrences are returned in document order. Each `value` is the literal
+	 * substring found at that position, which may differ in case from the
+	 * declared term under `caseInsensitive`/`wordBoundary`.
+	 *
 	 * @param string $text The document text to search.
 	 * @param array<int, array{value: string, label?: string}> $terms Candidate terms.
 	 * @param string $mode One of {@see VALID_MODES}; an
@@ -112,9 +116,6 @@ class CustomDictionaryMatchService {
 	 *                     MODE_CASE_INSENSITIVE}.
 	 *
 	 * @return array<int, array{value: string, label: string, positionStart: int, positionEnd: int}>
-	 *                                                                                               Occurrences in document order. `value` is the literal substring
-	 *                                                                                               found at that position (which may differ in case from the
-	 *                                                                                               declared term under `caseInsensitive`/`wordBoundary`).
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
