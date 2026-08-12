@@ -2,8 +2,8 @@
     "openapi": "3.0.0",
     "info": {
         "title": "DocuDesk Register",
-        "description": "DocuDesk register v7.6.4 — standing-consent-documentid-not-required: `publicationConsent` listed `documentId` in the schema-level `required` array, so OpenRegister created the backing column NOT NULL. Every scope=entity (standing consent) record is document-less by definition, so all 12 seeded standing consents failed to insert with 'null value in column \"document_id\" violates not-null constraint', and the same constraint blocks PolicyController::createStandingConsent at runtime — the entire \"Publish always\" surface. The condition is PER RECORD, not per schema, and openspec/specs/consent-management/spec.md already states it: 'documentId MUST be required only for scope=document records'. It is enforced where it can be — ConsentScopeValidator::assertValid(), which rejects a scope=document record without a documentId AND a scope=entity record WITH one. Removing it from the schema's `required` array restores what the spec mandates; nothing is left unvalidated. Previous v7.6.3 — archival-retention-object-shape: fixes six schemas that OpenRegister REJECTED on import, so they never existed on any fresh install. Five (correspondence, signingRequest, signerRecord, signingAuditEntry, batchCorrespondenceJob) declared `x-openregister-archival.retention` as a bare ISO-8601 STRING; OpenRegister's ArchivalAnnotationValidator requires an object `{ default: <duration>, rules?: [] }` and threw 'retention is required and must be an object'. The sixth (publicationProhibition) declared an authorization action `write`, which is not in OpenRegister's CRUD vocabulary (create, read, update, delete) — expanded to create/update/delete, preserving the intent that docudesk-policy-admins may write. ImportHandler catches a per-schema exception, logs it and continues, so the import still answered HTTP 200 'Import successful' while writing only 14 of 20 schemas — which left signing entirely non-functional (signingRequest/signerRecord/signingAuditEntry absent). anonymizationLink and financialExtraction already used the object form; this aligns the rest. No property, slug or retention DURATION changed. Previous v7.6.2 — schema-level-titles-en: re-authored the remaining Dutch schema-level `title` values to English — base 'Grondslag' -> 'Legal Basis', huisstijl 'Huisstijl Configuration' -> 'Branding Configuration' (schema slugs, property keys/titles, enums, descriptions unchanged). Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.1 — schema-titles-en: re-authored all Dutch schema property `title` values to English (property names/keys unchanged); Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.0 — document-output-destinations-and-bulk-retention: generatedDocument gains additive, nullable fileId/filePath properties, populated when a generation is stored to Files via the new DocumentStorageService (options.output.mode 'files'/'both' on generate, or the now-persisted async bulk job). hardValidation:false, so existing rows remain valid unchanged. See openspec/changes/document-output-destinations-and-bulk-retention/. Previous v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping DocuDesk's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
-        "version": "7.6.4"
+        "description": "DocuDesk register v7.7.0 — prohibition-override-audit-schema: adds the `prohibitionOverrideAudit` schema to the `consent` register. `ProhibitionOverrideCommitter::writeAudit()` has always written to `register: consent, schema: prohibitionOverrideAudit`, and that schema was declared NOWHERE — `GET /apps/openregister/api/objects/consent/prohibitionOverrideAudit` answered 404 `Schema not found` while its sibling `publicationProhibition` answered 200 on the same freshly-seeded instance. The write is explicitly fail-closed ('If the audit write fails we MUST NOT proceed to the OR PATCH'), so every acknowledged override raised RuntimeException 500 and NO override could ever be committed. openspec/specs/anonymisation-prohibition-gate/spec.md mandates the schema by name: 'Implementations MUST use a `prohibitionOverrideAudit` schema in `docudesk_register.json` for this entry'. Properties are exactly the six the committer writes {ruleId, entityRelationId, fileId, reason, acknowledgedBy, acknowledgedAt}; retention P10Y because an override audit must outlive the P10Y prohibition it released. `authorization: null` matches publicationConsent/anonymizationLink — restricting `create` to policy admins would re-break the same fail-closed path for the ordinary operator who performs the anonymise. See ConductionNL/docudesk#428. Previous v7.6.4 — standing-consent-documentid-not-required: `publicationConsent` listed `documentId` in the schema-level `required` array, so OpenRegister created the backing column NOT NULL. Every scope=entity (standing consent) record is document-less by definition, so all 12 seeded standing consents failed to insert with 'null value in column \"document_id\" violates not-null constraint', and the same constraint blocks PolicyController::createStandingConsent at runtime — the entire \"Publish always\" surface. The condition is PER RECORD, not per schema, and openspec/specs/consent-management/spec.md already states it: 'documentId MUST be required only for scope=document records'. It is enforced where it can be — ConsentScopeValidator::assertValid(), which rejects a scope=document record without a documentId AND a scope=entity record WITH one. Removing it from the schema's `required` array restores what the spec mandates; nothing is left unvalidated. Previous v7.6.3 — archival-retention-object-shape: fixes six schemas that OpenRegister REJECTED on import, so they never existed on any fresh install. Five (correspondence, signingRequest, signerRecord, signingAuditEntry, batchCorrespondenceJob) declared `x-openregister-archival.retention` as a bare ISO-8601 STRING; OpenRegister's ArchivalAnnotationValidator requires an object `{ default: <duration>, rules?: [] }` and threw 'retention is required and must be an object'. The sixth (publicationProhibition) declared an authorization action `write`, which is not in OpenRegister's CRUD vocabulary (create, read, update, delete) — expanded to create/update/delete, preserving the intent that docudesk-policy-admins may write. ImportHandler catches a per-schema exception, logs it and continues, so the import still answered HTTP 200 'Import successful' while writing only 14 of 20 schemas — which left signing entirely non-functional (signingRequest/signerRecord/signingAuditEntry absent). anonymizationLink and financialExtraction already used the object form; this aligns the rest. No property, slug or retention DURATION changed. Previous v7.6.2 — schema-level-titles-en: re-authored the remaining Dutch schema-level `title` values to English — base 'Grondslag' -> 'Legal Basis', huisstijl 'Huisstijl Configuration' -> 'Branding Configuration' (schema slugs, property keys/titles, enums, descriptions unchanged). Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.1 — schema-titles-en: re-authored all Dutch schema property `title` values to English (property names/keys unchanged); Dutch labels now live in l10n/nl.json for the display layer. See openspec/changes (fleet-wide schema-i18n titles rule). Previous v7.6.0 — document-output-destinations-and-bulk-retention: generatedDocument gains additive, nullable fileId/filePath properties, populated when a generation is stored to Files via the new DocumentStorageService (options.output.mode 'files'/'both' on generate, or the now-persisted async bulk job). hardValidation:false, so existing rows remain valid unchanged. See openspec/changes/document-output-destinations-and-bulk-retention/. Previous v7.5.0 — unified-search-provider: corrects the searchable opt-in so only navigable schemas (template, signingRequest) stay searchable and every other schema is searchable:false, keeping DocuDesk's contribution to OpenRegister's shared Unified Search provider free of dead/unnavigable results. Deep-link routing for template + signingRequest lives in src/manifest.json deepLinks[]. No bespoke OCP\\Search\\IProvider — org scoping inherited from openregister_objects. See openspec/changes/unified-search-provider/. Previous v7.4.0 — adds customDictionary + customDictionaryTerm to the document register per custom-dictionary-recognition: organisation-scoped, register-i18n-tagged term lists (label, description, colour, matchMode exact/caseInsensitive/wordBoundary, deferred fuzzy flag, active, calculated termCount) matched by CustomDictionaryMatchService and written into OpenRegister's shared entity catalogue as CUSTOM_DICTIONARY occurrences alongside Presidio/regex detections. Seeds one demo dictionary (\"Projectnamen\") with two demo terms. See openspec/changes/custom-dictionary-recognition/. Previous v7.3.0 — MERGE of Robert's anonimiseren-bij-de-bron work onto development: Woo Art. 5 grondslagen legenda A–S seed (base schema), standing-consent generic-term seeds (publicationConsent, entityType OTHER, notificationStatus skipped), entityType OTHER enum on publicationConsent/publicationProhibition, and EML→PDF assembly. Development schemas + dialect/RBAC fixes are preserved. Previous v5.10.0 — adds glAccountBooking (opaque per-tenant GL-account booking history, keyed by supplierIdentity, fed by the financial-extraction corrections endpoint) and glAccountMappingRule (admin-editable cold-start keyword/category → account rules, no seeded rows — DocuDesk ships no chart of accounts) to the document register, per ai-gl-account-suggestion. Both hardValidation:true. See openspec/changes/ai-gl-account-suggestion/. Previous v5.9.0 adds the financialExtraction schema to the document register: structured financial field-extraction results (supplier/IBAN/KvK/BTW, invoice number, dates, currency, totals + VAT breakdown, line items) with per-field confidence and an additive corrections[] tuning corpus, per financial-document-field-extraction. hardValidation:true; x-openregister-archival category shipped as an explicit placeholder pending selectielijst-manager sign-off (same pattern as anonymizationLink). See openspec/changes/financial-document-field-extraction/. Previous v5.8.0 declares validationStatus + validationFindings as x-openregister-calculations on generatedDocument (computation backend docudesk.validation = DocumentValidationService) per document-validation-checks; the event-listener fallback dispatches the same service until OR's ADR-031 calculation runtime ships. Previous v5.7.0 declared the four AVG Art. 30 processing activities (anonymisation, OCR, metadata-enrichment, signing) as x-openregister-processing catalogue annotations on anonymizationLink, generatedDocument, base, and signingAuditEntry: each carries purpose (doelbinding), legal basis, NER data categories, backend identifier, retention reference taken from the existing x-openregister-archival annotations (\"not declared\" where absent), and opts the schema into OpenRegister's per-access read-logging (logReads:true, attribution.default referencing the activity code). Requires OpenRegister >= 0.2.14. See openspec/changes/processing-activity-export/. Previous v5.5.0 extended OR register-i18n adoption to the remaining user-facing string fields across templateVersion (name/description/changelog), huisstijl (name), base (name/description), correspondence (templateName), signingRequest (documentName), signingSession (documentName), signerRecord (displayName/declineReason), publicationConsent (notes/objectionReason/publicationDecision), publicationProhibition (primaryName/reason/notes), and batchCorrespondenceJob (templateName). OpenRegister TranslationHandler picks these up automatically and stores per-language variants under the existing object JSON column; no DB migration required. See openspec/changes/register-i18n/. Previous v5.4.0 tagged template (name/description/content/category) + dossier (name/description) per register-i18n. Previous v5.3.0 adopted OR abstractions per docudesk-adopt-or-abstractions, added batchCorrespondenceJob schema with x-openregister-lifecycle + archival + notifications + calculations, added x-openregister-archival to signingAuditEntry (P10Y), signingRequest (P10Y), signerRecord (P10Y), correspondence (P7Y), added x-openregister-lifecycle to signingSession, and added anonymizationLink schema for source↔anonymised file mapping.",
+        "version": "7.7.0"
     },
     "x-openregister": {
         "type": "application",
@@ -22,11 +22,12 @@
             "consent": {
                 "slug": "consent",
                 "title": "Consent Register",
-                "version": "2.0.0",
+                "version": "2.1.0",
                 "description": "Register voor GDPR publicatie toestemmingen",
                 "schemas": [
                     "publicationConsent",
-                    "publicationProhibition"
+                    "publicationProhibition",
+                    "prohibitionOverrideAudit"
                 ]
             },
             "signing": {
@@ -3292,6 +3293,111 @@
                         "docudesk-policy-admins"
                     ]
                 }
+            },
+            "prohibitionOverrideAudit": {
+                "uri": null,
+                "slug": "prohibitionOverrideAudit",
+                "title": "Prohibition Override Audit",
+                "description": "Records why an operator released a low-confidence publication-prohibition match from anonymisation. Written by ProhibitionOverrideCommitter BEFORE the OpenRegister EntityRelation is PATCHed with skipAnonymization=true, so an override can never reach OpenRegister unrecorded on the DocuDesk side. Carries the operator commentary that OpenRegister's own audit trail does not (its PATCH whitelist is decision-only).",
+                "version": "1.0.0",
+                "summary": "",
+                "icon": "ClipboardCheckOutline",
+                "required": [
+                    "ruleId",
+                    "fileId",
+                    "reason",
+                    "acknowledgedBy",
+                    "acknowledgedAt"
+                ],
+                "properties": {
+                    "ruleId": {
+                        "description": "Identifier of the publication-prohibition rule whose match was released.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 1,
+                        "facetable": true,
+                        "title": "Rule ID",
+                        "maxLength": 255
+                    },
+                    "entityRelationId": {
+                        "description": "OpenRegister EntityRelation row that was flagged skipAnonymization=true. Zero when the released match carried no relation id.",
+                        "type": "integer",
+                        "required": false,
+                        "visible": true,
+                        "order": 2,
+                        "facetable": true,
+                        "title": "Entity relation ID"
+                    },
+                    "fileId": {
+                        "description": "Nextcloud file ID the anonymisation request was made against.",
+                        "type": "integer",
+                        "required": true,
+                        "visible": true,
+                        "order": 3,
+                        "facetable": true,
+                        "title": "File ID"
+                    },
+                    "reason": {
+                        "description": "Operator's stated justification for releasing the flagged entity from redaction.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 4,
+                        "facetable": false,
+                        "title": "Reason",
+                        "maxLength": 1024,
+                        "translatable": true
+                    },
+                    "acknowledgedBy": {
+                        "description": "Nextcloud UID of the user who acknowledged the override.",
+                        "type": "string",
+                        "required": true,
+                        "visible": true,
+                        "order": 5,
+                        "facetable": true,
+                        "title": "Acknowledged by",
+                        "maxLength": 64
+                    },
+                    "acknowledgedAt": {
+                        "description": "Moment the override was acknowledged (ISO 8601).",
+                        "type": "string",
+                        "format": "date-time",
+                        "required": true,
+                        "visible": true,
+                        "order": 6,
+                        "facetable": false,
+                        "title": "Acknowledged at"
+                    }
+                },
+                "archive": [],
+                "source": "internal",
+                "hardValidation": true,
+                "immutable": false,
+                "updated": "2026-08-11T00:00:00+00:00",
+                "created": "2026-08-11T00:00:00+00:00",
+                "maxDepth": 0,
+                "owner": null,
+                "application": null,
+                "organisation": null,
+                "groups": null,
+                "deleted": null,
+                "configuration": {
+                    "objectNameField": "ruleId",
+                    "objectDescriptionField": "reason",
+                    "autoPublish": false
+                },
+                "searchable": false,
+                "x-openregister-archival": {
+                    "retention": {
+                        "default": "P10Y"
+                    },
+                    "reason": "An override audit entry is the only record of a deliberate decision NOT to redact a legally protected entity; it must outlive the prohibition it released, which is itself retained P10Y.",
+                    "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
+                    "action": "destroy",
+                    "responsibleParty": "docudesk-privacy-officer"
+                },
+                "authorization": null
             }
         },
         "objects": [
