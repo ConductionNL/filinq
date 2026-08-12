@@ -804,11 +804,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
-/* Options menu in the actions-column header (bulk-selection / bulk actions). */
-.my-documents-options {
-	color: var(--color-text-maxcontrast);
-}
-
 .my-documents-filter-icon {
 	color: var(--color-text-maxcontrast);
 	cursor: pointer;

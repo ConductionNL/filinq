@@ -236,6 +236,7 @@ export default {
 .comparison-view {
 	padding: 16px;
 }
+
 .comparison-view__pickers {
 	display: flex;
 	gap: 16px;
@@ -243,16 +244,19 @@ export default {
 	flex-wrap: wrap;
 	margin-bottom: 16px;
 }
+
 .comparison-view__field {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
 }
+
 .comparison-view__diff {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 8px;
 }
+
 .comparison-view__pane {
 	max-height: 60vh;
 	overflow-y: auto;
@@ -262,15 +266,19 @@ export default {
 	white-space: pre-wrap;
 	word-break: break-word;
 }
+
 .comparison-view__hunk--added {
 	background-color: var(--color-success-hover, #e6ffed);
 }
+
 .comparison-view__hunk--removed {
 	background-color: var(--color-error-hover, #ffeef0);
 }
+
 .comparison-view__hunk--changed {
 	background-color: var(--color-warning-hover, #fff5b1);
 }
+
 .comparison-view__badge {
 	display: inline-block;
 	font-size: 0.7em;
@@ -280,6 +288,7 @@ export default {
 	padding: 0 4px;
 	margin-left: 2px;
 }
+
 .comparison-view__advisory {
 	border: 1px solid var(--color-warning, #c8a500);
 	border-radius: var(--border-radius);

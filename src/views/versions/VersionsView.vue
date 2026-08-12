@@ -232,6 +232,7 @@ export default {
 .versions-view {
 	padding: var(--default-grid-baseline, 16px);
 }
+
 .versions-view__subtitle {
 	color: var(--color-text-maxcontrast);
 }
