@@ -51,6 +51,16 @@ test.afterAll(async ({ request }) => {
 	}
 })
 
+// @e2e openspec/specs/template-management/spec.md#create-a-template
+// @e2e openspec/specs/template-management/spec.md#get-single-template
+// @e2e openspec/specs/template-management/spec.md#delete-a-template
+//
+// Anchored 2026-08-11. These were NOT new claims: this test was already green
+// in CI (E2E job of run 31461514843, 94 passed) and already asserted each of
+// the three scenarios — POST creates and returns the object, GET by id returns
+// name/content/namespace, DELETE leaves subsequent reads empty. The spec simply
+// carried a whole-spec `@e2e exclude` saying no UI or e2e coverage existed, so
+// real coverage was being recorded as debt. See the note at the top of the spec.
 test('Template lifecycle persists: create → read content → list (API+UI) → delete → gone', async ({ page }) => {
 	const token = await harvestToken(page)
 	const req = page.request
@@ -115,6 +125,11 @@ test('Template lifecycle persists: create → read content → list (API+UI) →
 // idempotently provisions the templateVersion register/schema keys (resolving
 // the templateVersion schema from OpenRegister, co-located with the templates
 // register), and getAllSettings() loads them. Template edit now persists.
+// @e2e openspec/specs/template-management/spec.md#update-a-template
+//
+// The scenario's clauses map onto the assertions below: PUT with updated
+// content answers 200, the re-read shows the new name and content, and the
+// renamed row appears in the real Templates list UI.
 test('Template update persists new name + content and the renamed row shows in the UI', async ({ page }) => {
 	const token = await harvestToken(page)
 	const req = page.request
@@ -132,6 +147,14 @@ test('Template update persists new name + content and the renamed row shows in t
 	const reread = await getTemplate(req, token, tmpl.id)
 	expect(reread.body.name, 'updated name must persist').toBe(newName)
 	expect(reread.body.content, 'updated content must persist').toContain('UPDATED —')
+
+	// The scenario's second clause: "AND the namespace remains unchanged
+	// (immutable)". Added 2026-08-11 while anchoring this test to
+	// #update-a-template — the test proved the content half and said nothing
+	// about immutability, so the anchor would have claimed a clause no
+	// assertion covered. The PUT above deliberately omits `namespace`; this
+	// pins that omission to "unchanged" rather than "silently cleared".
+	expect(reread.body.namespace, 'namespace must be immutable across an update').toBe('docudesk')
 
 	await go(page, 'templates')
 	await page.waitForTimeout(1500)
@@ -168,6 +191,11 @@ test('Two seeded templates both surface in the list and are independently deleta
 	expect(await deleteTemplate(req, token, b.id)).toBe(200)
 })
 
+// @e2e openspec/specs/template-management/spec.md#required-fields-validation
+//
+// "WHEN name, content, or namespace is missing THEN a 400 error is returned" —
+// the test drives all three omissions separately and requires each to be
+// rejected, which is the scenario exactly.
 test('Template create validation rejects missing required fields (name / content / namespace)', async ({ page }) => {
 	const token = await harvestToken(page)
 	const req = page.request
