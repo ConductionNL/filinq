@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for GrondslagProposalService
+ * Unit tests for LegalBasisProposalService
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -16,7 +16,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\GrondslagProposalService;
+use OCA\DocuDesk\Service\LegalBasisProposalService;
 use OCA\OpenRegister\Db\EntityRelation;
 use OCA\OpenRegister\Db\EntityRelationMapper;
 use OCA\OpenRegister\Service\ObjectService;
@@ -38,7 +38,7 @@ use Psr\Log\LoggerInterface;
  * @psalm-suppress PropertyNotSetInConstructor
  * @phpstan-extends TestCase
  */
-class GrondslagProposalServiceTest extends TestCase
+class LegalBasisProposalServiceTest extends TestCase
 {
 
     /**
@@ -48,9 +48,9 @@ class GrondslagProposalServiceTest extends TestCase
      * @param ContainerInterface|null $container   Optional container (for mapper resolution).
      * @param bool                    $orInstalled Whether OpenRegister appears installed.
      *
-     * @return GrondslagProposalService The service under test.
+     * @return LegalBasisProposalService The service under test.
      */
-    private function makeService(string $mappingJson, ?ContainerInterface $container=null, bool $orInstalled=true): GrondslagProposalService
+    private function makeService(string $mappingJson, ?ContainerInterface $container=null, bool $orInstalled=true): LegalBasisProposalService
     {
         $config = $this->createMock(IAppConfig::class);
         $config->method('getValueString')->willReturn($mappingJson);
@@ -62,7 +62,7 @@ class GrondslagProposalServiceTest extends TestCase
             $container = $this->createMock(ContainerInterface::class);
         }
 
-        return new GrondslagProposalService(
+        return new LegalBasisProposalService(
             $config,
             $appManager,
             $container,
@@ -378,14 +378,14 @@ class GrondslagProposalServiceTest extends TestCase
      *
      * @param string $enabledJson Raw JSON for the enabled-types config key.
      *
-     * @return GrondslagProposalService The service under test.
+     * @return LegalBasisProposalService The service under test.
      */
-    private function makeServiceEnabled(string $enabledJson): GrondslagProposalService
+    private function makeServiceEnabled(string $enabledJson): LegalBasisProposalService
     {
         $config = $this->createMock(IAppConfig::class);
         $config->method('getValueString')->willReturnCallback(
             static function (string $app, string $key, string $default='') use ($enabledJson): string {
-                if ($key === GrondslagProposalService::ENABLED_TYPES_CONFIG_KEY) {
+                if ($key === LegalBasisProposalService::ENABLED_TYPES_CONFIG_KEY) {
                     return $enabledJson;
                 }
 
@@ -393,7 +393,7 @@ class GrondslagProposalServiceTest extends TestCase
             }
         );
 
-        return new GrondslagProposalService(
+        return new LegalBasisProposalService(
             $config,
             $this->createMock(IAppManager::class),
             $this->createMock(ContainerInterface::class),

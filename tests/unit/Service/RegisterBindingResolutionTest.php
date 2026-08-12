@@ -20,7 +20,7 @@
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
 use OCA\DocuDesk\Exception\RegisterNotConfiguredException;
-use OCA\DocuDesk\Service\GrondslagProposalService;
+use OCA\DocuDesk\Service\LegalBasisProposalService;
 use OCA\DocuDesk\Service\OcrService;
 use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
 use OCA\DocuDesk\Service\OpenRegisterResolver;
@@ -84,7 +84,7 @@ class RegisterBindingResolutionTest extends TestCase
             $this->createMock(RegisterDiscoveryService::class),
             $this->createMock(SettingsInitializer::class),
             $this->createMock(OcrService::class),
-            $this->createMock(GrondslagProposalService::class),
+            $this->createMock(LegalBasisProposalService::class),
             $this->createMock(OpenRegisterAvailabilityService::class)
         );
 

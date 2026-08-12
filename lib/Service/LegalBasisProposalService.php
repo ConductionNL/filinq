@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
-class GrondslagProposalService
+class LegalBasisProposalService
 {
 
     /**
@@ -118,22 +118,22 @@ class GrondslagProposalService
     /**
      * OpenRegister-facing reads (service resolution + `base` records).
      *
-     * @var GrondslagBaseCatalog
+     * @var LegalBasisCatalog
      */
-    private readonly GrondslagBaseCatalog $baseCatalog;
+    private readonly LegalBasisCatalog $baseCatalog;
 
     /**
-     * Constructor for GrondslagProposalService.
+     * Constructor for LegalBasisProposalService.
      *
      * The catalog is an injected collaborator; the null default keeps the
      * historical four-argument signature usable, in which case an equivalent
      * catalog is built from the same three dependencies.
      *
-     * @param IAppConfig                $config      App configuration (mapping storage).
-     * @param IAppManager               $appManager  App manager (OpenRegister availability).
-     * @param ContainerInterface        $container   DI container resolving OpenRegister services at runtime.
-     * @param LoggerInterface           $logger      Logger for best-effort diagnostics.
-     * @param GrondslagBaseCatalog|null $baseCatalog OpenRegister-facing reads; built from the above when null.
+     * @param IAppConfig             $config      App configuration (mapping storage).
+     * @param IAppManager            $appManager  App manager (OpenRegister availability).
+     * @param ContainerInterface     $container   DI container resolving OpenRegister services at runtime.
+     * @param LoggerInterface        $logger      Logger for best-effort diagnostics.
+     * @param LegalBasisCatalog|null $baseCatalog OpenRegister-facing reads; built from the above when null.
      *
      * @return void
      */
@@ -142,9 +142,9 @@ class GrondslagProposalService
         IAppManager $appManager,
         ContainerInterface $container,
         private readonly LoggerInterface $logger,
-        ?GrondslagBaseCatalog $baseCatalog=null,
+        ?LegalBasisCatalog $baseCatalog=null,
     ) {
-        $this->baseCatalog = ($baseCatalog ?? new GrondslagBaseCatalog($appManager, $container, $logger));
+        $this->baseCatalog = ($baseCatalog ?? new LegalBasisCatalog($appManager, $container, $logger));
 
     }//end __construct()
 
@@ -307,6 +307,8 @@ class GrondslagProposalService
      * @param int $fileId Nextcloud file id whose relations were just detected.
      *
      * @return int Number of relations a proposal was written to.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
      */
     public function applyProposals(int $fileId): int
     {
@@ -325,7 +327,7 @@ class GrondslagProposalService
             $detections = $mapper->findEntitiesForFile($fileId);
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagProposalService: could not load detections for proposal',
+                'LegalBasisProposalService: could not load detections for proposal',
                 ['fileId' => $fileId, 'error' => $e->getMessage()]
             );
             return 0;
@@ -381,7 +383,7 @@ class GrondslagProposalService
             return 1;
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagProposalService: failed to pre-fill bases',
+                'LegalBasisProposalService: failed to pre-fill bases',
                 ['fileId' => $fileId, 'relationId' => $relationId, 'error' => $e->getMessage()]
             );
             return 0;
@@ -402,6 +404,8 @@ class GrondslagProposalService
      * @param int               $fileId   File whose relations supply the bases.
      *
      * @return array<int, mixed> The detection rows with a `bases` key populated.
+     *
+     * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-proposed-grondslag-pre-filled-at-detection-time
      */
     public function enrichEntitiesWithBases(array $entities, int $fileId): array
     {
@@ -417,7 +421,7 @@ class GrondslagProposalService
             }
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagProposalService: could not load bases for enrichment',
+                'LegalBasisProposalService: could not load bases for enrichment',
                 ['fileId' => $fileId, 'error' => $e->getMessage()]
             );
             return $entities;

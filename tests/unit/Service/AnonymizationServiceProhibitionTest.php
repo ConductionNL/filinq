@@ -132,7 +132,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
      * Stub the container to return the OR services + an optional PolicyMatchService.
      *
      * Mirrors the merged `extractAndDetectEntities()` container dependencies:
-     * TextExtractionService, GrondslagProposalService, EntityRelationMapper and
+     * TextExtractionService, LegalBasisProposalService, EntityRelationMapper and
      * (optionally) PolicyMatchService — the last is what `applyPolicyDecisions()`
      * resolves and is omitted (throws on resolve) to simulate an unavailable
      * policy layer.
@@ -149,7 +149,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
         $mockMapper = $this->createMock(\OCA\OpenRegister\Db\EntityRelationMapper::class);
         $mockMapper->method('findEntitiesForFile')->willReturn($rawEntities);
 
-        $mockGrondslag = $this->createMock(\OCA\DocuDesk\Service\GrondslagProposalService::class);
+        $mockGrondslag = $this->createMock(\OCA\DocuDesk\Service\LegalBasisProposalService::class);
         $mockGrondslag->method('getEntityTypeWhitelist')->willReturn(null);
         // enrichEntitiesWithBases must return its entities argument unchanged.
         $mockGrondslag->method('enrichEntitiesWithBases')->willReturnArgument(0);
@@ -164,7 +164,7 @@ class AnonymizationServiceProhibitionTest extends TestCase
                     return $mockMapper;
                 }
 
-                if ($class === 'OCA\DocuDesk\Service\GrondslagProposalService') {
+                if ($class === 'OCA\DocuDesk\Service\LegalBasisProposalService') {
                     return $mockGrondslag;
                 }
 

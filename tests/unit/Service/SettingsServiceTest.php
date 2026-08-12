@@ -20,7 +20,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\GrondslagProposalService;
+use OCA\DocuDesk\Service\LegalBasisProposalService;
 use OCA\DocuDesk\Service\OcrService;
 use OCA\DocuDesk\Service\OpenRegisterAvailabilityService;
 use OCA\DocuDesk\Service\RegisterDiscoveryService;
@@ -82,9 +82,9 @@ class SettingsServiceTest extends TestCase
     private OcrService|MockObject $mockOcrService;
 
     /**
-     * @var GrondslagProposalService|MockObject
+     * @var LegalBasisProposalService|MockObject
      */
-    private GrondslagProposalService|MockObject $mockGrondslagProposal;
+    private LegalBasisProposalService|MockObject $mockGrondslagProposal;
 
 
     /**
@@ -101,7 +101,7 @@ class SettingsServiceTest extends TestCase
         $this->mockDiscoveryService  = $this->createMock(RegisterDiscoveryService::class);
         $this->mockInitializer       = $this->createMock(SettingsInitializer::class);
         $this->mockOcrService        = $this->createMock(OcrService::class);
-        $this->mockGrondslagProposal = $this->createMock(GrondslagProposalService::class);
+        $this->mockGrondslagProposal = $this->createMock(LegalBasisProposalService::class);
         $this->mockOpenRegister      = $this->createMock(OpenRegisterAvailabilityService::class);
 
         $this->settingsService = new SettingsService(
