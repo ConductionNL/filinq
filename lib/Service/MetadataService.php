@@ -266,10 +266,26 @@ class MetadataService
      * Read the object, merge the metadata into it and save it back.
      *
      * Security (C2): `_rbac:false` / `_multitenancy:false` are deliberately not
-     * passed — OpenRegister's per-object RBAC and multitenancy guards must apply
-     * so callers cannot read or overwrite objects in other tenants/users.
-     * System-context callers elevate via `runAsSystem()` instead of disabling
-     * the guards wholesale.
+     * passed, and system-context callers elevate via `runAsSystem()` instead of
+     * disabling the guards wholesale. That much is real and worth keeping.
+     *
+     * ⚠️ But read what each half actually buys, because this comment used to
+     * claim more than the code delivers:
+     *
+     *  - The MULTITENANCY half is live. Organisation scoping still applies.
+     *  - The per-object RBAC half currently enforces NOTHING for this app.
+     *    OpenRegister resolves authorization through a register/schema cascade
+     *    and treats "configured nowhere" as OPEN. Every schema in
+     *    `lib/Settings/docudesk_register.json` declares `"authorization": null`
+     *    except `publicationProhibition`, and no register declares the key at
+     *    all — so for the schemas this method writes, OR permits the read and
+     *    the write regardless of who is asking.
+     *
+     * So this is NOT a per-user boundary today. Do not treat the absence of the
+     * bypass flags as an ownership check, and do not delete a caller-side
+     * ownership guard on the strength of it. Making the RBAC half real means
+     * declaring `authorization` on the schemas (ConductionNL/openregister#2011),
+     * not changing anything here.
      *
      * @param \OCA\OpenRegister\Service\ObjectService $objectService The resolved OpenRegister object service
      * @param string                                  $objectId      The object UUID in OpenRegister

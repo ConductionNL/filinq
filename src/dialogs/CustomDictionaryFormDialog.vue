@@ -118,15 +118,33 @@ export default {
 					:label="t('docudesk', 'Hex value')"
 					class="custom-dictionary-form__colour-hex" />
 			</div>
+			<!--
+				`v-model`, NOT `:value` + `@input`.
+
+				This was a Vue 2 binding left behind by the Vue 3 migration, and
+				it made the control INERT rather than merely mis-styled.
+				`@nextcloud/vue` 9.9.0's NcSelect declares a `modelValue` prop,
+				declares NO `value` prop at all, and its only declared emit is
+				`update:modelValue` (verified in the installed
+				dist/chunks/NcSelect-*.mjs). So `:value` bound nothing — the
+				select rendered with no `.vs__selected` at all — and `@input`
+				never fired, so picking a match mode did not change
+				`form.matchMode`. Every dictionary created or edited through this
+				dialog was written with the `caseInsensitive` default no matter
+				what the user chose, silently.
+
+				The sibling select in StandingConsentFormModal.vue already uses
+				`v-model` and works; this was the only `:value`-bound NcSelect
+				left in src/ (swept 2026-08-11).
+			-->
 			<NcSelect
-				:value="form.matchMode"
+				v-model="form.matchMode"
 				:options="matchModeOptions"
 				label="label"
 				:reduce="(o) => o.value"
 				:clearable="false"
 				:input-label="t('docudesk', 'Match mode')"
-				required
-				@input="form.matchMode = $event" />
+				required />
 			<p class="custom-dictionary-form__hint">
 				{{ t('docudesk', 'Exact matches case-sensitively; case-insensitive (default) folds case; word boundary is case-insensitive but never matches inside a longer word.') }}
 			</p>

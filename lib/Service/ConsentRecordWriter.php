@@ -383,8 +383,15 @@ class ConsentRecordWriter
         // controller surfaces as HTTP 400.
         $this->scopeValidator->assertValid($consentData);
 
-        // Let OpenRegister enforce RBAC and multitenancy so the consent
-        // record is owned by the creating user (security finding #283).
+        // Save WITHOUT the bypass flags so OpenRegister stamps `@self.owner`
+        // from the session user — that ownership stamp is what the read guard
+        // in `ConsentController::canAccessConsent()` later compares against,
+        // and it is the half of #283 that this call really delivers.
+        //
+        // ⚠️ The word "RBAC" was in this comment and has been removed: the
+        // `publicationConsent` schema declares `"authorization": null`, so
+        // OpenRegister's per-object RBAC permits this write for anyone
+        // authenticated. Ownership is RECORDED here, not ENFORCED here.
         $savedObject = $this->getObjectService()->saveObject(
             object: $consentData,
             register: $register,

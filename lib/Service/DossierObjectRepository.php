@@ -7,7 +7,7 @@
  * resolving OR's optional services, loading a dossier's context, and writing
  * back the `configuration.grondslagen` freshness metadata.
  *
- * Extracted from {@see GrondslagenSummaryService} so that knowledge of OR's
+ * Extracted from {@see LegalBasesSummaryService} so that knowledge of OR's
  * object shape — the `getObject()` payload, the entity-level `folder` column
  * that lives OUTSIDE that payload, and the save-path folder-preservation
  * dance — sits in one place instead of being spread through the renderer.
@@ -130,6 +130,8 @@ class DossierObjectRepository
      * Get the OpenRegister ObjectService, or null when unavailable.
      *
      * @return object|null The ObjectService instance, or null.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function objectService(): ?object
     {
@@ -141,7 +143,7 @@ class DossierObjectRepository
             return $this->container->get('OCA\OpenRegister\Service\ObjectService');
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: ObjectService unavailable',
+                'LegalBasesSummaryService: ObjectService unavailable',
                 ['error' => $e->getMessage()]
             );
             return null;
@@ -153,6 +155,8 @@ class DossierObjectRepository
      * Get the OpenRegister EntityRelationMapper, or null when unavailable.
      *
      * @return object|null The EntityRelationMapper instance, or null.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function entityRelationMapper(): ?object
     {
@@ -164,7 +168,7 @@ class DossierObjectRepository
             return $this->container->get('OCA\OpenRegister\Db\EntityRelationMapper');
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: EntityRelationMapper unavailable',
+                'LegalBasesSummaryService: EntityRelationMapper unavailable',
                 ['error' => $e->getMessage()]
             );
             return null;
@@ -207,13 +211,15 @@ class DossierObjectRepository
      * @param int    $summaryFileId The newly-written summary file's NC node id.
      *
      * @return void
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function updateDossierConfiguration(string $dossierUuid, int $summaryFileId): void
     {
         $objectService = $this->objectService();
         if ($objectService === null) {
             $this->logger->warning(
-                'GrondslagenSummaryService: cannot update dossier configuration — ObjectService unavailable',
+                'LegalBasesSummaryService: cannot update dossier configuration — ObjectService unavailable',
                 ['dossierUuid' => $dossierUuid]
             );
             return;
@@ -250,7 +256,7 @@ class DossierObjectRepository
             );
         } catch (Exception $e) {
             $this->logger->warning(
-                'GrondslagenSummaryService: failed to update dossier configuration.grondslagen',
+                'LegalBasesSummaryService: failed to update dossier configuration.grondslagen',
                 ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
             );
         }//end try
@@ -441,7 +447,7 @@ class DossierObjectRepository
             // log and proceed with the save (the user-visible PDF is already
             // on disk).
             $this->logger->warning(
-                'GrondslagenSummaryService: could not read existing folder ref before save',
+                'LegalBasesSummaryService: could not read existing folder ref before save',
                 ['dossierUuid' => $dossierUuid, 'error' => $e->getMessage()]
             );
             return $payload;

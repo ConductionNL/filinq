@@ -29,7 +29,7 @@ use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\FileEntityStatsService;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\PdfConversionService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;

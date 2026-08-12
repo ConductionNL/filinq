@@ -27,7 +27,7 @@ it (fail-closed).
 - GIVEN a new dictionary created without an explicit match mode
 - WHEN it is persisted and read back
 - THEN its match mode is `caseInsensitive`
-- @e2e tests/e2e/spec-coverage/custom-dictionary-recognition.spec.ts
+- @e2e exclude not observable in a browser — both rendering paths substitute the default themselves, so the DOM is identical whether or not the value was persisted. `matchModeLabel()` is byte-identical in CustomDictionaryIndex.vue and CustomDictionaryDetail.vue and both end `|| t('docudesk', 'Case-insensitive')`, so a NULL match mode renders exactly like a persisted `caseInsensitive` one. Asserted where the value IS visible: tests/unit/Service/CustomDictionaryServiceTest.php::testCreateDictionaryDefaultsMatchMode, which asserts `saveObject()` received `matchMode === 'caseInsensitive'`.
 
 ### Requirement: Deterministic term matching engine (REQ-DDCDR-002)
 

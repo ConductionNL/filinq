@@ -9,9 +9,19 @@
  * enable-on-input behaviour, and the optional dossier-binding sub-form.
  * Background extraction / NER pipeline scenarios are backend and carry
  * @e2e exclude in the spec.
+ *
+ * ANCHOR REPAIR: the anchors below used to name
+ * `#initiate-folder-analysis-on-a-folder-with-5-documents`, a scenario that
+ * does not exist in this spec (it was renamed to
+ * `initiate-folder-analysis-by-folder-path-existing-behavior`). Gate-19 does
+ * not report a dangling anchor — it parses the ref, finds no scenario with
+ * that name, and moves on — so the mismatch was invisible for as long as it
+ * existed. The count is unchanged by this repair (every scenario in this spec
+ * carries an `@e2e exclude`); what changes is that the file no longer claims
+ * to trace to something that is not there.
  */
 
-// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-on-a-folder-with-5-documents
+// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 // @e2e openspec/specs/folder-batch-analysis/spec.md#folder-path-does-not-exist
 
 import { test, expect } from '@playwright/test'
@@ -19,7 +29,7 @@ import { attachConsoleGuard, dismissOverlays, go, navClick } from './_helpers'
 
 test.describe('folder-batch-analysis — folder analysis UI', () => {
 	test('Folder Analysis page renders heading, path input and Analyze action', async ({ page }) => {
-		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-on-a-folder-with-5-documents
+		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 		const guard = attachConsoleGuard(page)
 		await go(page, 'folder-anonymization')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/folder-anonymization/)
@@ -48,7 +58,7 @@ test.describe('folder-batch-analysis — folder analysis UI', () => {
 	})
 
 	test('initial step shows the folder-path instruction text', async ({ page }) => {
-		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-on-a-folder-with-5-documents
+		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 		// Step 1 (store.isActive === false) renders the instruction paragraph.
 		// The optional dossier-binding sub-form is intentionally only mounted
 		// once analysis has started (store.batchStatus === extracting|review),
@@ -59,7 +69,7 @@ test.describe('folder-batch-analysis — folder analysis UI', () => {
 	})
 
 	test('Folder Analysis is reachable via the left navigation', async ({ page }) => {
-		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-on-a-folder-with-5-documents
+		// @e2e openspec/specs/folder-batch-analysis/spec.md#initiate-folder-analysis-by-folder-path-existing-behavior
 		await go(page, '')
 		await navClick(page, 'Folder Analysis')
 		await expect(page).toHaveURL(/\/apps\/docudesk\/folder-anonymization/)

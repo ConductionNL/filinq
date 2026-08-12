@@ -31,7 +31,7 @@ use OCA\DocuDesk\Service\EmlAnonymizationService;
 use OCA\DocuDesk\Service\EmlPdfAssemblyService;
 use OCA\DocuDesk\Service\EntityDetectionService;
 use OCA\DocuDesk\Service\GrondslagenSummaryAttacher;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\OpenRegisterServiceLocator;
 use OCA\DocuDesk\Service\PdfConversionService;
 use OCA\DocuDesk\Service\PolicyMatchService;
@@ -386,7 +386,7 @@ class AnonymizationServiceTest extends TestCase
      */
     public function testWarningFieldDefinedOnSummaryFailure(): void
     {
-        $summary = $this->createMock(GrondslagenSummaryService::class);
+        $summary = $this->createMock(LegalBasesSummaryService::class);
         $summary->method('appendSummaryToPdf')->willThrowException(new \Exception('renderer down'));
 
         $result = $this->summaryAttacher($summary)->attachGrondslagenSummary(
@@ -415,7 +415,7 @@ class AnonymizationServiceTest extends TestCase
         $summaryFile->method('getId')->willReturn(321);
         $summaryFile->method('getPath')->willReturn('/u/doc_grondslagen.pdf');
 
-        $summary = $this->createMock(GrondslagenSummaryService::class);
+        $summary = $this->createMock(LegalBasesSummaryService::class);
         $summary->method('renderSummaryBesideFile')->willReturn($summaryFile);
 
         $result = $this->summaryAttacher($summary)->attachGrondslagenSummary(
@@ -956,11 +956,11 @@ class AnonymizationServiceTest extends TestCase
     /**
      * Build the grondslagen summary attacher around a renderer double.
      *
-     * @param GrondslagenSummaryService $summary The renderer double.
+     * @param LegalBasesSummaryService $summary The renderer double.
      *
      * @return GrondslagenSummaryAttacher The attacher under test.
      */
-    private function summaryAttacher(GrondslagenSummaryService $summary): GrondslagenSummaryAttacher
+    private function summaryAttacher(LegalBasesSummaryService $summary): GrondslagenSummaryAttacher
     {
         return new GrondslagenSummaryAttacher(logger: new NullLogger(), grondslagenSummary: $summary);
 
@@ -1114,7 +1114,7 @@ class AnonymizationServiceTest extends TestCase
             ),
             summaryAttacher: new GrondslagenSummaryAttacher(
                 logger: $logger,
-                grondslagenSummary: $this->createMock(GrondslagenSummaryService::class)
+                grondslagenSummary: $this->createMock(LegalBasesSummaryService::class)
             )
         );
 

@@ -23,7 +23,7 @@
 namespace OCA\DocuDesk\Tests\Unit\EventListener;
 
 use OCA\DocuDesk\EventListener\DossierCheckedOnListener;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -60,7 +60,7 @@ class DossierCheckedOnListenerTest extends TestCase
     /**
      * Mock grondslagen summary service.
      *
-     * @var MockObject&GrondslagenSummaryService
+     * @var MockObject&LegalBasesSummaryService
      */
     private MockObject $grondslagenSummaryService;
 
@@ -74,7 +74,7 @@ class DossierCheckedOnListenerTest extends TestCase
         parent::setUp();
 
         $this->logger                    = $this->createMock(originalClassName: LoggerInterface::class);
-        $this->grondslagenSummaryService = $this->createMock(originalClassName: GrondslagenSummaryService::class);
+        $this->grondslagenSummaryService = $this->createMock(originalClassName: LegalBasesSummaryService::class);
 
         $this->listener = new DossierCheckedOnListener(
             logger: $this->logger,

@@ -255,13 +255,33 @@ class Wave12SecurityRegressionTest extends TestCase
     }//end testJobStatusReturns200ForOwner()
 
     /**
-     * SB1: when ownerUserId is empty (e.g. sync batch — no ownerUserId stored)
-     * the check is skipped and any authenticated user can query it.
-     * (Backward-compat: sync results were never gated by this field.)
+     * SB1, CORRECTED: an empty ownerUserId must be REFUSED, not waved through.
+     *
+     * This test previously asserted the opposite — that an empty ownerUserId
+     * skipped the check so any authenticated user could query the job — on the
+     * stated grounds that a "sync batch" stores no ownerUserId and sync results
+     * "were never gated by this field". That reason names a state of the world,
+     * and the state does not exist:
+     *
+     *  - The only writer of a correspondence job-status record is
+     *    `CorrespondenceService::dispatchBatchJob()` plus the three
+     *    `storeJobStatus()` calls in `BatchCorrespondenceJob`, and every one of
+     *    them seeds `ownerUserId` from `$options['userId']`.
+     *  - `$options['userId']` is set in exactly two places, both in
+     *    `CorrespondenceController`, both from the session, and both behind a
+     *    `$user === null` 401 preamble — so it cannot be empty.
+     *  - The sync path is `generate()`, which returns the document directly and
+     *    writes no job-status record at all. There is nothing for the
+     *    backward-compat clause to protect.
+     *
+     * So the old assertion pinned a fail-open: the single input an attacker
+     * benefits from was the one input that skipped the ownership check, in the
+     * file whose whole purpose is to stop that. A test asserting the call the
+     * code happens to make cannot tell you the call is wrong.
      *
      * @return void
      */
-    public function testJobStatusAllowsAccessWhenOwnerUserIdIsEmpty(): void
+    public function testJobStatusDeniesAccessWhenOwnerUserIdIsEmpty(): void
     {
         $corrSvc = $this->createMock(CorrespondenceService::class);
         $corrSvc->method('getJobStatus')->willReturn(
@@ -284,9 +304,14 @@ class Wave12SecurityRegressionTest extends TestCase
         $response = $controller->jobStatus('some-job-id');
 
         $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
+        $this->assertSame(
+            Http::STATUS_FORBIDDEN,
+            $response->getStatus(),
+            'a job-status record carrying no ownerUserId must be refused, not '
+            .'handed to whichever authenticated caller guessed the jobId'
+        );
 
-    }//end testJobStatusAllowsAccessWhenOwnerUserIdIsEmpty()
+    }//end testJobStatusDeniesAccessWhenOwnerUserIdIsEmpty()
 
     // ─────────────────────────────────────────────────────────────────────────
     // WF1 — cancelRequest requires initiator-or-admin

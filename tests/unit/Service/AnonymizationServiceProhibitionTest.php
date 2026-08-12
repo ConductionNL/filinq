@@ -27,7 +27,7 @@ use OCA\DocuDesk\Service\ConsentService;
 use OCA\DocuDesk\Service\CustomDictionaryMatchService;
 use OCA\DocuDesk\Service\CustomDictionaryService;
 use OCA\DocuDesk\Service\EntityDetectionService;
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\PolicyMatchService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;

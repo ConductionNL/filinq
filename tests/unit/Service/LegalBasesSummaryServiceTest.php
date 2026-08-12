@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for GrondslagenSummaryService
+ * Unit tests for LegalBasesSummaryService
  *
  * @category Tests
  * @package  OCA\DocuDesk\Tests\Unit\Service
@@ -17,7 +17,7 @@
 
 namespace OCA\DocuDesk\Tests\Unit\Service;
 
-use OCA\DocuDesk\Service\GrondslagenSummaryService;
+use OCA\DocuDesk\Service\LegalBasesSummaryService;
 use OCA\DocuDesk\Service\PdfService;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
@@ -30,7 +30,7 @@ use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 
 /**
- * Cover the deterministic helpers of GrondslagenSummaryService.
+ * Cover the deterministic helpers of LegalBasesSummaryService.
  *
  * The public methods touch OpenRegister via the container and the
  * Nextcloud filesystem, which are out of scope for unit tests; Newman
@@ -47,15 +47,15 @@ use ReflectionMethod;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class GrondslagenSummaryServiceTest extends TestCase
+class LegalBasesSummaryServiceTest extends TestCase
 {
 
     /**
      * Service under test.
      *
-     * @var GrondslagenSummaryService
+     * @var LegalBasesSummaryService
      */
-    private GrondslagenSummaryService $service;
+    private LegalBasesSummaryService $service;
 
     /**
      * Mock logger.
@@ -115,7 +115,7 @@ class GrondslagenSummaryServiceTest extends TestCase
         $this->mockAppManager  = $this->createMock(originalClassName: IAppManager::class);
         $this->mockContainer   = $this->createMock(originalClassName: ContainerInterface::class);
 
-        $this->service = new GrondslagenSummaryService(
+        $this->service = new LegalBasesSummaryService(
             logger: $this->mockLogger,
             pdfService: $this->mockPdfService,
             rootFolder: $this->mockRootFolder,
@@ -134,7 +134,7 @@ class GrondslagenSummaryServiceTest extends TestCase
     public function testServiceCanBeInstantiated(): void
     {
         $this->assertInstanceOf(
-            expected: GrondslagenSummaryService::class,
+            expected: LegalBasesSummaryService::class,
             actual: $this->service
         );
 
@@ -153,7 +153,7 @@ class GrondslagenSummaryServiceTest extends TestCase
     public function testResolveBaseLabelsFallsBackToRawRef(): void
     {
         $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
+            objectOrMethod: LegalBasesSummaryService::class,
             method: 'resolveBaseLabels'
         );
         $method->setAccessible(accessible: true);
@@ -177,7 +177,7 @@ class GrondslagenSummaryServiceTest extends TestCase
     public function testCountDistinctBases(): void
     {
         $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
+            objectOrMethod: LegalBasesSummaryService::class,
             method: 'countDistinctBases'
         );
         $method->setAccessible(accessible: true);
@@ -207,7 +207,7 @@ class GrondslagenSummaryServiceTest extends TestCase
     public function testAggregateForDossier(): void
     {
         $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
+            objectOrMethod: LegalBasesSummaryService::class,
             method: 'aggregateForDossier'
         );
         $method->setAccessible(accessible: true);
@@ -301,7 +301,7 @@ class GrondslagenSummaryServiceTest extends TestCase
             }
         );
 
-        $service = new GrondslagenSummaryService(
+        $service = new LegalBasesSummaryService(
             logger: $this->mockLogger,
             pdfService: $this->mockPdfService,
             rootFolder: $this->mockRootFolder,
@@ -312,7 +312,7 @@ class GrondslagenSummaryServiceTest extends TestCase
         );
 
         $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
+            objectOrMethod: LegalBasesSummaryService::class,
             method: 'localizeEntityType'
         );
         $method->setAccessible(accessible: true);
@@ -334,7 +334,7 @@ class GrondslagenSummaryServiceTest extends TestCase
     {
         // $this->service was constructed without an IL10N (l10n defaults null).
         $method = new ReflectionMethod(
-            objectOrMethod: GrondslagenSummaryService::class,
+            objectOrMethod: LegalBasesSummaryService::class,
             method: 'localizeEntityType'
         );
         $method->setAccessible(accessible: true);
