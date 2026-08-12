@@ -8,7 +8,7 @@
  * into an already-anonymised PDF with FPDI, and persists the result to
  * Nextcloud Files.
  *
- * Extracted from {@see GrondslagenSummaryService} so that the summary service
+ * Extracted from {@see LegalBasesSummaryService} so that the summary service
  * decides WHAT to report while this class owns HOW it reaches disk.
  *
  * @category  Service

@@ -342,10 +342,23 @@ class CorrespondenceController extends Controller
             // ownerUserId is stored at the top level of the status payload (persisted
             // by dispatchBatchJob and every storeJobStatus call in the background job).
             // The old check read options.userId which was NEVER persisted — SB1 fix.
+            //
+            // This test FAILS CLOSED. It previously read
+            // `$jobUserId !== '' && $jobUserId !== $uid`, which let a status
+            // payload carrying no owner through to any authenticated caller —
+            // i.e. the one input an attacker benefits from was the one that
+            // skipped the check. Every writer sets the key today
+            // (CorrespondenceService::dispatchBatchJob and all three
+            // BatchCorrespondenceJob::storeJobStatus calls, seeded from
+            // `$options['userId']`, which this controller sets from the session
+            // before dispatch), so refusing an empty owner costs nothing that
+            // works — it only removes the fallback. Same shape as
+            // PrintJobController::authorizeJobAccess(), which already compares
+            // for equality rather than for inequality-when-present.
             $jobUserId = (string) ($status['ownerUserId'] ?? '');
-            if ($jobUserId !== '' && $jobUserId !== $user->getUID()) {
+            if ($jobUserId !== $user->getUID()) {
                 return new JSONResponse(
-                    data: ['error' => $this->l10n->t('Access denied')],
+                    data: ['error' => $this->l10n->t('This job belongs to another user')],
                     statusCode: Http::STATUS_FORBIDDEN
                 );
             }

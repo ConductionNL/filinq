@@ -1,6 +1,6 @@
 <?php
 /**
- * Grondslagen Summary Service
+ * Legal Bases Summary Service
  *
  * Renders per-document and per-dossier grondslagen summary PDFs. Reads
  * EntityRelation.bases (OpenRegister, Wave 1.3 — entity-relation-grondslagen)
@@ -62,7 +62,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class GrondslagenSummaryService
+class LegalBasesSummaryService
 {
 
     /**
@@ -179,6 +179,8 @@ class GrondslagenSummaryService
      * @return File The same anonymised file, with the summary page appended.
      *
      * @throws \RuntimeException When template rendering, PDF merging, or file write fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-document-anonymise-endpoint-must-accept-an-optional-appendbasissummary-field
      */
     public function appendSummaryToPdf(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
@@ -191,7 +193,7 @@ class GrondslagenSummaryService
         $this->pdfWriter->appendToPdf(anonymisedFile: $anonymisedFile, summaryBytes: $summaryBytes);
 
         $this->logger->info(
-            'GrondslagenSummaryService: appended summary to anonymised PDF',
+            'LegalBasesSummaryService: appended summary to anonymised PDF',
             [
                 'fileId'       => $anonymisedFile->getId(),
                 'sourceFileId' => $sourceFileId,
@@ -218,6 +220,8 @@ class GrondslagenSummaryService
      * @return File The newly-written summary PDF.
      *
      * @throws \RuntimeException When rendering or write fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-the-per-document-anonymise-endpoint-must-accept-an-optional-appendbasissummary-field
      */
     public function renderSummaryBesideFile(File $anonymisedFile, int $sourceFileId, array $placeholderMap=[]): File
     {
@@ -234,9 +238,9 @@ class GrondslagenSummaryService
             summaryBytes: $summaryBytes
         );
 
-        $message = 'GrondslagenSummaryService: wrote beside-file summary';
+        $message = 'LegalBasesSummaryService: wrote beside-file summary';
         if ($written['refreshed'] === true) {
-            $message = 'GrondslagenSummaryService: refreshed beside-file summary';
+            $message = 'LegalBasesSummaryService: refreshed beside-file summary';
         }
 
         $this->logger->info(
@@ -249,20 +253,27 @@ class GrondslagenSummaryService
     }//end renderSummaryBesideFile()
 
     /**
-     * Authorize the acting user to (re)generate a dossier's summary.
+     * Assert the dossier exists before (re)generating its summary.
      *
-     * Resolves the dossier through OpenRegister's ObjectService under the
-     * session user's view, so OR's standard RBAC governs visibility: a dossier
-     * the caller may not read resolves to null and we deny by throwing. A
-     * successful resolution means the operator is permitted. The HTTP layer
-     * (`DossierController`) calls this before `renderDossierSummary` (which
-     * itself runs the render as a system operation with RBAC disabled).
+     * ⚠️ The name of this method overstates what it does, and the docblock it
+     * replaces overstated it further ("a successful resolution means the
+     * operator is permitted"). It is an EXISTENCE check. See
+     * `DossierSummaryDataService::assertDossierReadable()` for the measured
+     * reason: OpenRegister's RBAC cascade resolves to "configured nowhere" for
+     * the `dossier` schema, which OpenRegister treats as open, so the refusal
+     * this method relies on cannot fire for an existing dossier.
+     *
+     * What remains true: the HTTP layer (`DossierController`) does call this
+     * before `renderDossierSummary`, and the render itself deliberately runs
+     * as a system operation with RBAC disabled — so this call is the ONLY
+     * pre-render check there is, which is exactly why its real strength
+     * matters. Tracked in ConductionNL/docudesk#441.
      *
      * @param string $dossierId The OR dossier object UUID.
      *
      * @return void
      *
-     * @throws \RuntimeException 403 when the dossier is not readable / not found.
+     * @throws \RuntimeException 403 when the dossier cannot be resolved at all.
      */
     public function authorizeAccess(string $dossierId): void
     {
@@ -289,6 +300,8 @@ class GrondslagenSummaryService
      *
      * @throws \RuntimeException When the dossier can't be loaded, the folder
      *                           isn't accessible, or rendering fails.
+     *
+     * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md#requirement-a-per-dossier-summary-endpoint-must-exist
      */
     public function renderDossierSummary(string $dossierUuid): File
     {
@@ -343,7 +356,7 @@ class GrondslagenSummaryService
         );
 
         $this->logger->info(
-            'GrondslagenSummaryService: rendered per-dossier summary',
+            'LegalBasesSummaryService: rendered per-dossier summary',
             [
                 'dossierUuid'   => $dossierUuid,
                 'summaryFileId' => $summaryFile->getId(),

@@ -501,7 +501,7 @@ class AnonymizationService
     /**
      * Anonymize entities in a document AND append the grondslagen summary.
      *
-     * Identical to {@see anonymizeDocument()} except that GrondslagenSummaryService
+     * Identical to {@see anonymizeDocument()} except that LegalBasesSummaryService
      * is invoked after the anonymised file has been written. For PDF output the
      * summary is appended as an extra page; otherwise a separate
      * `<base>_grondslagen.pdf` is written alongside. Summary failure is non-fatal:

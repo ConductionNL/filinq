@@ -47,15 +47,15 @@ class GrondslagenSummaryAttacher
     /**
      * Constructor for GrondslagenSummaryAttacher
      *
-     * @param LoggerInterface           $logger             Logger for the non-fatal failure warning.
-     * @param GrondslagenSummaryService $grondslagenSummary Renderer for the per-document grondslagen
-     *                                                      summary page.
+     * @param LoggerInterface          $logger             Logger for the non-fatal failure warning.
+     * @param LegalBasesSummaryService $grondslagenSummary Renderer for the per-document grondslagen
+     *                                                     summary page.
      *
      * @return void
      */
     public function __construct(
         private readonly LoggerInterface $logger,
-        private readonly GrondslagenSummaryService $grondslagenSummary
+        private readonly LegalBasesSummaryService $grondslagenSummary
     ) {
 
     }//end __construct()
