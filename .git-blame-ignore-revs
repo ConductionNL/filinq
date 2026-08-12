@@ -1,10 +1,16 @@
-# Retrofit annotation commits (opsx-annotate, 2026-05-24)
-# Bucket 1 annotations across 52 files; no logic changes.
-cf09844bace55c286eaba3d71f7e9fe7a1108122
-44270e45aba841bea54cfc2e5fa706d6a6eec186
-7ef82c27223f49d601d9d93b5ced927380452c54
-52dbfce1c2c1e8837354a91bae39e9fc5b553c12
-7f9396cdec87abebd89c22aeccbb57a3a17db0d2
-ca200dfb8757038709f6896a69e7e02f13b62ded
-da669b1ce73dcf1181c81e84385131fa7f10b6f4
-46134b2368ee7de85dcfadfd6e936722dd7fe79e
+# Revisions to skip in `git blame`.
+#
+# Enable locally, once:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# GitHub reads this file automatically. Your terminal does not, until you run
+# the line above.
+#
+# Only ever add commits that change formatting and NOTHING else. A commit listed
+# here becomes invisible to blame, so a behaviour change hidden inside one would
+# be very hard to find later.
+
+# style: reformat with nextcloud/coding-standard — whitespace only
+# The fleet-wide move from a PEAR-derived PHPCS ruleset (4 spaces, next-line
+# braces) to Nextcloud's own standard (tabs, same-line braces).
+fc52070dba464803e985952851dedc38e6151aae

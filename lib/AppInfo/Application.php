@@ -33,58 +33,55 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
  *
  * @package OCA\DocuDesk\AppInfo
  */
-class Application extends App implements IBootstrap
-{
-    public const APP_ID = 'docudesk';
+class Application extends App implements IBootstrap {
+	public const APP_ID = 'docudesk';
 
-    /**
-     * Constructor
-     *
-     * @param array $urlParams URL parameters for the application
-     */
-    public function __construct(
-        array $urlParams=[],
-    ) {
-        parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
+	/**
+	 * Constructor
+	 *
+	 * @param array $urlParams URL parameters for the application
+	 */
+	public function __construct(
+		array $urlParams = [],
+	) {
+		parent::__construct(appName: self::APP_ID, urlParams: $urlParams);
 
-        // Register the app's bundled vendor autoload so third-party
-        // packages (mpdf, fpdi, twig, …) declared in composer.json
-        // resolve at runtime. Nextcloud only autoloads the app's own
-        // PSR-4 namespace by default; vendor deps live outside that
-        // and need an explicit include. Mirrors OpenRegister's
-        // Application::__construct pattern.
-        $autoload = __DIR__.'/../../vendor/autoload.php';
-        if (is_file($autoload) === true) {
-            include_once $autoload;
-        }
+		// Register the app's bundled vendor autoload so third-party
+		// packages (mpdf, fpdi, twig, …) declared in composer.json
+		// resolve at runtime. Nextcloud only autoloads the app's own
+		// PSR-4 namespace by default; vendor deps live outside that
+		// and need an explicit include. Mirrors OpenRegister's
+		// Application::__construct pattern.
+		$autoload = __DIR__ . '/../../vendor/autoload.php';
+		if (is_file($autoload) === true) {
+			include_once $autoload;
+		}
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Register services and event listeners
-     *
-     * @param IRegistrationContext $context The registration context
-     *
-     * @return void
-     */
-    public function register(IRegistrationContext $context): void
-    {
-        $bootstrap = new RegistrationBootstrap();
-        $bootstrap->register(context: $context);
+	/**
+	 * Register services and event listeners
+	 *
+	 * @param IRegistrationContext $context The registration context
+	 *
+	 * @return void
+	 */
+	public function register(IRegistrationContext $context): void {
+		$bootstrap = new RegistrationBootstrap();
+		$bootstrap->register(context: $context);
 
-    }//end register()
+	}//end register()
 
-    /**
-     * Boot the application
-     *
-     * @param IBootContext $context The boot context
-     *
-     * @return void
-     */
-    public function boot(IBootContext $context): void
-    {
-        $bootstrap = new RegistrationBootstrap();
-        $bootstrap->boot(container: $context->getServerContainer(), appName: self::APP_ID);
+	/**
+	 * Boot the application
+	 *
+	 * @param IBootContext $context The boot context
+	 *
+	 * @return void
+	 */
+	public function boot(IBootContext $context): void {
+		$bootstrap = new RegistrationBootstrap();
+		$bootstrap->boot(container: $context->getServerContainer(), appName: self::APP_ID);
 
-    }//end boot()
+	}//end boot()
 }//end class

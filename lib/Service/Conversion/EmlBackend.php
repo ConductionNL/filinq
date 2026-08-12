@@ -63,199 +63,185 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class EmlBackend implements ConversionBackendInterface
-{
+class EmlBackend implements ConversionBackendInterface {
 
+	/**
+	 * App config key for the tenant observability flag.
+	 */
+	private const ENABLED_KEY = 'docudesk.conversion.backends.eml_enabled';
 
-    /**
-     * App config key for the tenant observability flag.
-     */
-    private const ENABLED_KEY = 'docudesk.conversion.backends.eml_enabled';
+	/**
+	 * App identifier used for IAppConfig reads/writes.
+	 */
+	private const APP_ID = 'docudesk';
 
+	/**
+	 * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
+	 */
+	private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
 
-    /**
-     * App identifier used for IAppConfig reads/writes.
-     */
-    private const APP_ID = 'docudesk';
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig Tenant configuration provider.
+	 * @param IAppManager $appManager App manager (OpenRegister installed check).
+	 * @param ContainerInterface $container DI container for OR service resolution.
+	 * @param EmlPdfAssemblyService $assembly Redacted-component PDF assembler.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 */
+	public function __construct(
+		private readonly IAppConfig $appConfig,
+		private readonly IAppManager $appManager,
+		private readonly ContainerInterface $container,
+		private readonly EmlPdfAssemblyService $assembly,
+		private readonly LoggerInterface $logger,
+	) {
 
+	}//end __construct()
 
-    /**
-     * OpenRegister FileService FQCN — exposes anonymizeEmlStructured().
-     */
-    private const OR_FILE_SERVICE = 'OCA\\OpenRegister\\Service\\FileService';
+	/**
+	 * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'eml';
+	}//end name()
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig            $appConfig  Tenant configuration provider.
-     * @param IAppManager           $appManager App manager (OpenRegister installed check).
-     * @param ContainerInterface    $container  DI container for OR service resolution.
-     * @param EmlPdfAssemblyService $assembly   Redacted-component PDF assembler.
-     * @param LoggerInterface       $logger     Logger for diagnostics.
-     */
-    public function __construct(
-        private readonly IAppConfig $appConfig,
-        private readonly IAppManager $appManager,
-        private readonly ContainerInterface $container,
-        private readonly EmlPdfAssemblyService $assembly,
-        private readonly LoggerInterface $logger,
-    ) {
+	/**
+	 * Available iff the tenant flag is set AND OpenRegister exposes its
+	 * anonymise-EML API (`anonymizeEmlStructured`) AND the assembly service
+	 * is present. The tenant flag is read for observability and lets tenants
+	 * force fall-through.
+	 *
+	 * @return bool
+	 */
+	public function isAvailable(): bool {
+		$flag = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
+		if ($flag === 'false') {
+			return false;
+		}
 
-    }//end __construct()
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			return false;
+		}
 
-    /**
-     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'eml';
+		try {
+			$fileService = $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			return false;
+		}
 
-    }//end name()
+		return method_exists($fileService, 'anonymizeEmlStructured');
+	}//end isAvailable()
 
-    /**
-     * Available iff the tenant flag is set AND OpenRegister exposes its
-     * anonymise-EML API (`anonymizeEmlStructured`) AND the assembly service
-     * is present. The tenant flag is read for observability and lets tenants
-     * force fall-through.
-     *
-     * @return bool
-     */
-    public function isAvailable(): bool
-    {
-        $flag = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-        if ($flag === 'false') {
-            return false;
-        }
+	/**
+	 * Declare the input formats this backend claims for cascade routing.
+	 *
+	 * @param string $mimeType Source MIME.
+	 * @param string $extension Source extension (lowercased, no dot).
+	 *
+	 * @return bool True for `message/rfc822` (.eml).
+	 */
+	public function canHandle(string $mimeType, string $extension): bool {
+		return $mimeType === 'message/rfc822' || $extension === 'eml';
+	}//end canHandle()
 
-        if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-            return false;
-        }
+	/**
+	 * Convert an EML input: call OR's anonymise-EML API and assemble the
+	 * redacted result into a PDF/A-3b written beside the source.
+	 *
+	 * NO raw-parse fallback: if OR's API throws, this throws
+	 * ConversionFailedException so the cascade falls through (422 for EML) —
+	 * never emitting un-redacted content (design D9). Entities are not
+	 * threaded through the cascade signature, so this calls OR with an empty
+	 * entity set; the operator-facing redaction path is the
+	 * AnonymizationService branch.
+	 *
+	 * @param File $source Source EML file node.
+	 *
+	 * @return File Newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException On OR API failure or assembly failure.
+	 */
+	public function convert(File $source): File {
+		try {
+			$fileService = $this->container->get(self::OR_FILE_SERVICE);
+		} catch (Throwable $e) {
+			throw new ConversionFailedException(
+				message: 'EML backend could not resolve OpenRegister FileService: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => false,
+						'supports' => true,
+						'reason' => 'OpenRegister FileService unavailable',
+					],
+				],
+				previous: $e
+			);
+		}
 
-        try {
-            $fileService = $this->container->get(self::OR_FILE_SERVICE);
-        } catch (Throwable $e) {
-            return false;
-        }
+		try {
+			$structure = $fileService->anonymizeEmlStructured($source, [], 'document', null);
+		} catch (Throwable $e) {
+			// NO raw-parse fallback — re-throw as a typed failure.
+			$this->logger->warning(
+				'[EmlBackend] OR anonymizeEmlStructured failed; no raw-parse fallback',
+				['source' => $source->getPath(), 'exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			throw new ConversionFailedException(
+				message: 'OpenRegister anonymise-EML API failed: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'anonymizeEmlStructured threw: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-        return method_exists($fileService, 'anonymizeEmlStructured');
+		if (is_object($structure) === false) {
+			throw new ConversionFailedException(
+				message: 'OpenRegister anonymise-EML API returned no structure.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'anonymizeEmlStructured returned non-object',
+					],
+				]
+			);
+		}
 
-    }//end isAvailable()
+		$pdfBytes = $this->assembly->assemble(result: $structure, sourceFilename: $source->getName());
 
-    /**
-     * Declare the input formats this backend claims for cascade routing.
-     *
-     * @param string $mimeType  Source MIME.
-     * @param string $extension Source extension (lowercased, no dot).
-     *
-     * @return bool True for `message/rfc822` (.eml).
-     */
-    public function canHandle(string $mimeType, string $extension): bool
-    {
-        return $mimeType === 'message/rfc822' || $extension === 'eml';
+		$parent = $source->getParent();
+		$outputName = $this->stripExtension(name: $source->getName()) . '_anonymized.pdf';
+		if ($parent->nodeExists($outputName) === true) {
+			$parent->get($outputName)->delete();
+		}
 
-    }//end canHandle()
+		return $parent->newFile($outputName, $pdfBytes);
+	}//end convert()
 
-    /**
-     * Convert an EML input: call OR's anonymise-EML API and assemble the
-     * redacted result into a PDF/A-3b written beside the source.
-     *
-     * NO raw-parse fallback: if OR's API throws, this throws
-     * ConversionFailedException so the cascade falls through (422 for EML) —
-     * never emitting un-redacted content (design D9). Entities are not
-     * threaded through the cascade signature, so this calls OR with an empty
-     * entity set; the operator-facing redaction path is the
-     * AnonymizationService branch.
-     *
-     * @param File $source Source EML file node.
-     *
-     * @return File Newly written PDF file node.
-     *
-     * @throws ConversionFailedException On OR API failure or assembly failure.
-     */
-    public function convert(File $source): File
-    {
-        try {
-            $fileService = $this->container->get(self::OR_FILE_SERVICE);
-        } catch (Throwable $e) {
-            throw new ConversionFailedException(
-                message: 'EML backend could not resolve OpenRegister FileService: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => false,
-                        'supports'  => true,
-                        'reason'    => 'OpenRegister FileService unavailable',
-                    ],
-                ],
-                previous: $e
-            );
-        }
+	/**
+	 * Return $name without its trailing `.ext`.
+	 *
+	 * @param string $name File name with extension.
+	 *
+	 * @return string
+	 */
+	private function stripExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return $name;
+		}
 
-        try {
-            $structure = $fileService->anonymizeEmlStructured($source, [], 'document', null);
-        } catch (Throwable $e) {
-            // NO raw-parse fallback — re-throw as a typed failure.
-            $this->logger->warning(
-                '[EmlBackend] OR anonymizeEmlStructured failed; no raw-parse fallback',
-                ['source' => $source->getPath(), 'exception' => get_class($e), 'message' => $e->getMessage()]
-            );
-            throw new ConversionFailedException(
-                message: 'OpenRegister anonymise-EML API failed: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'anonymizeEmlStructured threw: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
-
-        if (is_object($structure) === false) {
-            throw new ConversionFailedException(
-                message: 'OpenRegister anonymise-EML API returned no structure.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'anonymizeEmlStructured returned non-object',
-                    ],
-                ]
-            );
-        }
-
-        $pdfBytes = $this->assembly->assemble(result: $structure, sourceFilename: $source->getName());
-
-        $parent     = $source->getParent();
-        $outputName = $this->stripExtension(name: $source->getName()).'_anonymized.pdf';
-        if ($parent->nodeExists($outputName) === true) {
-            $parent->get($outputName)->delete();
-        }
-
-        return $parent->newFile($outputName, $pdfBytes);
-
-    }//end convert()
-
-    /**
-     * Return $name without its trailing `.ext`.
-     *
-     * @param string $name File name with extension.
-     *
-     * @return string
-     */
-    private function stripExtension(string $name): string
-    {
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            return $name;
-        }
-
-        return substr($name, 0, $dotPos);
-
-    }//end stripExtension()
+		return substr($name, 0, $dotPos);
+	}//end stripExtension()
 }//end class

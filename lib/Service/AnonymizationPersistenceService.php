@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Anonymization Persistence Service
  *
@@ -45,398 +46,382 @@ use Throwable;
  *
  * @spec openspec/specs/anonymization/spec.md
  */
-class AnonymizationPersistenceService
-{
-    /**
-     * Constructor for AnonymizationPersistenceService
-     *
-     * @param LoggerInterface            $logger         Logger for best-effort persistence failures.
-     * @param OpenRegisterServiceLocator $locator        Resolver for OpenRegister services and mappers.
-     * @param ConsentCrudService         $consentCrud    Consent CRUD service for register/schema config.
-     * @param ConsentService             $consentService Consent service for creating publication consents.
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly LoggerInterface $logger,
-        private readonly OpenRegisterServiceLocator $locator,
-        private readonly ConsentCrudService $consentCrud,
-        private readonly ConsentService $consentService
-    ) {
+class AnonymizationPersistenceService {
+	/**
+	 * Constructor for AnonymizationPersistenceService
+	 *
+	 * @param LoggerInterface $logger Logger for best-effort persistence failures.
+	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
+	 * @param ConsentCrudService $consentCrud Consent CRUD service for register/schema config.
+	 * @param ConsentService $consentService Consent service for creating publication consents.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+		private readonly OpenRegisterServiceLocator $locator,
+		private readonly ConsentCrudService $consentCrud,
+		private readonly ConsentService $consentService,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Persist or update the mapping between a source file and its anonymised counterpart.
-     *
-     * Idempotent UPSERT keyed on `sourceFileId`: the first successful
-     * anonymisation of a file creates an `anonymizationLink` object in the
-     * `document` register; every subsequent re-anonymisation of the same
-     * source file updates that same record (preserving its `@self`, which
-     * triggers OpenRegister's update path) and increments `runCount`. Both
-     * `sourceFileId` and `anonymizedFileId` are facetable on the schema so
-     * OR's search API resolves the link in both directions.
-     *
-     * Best-effort: the anonymised file already exists and the run has
-     * succeeded, so a persistence failure here MUST NOT abort or alter the
-     * response. Failures are caught, logged at warning level, and the
-     * unmodified `$resultInfo` is returned (without an `anonymizationLinkId`
-     * key).
-     *
-     * @param int                  $fileId     The source (unanonymised) Nextcloud file ID.
-     * @param mixed                $sourceNode The source file node (used for name/path/owner metadata).
-     * @param array<string, mixed> $resultInfo Current result; carries anonymizedFileId/Name/Path + replacementCount.
-     *
-     * @return array<string, mixed> The `$resultInfo`, enriched with `anonymizationLinkId` on success.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    public function recordAnonymizationLink(int $fileId, mixed $sourceNode, array $resultInfo): array
-    {
-        try {
-            $objectService = $this->locator->get(
-                className: 'OCA\OpenRegister\Service\ObjectService'
-            );
+	/**
+	 * Persist or update the mapping between a source file and its anonymised counterpart.
+	 *
+	 * Idempotent UPSERT keyed on `sourceFileId`: the first successful
+	 * anonymisation of a file creates an `anonymizationLink` object in the
+	 * `document` register; every subsequent re-anonymisation of the same
+	 * source file updates that same record (preserving its `@self`, which
+	 * triggers OpenRegister's update path) and increments `runCount`. Both
+	 * `sourceFileId` and `anonymizedFileId` are facetable on the schema so
+	 * OR's search API resolves the link in both directions.
+	 *
+	 * Best-effort: the anonymised file already exists and the run has
+	 * succeeded, so a persistence failure here MUST NOT abort or alter the
+	 * response. Failures are caught, logged at warning level, and the
+	 * unmodified `$resultInfo` is returned (without an `anonymizationLinkId`
+	 * key).
+	 *
+	 * @param int $fileId The source (unanonymised) Nextcloud file ID.
+	 * @param mixed $sourceNode The source file node (used for name/path/owner metadata).
+	 * @param array<string, mixed> $resultInfo Current result; carries anonymizedFileId/Name/Path + replacementCount.
+	 *
+	 * @return array<string, mixed> The `$resultInfo`, enriched with `anonymizationLinkId` on success.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function recordAnonymizationLink(int $fileId, mixed $sourceNode, array $resultInfo): array {
+		try {
+			$objectService = $this->locator->get(
+				className: 'OCA\OpenRegister\Service\ObjectService'
+			);
 
-            $object = $this->buildLinkObject(
-                objectService: $objectService,
-                fileId: $fileId,
-                resultInfo: $resultInfo
-            );
-            $object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
+			$object = $this->buildLinkObject(
+				objectService: $objectService,
+				fileId: $fileId,
+				resultInfo: $resultInfo
+			);
+			$object = $this->applySourceNodeMetadata(object: $object, sourceNode: $sourceNode);
 
-            $saved  = $objectService->saveObject(
-                object: $object,
-                register: 'document',
-                schema: 'anonymizationLink'
-            );
-            $linkId = $this->extractSavedObjectId(saved: $saved);
-            if ($linkId !== null) {
-                $resultInfo['anonymizationLinkId'] = $linkId;
-            }
+			$saved = $objectService->saveObject(
+				object: $object,
+				register: 'document',
+				schema: 'anonymizationLink'
+			);
+			$linkId = $this->extractSavedObjectId(saved: $saved);
+			if ($linkId !== null) {
+				$resultInfo['anonymizationLinkId'] = $linkId;
+			}
 
-            $this->logger->info(
-                'Anonymisation link recorded',
-                [
-                    'sourceFileId'     => $fileId,
-                    'anonymizedFileId' => $object['anonymizedFileId'],
-                    'runCount'         => $object['runCount'],
-                ]
-            );
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'recordAnonymizationLink failed; anonymisation result is unaffected: '.$e->getMessage(),
-                ['fileId' => $fileId, 'exception' => $e]
-            );
-        }//end try
+			$this->logger->info(
+				'Anonymisation link recorded',
+				[
+					'sourceFileId' => $fileId,
+					'anonymizedFileId' => $object['anonymizedFileId'],
+					'runCount' => $object['runCount'],
+				]
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'recordAnonymizationLink failed; anonymisation result is unaffected: ' . $e->getMessage(),
+				['fileId' => $fileId, 'exception' => $e]
+			);
+		}//end try
 
-        return $resultInfo;
+		return $resultInfo;
+	}//end recordAnonymizationLink()
 
-    }//end recordAnonymizationLink()
+	/**
+	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.
+	 *
+	 * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
+	 * failure is logged but does NOT abort the response — the consent failure is surfaced as
+	 * a structured error entry in createdConsents[].
+	 *
+	 * @param array<string, mixed> $resultInfo Current anonymization result.
+	 * @param array<int, array<string, mixed>> $unredactedEntities Validated unredacted-entity entries.
+	 *
+	 * @return array<string, mixed> Result enriched with createdConsents[] field.
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
+	 */
+	public function createConsentsForUnredactedEntities(array $resultInfo, array $unredactedEntities): array {
+		$config = $this->consentCrud->getConsentConfig();
+		if ($config === null) {
+			$this->logger->warning(
+				'Publication consent register/schema not configured; skipping consent creation for unredacted entities.'
+			);
+			$resultInfo['createdConsents'] = [];
+			return $resultInfo;
+		}
 
-    /**
-     * Create publicationConsent records for each unredacted entity after a successful anonymise run.
-     *
-     * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
-     * failure is logged but does NOT abort the response — the consent failure is surfaced as
-     * a structured error entry in createdConsents[].
-     *
-     * @param array<string, mixed>             $resultInfo         Current anonymization result.
-     * @param array<int, array<string, mixed>> $unredactedEntities Validated unredacted-entity entries.
-     *
-     * @return array<string, mixed> Result enriched with createdConsents[] field.
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-4
-     */
-    public function createConsentsForUnredactedEntities(array $resultInfo, array $unredactedEntities): array
-    {
-        $config = $this->consentCrud->getConsentConfig();
-        if ($config === null) {
-            $this->logger->warning(
-                'Publication consent register/schema not configured; skipping consent creation for unredacted entities.'
-            );
-            $resultInfo['createdConsents'] = [];
-            return $resultInfo;
-        }
+		$documentId = (string)($resultInfo['anonymizedFileId'] ?? '');
+		$createdConsents = [];
 
-        $documentId      = (string) ($resultInfo['anonymizedFileId'] ?? '');
-        $createdConsents = [];
+		foreach ($unredactedEntities as $entry) {
+			$createdConsents[] = $this->createOneConsent(
+				entry: $entry,
+				documentId: $documentId,
+				config: $config
+			);
+		}
 
-        foreach ($unredactedEntities as $entry) {
-            $createdConsents[] = $this->createOneConsent(
-                entry: $entry,
-                documentId: $documentId,
-                config: $config
-            );
-        }
+		$resultInfo['createdConsents'] = $createdConsents;
+		return $resultInfo;
+	}//end createConsentsForUnredactedEntities()
 
-        $resultInfo['createdConsents'] = $createdConsents;
-        return $resultInfo;
+	/**
+	 * Create the publicationConsent record for one unredacted entity.
+	 *
+	 * @param array<string, mixed> $entry The unredacted-entity entry.
+	 * @param string $documentId The anonymised document id the consent belongs to.
+	 * @param array<string, string> $config Resolved consent register/schema configuration.
+	 *
+	 * @return array<string, mixed> The created-consent descriptor, or its structured failure entry.
+	 *
+	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
+	 */
+	private function createOneConsent(array $entry, string $documentId, array $config): array {
+		$entityText = (string)($entry['entityText'] ?? '');
+		$extra = [
+			'publicationBases' => ($entry['publicationBases'] ?? []),
+		];
 
-    }//end createConsentsForUnredactedEntities()
+		if (empty($entry['contactEmail']) === false) {
+			$extra['contactEmail'] = (string)$entry['contactEmail'];
+		}
 
-    /**
-     * Create the publicationConsent record for one unredacted entity.
-     *
-     * @param array<string, mixed>  $entry      The unredacted-entity entry.
-     * @param string                $documentId The anonymised document id the consent belongs to.
-     * @param array<string, string> $config     Resolved consent register/schema configuration.
-     *
-     * @return array<string, mixed> The created-consent descriptor, or its structured failure entry.
-     *
-     * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-3
-     */
-    private function createOneConsent(array $entry, string $documentId, array $config): array
-    {
-        $entityText = (string) ($entry['entityText'] ?? '');
-        $extra      = [
-            'publicationBases' => ($entry['publicationBases'] ?? []),
-        ];
+		if (empty($entry['contactAddress']) === false) {
+			$extra['contactAddress'] = (string)$entry['contactAddress'];
+		}
 
-        if (empty($entry['contactEmail']) === false) {
-            $extra['contactEmail'] = (string) $entry['contactEmail'];
-        }
+		try {
+			$consent = $this->consentService->createConsentRequest(
+				documentId: $documentId,
+				entityType: (string)($entry['entityType'] ?? ''),
+				entityText: $entityText,
+				register: $config['register'],
+				schema: $config['schema'],
+				extra: $extra
+			);
 
-        if (empty($entry['contactAddress']) === false) {
-            $extra['contactAddress'] = (string) $entry['contactAddress'];
-        }
+			return [
+				'entityId' => ($entry['entityId'] ?? null),
+				'entityText' => $entityText,
+				'consentId' => ($consent['id'] ?? $consent['uuid'] ?? null),
+				'consentStatus' => ($consent['consentStatus'] ?? 'pending'),
+				'action' => 'created',
+			];
+		} catch (Exception $e) {
+			$this->logger->error(
+				'Failed to create consent for unredacted entity: ' . $e->getMessage(),
+				['entityText' => $entityText, 'exception' => $e]
+			);
 
-        try {
-            $consent = $this->consentService->createConsentRequest(
-                documentId: $documentId,
-                entityType: (string) ($entry['entityType'] ?? ''),
-                entityText: $entityText,
-                register: $config['register'],
-                schema: $config['schema'],
-                extra: $extra
-            );
+			return [
+				'entityId' => ($entry['entityId'] ?? null),
+				'entityText' => $entityText,
+				'action' => 'failed',
+				'error' => 'Consent creation failed.',
+			];
+		}//end try
 
-            return [
-                'entityId'      => ($entry['entityId'] ?? null),
-                'entityText'    => $entityText,
-                'consentId'     => ($consent['id'] ?? $consent['uuid'] ?? null),
-                'consentStatus' => ($consent['consentStatus'] ?? 'pending'),
-                'action'        => 'created',
-            ];
-        } catch (Exception $e) {
-            $this->logger->error(
-                'Failed to create consent for unredacted entity: '.$e->getMessage(),
-                ['entityText' => $entityText, 'exception' => $e]
-            );
+	}//end createOneConsent()
 
-            return [
-                'entityId'   => ($entry['entityId'] ?? null),
-                'entityText' => $entityText,
-                'action'     => 'failed',
-                'error'      => 'Consent creation failed.',
-            ];
-        }//end try
+	/**
+	 * Build the anonymizationLink object, reusing the existing record when present.
+	 *
+	 * @param mixed $objectService OpenRegister ObjectService.
+	 * @param int $fileId The source Nextcloud file id.
+	 * @param array<string, mixed> $resultInfo The anonymise result.
+	 *
+	 * @return array<string, mixed> The object ready to be saved.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array {
+		$results = $objectService->searchObjects(
+			query: [
+				'@self' => [
+					'register' => 'document',
+					'schema' => 'anonymizationLink',
+				],
+				'sourceFileId' => $fileId,
+			]
+		);
 
-    }//end createOneConsent()
+		$existing = [];
+		if (is_array($results) === true && empty($results) === false) {
+			$existing = $this->extractLinkObjectData(candidate: $results[0]);
+		}
 
-    /**
-     * Build the anonymizationLink object, reusing the existing record when present.
-     *
-     * @param mixed                $objectService OpenRegister ObjectService.
-     * @param int                  $fileId        The source Nextcloud file id.
-     * @param array<string, mixed> $resultInfo    The anonymise result.
-     *
-     * @return array<string, mixed> The object ready to be saved.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array
-    {
-        $results = $objectService->searchObjects(
-            query: [
-                '@self'        => [
-                    'register' => 'document',
-                    'schema'   => 'anonymizationLink',
-                ],
-                'sourceFileId' => $fileId,
-            ]
-        );
+		$object = [
+			'@self' => [
+				'register' => 'document',
+				'schema' => 'anonymizationLink',
+			],
+			'sourceFileId' => $fileId,
+			'runCount' => 1,
+		];
 
-        $existing = [];
-        if (is_array($results) === true && empty($results) === false) {
-            $existing = $this->extractLinkObjectData(candidate: $results[0]);
-        }
+		if (empty($existing) === false) {
+			$object = $existing;
+			$object['runCount'] = ((int)($existing['runCount'] ?? 0) + 1);
+		}
 
-        $object = [
-            '@self'        => [
-                'register' => 'document',
-                'schema'   => 'anonymizationLink',
-            ],
-            'sourceFileId' => $fileId,
-            'runCount'     => 1,
-        ];
+		// Anonymised-side metadata + run stats. Only successful runs
+		// reach this method, so status is always 'anonymized'.
+		$anonymizedName = (string)($resultInfo['anonymizedFileName'] ?? '');
+		$object['anonymizedFileId'] = (int)$resultInfo['anonymizedFileId'];
+		$object['anonymizedFileName'] = $anonymizedName;
+		$object['anonymizedFilePath'] = (string)($resultInfo['anonymizedFilePath'] ?? '');
+		$object['status'] = 'anonymized';
+		$object['replacementCount'] = (int)($resultInfo['replacementCount'] ?? 0);
+		$object['anonymizedAt'] = date(format: 'c');
 
-        if (empty($existing) === false) {
-            $object = $existing;
-            $object['runCount'] = ((int) ($existing['runCount'] ?? 0) + 1);
-        }
+		$extension = strtolower(pathinfo($anonymizedName, PATHINFO_EXTENSION));
+		if (in_array($extension, ['pdf', 'docx', 'odt', 'txt', 'html'], true) === true) {
+			$object['outputFormat'] = $extension;
+		}
 
-        // Anonymised-side metadata + run stats. Only successful runs
-        // reach this method, so status is always 'anonymized'.
-        $anonymizedName = (string) ($resultInfo['anonymizedFileName'] ?? '');
-        $object['anonymizedFileId']   = (int) $resultInfo['anonymizedFileId'];
-        $object['anonymizedFileName'] = $anonymizedName;
-        $object['anonymizedFilePath'] = (string) ($resultInfo['anonymizedFilePath'] ?? '');
-        $object['status']           = 'anonymized';
-        $object['replacementCount'] = (int) ($resultInfo['replacementCount'] ?? 0);
-        $object['anonymizedAt']     = date(format: 'c');
+		return $object;
+	}//end buildLinkObject()
 
-        $extension = strtolower(pathinfo($anonymizedName, PATHINFO_EXTENSION));
-        if (in_array($extension, ['pdf', 'docx', 'odt', 'txt', 'html'], true) === true) {
-            $object['outputFormat'] = $extension;
-        }
+	/**
+	 * Apply best-effort source-node metadata (name, path, owner) to a link object.
+	 *
+	 * Each accessor is guarded with method_exists so the method tolerates any
+	 * file-node-like object (and mocks in unit tests) without fataling.
+	 *
+	 * @param array<string, mixed> $object The link object being built.
+	 * @param mixed $sourceNode The source file node.
+	 *
+	 * @return array<string, mixed> The object with any resolvable source metadata applied.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function applySourceNodeMetadata(array $object, mixed $sourceNode): array {
+		if (is_object($sourceNode) === false) {
+			return $object;
+		}
 
-        return $object;
+		if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
+			$object['sourceFileName'] = (string)$sourceNode->getName();
+		}
 
-    }//end buildLinkObject()
+		if (method_exists(object_or_class: $sourceNode, method: 'getPath') === true) {
+			$object['sourceFilePath'] = (string)$sourceNode->getPath();
+		}
 
-    /**
-     * Apply best-effort source-node metadata (name, path, owner) to a link object.
-     *
-     * Each accessor is guarded with method_exists so the method tolerates any
-     * file-node-like object (and mocks in unit tests) without fataling.
-     *
-     * @param array<string, mixed> $object     The link object being built.
-     * @param mixed                $sourceNode The source file node.
-     *
-     * @return array<string, mixed> The object with any resolvable source metadata applied.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function applySourceNodeMetadata(array $object, mixed $sourceNode): array
-    {
-        if (is_object($sourceNode) === false) {
-            return $object;
-        }
+		$owner = null;
+		if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
+			$owner = $sourceNode->getOwner();
+		}
 
-        if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
-            $object['sourceFileName'] = (string) $sourceNode->getName();
-        }
+		if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
+			$object['anonymizedBy'] = (string)$owner->getUID();
+		}
 
-        if (method_exists(object_or_class: $sourceNode, method: 'getPath') === true) {
-            $object['sourceFilePath'] = (string) $sourceNode->getPath();
-        }
+		return $object;
+	}//end applySourceNodeMetadata()
 
-        $owner = null;
-        if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
-            $owner = $sourceNode->getOwner();
-        }
+	/**
+	 * Normalise a searchObjects() candidate to a plain array including its `@self`.
+	 *
+	 * @param mixed $candidate A search result entry (array, or an OR entity object).
+	 *
+	 * @return array<string, mixed> The object data, or an empty array if it could not be read.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function extractLinkObjectData(mixed $candidate): array {
+		if (is_array($candidate) === true) {
+			return $candidate;
+		}
 
-        if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
-            $object['anonymizedBy'] = (string) $owner->getUID();
-        }
+		if (is_object($candidate) === true) {
+			return $this->extractObjectPayload(candidate: $candidate);
+		}
 
-        return $object;
+		return [];
+	}//end extractLinkObjectData()
 
-    }//end applySourceNodeMetadata()
+	/**
+	 * Read an OR entity object's payload, restoring its `@self` id when absent.
+	 *
+	 * @param object $candidate The OR entity object.
+	 *
+	 * @return array<string, mixed> The payload, or an empty array when it cannot be read.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function extractObjectPayload(object $candidate): array {
+		if (method_exists(object_or_class: $candidate, method: 'getObject') === true) {
+			$payload = $candidate->getObject();
+			if (is_array($payload) === true) {
+				if (isset($payload['@self']) === false
+					&& method_exists(object_or_class: $candidate, method: 'getUuid') === true
+				) {
+					$uuid = $candidate->getUuid();
+					if ($uuid !== null) {
+						$payload['@self'] = ['id' => $uuid];
+					}
+				}
 
-    /**
-     * Normalise a searchObjects() candidate to a plain array including its `@self`.
-     *
-     * @param mixed $candidate A search result entry (array, or an OR entity object).
-     *
-     * @return array<string, mixed> The object data, or an empty array if it could not be read.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function extractLinkObjectData(mixed $candidate): array
-    {
-        if (is_array($candidate) === true) {
-            return $candidate;
-        }
+				return $payload;
+			}
+		}
 
-        if (is_object($candidate) === true) {
-            return $this->extractObjectPayload(candidate: $candidate);
-        }
+		if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === true) {
+			$payload = $candidate->jsonSerialize();
+			if (is_array($payload) === true) {
+				return $payload;
+			}
+		}
 
-        return [];
+		return [];
+	}//end extractObjectPayload()
 
-    }//end extractLinkObjectData()
+	/**
+	 * Extract the persisted object's identifier from a saveObject() return value.
+	 *
+	 * @param mixed $saved The value returned by ObjectService::saveObject.
+	 *
+	 * @return string|null The object id/uuid, or null when it cannot be determined.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	private function extractSavedObjectId(mixed $saved): ?string {
+		if (is_object($saved) === true) {
+			if (method_exists(object_or_class: $saved, method: 'getUuid') === true) {
+				$uuid = $saved->getUuid();
+				if (empty($uuid) === false) {
+					return (string)$uuid;
+				}
+			}
 
-    /**
-     * Read an OR entity object's payload, restoring its `@self` id when absent.
-     *
-     * @param object $candidate The OR entity object.
-     *
-     * @return array<string, mixed> The payload, or an empty array when it cannot be read.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function extractObjectPayload(object $candidate): array
-    {
-        if (method_exists(object_or_class: $candidate, method: 'getObject') === true) {
-            $payload = $candidate->getObject();
-            if (is_array($payload) === true) {
-                if (isset($payload['@self']) === false
-                    && method_exists(object_or_class: $candidate, method: 'getUuid') === true
-                ) {
-                    $uuid = $candidate->getUuid();
-                    if ($uuid !== null) {
-                        $payload['@self'] = ['id' => $uuid];
-                    }
-                }
+			if (method_exists(object_or_class: $saved, method: 'getId') === true) {
+				$id = $saved->getId();
+				if (empty($id) === false) {
+					return (string)$id;
+				}
+			}
 
-                return $payload;
-            }
-        }
+			if (method_exists(object_or_class: $saved, method: 'jsonSerialize') === true) {
+				$saved = $saved->jsonSerialize();
+			}
+		}
 
-        if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === true) {
-            $payload = $candidate->jsonSerialize();
-            if (is_array($payload) === true) {
-                return $payload;
-            }
-        }
+		if (is_array($saved) === true) {
+			$self = ($saved['@self'] ?? []);
+			$id = ($self['id'] ?? ($self['uuid'] ?? ($saved['id'] ?? null)));
+			if (empty($id) === false) {
+				return (string)$id;
+			}
+		}
 
-        return [];
-
-    }//end extractObjectPayload()
-
-    /**
-     * Extract the persisted object's identifier from a saveObject() return value.
-     *
-     * @param mixed $saved The value returned by ObjectService::saveObject.
-     *
-     * @return string|null The object id/uuid, or null when it cannot be determined.
-     *
-     * @spec openspec/specs/anonymization/spec.md
-     */
-    private function extractSavedObjectId(mixed $saved): ?string
-    {
-        if (is_object($saved) === true) {
-            if (method_exists(object_or_class: $saved, method: 'getUuid') === true) {
-                $uuid = $saved->getUuid();
-                if (empty($uuid) === false) {
-                    return (string) $uuid;
-                }
-            }
-
-            if (method_exists(object_or_class: $saved, method: 'getId') === true) {
-                $id = $saved->getId();
-                if (empty($id) === false) {
-                    return (string) $id;
-                }
-            }
-
-            if (method_exists(object_or_class: $saved, method: 'jsonSerialize') === true) {
-                $saved = $saved->jsonSerialize();
-            }
-        }
-
-        if (is_array($saved) === true) {
-            $self = ($saved['@self'] ?? []);
-            $id   = ($self['id'] ?? ($self['uuid'] ?? ($saved['id'] ?? null)));
-            if (empty($id) === false) {
-                return (string) $id;
-            }
-        }
-
-        return null;
-
-    }//end extractSavedObjectId()
+		return null;
+	}//end extractSavedObjectId()
 }//end class

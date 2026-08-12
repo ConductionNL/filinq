@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Thousands Formatter
  *
@@ -35,64 +36,59 @@ namespace OCA\DocuDesk\Service\Charts;
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */
-class ThousandsFormatter
-{
-    /**
-     * Format a number with NL-style thousands separators, independent of
-     * environment locale (deterministic across containers).
-     *
-     * @param float $value    Value to format.
-     * @param int   $decimals Number of decimal places.
-     *
-     * @return string Formatted number, e.g. '1.234,56'.
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md
-     */
-    public function format(float $value, int $decimals): string
-    {
-        $fixed    = sprintf('%.'.$decimals.'f', $value);
-        $negative = str_starts_with($fixed, '-');
-        if ($negative === true) {
-            $fixed = substr($fixed, 1);
-        }
+class ThousandsFormatter {
+	/**
+	 * Format a number with NL-style thousands separators, independent of
+	 * environment locale (deterministic across containers).
+	 *
+	 * @param float $value Value to format.
+	 * @param int $decimals Number of decimal places.
+	 *
+	 * @return string Formatted number, e.g. '1.234,56'.
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md
+	 */
+	public function format(float $value, int $decimals): string {
+		$fixed = sprintf('%.' . $decimals . 'f', $value);
+		$negative = str_starts_with($fixed, '-');
+		if ($negative === true) {
+			$fixed = substr($fixed, 1);
+		}
 
-        $parts       = explode('.', $fixed);
-        $decimalPart = $parts[1] ?? '';
+		$parts = explode('.', $fixed);
+		$decimalPart = $parts[1] ?? '';
 
-        $result = $this->group(wholePart: $parts[0]);
-        if ($decimals > 0) {
-            $result .= ','.$decimalPart;
-        }
+		$result = $this->group(wholePart: $parts[0]);
+		if ($decimals > 0) {
+			$result .= ',' . $decimalPart;
+		}
 
-        $sign = '';
-        if ($negative === true) {
-            $sign = '-';
-        }
+		$sign = '';
+		if ($negative === true) {
+			$sign = '-';
+		}
 
-        return $sign.$result;
+		return $sign . $result;
+	}//end format()
 
-    }//end format()
+	/**
+	 * Insert '.' group separators into the whole-number part of a number.
+	 *
+	 * @param string $wholePart The digits before the decimal separator.
+	 *
+	 * @return string The grouped digits.
+	 */
+	private function group(string $wholePart): string {
+		$grouped = '';
+		$len = strlen($wholePart);
+		for ($i = 0; $i < $len; $i++) {
+			if ($i > 0 && ($len - $i) % 3 === 0) {
+				$grouped .= '.';
+			}
 
-    /**
-     * Insert '.' group separators into the whole-number part of a number.
-     *
-     * @param string $wholePart The digits before the decimal separator.
-     *
-     * @return string The grouped digits.
-     */
-    private function group(string $wholePart): string
-    {
-        $grouped = '';
-        $len     = strlen($wholePart);
-        for ($i = 0; $i < $len; $i++) {
-            if ($i > 0 && ($len - $i) % 3 === 0) {
-                $grouped .= '.';
-            }
+			$grouped .= $wholePart[$i];
+		}
 
-            $grouped .= $wholePart[$i];
-        }
-
-        return $grouped;
-
-    }//end group()
+		return $grouped;
+	}//end group()
 }//end class

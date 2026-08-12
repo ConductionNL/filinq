@@ -26,63 +26,57 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for TotalsReconciler.
  */
-class TotalsReconcilerTest extends TestCase
-{
+class TotalsReconcilerTest extends TestCase {
 
-    private TotalsReconciler $reconciler;
+	private TotalsReconciler $reconciler;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->reconciler = new TotalsReconciler();
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->reconciler = new TotalsReconciler();
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * 100.00 + 21.00 reconciles with 121.00.
-     *
-     * @return void
-     */
-    public function testReconcilingTotalsReturnTrue(): void
-    {
-        $this->assertTrue($this->reconciler->reconciles(100.00, 21.00, 121.00));
+	/**
+	 * 100.00 + 21.00 reconciles with 121.00.
+	 *
+	 * @return void
+	 */
+	public function testReconcilingTotalsReturnTrue(): void {
+		$this->assertTrue($this->reconciler->reconciles(100.00, 21.00, 121.00));
 
-    }//end testReconcilingTotalsReturnTrue()
+	}//end testReconcilingTotalsReturnTrue()
 
-    /**
-     * 100.00 + 21.00 does not reconcile with 130.00.
-     *
-     * @return void
-     */
-    public function testNonReconcilingTotalsReturnFalse(): void
-    {
-        $this->assertFalse($this->reconciler->reconciles(100.00, 21.00, 130.00));
+	/**
+	 * 100.00 + 21.00 does not reconcile with 130.00.
+	 *
+	 * @return void
+	 */
+	public function testNonReconcilingTotalsReturnFalse(): void {
+		$this->assertFalse($this->reconciler->reconciles(100.00, 21.00, 130.00));
 
-    }//end testNonReconcilingTotalsReturnFalse()
+	}//end testNonReconcilingTotalsReturnFalse()
 
-    /**
-     * A missing (null) value always fails reconciliation.
-     *
-     * @return void
-     */
-    public function testMissingValueReturnsFalse(): void
-    {
-        $this->assertFalse($this->reconciler->reconciles(100.00, null, 121.00));
-        $this->assertFalse($this->reconciler->reconciles(null, null, null));
+	/**
+	 * A missing (null) value always fails reconciliation.
+	 *
+	 * @return void
+	 */
+	public function testMissingValueReturnsFalse(): void {
+		$this->assertFalse($this->reconciler->reconciles(100.00, null, 121.00));
+		$this->assertFalse($this->reconciler->reconciles(null, null, null));
 
-    }//end testMissingValueReturnsFalse()
+	}//end testMissingValueReturnsFalse()
 
-    /**
-     * A rounding-level discrepancy within tolerance still reconciles.
-     *
-     * @return void
-     */
-    public function testWithinToleranceReconciles(): void
-    {
-        $this->assertTrue($this->reconciler->reconciles(100.00, 21.00, 121.005));
+	/**
+	 * A rounding-level discrepancy within tolerance still reconciles.
+	 *
+	 * @return void
+	 */
+	public function testWithinToleranceReconciles(): void {
+		$this->assertTrue($this->reconciler->reconciles(100.00, 21.00, 121.005));
 
-    }//end testWithinToleranceReconciles()
+	}//end testWithinToleranceReconciles()
 }//end class

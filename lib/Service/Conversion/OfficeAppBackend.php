@@ -52,351 +52,335 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class OfficeAppBackend implements ConversionBackendInterface
-{
+class OfficeAppBackend implements ConversionBackendInterface {
 
+	/**
+	 * App config key controlling whether this backend is attempted.
+	 * Default true; tenants disable for air-gapped installs that
+	 * don't want HTTP probing into Office app endpoints.
+	 */
+	private const ENABLED_KEY = 'docudesk.conversion.backends.office_app_enabled';
 
-    /**
-     * App config key controlling whether this backend is attempted.
-     * Default true; tenants disable for air-gapped installs that
-     * don't want HTTP probing into Office app endpoints.
-     */
-    private const ENABLED_KEY = 'docudesk.conversion.backends.office_app_enabled';
+	/**
+	 * App identifier used for IAppConfig reads/writes.
+	 */
+	private const APP_ID = 'docudesk';
 
+	/**
+	 * Target MIME for all conversions in this cascade.
+	 */
+	private const TARGET_MIME = 'application/pdf';
 
-    /**
-     * App identifier used for IAppConfig reads/writes.
-     */
-    private const APP_ID = 'docudesk';
+	/**
+	 * Cached `hasProviders()` result per request to avoid repeated
+	 * HTTP probing across multiple isAvailable() calls within one
+	 * conversion attempt.
+	 *
+	 * @var boolean|null
+	 */
+	private ?bool $hasProvidersCache = null;
 
+	/**
+	 * Cached provider list per request.
+	 *
+	 * @var array<int, \OCP\Files\Conversion\ConversionMimeProvider>|null
+	 */
+	private ?array $providersCache = null;
 
-    /**
-     * Target MIME for all conversions in this cascade.
-     */
-    private const TARGET_MIME = 'application/pdf';
+	/**
+	 * Constructor.
+	 *
+	 * IConversionManager and IRootFolder are nullable so the backend
+	 * degrades cleanly on Nextcloud versions older than 31 (interface
+	 * not present) — `isAvailable()` returns false rather than crashing
+	 * at autowire time.
+	 *
+	 * @param IConversionManager|null $conversionManager NC's unified converter (31+).
+	 * @param IRootFolder $rootFolder For looking up the converted-file path.
+	 * @param IUserSession $userSession Active session — providers expect a user context.
+	 * @param IAppConfig $appConfig Tenant configuration.
+	 * @param LoggerInterface $logger Diagnostics.
+	 */
+	public function __construct(
+		private readonly ?IConversionManager $conversionManager,
+		private readonly IRootFolder $rootFolder,
+		private readonly IUserSession $userSession,
+		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
+	) {
 
-    /**
-     * Cached `hasProviders()` result per request to avoid repeated
-     * HTTP probing across multiple isAvailable() calls within one
-     * conversion attempt.
-     *
-     * @var boolean|null
-     */
-    private ?bool $hasProvidersCache = null;
+	}//end __construct()
 
-    /**
-     * Cached provider list per request.
-     *
-     * @var array<int, \OCP\Files\Conversion\ConversionMimeProvider>|null
-     */
-    private ?array $providersCache = null;
+	/**
+	 * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
+	 *
+	 * @return string
+	 */
+	public function name(): string {
+		return 'office_app';
+	}//end name()
 
-    /**
-     * Constructor.
-     *
-     * IConversionManager and IRootFolder are nullable so the backend
-     * degrades cleanly on Nextcloud versions older than 31 (interface
-     * not present) — `isAvailable()` returns false rather than crashing
-     * at autowire time.
-     *
-     * @param IConversionManager|null $conversionManager NC's unified converter (31+).
-     * @param IRootFolder             $rootFolder        For looking up the converted-file path.
-     * @param IUserSession            $userSession       Active session — providers expect a user context.
-     * @param IAppConfig              $appConfig         Tenant configuration.
-     * @param LoggerInterface         $logger            Diagnostics.
-     */
-    public function __construct(
-        private readonly ?IConversionManager $conversionManager,
-        private readonly IRootFolder $rootFolder,
-        private readonly IUserSession $userSession,
-        private readonly IAppConfig $appConfig,
-        private readonly LoggerInterface $logger,
-    ) {
+	/**
+	 * Available iff:
+	 *   - tenant flag is `true`
+	 *   - IConversionManager was bound (NC ≥ 31 with at least one
+	 *     conversion provider app installed)
+	 *   - the manager reports at least one registered provider
+	 *
+	 * @return bool
+	 */
+	public function isAvailable(): bool {
+		$value = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
+		if ($value === 'false') {
+			return false;
+		}
 
-    }//end __construct()
+		if ($this->conversionManager === null) {
+			return false;
+		}
 
-    /**
-     * Backend identifier surfaced in the 422 body's `conversionAttempts[].name`.
-     *
-     * @return string
-     */
-    public function name(): string
-    {
-        return 'office_app';
+		if ($this->hasProvidersCache === null) {
+			try {
+				$this->hasProvidersCache = $this->conversionManager->hasProviders();
+			} catch (Throwable $e) {
+				$this->logger->warning(
+					'[OfficeAppBackend] IConversionManager::hasProviders threw; treating as unavailable',
+					['exception' => get_class($e), 'message' => $e->getMessage()]
+				);
+				$this->hasProvidersCache = false;
+			}
+		}
 
-    }//end name()
+		return $this->hasProvidersCache === true;
+	}//end isAvailable()
 
-    /**
-     * Available iff:
-     *   - tenant flag is `true`
-     *   - IConversionManager was bound (NC ≥ 31 with at least one
-     *     conversion provider app installed)
-     *   - the manager reports at least one registered provider
-     *
-     * @return bool
-     */
-    public function isAvailable(): bool
-    {
-        $value = $this->appConfig->getValueString(self::APP_ID, self::ENABLED_KEY, 'true');
-        if ($value === 'false') {
-            return false;
-        }
+	/**
+	 * Declare whether any registered conversion provider can map this source MIME to PDF.
+	 *
+	 * @param string $mimeType Source MIME.
+	 * @param string $extension Source extension (lowercased, no dot). Matching is
+	 *                          MIME-driven — providers advertise MIME tuples, not
+	 *                          extensions — so this is carried into the decline
+	 *                          diagnostics only.
+	 *
+	 * @return bool True iff some registered provider can convert this MIME → application/pdf.
+	 */
+	public function canHandle(string $mimeType, string $extension): bool {
+		if ($this->conversionManager === null) {
+			return false;
+		}
 
-        if ($this->conversionManager === null) {
-            return false;
-        }
+		$providers = $this->getProvidersCached();
+		foreach ($providers as $provider) {
+			if ($provider->getFrom() === $mimeType
+				&& $provider->getTo() === self::TARGET_MIME
+			) {
+				return true;
+			}
+		}
 
-        if ($this->hasProvidersCache === null) {
-            try {
-                $this->hasProvidersCache = $this->conversionManager->hasProviders();
-            } catch (Throwable $e) {
-                $this->logger->warning(
-                    '[OfficeAppBackend] IConversionManager::hasProviders threw; treating as unavailable',
-                    ['exception' => get_class($e), 'message' => $e->getMessage()]
-                );
-                $this->hasProvidersCache = false;
-            }
-        }
+		// Declining here is the single most common reason the cascade falls
+		// through to a lower-fidelity backend; record both coordinates of the
+		// input so operators can match them against the registered providers.
+		$this->logger->debug(
+			'[OfficeAppBackend] No registered provider maps this input to PDF',
+			['mimeType' => $mimeType, 'extension' => $extension]
+		);
 
-        return $this->hasProvidersCache === true;
+		return false;
+	}//end canHandle()
 
-    }//end isAvailable()
+	/**
+	 * Delegate to IConversionManager. The provider writes the converted
+	 * file into the user's Files area at the destination path we
+	 * supply; we then resolve that path back to a File node for the
+	 * caller.
+	 *
+	 * @param File $source Source file node.
+	 *
+	 * @return File Newly written PDF file node.
+	 *
+	 * @throws ConversionFailedException On manager failure or path resolution failure.
+	 */
+	public function convert(File $source): File {
+		if ($this->conversionManager === null) {
+			throw new ConversionFailedException(
+				message: 'OfficeAppBackend reached convert() without IConversionManager bound.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => false,
+						'supports' => false,
+						'reason' => 'IConversionManager not present (NC < 31?)',
+					],
+				]
+			);
+		}
 
-    /**
-     * Declare whether any registered conversion provider can map this source MIME to PDF.
-     *
-     * @param string $mimeType  Source MIME.
-     * @param string $extension Source extension (lowercased, no dot). Matching is
-     *                          MIME-driven — providers advertise MIME tuples, not
-     *                          extensions — so this is carried into the decline
-     *                          diagnostics only.
-     *
-     * @return bool True iff some registered provider can convert this MIME → application/pdf.
-     */
-    public function canHandle(string $mimeType, string $extension): bool
-    {
-        if ($this->conversionManager === null) {
-            return false;
-        }
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			throw new ConversionFailedException(
+				message: 'OfficeAppBackend requires a user session.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'no active user session',
+					],
+				]
+			);
+		}
 
-        $providers = $this->getProvidersCached();
-        foreach ($providers as $provider) {
-            if ($provider->getFrom() === $mimeType
-                && $provider->getTo() === self::TARGET_MIME
-            ) {
-                return true;
-            }
-        }
+		$sourceName = $source->getName();
+		$sourceFolder = $source->getParent();
+		$targetBaseName = $this->stripExtension(name: $sourceName) . '.pdf';
+		$destFullPath = $sourceFolder->getPath() . '/' . $targetBaseName;
 
-        // Declining here is the single most common reason the cascade falls
-        // through to a lower-fidelity backend; record both coordinates of the
-        // input so operators can match them against the registered providers.
-        $this->logger->debug(
-            '[OfficeAppBackend] No registered provider maps this input to PDF',
-            ['mimeType' => $mimeType, 'extension' => $extension]
-        );
+		// If a previous conversion left a file behind, delete it —
+		// IConversionManager refuses to overwrite.
+		if ($sourceFolder->nodeExists($targetBaseName) === true) {
+			$sourceFolder->get($targetBaseName)->delete();
+		}
 
-        return false;
+		try {
+			$writtenPath = $this->conversionManager->convert(
+				$source,
+				self::TARGET_MIME,
+				$destFullPath
+			);
+		} catch (Throwable $e) {
+			throw new ConversionFailedException(
+				message: 'IConversionManager->convert threw: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'manager convert exception: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}
 
-    }//end canHandle()
+		// Manager returned a path; resolve it to a File node for the caller.
+		return $this->resolveConvertedFile(
+			sourceFolder: $sourceFolder,
+			targetBaseName: $targetBaseName,
+			destFullPath: $destFullPath,
+			writtenPath: $writtenPath
+		);
 
-    /**
-     * Delegate to IConversionManager. The provider writes the converted
-     * file into the user's Files area at the destination path we
-     * supply; we then resolve that path back to a File node for the
-     * caller.
-     *
-     * @param File $source Source file node.
-     *
-     * @return File Newly written PDF file node.
-     *
-     * @throws ConversionFailedException On manager failure or path resolution failure.
-     */
-    public function convert(File $source): File
-    {
-        if ($this->conversionManager === null) {
-            throw new ConversionFailedException(
-                message: 'OfficeAppBackend reached convert() without IConversionManager bound.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => false,
-                        'supports'  => false,
-                        'reason'    => 'IConversionManager not present (NC < 31?)',
-                    ],
-                ]
-            );
-        }
+	}//end convert()
 
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            throw new ConversionFailedException(
-                message: 'OfficeAppBackend requires a user session.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'no active user session',
-                    ],
-                ]
-            );
-        }
+	/**
+	 * Resolve the file the conversion manager reported it wrote.
+	 *
+	 * The manager returns a path relative to the user folder OR an absolute
+	 * one depending on the provider, so the lookup is normalised by going
+	 * through the source's parent folder plus the target basename.
+	 *
+	 * @param Folder $sourceFolder Folder that holds the source (and the output).
+	 * @param string $targetBaseName Basename of the expected PDF.
+	 * @param string $destFullPath Full destination path handed to the manager.
+	 * @param mixed $writtenPath Whatever the manager returned, for diagnostics.
+	 *
+	 * @return File The converted PDF node.
+	 *
+	 * @throws ConversionFailedException When the node cannot be found or is not a file.
+	 */
+	private function resolveConvertedFile(
+		Folder $sourceFolder,
+		string $targetBaseName,
+		string $destFullPath,
+		mixed $writtenPath,
+	): File {
+		try {
+			$resolved = $sourceFolder->get($targetBaseName);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[OfficeAppBackend] Conversion reported success but result lookup failed',
+				[
+					'expected' => $destFullPath,
+					'manager_ret' => $writtenPath,
+					'exception' => get_class($e),
+				]
+			);
+			throw new ConversionFailedException(
+				message: 'Office-app conversion reported success but the resulting PDF could not be located.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'post-convert file lookup failed: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-        $sourceName     = $source->getName();
-        $sourceFolder   = $source->getParent();
-        $targetBaseName = $this->stripExtension(name: $sourceName).'.pdf';
-        $destFullPath   = $sourceFolder->getPath().'/'.$targetBaseName;
+		if ($resolved instanceof File === false) {
+			throw new ConversionFailedException(
+				message: 'Office-app conversion result is not a regular file node.',
+				attempts: [
+					[
+						'name' => $this->name(),
+						'available' => true,
+						'supports' => true,
+						'reason' => 'result node is not File',
+					],
+				]
+			);
+		}
 
-        // If a previous conversion left a file behind, delete it —
-        // IConversionManager refuses to overwrite.
-        if ($sourceFolder->nodeExists($targetBaseName) === true) {
-            $sourceFolder->get($targetBaseName)->delete();
-        }
+		return $resolved;
+	}//end resolveConvertedFile()
 
-        try {
-            $writtenPath = $this->conversionManager->convert(
-                $source,
-                self::TARGET_MIME,
-                $destFullPath
-            );
-        } catch (Throwable $e) {
-            throw new ConversionFailedException(
-                message: 'IConversionManager->convert threw: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'manager convert exception: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }
+	/**
+	 * Cached accessor for the provider list. Memoised per request to
+	 * avoid hitting the manager's `getProviders()` repeatedly during
+	 * a single cascade walk.
+	 *
+	 * @return array<int, \OCP\Files\Conversion\ConversionMimeProvider>
+	 */
+	private function getProvidersCached(): array {
+		if ($this->providersCache !== null) {
+			return $this->providersCache;
+		}
 
-        // Manager returned a path; resolve it to a File node for the caller.
-        return $this->resolveConvertedFile(
-            sourceFolder: $sourceFolder,
-            targetBaseName: $targetBaseName,
-            destFullPath: $destFullPath,
-            writtenPath: $writtenPath
-        );
+		if ($this->conversionManager === null) {
+			$this->providersCache = [];
+			return $this->providersCache;
+		}
 
-    }//end convert()
+		try {
+			$this->providersCache = $this->conversionManager->getProviders();
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[OfficeAppBackend] IConversionManager::getProviders threw; treating as no providers',
+				['exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			$this->providersCache = [];
+		}
 
-    /**
-     * Resolve the file the conversion manager reported it wrote.
-     *
-     * The manager returns a path relative to the user folder OR an absolute
-     * one depending on the provider, so the lookup is normalised by going
-     * through the source's parent folder plus the target basename.
-     *
-     * @param Folder $sourceFolder   Folder that holds the source (and the output).
-     * @param string $targetBaseName Basename of the expected PDF.
-     * @param string $destFullPath   Full destination path handed to the manager.
-     * @param mixed  $writtenPath    Whatever the manager returned, for diagnostics.
-     *
-     * @return File The converted PDF node.
-     *
-     * @throws ConversionFailedException When the node cannot be found or is not a file.
-     */
-    private function resolveConvertedFile(
-        Folder $sourceFolder,
-        string $targetBaseName,
-        string $destFullPath,
-        mixed $writtenPath
-    ): File {
-        try {
-            $resolved = $sourceFolder->get($targetBaseName);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[OfficeAppBackend] Conversion reported success but result lookup failed',
-                [
-                    'expected'    => $destFullPath,
-                    'manager_ret' => $writtenPath,
-                    'exception'   => get_class($e),
-                ]
-            );
-            throw new ConversionFailedException(
-                message: 'Office-app conversion reported success but the resulting PDF could not be located.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'post-convert file lookup failed: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
+		return $this->providersCache;
+	}//end getProvidersCached()
 
-        if ($resolved instanceof File === false) {
-            throw new ConversionFailedException(
-                message: 'Office-app conversion result is not a regular file node.',
-                attempts: [
-                    [
-                        'name'      => $this->name(),
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'result node is not File',
-                    ],
-                ]
-            );
-        }
+	/**
+	 * Return $name without its trailing `.ext`.
+	 *
+	 * @param string $name File name with extension.
+	 *
+	 * @return string
+	 */
+	private function stripExtension(string $name): string {
+		$dotPos = strrpos($name, '.');
+		if ($dotPos === false) {
+			return $name;
+		}
 
-        return $resolved;
-
-    }//end resolveConvertedFile()
-
-    /**
-     * Cached accessor for the provider list. Memoised per request to
-     * avoid hitting the manager's `getProviders()` repeatedly during
-     * a single cascade walk.
-     *
-     * @return array<int, \OCP\Files\Conversion\ConversionMimeProvider>
-     */
-    private function getProvidersCached(): array
-    {
-        if ($this->providersCache !== null) {
-            return $this->providersCache;
-        }
-
-        if ($this->conversionManager === null) {
-            $this->providersCache = [];
-            return $this->providersCache;
-        }
-
-        try {
-            $this->providersCache = $this->conversionManager->getProviders();
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[OfficeAppBackend] IConversionManager::getProviders threw; treating as no providers',
-                ['exception' => get_class($e), 'message' => $e->getMessage()]
-            );
-            $this->providersCache = [];
-        }
-
-        return $this->providersCache;
-
-    }//end getProvidersCached()
-
-    /**
-     * Return $name without its trailing `.ext`.
-     *
-     * @param string $name File name with extension.
-     *
-     * @return string
-     */
-    private function stripExtension(string $name): string
-    {
-        $dotPos = strrpos($name, '.');
-        if ($dotPos === false) {
-            return $name;
-        }
-
-        return substr($name, 0, $dotPos);
-
-    }//end stripExtension()
+		return substr($name, 0, $dotPos);
+	}//end stripExtension()
 }//end class

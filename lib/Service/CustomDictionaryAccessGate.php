@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Custom Dictionary Access Gate
  *
@@ -45,120 +46,112 @@ use Throwable;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryAccessGate
-{
+class CustomDictionaryAccessGate {
 
-    /**
-     * OpenRegister's app id, used for the install-presence check.
-     *
-     * @var string
-     */
-    private const OPENREGISTER_APP_ID = 'openregister';
+	/**
+	 * OpenRegister's app id, used for the install-presence check.
+	 *
+	 * @var string
+	 */
+	private const OPENREGISTER_APP_ID = 'openregister';
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container   DI container for lazy OpenRegister service resolution.
-     * @param IAppManager        $appManager  App manager (OpenRegister availability check).
-     * @param IUserSession       $userSession Current-user lookup for the organisation gate.
-     * @param LoggerInterface    $logger      Structured logger.
-     */
-    public function __construct(
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
-        private readonly IUserSession $userSession,
-        private readonly LoggerInterface $logger
-    ) {
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container DI container for lazy OpenRegister service resolution.
+	 * @param IAppManager $appManager App manager (OpenRegister availability check).
+	 * @param IUserSession $userSession Current-user lookup for the organisation gate.
+	 * @param LoggerInterface $logger Structured logger.
+	 */
+	public function __construct(
+		private readonly ContainerInterface $container,
+		private readonly IAppManager $appManager,
+		private readonly IUserSession $userSession,
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Whether OpenRegister is installed. Callers use this to return an
-     * explanatory unavailable state instead of crashing (REQ-DDCDR-004).
-     *
-     * @return bool
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function isAvailable(): bool
-    {
-        return in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true);
+	/**
+	 * Whether OpenRegister is installed. Callers use this to return an
+	 * explanatory unavailable state instead of crashing (REQ-DDCDR-004).
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function isAvailable(): bool {
+		return in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true);
+	}//end isAvailable()
 
-    }//end isAvailable()
+	/**
+	 * Fail-closed organisation-membership check for one record.
+	 *
+	 * A record without an organisation, or any failure resolving
+	 * OpenRegister's `OrganisationService`, is treated as inaccessible —
+	 * never as "everyone may access it".
+	 *
+	 * @param array<string, mixed> $record The record to check.
+	 *
+	 * @return bool True when the current caller may read/write this record.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function callerHasAccess(array $record): bool {
+		$organisationUuid = (string)($this->selfMeta(record: $record)['organisation'] ?? '');
+		if ($organisationUuid === '') {
+			return false;
+		}
 
-    /**
-     * Fail-closed organisation-membership check for one record.
-     *
-     * A record without an organisation, or any failure resolving
-     * OpenRegister's `OrganisationService`, is treated as inaccessible —
-     * never as "everyone may access it".
-     *
-     * @param array<string, mixed> $record The record to check.
-     *
-     * @return bool True when the current caller may read/write this record.
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function callerHasAccess(array $record): bool
-    {
-        $organisationUuid = (string) ($this->selfMeta(record: $record)['organisation'] ?? '');
-        if ($organisationUuid === '') {
-            return false;
-        }
+		if ($this->userSession->getUser() === null) {
+			return false;
+		}
 
-        if ($this->userSession->getUser() === null) {
-            return false;
-        }
+		try {
+			$organisationService = $this->getOrganisationService();
+			return $organisationService->hasAccessToOrganisation($organisationUuid);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[CustomDictionaryAccessGate] organisation-access check failed; denying access (fail-closed).',
+				['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
+			);
+			return false;
+		}
 
-        try {
-            $organisationService = $this->getOrganisationService();
-            return $organisationService->hasAccessToOrganisation($organisationUuid);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[CustomDictionaryAccessGate] organisation-access check failed; denying access (fail-closed).',
-                ['file' => __FILE__, 'line' => __LINE__, 'error' => $e->getMessage()]
-            );
-            return false;
-        }
+	}//end callerHasAccess()
 
-    }//end callerHasAccess()
+	/**
+	 * Extract the `@self` metadata block from a record, defensively.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function selfMeta(array $record): array {
+		$self = $record['@self'] ?? [];
+		if (is_array($self) === false) {
+			return [];
+		}
 
-    /**
-     * Extract the `@self` metadata block from a record, defensively.
-     *
-     * @param array<string, mixed> $record The record.
-     *
-     * @return array<string, mixed>
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function selfMeta(array $record): array
-    {
-        $self = $record['@self'] ?? [];
-        if (is_array($self) === false) {
-            return [];
-        }
+		return $self;
+	}//end selfMeta()
 
-        return $self;
+	/**
+	 * Lazily resolve OpenRegister's `OrganisationService` by FQCN via the
+	 * DI container (same cross-app pattern used throughout DocuDesk), so
+	 * this class stays loadable without OpenRegister installed.
+	 *
+	 * @return object OpenRegister's `OrganisationService`.
+	 *
+	 * @throws RuntimeException When OpenRegister is not installed.
+	 */
+	private function getOrganisationService(): object {
+		if ($this->isAvailable() === false) {
+			throw new RuntimeException('OpenRegister is not available.');
+		}
 
-    }//end selfMeta()
-
-    /**
-     * Lazily resolve OpenRegister's `OrganisationService` by FQCN via the
-     * DI container (same cross-app pattern used throughout DocuDesk), so
-     * this class stays loadable without OpenRegister installed.
-     *
-     * @return object OpenRegister's `OrganisationService`.
-     *
-     * @throws RuntimeException When OpenRegister is not installed.
-     */
-    private function getOrganisationService(): object
-    {
-        if ($this->isAvailable() === false) {
-            throw new RuntimeException('OpenRegister is not available.');
-        }
-
-        return $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-
-    }//end getOrganisationService()
+		return $this->container->get('OCA\OpenRegister\Service\OrganisationService');
+	}//end getOrganisationService()
 }//end class

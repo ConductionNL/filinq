@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PHP built-in-server router for the shared `E2E Tests (Playwright)` job.
  *
@@ -63,7 +64,7 @@
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $path = parse_url($requestUri, PHP_URL_PATH);
 if (!is_string($path) || $path === '') {
-    $path = '/';
+	$path = '/';
 }
 $path = rawurldecode($path);
 
@@ -71,36 +72,36 @@ $path = rawurldecode($path);
 // router that resolves `..` is a directory-traversal primitive and this file
 // is read by people looking for a pattern to copy.
 if (str_contains($path, '..')) {
-    http_response_code(400);
-    return true;
+	http_response_code(400);
+	return true;
 }
 
-$root = rtrim((string) ($_SERVER['DOCUMENT_ROOT'] ?? getcwd()), '/');
+$root = rtrim((string)($_SERVER['DOCUMENT_ROOT'] ?? getcwd()), '/');
 
 // 1. Existing file → let the built-in server serve (or execute) it unchanged.
 if ($path !== '/' && is_file($root . $path)) {
-    return false;
+	return false;
 }
 
 // 2. PATH_INFO dispatch: longest leading `.php` prefix wins.
 $prefix = '';
 foreach (explode('/', ltrim($path, '/')) as $segment) {
-    $prefix .= '/' . $segment;
-    if (substr($prefix, -4) !== '.php') {
-        continue;
-    }
-    $script = $root . $prefix;
-    if (!is_file($script)) {
-        continue;
-    }
-    $pathInfo = substr($path, strlen($prefix));
-    $_SERVER['SCRIPT_NAME'] = $prefix;
-    $_SERVER['SCRIPT_FILENAME'] = $script;
-    $_SERVER['PHP_SELF'] = $prefix . $pathInfo;
-    $_SERVER['PATH_INFO'] = $pathInfo;
-    $_SERVER['PATH_TRANSLATED'] = $root . $pathInfo;
-    require $script;
-    return true;
+	$prefix .= '/' . $segment;
+	if (substr($prefix, -4) !== '.php') {
+		continue;
+	}
+	$script = $root . $prefix;
+	if (!is_file($script)) {
+		continue;
+	}
+	$pathInfo = substr($path, strlen($prefix));
+	$_SERVER['SCRIPT_NAME'] = $prefix;
+	$_SERVER['SCRIPT_FILENAME'] = $script;
+	$_SERVER['PHP_SELF'] = $prefix . $pathInfo;
+	$_SERVER['PATH_INFO'] = $pathInfo;
+	$_SERVER['PATH_TRANSLATED'] = $root . $pathInfo;
+	require $script;
+	return true;
 }
 
 // 3. Nothing matched — the document root's index.php is Nextcloud's front

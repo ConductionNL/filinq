@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Correspondence Controller
  *
@@ -47,373 +48,365 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/letter-correspondence-generation/tasks.md#task-1
  */
-class CorrespondenceController extends Controller
-{
-    /**
-     * Constructor for CorrespondenceController
-     *
-     * @param string                $appName     The application name
-     * @param IRequest              $request     The request object
-     * @param CorrespondenceService $corrSvc     Correspondence generation service
-     * @param IUserSession          $userSession User session for auth info
-     * @param LoggerInterface       $logger      Logger for error reporting
-     * @param IL10N                 $l10n        The localization service
-     *
-     * @return void
-     */
-    public function __construct(
-        string $appName,
-        IRequest $request,
-        private readonly CorrespondenceService $corrSvc,
-        private readonly IUserSession $userSession,
-        private readonly LoggerInterface $logger,
-        private readonly IL10N $l10n
-    ) {
-        parent::__construct(appName: $appName, request: $request);
+class CorrespondenceController extends Controller {
+	/**
+	 * Constructor for CorrespondenceController
+	 *
+	 * @param string $appName The application name
+	 * @param IRequest $request The request object
+	 * @param CorrespondenceService $corrSvc Correspondence generation service
+	 * @param IUserSession $userSession User session for auth info
+	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param IL10N $l10n The localization service
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		private readonly CorrespondenceService $corrSvc,
+		private readonly IUserSession $userSession,
+		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
+	) {
+		parent::__construct(appName: $appName, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Generate a single correspondence document
-     *
-     * Accepts JSON body with:
-     * - templateId (string, required): UUID of the template to use
-     * - dataRefs (array, required): Data references with register/schema/id
-     * - options (object, optional): format, huisstijlId, caseReference
-     * - filename (string, optional): Download filename
-     *
-     * @return DataDownloadResponse|JSONResponse Generated document or error
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
-     */
-    public function generate(): DataDownloadResponse | JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('Not authenticated')],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
+	/**
+	 * Generate a single correspondence document
+	 *
+	 * Accepts JSON body with:
+	 * - templateId (string, required): UUID of the template to use
+	 * - dataRefs (array, required): Data references with register/schema/id
+	 * - options (object, optional): format, huisstijlId, caseReference
+	 * - filename (string, optional): Download filename
+	 *
+	 * @return DataDownloadResponse|JSONResponse Generated document or error
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
+	 */
+	public function generate(): DataDownloadResponse|JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('Not authenticated')],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
 
-            $params = $this->parseGenerateParams();
-            if ($params instanceof JSONResponse) {
-                return $params;
-            }
+			$params = $this->parseGenerateParams();
+			if ($params instanceof JSONResponse) {
+				return $params;
+			}
 
-            $result = $this->corrSvc->generate(
-                templateId: $params['templateId'],
-                dataRefs: $params['dataRefs'],
-                options: $params['options']
-            );
+			$result = $this->corrSvc->generate(
+				templateId: $params['templateId'],
+				dataRefs: $params['dataRefs'],
+				options: $params['options']
+			);
 
-            return $this->formatGenerateResponse(
-                result: $result,
-                filename: $params['filename']
-            );
-        } catch (Exception $e) {
-            return $this->handleException(exception: $e);
-        }//end try
+			return $this->formatGenerateResponse(
+				result: $result,
+				filename: $params['filename']
+			);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}//end try
 
-    }//end generate()
+	}//end generate()
 
-    /**
-     * Parse and validate generation request parameters
-     *
-     * @return array|JSONResponse Parsed params or error response
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
-     */
-    private function parseGenerateParams(): array | JSONResponse
-    {
-        $templateId = $this->request->getParam('templateId');
-        $dataRefs   = $this->request->getParam('dataRefs', []);
-        $options    = $this->request->getParam('options', []);
-        $filename   = $this->request->getParam('filename', 'correspondence.pdf');
+	/**
+	 * Parse and validate generation request parameters
+	 *
+	 * @return array|JSONResponse Parsed params or error response
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
+	 */
+	private function parseGenerateParams(): array|JSONResponse {
+		$templateId = $this->request->getParam('templateId');
+		$dataRefs = $this->request->getParam('dataRefs', []);
+		$options = $this->request->getParam('options', []);
+		$filename = $this->request->getParam('filename', 'correspondence.pdf');
 
-        if (empty($templateId) === true) {
-            return new JSONResponse(
-                data: ['error' => $this->l10n->t('templateId is required')],
-                statusCode: Http::STATUS_BAD_REQUEST
-            );
-        }
+		if (empty($templateId) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('templateId is required')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        if (empty($dataRefs) === true || is_array($dataRefs) === false) {
-            return new JSONResponse(
-                data: ['error' => $this->l10n->t('dataRefs is required and must be an array')],
-                statusCode: Http::STATUS_BAD_REQUEST
-            );
-        }
+		if (empty($dataRefs) === true || is_array($dataRefs) === false) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('dataRefs is required and must be an array')],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        if (is_array($options) === false) {
-            $options = [];
-        }
+		if (is_array($options) === false) {
+			$options = [];
+		}
 
-        $options['userId'] = $this->getCurrentUserId();
+		$options['userId'] = $this->getCurrentUserId();
 
-        return [
-            'templateId' => $templateId,
-            'dataRefs'   => $dataRefs,
-            'options'    => $options,
-            'filename'   => $filename,
-        ];
+		return [
+			'templateId' => $templateId,
+			'dataRefs' => $dataRefs,
+			'options' => $options,
+			'filename' => $filename,
+		];
 
-    }//end parseGenerateParams()
+	}//end parseGenerateParams()
 
-    /**
-     * Format the generate response based on output format
-     *
-     * @param array  $result   The generation result
-     * @param string $filename The requested filename
-     *
-     * @return DataDownloadResponse|JSONResponse The formatted response
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
-     */
-    private function formatGenerateResponse(
-        array $result,
-        string $filename
-    ): DataDownloadResponse | JSONResponse {
-        $format = $result['format'];
+	/**
+	 * Format the generate response based on output format
+	 *
+	 * @param array $result The generation result
+	 * @param string $filename The requested filename
+	 *
+	 * @return DataDownloadResponse|JSONResponse The formatted response
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-output-format-selection
+	 */
+	private function formatGenerateResponse(
+		array $result,
+		string $filename,
+	): DataDownloadResponse|JSONResponse {
+		$format = $result['format'];
 
-        // For binary formats, return as download.
-        if ($format === 'pdf' || $format === 'docx') {
-            return $this->buildDownloadResponse(
-                result: $result,
-                format: $format,
-                filename: $filename
-            );
-        }
+		// For binary formats, return as download.
+		if ($format === 'pdf' || $format === 'docx') {
+			return $this->buildDownloadResponse(
+				result: $result,
+				format: $format,
+				filename: $filename
+			);
+		}
 
-        // For HTML/email formats, return as JSON with content.
-        return new JSONResponse(
-            data: [
-                'content'  => $result['content'],
-                'format'   => $format,
-                'warnings' => $result['warnings'],
-            ],
-            statusCode: Http::STATUS_OK
-        );
+		// For HTML/email formats, return as JSON with content.
+		return new JSONResponse(
+			data: [
+				'content' => $result['content'],
+				'format' => $format,
+				'warnings' => $result['warnings'],
+			],
+			statusCode: Http::STATUS_OK
+		);
 
-    }//end formatGenerateResponse()
+	}//end formatGenerateResponse()
 
-    /**
-     * Build a download response for binary document formats
-     *
-     * @param array  $result   The generation result
-     * @param string $format   The output format (pdf or docx)
-     * @param string $filename The requested filename
-     *
-     * @return DataDownloadResponse The download response
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
-     */
-    private function buildDownloadResponse(
-        array $result,
-        string $format,
-        string $filename
-    ): DataDownloadResponse {
-        $extension   = '.pdf';
-        $contentType = 'application/pdf';
-        if ($format === 'docx') {
-            $extension   = '.docx';
-            $contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-        }
+	/**
+	 * Build a download response for binary document formats
+	 *
+	 * @param array $result The generation result
+	 * @param string $format The output format (pdf or docx)
+	 * @param string $filename The requested filename
+	 *
+	 * @return DataDownloadResponse The download response
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-rest-endpoint
+	 */
+	private function buildDownloadResponse(
+		array $result,
+		string $format,
+		string $filename,
+	): DataDownloadResponse {
+		$extension = '.pdf';
+		$contentType = 'application/pdf';
+		if ($format === 'docx') {
+			$extension = '.docx';
+			$contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+		}
 
-        if (str_ends_with($filename, $extension) === false) {
-            $filename = pathinfo($filename, PATHINFO_FILENAME).$extension;
-        }
+		if (str_ends_with($filename, $extension) === false) {
+			$filename = pathinfo($filename, PATHINFO_FILENAME) . $extension;
+		}
 
-        return new DataDownloadResponse(
-            data: $result['content'],
-            filename: $filename,
-            contentType: $contentType
-        );
+		return new DataDownloadResponse(
+			data: $result['content'],
+			filename: $filename,
+			contentType: $contentType
+		);
 
-    }//end buildDownloadResponse()
+	}//end buildDownloadResponse()
 
-    /**
-     * Generate correspondence for a batch of recipients
-     *
-     * Accepts JSON body with:
-     * - templateId (string, required): UUID of the template
-     * - recipientIds (array, required): Array of recipient object UUIDs
-     * - options (object, optional): format, register, schema, huisstijlId
-     *
-     * @return JSONResponse Batch results or job info
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
-     */
-    public function generateBatch(): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('Not authenticated')],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
+	/**
+	 * Generate correspondence for a batch of recipients
+	 *
+	 * Accepts JSON body with:
+	 * - templateId (string, required): UUID of the template
+	 * - recipientIds (array, required): Array of recipient object UUIDs
+	 * - options (object, optional): format, register, schema, huisstijlId
+	 *
+	 * @return JSONResponse Batch results or job info
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	public function generateBatch(): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('Not authenticated')],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
 
-            $templateId   = $this->request->getParam('templateId');
-            $recipientIds = $this->request->getParam('recipientIds', []);
-            $options      = $this->request->getParam('options', []);
+			$templateId = $this->request->getParam('templateId');
+			$recipientIds = $this->request->getParam('recipientIds', []);
+			$options = $this->request->getParam('options', []);
 
-            if (empty($templateId) === true) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('templateId is required')],
-                    statusCode: Http::STATUS_BAD_REQUEST
-                );
-            }
+			if (empty($templateId) === true) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('templateId is required')],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
 
-            if (empty($recipientIds) === true || is_array($recipientIds) === false) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
-                    statusCode: Http::STATUS_BAD_REQUEST
-                );
-            }
+			if (empty($recipientIds) === true || is_array($recipientIds) === false) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('recipientIds is required and must be an array')],
+					statusCode: Http::STATUS_BAD_REQUEST
+				);
+			}
 
-            if (is_array($options) === false) {
-                $options = [];
-            }
+			if (is_array($options) === false) {
+				$options = [];
+			}
 
-            $options['userId'] = $this->getCurrentUserId();
+			$options['userId'] = $this->getCurrentUserId();
 
-            $result = $this->corrSvc->generateBatch(
-                templateId: $templateId,
-                recipientIds: $recipientIds,
-                options: $options
-            );
+			$result = $this->corrSvc->generateBatch(
+				templateId: $templateId,
+				recipientIds: $recipientIds,
+				options: $options
+			);
 
-            // If async (has jobId), return 202 Accepted.
-            if (isset($result['jobId']) === true) {
-                return new JSONResponse(
-                    data: $result,
-                    statusCode: Http::STATUS_ACCEPTED
-                );
-            }
+			// If async (has jobId), return 202 Accepted.
+			if (isset($result['jobId']) === true) {
+				return new JSONResponse(
+					data: $result,
+					statusCode: Http::STATUS_ACCEPTED
+				);
+			}
 
-            return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
-        } catch (Exception $e) {
-            return $this->handleException(exception: $e);
-        }//end try
+			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}//end try
 
-    }//end generateBatch()
+	}//end generateBatch()
 
-    /**
-     * Get the status of a batch correspondence job
-     *
-     * @param string $jobId The job UUID
-     *
-     * @return JSONResponse The job status
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     *
-     * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
-     */
-    public function jobStatus(string $jobId): JSONResponse
-    {
-        try {
-            $user = $this->userSession->getUser();
-            if ($user === null) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('Not authenticated')],
-                    statusCode: Http::STATUS_UNAUTHORIZED
-                );
-            }
+	/**
+	 * Get the status of a batch correspondence job
+	 *
+	 * @param string $jobId The job UUID
+	 *
+	 * @return JSONResponse The job status
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-batch-correspondence-rest-endpoints
+	 */
+	public function jobStatus(string $jobId): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('Not authenticated')],
+					statusCode: Http::STATUS_UNAUTHORIZED
+				);
+			}
 
-            $status = $this->corrSvc->getJobStatus(jobId: $jobId);
+			$status = $this->corrSvc->getJobStatus(jobId: $jobId);
 
-            if ($status === null) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('Job not found')],
-                    statusCode: Http::STATUS_NOT_FOUND
-                );
-            }
+			if ($status === null) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('Job not found')],
+					statusCode: Http::STATUS_NOT_FOUND
+				);
+			}
 
-            // C3 / SB1 security fix: enforce job ownership so an authenticated user
-            // cannot poll another user's job by guessing or brute-forcing the jobId.
-            // ownerUserId is stored at the top level of the status payload (persisted
-            // by dispatchBatchJob and every storeJobStatus call in the background job).
-            // The old check read options.userId which was NEVER persisted — SB1 fix.
-            //
-            // This test FAILS CLOSED. It previously read
-            // `$jobUserId !== '' && $jobUserId !== $uid`, which let a status
-            // payload carrying no owner through to any authenticated caller —
-            // i.e. the one input an attacker benefits from was the one that
-            // skipped the check. Every writer sets the key today
-            // (CorrespondenceService::dispatchBatchJob and all three
-            // BatchCorrespondenceJob::storeJobStatus calls, seeded from
-            // `$options['userId']`, which this controller sets from the session
-            // before dispatch), so refusing an empty owner costs nothing that
-            // works — it only removes the fallback. Same shape as
-            // PrintJobController::authorizeJobAccess(), which already compares
-            // for equality rather than for inequality-when-present.
-            $jobUserId = (string) ($status['ownerUserId'] ?? '');
-            if ($jobUserId !== $user->getUID()) {
-                return new JSONResponse(
-                    data: ['error' => $this->l10n->t('This job belongs to another user')],
-                    statusCode: Http::STATUS_FORBIDDEN
-                );
-            }
+			// C3 / SB1 security fix: enforce job ownership so an authenticated user
+			// cannot poll another user's job by guessing or brute-forcing the jobId.
+			// ownerUserId is stored at the top level of the status payload (persisted
+			// by dispatchBatchJob and every storeJobStatus call in the background job).
+			// The old check read options.userId which was NEVER persisted — SB1 fix.
+			//
+			// This test FAILS CLOSED. It previously read
+			// `$jobUserId !== '' && $jobUserId !== $uid`, which let a status
+			// payload carrying no owner through to any authenticated caller —
+			// i.e. the one input an attacker benefits from was the one that
+			// skipped the check. Every writer sets the key today
+			// (CorrespondenceService::dispatchBatchJob and all three
+			// BatchCorrespondenceJob::storeJobStatus calls, seeded from
+			// `$options['userId']`, which this controller sets from the session
+			// before dispatch), so refusing an empty owner costs nothing that
+			// works — it only removes the fallback. Same shape as
+			// PrintJobController::authorizeJobAccess(), which already compares
+			// for equality rather than for inequality-when-present.
+			$jobUserId = (string)($status['ownerUserId'] ?? '');
+			if ($jobUserId !== $user->getUID()) {
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('This job belongs to another user')],
+					statusCode: Http::STATUS_FORBIDDEN
+				);
+			}
 
-            $status['jobId'] = $jobId;
+			$status['jobId'] = $jobId;
 
-            return new JSONResponse(data: $status, statusCode: Http::STATUS_OK);
-        } catch (Exception $e) {
-            return $this->handleException(exception: $e);
-        }//end try
+			return new JSONResponse(data: $status, statusCode: Http::STATUS_OK);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}//end try
 
-    }//end jobStatus()
+	}//end jobStatus()
 
-    /**
-     * Get the current user ID from the session
-     *
-     * @return string The user ID or empty string if not logged in
-     */
-    private function getCurrentUserId(): string
-    {
-        $user = $this->userSession->getUser();
-        if ($user !== null) {
-            return $user->getUID();
-        }
+	/**
+	 * Get the current user ID from the session
+	 *
+	 * @return string The user ID or empty string if not logged in
+	 */
+	private function getCurrentUserId(): string {
+		$user = $this->userSession->getUser();
+		if ($user !== null) {
+			return $user->getUID();
+		}
 
-        return '';
+		return '';
+	}//end getCurrentUserId()
 
-    }//end getCurrentUserId()
+	/**
+	 * Handle exceptions and return appropriate JSON error responses
+	 *
+	 * @param Exception $exception The exception to handle
+	 *
+	 * @return JSONResponse The error response
+	 *
+	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
+	 */
+	private function handleException(Exception $exception): JSONResponse {
+		$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
+		$code = $exception->getCode();
+		if ($code >= 400 && $code < 600) {
+			$statusCode = $code;
+		}
 
-    /**
-     * Handle exceptions and return appropriate JSON error responses
-     *
-     * @param Exception $exception The exception to handle
-     *
-     * @return JSONResponse The error response
-     *
-     * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-     */
-    private function handleException(Exception $exception): JSONResponse
-    {
-        $statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-        $code       = $exception->getCode();
-        if ($code >= 400 && $code < 600) {
-            $statusCode = $code;
-        }
+		$this->logger->error(
+			message: 'Correspondence generation failed: ' . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
 
-        $this->logger->error(
-            message: 'Correspondence generation failed: '.$exception->getMessage(),
-            context: ['exception' => $exception]
-        );
+		return new JSONResponse(
+			data: ['error' => $exception->getMessage()],
+			statusCode: $statusCode
+		);
 
-        return new JSONResponse(
-            data: ['error' => $exception->getMessage()],
-            statusCode: $statusCode
-        );
-
-    }//end handleException()
+	}//end handleException()
 }//end class

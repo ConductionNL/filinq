@@ -48,111 +48,106 @@ use Throwable;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class Pdfa3ConversionException extends RuntimeException
-{
+class Pdfa3ConversionException extends RuntimeException {
 
-    /**
-     * Source file (or one of its attachments) exceeds the configured
-     * byte cap. HTTP 413.
-     */
-    public const REASON_SOURCE_TOO_LARGE = 'source_too_large';
+	/**
+	 * Source file (or one of its attachments) exceeds the configured
+	 * byte cap. HTTP 413.
+	 */
+	public const REASON_SOURCE_TOO_LARGE = 'source_too_large';
 
-    /**
-     * An attachment to be embedded exceeds the configured byte cap.
-     * HTTP 413.
-     */
-    public const REASON_ATTACHMENT_TOO_LARGE = 'attachment_too_large';
+	/**
+	 * An attachment to be embedded exceeds the configured byte cap.
+	 * HTTP 413.
+	 */
+	public const REASON_ATTACHMENT_TOO_LARGE = 'attachment_too_large';
 
-    /**
-     * Conversion exceeded the configured time budget. HTTP 504.
-     */
-    public const REASON_TIME_LIMIT_EXCEEDED = 'time_limit_exceeded';
+	/**
+	 * Conversion exceeded the configured time budget. HTTP 504.
+	 */
+	public const REASON_TIME_LIMIT_EXCEEDED = 'time_limit_exceeded';
 
-    /**
-     * The PDF/A-3 converter (mPDF/FPDI) is disabled in tenant config or
-     * its classes are not autoloadable. HTTP 503.
-     */
-    public const REASON_CONVERTER_UNAVAILABLE = 'converter_unavailable';
+	/**
+	 * The PDF/A-3 converter (mPDF/FPDI) is disabled in tenant config or
+	 * its classes are not autoloadable. HTTP 503.
+	 */
+	public const REASON_CONVERTER_UNAVAILABLE = 'converter_unavailable';
 
-    /**
-     * The source could not be parsed as a PDF (corrupt, encrypted, or
-     * not actually a PDF despite its declared MIME type). HTTP 422.
-     */
-    public const REASON_SOURCE_UNREADABLE = 'source_unreadable';
+	/**
+	 * The source could not be parsed as a PDF (corrupt, encrypted, or
+	 * not actually a PDF despite its declared MIME type). HTTP 422.
+	 */
+	public const REASON_SOURCE_UNREADABLE = 'source_unreadable';
 
-    /**
-     * MPDF raised during rendering/attachment/metadata assembly. HTTP 500.
-     */
-    public const REASON_RENDER_FAILED = 'render_failed';
+	/**
+	 * MPDF raised during rendering/attachment/metadata assembly. HTTP 500.
+	 */
+	public const REASON_RENDER_FAILED = 'render_failed';
 
-    /**
-     * The assembled output failed this service's own post-conversion
-     * PDF/A-3 marker check (missing `%PDF` header or XMP
-     * `pdfaid:part`/`pdfaid:conformance` identification) — the
-     * no-silent-passthrough guardrail. HTTP 500.
-     */
-    public const REASON_OUTPUT_VALIDATION_FAILED = 'output_validation_failed';
+	/**
+	 * The assembled output failed this service's own post-conversion
+	 * PDF/A-3 marker check (missing `%PDF` header or XMP
+	 * `pdfaid:part`/`pdfaid:conformance` identification) — the
+	 * no-silent-passthrough guardrail. HTTP 500.
+	 */
+	public const REASON_OUTPUT_VALIDATION_FAILED = 'output_validation_failed';
 
-    /**
-     * Machine-readable reason code — one of the REASON_* constants.
-     *
-     * @var string
-     */
-    private string $reason;
+	/**
+	 * Machine-readable reason code — one of the REASON_* constants.
+	 *
+	 * @var string
+	 */
+	private string $reason;
 
-    /**
-     * Human-readable, safe-to-display admin hint describing what an
-     * operator should check or configure.
-     *
-     * @var string
-     */
-    private string $adminHint;
+	/**
+	 * Human-readable, safe-to-display admin hint describing what an
+	 * operator should check or configure.
+	 *
+	 * @var string
+	 */
+	private string $adminHint;
 
-    /**
-     * Constructor.
-     *
-     * @param string         $reason    One of the REASON_* constants.
-     * @param string         $message   Human-readable summary (safe for API responses).
-     * @param string         $adminHint Actionable hint for an administrator.
-     * @param int            $code      HTTP-style status code.
-     * @param Throwable|null $previous  Underlying cause if any.
-     */
-    public function __construct(
-        string $reason,
-        string $message,
-        string $adminHint,
-        int $code=500,
-        ?Throwable $previous=null
-    ) {
-        parent::__construct(message: $message, code: $code, previous: $previous);
-        $this->reason    = $reason;
-        $this->adminHint = $adminHint;
+	/**
+	 * Constructor.
+	 *
+	 * @param string $reason One of the REASON_* constants.
+	 * @param string $message Human-readable summary (safe for API responses).
+	 * @param string $adminHint Actionable hint for an administrator.
+	 * @param int $code HTTP-style status code.
+	 * @param Throwable|null $previous Underlying cause if any.
+	 */
+	public function __construct(
+		string $reason,
+		string $message,
+		string $adminHint,
+		int $code = 500,
+		?Throwable $previous = null,
+	) {
+		parent::__construct(message: $message, code: $code, previous: $previous);
+		$this->reason = $reason;
+		$this->adminHint = $adminHint;
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the machine-readable reason code.
-     *
-     * @return string One of the REASON_* constants.
-     *
-     * @spec openspec/specs/pdfa3-conversion/spec.md
-     */
-    public function getReason(): string
-    {
-        return $this->reason;
+	/**
+	 * Get the machine-readable reason code.
+	 *
+	 * @return string One of the REASON_* constants.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	public function getReason(): string {
+		return $this->reason;
+	}//end getReason()
 
-    }//end getReason()
-
-    /**
-     * Get the admin-facing hint.
-     *
-     * @return string
-     *
-     * @spec openspec/specs/pdfa3-conversion/spec.md
-     */
-    public function getAdminHint(): string
-    {
-        return $this->adminHint;
-
-    }//end getAdminHint()
+	/**
+	 * Get the admin-facing hint.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	public function getAdminHint(): string {
+		return $this->adminHint;
+	}//end getAdminHint()
 }//end class

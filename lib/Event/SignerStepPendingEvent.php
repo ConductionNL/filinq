@@ -47,56 +47,49 @@ use OCP\EventDispatcher\Event;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class SignerStepPendingEvent extends Event
-{
-    /**
-     * Constructor.
-     *
-     * @param ApprovalChain $chain      The OR approval chain.
-     * @param ApprovalStep  $step       The OR approval step now in `pending`.
-     * @param string        $objectUuid UUID of the docudesk signing request.
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly ApprovalChain $chain,
-        private readonly ApprovalStep $step,
-        private readonly string $objectUuid
-    ) {
-        parent::__construct();
+class SignerStepPendingEvent extends Event {
+	/**
+	 * Constructor.
+	 *
+	 * @param ApprovalChain $chain The OR approval chain.
+	 * @param ApprovalStep $step The OR approval step now in `pending`.
+	 * @param string $objectUuid UUID of the docudesk signing request.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly ApprovalChain $chain,
+		private readonly ApprovalStep $step,
+		private readonly string $objectUuid,
+	) {
+		parent::__construct();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the approval chain the step belongs to.
-     *
-     * @return ApprovalChain The OR approval chain.
-     */
-    public function getChain(): ApprovalChain
-    {
-        return $this->chain;
+	/**
+	 * Get the approval chain the step belongs to.
+	 *
+	 * @return ApprovalChain The OR approval chain.
+	 */
+	public function getChain(): ApprovalChain {
+		return $this->chain;
+	}//end getChain()
 
-    }//end getChain()
+	/**
+	 * Get the now-pending approval step.
+	 *
+	 * @return ApprovalStep The OR approval step.
+	 */
+	public function getStep(): ApprovalStep {
+		return $this->step;
+	}//end getStep()
 
-    /**
-     * Get the now-pending approval step.
-     *
-     * @return ApprovalStep The OR approval step.
-     */
-    public function getStep(): ApprovalStep
-    {
-        return $this->step;
-
-    }//end getStep()
-
-    /**
-     * Get the docudesk signing-request UUID this step relates to.
-     *
-     * @return string Signing-request UUID.
-     */
-    public function getSigningRequestUuid(): string
-    {
-        return $this->objectUuid;
-
-    }//end getSigningRequestUuid()
+	/**
+	 * Get the docudesk signing-request UUID this step relates to.
+	 *
+	 * @return string Signing-request UUID.
+	 */
+	public function getSigningRequestUuid(): string {
+		return $this->objectUuid;
+	}//end getSigningRequestUuid()
 }//end class

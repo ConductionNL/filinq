@@ -39,62 +39,57 @@ namespace OCA\DocuDesk\Service\Suggestion;
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
-class SupplierIdentityResolver
-{
-    /**
-     * Resolve the supplier identity and its type from extraction fields.
-     *
-     * @param array<string, mixed> $fields The `financialExtraction` `fields` map
-     *                                     (`supplierKvk`, `supplierIban`, `supplierName`).
-     *
-     * @return array{identity: string, identityType: string}|null The resolved
-     *         identity, or null when none of the three source fields yield
-     *         a usable value.
-     *
-     * @spec openspec/specs/ai-gl-account-suggestion/spec.md
-     */
-    public function resolve(array $fields): ?array
-    {
-        $kvk = trim((string) ($fields['supplierKvk'] ?? ''));
-        if ($kvk !== '') {
-            return ['identity' => $kvk, 'identityType' => 'kvk'];
-        }
+class SupplierIdentityResolver {
+	/**
+	 * Resolve the supplier identity and its type from extraction fields.
+	 *
+	 * @param array<string, mixed> $fields The `financialExtraction` `fields` map
+	 *                                     (`supplierKvk`, `supplierIban`, `supplierName`).
+	 *
+	 * @return array{identity: string, identityType: string}|null The resolved
+	 *                                                            identity, or null when none of the three source fields yield
+	 *                                                            a usable value.
+	 *
+	 * @spec openspec/specs/ai-gl-account-suggestion/spec.md
+	 */
+	public function resolve(array $fields): ?array {
+		$kvk = trim((string)($fields['supplierKvk'] ?? ''));
+		if ($kvk !== '') {
+			return ['identity' => $kvk, 'identityType' => 'kvk'];
+		}
 
-        $iban = trim((string) ($fields['supplierIban'] ?? ''));
-        if ($iban !== '') {
-            return ['identity' => $iban, 'identityType' => 'iban'];
-        }
+		$iban = trim((string)($fields['supplierIban'] ?? ''));
+		if ($iban !== '') {
+			return ['identity' => $iban, 'identityType' => 'iban'];
+		}
 
-        $normalisedName = $this->normaliseName(name: (string) ($fields['supplierName'] ?? ''));
-        if ($normalisedName !== '') {
-            return ['identity' => $normalisedName, 'identityType' => 'name'];
-        }
+		$normalisedName = $this->normaliseName(name: (string)($fields['supplierName'] ?? ''));
+		if ($normalisedName !== '') {
+			return ['identity' => $normalisedName, 'identityType' => 'name'];
+		}
 
-        return null;
+		return null;
+	}//end resolve()
 
-    }//end resolve()
+	/**
+	 * Normalise a supplier name for use as a stable grouping key: trimmed,
+	 * whitespace-collapsed, lower-cased.
+	 *
+	 * @param string $name The raw supplier name.
+	 *
+	 * @return string The normalised name, or '' when the input is blank.
+	 */
+	private function normaliseName(string $name): string {
+		$trimmed = trim($name);
+		if ($trimmed === '') {
+			return '';
+		}
 
-    /**
-     * Normalise a supplier name for use as a stable grouping key: trimmed,
-     * whitespace-collapsed, lower-cased.
-     *
-     * @param string $name The raw supplier name.
-     *
-     * @return string The normalised name, or '' when the input is blank.
-     */
-    private function normaliseName(string $name): string
-    {
-        $trimmed = trim($name);
-        if ($trimmed === '') {
-            return '';
-        }
+		$collapsed = preg_replace('/\s+/', ' ', $trimmed);
+		if ($collapsed === null) {
+			$collapsed = $trimmed;
+		}
 
-        $collapsed = preg_replace('/\s+/', ' ', $trimmed);
-        if ($collapsed === null) {
-            $collapsed = $trimmed;
-        }
-
-        return mb_strtolower($collapsed);
-
-    }//end normaliseName()
+		return mb_strtolower($collapsed);
+	}//end normaliseName()
 }//end class

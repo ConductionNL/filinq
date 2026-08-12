@@ -26,46 +26,42 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for VatIdExtractor.
  */
-class VatIdExtractorTest extends TestCase
-{
+class VatIdExtractorTest extends TestCase {
 
-    private VatIdExtractor $extractor;
+	private VatIdExtractor $extractor;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->extractor = new VatIdExtractor();
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->extractor = new VatIdExtractor();
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * "NL001234567B01" is recognised as the BTW-nummer.
-     *
-     * @return void
-     */
-    public function testBtwNummerRecognised(): void
-    {
-        $result = $this->extractor->extract('BTW-nummer: NL001234567B01');
+	/**
+	 * "NL001234567B01" is recognised as the BTW-nummer.
+	 *
+	 * @return void
+	 */
+	public function testBtwNummerRecognised(): void {
+		$result = $this->extractor->extract('BTW-nummer: NL001234567B01');
 
-        $this->assertSame('NL001234567B01', $result['value']);
-        $this->assertGreaterThan(0.0, $result['confidence']);
+		$this->assertSame('NL001234567B01', $result['value']);
+		$this->assertGreaterThan(0.0, $result['confidence']);
 
-    }//end testBtwNummerRecognised()
+	}//end testBtwNummerRecognised()
 
-    /**
-     * Text without a BTW-nummer-shaped token yields a null value.
-     *
-     * @return void
-     */
-    public function testNoMatchYieldsNull(): void
-    {
-        $result = $this->extractor->extract('Geen BTW gegevens hier.');
+	/**
+	 * Text without a BTW-nummer-shaped token yields a null value.
+	 *
+	 * @return void
+	 */
+	public function testNoMatchYieldsNull(): void {
+		$result = $this->extractor->extract('Geen BTW gegevens hier.');
 
-        $this->assertNull($result['value']);
-        $this->assertSame(0.0, $result['confidence']);
+		$this->assertNull($result['value']);
+		$this->assertSame(0.0, $result['confidence']);
 
-    }//end testNoMatchYieldsNull()
+	}//end testNoMatchYieldsNull()
 }//end class

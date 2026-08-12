@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Custom Dictionary Payload Normaliser
  *
@@ -39,157 +40,144 @@ namespace OCA\DocuDesk\Service;
  *
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
-class CustomDictionaryPayloadNormaliser
-{
+class CustomDictionaryPayloadNormaliser {
 
-    /**
-     * Valid `matchMode` values (mirrors the schema enum).
-     *
-     * @var array<int, string>
-     */
-    public const VALID_MATCH_MODES = ['exact', 'caseInsensitive', 'wordBoundary'];
+	/**
+	 * Valid `matchMode` values (mirrors the schema enum).
+	 *
+	 * @var array<int, string>
+	 */
+	public const VALID_MATCH_MODES = ['exact', 'caseInsensitive', 'wordBoundary'];
 
-    /**
-     * Default match mode when unset/invalid.
-     *
-     * @var string
-     */
-    public const DEFAULT_MATCH_MODE = 'caseInsensitive';
+	/**
+	 * Default match mode when unset/invalid.
+	 *
+	 * @var string
+	 */
+	public const DEFAULT_MATCH_MODE = 'caseInsensitive';
 
-    /**
-     * Sanitise a `matchMode` value against the schema enum.
-     *
-     * @param mixed $mode Raw value.
-     *
-     * @return string A value from {@see VALID_MATCH_MODES}.
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function sanitizeMatchMode(mixed $mode): string
-    {
-        if (is_string($mode) === true && in_array($mode, self::VALID_MATCH_MODES, true) === true) {
-            return $mode;
-        }
+	/**
+	 * Sanitise a `matchMode` value against the schema enum.
+	 *
+	 * @param mixed $mode Raw value.
+	 *
+	 * @return string A value from {@see VALID_MATCH_MODES}.
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function sanitizeMatchMode(mixed $mode): string {
+		if (is_string($mode) === true && in_array($mode, self::VALID_MATCH_MODES, true) === true) {
+			return $mode;
+		}
 
-        return self::DEFAULT_MATCH_MODE;
+		return self::DEFAULT_MATCH_MODE;
+	}//end sanitizeMatchMode()
 
-    }//end sanitizeMatchMode()
+	/**
+	 * Parse CSV import content into `{value, label}` rows.
+	 *
+	 * @param string $content Raw CSV content.
+	 *
+	 * @return array<int, array{value: string, label: string|null}>
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function parseCsv(string $content): array {
+		$rows = [];
+		foreach ($this->splitLines(content: $content) as $line) {
+			// Explicit $escape (PHP 8.4 deprecates the implicit default) —
+			// no escape character: dictionary term CSVs are simple
+			// value[,label] rows, never quoted-and-escaped fields.
+			$columns = str_getcsv(string: $line, separator: ',', enclosure: '"', escape: '');
+			$rows[] = [
+				'value' => (string)($columns[0] ?? ''),
+				'label' => ($columns[1] ?? null),
+			];
+		}
 
-    /**
-     * Parse CSV import content into `{value, label}` rows.
-     *
-     * @param string $content Raw CSV content.
-     *
-     * @return array<int, array{value: string, label: string|null}>
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function parseCsv(string $content): array
-    {
-        $rows = [];
-        foreach ($this->splitLines(content: $content) as $line) {
-            // Explicit $escape (PHP 8.4 deprecates the implicit default) —
-            // no escape character: dictionary term CSVs are simple
-            // value[,label] rows, never quoted-and-escaped fields.
-            $columns = str_getcsv(string: $line, separator: ',', enclosure: '"', escape: '');
-            $rows[]  = [
-                'value' => (string) ($columns[0] ?? ''),
-                'label' => ($columns[1] ?? null),
-            ];
-        }
+		return $rows;
+	}//end parseCsv()
 
-        return $rows;
+	/**
+	 * Parse newline-separated plain-text import content into
+	 * `{value, label}` rows.
+	 *
+	 * @param string $content Raw plain-text content.
+	 *
+	 * @return array<int, array{value: string, label: string|null}>
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function parseList(string $content): array {
+		$rows = [];
+		foreach ($this->splitLines(content: $content) as $line) {
+			$rows[] = [
+				'value' => $line,
+				'label' => null,
+			];
+		}
 
-    }//end parseCsv()
+		return $rows;
+	}//end parseList()
 
-    /**
-     * Parse newline-separated plain-text import content into
-     * `{value, label}` rows.
-     *
-     * @param string $content Raw plain-text content.
-     *
-     * @return array<int, array{value: string, label: string|null}>
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function parseList(string $content): array
-    {
-        $rows = [];
-        foreach ($this->splitLines(content: $content) as $line) {
-            $rows[] = [
-                'value' => $line,
-                'label' => null,
-            ];
-        }
+	/**
+	 * Strip framework-injected request params before persistence.
+	 *
+	 * @param array<string, mixed> $data Raw incoming data.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function stripFrameworkParams(array $data): array {
+		unset($data['_route'], $data['_method'], $data['id'], $data['uuid']);
+		return $data;
+	}//end stripFrameworkParams()
 
-        return $rows;
+	/**
+	 * Coerce a value to a trimmed string, or null when blank/absent.
+	 *
+	 * @param mixed $value Raw value.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === false) {
+			return null;
+		}
 
-    }//end parseList()
+		$trimmed = trim($value);
+		if ($trimmed === '') {
+			return null;
+		}
 
-    /**
-     * Strip framework-injected request params before persistence.
-     *
-     * @param array<string, mixed> $data Raw incoming data.
-     *
-     * @return array<string, mixed>
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function stripFrameworkParams(array $data): array
-    {
-        unset($data['_route'], $data['_method'], $data['id'], $data['uuid']);
-        return $data;
+		return $trimmed;
+	}//end stringOrNull()
 
-    }//end stripFrameworkParams()
+	/**
+	 * Split raw import content into lines.
+	 *
+	 * Normalises line endings so a Windows-authored CSV/list parses the same
+	 * as a Unix one, then drops exactly one trailing newline artifact (a
+	 * pasted textarea value or an uploaded file almost always ends with one)
+	 * so it is not counted as an extra blank line. Every OTHER
+	 * blank/whitespace-only line is preserved as a row — importTerms() counts
+	 * it toward `skipped` per REQ-DDCDR-005's scenario numbers (blank lines
+	 * are part of the reported total, not silently dropped pre-count).
+	 *
+	 * @param string $content Raw content.
+	 *
+	 * @return array<int, string>
+	 */
+	private function splitLines(string $content): array {
+		$normalized = str_replace(["\r\n", "\r"], "\n", $content);
 
-    /**
-     * Coerce a value to a trimmed string, or null when blank/absent.
-     *
-     * @param mixed $value Raw value.
-     *
-     * @return string|null
-     *
-     * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
-     */
-    public function stringOrNull(mixed $value): ?string
-    {
-        if (is_string($value) === false) {
-            return null;
-        }
+		if (str_ends_with($normalized, "\n") === true) {
+			$normalized = substr($normalized, 0, -1);
+		}
 
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return $trimmed;
-
-    }//end stringOrNull()
-
-    /**
-     * Split raw import content into lines.
-     *
-     * Normalises line endings so a Windows-authored CSV/list parses the same
-     * as a Unix one, then drops exactly one trailing newline artifact (a
-     * pasted textarea value or an uploaded file almost always ends with one)
-     * so it is not counted as an extra blank line. Every OTHER
-     * blank/whitespace-only line is preserved as a row — importTerms() counts
-     * it toward `skipped` per REQ-DDCDR-005's scenario numbers (blank lines
-     * are part of the reported total, not silently dropped pre-count).
-     *
-     * @param string $content Raw content.
-     *
-     * @return array<int, string>
-     */
-    private function splitLines(string $content): array
-    {
-        $normalized = str_replace(["\r\n", "\r"], "\n", $content);
-
-        if (str_ends_with($normalized, "\n") === true) {
-            $normalized = substr($normalized, 0, -1);
-        }
-
-        return explode("\n", $normalized);
-
-    }//end splitLines()
+		return explode("\n", $normalized);
+	}//end splitLines()
 }//end class

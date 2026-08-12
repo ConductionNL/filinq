@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Prohibition Skip Tier
  *
@@ -36,34 +37,31 @@ namespace OCA\DocuDesk\Service;
  *
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
  */
-class ProhibitionSkipTier
-{
-    /**
-     * Classify a skip attempt on a prohibition-matched entity.
-     *
-     * Pure tier logic (callers have already established it is a skip AND a
-     * prohibition match): at or above the threshold the match is absolute and
-     * cannot be released; below the threshold it is releasable only with force.
-     *
-     * @param float $confidence Detection confidence for the occurrence.
-     * @param float $threshold  High-confidence threshold in effect.
-     * @param bool  $force      Whether the request set force.
-     *
-     * @return string One of 'block_absolute', 'block_releasable', 'allow'.
-     *
-     * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
-     */
-    public function classify(float $confidence, float $threshold, bool $force): string
-    {
-        if ($confidence >= $threshold) {
-            return 'block_absolute';
-        }
+class ProhibitionSkipTier {
+	/**
+	 * Classify a skip attempt on a prohibition-matched entity.
+	 *
+	 * Pure tier logic (callers have already established it is a skip AND a
+	 * prohibition match): at or above the threshold the match is absolute and
+	 * cannot be released; below the threshold it is releasable only with force.
+	 *
+	 * @param float $confidence Detection confidence for the occurrence.
+	 * @param float $threshold High-confidence threshold in effect.
+	 * @param bool $force Whether the request set force.
+	 *
+	 * @return string One of 'block_absolute', 'block_releasable', 'allow'.
+	 *
+	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
+	 */
+	public function classify(float $confidence, float $threshold, bool $force): string {
+		if ($confidence >= $threshold) {
+			return 'block_absolute';
+		}
 
-        if ($force === false) {
-            return 'block_releasable';
-        }
+		if ($force === false) {
+			return 'block_releasable';
+		}
 
-        return 'allow';
-
-    }//end classify()
+		return 'allow';
+	}//end classify()
 }//end class

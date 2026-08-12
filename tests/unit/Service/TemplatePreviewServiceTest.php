@@ -42,175 +42,161 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class TemplatePreviewServiceTest extends TestCase
-{
+class TemplatePreviewServiceTest extends TestCase {
 
-    /**
-     * The TemplatePreviewService under test
-     *
-     * @var TemplatePreviewService
-     */
-    private TemplatePreviewService $previewService;
+	/**
+	 * The TemplatePreviewService under test
+	 *
+	 * @var TemplatePreviewService
+	 */
+	private TemplatePreviewService $previewService;
 
-    /**
-     * Mock TemplateRenderer
-     *
-     * @var TemplateRenderer|MockObject
-     */
-    private TemplateRenderer|MockObject $mockRenderer;
+	/**
+	 * Mock TemplateRenderer
+	 *
+	 * @var TemplateRenderer|MockObject
+	 */
+	private TemplateRenderer|MockObject $mockRenderer;
 
-    /**
-     * Mock TemplateService
-     *
-     * @var TemplateService|MockObject
-     */
-    private TemplateService|MockObject $mockTemplateService;
+	/**
+	 * Mock TemplateService
+	 *
+	 * @var TemplateService|MockObject
+	 */
+	private TemplateService|MockObject $mockTemplateService;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockRenderer = $this->createMock(TemplateRenderer::class);
+		$this->mockTemplateService = $this->createMock(TemplateService::class);
 
-        $this->mockRenderer        = $this->createMock(TemplateRenderer::class);
-        $this->mockTemplateService = $this->createMock(TemplateService::class);
+		$this->previewService = new TemplatePreviewService(
+			$this->mockRenderer,
+			$this->mockTemplateService
+		);
 
-        $this->previewService = new TemplatePreviewService(
-            $this->mockRenderer,
-            $this->mockTemplateService
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test preview converts conditional sections then renders
+	 *
+	 * @return void
+	 */
+	public function testPreviewConvertsConditionalSectionsThenRenders(): void {
+		$inputContent = '<p data-condition-field="x" data-condition-op="is_not_empty">Hi</p>';
+		$processedContent = '{% if x is not empty %}<p>Hi</p>{% endif %}';
+		$renderedHtml = '<p>Hi</p>';
 
+		$this->mockRenderer->expects($this->once())
+			->method('convertConditionalSections')
+			->with($inputContent)
+			->willReturn($processedContent);
 
-    /**
-     * Test preview converts conditional sections then renders
-     *
-     * @return void
-     */
-    public function testPreviewConvertsConditionalSectionsThenRenders(): void
-    {
-        $inputContent     = '<p data-condition-field="x" data-condition-op="is_not_empty">Hi</p>';
-        $processedContent = '{% if x is not empty %}<p>Hi</p>{% endif %}';
-        $renderedHtml     = '<p>Hi</p>';
+		$this->mockRenderer->expects($this->once())
+			->method('renderTemplate')
+			->with($processedContent, ['x' => 'hello'])
+			->willReturn($renderedHtml);
 
-        $this->mockRenderer->expects($this->once())
-            ->method('convertConditionalSections')
-            ->with($inputContent)
-            ->willReturn($processedContent);
+		$result = $this->previewService->preview(
+			content: $inputContent,
+			data: ['x' => 'hello']
+		);
 
-        $this->mockRenderer->expects($this->once())
-            ->method('renderTemplate')
-            ->with($processedContent, ['x' => 'hello'])
-            ->willReturn($renderedHtml);
+		$this->assertEquals($renderedHtml, $result);
 
-        $result = $this->previewService->preview(
-            content: $inputContent,
-            data: ['x' => 'hello']
-        );
+	}//end testPreviewConvertsConditionalSectionsThenRenders()
 
-        $this->assertEquals($renderedHtml, $result);
+	/**
+	 * Test preview with empty data still renders
+	 *
+	 * @return void
+	 */
+	public function testPreviewWithEmptyDataStillRenders(): void {
+		$content = '<h1>Hello</h1>';
 
-    }//end testPreviewConvertsConditionalSectionsThenRenders()
+		$this->mockRenderer->method('convertConditionalSections')
+			->willReturn($content);
+		$this->mockRenderer->method('renderTemplate')
+			->willReturn($content);
 
+		$result = $this->previewService->preview(content: $content, data: []);
 
-    /**
-     * Test preview with empty data still renders
-     *
-     * @return void
-     */
-    public function testPreviewWithEmptyDataStillRenders(): void
-    {
-        $content = '<h1>Hello</h1>';
+		$this->assertEquals($content, $result);
 
-        $this->mockRenderer->method('convertConditionalSections')
-            ->willReturn($content);
-        $this->mockRenderer->method('renderTemplate')
-            ->willReturn($content);
+	}//end testPreviewWithEmptyDataStillRenders()
 
-        $result = $this->previewService->preview(content: $content, data: []);
+	/**
+	 * Test preview propagates exception from renderer
+	 *
+	 * @return void
+	 */
+	public function testPreviewPropagatesRendererException(): void {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Template rendering failed');
 
-        $this->assertEquals($content, $result);
+		$this->mockRenderer->method('convertConditionalSections')
+			->willReturn('<p>{{ broken }}');
+		$this->mockRenderer->method('renderTemplate')
+			->willThrowException(new Exception('Template rendering failed', 400));
 
-    }//end testPreviewWithEmptyDataStillRenders()
+		$this->previewService->preview(content: '<p>{{ broken }}', data: []);
 
+	}//end testPreviewPropagatesRendererException()
 
-    /**
-     * Test preview propagates exception from renderer
-     *
-     * @return void
-     */
-    public function testPreviewPropagatesRendererException(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Template rendering failed');
+	/**
+	 * Test previewTemplate fetches template by ID then renders
+	 *
+	 * @return void
+	 */
+	public function testPreviewTemplateFetchesAndRenders(): void {
+		$template = [
+			'id' => 'tmpl-1',
+			'content' => '<h1>{{ title }}</h1>',
+			'name' => 'Test Template',
+		];
 
-        $this->mockRenderer->method('convertConditionalSections')
-            ->willReturn('<p>{{ broken }}');
-        $this->mockRenderer->method('renderTemplate')
-            ->willThrowException(new Exception('Template rendering failed', 400));
+		$this->mockTemplateService->expects($this->once())
+			->method('getTemplate')
+			->with('tmpl-1')
+			->willReturn($template);
 
-        $this->previewService->preview(content: '<p>{{ broken }}', data: []);
+		$this->mockRenderer->method('convertConditionalSections')
+			->willReturn('<h1>{{ title }}</h1>');
+		$this->mockRenderer->method('renderTemplate')
+			->willReturn('<h1>My Title</h1>');
 
-    }//end testPreviewPropagatesRendererException()
+		$result = $this->previewService->previewTemplate(
+			templateId: 'tmpl-1',
+			data: ['title' => 'My Title']
+		);
 
+		$this->assertEquals('<h1>My Title</h1>', $result);
 
-    /**
-     * Test previewTemplate fetches template by ID then renders
-     *
-     * @return void
-     */
-    public function testPreviewTemplateFetchesAndRenders(): void
-    {
-        $template = [
-            'id'      => 'tmpl-1',
-            'content' => '<h1>{{ title }}</h1>',
-            'name'    => 'Test Template',
-        ];
+	}//end testPreviewTemplateFetchesAndRenders()
 
-        $this->mockTemplateService->expects($this->once())
-            ->method('getTemplate')
-            ->with('tmpl-1')
-            ->willReturn($template);
+	/**
+	 * Test previewTemplate throws when template not found
+	 *
+	 * @return void
+	 */
+	public function testPreviewTemplateThrowsWhenTemplateNotFound(): void {
+		$this->expectException(Exception::class);
+		$this->expectExceptionMessage('Template not found');
 
-        $this->mockRenderer->method('convertConditionalSections')
-            ->willReturn('<h1>{{ title }}</h1>');
-        $this->mockRenderer->method('renderTemplate')
-            ->willReturn('<h1>My Title</h1>');
+		$this->mockTemplateService->method('getTemplate')
+			->willThrowException(new Exception('Template not found', 404));
 
-        $result = $this->previewService->previewTemplate(
-            templateId: 'tmpl-1',
-            data: ['title' => 'My Title']
-        );
+		$this->previewService->previewTemplate(
+			templateId: 'nonexistent',
+			data: []
+		);
 
-        $this->assertEquals('<h1>My Title</h1>', $result);
-
-    }//end testPreviewTemplateFetchesAndRenders()
-
-
-    /**
-     * Test previewTemplate throws when template not found
-     *
-     * @return void
-     */
-    public function testPreviewTemplateThrowsWhenTemplateNotFound(): void
-    {
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Template not found');
-
-        $this->mockTemplateService->method('getTemplate')
-            ->willThrowException(new Exception('Template not found', 404));
-
-        $this->previewService->previewTemplate(
-            templateId: 'nonexistent',
-            data: []
-        );
-
-    }//end testPreviewTemplateThrowsWhenTemplateNotFound()
-
+	}//end testPreviewTemplateThrowsWhenTemplateNotFound()
 
 }//end class

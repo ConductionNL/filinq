@@ -44,217 +44,210 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/pdf-conversion/spec.md
  */
-class SofficeProcessRunner
-{
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface $logger Logger for subprocess diagnostics.
-     */
-    public function __construct(private readonly LoggerInterface $logger)
-    {
+class SofficeProcessRunner {
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger Logger for subprocess diagnostics.
+	 */
+	public function __construct(
+		private readonly LoggerInterface $logger,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Invoke the command in a subprocess, draining stdout/stderr and
-     * enforcing the timeout via `stream_select`.
-     *
-     * Uses the array form of proc_open so PHP execs the binary directly
-     * without going through `/bin/sh -c` — eliminates the shell layer
-     * and the associated quoting/injection surface.
-     *
-     * @param array<int, string> $argv        Process argv (argv[0] = binary).
-     * @param int                $timeout     Timeout in seconds.
-     * @param string             $tmpDir      Temp directory (for logging only).
-     * @param string             $backendName Backend identifier for attempt records.
-     *
-     * @return int Process exit code (or 1 when the platform reports -1).
-     *
-     * @throws ConversionFailedException On timeout or if proc_open fails.
-     *
-     * @spec openspec/changes/pdf-conversion-service/tasks.md#task-6
-     */
-    public function run(array $argv, int $timeout, string $tmpDir, string $backendName): int
-    {
-        [$proc, $pipes] = $this->openProcess(argv: $argv, backendName: $backendName);
+	/**
+	 * Invoke the command in a subprocess, draining stdout/stderr and
+	 * enforcing the timeout via `stream_select`.
+	 *
+	 * Uses the array form of proc_open so PHP execs the binary directly
+	 * without going through `/bin/sh -c` — eliminates the shell layer
+	 * and the associated quoting/injection surface.
+	 *
+	 * @param array<int, string> $argv Process argv (argv[0] = binary).
+	 * @param int $timeout Timeout in seconds.
+	 * @param string $tmpDir Temp directory (for logging only).
+	 * @param string $backendName Backend identifier for attempt records.
+	 *
+	 * @return int Process exit code (or 1 when the platform reports -1).
+	 *
+	 * @throws ConversionFailedException On timeout or if proc_open fails.
+	 *
+	 * @spec openspec/changes/pdf-conversion-service/tasks.md#task-6
+	 */
+	public function run(array $argv, int $timeout, string $tmpDir, string $backendName): int {
+		[$proc, $pipes] = $this->openProcess(argv: $argv, backendName: $backendName);
 
-        $outcome = $this->pumpUntilExit(proc: $proc, pipes: $pipes, timeout: $timeout);
+		$outcome = $this->pumpUntilExit(proc: $proc, pipes: $pipes, timeout: $timeout);
 
-        // Drain whatever is left before closing; stdout is discarded, soffice
-        // reports everything actionable on stderr. The discard is deliberate —
-        // an undrained pipe can block the child at proc_close() — so the
-        // result is assigned to make that intent explicit rather than looking
-        // like a forgotten return value.
-        $discardedStdout = stream_get_contents($pipes[1]);
-        unset($discardedStdout);
+		// Drain whatever is left before closing; stdout is discarded, soffice
+		// reports everything actionable on stderr. The discard is deliberate —
+		// an undrained pipe can block the child at proc_close() — so the
+		// result is assigned to make that intent explicit rather than looking
+		// like a forgotten return value.
+		$discardedStdout = stream_get_contents($pipes[1]);
+		unset($discardedStdout);
 
-        $stderr = $outcome['stderr'].stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+		$stderr = $outcome['stderr'] . stream_get_contents($pipes[2]);
+		fclose($pipes[1]);
+		fclose($pipes[2]);
 
-        $exitCode = proc_close($proc);
+		$exitCode = proc_close($proc);
 
-        if ($outcome['timedOut'] === true) {
-            $this->logger->warning(
-                '[LibreOfficeHeadlessBackend] soffice timed out',
-                [
-                    'timeout' => $timeout,
-                    'tmpDir'  => $tmpDir,
-                    'stderr'  => substr($stderr, 0, 500),
-                ]
-            );
-            throw new ConversionFailedException(
-                message: sprintf('soffice timed out after %d seconds.', $timeout),
-                attempts: [
-                    [
-                        'name'      => $backendName,
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => sprintf('timeout after %d seconds', $timeout),
-                    ],
-                ]
-            );
-        }//end if
+		if ($outcome['timedOut'] === true) {
+			$this->logger->warning(
+				'[LibreOfficeHeadlessBackend] soffice timed out',
+				[
+					'timeout' => $timeout,
+					'tmpDir' => $tmpDir,
+					'stderr' => substr($stderr, 0, 500),
+				]
+			);
+			throw new ConversionFailedException(
+				message: sprintf('soffice timed out after %d seconds.', $timeout),
+				attempts: [
+					[
+						'name' => $backendName,
+						'available' => true,
+						'supports' => true,
+						'reason' => sprintf('timeout after %d seconds', $timeout),
+					],
+				]
+			);
+		}//end if
 
-        if ($stderr !== '') {
-            $this->logger->debug(
-                '[LibreOfficeHeadlessBackend] soffice stderr',
-                ['stderr' => substr($stderr, 0, 500)]
-            );
-        }
+		if ($stderr !== '') {
+			$this->logger->debug(
+				'[LibreOfficeHeadlessBackend] soffice stderr',
+				['stderr' => substr($stderr, 0, 500)]
+			);
+		}
 
-        if ($exitCode === -1) {
-            return 1;
-        }
+		if ($exitCode === -1) {
+			return 1;
+		}
 
-        return $exitCode;
+		return $exitCode;
+	}//end run()
 
-    }//end run()
+	/**
+	 * Launch the subprocess and put its output pipes in non-blocking mode.
+	 *
+	 * @param array<int, string> $argv Process argv (argv[0] = binary).
+	 * @param string $backendName Backend identifier for attempt records.
+	 *
+	 * @return array{0: resource, 1: array<int, resource>} The process handle and its pipes.
+	 *
+	 * @throws ConversionFailedException When proc_open refuses to launch.
+	 */
+	private function openProcess(array $argv, string $backendName): array {
+		$descriptors = [
+			0 => ['pipe', 'r'],
+			1 => ['pipe', 'w'],
+			2 => ['pipe', 'w'],
+		];
 
-    /**
-     * Launch the subprocess and put its output pipes in non-blocking mode.
-     *
-     * @param array<int, string> $argv        Process argv (argv[0] = binary).
-     * @param string             $backendName Backend identifier for attempt records.
-     *
-     * @return array{0: resource, 1: array<int, resource>} The process handle and its pipes.
-     *
-     * @throws ConversionFailedException When proc_open refuses to launch.
-     */
-    private function openProcess(array $argv, string $backendName): array
-    {
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
+		$proc = proc_open($argv, $descriptors, $pipes);
+		if (is_resource($proc) === false) {
+			throw new ConversionFailedException(
+				message: 'proc_open failed to launch soffice.',
+				attempts: [
+					[
+						'name' => $backendName,
+						'available' => true,
+						'supports' => true,
+						'reason' => 'proc_open returned false',
+					],
+				]
+			);
+		}
 
-        $proc = proc_open($argv, $descriptors, $pipes);
-        if (is_resource($proc) === false) {
-            throw new ConversionFailedException(
-                message: 'proc_open failed to launch soffice.',
-                attempts: [
-                    [
-                        'name'      => $backendName,
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'proc_open returned false',
-                    ],
-                ]
-            );
-        }
+		fclose($pipes[0]);
+		stream_set_blocking($pipes[1], false);
+		stream_set_blocking($pipes[2], false);
 
-        fclose($pipes[0]);
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
+		return [$proc, $pipes];
+	}//end openProcess()
 
-        return [$proc, $pipes];
+	/**
+	 * Read from the process pipes until it exits or the deadline passes.
+	 *
+	 * Both pipes are drained so the child never blocks on a full buffer, but
+	 * only stderr is retained — it is the only stream soffice reports
+	 * actionable diagnostics on.
+	 *
+	 * @param resource $proc Process handle from proc_open.
+	 * @param array<int, resource> $pipes Pipes from proc_open.
+	 * @param int $timeout Timeout in seconds.
+	 *
+	 * @return array{timedOut: bool, stderr: string} Whether the deadline was hit,
+	 *                                               plus the stderr collected so far.
+	 */
+	private function pumpUntilExit($proc, array $pipes, int $timeout): array {
+		$deadline = (time() + $timeout);
+		$stderr = '';
+		$timedOut = false;
 
-    }//end openProcess()
+		while (true) {
+			$remaining = ($deadline - time());
+			if ($remaining <= 0) {
+				$timedOut = true;
+				proc_terminate($proc, 9);
+				break;
+			}
 
-    /**
-     * Read from the process pipes until it exits or the deadline passes.
-     *
-     * Both pipes are drained so the child never blocks on a full buffer, but
-     * only stderr is retained — it is the only stream soffice reports
-     * actionable diagnostics on.
-     *
-     * @param resource             $proc    Process handle from proc_open.
-     * @param array<int, resource> $pipes   Pipes from proc_open.
-     * @param int                  $timeout Timeout in seconds.
-     *
-     * @return array{timedOut: bool, stderr: string} Whether the deadline was hit,
-     *                                               plus the stderr collected so far.
-     */
-    private function pumpUntilExit($proc, array $pipes, int $timeout): array
-    {
-        $deadline = (time() + $timeout);
-        $stderr   = '';
-        $timedOut = false;
+			$read = [$pipes[1], $pipes[2]];
+			$write = null;
+			$except = null;
+			$selected = stream_select($read, $write, $except, $remaining);
 
-        while (true) {
-            $remaining = ($deadline - time());
-            if ($remaining <= 0) {
-                $timedOut = true;
-                proc_terminate($proc, 9);
-                break;
-            }
+			if ($selected === false || $selected === 0) {
+				// Select() returned without readable data — check if
+				// the process is still running.
+				$status = proc_get_status($proc);
+				if ($status['running'] === false) {
+					break;
+				}
 
-            $read     = [$pipes[1], $pipes[2]];
-            $write    = null;
-            $except   = null;
-            $selected = stream_select($read, $write, $except, $remaining);
+				continue;
+			}
 
-            if ($selected === false || $selected === 0) {
-                // Select() returned without readable data — check if
-                // the process is still running.
-                $status = proc_get_status($proc);
-                if ($status['running'] === false) {
-                    break;
-                }
+			$stderr .= $this->drainStreams(streams: $read, stderrPipe: $pipes[2]);
 
-                continue;
-            }
+			$status = proc_get_status($proc);
+			if ($status['running'] === false) {
+				break;
+			}
+		}//end while
 
-            $stderr .= $this->drainStreams(streams: $read, stderrPipe: $pipes[2]);
+		return [
+			'timedOut' => $timedOut,
+			'stderr' => $stderr,
+		];
 
-            $status = proc_get_status($proc);
-            if ($status['running'] === false) {
-                break;
-            }
-        }//end while
+	}//end pumpUntilExit()
 
-        return [
-            'timedOut' => $timedOut,
-            'stderr'   => $stderr,
-        ];
+	/**
+	 * Read one chunk from every readable stream, returning the stderr part.
+	 *
+	 * @param array<int, resource> $streams Streams flagged readable by stream_select.
+	 * @param resource $stderrPipe The stderr pipe, so its chunk can be kept.
+	 *
+	 * @return string The chunk read from stderr, or an empty string.
+	 */
+	private function drainStreams(array $streams, $stderrPipe): string {
+		$stderr = '';
+		foreach ($streams as $stream) {
+			$chunk = fread($stream, 8192);
+			if ($chunk === false) {
+				continue;
+			}
 
-    }//end pumpUntilExit()
+			if ($stream === $stderrPipe) {
+				$stderr .= $chunk;
+			}
+		}
 
-    /**
-     * Read one chunk from every readable stream, returning the stderr part.
-     *
-     * @param array<int, resource> $streams    Streams flagged readable by stream_select.
-     * @param resource             $stderrPipe The stderr pipe, so its chunk can be kept.
-     *
-     * @return string The chunk read from stderr, or an empty string.
-     */
-    private function drainStreams(array $streams, $stderrPipe): string
-    {
-        $stderr = '';
-        foreach ($streams as $stream) {
-            $chunk = fread($stream, 8192);
-            if ($chunk === false) {
-                continue;
-            }
-
-            if ($stream === $stderrPipe) {
-                $stderr .= $chunk;
-            }
-        }
-
-        return $stderr;
-
-    }//end drainStreams()
+		return $stderr;
+	}//end drainStreams()
 }//end class

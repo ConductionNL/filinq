@@ -29,58 +29,56 @@ namespace OCP;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IRequest
-{
-    /**
-     * Get a parameter from the request
-     *
-     * @param string $key     Parameter key
-     * @param mixed  $default Default value
-     *
-     * @return mixed
-     */
-    public function getParam(string $key, mixed $default=null): mixed;
+interface IRequest {
+	/**
+	 * Get a parameter from the request
+	 *
+	 * @param string $key Parameter key
+	 * @param mixed $default Default value
+	 *
+	 * @return mixed
+	 */
+	public function getParam(string $key, mixed $default = null): mixed;
 
-    /**
-     * Get all parameters
-     *
-     * @return array<string, mixed>
-     */
-    public function getParams(): array;
+	/**
+	 * Get all parameters
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getParams(): array;
 
-    /**
-     * Get an uploaded file
-     *
-     * @param string $key File key
-     *
-     * @return array<string, mixed>|null
-     */
-    public function getUploadedFile(string $key): ?array;
+	/**
+	 * Get an uploaded file
+	 *
+	 * @param string $key File key
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public function getUploadedFile(string $key): ?array;
 
-    /**
-     * Get the remote (client) IP address for the request.
-     *
-     * @return string
-     */
-    public function getRemoteAddress(): string;
+	/**
+	 * Get the remote (client) IP address for the request.
+	 *
+	 * @return string
+	 */
+	public function getRemoteAddress(): string;
 
-    /**
-     * Get a request header value.
-     *
-     * @param string $name Header name
-     *
-     * @return string
-     */
-    public function getHeader(string $name): string;
+	/**
+	 * Get a request header value.
+	 *
+	 * @param string $name Header name
+	 *
+	 * @return string
+	 */
+	public function getHeader(string $name): string;
 
-    /**
-     * Get the HTTP method of the request.
-     *
-     * @return string
-     */
-    public function getMethod(): string;
+	/**
+	 * Get the HTTP method of the request.
+	 *
+	 * @return string
+	 */
+	public function getMethod(): string;
 }//end interface
-
 
 /**
  * Stub for OCP\IL10N
@@ -91,17 +89,16 @@ interface IRequest
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IL10N
-{
-    /**
-     * Translate a string
-     *
-     * @param string       $text       The text to translate
-     * @param array<mixed> $parameters Optional parameters
-     *
-     * @return string
-     */
-    public function t(string $text, array $parameters=[]): string;
+interface IL10N {
+	/**
+	 * Translate a string
+	 *
+	 * @param string $text The text to translate
+	 * @param array<mixed> $parameters Optional parameters
+	 *
+	 * @return string
+	 */
+	public function t(string $text, array $parameters = []): string;
 }//end interface
 
 /**
@@ -113,14 +110,13 @@ interface IL10N
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Constants
-{
-    public const PERMISSION_READ   = 1;
-    public const PERMISSION_UPDATE = 2;
-    public const PERMISSION_CREATE = 4;
-    public const PERMISSION_DELETE = 8;
-    public const PERMISSION_SHARE  = 16;
-    public const PERMISSION_ALL    = 31;
+class Constants {
+	public const PERMISSION_READ = 1;
+	public const PERMISSION_UPDATE = 2;
+	public const PERMISSION_CREATE = 4;
+	public const PERMISSION_DELETE = 8;
+	public const PERMISSION_SHARE = 16;
+	public const PERMISSION_ALL = 31;
 }//end class
 
 namespace OCP\AppFramework;
@@ -134,22 +130,21 @@ namespace OCP\AppFramework;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Controller
-{
-    /**
-     * Constructor
-     *
-     * @param string        $appName App name
-     * @param \OCP\IRequest $request The request object
-     *
-     * @return void
-     */
-    public function __construct(
-        protected string $appName,
-        protected \OCP\IRequest $request
-    ) {
+class Controller {
+	/**
+	 * Constructor
+	 *
+	 * @param string $appName App name
+	 * @param \OCP\IRequest $request The request object
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		protected string $appName,
+		protected \OCP\IRequest $request,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 }//end class
 
 namespace OCP\AppFramework;
@@ -166,41 +161,40 @@ namespace OCP\AppFramework;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Http
-{
-    public const STATUS_OK = 200;
+class Http {
+	public const STATUS_OK = 200;
 
-    public const STATUS_CREATED = 201;
+	public const STATUS_CREATED = 201;
 
-    public const STATUS_ACCEPTED = 202;
+	public const STATUS_ACCEPTED = 202;
 
-    public const STATUS_NO_CONTENT = 204;
+	public const STATUS_NO_CONTENT = 204;
 
-    public const STATUS_MULTI_STATUS = 207;
+	public const STATUS_MULTI_STATUS = 207;
 
-    public const STATUS_BAD_REQUEST = 400;
+	public const STATUS_BAD_REQUEST = 400;
 
-    public const STATUS_UNAUTHORIZED = 401;
+	public const STATUS_UNAUTHORIZED = 401;
 
-    public const STATUS_FORBIDDEN = 403;
+	public const STATUS_FORBIDDEN = 403;
 
-    public const STATUS_NOT_FOUND = 404;
+	public const STATUS_NOT_FOUND = 404;
 
-    public const STATUS_METHOD_NOT_ALLOWED = 405;
+	public const STATUS_METHOD_NOT_ALLOWED = 405;
 
-    public const STATUS_CONFLICT = 409;
+	public const STATUS_CONFLICT = 409;
 
-    public const STATUS_GONE = 410;
+	public const STATUS_GONE = 410;
 
-    public const STATUS_UNPROCESSABLE_ENTITY = 422;
+	public const STATUS_UNPROCESSABLE_ENTITY = 422;
 
-    public const STATUS_INTERNAL_SERVER_ERROR = 500;
+	public const STATUS_INTERNAL_SERVER_ERROR = 500;
 
-    public const STATUS_NOT_IMPLEMENTED = 501;
+	public const STATUS_NOT_IMPLEMENTED = 501;
 
-    public const STATUS_BAD_GATEWAY = 502;
+	public const STATUS_BAD_GATEWAY = 502;
 
-    public const STATUS_SERVICE_UNAVAILABLE = 503;
+	public const STATUS_SERVICE_UNAVAILABLE = 503;
 }//end class
 
 namespace OCP\AppFramework\OCS;
@@ -214,19 +208,17 @@ namespace OCP\AppFramework\OCS;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class OCSForbiddenException extends \RuntimeException
-{
-    /**
-     * Constructor
-     *
-     * @param string $message Exception message
-     *
-     * @return void
-     */
-    public function __construct(string $message='')
-    {
-        parent::__construct(message: $message, code: 403);
-    }//end __construct()
+class OCSForbiddenException extends \RuntimeException {
+	/**
+	 * Constructor
+	 *
+	 * @param string $message Exception message
+	 *
+	 * @return void
+	 */
+	public function __construct(string $message = '') {
+		parent::__construct(message: $message, code: 403);
+	}//end __construct()
 }//end class
 
 namespace OCP\AppFramework\Http;
@@ -252,95 +244,85 @@ namespace OCP\AppFramework\Http;
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
  */
-class Response
-{
-    /**
-     * Headers keyed by name.
-     *
-     * @var array<string,string>
-     */
-    private array $headers = [];
+class Response {
+	/**
+	 * Headers keyed by name.
+	 *
+	 * @var array<string,string>
+	 */
+	private array $headers = [];
 
-    /**
-     * Add a header.
-     *
-     * @param string $name  Header name.
-     * @param string $value Header value.
-     *
-     * @return self
-     */
-    public function addHeader(string $name, string $value): self
-    {
-        $this->headers[$name] = $value;
-        return $this;
-    }
+	/**
+	 * Add a header.
+	 *
+	 * @param string $name Header name.
+	 * @param string $value Header value.
+	 *
+	 * @return self
+	 */
+	public function addHeader(string $name, string $value): self {
+		$this->headers[$name] = $value;
+		return $this;
+	}
 
-    /**
-     * Get response headers.
-     *
-     * @return array<string,string>
-     */
-    public function getHeaders(): array
-    {
-        return $this->headers;
-    }
+	/**
+	 * Get response headers.
+	 *
+	 * @return array<string,string>
+	 */
+	public function getHeaders(): array {
+		return $this->headers;
+	}
 }//end class
 
-class JSONResponse extends Response
-{
+class JSONResponse extends Response {
 
-    /**
-     * The response data
-     *
-     * @var mixed
-     */
-    private mixed $data;
+	/**
+	 * The response data
+	 *
+	 * @var mixed
+	 */
+	private mixed $data;
 
-    /**
-     * HTTP status code
-     *
-     * @var integer
-     */
-    private int $status;
+	/**
+	 * HTTP status code
+	 *
+	 * @var integer
+	 */
+	private int $status;
 
-    /**
-     * Constructor
-     *
-     * @param mixed $data       Response data
-     * @param int   $statusCode HTTP status code
-     *
-     * @return void
-     */
-    public function __construct(mixed $data=[], int $statusCode=200)
-    {
-        $this->data   = $data;
-        $this->status = $statusCode;
+	/**
+	 * Constructor
+	 *
+	 * @param mixed $data Response data
+	 * @param int $statusCode HTTP status code
+	 *
+	 * @return void
+	 */
+	public function __construct(mixed $data = [], int $statusCode = 200) {
+		$this->data = $data;
+		$this->status = $statusCode;
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get response data
-     *
-     * @return mixed
-     */
-    public function getData(): mixed
-    {
-        return $this->data;
+	/**
+	 * Get response data
+	 *
+	 * @return mixed
+	 */
+	public function getData(): mixed {
+		return $this->data;
+	}//end getData()
 
-    }//end getData()
-
-    /**
-     * Get HTTP status code
-     *
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-
-    }//end getStatus()
+	/**
+	 * Get HTTP status code
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
 }//end class
-
 
 /**
  * Stub for OCP\AppFramework\Http\DataDownloadResponse
@@ -357,55 +339,49 @@ class JSONResponse extends Response
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class DataDownloadResponse extends Response
-{
+class DataDownloadResponse extends Response {
 
-    /**
-     * The response data
-     *
-     * @var string
-     */
-    private string $data;
+	/**
+	 * The response data
+	 *
+	 * @var string
+	 */
+	private string $data;
 
-    /**
-     * Constructor
-     *
-     * @param string $data        Response data
-     * @param string $filename    Filename
-     * @param string $contentType Content-Type header
-     *
-     * @return void
-     */
-    public function __construct(string $data, string $filename, string $contentType)
-    {
-        $this->data = $data;
-        $this->addHeader('Content-Type', $contentType);
-        $this->addHeader('Content-Disposition', 'attachment; filename="'.$filename.'"');
+	/**
+	 * Constructor
+	 *
+	 * @param string $data Response data
+	 * @param string $filename Filename
+	 * @param string $contentType Content-Type header
+	 *
+	 * @return void
+	 */
+	public function __construct(string $data, string $filename, string $contentType) {
+		$this->data = $data;
+		$this->addHeader('Content-Type', $contentType);
+		$this->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get response data
-     *
-     * @return string
-     */
-    public function getData(): string
-    {
-        return $this->data;
+	/**
+	 * Get response data
+	 *
+	 * @return string
+	 */
+	public function getData(): string {
+		return $this->data;
+	}//end getData()
 
-    }//end getData()
-
-    /**
-     * Get HTTP status code. DataDownloadResponse always defaults to 200
-     * (matching the real OCP class, which inherits Http::STATUS_OK).
-     *
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return 200;
-
-    }//end getStatus()
+	/**
+	 * Get HTTP status code. DataDownloadResponse always defaults to 200
+	 * (matching the real OCP class, which inherits Http::STATUS_OK).
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return 200;
+	}//end getStatus()
 }//end class
 
 namespace OCP\AppFramework;
@@ -419,29 +395,26 @@ namespace OCP\AppFramework;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class App
-{
-    /**
-     * Construct the application.
-     *
-     * @param string  $appName   Application name
-     * @param mixed[] $urlParams URL parameters
-     *
-     * @return void
-     */
-    public function __construct(string $appName, array $urlParams=[])
-    {
-    }//end __construct()
+class App {
+	/**
+	 * Construct the application.
+	 *
+	 * @param string $appName Application name
+	 * @param mixed[] $urlParams URL parameters
+	 *
+	 * @return void
+	 */
+	public function __construct(string $appName, array $urlParams = []) {
+	}//end __construct()
 
-    /**
-     * Get the application container.
-     *
-     * @return \Psr\Container\ContainerInterface|null
-     */
-    public function getContainer(): ?\Psr\Container\ContainerInterface
-    {
-        return null;
-    }//end getContainer()
+	/**
+	 * Get the application container.
+	 *
+	 * @return \Psr\Container\ContainerInterface|null
+	 */
+	public function getContainer(): ?\Psr\Container\ContainerInterface {
+		return null;
+	}//end getContainer()
 }//end class
 
 namespace OCP\AppFramework\Bootstrap;
@@ -455,25 +428,24 @@ namespace OCP\AppFramework\Bootstrap;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IBootstrap
-{
-    /**
-     * Register services.
-     *
-     * @param \OCP\AppFramework\Bootstrap\IRegistrationContext $context Registration context
-     *
-     * @return void
-     */
-    public function register(\OCP\AppFramework\Bootstrap\IRegistrationContext $context): void;
+interface IBootstrap {
+	/**
+	 * Register services.
+	 *
+	 * @param \OCP\AppFramework\Bootstrap\IRegistrationContext $context Registration context
+	 *
+	 * @return void
+	 */
+	public function register(\OCP\AppFramework\Bootstrap\IRegistrationContext $context): void;
 
-    /**
-     * Boot the application.
-     *
-     * @param \OCP\AppFramework\Bootstrap\IBootContext $context Boot context
-     *
-     * @return void
-     */
-    public function boot(\OCP\AppFramework\Bootstrap\IBootContext $context): void;
+	/**
+	 * Boot the application.
+	 *
+	 * @param \OCP\AppFramework\Bootstrap\IBootContext $context Boot context
+	 *
+	 * @return void
+	 */
+	public function boot(\OCP\AppFramework\Bootstrap\IBootContext $context): void;
 }//end interface
 
 /**
@@ -485,48 +457,47 @@ interface IBootstrap
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IRegistrationContext
-{
-    /**
-     * Register a service.
-     *
-     * @param string   $name    Service name
-     * @param callable $factory Factory callable
-     * @param bool     $shared  Whether shared
-     *
-     * @return void
-     */
-    public function registerService(string $name, callable $factory, bool $shared=true): void;
+interface IRegistrationContext {
+	/**
+	 * Register a service.
+	 *
+	 * @param string $name Service name
+	 * @param callable $factory Factory callable
+	 * @param bool $shared Whether shared
+	 *
+	 * @return void
+	 */
+	public function registerService(string $name, callable $factory, bool $shared = true): void;
 
-    /**
-     * Register an alias.
-     *
-     * @param string $alias  Alias name
-     * @param string $target Target class
-     *
-     * @return void
-     */
-    public function registerAlias(string $alias, string $target): void;
+	/**
+	 * Register an alias.
+	 *
+	 * @param string $alias Alias name
+	 * @param string $target Target class
+	 *
+	 * @return void
+	 */
+	public function registerAlias(string $alias, string $target): void;
 
-    /**
-     * Register a service alias.
-     *
-     * @param string $alias  Alias name
-     * @param string $target Target class
-     *
-     * @return void
-     */
-    public function registerServiceAlias(string $alias, string $target): void;
+	/**
+	 * Register a service alias.
+	 *
+	 * @param string $alias Alias name
+	 * @param string $target Target class
+	 *
+	 * @return void
+	 */
+	public function registerServiceAlias(string $alias, string $target): void;
 
-    /**
-     * Register a parameter.
-     *
-     * @param string $name  Parameter name
-     * @param mixed  $value Parameter value
-     *
-     * @return void
-     */
-    public function registerParameter(string $name, mixed $value): void;
+	/**
+	 * Register a parameter.
+	 *
+	 * @param string $name Parameter name
+	 * @param mixed $value Parameter value
+	 *
+	 * @return void
+	 */
+	public function registerParameter(string $name, mixed $value): void;
 }//end interface
 
 /**
@@ -538,14 +509,13 @@ interface IRegistrationContext
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IBootContext
-{
-    /**
-     * Get the application container.
-     *
-     * @return \Psr\Container\ContainerInterface
-     */
-    public function getAppContainer(): \Psr\Container\ContainerInterface;
+interface IBootContext {
+	/**
+	 * Get the application container.
+	 *
+	 * @return \Psr\Container\ContainerInterface
+	 */
+	public function getAppContainer(): \Psr\Container\ContainerInterface;
 }//end interface
 
 namespace OCP\AppFramework\Http;
@@ -559,69 +529,64 @@ namespace OCP\AppFramework\Http;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TextPlainResponse
-{
+class TextPlainResponse {
 
-    /**
-     * Response text content.
-     *
-     * @var string
-     */
-    private string $data;
+	/**
+	 * Response text content.
+	 *
+	 * @var string
+	 */
+	private string $data;
 
-    /**
-     * HTTP status code.
-     *
-     * @var integer
-     */
-    private int $status;
+	/**
+	 * HTTP status code.
+	 *
+	 * @var integer
+	 */
+	private int $status;
 
-    /**
-     * Construct a plain text response.
-     *
-     * @param string $text       Response text
-     * @param int    $statusCode HTTP status code
-     *
-     * @return void
-     */
-    public function __construct(string $text='', int $statusCode=200)
-    {
-        $this->data   = $text;
-        $this->status = $statusCode;
-    }//end __construct()
+	/**
+	 * Construct a plain text response.
+	 *
+	 * @param string $text Response text
+	 * @param int $statusCode HTTP status code
+	 *
+	 * @return void
+	 */
+	public function __construct(string $text = '', int $statusCode = 200) {
+		$this->data = $text;
+		$this->status = $statusCode;
+	}//end __construct()
 
-    /**
-     * Get response data.
-     *
-     * @return string
-     */
-    public function getData(): string
-    {
-        return $this->data;
-    }//end getData()
+	/**
+	 * Get response data.
+	 *
+	 * @return string
+	 */
+	public function getData(): string {
+		return $this->data;
+	}//end getData()
 
-    /**
-     * Get HTTP status code.
-     *
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return $this->status;
-    }//end getStatus()
+	/**
+	 * Get HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
 
-    /**
-     * Add a response header.
-     *
-     * @param string $name  Header name
-     * @param string $value Header value
-     *
-     * @return self
-     */
-    public function addHeader(string $name, string $value): self
-    {
-        return $this;
-    }//end addHeader()
+	/**
+	 * Add a response header.
+	 *
+	 * @param string $name Header name
+	 * @param string $value Header value
+	 *
+	 * @return self
+	 */
+	public function addHeader(string $name, string $value): self {
+		return $this;
+	}//end addHeader()
 }//end class
 
 /**
@@ -633,112 +598,106 @@ class TextPlainResponse
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TemplateResponse
-{
+class TemplateResponse {
 
-    /**
-     * Application name.
-     *
-     * @var string
-     */
-    private string $appName;
+	/**
+	 * Application name.
+	 *
+	 * @var string
+	 */
+	private string $appName;
 
-    /**
-     * Template name.
-     *
-     * @var string
-     */
-    private string $templateName;
+	/**
+	 * Template name.
+	 *
+	 * @var string
+	 */
+	private string $templateName;
 
-    /**
-     * Template parameters.
-     *
-     * @var mixed[]
-     */
-    private array $params;
+	/**
+	 * Template parameters.
+	 *
+	 * @var mixed[]
+	 */
+	private array $params;
 
-    /**
-     * Render mode.
-     *
-     * @var string
-     */
-    private string $renderAs;
+	/**
+	 * Render mode.
+	 *
+	 * @var string
+	 */
+	private string $renderAs;
 
-    /**
-     * Construct a template response.
-     *
-     * @param string  $appName      Application name
-     * @param string  $templateName Template name
-     * @param mixed[] $params       Template parameters
-     * @param string  $renderAs     Render mode
-     *
-     * @return void
-     */
-    public function __construct(
-        string $appName,
-        string $templateName,
-        array $params=[],
-        string $renderAs='user'
-    ) {
-        $this->appName      = $appName;
-        $this->templateName = $templateName;
-        $this->params       = $params;
-        $this->renderAs     = $renderAs;
-    }//end __construct()
+	/**
+	 * Construct a template response.
+	 *
+	 * @param string $appName Application name
+	 * @param string $templateName Template name
+	 * @param mixed[] $params Template parameters
+	 * @param string $renderAs Render mode
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		string $appName,
+		string $templateName,
+		array $params = [],
+		string $renderAs = 'user',
+	) {
+		$this->appName = $appName;
+		$this->templateName = $templateName;
+		$this->params = $params;
+		$this->renderAs = $renderAs;
+	}//end __construct()
 
-    /**
-     * Get HTTP status code.
-     *
-     * @return int
-     */
-    public function getStatus(): int
-    {
-        return 200;
-    }//end getStatus()
+	/**
+	 * Get HTTP status code.
+	 *
+	 * @return int
+	 */
+	public function getStatus(): int {
+		return 200;
+	}//end getStatus()
 
-    /**
-     * Get the app the template belongs to.
-     *
-     * Mirrors OCP\AppFramework\Http\TemplateResponse::getApp(), which exists on
-     * the real class; the stub omitted it, so any test asserting which app a
-     * TemplateResponse renders from could not run.
-     *
-     * @return string
-     */
-    public function getApp(): string
-    {
-        return $this->appName;
-    }//end getApp()
+	/**
+	 * Get the app the template belongs to.
+	 *
+	 * Mirrors OCP\AppFramework\Http\TemplateResponse::getApp(), which exists on
+	 * the real class; the stub omitted it, so any test asserting which app a
+	 * TemplateResponse renders from could not run.
+	 *
+	 * @return string
+	 */
+	public function getApp(): string {
+		return $this->appName;
+	}//end getApp()
 
-    /**
-     * Get template name.
-     *
-     * @return string
-     */
-    public function getTemplateName(): string
-    {
-        return $this->templateName;
-    }//end getTemplateName()
+	/**
+	 * Get template name.
+	 *
+	 * @return string
+	 */
+	public function getTemplateName(): string {
+		return $this->templateName;
+	}//end getTemplateName()
 
-    /**
-     * Get render mode.
-     *
-     * @return string
-     */
-    public function getRenderAs(): string
-    {
-        return $this->renderAs;
-    }//end getRenderAs()
+	/**
+	 * Get render mode.
+	 *
+	 * @return string
+	 */
+	public function getRenderAs(): string {
+		return $this->renderAs;
+	}//end getRenderAs()
 
-    /**
-     * Get template parameters.
-     *
-     * @return mixed[]
-     */
-    public function getParams(): array
-    {
-        return $this->params;
-    }//end getParams()
+	/**
+	 * Get template parameters.
+	 *
+	 * @return mixed[]
+	 */
+	public function getParams(): array {
+		return $this->params;
+	}//end getParams()
 }//end class
 
 namespace OCP;
@@ -752,54 +711,53 @@ namespace OCP;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface ICache
-{
-    /**
-     * Get a cached value.
-     *
-     * @param string $key Cache key
-     *
-     * @return mixed
-     */
-    public function get(string $key): mixed;
+interface ICache {
+	/**
+	 * Get a cached value.
+	 *
+	 * @param string $key Cache key
+	 *
+	 * @return mixed
+	 */
+	public function get(string $key): mixed;
 
-    /**
-     * Set a cached value.
-     *
-     * @param string $key   Cache key
-     * @param mixed  $value Value to cache
-     * @param int    $ttl   TTL in seconds
-     *
-     * @return mixed
-     */
-    public function set(string $key, mixed $value, int $ttl=0): mixed;
+	/**
+	 * Set a cached value.
+	 *
+	 * @param string $key Cache key
+	 * @param mixed $value Value to cache
+	 * @param int $ttl TTL in seconds
+	 *
+	 * @return mixed
+	 */
+	public function set(string $key, mixed $value, int $ttl = 0): mixed;
 
-    /**
-     * Check if a key exists.
-     *
-     * @param string $key Cache key
-     *
-     * @return bool
-     */
-    public function hasKey(string $key): bool;
+	/**
+	 * Check if a key exists.
+	 *
+	 * @param string $key Cache key
+	 *
+	 * @return bool
+	 */
+	public function hasKey(string $key): bool;
 
-    /**
-     * Remove a cached value.
-     *
-     * @param string $key Cache key
-     *
-     * @return mixed
-     */
-    public function remove(string $key): mixed;
+	/**
+	 * Remove a cached value.
+	 *
+	 * @param string $key Cache key
+	 *
+	 * @return mixed
+	 */
+	public function remove(string $key): mixed;
 
-    /**
-     * Clear the cache.
-     *
-     * @param string $prefix Key prefix
-     *
-     * @return mixed
-     */
-    public function clear(string $prefix=''): mixed;
+	/**
+	 * Clear the cache.
+	 *
+	 * @param string $prefix Key prefix
+	 *
+	 * @return mixed
+	 */
+	public function clear(string $prefix = ''): mixed;
 }//end interface
 
 /**
@@ -811,41 +769,40 @@ interface ICache
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface ICacheFactory
-{
-    /**
-     * Create a distributed cache.
-     *
-     * @param string $prefix Key prefix
-     *
-     * @return ICache
-     */
-    public function createDistributed(string $prefix=''): ICache;
+interface ICacheFactory {
+	/**
+	 * Create a distributed cache.
+	 *
+	 * @param string $prefix Key prefix
+	 *
+	 * @return ICache
+	 */
+	public function createDistributed(string $prefix = ''): ICache;
 
-    /**
-     * Create a local cache.
-     *
-     * @param string $prefix Key prefix
-     *
-     * @return ICache
-     */
-    public function createLocal(string $prefix=''): ICache;
+	/**
+	 * Create a local cache.
+	 *
+	 * @param string $prefix Key prefix
+	 *
+	 * @return ICache
+	 */
+	public function createLocal(string $prefix = ''): ICache;
 
-    /**
-     * Create an in-memory cache.
-     *
-     * @param int $capacity Max entries
-     *
-     * @return ICache
-     */
-    public function createInMemory(int $capacity=512): ICache;
+	/**
+	 * Create an in-memory cache.
+	 *
+	 * @param int $capacity Max entries
+	 *
+	 * @return ICache
+	 */
+	public function createInMemory(int $capacity = 512): ICache;
 
-    /**
-     * Check if distributed cache is available.
-     *
-     * @return bool
-     */
-    public function isAvailable(): bool;
+	/**
+	 * Check if distributed cache is available.
+	 *
+	 * @return bool
+	 */
+	public function isAvailable(): bool;
 }//end interface
 
 namespace OCP\Files;
@@ -859,8 +816,7 @@ namespace OCP\Files;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class NotFoundException extends \RuntimeException
-{
+class NotFoundException extends \RuntimeException {
 }//end class
 
 /**
@@ -872,8 +828,7 @@ class NotFoundException extends \RuntimeException
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class NotPermittedException extends \RuntimeException
-{
+class NotPermittedException extends \RuntimeException {
 }//end class
 
 namespace OCP\AppFramework\Utility;
@@ -887,31 +842,30 @@ namespace OCP\AppFramework\Utility;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface ITimeFactory
-{
-    /**
-     * Get the current Unix timestamp.
-     *
-     * @return int
-     */
-    public function getTime(): int;
+interface ITimeFactory {
+	/**
+	 * Get the current Unix timestamp.
+	 *
+	 * @return int
+	 */
+	public function getTime(): int;
 
-    /**
-     * Get a DateTime object.
-     *
-     * @param string             $time     Time string
-     * @param \DateTimeZone|null $timezone Timezone
-     *
-     * @return \DateTime
-     */
-    public function getDateTime(string $time='', ?\DateTimeZone $timezone=null): \DateTime;
+	/**
+	 * Get a DateTime object.
+	 *
+	 * @param string $time Time string
+	 * @param \DateTimeZone|null $timezone Timezone
+	 *
+	 * @return \DateTime
+	 */
+	public function getDateTime(string $time = '', ?\DateTimeZone $timezone = null): \DateTime;
 
-    /**
-     * Get a DateTimeImmutable for now.
-     *
-     * @return \DateTimeImmutable
-     */
-    public function now(): \DateTimeImmutable;
+	/**
+	 * Get a DateTimeImmutable for now.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	public function now(): \DateTimeImmutable;
 }//end interface
 
 namespace OCP\BackgroundJob;
@@ -925,69 +879,64 @@ namespace OCP\BackgroundJob;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-abstract class QueuedJob
-{
+abstract class QueuedJob {
 
-    /**
-     * Job argument data.
-     *
-     * @var mixed
-     */
-    protected mixed $argument;
+	/**
+	 * Job argument data.
+	 *
+	 * @var mixed
+	 */
+	protected mixed $argument;
 
-    /**
-     * Construct the queued job.
-     *
-     * @param \OCP\AppFramework\Utility\ITimeFactory $time Time factory
-     *
-     * @return void
-     */
-    public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time)
-    {
-    }//end __construct()
+	/**
+	 * Construct the queued job.
+	 *
+	 * @param \OCP\AppFramework\Utility\ITimeFactory $time Time factory
+	 *
+	 * @return void
+	 */
+	public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time) {
+	}//end __construct()
 
-    /**
-     * Run the job.
-     *
-     * @param mixed $argument Job argument
-     *
-     * @return void
-     */
-    abstract protected function run(mixed $argument): void;
+	/**
+	 * Run the job.
+	 *
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	abstract protected function run(mixed $argument): void;
 
-    /**
-     * Execute the job.
-     *
-     * @param \OCP\BackgroundJob\IJobList   $jobList Job list
-     * @param \Psr\Log\LoggerInterface|null $logger  Logger
-     *
-     * @return void
-     */
-    public function execute(\OCP\BackgroundJob\IJobList $jobList, ?\Psr\Log\LoggerInterface $logger=null): void
-    {
-    }//end execute()
+	/**
+	 * Execute the job.
+	 *
+	 * @param \OCP\BackgroundJob\IJobList $jobList Job list
+	 * @param \Psr\Log\LoggerInterface|null $logger Logger
+	 *
+	 * @return void
+	 */
+	public function execute(\OCP\BackgroundJob\IJobList $jobList, ?\Psr\Log\LoggerInterface $logger = null): void {
+	}//end execute()
 
-    /**
-     * Set the argument
-     *
-     * @param mixed $argument Job argument
-     *
-     * @return void
-     */
-    public function setArgument(mixed $argument): void
-    {
-        $this->argument = $argument;
-    }//end setArgument()
+	/**
+	 * Set the argument
+	 *
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	public function setArgument(mixed $argument): void {
+		$this->argument = $argument;
+	}//end setArgument()
 
-    /**
-     * Get the argument
-     *
-     * @return mixed
-     */
-    public function getArgument(): mixed
-    {
-        return $this->argument;
-    }//end getArgument()
+	/**
+	 * Get the argument
+	 *
+	 * @return mixed
+	 */
+	public function getArgument(): mixed {
+		return $this->argument;
+	}//end getArgument()
 }//end class
 
 /**
@@ -1002,107 +951,100 @@ abstract class QueuedJob
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-abstract class TimedJob
-{
+abstract class TimedJob {
 
-    /**
-     * Job argument data.
-     *
-     * @var mixed
-     */
-    protected mixed $argument;
+	/**
+	 * Job argument data.
+	 *
+	 * @var mixed
+	 */
+	protected mixed $argument;
 
-    /**
-     * Configured run interval in seconds.
-     *
-     * @var integer
-     */
-    protected int $interval = 0;
+	/**
+	 * Configured run interval in seconds.
+	 *
+	 * @var integer
+	 */
+	protected int $interval = 0;
 
-    /**
-     * Time-sensitivity flag.
-     *
-     * @var integer
-     */
-    protected int $timeSensitivity = 0;
+	/**
+	 * Time-sensitivity flag.
+	 *
+	 * @var integer
+	 */
+	protected int $timeSensitivity = 0;
 
-    /**
-     * Construct the timed job.
-     *
-     * @param \OCP\AppFramework\Utility\ITimeFactory $time Time factory
-     *
-     * @return void
-     */
-    public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time)
-    {
-    }//end __construct()
+	/**
+	 * Construct the timed job.
+	 *
+	 * @param \OCP\AppFramework\Utility\ITimeFactory $time Time factory
+	 *
+	 * @return void
+	 */
+	public function __construct(\OCP\AppFramework\Utility\ITimeFactory $time) {
+	}//end __construct()
 
-    /**
-     * Run the job.
-     *
-     * @param mixed $argument Job argument
-     *
-     * @return void
-     */
-    abstract protected function run(mixed $argument): void;
+	/**
+	 * Run the job.
+	 *
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	abstract protected function run(mixed $argument): void;
 
-    /**
-     * Set the run interval.
-     *
-     * @param int $seconds Interval in seconds
-     *
-     * @return void
-     */
-    public function setInterval(int $seconds): void
-    {
-        $this->interval = $seconds;
-    }//end setInterval()
+	/**
+	 * Set the run interval.
+	 *
+	 * @param int $seconds Interval in seconds
+	 *
+	 * @return void
+	 */
+	public function setInterval(int $seconds): void {
+		$this->interval = $seconds;
+	}//end setInterval()
 
-    /**
-     * Set the time sensitivity.
-     *
-     * @param int $sensitivity Sensitivity flag
-     *
-     * @return void
-     */
-    public function setTimeSensitivity(int $sensitivity): void
-    {
-        $this->timeSensitivity = $sensitivity;
-    }//end setTimeSensitivity()
+	/**
+	 * Set the time sensitivity.
+	 *
+	 * @param int $sensitivity Sensitivity flag
+	 *
+	 * @return void
+	 */
+	public function setTimeSensitivity(int $sensitivity): void {
+		$this->timeSensitivity = $sensitivity;
+	}//end setTimeSensitivity()
 
-    /**
-     * Execute the job.
-     *
-     * @param \OCP\BackgroundJob\IJobList   $jobList Job list
-     * @param \Psr\Log\LoggerInterface|null $logger  Logger
-     *
-     * @return void
-     */
-    public function execute(\OCP\BackgroundJob\IJobList $jobList, ?\Psr\Log\LoggerInterface $logger=null): void
-    {
-    }//end execute()
+	/**
+	 * Execute the job.
+	 *
+	 * @param \OCP\BackgroundJob\IJobList $jobList Job list
+	 * @param \Psr\Log\LoggerInterface|null $logger Logger
+	 *
+	 * @return void
+	 */
+	public function execute(\OCP\BackgroundJob\IJobList $jobList, ?\Psr\Log\LoggerInterface $logger = null): void {
+	}//end execute()
 
-    /**
-     * Set the argument
-     *
-     * @param mixed $argument Job argument
-     *
-     * @return void
-     */
-    public function setArgument(mixed $argument): void
-    {
-        $this->argument = $argument;
-    }//end setArgument()
+	/**
+	 * Set the argument
+	 *
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	public function setArgument(mixed $argument): void {
+		$this->argument = $argument;
+	}//end setArgument()
 
-    /**
-     * Get the argument
-     *
-     * @return mixed
-     */
-    public function getArgument(): mixed
-    {
-        return $this->argument;
-    }//end getArgument()
+	/**
+	 * Get the argument
+	 *
+	 * @return mixed
+	 */
+	public function getArgument(): mixed {
+		return $this->argument;
+	}//end getArgument()
 }//end class
 
 /**
@@ -1114,37 +1056,36 @@ abstract class TimedJob
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IJobList
-{
-    /**
-     * Add a job to the list.
-     *
-     * @param string $job      Job class name
-     * @param mixed  $argument Job argument
-     *
-     * @return void
-     */
-    public function add(string $job, mixed $argument=null): void;
+interface IJobList {
+	/**
+	 * Add a job to the list.
+	 *
+	 * @param string $job Job class name
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	public function add(string $job, mixed $argument = null): void;
 
-    /**
-     * Remove a job from the list.
-     *
-     * @param string $job      Job class name
-     * @param mixed  $argument Job argument
-     *
-     * @return void
-     */
-    public function remove(string $job, mixed $argument=null): void;
+	/**
+	 * Remove a job from the list.
+	 *
+	 * @param string $job Job class name
+	 * @param mixed $argument Job argument
+	 *
+	 * @return void
+	 */
+	public function remove(string $job, mixed $argument = null): void;
 
-    /**
-     * Check if a job exists.
-     *
-     * @param string $job      Job class name
-     * @param mixed  $argument Job argument
-     *
-     * @return bool
-     */
-    public function has(string $job, mixed $argument): bool;
+	/**
+	 * Check if a job exists.
+	 *
+	 * @param string $job Job class name
+	 * @param mixed $argument Job argument
+	 *
+	 * @return bool
+	 */
+	public function has(string $job, mixed $argument): bool;
 }//end interface
 
 namespace OCP;
@@ -1158,125 +1099,124 @@ namespace OCP;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IConfig
-{
-    /**
-     * Set a system-level config value.
-     *
-     * @param string $key   Config key
-     * @param mixed  $value Config value
-     *
-     * @return void
-     */
-    public function setSystemValue(string $key, mixed $value): void;
+interface IConfig {
+	/**
+	 * Set a system-level config value.
+	 *
+	 * @param string $key Config key
+	 * @param mixed $value Config value
+	 *
+	 * @return void
+	 */
+	public function setSystemValue(string $key, mixed $value): void;
 
-    /**
-     * Get a system-level config value.
-     *
-     * @param string $key     Config key
-     * @param mixed  $default Default value
-     *
-     * @return mixed
-     */
-    public function getSystemValue(string $key, mixed $default=''): mixed;
+	/**
+	 * Get a system-level config value.
+	 *
+	 * @param string $key Config key
+	 * @param mixed $default Default value
+	 *
+	 * @return mixed
+	 */
+	public function getSystemValue(string $key, mixed $default = ''): mixed;
 
-    /**
-     * Get a system-level config value as boolean.
-     *
-     * @param string $key     Config key
-     * @param bool   $default Default value
-     *
-     * @return bool
-     */
-    public function getSystemValueBool(string $key, bool $default=false): bool;
+	/**
+	 * Get a system-level config value as boolean.
+	 *
+	 * @param string $key Config key
+	 * @param bool $default Default value
+	 *
+	 * @return bool
+	 */
+	public function getSystemValueBool(string $key, bool $default = false): bool;
 
-    /**
-     * Get a system-level config value as integer.
-     *
-     * @param string $key     Config key
-     * @param int    $default Default value
-     *
-     * @return int
-     */
-    public function getSystemValueInt(string $key, int $default=0): int;
+	/**
+	 * Get a system-level config value as integer.
+	 *
+	 * @param string $key Config key
+	 * @param int $default Default value
+	 *
+	 * @return int
+	 */
+	public function getSystemValueInt(string $key, int $default = 0): int;
 
-    /**
-     * Get a system-level config value as string.
-     *
-     * @param string $key     Config key
-     * @param string $default Default value
-     *
-     * @return string
-     */
-    public function getSystemValueString(string $key, string $default=''): string;
+	/**
+	 * Get a system-level config value as string.
+	 *
+	 * @param string $key Config key
+	 * @param string $default Default value
+	 *
+	 * @return string
+	 */
+	public function getSystemValueString(string $key, string $default = ''): string;
 
-    /**
-     * Set an app-level config value.
-     *
-     * @param string $appName App identifier
-     * @param string $key     Config key
-     * @param string $value   Config value
-     *
-     * @return void
-     */
-    public function setAppValue(string $appName, string $key, string $value): void;
+	/**
+	 * Set an app-level config value.
+	 *
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 * @param string $value Config value
+	 *
+	 * @return void
+	 */
+	public function setAppValue(string $appName, string $key, string $value): void;
 
-    /**
-     * Get an app-level config value.
-     *
-     * @param string $appName App identifier
-     * @param string $key     Config key
-     * @param string $default Default value
-     *
-     * @return string
-     */
-    public function getAppValue(string $appName, string $key, string $default=''): string;
+	/**
+	 * Get an app-level config value.
+	 *
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 * @param string $default Default value
+	 *
+	 * @return string
+	 */
+	public function getAppValue(string $appName, string $key, string $default = ''): string;
 
-    /**
-     * Delete an app-level config value.
-     *
-     * @param string $appName App identifier
-     * @param string $key     Config key
-     *
-     * @return void
-     */
-    public function deleteAppValue(string $appName, string $key): void;
+	/**
+	 * Delete an app-level config value.
+	 *
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 *
+	 * @return void
+	 */
+	public function deleteAppValue(string $appName, string $key): void;
 
-    /**
-     * Set a user-level config value.
-     *
-     * @param string      $userId       User identifier
-     * @param string      $appName      App identifier
-     * @param string      $key          Config key
-     * @param string      $value        Config value
-     * @param string|null $preCondition Pre-condition
-     *
-     * @return void
-     */
-    public function setUserValue(string $userId, string $appName, string $key, string $value, ?string $preCondition=null): void;
+	/**
+	 * Set a user-level config value.
+	 *
+	 * @param string $userId User identifier
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 * @param string $value Config value
+	 * @param string|null $preCondition Pre-condition
+	 *
+	 * @return void
+	 */
+	public function setUserValue(string $userId, string $appName, string $key, string $value, ?string $preCondition = null): void;
 
-    /**
-     * Get a user-level config value.
-     *
-     * @param string $userId  User identifier
-     * @param string $appName App identifier
-     * @param string $key     Config key
-     * @param string $default Default value
-     *
-     * @return string
-     */
-    public function getUserValue(string $userId, string $appName, string $key, string $default=''): string;
+	/**
+	 * Get a user-level config value.
+	 *
+	 * @param string $userId User identifier
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 * @param string $default Default value
+	 *
+	 * @return string
+	 */
+	public function getUserValue(string $userId, string $appName, string $key, string $default = ''): string;
 
-    /**
-     * Delete a user-level config value.
-     *
-     * @param string $userId  User identifier
-     * @param string $appName App identifier
-     * @param string $key     Config key
-     *
-     * @return void
-     */
-    public function deleteUserValue(string $userId, string $appName, string $key): void;
+	/**
+	 * Delete a user-level config value.
+	 *
+	 * @param string $userId User identifier
+	 * @param string $appName App identifier
+	 * @param string $key Config key
+	 *
+	 * @return void
+	 */
+	public function deleteUserValue(string $userId, string $appName, string $key): void;
 }//end interface
 
 /**
@@ -1291,123 +1231,122 @@ interface IConfig
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IAppConfig
-{
-    /**
-     * Get a string app-config value.
-     *
-     * @param string $app     App identifier
-     * @param string $key     Config key
-     * @param string $default Default value
-     * @param bool   $lazy    Whether the value is lazy-loaded
-     *
-     * @return string
-     */
-    public function getValueString(string $app, string $key, string $default='', bool $lazy=false): string;
+interface IAppConfig {
+	/**
+	 * Get a string app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param string $default Default value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return string
+	 */
+	public function getValueString(string $app, string $key, string $default = '', bool $lazy = false): string;
 
-    /**
-     * Get an integer app-config value.
-     *
-     * @param string $app     App identifier
-     * @param string $key     Config key
-     * @param int    $default Default value
-     * @param bool   $lazy    Whether the value is lazy-loaded
-     *
-     * @return int
-     */
-    public function getValueInt(string $app, string $key, int $default=0, bool $lazy=false): int;
+	/**
+	 * Get an integer app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param int $default Default value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return int
+	 */
+	public function getValueInt(string $app, string $key, int $default = 0, bool $lazy = false): int;
 
-    /**
-     * Get a float app-config value.
-     *
-     * @param string $app     App identifier
-     * @param string $key     Config key
-     * @param float  $default Default value
-     * @param bool   $lazy    Whether the value is lazy-loaded
-     *
-     * @return float
-     */
-    public function getValueFloat(string $app, string $key, float $default=0.0, bool $lazy=false): float;
+	/**
+	 * Get a float app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param float $default Default value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return float
+	 */
+	public function getValueFloat(string $app, string $key, float $default = 0.0, bool $lazy = false): float;
 
-    /**
-     * Get a boolean app-config value.
-     *
-     * @param string $app     App identifier
-     * @param string $key     Config key
-     * @param bool   $default Default value
-     * @param bool   $lazy    Whether the value is lazy-loaded
-     *
-     * @return bool
-     */
-    public function getValueBool(string $app, string $key, bool $default=false, bool $lazy=false): bool;
+	/**
+	 * Get a boolean app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param bool $default Default value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return bool
+	 */
+	public function getValueBool(string $app, string $key, bool $default = false, bool $lazy = false): bool;
 
-    /**
-     * Set a string app-config value.
-     *
-     * @param string $app       App identifier
-     * @param string $key       Config key
-     * @param string $value     Config value
-     * @param bool   $lazy      Whether the value is lazy-loaded
-     * @param bool   $sensitive Whether the value is sensitive
-     *
-     * @return bool
-     */
-    public function setValueString(string $app, string $key, string $value, bool $lazy=false, bool $sensitive=false): bool;
+	/**
+	 * Set a string app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param string $value Config value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 * @param bool $sensitive Whether the value is sensitive
+	 *
+	 * @return bool
+	 */
+	public function setValueString(string $app, string $key, string $value, bool $lazy = false, bool $sensitive = false): bool;
 
-    /**
-     * Set an integer app-config value.
-     *
-     * @param string $app       App identifier
-     * @param string $key       Config key
-     * @param int    $value     Config value
-     * @param bool   $lazy      Whether the value is lazy-loaded
-     * @param bool   $sensitive Whether the value is sensitive
-     *
-     * @return bool
-     */
-    public function setValueInt(string $app, string $key, int $value, bool $lazy=false, bool $sensitive=false): bool;
+	/**
+	 * Set an integer app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param int $value Config value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 * @param bool $sensitive Whether the value is sensitive
+	 *
+	 * @return bool
+	 */
+	public function setValueInt(string $app, string $key, int $value, bool $lazy = false, bool $sensitive = false): bool;
 
-    /**
-     * Set a boolean app-config value.
-     *
-     * @param string $app   App identifier
-     * @param string $key   Config key
-     * @param bool   $value Config value
-     * @param bool   $lazy  Whether the value is lazy-loaded
-     *
-     * @return bool
-     */
-    public function setValueBool(string $app, string $key, bool $value, bool $lazy=false): bool;
+	/**
+	 * Set a boolean app-config value.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param bool $value Config value
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return bool
+	 */
+	public function setValueBool(string $app, string $key, bool $value, bool $lazy = false): bool;
 
-    /**
-     * Determine whether an app-config key exists.
-     *
-     * @param string $app  App identifier
-     * @param string $key  Config key
-     * @param bool   $lazy Whether the value is lazy-loaded
-     *
-     * @return bool
-     */
-    public function hasKey(string $app, string $key, ?bool $lazy=false): bool;
+	/**
+	 * Determine whether an app-config key exists.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 * @param bool $lazy Whether the value is lazy-loaded
+	 *
+	 * @return bool
+	 */
+	public function hasKey(string $app, string $key, ?bool $lazy = false): bool;
 
-    /**
-     * Delete an app-config key.
-     *
-     * @param string $app App identifier
-     * @param string $key Config key
-     *
-     * @return void
-     */
-    public function deleteKey(string $app, string $key): void;
+	/**
+	 * Delete an app-config key.
+	 *
+	 * @param string $app App identifier
+	 * @param string $key Config key
+	 *
+	 * @return void
+	 */
+	public function deleteKey(string $app, string $key): void;
 
-    /**
-     * Get the config keys defined for an app.
-     *
-     * @param string $app App identifier
-     *
-     * @return array<int, string>
-     */
-    public function getKeys(string $app): array;
+	/**
+	 * Get the config keys defined for an app.
+	 *
+	 * @param string $app App identifier
+	 *
+	 * @return array<int, string>
+	 */
+	public function getKeys(string $app): array;
 }//end interface
 
 namespace OCP\App;
@@ -1424,42 +1363,41 @@ namespace OCP\App;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IAppManager
-{
-    /**
-     * Determine whether an app is installed.
-     *
-     * @param string $appId App identifier
-     *
-     * @return bool
-     */
-    public function isInstalled(string $appId): bool;
+interface IAppManager {
+	/**
+	 * Determine whether an app is installed.
+	 *
+	 * @param string $appId App identifier
+	 *
+	 * @return bool
+	 */
+	public function isInstalled(string $appId): bool;
 
-    /**
-     * Determine whether an app is enabled for a user.
-     *
-     * @param string          $appId App identifier
-     * @param \OCP\IUser|null $user  The user, or null for the current user
-     *
-     * @return bool
-     */
-    public function isEnabledForUser(string $appId, $user=null): bool;
+	/**
+	 * Determine whether an app is enabled for a user.
+	 *
+	 * @param string $appId App identifier
+	 * @param \OCP\IUser|null $user The user, or null for the current user
+	 *
+	 * @return bool
+	 */
+	public function isEnabledForUser(string $appId, $user = null): bool;
 
-    /**
-     * Get the version of an installed app.
-     *
-     * @param string $appId App identifier
-     *
-     * @return string
-     */
-    public function getAppVersion(string $appId): string;
+	/**
+	 * Get the version of an installed app.
+	 *
+	 * @param string $appId App identifier
+	 *
+	 * @return string
+	 */
+	public function getAppVersion(string $appId): string;
 
-    /**
-     * Get the list of installed apps.
-     *
-     * @return array<int, string>
-     */
-    public function getInstalledApps(): array;
+	/**
+	 * Get the list of installed apps.
+	 *
+	 * @return array<int, string>
+	 */
+	public function getInstalledApps(): array;
 }//end interface
 
 namespace OCP\Notification;
@@ -1475,45 +1413,44 @@ namespace OCP\Notification;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface INotification
-{
-    /**
-     * Set the app the notification belongs to.
-     *
-     * @param string $app App identifier
-     *
-     * @return INotification
-     */
-    public function setApp(string $app): INotification;
+interface INotification {
+	/**
+	 * Set the app the notification belongs to.
+	 *
+	 * @param string $app App identifier
+	 *
+	 * @return INotification
+	 */
+	public function setApp(string $app): INotification;
 
-    /**
-     * Set the target user.
-     *
-     * @param string $user User identifier
-     *
-     * @return INotification
-     */
-    public function setUser(string $user): INotification;
+	/**
+	 * Set the target user.
+	 *
+	 * @param string $user User identifier
+	 *
+	 * @return INotification
+	 */
+	public function setUser(string $user): INotification;
 
-    /**
-     * Set the notification object.
-     *
-     * @param string $type Object type
-     * @param string $id   Object id
-     *
-     * @return INotification
-     */
-    public function setObject(string $type, string $id): INotification;
+	/**
+	 * Set the notification object.
+	 *
+	 * @param string $type Object type
+	 * @param string $id Object id
+	 *
+	 * @return INotification
+	 */
+	public function setObject(string $type, string $id): INotification;
 
-    /**
-     * Set the notification subject.
-     *
-     * @param string       $subject    Subject key
-     * @param array<mixed> $parameters Subject parameters
-     *
-     * @return INotification
-     */
-    public function setSubject(string $subject, array $parameters=[]): INotification;
+	/**
+	 * Set the notification subject.
+	 *
+	 * @param string $subject Subject key
+	 * @param array<mixed> $parameters Subject parameters
+	 *
+	 * @return INotification
+	 */
+	public function setSubject(string $subject, array $parameters = []): INotification;
 }//end interface
 
 /**
@@ -1525,32 +1462,31 @@ interface INotification
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IManager
-{
-    /**
-     * Create a fresh notification builder.
-     *
-     * @return INotification
-     */
-    public function createNotification(): INotification;
+interface IManager {
+	/**
+	 * Create a fresh notification builder.
+	 *
+	 * @return INotification
+	 */
+	public function createNotification(): INotification;
 
-    /**
-     * Dispatch a notification.
-     *
-     * @param INotification $notification The notification to send
-     *
-     * @return void
-     */
-    public function notify(INotification $notification): void;
+	/**
+	 * Dispatch a notification.
+	 *
+	 * @param INotification $notification The notification to send
+	 *
+	 * @return void
+	 */
+	public function notify(INotification $notification): void;
 
-    /**
-     * Mark matching notifications as processed.
-     *
-     * @param INotification $notification The notification matcher
-     *
-     * @return void
-     */
-    public function markProcessed(INotification $notification): void;
+	/**
+	 * Mark matching notifications as processed.
+	 *
+	 * @param INotification $notification The notification matcher
+	 *
+	 * @return void
+	 */
+	public function markProcessed(INotification $notification): void;
 }//end interface
 
 namespace OCP\AppFramework;
@@ -1567,49 +1503,45 @@ namespace OCP\AppFramework;
  * @license  EUPL-1.2
  * @link     https://www.DocuDesk.app
  */
-class Middleware
-{
-    /**
-     * Hook fired before the controller method.
-     *
-     * @param mixed  $controller The controller instance.
-     * @param string $methodName The method name being called.
-     *
-     * @return void
-     */
-    public function beforeController($controller, $methodName): void
-    {
-    }
+class Middleware {
+	/**
+	 * Hook fired before the controller method.
+	 *
+	 * @param mixed $controller The controller instance.
+	 * @param string $methodName The method name being called.
+	 *
+	 * @return void
+	 */
+	public function beforeController($controller, $methodName): void {
+	}
 
-    /**
-     * Hook fired after the controller method returns.
-     *
-     * @param mixed                                  $controller The controller instance.
-     * @param string                                 $methodName The method name that was called.
-     * @param \OCP\AppFramework\Http\Response        $response   The response object.
-     *
-     * @return \OCP\AppFramework\Http\Response
-     */
-    public function afterController($controller, $methodName, \OCP\AppFramework\Http\Response $response): \OCP\AppFramework\Http\Response
-    {
-        return $response;
-    }
+	/**
+	 * Hook fired after the controller method returns.
+	 *
+	 * @param mixed $controller The controller instance.
+	 * @param string $methodName The method name that was called.
+	 * @param \OCP\AppFramework\Http\Response $response The response object.
+	 *
+	 * @return \OCP\AppFramework\Http\Response
+	 */
+	public function afterController($controller, $methodName, \OCP\AppFramework\Http\Response $response): \OCP\AppFramework\Http\Response {
+		return $response;
+	}
 
-    /**
-     * Hook fired when an exception is thrown.
-     *
-     * @param mixed      $controller The controller instance.
-     * @param string     $methodName The method name being called.
-     * @param \Throwable $exception  The exception thrown.
-     *
-     * @return mixed
-     *
-     * @throws \Throwable
-     */
-    public function afterException($controller, $methodName, \Throwable $exception)
-    {
-        throw $exception;
-    }
+	/**
+	 * Hook fired when an exception is thrown.
+	 *
+	 * @param mixed $controller The controller instance.
+	 * @param string $methodName The method name being called.
+	 * @param \Throwable $exception The exception thrown.
+	 *
+	 * @return mixed
+	 *
+	 * @throws \Throwable
+	 */
+	public function afterException($controller, $methodName, \Throwable $exception) {
+		throw $exception;
+	}
 }//end class
 
 namespace OCP;
@@ -1623,12 +1555,11 @@ namespace OCP;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface ITempManager
-{
-    public function getTemporaryFile(string $postfix = ''): string|false;
-    public function getTemporaryFolder(string $postfix = ''): string|false;
-    public function clean(): void;
-    public function cleanOld(): void;
+interface ITempManager {
+	public function getTemporaryFile(string $postfix = ''): string|false;
+	public function getTemporaryFolder(string $postfix = ''): string|false;
+	public function clean(): void;
+	public function cleanOld(): void;
 }//end interface
 
 /**
@@ -1640,12 +1571,11 @@ interface ITempManager
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IDBConnection
-{
-    public function getQueryBuilder(): mixed;
-    public function prepare(string $sql, ?int $limit = null, ?int $offset = null): mixed;
-    public function executeQuery(string $sql, array $params = [], array $types = []): mixed;
-    public function executeStatement(string $sql, array $params = [], array $types = []): int;
+interface IDBConnection {
+	public function getQueryBuilder(): mixed;
+	public function prepare(string $sql, ?int $limit = null, ?int $offset = null): mixed;
+	public function executeQuery(string $sql, array $params = [], array $types = []): mixed;
+	public function executeStatement(string $sql, array $params = [], array $types = []): int;
 }//end interface
 
 /**
@@ -1660,23 +1590,21 @@ interface IDBConnection
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Server
-{
-    /**
-     * Resolve a service from the test container (\OC::$server).
-     *
-     * @param string $class Service class or interface name.
-     *
-     * @return mixed
-     */
-    public static function get(string $class): mixed
-    {
-        if (\OC::$server === null) {
-            throw new \Exception('Server container not available in unit tests');
-        }
+class Server {
+	/**
+	 * Resolve a service from the test container (\OC::$server).
+	 *
+	 * @param string $class Service class or interface name.
+	 *
+	 * @return mixed
+	 */
+	public static function get(string $class): mixed {
+		if (\OC::$server === null) {
+			throw new \Exception('Server container not available in unit tests');
+		}
 
-        return \OC::$server->get($class);
-    }//end get()
+		return \OC::$server->get($class);
+	}//end get()
 }//end class
 
 namespace OCP\Lock;
@@ -1690,15 +1618,14 @@ namespace OCP\Lock;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface ILockingProvider
-{
-    public const LOCK_SHARED    = 1;
-    public const LOCK_EXCLUSIVE = 2;
+interface ILockingProvider {
+	public const LOCK_SHARED = 1;
+	public const LOCK_EXCLUSIVE = 2;
 
-    public function acquireLock(string $path, int $type, ?string $readablePath = null): void;
-    public function releaseLock(string $path, int $type): void;
-    public function changeLock(string $path, int $targetType): void;
-    public function isLocked(string $path, int $type): bool;
+	public function acquireLock(string $path, int $type, ?string $readablePath = null): void;
+	public function releaseLock(string $path, int $type): void;
+	public function changeLock(string $path, int $targetType): void;
+	public function isLocked(string $path, int $type): bool;
 }//end interface
 
 /**
@@ -1710,8 +1637,7 @@ interface ILockingProvider
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class LockedException extends \Exception
-{
+class LockedException extends \Exception {
 }//end class
 
 namespace OCP\Files\Conversion;
@@ -1725,11 +1651,10 @@ namespace OCP\Files\Conversion;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IConversionManager
-{
-    public function hasProviders(): bool;
-    public function getProviders(): array;
-    public function convert(\OCP\Files\File $file, string $targetMimeType, ?string $path = null): string;
+interface IConversionManager {
+	public function hasProviders(): bool;
+	public function getProviders(): array;
+	public function convert(\OCP\Files\File $file, string $targetMimeType, ?string $path = null): string;
 }//end interface
 
 namespace OCP\TaskProcessing;
@@ -1745,11 +1670,10 @@ namespace OCP\TaskProcessing;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IManager
-{
-    public function runTask(Task $task): Task;
-    public function scheduleTask(Task $task): void;
-    public function getTask(int $id): Task;
+interface IManager {
+	public function runTask(Task $task): Task;
+	public function scheduleTask(Task $task): void;
+	public function getTask(int $id): Task;
 }//end interface
 
 /**
@@ -1761,64 +1685,56 @@ interface IManager
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Task implements \JsonSerializable
-{
-    public const STATUS_UNKNOWN    = 0;
-    public const STATUS_SCHEDULED  = 1;
-    public const STATUS_RUNNING    = 2;
-    public const STATUS_SUCCESSFUL = 3;
-    public const STATUS_FAILED     = 4;
-    public const STATUS_CANCELLED  = 5;
+class Task implements \JsonSerializable {
+	public const STATUS_UNKNOWN = 0;
+	public const STATUS_SCHEDULED = 1;
+	public const STATUS_RUNNING = 2;
+	public const STATUS_SUCCESSFUL = 3;
+	public const STATUS_FAILED = 4;
+	public const STATUS_CANCELLED = 5;
 
-    private ?array $output = null;
+	private ?array $output = null;
 
-    private int $status = self::STATUS_UNKNOWN;
+	private int $status = self::STATUS_UNKNOWN;
 
-    private ?string $errorMessage = null;
+	private ?string $errorMessage = null;
 
-    public function __construct(
-        protected readonly string $taskTypeId,
-        protected array $input,
-        protected readonly string $appId,
-        protected readonly ?string $userId,
-        protected readonly ?string $customId = ''
-    ) {
-    }//end __construct()
+	public function __construct(
+		protected readonly string $taskTypeId,
+		protected array $input,
+		protected readonly string $appId,
+		protected readonly ?string $userId,
+		protected readonly ?string $customId = '',
+	) {
+	}//end __construct()
 
-    public function getStatus(): int
-    {
-        return $this->status;
-    }//end getStatus()
+	public function getStatus(): int {
+		return $this->status;
+	}//end getStatus()
 
-    public function setStatus(int $status): void
-    {
-        $this->status = $status;
-    }//end setStatus()
+	public function setStatus(int $status): void {
+		$this->status = $status;
+	}//end setStatus()
 
-    public function getOutput(): ?array
-    {
-        return $this->output;
-    }//end getOutput()
+	public function getOutput(): ?array {
+		return $this->output;
+	}//end getOutput()
 
-    public function setOutput(?array $output): void
-    {
-        $this->output = $output;
-    }//end setOutput()
+	public function setOutput(?array $output): void {
+		$this->output = $output;
+	}//end setOutput()
 
-    public function getErrorMessage(): ?string
-    {
-        return $this->errorMessage;
-    }//end getErrorMessage()
+	public function getErrorMessage(): ?string {
+		return $this->errorMessage;
+	}//end getErrorMessage()
 
-    public function getInput(): array
-    {
-        return $this->input;
-    }//end getInput()
+	public function getInput(): array {
+		return $this->input;
+	}//end getInput()
 
-    public function jsonSerialize(): array
-    {
-        return ['taskTypeId' => $this->taskTypeId, 'input' => $this->input];
-    }//end jsonSerialize()
+	public function jsonSerialize(): array {
+		return ['taskTypeId' => $this->taskTypeId, 'input' => $this->input];
+	}//end jsonSerialize()
 }//end class
 
 namespace OCP\TaskProcessing\TaskTypes;
@@ -1832,9 +1748,8 @@ namespace OCP\TaskProcessing\TaskTypes;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TextToText
-{
-    public const ID = 'core:text2text';
+class TextToText {
+	public const ID = 'core:text2text';
 }//end class
 
 namespace OCP\TextProcessing;
@@ -1850,9 +1765,8 @@ namespace OCP\TextProcessing;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-interface IManager
-{
-    public function runTask(Task $task): string;
+interface IManager {
+	public function runTask(Task $task): string;
 }//end interface
 
 /**
@@ -1864,21 +1778,19 @@ interface IManager
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class Task implements \JsonSerializable
-{
-    public function __construct(
-        protected string $type,
-        protected string $input,
-        protected string $appId,
-        protected ?string $userId,
-        protected string $identifier = ''
-    ) {
-    }//end __construct()
+class Task implements \JsonSerializable {
+	public function __construct(
+		protected string $type,
+		protected string $input,
+		protected string $appId,
+		protected ?string $userId,
+		protected string $identifier = '',
+	) {
+	}//end __construct()
 
-    public function jsonSerialize(): array
-    {
-        return ['type' => $this->type, 'input' => $this->input];
-    }//end jsonSerialize()
+	public function jsonSerialize(): array {
+		return ['type' => $this->type, 'input' => $this->input];
+	}//end jsonSerialize()
 }//end class
 
 /**
@@ -1890,6 +1802,5 @@ class Task implements \JsonSerializable
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class FreePromptTaskType
-{
+class FreePromptTaskType {
 }//end class

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for translatable-value flattening in PolicyRuleNormaliser.
  *
@@ -44,126 +45,113 @@ use PHPUnit\Framework\TestCase;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class PolicyRuleNormaliserTranslatableTest extends TestCase
-{
+class PolicyRuleNormaliserTranslatableTest extends TestCase {
 
-    /**
-     * The normaliser under test.
-     *
-     * @var PolicyRuleNormaliser
-     */
-    private PolicyRuleNormaliser $normaliser;
+	/**
+	 * The normaliser under test.
+	 *
+	 * @var PolicyRuleNormaliser
+	 */
+	private PolicyRuleNormaliser $normaliser;
 
+	/**
+	 * Build the normaliser.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->normaliser = new PolicyRuleNormaliser();
 
-    /**
-     * Build the normaliser.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->normaliser = new PolicyRuleNormaliser();
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build a minimal admissible prohibition row around one primaryName value.
+	 *
+	 * @param mixed $primaryName The stored primaryName (string or language map).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function row(mixed $primaryName): array {
+		return [
+			'id' => 'R-PROHIBIT-1',
+			'active' => true,
+			'entityType' => 'PERSON',
+			'primaryName' => $primaryName,
+			'matchRules' => [['type' => 'exact', 'value' => 'Jansen']],
+		];
+	}//end row()
 
+	/**
+	 * A language-keyed primaryName is flattened to a display string.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
+	 */
+	public function testLanguageKeyedPrimaryNameIsFlattened(): void {
+		$rule = $this->normaliser->normaliseRule(
+			kind: 'prohibition',
+			object: $this->row(['en' => 'Newman Detect Prohibition Subject'])
+		);
 
-    /**
-     * Build a minimal admissible prohibition row around one primaryName value.
-     *
-     * @param mixed $primaryName The stored primaryName (string or language map).
-     *
-     * @return array<string, mixed>
-     */
-    private function row(mixed $primaryName): array
-    {
-        return [
-            'id'          => 'R-PROHIBIT-1',
-            'active'      => true,
-            'entityType'  => 'PERSON',
-            'primaryName' => $primaryName,
-            'matchRules'  => [['type' => 'exact', 'value' => 'Jansen']],
-        ];
-    }//end row()
+		$this->assertIsArray($rule);
+		$this->assertSame(
+			expected: 'Newman Detect Prohibition Subject',
+			actual: $rule['primaryName'],
+			message: 'A translatable primaryName must not be cast to the string "Array".'
+		);
 
+	}//end testLanguageKeyedPrimaryNameIsFlattened()
 
-    /**
-     * A language-keyed primaryName is flattened to a display string.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/entity-publication-policies/spec.md
-     */
-    public function testLanguageKeyedPrimaryNameIsFlattened(): void
-    {
-        $rule = $this->normaliser->normaliseRule(
-            kind: 'prohibition',
-            object: $this->row(['en' => 'Newman Detect Prohibition Subject'])
-        );
+	/**
+	 * Dutch wins over English when both are stored.
+	 *
+	 * @return void
+	 */
+	public function testDutchIsPreferredOverEnglish(): void {
+		$rule = $this->normaliser->normaliseRule(
+			kind: 'prohibition',
+			object: $this->row(['en' => 'Protected witness', 'nl' => 'Beschermde getuige'])
+		);
 
-        $this->assertIsArray($rule);
-        $this->assertSame(
-            expected: 'Newman Detect Prohibition Subject',
-            actual: $rule['primaryName'],
-            message: 'A translatable primaryName must not be cast to the string "Array".'
-        );
+		$this->assertIsArray($rule);
+		$this->assertSame('Beschermde getuige', $rule['primaryName']);
 
-    }//end testLanguageKeyedPrimaryNameIsFlattened()
+	}//end testDutchIsPreferredOverEnglish()
 
+	/**
+	 * An unexpected locale key still yields a usable string.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownLocaleFallsBackToTheFirstAvailableValue(): void {
+		$rule = $this->normaliser->normaliseRule(
+			kind: 'prohibition',
+			object: $this->row(['de' => 'Geschützter Zeuge'])
+		);
 
-    /**
-     * Dutch wins over English when both are stored.
-     *
-     * @return void
-     */
-    public function testDutchIsPreferredOverEnglish(): void
-    {
-        $rule = $this->normaliser->normaliseRule(
-            kind: 'prohibition',
-            object: $this->row(['en' => 'Protected witness', 'nl' => 'Beschermde getuige'])
-        );
+		$this->assertIsArray($rule);
+		$this->assertSame('Geschützter Zeuge', $rule['primaryName']);
 
-        $this->assertIsArray($rule);
-        $this->assertSame('Beschermde getuige', $rule['primaryName']);
+	}//end testAnUnknownLocaleFallsBackToTheFirstAvailableValue()
 
-    }//end testDutchIsPreferredOverEnglish()
+	/**
+	 * A plain string is still passed through unchanged.
+	 *
+	 * Positive control: without it, a flattener that always returned '' or a
+	 * fixed value would pass the tests above.
+	 *
+	 * @return void
+	 */
+	public function testAPlainStringPrimaryNameIsUnchanged(): void {
+		$rule = $this->normaliser->normaliseRule(
+			kind: 'prohibition',
+			object: $this->row('Politiemedewerker undercover')
+		);
 
+		$this->assertIsArray($rule);
+		$this->assertSame('Politiemedewerker undercover', $rule['primaryName']);
 
-    /**
-     * An unexpected locale key still yields a usable string.
-     *
-     * @return void
-     */
-    public function testAnUnknownLocaleFallsBackToTheFirstAvailableValue(): void
-    {
-        $rule = $this->normaliser->normaliseRule(
-            kind: 'prohibition',
-            object: $this->row(['de' => 'Geschützter Zeuge'])
-        );
-
-        $this->assertIsArray($rule);
-        $this->assertSame('Geschützter Zeuge', $rule['primaryName']);
-
-    }//end testAnUnknownLocaleFallsBackToTheFirstAvailableValue()
-
-
-    /**
-     * A plain string is still passed through unchanged.
-     *
-     * Positive control: without it, a flattener that always returned '' or a
-     * fixed value would pass the tests above.
-     *
-     * @return void
-     */
-    public function testAPlainStringPrimaryNameIsUnchanged(): void
-    {
-        $rule = $this->normaliser->normaliseRule(
-            kind: 'prohibition',
-            object: $this->row('Politiemedewerker undercover')
-        );
-
-        $this->assertIsArray($rule);
-        $this->assertSame('Politiemedewerker undercover', $rule['primaryName']);
-
-    }//end testAPlainStringPrimaryNameIsUnchanged()
+	}//end testAPlainStringPrimaryNameIsUnchanged()
 }//end class

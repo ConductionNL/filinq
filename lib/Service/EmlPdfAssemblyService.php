@@ -49,492 +49,478 @@ use Throwable;
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.DocuDesk.app
  */
-class EmlPdfAssemblyService
-{
+class EmlPdfAssemblyService {
 
+	/**
+	 * App identifier used for IAppConfig reads.
+	 */
+	private const APP_ID = 'docudesk';
 
-    /**
-     * App identifier used for IAppConfig reads.
-     */
-    private const APP_ID = 'docudesk';
+	/**
+	 * Config key: when false, only the redacted envelope renders; renderable
+	 * attachments are not appended as pages. Default true.
+	 */
+	private const KEY_APPEND_PAGES = 'docudesk.conversion.eml.append_attachment_pages';
 
+	/**
+	 * Config key: redacted attachments larger than this (bytes) get a
+	 * placeholder page. Default 26214400 (25 MB).
+	 */
+	private const KEY_MAX_SIZE = 'docudesk.conversion.eml.max_attachment_render_size_bytes';
 
-    /**
-     * Config key: when false, only the redacted envelope renders; renderable
-     * attachments are not appended as pages. Default true.
-     */
-    private const KEY_APPEND_PAGES = 'docudesk.conversion.eml.append_attachment_pages';
+	/**
+	 * Default value for the max-render-size config key (25 MB).
+	 */
+	private const DEFAULT_MAX_SIZE = 26214400;
 
+	/**
+	 * Renders the redacted envelope (headers + body) of a structure.
+	 *
+	 * @var EmlEnvelopeRenderer
+	 */
+	private readonly EmlEnvelopeRenderer $envelopeRenderer;
 
-    /**
-     * Config key: redacted attachments larger than this (bytes) get a
-     * placeholder page. Default 26214400 (25 MB).
-     */
-    private const KEY_MAX_SIZE = 'docudesk.conversion.eml.max_attachment_render_size_bytes';
+	/**
+	 * Renders dividers and redacted attachment pages.
+	 *
+	 * @var EmlAttachmentRenderer
+	 */
+	private readonly EmlAttachmentRenderer $attachmentRenderer;
 
+	/**
+	 * Constructor.
+	 *
+	 * Renderable redacted attachment bytes are rendered within the shared mPDF
+	 * instance: PDF via FPDI import, images inline as data URIs, text in a
+	 * `<pre>` block, Word-family via PhpWord's HTML writer (the same engine
+	 * `PhpWordBackend` uses), and nested EML by recursion. The cascade
+	 * backends are NOT injected here — they operate on `OCP\Files\File` nodes,
+	 * not the raw redacted bytes this service holds, so reusing the PhpWord
+	 * engine directly is the clean path (see DEFERRED_QUESTIONS).
+	 *
+	 * The two renderers are injected; the null defaults keep the historical
+	 * four-argument signature usable, in which case equivalent renderers are
+	 * built from the same dependencies.
+	 *
+	 * @param PdfService $pdfService Shared mPDF/PDF-A configuration.
+	 * @param TemplateRenderer $templateRenderer Sandboxed Twig renderer.
+	 * @param IAppConfig $appConfig Tenant configuration provider.
+	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param EmlEnvelopeRenderer|null $envelopeRenderer Envelope renderer; built from the above when null.
+	 * @param EmlAttachmentRenderer|null $attachmentRenderer Attachment renderer; built from the above when null.
+	 */
+	public function __construct(
+		private readonly PdfService $pdfService,
+		TemplateRenderer $templateRenderer,
+		private readonly IAppConfig $appConfig,
+		private readonly LoggerInterface $logger,
+		?EmlEnvelopeRenderer $envelopeRenderer = null,
+		?EmlAttachmentRenderer $attachmentRenderer = null,
+	) {
+		$this->envelopeRenderer = ($envelopeRenderer ?? new EmlEnvelopeRenderer(
+			$pdfService,
+			$templateRenderer,
+			$logger
+		));
 
-    /**
-     * Default value for the max-render-size config key (25 MB).
-     */
-    private const DEFAULT_MAX_SIZE = 26214400;
+		$this->attachmentRenderer = ($attachmentRenderer ?? new EmlAttachmentRenderer(
+			$pdfService,
+			$templateRenderer,
+			$appConfig,
+			$logger
+		));
 
-    /**
-     * Renders the redacted envelope (headers + body) of a structure.
-     *
-     * @var EmlEnvelopeRenderer
-     */
-    private readonly EmlEnvelopeRenderer $envelopeRenderer;
+	}//end __construct()
 
-    /**
-     * Renders dividers and redacted attachment pages.
-     *
-     * @var EmlAttachmentRenderer
-     */
-    private readonly EmlAttachmentRenderer $attachmentRenderer;
+	/**
+	 * Assemble a PDF/A-3b from a redacted EML structure and return its bytes.
+	 *
+	 * The caller writes the returned bytes to Nextcloud Files (mirroring the
+	 * cascade's `_anonymized` naming). Returning bytes — rather than a File —
+	 * keeps this service free of filesystem coupling and lets nested EML
+	 * attachments be rendered inline within the same mPDF document.
+	 *
+	 * @param object $result OR's AnonymisedEmlStructure (redacted).
+	 * @param string|null $sourceFilename Original .eml filename, for the PDF title.
+	 *
+	 * @return string PDF/A-3b binary content.
+	 *
+	 * @throws ConversionFailedException When no output can be produced.
+	 */
+	public function assemble(object $result, ?string $sourceFilename = null): string {
+		$options = [
+			'pdfa' => true,
+			'format' => 'A4',
+			'title' => $this->deriveTitle(result: $result, sourceFilename: $sourceFilename),
+		];
 
-    /**
-     * Constructor.
-     *
-     * Renderable redacted attachment bytes are rendered within the shared mPDF
-     * instance: PDF via FPDI import, images inline as data URIs, text in a
-     * `<pre>` block, Word-family via PhpWord's HTML writer (the same engine
-     * `PhpWordBackend` uses), and nested EML by recursion. The cascade
-     * backends are NOT injected here — they operate on `OCP\Files\File` nodes,
-     * not the raw redacted bytes this service holds, so reusing the PhpWord
-     * engine directly is the clean path (see DEFERRED_QUESTIONS).
-     *
-     * The two renderers are injected; the null defaults keep the historical
-     * four-argument signature usable, in which case equivalent renderers are
-     * built from the same dependencies.
-     *
-     * @param PdfService                 $pdfService         Shared mPDF/PDF-A configuration.
-     * @param TemplateRenderer           $templateRenderer   Sandboxed Twig renderer.
-     * @param IAppConfig                 $appConfig          Tenant configuration provider.
-     * @param LoggerInterface            $logger             Logger for diagnostics.
-     * @param EmlEnvelopeRenderer|null   $envelopeRenderer   Envelope renderer; built from the above when null.
-     * @param EmlAttachmentRenderer|null $attachmentRenderer Attachment renderer; built from the above when null.
-     */
-    public function __construct(
-        private readonly PdfService $pdfService,
-        TemplateRenderer $templateRenderer,
-        private readonly IAppConfig $appConfig,
-        private readonly LoggerInterface $logger,
-        ?EmlEnvelopeRenderer $envelopeRenderer=null,
-        ?EmlAttachmentRenderer $attachmentRenderer=null,
-    ) {
-        $this->envelopeRenderer = ($envelopeRenderer ?? new EmlEnvelopeRenderer(
-            $pdfService,
-            $templateRenderer,
-            $logger
-        ));
+		try {
+			$mpdf = $this->pdfService->createMpdfInstance(options: $options);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'[EmlPdfAssemblyService] Failed to create mPDF instance',
+				['exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			throw new ConversionFailedException(
+				message: 'EML assembly could not initialise the PDF engine: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => 'eml',
+						'available' => true,
+						'supports' => true,
+						'reason' => 'mPDF init failed: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-        $this->attachmentRenderer = ($attachmentRenderer ?? new EmlAttachmentRenderer(
-            $pdfService,
-            $templateRenderer,
-            $appConfig,
-            $logger
-        ));
+		$appendPages = $this->shouldAppendPages();
+		$maxSize = $this->maxAttachmentSize();
 
-    }//end __construct()
+		$this->renderStructure(
+			mpdf: $mpdf,
+			result: $result,
+			options: $options,
+			appendPages: $appendPages,
+			maxSize: $maxSize,
+			isRoot: true
+		);
 
-    /**
-     * Assemble a PDF/A-3b from a redacted EML structure and return its bytes.
-     *
-     * The caller writes the returned bytes to Nextcloud Files (mirroring the
-     * cascade's `_anonymized` naming). Returning bytes — rather than a File —
-     * keeps this service free of filesystem coupling and lets nested EML
-     * attachments be rendered inline within the same mPDF document.
-     *
-     * @param object      $result         OR's AnonymisedEmlStructure (redacted).
-     * @param string|null $sourceFilename Original .eml filename, for the PDF title.
-     *
-     * @return string PDF/A-3b binary content.
-     *
-     * @throws ConversionFailedException When no output can be produced.
-     */
-    public function assemble(object $result, ?string $sourceFilename=null): string
-    {
-        $options = [
-            'pdfa'   => true,
-            'format' => 'A4',
-            'title'  => $this->deriveTitle(result: $result, sourceFilename: $sourceFilename),
-        ];
+		try {
+			$bytes = $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'[EmlPdfAssemblyService] mPDF Output failed',
+				['exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			throw new ConversionFailedException(
+				message: 'EML assembly failed to emit the PDF: ' . $e->getMessage(),
+				attempts: [
+					[
+						'name' => 'eml',
+						'available' => true,
+						'supports' => true,
+						'reason' => 'mPDF Output failed: ' . $e->getMessage(),
+					],
+				],
+				previous: $e
+			);
+		}//end try
 
-        try {
-            $mpdf = $this->pdfService->createMpdfInstance(options: $options);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[EmlPdfAssemblyService] Failed to create mPDF instance',
-                ['exception' => get_class($e), 'message' => $e->getMessage()]
-            );
-            throw new ConversionFailedException(
-                message: 'EML assembly could not initialise the PDF engine: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => 'eml',
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'mPDF init failed: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
+		if (is_string($bytes) === false || $bytes === '') {
+			throw new ConversionFailedException(
+				message: 'EML assembly produced empty PDF output.',
+				attempts: [
+					[
+						'name' => 'eml',
+						'available' => true,
+						'supports' => true,
+						'reason' => 'mPDF Output returned empty',
+					],
+				]
+			);
+		}
 
-        $appendPages = $this->shouldAppendPages();
-        $maxSize     = $this->maxAttachmentSize();
+		return $bytes;
+	}//end assemble()
 
-        $this->renderStructure(
-            mpdf: $mpdf,
-            result: $result,
-            options: $options,
-            appendPages: $appendPages,
-            maxSize: $maxSize,
-            isRoot: true
-        );
+	/**
+	 * Render one EML structure (envelope + attachments) into the shared mPDF
+	 * instance. Recurses for nested EML attachments.
+	 *
+	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param object $result AnonymisedEmlStructure to render.
+	 * @param array<string,mixed> $options PDF options (for print CSS).
+	 * @param bool $appendPages Whether renderable attachments are appended.
+	 * @param int $maxSize Max attachment render size in bytes.
+	 * @param bool $isRoot True for the outermost message (no leading page break).
+	 *
+	 * @return void
+	 */
+	private function renderStructure(
+		\Mpdf\Mpdf $mpdf,
+		object $result,
+		array $options,
+		bool $appendPages,
+		int $maxSize,
+		bool $isRoot,
+	): void {
+		$envelopeHtml = $this->envelopeRenderer->render(result: $result, options: $options);
 
-        try {
-            $bytes = $mpdf->Output(name: '', dest: \Mpdf\Output\Destination::STRING_RETURN);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                '[EmlPdfAssemblyService] mPDF Output failed',
-                ['exception' => get_class($e), 'message' => $e->getMessage()]
-            );
-            throw new ConversionFailedException(
-                message: 'EML assembly failed to emit the PDF: '.$e->getMessage(),
-                attempts: [
-                    [
-                        'name'      => 'eml',
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'mPDF Output failed: '.$e->getMessage(),
-                    ],
-                ],
-                previous: $e
-            );
-        }//end try
+		try {
+			if ($isRoot === false) {
+				$mpdf->AddPage();
+			}
 
-        if (is_string($bytes) === false || $bytes === '') {
-            throw new ConversionFailedException(
-                message: 'EML assembly produced empty PDF output.',
-                attempts: [
-                    [
-                        'name'      => 'eml',
-                        'available' => true,
-                        'supports'  => true,
-                        'reason'    => 'mPDF Output returned empty',
-                    ],
-                ]
-            );
-        }
+			$mpdf->WriteHTML(html: $envelopeHtml);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[EmlPdfAssemblyService] Envelope WriteHTML failed; rendering minimal envelope',
+				['exception' => get_class($e), 'message' => $e->getMessage()]
+			);
+			$this->envelopeRenderer->writeMinimal(mpdf: $mpdf, result: $result, options: $options, addPage: false);
+		}
 
-        return $bytes;
+		$index = 0;
+		foreach ($this->attachmentRenderer->attachmentsOf(result: $result) as $attachment) {
+			$index++;
+			$this->renderAttachment(
+				mpdf: $mpdf,
+				attachment: $attachment,
+				index: $index,
+				options: $options,
+				appendPages: $appendPages,
+				maxSize: $maxSize
+			);
+		}
 
-    }//end assemble()
+	}//end renderStructure()
 
-    /**
-     * Render one EML structure (envelope + attachments) into the shared mPDF
-     * instance. Recurses for nested EML attachments.
-     *
-     * @param \Mpdf\Mpdf          $mpdf        Shared mPDF instance.
-     * @param object              $result      AnonymisedEmlStructure to render.
-     * @param array<string,mixed> $options     PDF options (for print CSS).
-     * @param bool                $appendPages Whether renderable attachments are appended.
-     * @param int                 $maxSize     Max attachment render size in bytes.
-     * @param bool                $isRoot      True for the outermost message (no leading page break).
-     *
-     * @return void
-     */
-    private function renderStructure(
-        \Mpdf\Mpdf $mpdf,
-        object $result,
-        array $options,
-        bool $appendPages,
-        int $maxSize,
-        bool $isRoot
-    ): void {
-        $envelopeHtml = $this->envelopeRenderer->render(result: $result, options: $options);
+	/**
+	 * Render a single redacted attachment: either appended rendered pages
+	 * (renderable + within cap + append enabled) or a placeholder page.
+	 *
+	 * The guards below are ordered exactly as the decision table in
+	 * design.md D6: "no anonymiser" wins over "nested EML", which wins over
+	 * "no redacted bytes".
+	 *
+	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param object $attachment AnonymisedEmlAttachment.
+	 * @param int $index 1-based attachment index.
+	 * @param array<string,mixed> $options PDF options.
+	 * @param bool $appendPages Whether to append renderable pages.
+	 * @param int $maxSize Max render size in bytes.
+	 *
+	 * @return void
+	 */
+	private function renderAttachment(
+		\Mpdf\Mpdf $mpdf,
+		object $attachment,
+		int $index,
+		array $options,
+		bool $appendPages,
+		int $maxSize,
+	): void {
+		$meta = $this->attachmentRenderer->metaOf(attachment: $attachment);
 
-        try {
-            if ($isRoot === false) {
-                $mpdf->AddPage();
-            }
+		// Unsupported (no anonymiser) → placeholder, no content.
+		if ($meta['unsupported'] === true && $meta['nestedEml'] === null) {
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
+			return;
+		}
 
-            $mpdf->WriteHTML(html: $envelopeHtml);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[EmlPdfAssemblyService] Envelope WriteHTML failed; rendering minimal envelope',
-                ['exception' => get_class($e), 'message' => $e->getMessage()]
-            );
-            $this->envelopeRenderer->writeMinimal(mpdf: $mpdf, result: $result, options: $options, addPage: false);
-        }
+		// Nested EML: recurse on the redacted nested result when present;
+		// otherwise (depth cap reached / no nested result) a placeholder.
+		if ($meta['mimeType'] === 'message/rfc822') {
+			$this->renderNestedEml(
+				mpdf: $mpdf,
+				meta: $meta,
+				index: $index,
+				options: $options,
+				appendPages: $appendPages,
+				maxSize: $maxSize
+			);
+			return;
+		}
 
-        $index = 0;
-        foreach ($this->attachmentRenderer->attachmentsOf(result: $result) as $attachment) {
-            $index++;
-            $this->renderAttachment(
-                mpdf: $mpdf,
-                attachment: $attachment,
-                index: $index,
-                options: $options,
-                appendPages: $appendPages,
-                maxSize: $maxSize
-            );
-        }
+		// No redacted bytes available → placeholder (unsupported-shaped).
+		if (is_string($meta['redacted']) === false) {
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
+			return;
+		}
 
-    }//end renderStructure()
+		$this->renderRedactedBytes(
+			mpdf: $mpdf,
+			meta: $meta,
+			index: $index,
+			options: $options,
+			appendPages: $appendPages,
+			maxSize: $maxSize
+		);
 
-    /**
-     * Render a single redacted attachment: either appended rendered pages
-     * (renderable + within cap + append enabled) or a placeholder page.
-     *
-     * The guards below are ordered exactly as the decision table in
-     * design.md D6: "no anonymiser" wins over "nested EML", which wins over
-     * "no redacted bytes".
-     *
-     * @param \Mpdf\Mpdf          $mpdf        Shared mPDF instance.
-     * @param object              $attachment  AnonymisedEmlAttachment.
-     * @param int                 $index       1-based attachment index.
-     * @param array<string,mixed> $options     PDF options.
-     * @param bool                $appendPages Whether to append renderable pages.
-     * @param int                 $maxSize     Max render size in bytes.
-     *
-     * @return void
-     */
-    private function renderAttachment(
-        \Mpdf\Mpdf $mpdf,
-        object $attachment,
-        int $index,
-        array $options,
-        bool $appendPages,
-        int $maxSize
-    ): void {
-        $meta = $this->attachmentRenderer->metaOf(attachment: $attachment);
+	}//end renderAttachment()
 
-        // Unsupported (no anonymiser) → placeholder, no content.
-        if ($meta['unsupported'] === true && $meta['nestedEml'] === null) {
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
-            return;
-        }
+	/**
+	 * Render a nested `message/rfc822` attachment: divider plus the recursed
+	 * redacted structure, or a depth-limit placeholder when OR supplied none.
+	 *
+	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
+	 * @param int $index 1-based attachment index.
+	 * @param array<string,mixed> $options PDF options.
+	 * @param bool $appendPages Whether to append renderable pages.
+	 * @param int $maxSize Max render size in bytes.
+	 *
+	 * @return void
+	 */
+	private function renderNestedEml(
+		\Mpdf\Mpdf $mpdf,
+		array $meta,
+		int $index,
+		array $options,
+		bool $appendPages,
+		int $maxSize,
+	): void {
+		if (is_object($meta['nestedEml']) === false) {
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'depth_limit');
+			return;
+		}
 
-        // Nested EML: recurse on the redacted nested result when present;
-        // otherwise (depth cap reached / no nested result) a placeholder.
-        if ($meta['mimeType'] === 'message/rfc822') {
-            $this->renderNestedEml(
-                mpdf: $mpdf,
-                meta: $meta,
-                index: $index,
-                options: $options,
-                appendPages: $appendPages,
-                maxSize: $maxSize
-            );
-            return;
-        }
+		$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'default');
+		$this->renderStructure(
+			mpdf: $mpdf,
+			result: $meta['nestedEml'],
+			options: $options,
+			appendPages: $appendPages,
+			maxSize: $maxSize,
+			isRoot: false
+		);
 
-        // No redacted bytes available → placeholder (unsupported-shaped).
-        if (is_string($meta['redacted']) === false) {
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'unsupported');
-            return;
-        }
+	}//end renderNestedEml()
 
-        $this->renderRedactedBytes(
-            mpdf: $mpdf,
-            meta: $meta,
-            index: $index,
-            options: $options,
-            appendPages: $appendPages,
-            maxSize: $maxSize
-        );
+	/**
+	 * Render an attachment that carries redacted bytes: a placeholder when it
+	 * is oversize or non-renderable, otherwise a divider plus its pages.
+	 *
+	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
+	 * @param int $index 1-based attachment index.
+	 * @param array<string,mixed> $options PDF options.
+	 * @param bool $appendPages Whether to append renderable pages.
+	 * @param int $maxSize Max render size in bytes.
+	 *
+	 * @return void
+	 */
+	private function renderRedactedBytes(
+		\Mpdf\Mpdf $mpdf,
+		array $meta,
+		int $index,
+		array $options,
+		bool $appendPages,
+		int $maxSize,
+	): void {
+		$redacted = (string)$meta['redacted'];
+		$size = strlen($redacted);
 
-    }//end renderAttachment()
+		// Append disabled → render nothing for renderable attachments.
+		// Placeholders above still appear because they carry no content.
+		if ($appendPages === false) {
+			return;
+		}
 
-    /**
-     * Render a nested `message/rfc822` attachment: divider plus the recursed
-     * redacted structure, or a depth-limit placeholder when OR supplied none.
-     *
-     * @param \Mpdf\Mpdf           $mpdf        Shared mPDF instance.
-     * @param array<string, mixed> $meta        Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-     * @param int                  $index       1-based attachment index.
-     * @param array<string,mixed>  $options     PDF options.
-     * @param bool                 $appendPages Whether to append renderable pages.
-     * @param int                  $maxSize     Max render size in bytes.
-     *
-     * @return void
-     */
-    private function renderNestedEml(
-        \Mpdf\Mpdf $mpdf,
-        array $meta,
-        int $index,
-        array $options,
-        bool $appendPages,
-        int $maxSize
-    ): void {
-        if (is_object($meta['nestedEml']) === false) {
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'depth_limit');
-            return;
-        }
+		// Oversize → placeholder.
+		if ($size > $maxSize) {
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'too_large');
+			return;
+		}
 
-        $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: null, variant: 'default');
-        $this->renderStructure(
-            mpdf: $mpdf,
-            result: $meta['nestedEml'],
-            options: $options,
-            appendPages: $appendPages,
-            maxSize: $maxSize,
-            isRoot: false
-        );
+		// Non-renderable MIME → placeholder.
+		if ($this->attachmentRenderer->isRenderable(mimeType: $meta['mimeType']) === false) {
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'non_renderable');
+			return;
+		}
 
-    }//end renderNestedEml()
+		// Renderable → divider + rendered pages from the REDACTED bytes.
+		$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'default');
 
-    /**
-     * Render an attachment that carries redacted bytes: a placeholder when it
-     * is oversize or non-renderable, otherwise a divider plus its pages.
-     *
-     * @param \Mpdf\Mpdf           $mpdf        Shared mPDF instance.
-     * @param array<string, mixed> $meta        Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-     * @param int                  $index       1-based attachment index.
-     * @param array<string,mixed>  $options     PDF options.
-     * @param bool                 $appendPages Whether to append renderable pages.
-     * @param int                  $maxSize     Max render size in bytes.
-     *
-     * @return void
-     */
-    private function renderRedactedBytes(
-        \Mpdf\Mpdf $mpdf,
-        array $meta,
-        int $index,
-        array $options,
-        bool $appendPages,
-        int $maxSize
-    ): void {
-        $redacted = (string) $meta['redacted'];
-        $size     = strlen($redacted);
+		try {
+			$this->attachmentRenderer->renderBytes(
+				mpdf: $mpdf,
+				bytes: $redacted,
+				mimeType: $meta['mimeType'],
+				filename: $meta['filename'],
+				options: $options
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[EmlPdfAssemblyService] Attachment render failed; placeholder used',
+				[
+					'index' => $index,
+					'mimeType' => $meta['mimeType'],
+					'exception' => get_class($e),
+					'message' => $e->getMessage(),
+				]
+			);
+			$this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'render_failed');
+		}//end try
 
-        // Append disabled → render nothing for renderable attachments.
-        // Placeholders above still appear because they carry no content.
-        if ($appendPages === false) {
-            return;
-        }
+	}//end renderRedactedBytes()
 
-        // Oversize → placeholder.
-        if ($size > $maxSize) {
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'too_large');
-            return;
-        }
+	/**
+	 * Write one divider/placeholder page for an attachment.
+	 *
+	 * @param \Mpdf\Mpdf $mpdf Shared mPDF instance.
+	 * @param array<string, mixed> $meta Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
+	 * @param int $index 1-based attachment index.
+	 * @param int|null $size Size in bytes, or null.
+	 * @param string $variant Divider variant.
+	 *
+	 * @return void
+	 */
+	private function writePlaceholder(\Mpdf\Mpdf $mpdf, array $meta, int $index, ?int $size, string $variant): void {
+		$this->attachmentRenderer->writeDivider(
+			mpdf: $mpdf,
+			index: $index,
+			filename: $meta['filename'],
+			mimeType: $meta['mimeType'],
+			size: $size,
+			variant: $variant
+		);
 
-        // Non-renderable MIME → placeholder.
-        if ($this->attachmentRenderer->isRenderable(mimeType: $meta['mimeType']) === false) {
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'non_renderable');
-            return;
-        }
+	}//end writePlaceholder()
 
-        // Renderable → divider + rendered pages from the REDACTED bytes.
-        $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'default');
+	/**
+	 * Derive the PDF title from the source filename or the redacted subject.
+	 *
+	 * @param object $result AnonymisedEmlStructure.
+	 * @param string|null $sourceFilename Original .eml filename.
+	 *
+	 * @return string PDF title.
+	 */
+	private function deriveTitle(object $result, ?string $sourceFilename): string {
+		if ($sourceFilename !== null && trim($sourceFilename) !== '') {
+			$dot = strrpos($sourceFilename, '.');
+			if ($dot === false) {
+				return $sourceFilename;
+			}
 
-        try {
-            $this->attachmentRenderer->renderBytes(
-                mpdf: $mpdf,
-                bytes: $redacted,
-                mimeType: $meta['mimeType'],
-                filename: $meta['filename'],
-                options: $options
-            );
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                '[EmlPdfAssemblyService] Attachment render failed; placeholder used',
-                [
-                    'index'     => $index,
-                    'mimeType'  => $meta['mimeType'],
-                    'exception' => get_class($e),
-                    'message'   => $e->getMessage(),
-                ]
-            );
-            $this->writePlaceholder(mpdf: $mpdf, meta: $meta, index: $index, size: $size, variant: 'render_failed');
-        }//end try
+			return substr($sourceFilename, 0, $dot);
+		}
 
-    }//end renderRedactedBytes()
+		$subject = $this->envelopeRenderer->subjectOf(result: $result);
+		if ($subject !== '') {
+			return $subject;
+		}
 
-    /**
-     * Write one divider/placeholder page for an attachment.
-     *
-     * @param \Mpdf\Mpdf           $mpdf    Shared mPDF instance.
-     * @param array<string, mixed> $meta    Attachment metadata from `EmlAttachmentRenderer::metaOf()`.
-     * @param int                  $index   1-based attachment index.
-     * @param int|null             $size    Size in bytes, or null.
-     * @param string               $variant Divider variant.
-     *
-     * @return void
-     */
-    private function writePlaceholder(\Mpdf\Mpdf $mpdf, array $meta, int $index, ?int $size, string $variant): void
-    {
-        $this->attachmentRenderer->writeDivider(
-            mpdf: $mpdf,
-            index: $index,
-            filename: $meta['filename'],
-            mimeType: $meta['mimeType'],
-            size: $size,
-            variant: $variant
-        );
+		return 'E-mail';
+	}//end deriveTitle()
 
-    }//end writePlaceholder()
+	/**
+	 * Whether renderable attachments should be appended (config-driven).
+	 *
+	 * @return bool
+	 */
+	private function shouldAppendPages(): bool {
+		$value = $this->appConfig->getValueString(self::APP_ID, self::KEY_APPEND_PAGES, 'true');
+		return $value !== 'false';
+	}//end shouldAppendPages()
 
-    /**
-     * Derive the PDF title from the source filename or the redacted subject.
-     *
-     * @param object      $result         AnonymisedEmlStructure.
-     * @param string|null $sourceFilename Original .eml filename.
-     *
-     * @return string PDF title.
-     */
-    private function deriveTitle(object $result, ?string $sourceFilename): string
-    {
-        if ($sourceFilename !== null && trim($sourceFilename) !== '') {
-            $dot = strrpos($sourceFilename, '.');
-            if ($dot === false) {
-                return $sourceFilename;
-            }
+	/**
+	 * Resolve the max-attachment-render-size config (positive integer).
+	 *
+	 * @return int Size in bytes.
+	 */
+	private function maxAttachmentSize(): int {
+		$value = (int)$this->appConfig->getValueString(
+			self::APP_ID,
+			self::KEY_MAX_SIZE,
+			(string)self::DEFAULT_MAX_SIZE
+		);
+		if ($value <= 0) {
+			return self::DEFAULT_MAX_SIZE;
+		}
 
-            return substr($sourceFilename, 0, $dot);
-        }
-
-        $subject = $this->envelopeRenderer->subjectOf(result: $result);
-        if ($subject !== '') {
-            return $subject;
-        }
-
-        return 'E-mail';
-
-    }//end deriveTitle()
-
-    /**
-     * Whether renderable attachments should be appended (config-driven).
-     *
-     * @return bool
-     */
-    private function shouldAppendPages(): bool
-    {
-        $value = $this->appConfig->getValueString(self::APP_ID, self::KEY_APPEND_PAGES, 'true');
-        return $value !== 'false';
-
-    }//end shouldAppendPages()
-
-    /**
-     * Resolve the max-attachment-render-size config (positive integer).
-     *
-     * @return int Size in bytes.
-     */
-    private function maxAttachmentSize(): int
-    {
-        $value = (int) $this->appConfig->getValueString(
-            self::APP_ID,
-            self::KEY_MAX_SIZE,
-            (string) self::DEFAULT_MAX_SIZE
-        );
-        if ($value <= 0) {
-            return self::DEFAULT_MAX_SIZE;
-        }
-
-        return $value;
-
-    }//end maxAttachmentSize()
+		return $value;
+	}//end maxAttachmentSize()
 }//end class

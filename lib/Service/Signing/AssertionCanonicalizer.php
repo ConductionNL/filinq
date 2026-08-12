@@ -41,43 +41,38 @@ namespace OCA\DocuDesk\Service\Signing;
  *
  * @spec openspec/specs/document-signing/spec.md
  */
-final class AssertionCanonicalizer
-{
-    /**
-     * Canonical-JSON encode an assertion payload with recursively sorted keys.
-     *
-     * @param array<string, mixed> $data The assertion data (already excluding `mac`).
-     *
-     * @return string The canonical JSON string.
-     *
-     * @spec openspec/specs/document-signing/spec.md
-     */
-    public function canonicalJson(array $data): string
-    {
-        $sorted = $this->sortRecursive(data: $data);
+final class AssertionCanonicalizer {
+	/**
+	 * Canonical-JSON encode an assertion payload with recursively sorted keys.
+	 *
+	 * @param array<string, mixed> $data The assertion data (already excluding `mac`).
+	 *
+	 * @return string The canonical JSON string.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function canonicalJson(array $data): string {
+		$sorted = $this->sortRecursive(data: $data);
 
-        return (string) json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		return (string)json_encode($sorted, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+	}//end canonicalJson()
 
-    }//end canonicalJson()
+	/**
+	 * Recursively sort array keys so nested maps encode deterministically.
+	 *
+	 * @param array<mixed, mixed> $data The data to sort.
+	 *
+	 * @return array<mixed, mixed> The recursively key-sorted data.
+	 */
+	private function sortRecursive(array $data): array {
+		foreach ($data as $key => $value) {
+			if (is_array($value) === true) {
+				$data[$key] = $this->sortRecursive(data: $value);
+			}
+		}
 
-    /**
-     * Recursively sort array keys so nested maps encode deterministically.
-     *
-     * @param array<mixed, mixed> $data The data to sort.
-     *
-     * @return array<mixed, mixed> The recursively key-sorted data.
-     */
-    private function sortRecursive(array $data): array
-    {
-        foreach ($data as $key => $value) {
-            if (is_array($value) === true) {
-                $data[$key] = $this->sortRecursive(data: $value);
-            }
-        }
+		ksort($data);
 
-        ksort($data);
-
-        return $data;
-
-    }//end sortRecursive()
+		return $data;
+	}//end sortRecursive()
 }//end class

@@ -44,348 +44,327 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */
-class PortalAssertionVerifierTest extends TestCase
-{
+class PortalAssertionVerifierTest extends TestCase {
 
-    /**
-     * A >= 16 char signing secret for plain-secret construction.
-     */
-    private const SECRET = 'docudesk-test-secret-0123456789';
+	/**
+	 * A >= 16 char signing secret for plain-secret construction.
+	 */
+	private const SECRET = 'docudesk-test-secret-0123456789';
 
-    /**
-     * A different valid-length secret for forged-signature tests.
-     */
-    private const OTHER_SECRET = 'attacker-secret-9876543210abcd';
+	/**
+	 * A different valid-length secret for forged-signature tests.
+	 */
+	private const OTHER_SECRET = 'attacker-secret-9876543210abcd';
 
-    /**
-     * The portal subject reference used as the asserted `sub`.
-     */
-    private const SUBJECT = '00000000-0000-0000-0000-000000000000';
+	/**
+	 * The portal subject reference used as the asserted `sub`.
+	 */
+	private const SUBJECT = '00000000-0000-0000-0000-000000000000';
 
-    /**
-     * Mint an assertion EXACTLY the way portaliq does.
-     *
-     * Byte-identical replica of PortalJwtService::createAssertion(): same
-     * header, same claim set and order, JSON_UNESCAPED_SLASHES, unpadded
-     * base64url, HMAC-SHA256 over "header.payload". Keep this helper in sync
-     * with portaliq — that is the point of the round-trip pin.
-     *
-     * @param string               $secret    The HMAC signing secret.
-     * @param array<string, mixed> $overrides Claim overrides / additions (null removes a claim).
-     * @param string               $alg       Header algorithm.
-     *
-     * @return string Compact JWT.
-     */
-    private function mintAssertion(string $secret, array $overrides=[], string $alg='HS256'): string
-    {
-        $iat    = time();
-        $claims = [
-            'sub'         => self::SUBJECT,
-            'audience'    => 'signer',
-            'signerEmail' => 'alice@example.com',
-            'trust'       => 'substantial',
-            'jti'         => 'sessionjti0000000000000000000000',
-            'use'         => 'assertion',
-            'iat'         => $iat,
-            'exp'         => ($iat + 60),
-            'iss'         => 'portaliq',
-        ];
+	/**
+	 * Mint an assertion EXACTLY the way portaliq does.
+	 *
+	 * Byte-identical replica of PortalJwtService::createAssertion(): same
+	 * header, same claim set and order, JSON_UNESCAPED_SLASHES, unpadded
+	 * base64url, HMAC-SHA256 over "header.payload". Keep this helper in sync
+	 * with portaliq — that is the point of the round-trip pin.
+	 *
+	 * @param string $secret The HMAC signing secret.
+	 * @param array<string, mixed> $overrides Claim overrides / additions (null removes a claim).
+	 * @param string $alg Header algorithm.
+	 *
+	 * @return string Compact JWT.
+	 */
+	private function mintAssertion(string $secret, array $overrides = [], string $alg = 'HS256'): string {
+		$iat = time();
+		$claims = [
+			'sub' => self::SUBJECT,
+			'audience' => 'signer',
+			'signerEmail' => 'alice@example.com',
+			'trust' => 'substantial',
+			'jti' => 'sessionjti0000000000000000000000',
+			'use' => 'assertion',
+			'iat' => $iat,
+			'exp' => ($iat + 60),
+			'iss' => 'portaliq',
+		];
 
-        foreach ($overrides as $claim => $value) {
-            if ($value === null) {
-                unset($claims[$claim]);
-                continue;
-            }
+		foreach ($overrides as $claim => $value) {
+			if ($value === null) {
+				unset($claims[$claim]);
+				continue;
+			}
 
-            $claims[$claim] = $value;
-        }
+			$claims[$claim] = $value;
+		}
 
-        $header = ['alg' => $alg, 'typ' => 'JWT'];
-        $hPart  = $this->b64UrlEncode(bytes: (string) json_encode($header, JSON_UNESCAPED_SLASHES));
-        $cPart  = $this->b64UrlEncode(bytes: (string) json_encode($claims, JSON_UNESCAPED_SLASHES));
-        $sig    = $this->b64UrlEncode(bytes: hash_hmac('sha256', $hPart.'.'.$cPart, $secret, true));
+		$header = ['alg' => $alg, 'typ' => 'JWT'];
+		$hPart = $this->b64UrlEncode(bytes: (string)json_encode($header, JSON_UNESCAPED_SLASHES));
+		$cPart = $this->b64UrlEncode(bytes: (string)json_encode($claims, JSON_UNESCAPED_SLASHES));
+		$sig = $this->b64UrlEncode(bytes: hash_hmac('sha256', $hPart . '.' . $cPart, $secret, true));
 
-        return $hPart.'.'.$cPart.'.'.$sig;
+		return $hPart . '.' . $cPart . '.' . $sig;
+	}//end mintAssertion()
 
-    }//end mintAssertion()
+	/**
+	 * Base64-url encode (no padding) — portaliq's encoding.
+	 *
+	 * @param string $bytes Raw bytes.
+	 *
+	 * @return string
+	 */
+	private function b64UrlEncode(string $bytes): string {
+		return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+	}//end b64UrlEncode()
 
-    /**
-     * Base64-url encode (no padding) — portaliq's encoding.
-     *
-     * @param string $bytes Raw bytes.
-     *
-     * @return string
-     */
-    private function b64UrlEncode(string $bytes): string
-    {
-        return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+	/**
+	 * A verifier with a plain secret (config sourcing not under test).
+	 *
+	 * @return PortalAssertionVerifier
+	 */
+	private function verifier(): PortalAssertionVerifier {
+		return new PortalAssertionVerifier(config: null, secretOverride: self::SECRET);
+	}//end verifier()
 
-    }//end b64UrlEncode()
+	/**
+	 * ROUND-TRIP PIN: a portaliq-style mint verifies losslessly.
+	 *
+	 * @return void
+	 */
+	public function testPortaliqRoundTripVerifies(): void {
+		$claims = $this->verifier()->verify($this->mintAssertion(secret: self::SECRET));
 
-    /**
-     * A verifier with a plain secret (config sourcing not under test).
-     *
-     * @return PortalAssertionVerifier
-     */
-    private function verifier(): PortalAssertionVerifier
-    {
-        return new PortalAssertionVerifier(config: null, secretOverride: self::SECRET);
+		$this->assertIsArray($claims);
+		$this->assertSame(self::SUBJECT, $claims['sub']);
+		$this->assertSame('signer', $claims['audience']);
+		$this->assertSame('alice@example.com', $claims['signerEmail']);
+		$this->assertSame('substantial', $claims['trust']);
+		$this->assertSame('sessionjti0000000000000000000000', $claims['jti']);
+		$this->assertSame('assertion', $claims['use']);
+		$this->assertSame('portaliq', $claims['iss']);
 
-    }//end verifier()
+	}//end testPortaliqRoundTripVerifies()
 
-    /**
-     * ROUND-TRIP PIN: a portaliq-style mint verifies losslessly.
-     *
-     * @return void
-     */
-    public function testPortaliqRoundTripVerifies(): void
-    {
-        $claims = $this->verifier()->verify($this->mintAssertion(secret: self::SECRET));
+	/**
+	 * An expired assertion (or one without exp) is rejected.
+	 *
+	 * @return void
+	 */
+	public function testExpiredOrMissingExpIsRejected(): void {
+		$now = time();
 
-        $this->assertIsArray($claims);
-        $this->assertSame(self::SUBJECT, $claims['sub']);
-        $this->assertSame('signer', $claims['audience']);
-        $this->assertSame('alice@example.com', $claims['signerEmail']);
-        $this->assertSame('substantial', $claims['trust']);
-        $this->assertSame('sessionjti0000000000000000000000', $claims['jti']);
-        $this->assertSame('assertion', $claims['use']);
-        $this->assertSame('portaliq', $claims['iss']);
+		$expired = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now - 120), 'exp' => ($now - 60)]);
+		$this->assertNull($this->verifier()->verify($expired));
 
-    }//end testPortaliqRoundTripVerifies()
+		$noExp = $this->mintAssertion(secret: self::SECRET, overrides: ['exp' => null]);
+		$this->assertNull($this->verifier()->verify($noExp));
 
-    /**
-     * An expired assertion (or one without exp) is rejected.
-     *
-     * @return void
-     */
-    public function testExpiredOrMissingExpIsRejected(): void
-    {
-        $now = time();
+		$stringExp = $this->mintAssertion(secret: self::SECRET, overrides: ['exp' => (string)($now + 60)]);
+		$this->assertNull($this->verifier()->verify($stringExp));
 
-        $expired = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now - 120), 'exp' => ($now - 60)]);
-        $this->assertNull($this->verifier()->verify($expired));
+	}//end testExpiredOrMissingExpIsRejected()
 
-        $noExp = $this->mintAssertion(secret: self::SECRET, overrides: ['exp' => null]);
-        $this->assertNull($this->verifier()->verify($noExp));
+	/**
+	 * A token signed with a different secret is rejected (forged signature).
+	 *
+	 * @return void
+	 */
+	public function testBadSignatureIsRejected(): void {
+		$forged = $this->mintAssertion(secret: self::OTHER_SECRET);
+		$this->assertNull($this->verifier()->verify($forged));
 
-        $stringExp = $this->mintAssertion(secret: self::SECRET, overrides: ['exp' => (string) ($now + 60)]);
-        $this->assertNull($this->verifier()->verify($stringExp));
+		// Tampered payload with the original signature.
+		$token = $this->mintAssertion(secret: self::SECRET);
+		$parts = explode('.', $token);
+		$tampered = json_decode((string)base64_decode(strtr($parts[1], '-_', '+/') . '=='), true);
+		$tampered['sub'] = '22222222-2222-2222-2222-222222222222';
+		$parts[1] = $this->b64UrlEncode(bytes: (string)json_encode($tampered, JSON_UNESCAPED_SLASHES));
+		$this->assertNull($this->verifier()->verify(implode('.', $parts)));
 
-    }//end testExpiredOrMissingExpIsRejected()
+	}//end testBadSignatureIsRejected()
 
-    /**
-     * A token signed with a different secret is rejected (forged signature).
-     *
-     * @return void
-     */
-    public function testBadSignatureIsRejected(): void
-    {
-        $forged = $this->mintAssertion(secret: self::OTHER_SECRET);
-        $this->assertNull($this->verifier()->verify($forged));
+	/**
+	 * Token-confusion guard: a portal SESSION token (no `use` claim, or a
+	 * non-assertion value) can never drive this receiver.
+	 *
+	 * @return void
+	 */
+	public function testSessionTokenAndWrongUseAreRejected(): void {
+		// Portaliq session tokens carry roles and NO `use` claim.
+		$session = $this->mintAssertion(secret: self::SECRET, overrides: ['use' => null, 'roles' => ['viewer']]);
+		$this->assertNull($this->verifier()->verify($session));
 
-        // Tampered payload with the original signature.
-        $token           = $this->mintAssertion(secret: self::SECRET);
-        $parts           = explode('.', $token);
-        $tampered        = json_decode((string) base64_decode(strtr($parts[1], '-_', '+/').'=='), true);
-        $tampered['sub'] = '22222222-2222-2222-2222-222222222222';
-        $parts[1]        = $this->b64UrlEncode(bytes: (string) json_encode($tampered, JSON_UNESCAPED_SLASHES));
-        $this->assertNull($this->verifier()->verify(implode('.', $parts)));
+		$wrongUse = $this->mintAssertion(secret: self::SECRET, overrides: ['use' => 'session']);
+		$this->assertNull($this->verifier()->verify($wrongUse));
 
-    }//end testBadSignatureIsRejected()
+	}//end testSessionTokenAndWrongUseAreRejected()
 
-    /**
-     * Token-confusion guard: a portal SESSION token (no `use` claim, or a
-     * non-assertion value) can never drive this receiver.
-     *
-     * @return void
-     */
-    public function testSessionTokenAndWrongUseAreRejected(): void
-    {
-        // Portaliq session tokens carry roles and NO `use` claim.
-        $session = $this->mintAssertion(secret: self::SECRET, overrides: ['use' => null, 'roles' => ['viewer']]);
-        $this->assertNull($this->verifier()->verify($session));
+	/**
+	 * `alg: none` — with or without a signature segment — is rejected.
+	 *
+	 * @return void
+	 */
+	public function testNoneAlgIsRejected(): void {
+		// Signed shape but header says none.
+		$noneSigned = $this->mintAssertion(secret: self::SECRET, alg: 'none');
+		$this->assertNull($this->verifier()->verify($noneSigned));
 
-        $wrongUse = $this->mintAssertion(secret: self::SECRET, overrides: ['use' => 'session']);
-        $this->assertNull($this->verifier()->verify($wrongUse));
+		// Classic unsecured-JWT shape: empty signature segment.
+		[$hPart, $cPart] = explode('.', $noneSigned);
+		$this->assertNull($this->verifier()->verify($hPart . '.' . $cPart . '.'));
 
-    }//end testSessionTokenAndWrongUseAreRejected()
+	}//end testNoneAlgIsRejected()
 
-    /**
-     * `alg: none` — with or without a signature segment — is rejected.
-     *
-     * @return void
-     */
-    public function testNoneAlgIsRejected(): void
-    {
-        // Signed shape but header says none.
-        $noneSigned = $this->mintAssertion(secret: self::SECRET, alg: 'none');
-        $this->assertNull($this->verifier()->verify($noneSigned));
+	/**
+	 * Any non-HS256 algorithm header is rejected (exact match only).
+	 *
+	 * @return void
+	 */
+	public function testWrongAlgIsRejected(): void {
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'HS512')));
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'hs256')));
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'RS256')));
 
-        // Classic unsecured-JWT shape: empty signature segment.
-        [$hPart, $cPart] = explode('.', $noneSigned);
-        $this->assertNull($this->verifier()->verify($hPart.'.'.$cPart.'.'));
+	}//end testWrongAlgIsRejected()
 
-    }//end testNoneAlgIsRejected()
+	/**
+	 * Structural garbage never throws — it just returns null.
+	 *
+	 * @return void
+	 */
+	public function testGarbageIsRejectedWithoutThrowing(): void {
+		$verifier = $this->verifier();
 
-    /**
-     * Any non-HS256 algorithm header is rejected (exact match only).
-     *
-     * @return void
-     */
-    public function testWrongAlgIsRejected(): void
-    {
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'HS512')));
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'hs256')));
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, alg: 'RS256')));
+		$this->assertNull($verifier->verify(''));
+		$this->assertNull($verifier->verify('not-a-jwt'));
+		$this->assertNull($verifier->verify('a.b'));
+		$this->assertNull($verifier->verify('a.b.c.d'));
+		$this->assertNull($verifier->verify('..'));
+		$this->assertNull($verifier->verify("\x00\xff binary junk"));
+		// Valid-looking segments that are not JSON.
+		$this->assertNull($verifier->verify('bm90LWpzb24.bm90LWpzb24.bm90LWpzb24'));
 
-    }//end testWrongAlgIsRejected()
+	}//end testGarbageIsRejectedWithoutThrowing()
 
-    /**
-     * Structural garbage never throws — it just returns null.
-     *
-     * @return void
-     */
-    public function testGarbageIsRejectedWithoutThrowing(): void
-    {
-        $verifier = $this->verifier();
+	/**
+	 * An assertion without a usable subject authorises nothing.
+	 *
+	 * @return void
+	 */
+	public function testEmptyOrMissingSubIsRejected(): void {
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => ''])));
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => null])));
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => 42])));
 
-        $this->assertNull($verifier->verify(''));
-        $this->assertNull($verifier->verify('not-a-jwt'));
-        $this->assertNull($verifier->verify('a.b'));
-        $this->assertNull($verifier->verify('a.b.c.d'));
-        $this->assertNull($verifier->verify('..'));
-        $this->assertNull($verifier->verify("\x00\xff binary junk"));
-        // Valid-looking segments that are not JSON.
-        $this->assertNull($verifier->verify('bm90LWpzb24.bm90LWpzb24.bm90LWpzb24'));
+	}//end testEmptyOrMissingSubIsRejected()
 
-    }//end testGarbageIsRejectedWithoutThrowing()
+	/**
+	 * Implausible iat values (future beyond leeway, after exp, missing) are rejected.
+	 *
+	 * @return void
+	 */
+	public function testImplausibleIatIsRejected(): void {
+		$now = time();
 
-    /**
-     * An assertion without a usable subject authorises nothing.
-     *
-     * @return void
-     */
-    public function testEmptyOrMissingSubIsRejected(): void
-    {
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => ''])));
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => null])));
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['sub' => 42])));
+		$future = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now + 3600), 'exp' => ($now + 7200)]);
+		$this->assertNull($this->verifier()->verify($future));
 
-    }//end testEmptyOrMissingSubIsRejected()
+		$afterExp = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now + 30), 'exp' => ($now + 10)]);
+		$this->assertNull($this->verifier()->verify($afterExp));
 
-    /**
-     * Implausible iat values (future beyond leeway, after exp, missing) are rejected.
-     *
-     * @return void
-     */
-    public function testImplausibleIatIsRejected(): void
-    {
-        $now = time();
+		$noIat = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => null]);
+		$this->assertNull($this->verifier()->verify($noIat));
 
-        $future = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now + 3600), 'exp' => ($now + 7200)]);
-        $this->assertNull($this->verifier()->verify($future));
+	}//end testImplausibleIatIsRejected()
 
-        $afterExp = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => ($now + 30), 'exp' => ($now + 10)]);
-        $this->assertNull($this->verifier()->verify($afterExp));
+	/**
+	 * A wrong issuer is rejected — only portaliq mints assertions.
+	 *
+	 * @return void
+	 */
+	public function testWrongIssuerIsRejected(): void {
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['iss' => 'procest'])));
+		$this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['iss' => null])));
 
-        $noIat = $this->mintAssertion(secret: self::SECRET, overrides: ['iat' => null]);
-        $this->assertNull($this->verifier()->verify($noIat));
+	}//end testWrongIssuerIsRejected()
 
-    }//end testImplausibleIatIsRejected()
+	/**
+	 * Secret derivation branch 1: the dedicated portaliq app-config secret
+	 * takes precedence — tokens signed with the instance secret then fail.
+	 *
+	 * @return void
+	 */
+	public function testAppConfigSecretTakesPrecedence(): void {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getAppValue')
+			->with('portaliq', 'jwt_signing_secret', '')
+			->willReturn(self::SECRET);
+		$config->method('getSystemValue')
+			->with('secret', str_pad('portaliq', 32, '_'))
+			->willReturn(self::OTHER_SECRET);
 
-    /**
-     * A wrong issuer is rejected — only portaliq mints assertions.
-     *
-     * @return void
-     */
-    public function testWrongIssuerIsRejected(): void
-    {
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['iss' => 'procest'])));
-        $this->assertNull($this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['iss' => null])));
+		$verifier = new PortalAssertionVerifier(config: $config);
 
-    }//end testWrongIssuerIsRejected()
+		$this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
+		$this->assertNull($verifier->verify($this->mintAssertion(secret: self::OTHER_SECRET)));
 
-    /**
-     * Secret derivation branch 1: the dedicated portaliq app-config secret
-     * takes precedence — tokens signed with the instance secret then fail.
-     *
-     * @return void
-     */
-    public function testAppConfigSecretTakesPrecedence(): void
-    {
-        $config = $this->createMock(IConfig::class);
-        $config->method('getAppValue')
-            ->with('portaliq', 'jwt_signing_secret', '')
-            ->willReturn(self::SECRET);
-        $config->method('getSystemValue')
-            ->with('secret', str_pad('portaliq', 32, '_'))
-            ->willReturn(self::OTHER_SECRET);
+	}//end testAppConfigSecretTakesPrecedence()
 
-        $verifier = new PortalAssertionVerifier(config: $config);
+	/**
+	 * Secret derivation branch 2: empty or too-short app-config values fall
+	 * back to the Nextcloud instance secret — exactly like portaliq.
+	 *
+	 * @return void
+	 */
+	public function testInstanceSecretFallback(): void {
+		foreach (['', 'short'] as $appValue) {
+			$config = $this->createMock(IConfig::class);
+			$config->method('getAppValue')
+				->with('portaliq', 'jwt_signing_secret', '')
+				->willReturn($appValue);
+			$config->method('getSystemValue')
+				->with('secret', str_pad('portaliq', 32, '_'))
+				->willReturn(self::SECRET);
 
-        $this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
-        $this->assertNull($verifier->verify($this->mintAssertion(secret: self::OTHER_SECRET)));
+			$verifier = new PortalAssertionVerifier(config: $config);
 
-    }//end testAppConfigSecretTakesPrecedence()
+			$this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
+		}
 
-    /**
-     * Secret derivation branch 2: empty or too-short app-config values fall
-     * back to the Nextcloud instance secret — exactly like portaliq.
-     *
-     * @return void
-     */
-    public function testInstanceSecretFallback(): void
-    {
-        foreach (['', 'short'] as $appValue) {
-            $config = $this->createMock(IConfig::class);
-            $config->method('getAppValue')
-                ->with('portaliq', 'jwt_signing_secret', '')
-                ->willReturn($appValue);
-            $config->method('getSystemValue')
-                ->with('secret', str_pad('portaliq', 32, '_'))
-                ->willReturn(self::SECRET);
+	}//end testInstanceSecretFallback()
 
-            $verifier = new PortalAssertionVerifier(config: $config);
+	/**
+	 * No usable secret (< 16 chars, or neither config nor override) fails
+	 * closed even for a correctly signed token.
+	 *
+	 * @return void
+	 */
+	public function testUnusableSecretFailsClosed(): void {
+		$shortSecret = new PortalAssertionVerifier(config: null, secretOverride: 'short');
+		$this->assertNull($shortSecret->verify($this->mintAssertion(secret: 'short')));
 
-            $this->assertIsArray($verifier->verify($this->mintAssertion(secret: self::SECRET)));
-        }
+		$noSource = new PortalAssertionVerifier();
+		$this->assertNull($noSource->verify($this->mintAssertion(secret: self::SECRET)));
 
-    }//end testInstanceSecretFallback()
+	}//end testUnusableSecretFailsClosed()
 
-    /**
-     * No usable secret (< 16 chars, or neither config nor override) fails
-     * closed even for a correctly signed token.
-     *
-     * @return void
-     */
-    public function testUnusableSecretFailsClosed(): void
-    {
-        $shortSecret = new PortalAssertionVerifier(config: null, secretOverride: 'short');
-        $this->assertNull($shortSecret->verify($this->mintAssertion(secret: 'short')));
+	/**
+	 * An assertion missing the `signerEmail` scope claim still verifies at the
+	 * verifier layer (the claim is optional here) — the receiver's
+	 * `authoriseAct()` is the layer that fails closed 403 on its absence
+	 * (portal-signing-actions design.md Open Question 1). Pinned here so a
+	 * future change to this class does not accidentally start REQUIRING the
+	 * claim at the verifier layer, which would be the wrong place to enforce
+	 * it (the claim's presence is a receiver-side authorisation scope, not a
+	 * token-structure validity concern).
+	 *
+	 * @return void
+	 */
+	public function testMissingSignerEmailStillVerifiesAtThisLayer(): void {
+		$claims = $this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['signerEmail' => null]));
 
-        $noSource = new PortalAssertionVerifier();
-        $this->assertNull($noSource->verify($this->mintAssertion(secret: self::SECRET)));
+		$this->assertIsArray($claims);
+		$this->assertArrayNotHasKey('signerEmail', $claims);
 
-    }//end testUnusableSecretFailsClosed()
-
-    /**
-     * An assertion missing the `signerEmail` scope claim still verifies at the
-     * verifier layer (the claim is optional here) — the receiver's
-     * `authoriseAct()` is the layer that fails closed 403 on its absence
-     * (portal-signing-actions design.md Open Question 1). Pinned here so a
-     * future change to this class does not accidentally start REQUIRING the
-     * claim at the verifier layer, which would be the wrong place to enforce
-     * it (the claim's presence is a receiver-side authorisation scope, not a
-     * token-structure validity concern).
-     *
-     * @return void
-     */
-    public function testMissingSignerEmailStillVerifiesAtThisLayer(): void
-    {
-        $claims = $this->verifier()->verify($this->mintAssertion(secret: self::SECRET, overrides: ['signerEmail' => null]));
-
-        $this->assertIsArray($claims);
-        $this->assertArrayNotHasKey('signerEmail', $claims);
-
-    }//end testMissingSignerEmailStillVerifiesAtThisLayer()
+	}//end testMissingSignerEmailStillVerifiesAtThisLayer()
 }//end class

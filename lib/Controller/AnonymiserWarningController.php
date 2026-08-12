@@ -45,105 +45,100 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
  */
-class AnonymiserWarningController extends Controller
-{
+class AnonymiserWarningController extends Controller {
 
-    /**
-     * IConfig key under which the per-admin dismissal flag is stored.
-     *
-     * @var string
-     */
-    public const DISMISSED_KEY = 'anonymiser_warning_dismissed';
+	/**
+	 * IConfig key under which the per-admin dismissal flag is stored.
+	 *
+	 * @var string
+	 */
+	public const DISMISSED_KEY = 'anonymiser_warning_dismissed';
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest        $request     HTTP request object.
-     * @param IConfig         $config      Nextcloud config (provides per-user values).
-     * @param IUserSession    $userSession Current user session.
-     * @param LoggerInterface $logger      Logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly IConfig $config,
-        private readonly IUserSession $userSession,
-        private readonly LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request HTTP request object.
+	 * @param IConfig $config Nextcloud config (provides per-user values).
+	 * @param IUserSession $userSession Current user session.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly IConfig $config,
+		private readonly IUserSession $userSession,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Dismiss the anonymiser backend warning for the current admin.
-     *
-     * Persists a per-user config value so the banner is suppressed on
-     * subsequent page loads for this admin only (ADR-017).
-     *
-     * @return JSONResponse JSON response with the new dismissed state.
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
-     */
-    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
-    public function dismiss(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(
-                data: ['message' => 'Not authenticated'],
-                statusCode: Http::STATUS_UNAUTHORIZED
-            );
-        }
+	/**
+	 * Dismiss the anonymiser backend warning for the current admin.
+	 *
+	 * Persists a per-user config value so the banner is suppressed on
+	 * subsequent page loads for this admin only (ADR-017).
+	 *
+	 * @return JSONResponse JSON response with the new dismissed state.
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
+	 */
+	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	public function dismiss(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				data: ['message' => 'Not authenticated'],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
 
-        $this->config->setUserValue(
-            userId: $user->getUID(),
-            appName: Application::APP_ID,
-            key: self::DISMISSED_KEY,
-            value: '1'
-        );
+		$this->config->setUserValue(
+			userId: $user->getUID(),
+			appName: Application::APP_ID,
+			key: self::DISMISSED_KEY,
+			value: '1'
+		);
 
-        $this->logger->info(
-            'Anonymiser backend warning dismissed',
-            ['userId' => $user->getUID()]
-        );
+		$this->logger->info(
+			'Anonymiser backend warning dismissed',
+			['userId' => $user->getUID()]
+		);
 
-        return new JSONResponse(['dismissed' => true]);
+		return new JSONResponse(['dismissed' => true]);
+	}//end dismiss()
 
-    }//end dismiss()
+	/**
+	 * Reset (restore) the anonymiser backend warning for the current admin.
+	 *
+	 * Clears the per-user dismissal flag so the banner is shown again on the
+	 * next page load. Provides a path for admins who want to re-read the
+	 * install guidance after initially dismissing it.
+	 *
+	 * @return JSONResponse JSON response with the new dismissed state.
+	 *
+	 * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
+	 */
+	#[AuthorizedAdminSetting(DocuDeskAdmin::class)]
+	public function reset(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(
+				data: ['message' => 'Not authenticated'],
+				statusCode: Http::STATUS_UNAUTHORIZED
+			);
+		}
 
-    /**
-     * Reset (restore) the anonymiser backend warning for the current admin.
-     *
-     * Clears the per-user dismissal flag so the banner is shown again on the
-     * next page load. Provides a path for admins who want to re-read the
-     * install guidance after initially dismissing it.
-     *
-     * @return JSONResponse JSON response with the new dismissed state.
-     *
-     * @spec openspec/changes/anonymiser-backend-warning/tasks.md#task-3
-     */
-    #[AuthorizedAdminSetting(DocuDeskAdmin::class)]
-    public function reset(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(
-                data: ['message' => 'Not authenticated'],
-                statusCode: Http::STATUS_UNAUTHORIZED
-            );
-        }
+		$this->config->deleteUserValue(
+			userId: $user->getUID(),
+			appName: Application::APP_ID,
+			key: self::DISMISSED_KEY
+		);
 
-        $this->config->deleteUserValue(
-            userId: $user->getUID(),
-            appName: Application::APP_ID,
-            key: self::DISMISSED_KEY
-        );
+		$this->logger->info(
+			'Anonymiser backend warning reset',
+			['userId' => $user->getUID()]
+		);
 
-        $this->logger->info(
-            'Anonymiser backend warning reset',
-            ['userId' => $user->getUID()]
-        );
-
-        return new JSONResponse(['dismissed' => false]);
-
-    }//end reset()
+		return new JSONResponse(['dismissed' => false]);
+	}//end reset()
 }//end class

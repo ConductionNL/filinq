@@ -26,75 +26,69 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for IbanExtractor.
  */
-class IbanExtractorTest extends TestCase
-{
+class IbanExtractorTest extends TestCase {
 
-    private IbanExtractor $extractor;
+	private IbanExtractor $extractor;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->extractor = new IbanExtractor();
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->extractor = new IbanExtractor();
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * A checksum-valid IBAN is accepted with high confidence.
-     *
-     * @return void
-     */
-    public function testValidIbanAcceptedHighConfidence(): void
-    {
-        $result = $this->extractor->extract('Betaal aan NL91ABNA0417164300 binnen 14 dagen.');
+	/**
+	 * A checksum-valid IBAN is accepted with high confidence.
+	 *
+	 * @return void
+	 */
+	public function testValidIbanAcceptedHighConfidence(): void {
+		$result = $this->extractor->extract('Betaal aan NL91ABNA0417164300 binnen 14 dagen.');
 
-        $this->assertSame('NL91ABNA0417164300', $result['value']);
-        $this->assertGreaterThanOrEqual(0.9, $result['confidence']);
+		$this->assertSame('NL91ABNA0417164300', $result['value']);
+		$this->assertGreaterThanOrEqual(0.9, $result['confidence']);
 
-    }//end testValidIbanAcceptedHighConfidence()
+	}//end testValidIbanAcceptedHighConfidence()
 
-    /**
-     * A mod-97-invalid IBAN-shaped string is rejected — no value returned.
-     *
-     * @return void
-     */
-    public function testInvalidIbanRejected(): void
-    {
-        // Same shape as a valid IBAN but with the checksum digits tampered.
-        $result = $this->extractor->extract('Betaal aan NL00ABNA0417164300 binnen 14 dagen.');
+	/**
+	 * A mod-97-invalid IBAN-shaped string is rejected — no value returned.
+	 *
+	 * @return void
+	 */
+	public function testInvalidIbanRejected(): void {
+		// Same shape as a valid IBAN but with the checksum digits tampered.
+		$result = $this->extractor->extract('Betaal aan NL00ABNA0417164300 binnen 14 dagen.');
 
-        $this->assertNull($result['value']);
-        $this->assertSame(0.0, $result['confidence']);
+		$this->assertNull($result['value']);
+		$this->assertSame(0.0, $result['confidence']);
 
-    }//end testInvalidIbanRejected()
+	}//end testInvalidIbanRejected()
 
-    /**
-     * No IBAN-shaped text at all yields a null value.
-     *
-     * @return void
-     */
-    public function testNoCandidateYieldsNull(): void
-    {
-        $result = $this->extractor->extract('Geen bankgegevens in deze tekst.');
+	/**
+	 * No IBAN-shaped text at all yields a null value.
+	 *
+	 * @return void
+	 */
+	public function testNoCandidateYieldsNull(): void {
+		$result = $this->extractor->extract('Geen bankgegevens in deze tekst.');
 
-        $this->assertNull($result['value']);
-        $this->assertSame(0.0, $result['confidence']);
+		$this->assertNull($result['value']);
+		$this->assertSame(0.0, $result['confidence']);
 
-    }//end testNoCandidateYieldsNull()
+	}//end testNoCandidateYieldsNull()
 
-    /**
-     * When an invalid candidate precedes a valid one, the valid one still wins.
-     *
-     * @return void
-     */
-    public function testSkipsInvalidCandidateAndFindsValidOne(): void
-    {
-        $text   = 'Oud: NL00ABNA0417164300. Nieuw: NL91ABNA0417164300.';
-        $result = $this->extractor->extract($text);
+	/**
+	 * When an invalid candidate precedes a valid one, the valid one still wins.
+	 *
+	 * @return void
+	 */
+	public function testSkipsInvalidCandidateAndFindsValidOne(): void {
+		$text = 'Oud: NL00ABNA0417164300. Nieuw: NL91ABNA0417164300.';
+		$result = $this->extractor->extract($text);
 
-        $this->assertSame('NL91ABNA0417164300', $result['value']);
+		$this->assertSame('NL91ABNA0417164300', $result['value']);
 
-    }//end testSkipsInvalidCandidateAndFindsValidOne()
+	}//end testSkipsInvalidCandidateAndFindsValidOne()
 }//end class

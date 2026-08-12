@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Chart Render Error
  *
@@ -35,18 +36,17 @@ namespace OCA\DocuDesk\Service\Charts;
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */
-final class ChartRenderError
-{
-    /**
-     * Constructor for ChartRenderError.
-     *
-     * @param string $message Human-readable, already user-safe reason.
-     *
-     * @return void
-     */
-    public function __construct(
-        public readonly string $message
-    ) {
+final class ChartRenderError {
+	/**
+	 * Constructor for ChartRenderError.
+	 *
+	 * @param string $message Human-readable, already user-safe reason.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		public readonly string $message,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 }//end class

@@ -53,180 +53,163 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class TemplateVersionsControllerTest extends TestCase
-{
+class TemplateVersionsControllerTest extends TestCase {
 
-    /**
-     * Mocked request.
-     *
-     * @var IRequest|MockObject
-     */
-    private IRequest|MockObject $request;
+	/**
+	 * Mocked request.
+	 *
+	 * @var IRequest|MockObject
+	 */
+	private IRequest|MockObject $request;
 
-    /**
-     * Mocked version service.
-     *
-     * @var TemplateVersionService|MockObject
-     */
-    private TemplateVersionService|MockObject $versionService;
+	/**
+	 * Mocked version service.
+	 *
+	 * @var TemplateVersionService|MockObject
+	 */
+	private TemplateVersionService|MockObject $versionService;
 
+	/**
+	 * Set up the shared mocks.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up the shared mocks.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->request = $this->createMock(IRequest::class);
+		$this->versionService = $this->createMock(TemplateVersionService::class);
 
-        $this->request        = $this->createMock(IRequest::class);
-        $this->versionService = $this->createMock(TemplateVersionService::class);
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build the controller for a given session.
+	 *
+	 * @param IUserSession $session The session the controller should see.
+	 *
+	 * @return TemplateVersionsController The controller under test.
+	 */
+	private function buildController(IUserSession $session): TemplateVersionsController {
+		return new TemplateVersionsController(
+			'docudesk',
+			$this->request,
+			$this->createMock(TemplateService::class),
+			new TemplateRequestHandler($this->createMock(LoggerInterface::class)),
+			$this->versionService,
+			$session
+		);
 
+	}//end buildController()
 
-    /**
-     * Build the controller for a given session.
-     *
-     * @param IUserSession $session The session the controller should see.
-     *
-     * @return TemplateVersionsController The controller under test.
-     */
-    private function buildController(IUserSession $session): TemplateVersionsController
-    {
-        return new TemplateVersionsController(
-            'docudesk',
-            $this->request,
-            $this->createMock(TemplateService::class),
-            new TemplateRequestHandler($this->createMock(LoggerInterface::class)),
-            $this->versionService,
-            $session
-        );
+	/**
+	 * Build a session with a logged-in user.
+	 *
+	 * @return IUserSession The authenticated session.
+	 */
+	private function authenticatedSession(): IUserSession {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
 
-    }//end buildController()
+		return $session;
+	}//end authenticatedSession()
 
+	/**
+	 * A diff of two known versions answers 200 with both version objects under
+	 * `from` and `to`, resolved purely from the query params.
+	 *
+	 * @return void
+	 */
+	public function testDiffVersionsReturnsBothVersions(): void {
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['from', '', 'ver-1'],
+				['to', '', 'ver-2'],
+			]
+		);
 
-    /**
-     * Build a session with a logged-in user.
-     *
-     * @return IUserSession The authenticated session.
-     */
-    private function authenticatedSession(): IUserSession
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $session = $this->createMock(IUserSession::class);
-        $session->method('getUser')->willReturn($user);
+		$diff = [
+			'from' => ['id' => 'ver-1', 'content' => 'old'],
+			'to' => ['id' => 'ver-2', 'content' => 'new'],
+		];
 
-        return $session;
+		$this->versionService->expects($this->once())
+			->method('getDiff')
+			->with('ver-1', 'ver-2')
+			->willReturn($diff);
 
-    }//end authenticatedSession()
+		$response = $this->buildController($this->authenticatedSession())->diffVersions();
 
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($diff, $response->getData());
 
-    /**
-     * A diff of two known versions answers 200 with both version objects under
-     * `from` and `to`, resolved purely from the query params.
-     *
-     * @return void
-     */
-    public function testDiffVersionsReturnsBothVersions(): void
-    {
-        $this->request->method('getParam')->willReturnMap(
-            [
-                ['from', '', 'ver-1'],
-                ['to', '', 'ver-2'],
-            ]
-        );
+	}//end testDiffVersionsReturnsBothVersions()
 
-        $diff = [
-            'from' => ['id' => 'ver-1', 'content' => 'old'],
-            'to'   => ['id' => 'ver-2', 'content' => 'new'],
-        ];
+	/**
+	 * An anonymous caller is refused with 401 and no version is read.
+	 *
+	 * @return void
+	 */
+	public function testDiffVersionsRejectsAnonymousCaller(): void {
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
 
-        $this->versionService->expects($this->once())
-            ->method('getDiff')
-            ->with('ver-1', 'ver-2')
-            ->willReturn($diff);
+		$this->versionService->expects($this->never())->method('getDiff');
 
-        $response = $this->buildController($this->authenticatedSession())->diffVersions();
+		$response = $this->buildController($session)->diffVersions();
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($diff, $response->getData());
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['error' => 'Not authenticated'], $response->getData());
 
-    }//end testDiffVersionsReturnsBothVersions()
+	}//end testDiffVersionsRejectsAnonymousCaller()
 
+	/**
+	 * A missing `to` param is a client error: 400 with an explanatory message,
+	 * and the service is never called with a half-empty pair.
+	 *
+	 * @return void
+	 */
+	public function testDiffVersionsRequiresBothVersionIds(): void {
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['from', '', 'ver-1'],
+				['to', '', ''],
+			]
+		);
 
-    /**
-     * An anonymous caller is refused with 401 and no version is read.
-     *
-     * @return void
-     */
-    public function testDiffVersionsRejectsAnonymousCaller(): void
-    {
-        $session = $this->createMock(IUserSession::class);
-        $session->method('getUser')->willReturn(null);
+		$this->versionService->expects($this->never())->method('getDiff');
 
-        $this->versionService->expects($this->never())->method('getDiff');
+		$response = $this->buildController($this->authenticatedSession())->diffVersions();
 
-        $response = $this->buildController($session)->diffVersions();
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertStringContainsString('required', $response->getData()['error']);
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['error' => 'Not authenticated'], $response->getData());
+	}//end testDiffVersionsRequiresBothVersionIds()
 
-    }//end testDiffVersionsRejectsAnonymousCaller()
+	/**
+	 * A version UUID that does not resolve surfaces the service's own coded
+	 * exception as that status, not a blanket 500.
+	 *
+	 * @return void
+	 */
+	public function testDiffVersionsSurfacesServiceStatusCode(): void {
+		$this->request->method('getParam')->willReturnMap(
+			[
+				['from', '', 'ver-1'],
+				['to', '', 'ver-missing'],
+			]
+		);
 
+		$this->versionService->method('getDiff')
+			->willThrowException(new Exception('Version not found', 404));
 
-    /**
-     * A missing `to` param is a client error: 400 with an explanatory message,
-     * and the service is never called with a half-empty pair.
-     *
-     * @return void
-     */
-    public function testDiffVersionsRequiresBothVersionIds(): void
-    {
-        $this->request->method('getParam')->willReturnMap(
-            [
-                ['from', '', 'ver-1'],
-                ['to', '', ''],
-            ]
-        );
+		$response = $this->buildController($this->authenticatedSession())->diffVersions();
 
-        $this->versionService->expects($this->never())->method('getDiff');
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Version not found'], $response->getData());
 
-        $response = $this->buildController($this->authenticatedSession())->diffVersions();
-
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertStringContainsString('required', $response->getData()['error']);
-
-    }//end testDiffVersionsRequiresBothVersionIds()
-
-
-    /**
-     * A version UUID that does not resolve surfaces the service's own coded
-     * exception as that status, not a blanket 500.
-     *
-     * @return void
-     */
-    public function testDiffVersionsSurfacesServiceStatusCode(): void
-    {
-        $this->request->method('getParam')->willReturnMap(
-            [
-                ['from', '', 'ver-1'],
-                ['to', '', 'ver-missing'],
-            ]
-        );
-
-        $this->versionService->method('getDiff')
-            ->willThrowException(new Exception('Version not found', 404));
-
-        $response = $this->buildController($this->authenticatedSession())->diffVersions();
-
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-        $this->assertSame(['error' => 'Version not found'], $response->getData());
-
-    }//end testDiffVersionsSurfacesServiceStatusCode()
-
+	}//end testDiffVersionsSurfacesServiceStatusCode()
 
 }//end class

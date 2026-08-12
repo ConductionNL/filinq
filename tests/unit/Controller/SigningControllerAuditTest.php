@@ -54,199 +54,183 @@ use RuntimeException;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class SigningControllerAuditTest extends TestCase
-{
+class SigningControllerAuditTest extends TestCase {
 
-    /**
-     * Mocked signing service.
-     *
-     * @var SigningService|MockObject
-     */
-    private SigningService|MockObject $signingService;
+	/**
+	 * Mocked signing service.
+	 *
+	 * @var SigningService|MockObject
+	 */
+	private SigningService|MockObject $signingService;
 
-    /**
-     * Mocked audit service.
-     *
-     * @var SigningAuditService|MockObject
-     */
-    private SigningAuditService|MockObject $auditService;
+	/**
+	 * Mocked audit service.
+	 *
+	 * @var SigningAuditService|MockObject
+	 */
+	private SigningAuditService|MockObject $auditService;
 
-    /**
-     * Mocked localisation.
-     *
-     * @var IL10N|MockObject
-     */
-    private IL10N|MockObject $l10n;
+	/**
+	 * Mocked localisation.
+	 *
+	 * @var IL10N|MockObject
+	 */
+	private IL10N|MockObject $l10n;
 
+	/**
+	 * Set up the shared mocks.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up the shared mocks.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->signingService = $this->createMock(SigningService::class);
+		$this->auditService = $this->createMock(SigningAuditService::class);
+		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n->method('t')->willReturnCallback(
+			static function (string $text): string {
+				return $text;
+			}
+		);
 
-        $this->signingService = $this->createMock(SigningService::class);
-        $this->auditService   = $this->createMock(SigningAuditService::class);
-        $this->l10n           = $this->createMock(IL10N::class);
-        $this->l10n->method('t')->willReturnCallback(
-            static function (string $text): string {
-                return $text;
-            }
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Build the controller for a given caller.
+	 *
+	 * @param string|null $uid The caller's UID, or null for an anonymous session.
+	 * @param bool $isAdmin Whether the caller is an instance admin.
+	 *
+	 * @return SigningController The controller under test.
+	 */
+	private function buildController(?string $uid, bool $isAdmin = false): SigningController {
+		$session = $this->createMock(IUserSession::class);
+		if ($uid === null) {
+			$session->method('getUser')->willReturn(null);
+		} else {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn($uid);
+			$session->method('getUser')->willReturn($user);
+		}
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
-    /**
-     * Build the controller for a given caller.
-     *
-     * @param string|null $uid     The caller's UID, or null for an anonymous session.
-     * @param bool        $isAdmin Whether the caller is an instance admin.
-     *
-     * @return SigningController The controller under test.
-     */
-    private function buildController(?string $uid, bool $isAdmin=false): SigningController
-    {
-        $session = $this->createMock(IUserSession::class);
-        if ($uid === null) {
-            $session->method('getUser')->willReturn(null);
-        } else {
-            $user = $this->createMock(IUser::class);
-            $user->method('getUID')->willReturn($uid);
-            $session->method('getUser')->willReturn($user);
-        }
+		return new SigningController(
+			'docudesk',
+			$this->createMock(IRequest::class),
+			$this->signingService,
+			$this->auditService,
+			$this->createMock(SigningVerificationService::class),
+			$session,
+			$this->createMock(LoggerInterface::class),
+			$this->l10n,
+			$groupManager
+		);
 
-        $groupManager = $this->createMock(IGroupManager::class);
-        $groupManager->method('isAdmin')->willReturn($isAdmin);
+	}//end buildController()
 
-        return new SigningController(
-            'docudesk',
-            $this->createMock(IRequest::class),
-            $this->signingService,
-            $this->auditService,
-            $this->createMock(SigningVerificationService::class),
-            $session,
-            $this->createMock(LoggerInterface::class),
-            $this->l10n,
-            $groupManager
-        );
+	/**
+	 * A participant reads the trail: the request is first resolved scoped to
+	 * the caller's own UID, then the audit trail is returned with HTTP 200.
+	 *
+	 * @return void
+	 */
+	public function testGetAuditReturnsTrailForParticipant(): void {
+		$trail = [
+			['action' => 'docudesk.signing.created', 'actor' => 'alice'],
+			['action' => 'docudesk.signing.signed', 'actor' => 'bob'],
+		];
 
-    }//end buildController()
+		$this->signingService->expects($this->once())
+			->method('getRequest')
+			->with('req-1', 'alice')
+			->willReturn(['id' => 'req-1']);
+		$this->auditService->expects($this->once())
+			->method('getAuditTrail')
+			->with('req-1')
+			->willReturn($trail);
 
+		$response = $this->buildController('alice')->getAudit('req-1');
 
-    /**
-     * A participant reads the trail: the request is first resolved scoped to
-     * the caller's own UID, then the audit trail is returned with HTTP 200.
-     *
-     * @return void
-     */
-    public function testGetAuditReturnsTrailForParticipant(): void
-    {
-        $trail = [
-            ['action' => 'docudesk.signing.created', 'actor' => 'alice'],
-            ['action' => 'docudesk.signing.signed', 'actor' => 'bob'],
-        ];
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($trail, $response->getData());
 
-        $this->signingService->expects($this->once())
-            ->method('getRequest')
-            ->with('req-1', 'alice')
-            ->willReturn(['id' => 'req-1']);
-        $this->auditService->expects($this->once())
-            ->method('getAuditTrail')
-            ->with('req-1')
-            ->willReturn($trail);
+	}//end testGetAuditReturnsTrailForParticipant()
 
-        $response = $this->buildController('alice')->getAudit('req-1');
+	/**
+	 * An unrelated caller gets 404 and the audit trail — which carries IP
+	 * addresses and user identifiers — is never read.
+	 *
+	 * @return void
+	 */
+	public function testGetAuditHidesTrailFromUnrelatedCaller(): void {
+		$this->signingService->method('getRequest')->willReturn(null);
+		$this->auditService->expects($this->never())->method('getAuditTrail');
 
-        $this->assertInstanceOf(JSONResponse::class, $response);
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertSame($trail, $response->getData());
+		$response = $this->buildController('mallory')->getAudit('req-1');
 
-    }//end testGetAuditReturnsTrailForParticipant()
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Signing request not found'], $response->getData());
 
+	}//end testGetAuditHidesTrailFromUnrelatedCaller()
 
-    /**
-     * An unrelated caller gets 404 and the audit trail — which carries IP
-     * addresses and user identifiers — is never read.
-     *
-     * @return void
-     */
-    public function testGetAuditHidesTrailFromUnrelatedCaller(): void
-    {
-        $this->signingService->method('getRequest')->willReturn(null);
-        $this->auditService->expects($this->never())->method('getAuditTrail');
+	/**
+	 * An admin reads any trail without the per-request scoping step.
+	 *
+	 * @return void
+	 */
+	public function testGetAuditAllowsAdminWithoutScopedLookup(): void {
+		$this->signingService->expects($this->never())->method('getRequest');
+		$this->auditService->expects($this->once())
+			->method('getAuditTrail')
+			->with('req-1')
+			->willReturn([['action' => 'docudesk.signing.created', 'actor' => 'alice']]);
 
-        $response = $this->buildController('mallory')->getAudit('req-1');
+		$response = $this->buildController('admin', true)->getAudit('req-1');
 
-        $this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-        $this->assertSame(['error' => 'Signing request not found'], $response->getData());
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertCount(1, $response->getData());
 
-    }//end testGetAuditHidesTrailFromUnrelatedCaller()
+	}//end testGetAuditAllowsAdminWithoutScopedLookup()
 
+	/**
+	 * An anonymous caller is refused with 401 before any lookup.
+	 *
+	 * @return void
+	 */
+	public function testGetAuditRejectsAnonymousCaller(): void {
+		$this->signingService->expects($this->never())->method('getRequest');
+		$this->auditService->expects($this->never())->method('getAuditTrail');
 
-    /**
-     * An admin reads any trail without the per-request scoping step.
-     *
-     * @return void
-     */
-    public function testGetAuditAllowsAdminWithoutScopedLookup(): void
-    {
-        $this->signingService->expects($this->never())->method('getRequest');
-        $this->auditService->expects($this->once())
-            ->method('getAuditTrail')
-            ->with('req-1')
-            ->willReturn([['action' => 'docudesk.signing.created', 'actor' => 'alice']]);
+		$response = $this->buildController(null)->getAudit('req-1');
 
-        $response = $this->buildController('admin', true)->getAudit('req-1');
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame(['error' => 'Not authenticated'], $response->getData());
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $this->assertCount(1, $response->getData());
+	}//end testGetAuditRejectsAnonymousCaller()
 
-    }//end testGetAuditAllowsAdminWithoutScopedLookup()
+	/**
+	 * A backend failure answers 500 with a generic body — the exception text
+	 * must never reach the client, since distinct messages would confirm
+	 * whether a request ID exists (docudesk#100).
+	 *
+	 * @return void
+	 */
+	public function testGetAuditDoesNotLeakExceptionText(): void {
+		$this->signingService->method('getRequest')->willReturn(['id' => 'req-1']);
+		$this->auditService->method('getAuditTrail')
+			->willThrowException(new RuntimeException('Access denied: belongs to another user'));
 
+		$response = $this->buildController('alice')->getAudit('req-1');
 
-    /**
-     * An anonymous caller is refused with 401 before any lookup.
-     *
-     * @return void
-     */
-    public function testGetAuditRejectsAnonymousCaller(): void
-    {
-        $this->signingService->expects($this->never())->method('getRequest');
-        $this->auditService->expects($this->never())->method('getAuditTrail');
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$body = json_encode($response->getData());
+		$this->assertIsString($body);
+		$this->assertStringNotContainsString('another user', $body);
 
-        $response = $this->buildController(null)->getAudit('req-1');
-
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame(['error' => 'Not authenticated'], $response->getData());
-
-    }//end testGetAuditRejectsAnonymousCaller()
-
-
-    /**
-     * A backend failure answers 500 with a generic body — the exception text
-     * must never reach the client, since distinct messages would confirm
-     * whether a request ID exists (docudesk#100).
-     *
-     * @return void
-     */
-    public function testGetAuditDoesNotLeakExceptionText(): void
-    {
-        $this->signingService->method('getRequest')->willReturn(['id' => 'req-1']);
-        $this->auditService->method('getAuditTrail')
-            ->willThrowException(new RuntimeException('Access denied: belongs to another user'));
-
-        $response = $this->buildController('alice')->getAudit('req-1');
-
-        $this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-        $body = json_encode($response->getData());
-        $this->assertIsString($body);
-        $this->assertStringNotContainsString('another user', $body);
-
-    }//end testGetAuditDoesNotLeakExceptionText()
-
+	}//end testGetAuditDoesNotLeakExceptionText()
 
 }//end class

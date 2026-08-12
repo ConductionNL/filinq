@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Chart Label Formatter
  *
@@ -34,84 +35,78 @@ namespace OCA\DocuDesk\Service\Charts;
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.1
  */
-class ChartLabelFormatter
-{
+class ChartLabelFormatter {
 
-    /**
-     * Maximum number of legend/slice/category label entries rendered before
-     * the renderers stop emitting individual text labels (chart shapes are
-     * still drawn; this only bounds label text volume for very wide series).
-     *
-     * @var int
-     */
-    public const MAX_LABELLED_ENTRIES = 20;
+	/**
+	 * Maximum number of legend/slice/category label entries rendered before
+	 * the renderers stop emitting individual text labels (chart shapes are
+	 * still drawn; this only bounds label text volume for very wide series).
+	 *
+	 * @var int
+	 */
+	public const MAX_LABELLED_ENTRIES = 20;
 
-    /**
-     * Number formatter used for the integer and currency formats.
-     *
-     * @var ThousandsFormatter
-     */
-    private readonly ThousandsFormatter $thousands;
+	/**
+	 * Number formatter used for the integer and currency formats.
+	 *
+	 * @var ThousandsFormatter
+	 */
+	private readonly ThousandsFormatter $thousands;
 
-    /**
-     * Constructor.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->thousands = new ThousandsFormatter();
+	/**
+	 * Constructor.
+	 *
+	 * @return void
+	 */
+	public function __construct() {
+		$this->thousands = new ThousandsFormatter();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Format a numeric value for on-chart labels.
-     *
-     * @param float  $value  The value to format.
-     * @param string $format 'integer' (default), 'decimal:N', 'currency', or 'percent'.
-     *
-     * @return string Formatted value.
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
-     */
-    public function formatValue(float $value, string $format): string
-    {
-        if ($format === 'percent') {
-            return sprintf('%.0f%%', $value * 100);
-        }
+	/**
+	 * Format a numeric value for on-chart labels.
+	 *
+	 * @param float $value The value to format.
+	 * @param string $format 'integer' (default), 'decimal:N', 'currency', or 'percent'.
+	 *
+	 * @return string Formatted value.
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 */
+	public function formatValue(float $value, string $format): string {
+		if ($format === 'percent') {
+			return sprintf('%.0f%%', $value * 100);
+		}
 
-        if (str_starts_with($format, 'decimal:') === true) {
-            $precision = (int) substr($format, 8);
-            $precision = max(0, min($precision, 6));
-            return sprintf('%.'.$precision.'f', $value);
-        }
+		if (str_starts_with($format, 'decimal:') === true) {
+			$precision = (int)substr($format, 8);
+			$precision = max(0, min($precision, 6));
+			return sprintf('%.' . $precision . 'f', $value);
+		}
 
-        if ($format === 'currency') {
-            return '€ '.$this->thousands->format(value: $value, decimals: 2);
-        }
+		if ($format === 'currency') {
+			return '€ ' . $this->thousands->format(value: $value, decimals: 2);
+		}
 
-        // Default: integer.
-        return $this->thousands->format(value: round($value), decimals: 0);
+		// Default: integer.
+		return $this->thousands->format(value: round($value), decimals: 0);
+	}//end formatValue()
 
-    }//end formatValue()
+	/**
+	 * Truncate text to a maximum character length with an ellipsis marker.
+	 *
+	 * @param string $text Source text.
+	 * @param int $max Maximum character length.
+	 *
+	 * @return string Truncated text.
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
+	 */
+	public function truncate(string $text, int $max): string {
+		if (strlen($text) <= $max) {
+			return $text;
+		}
 
-    /**
-     * Truncate text to a maximum character length with an ellipsis marker.
-     *
-     * @param string $text Source text.
-     * @param int    $max  Maximum character length.
-     *
-     * @return string Truncated text.
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-001
-     */
-    public function truncate(string $text, int $max): string
-    {
-        if (strlen($text) <= $max) {
-            return $text;
-        }
-
-        return substr($text, 0, max(1, $max - 1)).'…';
-
-    }//end truncate()
+		return substr($text, 0, max(1, $max - 1)) . '…';
+	}//end truncate()
 }//end class

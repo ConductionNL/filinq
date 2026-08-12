@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Table Cell Formatter
  *
@@ -35,111 +36,103 @@ namespace OCA\DocuDesk\Service\Charts;
  *
  * @spec openspec/changes/template-charts/tasks.md#task-1.2
  */
-class TableCellFormatter
-{
+class TableCellFormatter {
 
-    /**
-     * Number formatter used for the number and currency formats.
-     *
-     * @var ThousandsFormatter
-     */
-    private readonly ThousandsFormatter $thousands;
+	/**
+	 * Number formatter used for the number and currency formats.
+	 *
+	 * @var ThousandsFormatter
+	 */
+	private readonly ThousandsFormatter $thousands;
 
-    /**
-     * Constructor.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->thousands = new ThousandsFormatter();
+	/**
+	 * Constructor.
+	 *
+	 * @return void
+	 */
+	public function __construct() {
+		$this->thousands = new ThousandsFormatter();
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Format a single cell value according to its column format.
-     *
-     * @param mixed  $value  Raw cell value.
-     * @param string $format 'text'|'number'|'date'|'currency'.
-     *
-     * @return string Formatted (unescaped) text — escaping happens by the caller.
-     *
-     * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
-     */
-    public function format($value, string $format): string
-    {
-        if ($value === null) {
-            return '';
-        }
+	/**
+	 * Format a single cell value according to its column format.
+	 *
+	 * @param mixed $value Raw cell value.
+	 * @param string $format 'text'|'number'|'date'|'currency'.
+	 *
+	 * @return string Formatted (unescaped) text — escaping happens by the caller.
+	 *
+	 * @spec openspec/changes/template-charts/specs/template-charts/spec.md#REQ-DDTCH-004
+	 */
+	public function format($value, string $format): string {
+		if ($value === null) {
+			return '';
+		}
 
-        if ($format === 'number' || $format === 'currency') {
-            return $this->formatNumeric(value: $value, format: $format);
-        }
+		if ($format === 'number' || $format === 'currency') {
+			return $this->formatNumeric(value: $value, format: $format);
+		}
 
-        if ($format === 'date') {
-            return $this->formatDate(value: $value);
-        }
+		if ($format === 'date') {
+			return $this->formatDate(value: $value);
+		}
 
-        return (string) $value;
+		return (string)$value;
+	}//end format()
 
-    }//end format()
+	/**
+	 * Format a numeric or currency cell, falling back to the plain string
+	 * form when the value is not numeric.
+	 *
+	 * @param mixed $value Raw cell value (never null).
+	 * @param string $format 'number' or 'currency'.
+	 *
+	 * @return string Formatted text.
+	 */
+	private function formatNumeric($value, string $format): string {
+		if (is_numeric($value) === false) {
+			return (string)$value;
+		}
 
-    /**
-     * Format a numeric or currency cell, falling back to the plain string
-     * form when the value is not numeric.
-     *
-     * @param mixed  $value  Raw cell value (never null).
-     * @param string $format 'number' or 'currency'.
-     *
-     * @return string Formatted text.
-     */
-    private function formatNumeric($value, string $format): string
-    {
-        if (is_numeric($value) === false) {
-            return (string) $value;
-        }
+		$numeric = (float)$value;
 
-        $numeric = (float) $value;
+		$decimals = 2;
+		if (floor($numeric) === $numeric) {
+			$decimals = 0;
+		}
 
-        $decimals = 2;
-        if (floor($numeric) === $numeric) {
-            $decimals = 0;
-        }
+		$formatted = $this->thousands->format(value: $numeric, decimals: $decimals);
 
-        $formatted = $this->thousands->format(value: $numeric, decimals: $decimals);
+		if ($format === 'currency') {
+			return '€ ' . $formatted;
+		}
 
-        if ($format === 'currency') {
-            return '€ '.$formatted;
-        }
+		return $formatted;
+	}//end formatNumeric()
 
-        return $formatted;
+	/**
+	 * Format a date cell from a timestamp or a parseable date string, falling
+	 * back to the plain string form when it cannot be interpreted.
+	 *
+	 * @param mixed $value Raw cell value (never null).
+	 *
+	 * @return string Formatted text.
+	 */
+	private function formatDate($value): string {
+		if (is_string($value) === false && is_numeric($value) === false) {
+			return (string)$value;
+		}
 
-    }//end formatNumeric()
+		$timestamp = strtotime((string)$value);
+		if (is_numeric($value) === true) {
+			$timestamp = (int)$value;
+		}
 
-    /**
-     * Format a date cell from a timestamp or a parseable date string, falling
-     * back to the plain string form when it cannot be interpreted.
-     *
-     * @param mixed $value Raw cell value (never null).
-     *
-     * @return string Formatted text.
-     */
-    private function formatDate($value): string
-    {
-        if (is_string($value) === false && is_numeric($value) === false) {
-            return (string) $value;
-        }
+		if ($timestamp === false) {
+			return (string)$value;
+		}
 
-        $timestamp = strtotime((string) $value);
-        if (is_numeric($value) === true) {
-            $timestamp = (int) $value;
-        }
-
-        if ($timestamp === false) {
-            return (string) $value;
-        }
-
-        return date('d-m-Y', $timestamp);
-
-    }//end formatDate()
+		return date('d-m-Y', $timestamp);
+	}//end formatDate()
 }//end class

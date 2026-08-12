@@ -33,187 +33,171 @@ use RuntimeException;
 /**
  * OR FileService double exposing getFileById() + anonymizeEmlStructured().
  */
-class FakePreviewOrFileService
-{
-    /** @var mixed */
-    public mixed $node = null;
+class FakePreviewOrFileService {
+	/** @var mixed */
+	public mixed $node = null;
 
-    /** @var mixed */
-    public mixed $structure = null;
+	/** @var mixed */
+	public mixed $structure = null;
 
-    /** @var array|null */
-    public ?array $lastEntities = null;
+	/** @var array|null */
+	public ?array $lastEntities = null;
 
-    /**
-     * @param int $fileId File id.
-     *
-     * @return mixed
-     */
-    public function getFileById(int $fileId): mixed
-    {
-        return $this->node;
-    }
+	/**
+	 * @param int $fileId File id.
+	 *
+	 * @return mixed
+	 */
+	public function getFileById(int $fileId): mixed {
+		return $this->node;
+	}
 
-    /**
-     * @param mixed  $node       File node.
-     * @param array  $entities   Entities.
-     * @param string $scope      Scope.
-     * @param mixed  $dossierKey Dossier key.
-     *
-     * @return mixed
-     */
-    public function anonymizeEmlStructured(mixed $node, array $entities, string $scope='document', mixed $dossierKey=null): mixed
-    {
-        $this->lastEntities = $entities;
-        return $this->structure;
-    }
+	/**
+	 * @param mixed $node File node.
+	 * @param array $entities Entities.
+	 * @param string $scope Scope.
+	 * @param mixed $dossierKey Dossier key.
+	 *
+	 * @return mixed
+	 */
+	public function anonymizeEmlStructured(mixed $node, array $entities, string $scope = 'document', mixed $dossierKey = null): mixed {
+		$this->lastEntities = $entities;
+		return $this->structure;
+	}
 }
 
 /**
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class EmlPreviewServiceTest extends TestCase
-{
+class EmlPreviewServiceTest extends TestCase {
 
+	/**
+	 * Build a service with the given collaborators.
+	 *
+	 * @param ContainerInterface $container Container.
+	 * @param IAppManager $appManager App manager.
+	 * @param EmlPdfAssemblyService $assembly Assembly service.
+	 *
+	 * @return EmlPreviewService
+	 */
+	private function service(ContainerInterface $container, IAppManager $appManager, EmlPdfAssemblyService $assembly): EmlPreviewService {
+		return new EmlPreviewService(
+			appManager: $appManager,
+			container: $container,
+			emlAssembly: $assembly,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+	}
 
-    /**
-     * Build a service with the given collaborators.
-     *
-     * @param ContainerInterface     $container  Container.
-     * @param IAppManager            $appManager App manager.
-     * @param EmlPdfAssemblyService  $assembly   Assembly service.
-     *
-     * @return EmlPreviewService
-     */
-    private function service(ContainerInterface $container, IAppManager $appManager, EmlPdfAssemblyService $assembly): EmlPreviewService
-    {
-        return new EmlPreviewService(
-            appManager: $appManager,
-            container: $container,
-            emlAssembly: $assembly,
-            logger: $this->createMock(LoggerInterface::class)
-        );
-    }
+	/**
+	 * An IAppManager reporting the given installed apps.
+	 *
+	 * @param array $apps Installed app ids.
+	 *
+	 * @return IAppManager
+	 */
+	private function appManagerWith(array $apps): IAppManager {
+		$manager = $this->createMock(IAppManager::class);
+		$manager->method('getInstalledApps')->willReturn($apps);
+		return $manager;
+	}
 
+	/**
+	 * The preview renders via the assembly service and passes an EMPTY entity
+	 * set to OR so nothing is redacted (faithful original preview).
+	 *
+	 * @return void
+	 */
+	public function testRendersOriginalWithEmptyEntities(): void {
+		$node = $this->createMock(File::class);
+		$node->method('getName')->willReturn('message.eml');
 
-    /**
-     * An IAppManager reporting the given installed apps.
-     *
-     * @param array $apps Installed app ids.
-     *
-     * @return IAppManager
-     */
-    private function appManagerWith(array $apps): IAppManager
-    {
-        $manager = $this->createMock(IAppManager::class);
-        $manager->method('getInstalledApps')->willReturn($apps);
-        return $manager;
-    }
+		$or = new FakePreviewOrFileService();
+		$or->node = $node;
+		$or->structure = (object)['headers' => [], 'body' => (object)['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
 
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($or);
 
-    /**
-     * The preview renders via the assembly service and passes an EMPTY entity
-     * set to OR so nothing is redacted (faithful original preview).
-     *
-     * @return void
-     */
-    public function testRendersOriginalWithEmptyEntities(): void
-    {
-        $node = $this->createMock(File::class);
-        $node->method('getName')->willReturn('message.eml');
+		$assembly = $this->createMock(EmlPdfAssemblyService::class);
+		$assembly->expects($this->once())
+			->method('assemble')
+			->with($or->structure, 'message.eml')
+			->willReturn('%PDF-1.4 preview');
 
-        $or            = new FakePreviewOrFileService();
-        $or->node      = $node;
-        $or->structure = (object) ['headers' => [], 'body' => (object) ['plain' => null, 'html' => null], 'attachments' => [], 'inlineImages' => []];
+		$result = $this->service($container, $this->appManagerWith(['openregister']), $assembly)
+			->renderOriginalPreview(fileId: 99);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($or);
+		$this->assertSame('%PDF-1.4 preview', $result);
+		$this->assertSame([], $or->lastEntities, 'preview must pass an empty entity set (no redaction)');
+	}
 
-        $assembly = $this->createMock(EmlPdfAssemblyService::class);
-        $assembly->expects($this->once())
-            ->method('assemble')
-            ->with($or->structure, 'message.eml')
-            ->willReturn('%PDF-1.4 preview');
+	/**
+	 * OpenRegister not installed → RuntimeException, assembly never invoked.
+	 *
+	 * @return void
+	 */
+	public function testThrowsWhenOpenRegisterMissing(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$assembly = $this->createMock(EmlPdfAssemblyService::class);
+		$assembly->expects($this->never())->method('assemble');
 
-        $result = $this->service($container, $this->appManagerWith(['openregister']), $assembly)
-            ->renderOriginalPreview(fileId: 99);
+		$this->expectException(RuntimeException::class);
+		$this->service($container, $this->appManagerWith([]), $assembly)->renderOriginalPreview(fileId: 1);
+	}
 
-        $this->assertSame('%PDF-1.4 preview', $result);
-        $this->assertSame([], $or->lastEntities, 'preview must pass an empty entity set (no redaction)');
-    }
+	/**
+	 * Resolved node is not a File → RuntimeException, assembly never invoked.
+	 *
+	 * @return void
+	 */
+	public function testThrowsWhenNodeNotAFile(): void {
+		$or = new FakePreviewOrFileService();
+		$or->node = null;
 
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($or);
 
-    /**
-     * OpenRegister not installed → RuntimeException, assembly never invoked.
-     *
-     * @return void
-     */
-    public function testThrowsWhenOpenRegisterMissing(): void
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $assembly  = $this->createMock(EmlPdfAssemblyService::class);
-        $assembly->expects($this->never())->method('assemble');
+		$assembly = $this->createMock(EmlPdfAssemblyService::class);
+		$assembly->expects($this->never())->method('assemble');
 
-        $this->expectException(RuntimeException::class);
-        $this->service($container, $this->appManagerWith([]), $assembly)->renderOriginalPreview(fileId: 1);
-    }
+		$this->expectException(RuntimeException::class);
+		$this->service($container, $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 2);
+	}
 
+	/**
+	 * OR lacks the anonymise-EML API → RuntimeException, assembly never invoked.
+	 *
+	 * @return void
+	 */
+	public function testThrowsWhenAnonymiseApiAbsent(): void {
+		$node = $this->createMock(File::class);
+		$or = new class($node) {
+			/**
+			 * @param mixed $node Node.
+			 */
+			public function __construct(
+				private mixed $node,
+			) {
+			}
 
-    /**
-     * Resolved node is not a File → RuntimeException, assembly never invoked.
-     *
-     * @return void
-     */
-    public function testThrowsWhenNodeNotAFile(): void
-    {
-        $or       = new FakePreviewOrFileService();
-        $or->node = null;
+			/**
+			 * @param int $fileId File id.
+			 *
+			 * @return mixed
+			 */
+			public function getFileById(int $fileId): mixed {
+				return $this->node;
+			}
+		};
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($or);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($or);
 
-        $assembly = $this->createMock(EmlPdfAssemblyService::class);
-        $assembly->expects($this->never())->method('assemble');
+		$assembly = $this->createMock(EmlPdfAssemblyService::class);
+		$assembly->expects($this->never())->method('assemble');
 
-        $this->expectException(RuntimeException::class);
-        $this->service($container, $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 2);
-    }
-
-
-    /**
-     * OR lacks the anonymise-EML API → RuntimeException, assembly never invoked.
-     *
-     * @return void
-     */
-    public function testThrowsWhenAnonymiseApiAbsent(): void
-    {
-        $node = $this->createMock(File::class);
-        $or   = new class($node) {
-            /**
-             * @param mixed $node Node.
-             */
-            public function __construct(private mixed $node)
-            {
-            }
-
-            /**
-             * @param int $fileId File id.
-             *
-             * @return mixed
-             */
-            public function getFileById(int $fileId): mixed
-            {
-                return $this->node;
-            }
-        };
-
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($or);
-
-        $assembly = $this->createMock(EmlPdfAssemblyService::class);
-        $assembly->expects($this->never())->method('assemble');
-
-        $this->expectException(RuntimeException::class);
-        $this->service($container, $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 3);
-    }
+		$this->expectException(RuntimeException::class);
+		$this->service($container, $this->appManagerWith(['openregister']), $assembly)->renderOriginalPreview(fileId: 3);
+	}
 }

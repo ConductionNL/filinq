@@ -36,116 +36,106 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class SettingsInitializerTest extends TestCase
-{
+class SettingsInitializerTest extends TestCase {
 
-    /**
-     * @var SettingsInitializer
-     */
-    private SettingsInitializer $initializer;
+	/**
+	 * @var SettingsInitializer
+	 */
+	private SettingsInitializer $initializer;
 
-    /**
-     * @var IAppConfig|MockObject
-     */
-    private IAppConfig|MockObject $mockConfig;
+	/**
+	 * @var IAppConfig|MockObject
+	 */
+	private IAppConfig|MockObject $mockConfig;
 
-    /**
-     * @var ContainerInterface|MockObject
-     */
-    private ContainerInterface|MockObject $mockContainer;
+	/**
+	 * @var ContainerInterface|MockObject
+	 */
+	private ContainerInterface|MockObject $mockContainer;
 
-    /**
-     * @var IAppManager|MockObject
-     */
-    private IAppManager|MockObject $mockAppManager;
+	/**
+	 * @var IAppManager|MockObject
+	 */
+	private IAppManager|MockObject $mockAppManager;
 
-    /**
-     * @var LoggerInterface|MockObject
-     */
-    private LoggerInterface|MockObject $mockLogger;
+	/**
+	 * @var LoggerInterface|MockObject
+	 */
+	private LoggerInterface|MockObject $mockLogger;
 
+	/**
+	 * Set up test environment
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Set up test environment
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$this->mockConfig = $this->createMock(IAppConfig::class);
+		$this->mockContainer = $this->createMock(ContainerInterface::class);
+		$this->mockAppManager = $this->createMock(IAppManager::class);
+		$this->mockLogger = $this->createMock(LoggerInterface::class);
 
-        $this->mockConfig     = $this->createMock(IAppConfig::class);
-        $this->mockContainer  = $this->createMock(ContainerInterface::class);
-        $this->mockAppManager = $this->createMock(IAppManager::class);
-        $this->mockLogger     = $this->createMock(LoggerInterface::class);
+		$this->initializer = new SettingsInitializer(
+			$this->mockConfig,
+			$this->mockContainer,
+			$this->mockAppManager,
+			$this->mockLogger
+		);
 
-        $this->initializer = new SettingsInitializer(
-            $this->mockConfig,
-            $this->mockContainer,
-            $this->mockAppManager,
-            $this->mockLogger
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * Test initialize returns error when OpenRegister not installed
+	 *
+	 * @return void
+	 */
+	public function testInitializeReturnsErrorWhenNotInstalled(): void {
+		$this->mockAppManager->method('isInstalled')
+			->willReturn(false);
 
+		$result = $this->initializer->initialize();
 
-    /**
-     * Test initialize returns error when OpenRegister not installed
-     *
-     * @return void
-     */
-    public function testInitializeReturnsErrorWhenNotInstalled(): void
-    {
-        $this->mockAppManager->method('isInstalled')
-            ->willReturn(false);
+		$this->assertFalse($result['configuration']);
+		$this->assertNotEmpty($result['errors']);
 
-        $result = $this->initializer->initialize();
+	}//end testInitializeReturnsErrorWhenNotInstalled()
 
-        $this->assertFalse($result['configuration']);
-        $this->assertNotEmpty($result['errors']);
+	/**
+	 * Test initialize returns error when OpenRegister not enabled
+	 *
+	 * @return void
+	 */
+	public function testInitializeReturnsErrorWhenNotEnabled(): void {
+		$this->mockAppManager->method('isInstalled')
+			->willReturn(true);
+		$this->mockAppManager->method('getAppVersion')
+			->willReturn('1.0.0');
+		$this->mockAppManager->method('isEnabledForUser')
+			->willReturn(false);
 
-    }//end testInitializeReturnsErrorWhenNotInstalled()
+		$result = $this->initializer->initialize();
 
+		$this->assertFalse($result['configuration']);
+		$this->assertNotEmpty($result['errors']);
 
-    /**
-     * Test initialize returns error when OpenRegister not enabled
-     *
-     * @return void
-     */
-    public function testInitializeReturnsErrorWhenNotEnabled(): void
-    {
-        $this->mockAppManager->method('isInstalled')
-            ->willReturn(true);
-        $this->mockAppManager->method('getAppVersion')
-            ->willReturn('1.0.0');
-        $this->mockAppManager->method('isEnabledForUser')
-            ->willReturn(false);
+	}//end testInitializeReturnsErrorWhenNotEnabled()
 
-        $result = $this->initializer->initialize();
+	/**
+	 * Test initialize has expected result structure
+	 *
+	 * @return void
+	 */
+	public function testInitializeHasExpectedResultStructure(): void {
+		$this->mockAppManager->method('isInstalled')
+			->willReturn(false);
 
-        $this->assertFalse($result['configuration']);
-        $this->assertNotEmpty($result['errors']);
+		$result = $this->initializer->initialize();
 
-    }//end testInitializeReturnsErrorWhenNotEnabled()
+		$this->assertArrayHasKey('configuration', $result);
+		$this->assertArrayHasKey('errors', $result);
+		$this->assertArrayHasKey('info', $result);
 
-
-    /**
-     * Test initialize has expected result structure
-     *
-     * @return void
-     */
-    public function testInitializeHasExpectedResultStructure(): void
-    {
-        $this->mockAppManager->method('isInstalled')
-            ->willReturn(false);
-
-        $result = $this->initializer->initialize();
-
-        $this->assertArrayHasKey('configuration', $result);
-        $this->assertArrayHasKey('errors', $result);
-        $this->assertArrayHasKey('info', $result);
-
-    }//end testInitializeHasExpectedResultStructure()
-
+	}//end testInitializeHasExpectedResultStructure()
 
 }//end class

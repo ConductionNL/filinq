@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Unit tests for PolicyController's prohibition-delete status mapping.
  *
@@ -54,115 +55,108 @@ use Psr\Log\LoggerInterface;
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
-class PolicyControllerDeleteTest extends TestCase
-{
+class PolicyControllerDeleteTest extends TestCase {
 
-    /**
-     * CRUD service double.
-     *
-     * @var PolicyCrudService|MockObject
-     */
-    private PolicyCrudService|MockObject $mockCrudService;
+	/**
+	 * CRUD service double.
+	 *
+	 * @var PolicyCrudService|MockObject
+	 */
+	private PolicyCrudService|MockObject $mockCrudService;
 
-    /**
-     * The controller under test.
-     *
-     * @var PolicyController
-     */
-    private PolicyController $controller;
+	/**
+	 * The controller under test.
+	 *
+	 * @var PolicyController
+	 */
+	private PolicyController $controller;
 
+	/**
+	 * Wire the controller over an authenticated session.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-    /**
-     * Wire the controller over an authenticated session.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+		$mockRequest = $this->createMock(originalClassName: IRequest::class);
+		$mockLogger = $this->createMock(originalClassName: LoggerInterface::class);
+		$mockL10n = $this->createMock(originalClassName: IL10N::class);
+		$mockL10n->method('t')->willReturnCallback(
+			static function (string $text, array $params = []): string {
+				return vsprintf($text, $params);
+			}
+		);
 
-        $mockRequest = $this->createMock(originalClassName: IRequest::class);
-        $mockLogger  = $this->createMock(originalClassName: LoggerInterface::class);
-        $mockL10n    = $this->createMock(originalClassName: IL10N::class);
-        $mockL10n->method('t')->willReturnCallback(
-            static function (string $text, array $params=[]): string {
-                return vsprintf($text, $params);
-            }
-        );
+		$this->mockCrudService = $this->createMock(originalClassName: PolicyCrudService::class);
 
-        $this->mockCrudService = $this->createMock(originalClassName: PolicyCrudService::class);
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$mockUserSession = $this->createMock(originalClassName: IUserSession::class);
+		$mockUserSession->method('getUser')->willReturn($user);
 
-        $user = $this->createMock(originalClassName: IUser::class);
-        $user->method('getUID')->willReturn('admin');
-        $mockUserSession = $this->createMock(originalClassName: IUserSession::class);
-        $mockUserSession->method('getUser')->willReturn($user);
+		$this->controller = new PolicyController(
+			'docudesk',
+			$mockRequest,
+			$mockLogger,
+			$this->mockCrudService,
+			$mockL10n,
+			$mockUserSession
+		);
 
-        $this->controller = new PolicyController(
-            'docudesk',
-            $mockRequest,
-            $mockLogger,
-            $this->mockCrudService,
-            $mockL10n,
-            $mockUserSession
-        );
+	}//end setUp()
 
-    }//end setUp()
+	/**
+	 * An archival-immutable refusal answers 409, not 500.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
+	 */
+	public function testDeleteAnswers409WhenTheSchemaDeclaresArchivalRetention(): void {
+		$this->mockCrudService->method('deleteProhibition')
+			->willThrowException(
+				new ArchivalImmutableException('publicationProhibition', 'delete')
+			);
 
+		$result = $this->controller->deleteProhibition('prohibition-uuid-1');
 
-    /**
-     * An archival-immutable refusal answers 409, not 500.
-     *
-     * @return void
-     *
-     * @spec openspec/specs/entity-publication-policies/spec.md
-     */
-    public function testDeleteAnswers409WhenTheSchemaDeclaresArchivalRetention(): void
-    {
-        $this->mockCrudService->method('deleteProhibition')
-            ->willThrowException(
-                new ArchivalImmutableException('publicationProhibition', 'delete')
-            );
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(
+			expected: 409,
+			actual: $result->getStatus(),
+			message: 'A permanently impossible delete must not be reported as a server error.'
+		);
 
-        $result = $this->controller->deleteProhibition('prohibition-uuid-1');
+		$body = $result->getData();
+		$this->assertSame('SCHEMA_ARCHIVAL_IMMUTABLE', $body['error'] ?? null);
+		$this->assertSame('publicationProhibition', $body['schema'] ?? null);
+		$this->assertSame('delete', $body['operation'] ?? null);
+		$this->assertSame('prohibition-uuid-1', $body['id'] ?? null);
+		$this->assertStringContainsString(
+			needle: 'retention',
+			haystack: strtolower((string)($body['message'] ?? '')),
+			message: 'The 409 body must name retention as the reason.'
+		);
 
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertSame(
-            expected: 409,
-            actual: $result->getStatus(),
-            message: 'A permanently impossible delete must not be reported as a server error.'
-        );
+	}//end testDeleteAnswers409WhenTheSchemaDeclaresArchivalRetention()
 
-        $body = $result->getData();
-        $this->assertSame('SCHEMA_ARCHIVAL_IMMUTABLE', $body['error'] ?? null);
-        $this->assertSame('publicationProhibition', $body['schema'] ?? null);
-        $this->assertSame('delete', $body['operation'] ?? null);
-        $this->assertSame('prohibition-uuid-1', $body['id'] ?? null);
-        $this->assertStringContainsString(
-            needle: 'retention',
-            haystack: strtolower((string) ($body['message'] ?? '')),
-            message: 'The 409 body must name retention as the reason.'
-        );
+	/**
+	 * A genuine failure is still reported as 500.
+	 *
+	 * Positive control: without it, a controller that answered 409 for every
+	 * exception would pass the test above for the wrong reason.
+	 *
+	 * @return void
+	 */
+	public function testDeleteStillAnswers500OnAnUnrelatedFailure(): void {
+		$this->mockCrudService->method('deleteProhibition')
+			->willThrowException(new \RuntimeException('database is on fire'));
 
-    }//end testDeleteAnswers409WhenTheSchemaDeclaresArchivalRetention()
+		$result = $this->controller->deleteProhibition('prohibition-uuid-1');
 
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(expected: 500, actual: $result->getStatus());
 
-    /**
-     * A genuine failure is still reported as 500.
-     *
-     * Positive control: without it, a controller that answered 409 for every
-     * exception would pass the test above for the wrong reason.
-     *
-     * @return void
-     */
-    public function testDeleteStillAnswers500OnAnUnrelatedFailure(): void
-    {
-        $this->mockCrudService->method('deleteProhibition')
-            ->willThrowException(new \RuntimeException('database is on fire'));
-
-        $result = $this->controller->deleteProhibition('prohibition-uuid-1');
-
-        $this->assertInstanceOf(JSONResponse::class, $result);
-        $this->assertSame(expected: 500, actual: $result->getStatus());
-
-    }//end testDeleteStillAnswers500OnAnUnrelatedFailure()
+	}//end testDeleteStillAnswers500OnAnUnrelatedFailure()
 }//end class

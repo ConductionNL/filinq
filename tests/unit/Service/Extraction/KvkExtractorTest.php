@@ -26,46 +26,42 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for KvkExtractor.
  */
-class KvkExtractorTest extends TestCase
-{
+class KvkExtractorTest extends TestCase {
 
-    private KvkExtractor $extractor;
+	private KvkExtractor $extractor;
 
-    /**
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->extractor = new KvkExtractor();
+	/**
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->extractor = new KvkExtractor();
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * "KvK: 12345678" is extracted as the KvK number.
-     *
-     * @return void
-     */
-    public function testLabelledKvkExtracted(): void
-    {
-        $result = $this->extractor->extract('Hostbaar B.V. KvK: 12345678');
+	/**
+	 * "KvK: 12345678" is extracted as the KvK number.
+	 *
+	 * @return void
+	 */
+	public function testLabelledKvkExtracted(): void {
+		$result = $this->extractor->extract('Hostbaar B.V. KvK: 12345678');
 
-        $this->assertSame('12345678', $result['value']);
-        $this->assertGreaterThan(0.0, $result['confidence']);
+		$this->assertSame('12345678', $result['value']);
+		$this->assertGreaterThan(0.0, $result['confidence']);
 
-    }//end testLabelledKvkExtracted()
+	}//end testLabelledKvkExtracted()
 
-    /**
-     * No "KvK" label present yields a null value even if 8 digits appear.
-     *
-     * @return void
-     */
-    public function testUnlabelledDigitsNotExtracted(): void
-    {
-        $result = $this->extractor->extract('Referentie: 12345678');
+	/**
+	 * No "KvK" label present yields a null value even if 8 digits appear.
+	 *
+	 * @return void
+	 */
+	public function testUnlabelledDigitsNotExtracted(): void {
+		$result = $this->extractor->extract('Referentie: 12345678');
 
-        $this->assertNull($result['value']);
-        $this->assertSame(0.0, $result['confidence']);
+		$this->assertNull($result['value']);
+		$this->assertSame(0.0, $result['confidence']);
 
-    }//end testUnlabelledDigitsNotExtracted()
+	}//end testUnlabelledDigitsNotExtracted()
 }//end class

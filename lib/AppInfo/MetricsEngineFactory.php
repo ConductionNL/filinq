@@ -52,35 +52,33 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/adopt-apphost/spec.md
  */
-class MetricsEngineFactory
-{
-    /**
-     * Build the metrics engine.
-     *
-     * Returns `object`, not the engine's own type — see the file docblock.
-     *
-     * @param ContainerInterface $container The server container.
-     *
-     * @return object The constructed OpenRegister AppHost MetricsEngine.
-     *
-     * @spec openspec/specs/adopt-apphost/spec.md
-     */
-    public function build(ContainerInterface $container): object
-    {
-        $namespace = '\\OCA\\OpenRegister\\AppHost\\Observability\\';
-        $engine    = $namespace.'MetricsEngine';
+class MetricsEngineFactory {
+	/**
+	 * Build the metrics engine.
+	 *
+	 * Returns `object`, not the engine's own type — see the file docblock.
+	 *
+	 * @param ContainerInterface $container The server container.
+	 *
+	 * @return object The constructed OpenRegister AppHost MetricsEngine.
+	 *
+	 * @spec openspec/specs/adopt-apphost/spec.md
+	 */
+	public function build(ContainerInterface $container): object {
+		$namespace = '\\OCA\\OpenRegister\\AppHost\\Observability\\';
+		$engine = $namespace . 'MetricsEngine';
 
-        return new $engine(
-            objectSource: $container->get($namespace.'Source\\ObjectMetricSource'),
-            tableSource: $container->get($namespace.'Source\\TableMetricSource'),
-            appConfigSource: $container->get($namespace.'Source\\AppConfigMetricSource'),
-            providerSource: $container->get($namespace.'Source\\ProviderMetricSource'),
-            renderer: $container->get($namespace.'PrometheusRenderer'),
-            manifestLoader: $container->get($namespace.'ManifestLoader'),
-            cacheFactory: $container->get(ICacheFactory::class),
-            config: $container->get(IConfig::class),
-            logger: $container->get(LoggerInterface::class)
-        );
+		return new $engine(
+			objectSource: $container->get($namespace . 'Source\\ObjectMetricSource'),
+			tableSource: $container->get($namespace . 'Source\\TableMetricSource'),
+			appConfigSource: $container->get($namespace . 'Source\\AppConfigMetricSource'),
+			providerSource: $container->get($namespace . 'Source\\ProviderMetricSource'),
+			renderer: $container->get($namespace . 'PrometheusRenderer'),
+			manifestLoader: $container->get($namespace . 'ManifestLoader'),
+			cacheFactory: $container->get(ICacheFactory::class),
+			config: $container->get(IConfig::class),
+			logger: $container->get(LoggerInterface::class)
+		);
 
-    }//end build()
+	}//end build()
 }//end class

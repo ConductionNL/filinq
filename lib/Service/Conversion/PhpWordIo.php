@@ -51,66 +51,59 @@ use PhpOffice\PhpWord\Writer\HTML as HtmlWriter;
  *
  * @spec openspec/specs/pdf-conversion/spec.md
  */
-class PhpWordIo
-{
-    /**
-     * Read a document from disk with the named PhpWord reader.
-     *
-     * @param string $path       Absolute path to the source document.
-     * @param string $readerName PhpWord reader short name (e.g. `Word2007`).
-     *
-     * @return PhpWord The parsed document model.
-     *
-     * @throws InvalidArgumentException When $readerName is not a known reader.
-     *
-     * @spec openspec/specs/pdf-conversion/spec.md
-     */
-    public function load(string $path, string $readerName): PhpWord
-    {
-        return $this->createReader(readerName: $readerName)->load($path);
+class PhpWordIo {
+	/**
+	 * Read a document from disk with the named PhpWord reader.
+	 *
+	 * @param string $path Absolute path to the source document.
+	 * @param string $readerName PhpWord reader short name (e.g. `Word2007`).
+	 *
+	 * @return PhpWord The parsed document model.
+	 *
+	 * @throws InvalidArgumentException When $readerName is not a known reader.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
+	 */
+	public function load(string $path, string $readerName): PhpWord {
+		return $this->createReader(readerName: $readerName)->load($path);
+	}//end load()
 
-    }//end load()
+	/**
+	 * Render a parsed document to the HTML intermediate representation.
+	 *
+	 * @param PhpWord $document Parsed document model.
+	 *
+	 * @return string HTML produced by PhpWord's HTML writer.
+	 *
+	 * @spec openspec/specs/pdf-conversion/spec.md
+	 */
+	public function toHtml(PhpWord $document): string {
+		return (new HtmlWriter($document))->getContent();
+	}//end toHtml()
 
-    /**
-     * Render a parsed document to the HTML intermediate representation.
-     *
-     * @param PhpWord $document Parsed document model.
-     *
-     * @return string HTML produced by PhpWord's HTML writer.
-     *
-     * @spec openspec/specs/pdf-conversion/spec.md
-     */
-    public function toHtml(PhpWord $document): string
-    {
-        return (new HtmlWriter($document))->getContent();
+	/**
+	 * Instantiate the concrete reader for a PhpWord reader short name.
+	 *
+	 * @param string $readerName PhpWord reader short name.
+	 *
+	 * @return ReaderInterface The matching reader instance.
+	 *
+	 * @throws InvalidArgumentException When $readerName is not a known reader.
+	 */
+	private function createReader(string $readerName): ReaderInterface {
+		$reader = match ($readerName) {
+			'Word2007' => new Word2007(),
+			'MsDoc' => new MsDoc(),
+			'ODText' => new ODText(),
+			'RTF' => new RTF(),
+			'HTML' => new HtmlReader(),
+			default => null,
+		};
 
-    }//end toHtml()
+		if ($reader === null) {
+			throw new InvalidArgumentException('"' . $readerName . '" is not a valid PhpWord reader.');
+		}
 
-    /**
-     * Instantiate the concrete reader for a PhpWord reader short name.
-     *
-     * @param string $readerName PhpWord reader short name.
-     *
-     * @return ReaderInterface The matching reader instance.
-     *
-     * @throws InvalidArgumentException When $readerName is not a known reader.
-     */
-    private function createReader(string $readerName): ReaderInterface
-    {
-        $reader = match ($readerName) {
-            'Word2007' => new Word2007(),
-            'MsDoc' => new MsDoc(),
-            'ODText' => new ODText(),
-            'RTF' => new RTF(),
-            'HTML' => new HtmlReader(),
-            default => null,
-        };
-
-        if ($reader === null) {
-            throw new InvalidArgumentException('"'.$readerName.'" is not a valid PhpWord reader.');
-        }
-
-        return $reader;
-
-    }//end createReader()
+		return $reader;
+	}//end createReader()
 }//end class

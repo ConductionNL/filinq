@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Text Analysis Service
  *
@@ -36,162 +37,151 @@ namespace OCA\DocuDesk\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.DocuDesk.app
  */
-class TextAnalysisService
-{
-    /**
-     * Constructor for TextAnalysisService
-     *
-     * @param LanguageClassifier $languageClassifier Language and topic classifier
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly LanguageClassifier $languageClassifier
-    ) {
+class TextAnalysisService {
+	/**
+	 * Constructor for TextAnalysisService
+	 *
+	 * @param LanguageClassifier $languageClassifier Language and topic classifier
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly LanguageClassifier $languageClassifier,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Count word occurrences for a list of target words in text
-     *
-     * @param string        $text  The text to search in
-     * @param array<string> $words The words to count
-     *
-     * @return int Total occurrence count
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function countWordOccurrences(string $text, array $words): int
-    {
-        $count = 0;
-        foreach ($words as $word) {
-            $count += substr_count($text, ' '.$word.' ');
-        }
+	/**
+	 * Count word occurrences for a list of target words in text
+	 *
+	 * @param string $text The text to search in
+	 * @param array<string> $words The words to count
+	 *
+	 * @return int Total occurrence count
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function countWordOccurrences(string $text, array $words): int {
+		$count = 0;
+		foreach ($words as $word) {
+			$count += substr_count($text, ' ' . $word . ' ');
+		}
 
-        return $count;
+		return $count;
+	}//end countWordOccurrences()
 
-    }//end countWordOccurrences()
+	/**
+	 * Detect language from text content
+	 *
+	 * @param string $text Text content to analyze
+	 *
+	 * @return string|null Detected language code or null if detection fails
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function detectLanguage(string $text): ?string {
+		return $this->languageClassifier->detectLanguage($text);
+	}//end detectLanguage()
 
-    /**
-     * Detect language from text content
-     *
-     * @param string $text Text content to analyze
-     *
-     * @return string|null Detected language code or null if detection fails
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function detectLanguage(string $text): ?string
-    {
-        return $this->languageClassifier->detectLanguage($text);
+	/**
+	 * Extract keywords from text content
+	 *
+	 * @param string $text Text content to analyze
+	 *
+	 * @return array<string> Extracted keywords
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function extractKeywords(string $text): array {
+		$words = str_word_count(strtolower($text), 1);
+		$wordCounts = array_count_values($words);
 
-    }//end detectLanguage()
+		$stopWords = [
+			'the',
+			'be',
+			'to',
+			'of',
+			'and',
+			'a',
+			'in',
+			'that',
+			'have',
+			'it',
+			'de',
+			'het',
+			'een',
+			'en',
+			'van',
+			'is',
+			'zijn',
+			'op',
+			'voor',
+			'met',
+			'for',
+			'not',
+			'on',
+			'with',
+			'he',
+			'as',
+			'you',
+			'do',
+			'at',
+		];
 
-    /**
-     * Extract keywords from text content
-     *
-     * @param string $text Text content to analyze
-     *
-     * @return array<string> Extracted keywords
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function extractKeywords(string $text): array
-    {
-        $words      = str_word_count(strtolower($text), 1);
-        $wordCounts = array_count_values($words);
+		foreach ($stopWords as $stopWord) {
+			unset($wordCounts[$stopWord]);
+		}
 
-        $stopWords = [
-            'the',
-            'be',
-            'to',
-            'of',
-            'and',
-            'a',
-            'in',
-            'that',
-            'have',
-            'it',
-            'de',
-            'het',
-            'een',
-            'en',
-            'van',
-            'is',
-            'zijn',
-            'op',
-            'voor',
-            'met',
-            'for',
-            'not',
-            'on',
-            'with',
-            'he',
-            'as',
-            'you',
-            'do',
-            'at',
-        ];
+		arsort($wordCounts);
 
-        foreach ($stopWords as $stopWord) {
-            unset($wordCounts[$stopWord]);
-        }
+		return array_slice(array_keys($wordCounts), 0, 10);
+	}//end extractKeywords()
 
-        arsort($wordCounts);
+	/**
+	 * Classify document topic based on text content
+	 *
+	 * @param string $text Text content to analyze
+	 *
+	 * @return string|null Classified topic or null if classification fails
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function classifyTopic(string $text): ?string {
+		return $this->languageClassifier->classifyTopic($text);
+	}//end classifyTopic()
 
-        return array_slice(array_keys($wordCounts), 0, 10);
+	/**
+	 * Standardize document type classification
+	 *
+	 * @param string $documentType Document type to standardize
+	 *
+	 * @return string Standardized document type
+	 *
+	 * @spec openspec/specs/metadata-enrichment/spec.md
+	 */
+	public function standardizeDocumentType(string $documentType): string {
+		$documentType = strtolower(trim($documentType));
 
-    }//end extractKeywords()
+		$typeMap = [
+			'pdf' => 'pdf',
+			'word' => 'word',
+			'doc' => 'word',
+			'docx' => 'word',
+			'excel' => 'spreadsheet',
+			'xls' => 'spreadsheet',
+			'xlsx' => 'spreadsheet',
+			'powerpoint' => 'presentation',
+			'ppt' => 'presentation',
+			'pptx' => 'presentation',
+			'text' => 'text',
+			'txt' => 'text',
+			'html' => 'html',
+			'image' => 'image',
+			'jpg' => 'image',
+			'jpeg' => 'image',
+			'png' => 'image',
+		];
 
-    /**
-     * Classify document topic based on text content
-     *
-     * @param string $text Text content to analyze
-     *
-     * @return string|null Classified topic or null if classification fails
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function classifyTopic(string $text): ?string
-    {
-        return $this->languageClassifier->classifyTopic($text);
-
-    }//end classifyTopic()
-
-    /**
-     * Standardize document type classification
-     *
-     * @param string $documentType Document type to standardize
-     *
-     * @return string Standardized document type
-     *
-     * @spec openspec/specs/metadata-enrichment/spec.md
-     */
-    public function standardizeDocumentType(string $documentType): string
-    {
-        $documentType = strtolower(trim($documentType));
-
-        $typeMap = [
-            'pdf'        => 'pdf',
-            'word'       => 'word',
-            'doc'        => 'word',
-            'docx'       => 'word',
-            'excel'      => 'spreadsheet',
-            'xls'        => 'spreadsheet',
-            'xlsx'       => 'spreadsheet',
-            'powerpoint' => 'presentation',
-            'ppt'        => 'presentation',
-            'pptx'       => 'presentation',
-            'text'       => 'text',
-            'txt'        => 'text',
-            'html'       => 'html',
-            'image'      => 'image',
-            'jpg'        => 'image',
-            'jpeg'       => 'image',
-            'png'        => 'image',
-        ];
-
-        return $typeMap[$documentType] ?? $documentType;
-
-    }//end standardizeDocumentType()
+		return $typeMap[$documentType] ?? $documentType;
+	}//end standardizeDocumentType()
 }//end class

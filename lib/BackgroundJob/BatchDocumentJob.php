@@ -49,187 +49,184 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
-class BatchDocumentJob extends QueuedJob
-{
-    /**
-     * Constructor for BatchDocumentJob.
-     *
-     * @param ITimeFactory    $time        Time factory
-     * @param DocumentService $documentSvc Document generation service
-     * @param LoggerInterface $logger      Logger for error reporting
-     *
-     * @return void
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private readonly DocumentService $documentSvc,
-        private readonly LoggerInterface $logger
-    ) {
-        parent::__construct(time: $time);
+class BatchDocumentJob extends QueuedJob {
+	/**
+	 * Constructor for BatchDocumentJob.
+	 *
+	 * @param ITimeFactory $time Time factory
+	 * @param DocumentService $documentSvc Document generation service
+	 * @param LoggerInterface $logger Logger for error reporting
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private readonly DocumentService $documentSvc,
+		private readonly LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Run the batch document generation.
-     *
-     * Processes each object individually. Updates job status after each
-     * object so progress can be tracked via getJobStatus(). Individual
-     * failures do not abort the batch (DCS-043).
-     *
-     * @param array $argument Job arguments containing jobId, templateId,
-     *                        objectIds, and options
-     *
-     * @return void
-     *
-     * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
-     */
-    protected function run(mixed $argument): void
-    {
-        $jobId      = $argument['jobId'] ?? '';
-        $templateId = $argument['templateId'] ?? '';
-        $objectIds  = $argument['objectIds'] ?? [];
-        $options    = $argument['options'] ?? [];
+	/**
+	 * Run the batch document generation.
+	 *
+	 * Processes each object individually. Updates job status after each
+	 * object so progress can be tracked via getJobStatus(). Individual
+	 * failures do not abort the batch (DCS-043).
+	 *
+	 * @param array $argument Job arguments containing jobId, templateId,
+	 *                        objectIds, and options
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	protected function run(mixed $argument): void {
+		$jobId = $argument['jobId'] ?? '';
+		$templateId = $argument['templateId'] ?? '';
+		$objectIds = $argument['objectIds'] ?? [];
+		$options = $argument['options'] ?? [];
 
-        if (empty($jobId) === true || empty($templateId) === true) {
-            $this->logger->error(
-                message: 'BatchDocumentJob: missing required arguments',
-                context: ['argument' => $argument]
-            );
-            return;
-        }
+		if (empty($jobId) === true || empty($templateId) === true) {
+			$this->logger->error(
+				message: 'BatchDocumentJob: missing required arguments',
+				context: ['argument' => $argument]
+			);
+			return;
+		}
 
-        $this->initializeJobStatus(jobId: $jobId, total: count($objectIds), options: $options);
-        $this->processObjects(
-            jobId: $jobId,
-            templateId: $templateId,
-            objectIds: $objectIds,
-            options: $options
-        );
+		$this->initializeJobStatus(jobId: $jobId, total: count($objectIds), options: $options);
+		$this->processObjects(
+			jobId: $jobId,
+			templateId: $templateId,
+			objectIds: $objectIds,
+			options: $options
+		);
 
-    }//end run()
+	}//end run()
 
-    /**
-     * Initialize job status to processing.
-     *
-     * @param string $jobId   The job UUID
-     * @param int    $total   Total number of objects to process
-     * @param array  $options Generation options (preserved so userId survives for auth checks)
-     *
-     * @return void
-     */
-    private function initializeJobStatus(string $jobId, int $total, array $options): void
-    {
-        $this->documentSvc->updateJobStatus(
-            jobId: $jobId,
-            status: [
-                'jobId'     => $jobId,
-                'status'    => 'processing',
-                'total'     => $total,
-                'completed' => 0,
-                'errors'    => 0,
-                'results'   => [],
-                'options'   => $options,
-            ]
-        );
+	/**
+	 * Initialize job status to processing.
+	 *
+	 * @param string $jobId The job UUID
+	 * @param int $total Total number of objects to process
+	 * @param array $options Generation options (preserved so userId survives for auth checks)
+	 *
+	 * @return void
+	 */
+	private function initializeJobStatus(string $jobId, int $total, array $options): void {
+		$this->documentSvc->updateJobStatus(
+			jobId: $jobId,
+			status: [
+				'jobId' => $jobId,
+				'status' => 'processing',
+				'total' => $total,
+				'completed' => 0,
+				'errors' => 0,
+				'results' => [],
+				'options' => $options,
+			]
+		);
 
-    }//end initializeJobStatus()
+	}//end initializeJobStatus()
 
-    /**
-     * Process all objects and update job status after each one.
-     *
-     * @param string $jobId      The job UUID
-     * @param string $templateId The template UUID
-     * @param array  $objectIds  Array of object UUIDs
-     * @param array  $options    Generation options
-     *
-     * @return void
-     */
-    private function processObjects(
-        string $jobId,
-        string $templateId,
-        array $objectIds,
-        array $options
-    ): void {
-        $register  = $options['register'] ?? '';
-        $schema    = $options['schema'] ?? '';
-        $results   = [];
-        $completed = 0;
-        $errors    = 0;
-        $total     = count($objectIds);
+	/**
+	 * Process all objects and update job status after each one.
+	 *
+	 * @param string $jobId The job UUID
+	 * @param string $templateId The template UUID
+	 * @param array $objectIds Array of object UUIDs
+	 * @param array $options Generation options
+	 *
+	 * @return void
+	 */
+	private function processObjects(
+		string $jobId,
+		string $templateId,
+		array $objectIds,
+		array $options,
+	): void {
+		$register = $options['register'] ?? '';
+		$schema = $options['schema'] ?? '';
+		$results = [];
+		$completed = 0;
+		$errors = 0;
+		$total = count($objectIds);
 
-        foreach ($objectIds as $objectId) {
-            $dataRefs = [
-                [
-                    'register' => $register,
-                    'schema'   => $schema,
-                    'id'       => $objectId,
-                ],
-            ];
+		foreach ($objectIds as $objectId) {
+			$dataRefs = [
+				[
+					'register' => $register,
+					'schema' => $schema,
+					'id' => $objectId,
+				],
+			];
 
-            try {
-                $result = $this->documentSvc->generateDocument(
-                    templateId: $templateId,
-                    dataRefs: $dataRefs,
-                    options: $options
-                );
+			try {
+				$result = $this->documentSvc->generateDocument(
+					templateId: $templateId,
+					dataRefs: $dataRefs,
+					options: $options
+				);
 
-                $results[] = [
-                    'objectId' => $objectId,
-                    'status'   => 'success',
-                    'warnings' => $result['warnings'],
-                    'fileId'   => $result['output']['fileId'] ?? null,
-                    'path'     => $result['output']['path'] ?? null,
-                ];
-                $completed++;
-            } catch (Exception $e) {
-                $results[] = [
-                    'objectId' => $objectId,
-                    'status'   => 'error',
-                    'error'    => $e->getMessage(),
-                ];
-                $errors++;
+				$results[] = [
+					'objectId' => $objectId,
+					'status' => 'success',
+					'warnings' => $result['warnings'],
+					'fileId' => $result['output']['fileId'] ?? null,
+					'path' => $result['output']['path'] ?? null,
+				];
+				$completed++;
+			} catch (Exception $e) {
+				$results[] = [
+					'objectId' => $objectId,
+					'status' => 'error',
+					'error' => $e->getMessage(),
+				];
+				$errors++;
 
-                $this->logger->warning(
-                    message: 'BatchDocumentJob: failed to generate document for object',
-                    context: [
-                        'objectId'   => $objectId,
-                        'templateId' => $templateId,
-                        'error'      => $e->getMessage(),
-                    ]
-                );
-            }//end try
+				$this->logger->warning(
+					message: 'BatchDocumentJob: failed to generate document for object',
+					context: [
+						'objectId' => $objectId,
+						'templateId' => $templateId,
+						'error' => $e->getMessage(),
+					]
+				);
+			}//end try
 
-            $this->documentSvc->updateJobStatus(
-                jobId: $jobId,
-                status: [
-                    'jobId'     => $jobId,
-                    'status'    => 'processing',
-                    'total'     => $total,
-                    'completed' => $completed,
-                    'errors'    => $errors,
-                    'results'   => $results,
-                    'options'   => $options,
-                ]
-            );
-        }//end foreach
+			$this->documentSvc->updateJobStatus(
+				jobId: $jobId,
+				status: [
+					'jobId' => $jobId,
+					'status' => 'processing',
+					'total' => $total,
+					'completed' => $completed,
+					'errors' => $errors,
+					'results' => $results,
+					'options' => $options,
+				]
+			);
+		}//end foreach
 
-        $finalStatus = 'completed';
-        if ($errors > 0) {
-            $finalStatus = 'completed_with_errors';
-        }
+		$finalStatus = 'completed';
+		if ($errors > 0) {
+			$finalStatus = 'completed_with_errors';
+		}
 
-        $this->documentSvc->updateJobStatus(
-            jobId: $jobId,
-            status: [
-                'jobId'     => $jobId,
-                'status'    => $finalStatus,
-                'total'     => $total,
-                'completed' => $completed,
-                'errors'    => $errors,
-                'results'   => $results,
-                'options'   => $options,
-            ]
-        );
+		$this->documentSvc->updateJobStatus(
+			jobId: $jobId,
+			status: [
+				'jobId' => $jobId,
+				'status' => $finalStatus,
+				'total' => $total,
+				'completed' => $completed,
+				'errors' => $errors,
+				'results' => $results,
+				'options' => $options,
+			]
+		);
 
-    }//end processObjects()
+	}//end processObjects()
 }//end class

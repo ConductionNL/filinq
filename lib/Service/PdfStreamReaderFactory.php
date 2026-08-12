@@ -42,37 +42,34 @@ use setasign\Fpdi\PdfParser\StreamReader;
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
  */
-class PdfStreamReaderFactory
-{
+class PdfStreamReaderFactory {
 
-    /**
-     * Bytes FPDI keeps in memory before spilling the temp stream to disk.
-     * Matches FPDI's own default for createByString().
-     */
-    private const DEFAULT_MAX_MEMORY = 2097152;
+	/**
+	 * Bytes FPDI keeps in memory before spilling the temp stream to disk.
+	 * Matches FPDI's own default for createByString().
+	 */
+	private const DEFAULT_MAX_MEMORY = 2097152;
 
-    /**
-     * Build a stream reader over a raw PDF byte string.
-     *
-     * @param string $content Raw PDF bytes.
-     *
-     * @return StreamReader Reader positioned at the start of $content.
-     *
-     * @throws InvalidArgumentException When the temp stream cannot be opened.
-     *
-     * @spec openspec/specs/pdfa3-conversion/spec.md
-     */
-    public function fromString(string $content): StreamReader
-    {
-        $handle = fopen('php://temp/maxmemory:'.self::DEFAULT_MAX_MEMORY, 'r+b');
-        if ($handle === false) {
-            throw new InvalidArgumentException('No stream given.');
-        }
+	/**
+	 * Build a stream reader over a raw PDF byte string.
+	 *
+	 * @param string $content Raw PDF bytes.
+	 *
+	 * @return StreamReader Reader positioned at the start of $content.
+	 *
+	 * @throws InvalidArgumentException When the temp stream cannot be opened.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	public function fromString(string $content): StreamReader {
+		$handle = fopen('php://temp/maxmemory:' . self::DEFAULT_MAX_MEMORY, 'r+b');
+		if ($handle === false) {
+			throw new InvalidArgumentException('No stream given.');
+		}
 
-        fwrite($handle, $content);
-        rewind($handle);
+		fwrite($handle, $content);
+		rewind($handle);
 
-        return new StreamReader($handle, true);
-
-    }//end fromString()
+		return new StreamReader($handle, true);
+	}//end fromString()
 }//end class

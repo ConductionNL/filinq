@@ -37,94 +37,81 @@ namespace OCA\DocuDesk\Event;
  *
  * @spec openspec/changes/docudesk-signing-events/specs/docudesk-signing-events/spec.md
  */
-final class SigningProvenance
-{
-    /**
-     * Construct the provenance envelope.
-     *
-     * @param string      $sourceApp         Consumer app that requested the signature
-     * @param string|null $subjectRegister   OpenRegister register of the originating object
-     * @param string|null $subjectSchema     OpenRegister schema of the originating object
-     * @param string|null $subjectId         OpenRegister id of the originating object
-     * @param string      $externalReference Consumer's own reference
-     * @param string      $correlationId     Correlation id from the request event
-     *
-     * @return void
-     */
-    public function __construct(
-        private readonly string $sourceApp='',
-        private readonly ?string $subjectRegister=null,
-        private readonly ?string $subjectSchema=null,
-        private readonly ?string $subjectId=null,
-        private readonly string $externalReference='',
-        private readonly string $correlationId=''
-    ) {
+final class SigningProvenance {
+	/**
+	 * Construct the provenance envelope.
+	 *
+	 * @param string $sourceApp Consumer app that requested the signature
+	 * @param string|null $subjectRegister OpenRegister register of the originating object
+	 * @param string|null $subjectSchema OpenRegister schema of the originating object
+	 * @param string|null $subjectId OpenRegister id of the originating object
+	 * @param string $externalReference Consumer's own reference
+	 * @param string $correlationId Correlation id from the request event
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly string $sourceApp = '',
+		private readonly ?string $subjectRegister = null,
+		private readonly ?string $subjectSchema = null,
+		private readonly ?string $subjectId = null,
+		private readonly string $externalReference = '',
+		private readonly string $correlationId = '',
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the consumer app that requested the signature.
-     *
-     * @return string The source app id.
-     */
-    public function getSourceApp(): string
-    {
-        return $this->sourceApp;
+	/**
+	 * Get the consumer app that requested the signature.
+	 *
+	 * @return string The source app id.
+	 */
+	public function getSourceApp(): string {
+		return $this->sourceApp;
+	}//end getSourceApp()
 
-    }//end getSourceApp()
+	/**
+	 * Get the OpenRegister register of the originating object.
+	 *
+	 * @return string|null The subject register, or null.
+	 */
+	public function getSubjectRegister(): ?string {
+		return $this->subjectRegister;
+	}//end getSubjectRegister()
 
-    /**
-     * Get the OpenRegister register of the originating object.
-     *
-     * @return string|null The subject register, or null.
-     */
-    public function getSubjectRegister(): ?string
-    {
-        return $this->subjectRegister;
+	/**
+	 * Get the OpenRegister schema of the originating object.
+	 *
+	 * @return string|null The subject schema, or null.
+	 */
+	public function getSubjectSchema(): ?string {
+		return $this->subjectSchema;
+	}//end getSubjectSchema()
 
-    }//end getSubjectRegister()
+	/**
+	 * Get the OpenRegister id of the originating object.
+	 *
+	 * @return string|null The subject id, or null.
+	 */
+	public function getSubjectId(): ?string {
+		return $this->subjectId;
+	}//end getSubjectId()
 
-    /**
-     * Get the OpenRegister schema of the originating object.
-     *
-     * @return string|null The subject schema, or null.
-     */
-    public function getSubjectSchema(): ?string
-    {
-        return $this->subjectSchema;
+	/**
+	 * Get the consumer's own external reference.
+	 *
+	 * @return string The external reference.
+	 */
+	public function getExternalReference(): string {
+		return $this->externalReference;
+	}//end getExternalReference()
 
-    }//end getSubjectSchema()
-
-    /**
-     * Get the OpenRegister id of the originating object.
-     *
-     * @return string|null The subject id, or null.
-     */
-    public function getSubjectId(): ?string
-    {
-        return $this->subjectId;
-
-    }//end getSubjectId()
-
-    /**
-     * Get the consumer's own external reference.
-     *
-     * @return string The external reference.
-     */
-    public function getExternalReference(): string
-    {
-        return $this->externalReference;
-
-    }//end getExternalReference()
-
-    /**
-     * Get the correlation id from the request event.
-     *
-     * @return string The correlation id.
-     */
-    public function getCorrelationId(): string
-    {
-        return $this->correlationId;
-
-    }//end getCorrelationId()
+	/**
+	 * Get the correlation id from the request event.
+	 *
+	 * @return string The correlation id.
+	 */
+	public function getCorrelationId(): string {
+		return $this->correlationId;
+	}//end getCorrelationId()
 }//end class
