@@ -146,17 +146,36 @@ class DossierSummaryDataService
     }//end loadDossier()
 
     /**
-     * Assert that the acting user may read a dossier.
+     * Assert that the dossier EXISTS and is resolvable to the acting user.
      *
-     * Resolves the dossier through OpenRegister's ObjectService under the
-     * session user's view, so OR's standard RBAC governs visibility: a dossier
-     * the caller may not read resolves to null and we deny by throwing.
+     * ⚠️ This is an EXISTENCE check, not an ownership check. The previous
+     * docblock claimed the opposite — "OR's standard RBAC governs visibility:
+     * a dossier the caller may not read resolves to null and we deny by
+     * throwing" — and that claim is false as the app is configured.
+     *
+     * The call below genuinely omits `_rbac: false`, so OpenRegister's RBAC
+     * cascade is consulted. But the cascade resolves to "configured nowhere",
+     * which OpenRegister treats as OPEN: the `dossier` schema in
+     * `lib/Settings/docudesk_register.json` declares `"authorization": null`,
+     * and no register declares the key at all. `find()` therefore returns the
+     * object for any authenticated caller in the same organisation, so the
+     * `null` branch below can only ever fire for a dossier that does not
+     * exist — never for one the caller merely has no business reading.
+     *
+     * What IS still enforced: organisation scoping (multitenancy is not
+     * bypassed here), and the existence check itself.
+     *
+     * Do not read a green result from this method as "the caller owns this
+     * dossier". Closing that gap needs an agreed ownership model for dossiers
+     * — a dossier is a shared work object and it is NOT obvious that only its
+     * creator may regenerate its summary — so it is deliberately not invented
+     * here. Tracked in ConductionNL/docudesk#441.
      *
      * @param string $dossierId The OR dossier object UUID.
      *
      * @return void
      *
-     * @throws RuntimeException 403 when the dossier is not readable / not found.
+     * @throws RuntimeException 403 when the dossier cannot be resolved at all.
      */
     public function assertDossierReadable(string $dossierId): void
     {
